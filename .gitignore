@@ -23,6 +23,9 @@ Thumbs.db
 # VSCode
 .vscode/
 
+# Cursor MCP Config (contains API keys)
+.cursor/mcp.json
+
 # Turbo/monorepo tools
 .turbo/
 
