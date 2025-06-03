@@ -1,0 +1,615 @@
+<context>
+# Overview  
+Mom's Blog is a high-performance, modern blog platform designed specifically for content creators who want enterprise-grade performance without enterprise costs. This project solves the common problems of expensive hosting, slow loading times, security vulnerabilities, and vendor lock-in that plague traditional blogging platforms like WordPress.
+
+**Target Users:**
+- Primary: Content creators (like Mom) who want to focus on writing, not technical maintenance
+- Secondary: Blog readers who expect fast, accessible, mobile-optimized experiences
+- Tertiary: Developers who need to maintain and extend the platform
+
+**Value Proposition:**
+- 98+ Lighthouse performance scores with sub-second loading times
+- $0-10/year operating costs (vs $300-1200/year for WordPress alternatives)
+- Enterprise-grade security with zero maintenance overhead
+- Infinite customization possibilities using modern development practices
+- Future-proof architecture using technologies that power Netflix, TikTok, and major enterprises
+
+# Core Features  
+
+## Content Management System
+**What it does:** Enables easy content creation and management using MDX (Markdown + React components)
+**Why it's important:** Combines the simplicity of Markdown writing with the power of custom React components
+**How it works:** Writers create content in familiar Markdown syntax, with ability to embed interactive components like image galleries, newsletter signups, or custom widgets
+
+## Performance-First Architecture  
+**What it does:** Delivers enterprise-grade performance using Static Site Generation (SSG) and modern optimization techniques
+**Why it's important:** Fast sites rank higher in search engines, convert better, and provide superior user experience
+**How it works:** Pages are pre-built at deploy time, served from global CDN, with automatic image optimization and code splitting
+
+## Modern Design System
+**What it does:** Provides beautiful, accessible, mobile-first design using Tailwind CSS and shadcn/ui components
+**Why it's important:** Professional appearance builds trust and credibility; accessibility ensures inclusive experience
+**How it works:** Utility-first CSS with pre-built, customizable components that maintain design consistency
+
+## SEO & Discovery Optimization
+**What it does:** Maximizes search engine visibility and social media sharing
+**Why it's important:** Content creators need organic discovery to grow their audience
+**How it works:** Automatic meta tag generation, structured data, sitemaps, and social media card optimization
+
+## Content Types & Templates
+**What it does:** Supports multiple content formats (blog posts, tutorials, photo galleries, about pages)
+**Why it's important:** Different content types require different layouts and interactive elements
+**How it works:** Template system with reusable components for consistent formatting and enhanced functionality
+
+# User Experience  
+
+## User Personas
+
+### Primary Persona: Content Creator (Mom)
+- **Demographics:** Non-technical content creator, focuses on writing and sharing experiences
+- **Goals:** Create engaging content without technical hassles, grow readership, share knowledge
+- **Pain Points:** Complex technical systems, expensive hosting, security concerns, slow performance
+- **Success Criteria:** Can publish new content in under 5 minutes, doesn't worry about technical issues
+
+### Secondary Persona: Blog Reader
+- **Demographics:** Mobile-first users expecting fast, accessible experiences
+- **Goals:** Quick access to content, easy navigation, social sharing
+- **Pain Points:** Slow loading times, poor mobile experience, intrusive ads
+- **Success Criteria:** Pages load in under 1 second, content is readable on any device
+
+### Tertiary Persona: Developer/Maintainer
+- **Demographics:** Technical team member responsible for platform maintenance and feature development
+- **Goals:** Minimal maintenance overhead, easy feature addition, performance optimization
+- **Pain Points:** Complex deployment processes, security vulnerabilities, outdated dependencies
+- **Success Criteria:** Zero-downtime deployments, automated security updates, clear development workflow
+
+## Key User Flows
+
+### Content Creation Flow
+1. Writer opens text editor with Markdown file
+2. Writes content using familiar Markdown syntax
+3. Adds frontmatter metadata (title, date, tags, excerpt)
+4. Embeds React components for interactive elements (image galleries, callout boxes)
+5. Commits to Git repository
+6. Automatic deployment triggers build and publish process
+7. Content is live globally within 2-3 minutes
+
+### Reader Experience Flow
+1. User discovers content through search, social media, or direct navigation
+2. Page loads in under 1 second from global CDN
+3. Content is immediately readable with progressive enhancement
+4. User can easily navigate to related content
+5. Social sharing and newsletter signup options are readily available
+6. Mobile experience is optimized for touch interaction
+
+## UI/UX Considerations
+- **Mobile-First Design:** All interfaces optimized for mobile devices first, enhanced for desktop
+- **Accessibility:** WCAG 2.1 AA compliance with keyboard navigation, screen reader support, proper color contrast
+- **Performance:** Sub-second loading times with progressive enhancement for interactive features
+- **Typography:** Optimized reading experience with proper line spacing, font sizing, and content hierarchy
+- **Dark Mode:** System-preference aware theme switching for reduced eye strain
+</context>
+<PRD>
+# Technical Architecture  
+
+## System Components
+
+### Frontend Stack
+- **Next.js 14 (App Router):** React framework with Server Components, SSG, and automatic optimization
+- **React 18:** UI library with concurrent features and Suspense for optimal user experience
+- **TypeScript:** Type safety for reduced bugs and improved developer experience
+- **Tailwind CSS:** Utility-first CSS framework for rapid, consistent styling
+- **shadcn/ui + Radix UI:** Accessible component library with full customization control
+
+### Content Management
+- **MDX:** Markdown with embedded React components for rich content creation
+- **next-mdx-remote:** Optimized MDX processing for Next.js App Router
+- **gray-matter:** Frontmatter parsing for content metadata
+- **Git-based workflow:** Version control for content with branch-based review process
+
+### Build & Optimization
+- **Static Site Generation (SSG):** Build-time rendering for maximum performance
+- **Automatic Image Optimization:** WebP/AVIF conversion, lazy loading, responsive images
+- **Code Splitting:** Automatic bundle optimization for faster loading
+- **Tree Shaking:** Dead code elimination for smaller bundle sizes
+
+### Deployment & Infrastructure
+- **Vercel:** Serverless deployment platform optimized for Next.js
+- **Global CDN:** Edge caching for worldwide performance
+- **GitHub Integration:** Automatic deployments on git push
+- **Preview Deployments:** Branch-based preview URLs for content review
+
+## Data Models
+
+### Content Structure
+```typescript
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string; // MDX content
+  publishedAt: Date;
+  updatedAt: Date;
+  tags: string[];
+  category: string;
+  featured: boolean;
+  author: Author;
+  seo: SEOMetadata;
+  socialImage?: string;
+}
+
+interface Tutorial extends BlogPost {
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  estimatedReadTime: number;
+  prerequisites: string[];
+  tools: string[];
+  sections: TutorialSection[];
+}
+```
+
+### File System Organization
+```
+blog/                           # Monorepo root
+├── packages/
+│   ├── web/                   # Next.js web application
+│   │   ├── public/           # Static assets
+│   │   ├── src/
+│   │   │   ├── app/          # Next.js App Router pages
+│   │   │   ├── components/   # Reusable UI components
+│   │   │   ├── context/      # React context providers
+│   │   │   ├── pages/        # Page components and features
+│   │   │   │   └── features/ # Feature-specific page components
+│   │   │   ├── lib/          # Utilities and helpers
+│   │   │   └── styles/       # Global styles and theme
+│   │   ├── content/          # MDX blog content
+│   │   │   ├── blog/         # Blog posts
+│   │   │   ├── tutorials/    # Tutorial content
+│   │   │   ├── authors/      # Author information
+│   │   │   └── pages/        # Static pages
+│   │   ├── package.json
+│   │   └── tailwind.config.js
+│   ├── ui/                   # Shared UI component library
+│   │   ├── src/
+│   │   │   ├── components/   # shadcn/ui and custom components
+│   │   │   ├── hooks/        # Shared React hooks
+│   │   │   └── utils/        # UI utilities
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── backend/              # API services (optional)
+│       ├── src/
+│       │   ├── controllers/  # API controllers
+│       │   ├── middleware/   # Express middleware
+│       │   └── routes/       # API routes
+│       └── package.json
+├── package.json              # Workspace root package.json
+├── pnpm-workspace.yaml       # pnpm workspace configuration
+└── pnpm-lock.yaml           # Dependency lockfile
+```
+
+## APIs and Integrations
+
+### Internal APIs
+- **Content API:** Server-side content fetching and processing
+- **Search API:** Client-side search functionality
+- **Newsletter API:** Email subscription management
+- **Analytics API:** Performance and usage tracking
+
+### External Integrations
+- **Email Marketing:** ConvertKit/Mailchimp for newsletter management
+- **Analytics:** Vercel Analytics + Google Analytics for comprehensive tracking
+- **Social Media:** Open Graph and Twitter Card optimization
+- **Comments:** Giscus (GitHub Discussions) for community engagement
+- **Forms:** Netlify Forms for contact and feedback collection
+
+## Infrastructure Requirements
+
+### Development Environment
+- **Node.js 18+:** JavaScript runtime
+- **Git:** Version control
+- **VS Code:** Recommended editor with TypeScript support
+- **Vercel CLI:** Local development and deployment tools
+
+### Production Environment
+- **Vercel Platform:** Serverless hosting with global CDN
+- **Custom Domain:** Professional branding (optional)
+- **SSL Certificates:** Automatic HTTPS with certificate management
+- **Environment Variables:** Secure configuration management
+
+### Performance Targets
+- **Lighthouse Score:** 95+ (Performance, Accessibility, Best Practices, SEO)
+- **Core Web Vitals:** LCP < 1.2s, FID < 100ms, CLS < 0.1
+- **Build Time:** < 2 minutes for full site generation
+- **Deploy Time:** < 30 seconds for incremental updates
+
+# Development Roadmap  
+
+## Phase 1: Foundation & MVP (Week 1-2)
+**Goal:** Establish core platform with basic blogging functionality
+
+### MVP Requirements
+- Next.js 14 project setup with TypeScript and Tailwind CSS
+- Basic MDX content processing and rendering
+- Simple blog post listing and detail pages
+- Responsive navigation and layout structure
+- Essential SEO meta tags and Open Graph support
+- Vercel deployment pipeline
+
+### Success Criteria
+- Can publish and display blog posts
+- Mobile-responsive design
+- Lighthouse score > 90
+- Automated deployment working
+
+## Phase 2: Enhanced Content Features (Week 3-4)
+**Goal:** Rich content creation capabilities and improved user experience
+
+### Features
+- Advanced MDX component system (image galleries, callout boxes, code blocks)
+- Content categorization and tagging system
+- Search functionality (client-side with Fuse.js)
+- Newsletter signup integration
+- Social sharing buttons
+- Dark mode theme switcher
+
+### Success Criteria
+- Support for multiple content types
+- Interactive content components working
+- Search returns relevant results
+- Email capture functionality active
+
+## Phase 3: Performance & SEO Optimization (Week 5-6)
+**Goal:** Enterprise-grade performance and search engine optimization
+
+### Features
+- Advanced image optimization and lazy loading
+- Structured data (JSON-LD) for rich search results
+- Sitemap and robots.txt generation
+- Performance monitoring and analytics integration
+- RSS feed generation
+- Advanced caching strategies
+
+### Success Criteria
+- Lighthouse score > 95 across all metrics
+- Google Search Console integration
+- Core Web Vitals in green zone
+- Analytics tracking implemented
+
+## Phase 4: Advanced Features & Polish (Week 7-8)
+**Goal:** Professional polish and advanced functionality
+
+### Features
+- Comment system integration (Giscus)
+- Related posts suggestions
+- Reading time estimates
+- Table of contents generation
+- Social media auto-posting
+- Advanced accessibility features
+
+### Success Criteria
+- WCAG 2.1 AA compliance verified
+- Community engagement features active
+- Content discovery enhanced
+- Social media integration working
+
+## Future Enhancements (Post-Launch)
+- Multi-author support with author profiles
+- Content scheduling and draft management
+- Advanced analytics dashboard
+- E-commerce integration (affiliate marketing)
+- Multilingual content support
+- Progressive Web App features
+- Membership/subscription features
+
+# Logical Dependency Chain
+
+## Foundation Dependencies (Must be completed first)
+1. **Development Environment Setup**
+   - Node.js and package manager installation
+   - Git repository initialization
+   - VS Code with recommended extensions
+   - Basic project structure creation
+
+2. **Core Framework Configuration**
+   - Next.js 14 with App Router setup
+   - TypeScript configuration and type definitions
+   - Tailwind CSS integration and configuration
+   - ESLint and Prettier setup for code quality
+
+3. **Content Processing Pipeline**
+   - MDX processing configuration
+   - Frontmatter parsing setup
+   - Content file structure establishment
+   - Basic content rendering pipeline
+
+## Getting to Usable Frontend Quickly
+4. **Minimal Viable Interface**
+   - Basic layout components (header, footer, main content area)
+   - Simple typography and spacing system
+   - Mobile-responsive navigation
+   - Homepage with content listing
+
+5. **Core Content Display**
+   - Blog post detail page with MDX rendering
+   - Blog post listing with pagination
+   - Basic metadata display (title, date, excerpt)
+   - Working internal linking
+
+6. **Essential SEO Foundation**
+   - Meta tags and Open Graph implementation
+   - Automatic sitemap generation
+   - Basic structured data
+   - URL structure optimization
+
+## Feature Building Blocks (Atomic components that can be enhanced)
+7. **Design System Foundation**
+   - shadcn/ui component installation
+   - Theme configuration (colors, fonts, spacing)
+   - Reusable UI components (buttons, cards, forms)
+   - Dark mode implementation
+
+8. **Content Enhancement Components**
+   - Image optimization and responsive images
+   - Code syntax highlighting
+   - Interactive content cards
+   - Newsletter signup forms
+
+9. **Performance Optimization**
+   - Static generation optimization
+   - Bundle analysis and optimization
+   - Image optimization pipeline
+   - Caching strategy implementation
+
+## Integration & Polish (Built upon foundation)
+10. **External Service Integration**
+    - Analytics implementation
+    - Email marketing service integration
+    - Comment system integration
+    - Social media sharing
+
+11. **Advanced Features**
+    - Search functionality
+    - Related content suggestions
+    - Advanced SEO features
+    - Performance monitoring
+
+12. **Production Readiness**
+    - Error handling and fallback pages
+    - Security headers and CSP
+    - Accessibility compliance verification
+    - Production deployment optimization
+
+# Risks and Mitigations  
+
+## Technical Challenges
+
+### Risk: Learning Curve for Modern Stack
+**Impact:** High - Could delay development if team lacks Next.js/TypeScript experience
+**Probability:** Medium
+**Mitigation Strategies:**
+- Comprehensive documentation and tutorial resources available
+- Start with simple implementations and gradually add complexity
+- Leverage existing templates and examples from Next.js community
+- Consider pair programming sessions for knowledge transfer
+
+### Risk: Build Complexity with Large Content Volume
+**Impact:** Medium - Static generation could become slow with hundreds of posts
+**Probability:** Low (long-term concern)
+**Mitigation Strategies:**
+- Implement Incremental Static Regeneration (ISR) for dynamic content
+- Use build caching and optimization techniques
+- Consider content pagination and lazy loading
+- Monitor build times and optimize as needed
+
+### Risk: MDX Learning Curve for Content Creators
+**Impact:** Medium - Non-technical users might struggle with Markdown syntax
+**Probability:** Medium
+**Mitigation Strategies:**
+- Provide comprehensive MDX writing guide with examples
+- Create reusable component templates for common content patterns
+- Consider visual editor integration (future enhancement)
+- Offer content creation training and documentation
+
+## MVP and Foundation Risks
+
+### Risk: Overengineering the Initial Implementation
+**Impact:** High - Could delay launch and complicate maintenance
+**Probability:** Medium
+**Mitigation Strategies:**
+- Start with absolutely minimal viable product
+- Resist adding features until core functionality is solid
+- Use progressive enhancement approach
+- Regular review of scope creep
+
+### Risk: Insufficient Performance Testing
+**Impact:** Medium - Could miss performance issues until production
+**Probability:** Low
+**Mitigation Strategies:**
+- Continuous Lighthouse monitoring during development
+- Test with realistic content volume
+- Monitor Core Web Vitals in development
+- Use performance budgets to prevent regression
+
+### Risk: SEO Implementation Gaps
+**Impact:** High - Poor search engine visibility affects content discovery
+**Probability:** Low
+**Mitigation Strategies:**
+- Follow Next.js SEO best practices from start
+- Implement structured data early
+- Regular SEO audits during development
+- Test with Google Search Console
+
+## Resource and Operational Constraints
+
+### Risk: Vercel Vendor Lock-in
+**Impact:** Medium - Difficult migration if platform becomes unsuitable
+**Probability:** Low
+**Mitigation Strategies:**
+- Build standard Next.js application deployable anywhere
+- Document deployment alternatives (Netlify, Railway, self-hosted)
+- Avoid Vercel-specific features in core functionality
+- Maintain deployment documentation for multiple platforms
+
+### Risk: Content Migration Complexity
+**Impact:** Low - Existing content might be difficult to convert to MDX
+**Probability:** Low (new project)
+**Mitigation Strategies:**
+- Create automated conversion tools for common formats
+- Establish clear content structure standards early
+- Provide migration guides and scripts
+- Phase content migration if converting from existing platform
+
+### Risk: Maintenance Overhead
+**Impact:** Medium - Framework updates and dependency management
+**Probability:** Low
+**Mitigation Strategies:**
+- Use Dependabot for automated dependency updates
+- Implement comprehensive testing to catch breaking changes
+- Follow semantic versioning for major updates
+- Maintain update documentation and procedures
+
+## Business and User Experience Risks
+
+### Risk: Poor Mobile Experience
+**Impact:** High - Majority of users access content on mobile devices
+**Probability:** Very Low (mobile-first approach)
+**Mitigation Strategies:**
+- Mobile-first development approach
+- Regular testing on actual mobile devices
+- Performance budgets for mobile performance
+- Touch-friendly interaction design
+
+### Risk: Accessibility Compliance Failures
+**Impact:** Medium - Legal and ethical concerns, reduced audience reach
+**Probability:** Low (using accessible components)
+**Mitigation Strategies:**
+- Use shadcn/ui and Radix UI for accessible components
+- Regular accessibility audits with tools like axe-core
+- Keyboard navigation testing
+- Screen reader compatibility verification
+
+### Risk: Content Creator Adoption
+**Impact:** High - Platform is useless without content
+**Probability:** Low (designed for ease of use)
+**Mitigation Strategies:**
+- Intuitive content creation workflow
+- Comprehensive documentation and examples
+- Regular feedback sessions with content creators
+- Gradual feature introduction to avoid overwhelm
+
+# Appendix  
+
+## Technology Comparison Matrix
+
+| Feature | Our Stack | WordPress | Ghost | Medium |
+|---------|-----------|-----------|-------|--------|
+| Performance Score | 95+ | 60-80 | 80-90 | 85-95 |
+| Annual Cost | $0-10 | $300-1200 | $108-384 | $60-600 |
+| Customization | Full | High | Medium | Low |
+| Security | Excellent | Poor-Medium | Good | Excellent |
+| Maintenance | Minimal | High | Medium | None |
+| Content Ownership | Full | Full | Full | Limited |
+| Developer Experience | Excellent | Poor | Good | N/A |
+
+## Performance Benchmarks
+
+### Core Web Vitals Targets
+- **Largest Contentful Paint (LCP):** < 1.2s (Target: 0.8s)
+- **First Input Delay (FID):** < 100ms (Target: 50ms)
+- **Cumulative Layout Shift (CLS):** < 0.1 (Target: 0.05)
+
+### Loading Performance Targets
+- **Time to First Byte (TTFB):** < 200ms
+- **First Contentful Paint (FCP):** < 1.0s
+- **Time to Interactive (TTI):** < 2.0s
+- **Bundle Size:** < 100KB initial JavaScript
+
+## Cost-Benefit Analysis (5-Year Projection)
+
+### Our Stack Total Cost of Ownership
+| Year | Domain | Hosting | Maintenance | Tools | Total |
+|------|--------|---------|-------------|-------|-------|
+| 1-5  | $50    | $0      | $0          | $0    | $50   |
+
+### WordPress Alternative TCO
+| Year | Hosting | Themes | Plugins | Security | Maintenance | Total |
+|------|---------|--------|---------|----------|-------------|-------|
+| 1    | $120    | $100   | $200     | $100     | $500        | $1,020 |
+| 2-5  | $600    | $200   | $800     | $400     | $2,000      | $4,000 |
+| **Total** |     |        |          |          |             | **$5,020** |
+
+**5-Year Savings: $4,970 (99% cost reduction)**
+
+## Technical Specifications
+
+### Browser Support
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+- Mobile Safari 14+
+- Chrome Mobile 90+
+
+### Accessibility Standards
+- WCAG 2.1 AA compliance
+- Section 508 compliance
+- Keyboard navigation support
+- Screen reader compatibility (NVDA, JAWS, VoiceOver)
+- High contrast mode support
+- Reduced motion preference support
+
+### Security Features
+- HTTPS everywhere with automatic SSL
+- Content Security Policy (CSP) headers
+- Subresource Integrity (SRI) for external resources
+- No server-side vulnerabilities (static files only)
+- Automatic dependency security updates
+- XSS protection through React's built-in escaping
+
+## Research and References
+
+### Industry Reports
+- **Web Almanac 2024:** Performance statistics and best practices
+- **Core Web Vitals Study:** Impact on search rankings and user experience
+- **Jamstack Survey 2024:** Developer satisfaction and adoption trends
+
+### Technical Documentation
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Server Components](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023)
+- [Tailwind CSS Best Practices](https://tailwindcss.com/docs/reusing-styles)
+- [shadcn/ui Component Library](https://ui.shadcn.com/)
+- [Vercel Deployment Guide](https://vercel.com/docs)
+
+### Performance Studies
+- **Google Page Speed Study:** 1-second delay reduces conversions by 20%
+- **Pinterest Performance Case Study:** 40% improvement in performance led to 15% increase in search traffic
+- **BBC Performance Study:** Each additional second of load time loses 10% of users
+
+## Success Metrics and KPIs
+
+### Technical Metrics
+- Lighthouse Performance Score: >95
+- Core Web Vitals: All green
+- Bundle Size: <100KB initial load
+- Build Time: <2 minutes
+- Deployment Time: <30 seconds
+
+### User Experience Metrics
+- Page Load Time: <1 second
+- Time to Interactive: <2 seconds
+- Bounce Rate: <40%
+- Pages per Session: >2
+- Average Session Duration: >2 minutes
+
+### Business Metrics
+- Organic Search Traffic Growth: 20% month-over-month
+- Newsletter Signup Rate: >3%
+- Social Media Shares: 10+ per post
+- Content Engagement Rate: >60%
+- Mobile Traffic Percentage: >65%
+
+### Content Metrics
+- Publishing Frequency: 2-3 posts per week
+- Content Creation Time: <30 minutes per post
+- Content Performance: 80% of posts get >100 views
+- Search Engine Indexing: 100% of content indexed within 24 hours
+</PRD> 
