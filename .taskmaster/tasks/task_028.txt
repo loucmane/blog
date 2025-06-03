@@ -1,0 +1,49 @@
+# Task ID: 28
+# Title: Create Content Creator Documentation
+# Status: pending
+# Dependencies: 19
+# Priority: medium
+# Description: Build comprehensive documentation for content creators including MDX guide and workflow instructions
+# Details:
+Create MDX writing guide with component examples, document content classification guidelines and approval workflows, build style guide for consistent content formatting. Include video tutorials for Git workflow and content submission process.
+
+# Test Strategy:
+Test documentation completeness with new users, verify example code functionality, validate workflow instructions, and confirm video tutorial accuracy
+
+# Subtasks:
+## 1. Create MDX Writing Guide [pending]
+### Dependencies: None
+### Description: Develop a comprehensive MDX writing guide tailored for the animal protection foundation's content needs
+### Details:
+Include syntax examples, best practices for trauma-informed content handling, and guidelines for creating emergency appeal content. Document how to properly structure content to build donor trust through transparent communication. Include code examples with proper syntax highlighting.
+
+## 2. Develop Component Examples Documentation [pending]
+### Dependencies: 28.1
+### Description: Create detailed documentation with examples of all available components
+### Details:
+Document each component with visual examples, code snippets, prop tables, and usage guidelines. Include specific examples showing how components can be used for animal welfare content, emergency appeals, and donor engagement. Provide complexity analysis for each component to guide appropriate usage.
+
+## 3. Establish Content Classification Guidelines [pending]
+### Dependencies: 28.1
+### Description: Create guidelines for classifying and tagging content appropriately for the foundation's needs
+### Details:
+Develop a taxonomy for content types including emergency appeals, success stories, educational content, and donor communications. Include guidelines for appropriate content warnings for trauma-informed approaches and sensitivity ratings for different audience segments.
+
+## 4. Document Approval Workflow Process [pending]
+### Dependencies: 28.3
+### Description: Create comprehensive documentation of the content approval workflow
+### Details:
+Map out the entire approval process from content creation to publication, including stakeholder review stages, legal compliance checks, and sensitivity reviews. Include flowcharts, role descriptions, and timeline expectations for emergency vs. standard content.
+
+## 5. Develop Style Guide for Foundation Content [pending]
+### Dependencies: 28.1, 28.3
+### Description: Create a detailed style guide specific to the animal protection foundation's voice and tone
+### Details:
+Document language guidelines, tone considerations for different content types, image usage policies for animal welfare content, and accessibility requirements. Include examples of appropriate vs. inappropriate content framing, especially for sensitive topics.
+
+## 6. Produce Video Tutorial Series [pending]
+### Dependencies: 28.1, 28.2, 28.3, 28.4, 28.5
+### Description: Plan and create instructional videos covering all documentation aspects
+### Details:
+Develop scripts, record, edit and publish video tutorials demonstrating the practical application of all documentation components. Include specific tutorials for emergency appeal creation, trauma-informed content development, and effective donor communication strategies.
+

@@ -1,0 +1,55 @@
+# Task ID: 7
+# Title: Build Core Layout Components
+# Status: pending
+# Dependencies: 4
+# Priority: high
+# Description: Create responsive header, footer, and main layout components with mobile-first navigation
+# Details:
+Build Header component with responsive navigation, logo placement, and mobile hamburger menu. Create Footer with foundation information, social links, and transparency indicators. Implement MainLayout wrapper with proper semantic HTML structure and accessibility landmarks. Use shadcn/ui Sheet component for mobile navigation.
+
+# Test Strategy:
+Test responsive behavior across breakpoints, verify keyboard navigation, validate semantic HTML structure, and confirm accessibility with screen readers
+
+# Subtasks:
+## 1. Create Semantic HTML Structure [pending]
+### Dependencies: None
+### Description: Develop the foundational semantic HTML structure for the animal protection foundation website
+### Details:
+Implement proper HTML5 semantic elements (<header>, <nav>, <main>, <section>, <article>, <aside>, <footer>) to create a meaningful document outline. Ensure the structure supports trauma-informed content organization and emergency appeal functionality. Include appropriate ARIA roles where needed to enhance accessibility.
+
+## 2. Implement Header Component [pending]
+### Dependencies: 7.1
+### Description: Design and develop the website header with foundation branding and primary navigation
+### Details:
+Create a visually appealing header that establishes brand identity with the foundation's logo prominently displayed. Include intuitive primary navigation with clear, descriptive labels organized logically. Ensure the header design builds donor trust through professional appearance and clear organizational identity.
+
+## 3. Develop Mobile Navigation System [pending]
+### Dependencies: 7.2
+### Description: Create a responsive mobile navigation solution with hamburger menu functionality
+### Details:
+Implement a mobile-friendly navigation system that collapses into a hamburger menu on smaller screens. Ensure touch targets are appropriately sized (at least 44x44px). Include smooth transitions for menu opening/closing and maintain access to emergency appeal functionality even in collapsed navigation state.
+
+## 4. Build Main Layout Wrapper [pending]
+### Dependencies: 7.1
+### Description: Develop the content area layout system with appropriate white space and visual hierarchy
+### Details:
+Create a flexible main content wrapper that organizes information with proper headings, subheadings, and paragraphs. Implement white space and visual hierarchy to help users process trauma-informed content appropriately. Design layout patterns that accommodate both emergency appeals and regular content while maintaining readability.
+
+## 5. Implement Accessibility Landmarks [pending]
+### Dependencies: 7.1, 7.2, 7.4
+### Description: Add proper ARIA landmarks and ensure keyboard navigation throughout the layout
+### Details:
+Implement ARIA landmarks (banner, navigation, main, contentinfo) to enhance screen reader navigation. Ensure all interactive elements are keyboard accessible with visible focus states. Test with screen readers to verify the layout is navigable for users with disabilities. Consider the emotional impact of content when designing focus order.
+
+## 6. Develop Footer Component [pending]
+### Dependencies: 7.1
+### Description: Create the website footer with secondary navigation, contact information, and trust signals
+### Details:
+Design an organized footer that includes secondary navigation links (About Us, Contact, Privacy Policy), social media icons, donation information, and trust-building elements like certifications or testimonials. Ensure the footer supports the foundation's credibility while providing easy access to important information.
+
+## 7. Conduct Responsive Testing [pending]
+### Dependencies: 7.2, 7.3, 7.4, 7.5, 7.6
+### Description: Test all layout components across multiple devices and breakpoints
+### Details:
+Perform comprehensive testing of all layout components across various devices (mobile, tablet, desktop) and breakpoints. Verify that emergency appeal functionality remains accessible at all screen sizes. Test loading performance, especially for trauma-informed image content. Document and fix any responsive issues discovered during testing.
+

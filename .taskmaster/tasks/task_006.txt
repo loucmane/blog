@@ -1,0 +1,49 @@
+# Task ID: 6
+# Title: Implement Content File Structure and Organization
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Create organized content directory structure for different content types with proper metadata schemas
+# Details:
+Create content directory structure: content/rescue-stories/, content/field-reports/, content/impact-updates/, content/emergency-appeals/, content/action-guides/. Define TypeScript interfaces for each content type with required metadata fields. Set up content validation and automatic slug generation.
+
+# Test Strategy:
+Create sample content files for each type, verify metadata parsing, test slug generation, and validate content type detection
+
+# Subtasks:
+## 1. Directory Structure Creation [pending]
+### Dependencies: None
+### Description: Design and create a logical directory structure to organize different content types (e.g., articles, emergency appeals, donor stories) with clear separation for trauma-informed and sensitive content, ensuring easy navigation and secure access.
+### Details:
+Include folders for each content type, metadata, validation scripts, and sample content. Consider access controls for sensitive or trauma-related materials.
+
+## 2. TypeScript Interface Definition for Content Types [pending]
+### Dependencies: 6.1
+### Description: Define TypeScript interfaces for each content type, reflecting the foundation’s needs (e.g., trauma-informed articles, donor testimonials, emergency appeals), ensuring fields accommodate sensitive content and trust-building elements.
+### Details:
+Include fields for trauma indicators, donor trust signals, and emergency-specific attributes. Document interface usage for maintainability.
+
+## 3. Metadata Schema Creation [pending]
+### Dependencies: 6.2
+### Description: Develop detailed metadata schemas for each content type, supporting trauma-informed handling, donor trust-building, and emergency appeal requirements.
+### Details:
+Define metadata fields such as content warnings, author credentials, donor transparency tags, and urgency levels for appeals.
+
+## 4. Validation Setup [pending]
+### Dependencies: 6.3
+### Description: Implement validation logic to enforce schema compliance and trauma-informed content handling, ensuring all content meets organizational and ethical standards.
+### Details:
+Set up validation scripts or middleware to check for required fields, metadata completeness, and trauma-sensitive content flags.
+
+## 5. Slug Generation Logic [pending]
+### Dependencies: 6.4
+### Description: Develop robust slug generation logic for each content type, supporting SEO, readability, and privacy for sensitive or trauma-related content.
+### Details:
+Ensure slugs are unique, human-readable, and optionally obfuscated for sensitive cases. Document slug rules for editors.
+
+## 6. Testing with Sample Content [pending]
+### Dependencies: 6.5
+### Description: Populate the system with sample content for each type, including trauma-informed articles, donor stories, and emergency appeals, to test directory structure, schema validation, and slug generation.
+### Details:
+Verify that all validation rules are enforced, metadata is correctly handled, and slugs are generated as expected. Adjust schemas and logic based on test results.
+
