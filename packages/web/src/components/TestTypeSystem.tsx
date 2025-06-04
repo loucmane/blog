@@ -1,6 +1,8 @@
-// Test component to validate our TypeScript setup
+// Test component to validate our TypeScript setup and path mapping
 
 import { BlogPost, RescueStory, EmergencyAppeal, ContentSensitivityLevel } from '@/types';
+// Test content path mapping - this should resolve to ../content/*
+// import contentExample from '@/content/blog/example.md'; // Uncomment when MDX is set up
 
 interface TestComponentProps {
   content: BlogPost | RescueStory | EmergencyAppeal;

@@ -63,7 +63,7 @@
       "@/context/*": ["./src/context/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/config/*": ["./src/config/*"],
-      "@/content/*": ["./src/content/*"],
+      "@/content/*": ["./content/*"],
       
       // Domain-specific modules (business logic organization)
       "@/trauma-informed/*": ["./src/trauma-informed/*"],
