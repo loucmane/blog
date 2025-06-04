@@ -20,7 +20,7 @@ export default function HomePage() {
           <div className="bg-gray-50 p-6 rounded-lg">
             <h2 className="text-2xl font-semibold mb-4">Get Involved</h2>
             <p className="text-gray-600">
-              Join our community of supporters and help make a difference in animals' lives.
+              Join our community of supporters and help make a difference in animals&apos; lives.
             </p>
           </div>
         </div>

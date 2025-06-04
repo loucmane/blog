@@ -29,7 +29,7 @@ Use `npx create-next-app@latest --ts` with Next.js 15 specifications. Verify exa
 ### Details:
 Configure `tsconfig.json` with Next.js 15 recommended settings verified through Context7 MCP. Define custom types/interfaces for content modules that handle sensitive animal protection stories, ensuring compatibility with Next.js 15 App Router patterns and latest TypeScript features.
 
-## 4. Customize next.config.js Using Next.js 15 Configuration Patterns [pending]
+## 4. Customize next.config.js Using Next.js 15 Configuration Patterns [done]
 ### Dependencies: 2.3
 ### Description: Configure next.config.js following Next.js 15 best practices from Context7 MCP to support donor trust-building and emergency appeal features.
 ### Details:

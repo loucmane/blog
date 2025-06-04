@@ -108,7 +108,7 @@
             3
           ],
           "details": "Use exact configuration examples from Context7 MCP for Next.js 15. Configure security headers, image optimization, API routes, and redirects following 2025 standards. Avoid deprecated Next.js 14 patterns and implement new Next.js 15 features where applicable.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 5,
