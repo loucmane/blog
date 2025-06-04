@@ -75,7 +75,9 @@
       "@legendary-test/ui": ["../ui/src"],
       "@legendary-test/ui/*": ["../ui/src/*"],
       "@legendary-test/backend": ["../backend/src"],
-      "@legendary-test/backend/*": ["../backend/src/*"]
+      "@legendary-test/backend/*": ["../backend/src/*"],
+      "@legendary-test/shared": ["../shared/src"],
+      "@legendary-test/shared/*": ["../shared/src/*"]
     }
   },
   "include": [
