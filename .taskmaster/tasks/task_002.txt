@@ -1,49 +1,55 @@
 # Task ID: 2
 # Title: Configure Next.js 14 with App Router and TypeScript
-# Status: pending
+# Status: in-progress
 # Dependencies: 1
 # Priority: high
-# Description: Set up Next.js 14 framework with App Router, TypeScript configuration, and essential build optimizations
+# Description: Set up Next.js 15 framework with App Router, TypeScript configuration, and essential build optimizations using MCP-enhanced workflow with Context7 integration
 # Details:
-Install Next.js 14.0+ with App Router enabled, configure TypeScript with strict mode, set up next.config.js with image optimization and MDX support. Configure tsconfig.json with path mapping for clean imports. Enable experimental features for React Server Components and static export optimization.
+Install Next.js 15.0+ with App Router enabled, configure TypeScript with strict mode, set up next.config.js with image optimization and MDX support. Configure tsconfig.json with path mapping for clean imports. Enable experimental features for React Server Components and static export optimization. Use Context7 MCP to verify latest 2025 best practices and avoid outdated patterns.
 
 # Test Strategy:
-Create test page in app directory, verify TypeScript compilation, test hot reload functionality, and confirm App Router navigation works
+Create test page in app directory, verify TypeScript compilation against Context7 documentation, test hot reload functionality, confirm App Router navigation works with Next.js 15 patterns, and validate MCP workflow integration
 
 # Subtasks:
-## 1. Install Next.js with Required Version and Dependencies [pending]
+## 1. Research Next.js 15 Best Practices via Context7 MCP [deferred]
 ### Dependencies: None
-### Description: Set up a new Next.js project with the specified version and install all necessary dependencies, ensuring compatibility with TypeScript and any required experimental features.
+### Description: Use Context7 MCP to gather the latest Next.js 15 App Router patterns, configuration options, and 2025 best practices before beginning implementation.
 ### Details:
-Use `npx create-next-app@latest --ts` to bootstrap the project with TypeScript support. If a specific Next.js version is required, specify it in the command. Install additional dependencies such as ESLint, and ensure all packages are up to date for security and stability.
+Query Context7 MCP for Next.js 15 specific documentation, App Router patterns, TypeScript configurations, and any breaking changes from Next.js 14. Document findings and create implementation plan based on latest 2025 standards.
 
-## 2. Configure TypeScript for Trauma-Informed Content Handling [pending]
+## 2. Install Next.js 15 with Required Dependencies [done]
 ### Dependencies: 2.1
-### Description: Set up TypeScript with strict type checking and custom types/interfaces to support trauma-informed content structures and validation.
+### Description: Set up a new Next.js 15 project with the latest version and install all necessary dependencies, ensuring compatibility with TypeScript and 2025 best practices.
 ### Details:
-Ensure `tsconfig.json` is created with strict settings. Define custom types/interfaces for content modules that handle sensitive animal protection stories, ensuring type safety and validation for trauma-informed content. Migrate or create files with `.ts`/`.tsx` extensions as needed.
+Use `npx create-next-app@latest --ts` with Next.js 15 specifications. Verify exact version requirements through Context7 MCP documentation. Install additional dependencies following 2025 standards and ensure all packages are compatible with Next.js 15.
 
-## 3. Customize next.config.js for Donor Trust and Emergency Appeal Features [pending]
+## 3. Configure TypeScript for Trauma-Informed Content with Next.js 15 Standards [pending]
 ### Dependencies: 2.2
-### Description: Edit `next.config.js` to enable features that support donor trust-building (e.g., security headers, image optimization) and emergency appeal functionality (e.g., API routes, redirects).
+### Description: Set up TypeScript with strict type checking and custom types/interfaces following Next.js 15 and 2025 TypeScript best practices for trauma-informed content structures.
 ### Details:
-Configure security headers, image domains, and any necessary rewrites or redirects for emergency appeals. Document all changes to ensure transparency and maintainability for donor trust.
+Configure `tsconfig.json` with Next.js 15 recommended settings verified through Context7 MCP. Define custom types/interfaces for content modules that handle sensitive animal protection stories, ensuring compatibility with Next.js 15 App Router patterns and latest TypeScript features.
 
-## 4. Set Up Path Mapping for Modular and Maintainable Codebase [pending]
+## 4. Customize next.config.js Using Next.js 15 Configuration Patterns [pending]
 ### Dependencies: 2.3
-### Description: Configure path mapping in `tsconfig.json` to organize code for trauma-informed content, donor modules, and emergency appeal components.
+### Description: Configure next.config.js following Next.js 15 best practices from Context7 MCP to support donor trust-building and emergency appeal features.
 ### Details:
-Add `paths` to `tsconfig.json` to simplify imports for key modules (e.g., `@content/*`, `@donors/*`, `@emergency/*`). Ensure all relevant files and folders follow the mapped structure for clarity and maintainability.
+Use exact configuration examples from Context7 MCP for Next.js 15. Configure security headers, image optimization, API routes, and redirects following 2025 standards. Avoid deprecated Next.js 14 patterns and implement new Next.js 15 features where applicable.
 
-## 5. Enable and Document Experimental Features Needed for Foundation Goals [pending]
+## 5. Set Up Path Mapping with Next.js 15 Import Conventions [pending]
 ### Dependencies: 2.4
-### Description: Activate experimental Next.js features in `next.config.js` that support advanced content handling, security, or performance as required by the foundation's needs.
+### Description: Configure path mapping in tsconfig.json following Next.js 15 conventions verified through Context7 MCP for modular trauma-informed content organization.
 ### Details:
-Enable features such as React Server Components, middleware, or edge runtime if they enhance trauma-informed content delivery, donor trust, or emergency response. Clearly document which features are enabled and why.
+Implement path mapping using Next.js 15 recommended patterns from Context7 documentation. Add `paths` to `tsconfig.json` for key modules (`@content/*`, `@donors/*`, `@emergency/*`) ensuring compatibility with Next.js 15 App Router and 2025 import standards.
 
-## 6. Conduct Initial Testing and Validation of Configuration [pending]
+## 6. Enable Next.js 15 Features and Validate Against Context7 Documentation [pending]
 ### Dependencies: 2.5
-### Description: Test the Next.js setup to ensure all configurations work as intended, with a focus on trauma-informed content rendering, donor trust-building modules, and emergency appeal flows.
+### Description: Activate Next.js 15 specific features and experimental options that support foundation goals, validating each configuration against Context7 MCP documentation.
 ### Details:
-Run `next dev` and `next build` to validate the setup. Test type safety, path mappings, experimental features, and custom configurations. Simulate trauma-informed content, donor interactions, and emergency appeals to ensure all requirements are met.
+Enable Next.js 15 features such as enhanced React Server Components, improved middleware, or new edge runtime capabilities. Cross-reference all configurations with Context7 MCP to ensure 2025 compliance and avoid deprecated patterns.
+
+## 7. Conduct Comprehensive Testing with Taskmaster-AI Progress Tracking [pending]
+### Dependencies: 2.6
+### Description: Test the Next.js 15 setup comprehensively while tracking progress through taskmaster-ai subtask updates, ensuring all configurations meet 2025 standards.
+### Details:
+Run `next dev` and `next build` with Next.js 15. Test type safety, path mappings, and new features. Update progress through taskmaster-ai as each validation step completes. Simulate trauma-informed content, donor interactions, and emergency appeals using Next.js 15 patterns verified through Context7 MCP.
 

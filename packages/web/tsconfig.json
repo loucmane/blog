@@ -1,0 +1,105 @@
+{
+  "compilerOptions": {
+    // Modern TypeScript and JavaScript targets - Updated for better performance
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    
+    // Strict type checking (enhanced with TS 5.0+ features)
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Additional strict checks for better code quality
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
+    "noPropertyAccessFromIndexSignature": false, // Keep flexible for dynamic access
+    
+    // Module resolution and bundling (optimized for Next.js 15+)
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    "allowImportingTsExtensions": false,
+    "moduleDetection": "force",
+    
+    // JSX configuration for React 18/19
+    "jsx": "preserve",
+    "jsxImportSource": "react",
+    
+    // Performance and development (enhanced)
+    "incremental": true,
+    "tsBuildInfoFile": ".next/cache/tsconfig.tsbuildinfo",
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    
+    // Next.js specific
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    
+    // Path mapping for organized codebase (streamlined)
+    "baseUrl": ".",
+    "paths": {
+      // Core application paths
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/styles/*": ["./src/styles/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/context/*": ["./src/context/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/config/*": ["./src/config/*"],
+      "@/content/*": ["./src/content/*"],
+      
+      // Domain-specific modules (business logic organization)
+      "@/trauma-informed/*": ["./src/trauma-informed/*"],
+      "@/donor/*": ["./src/donor/*"],
+      "@/emergency/*": ["./src/emergency/*"],
+      "@/analytics/*": ["./src/analytics/*"],
+      
+      // Workspace packages
+      "@legendary-test/ui": ["../ui/src"],
+      "@legendary-test/ui/*": ["../ui/src/*"],
+      "@legendary-test/backend": ["../backend/src"],
+      "@legendary-test/backend/*": ["../backend/src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "**/*.mts",
+    "**/*.cts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
+} 

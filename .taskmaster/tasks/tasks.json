@@ -4,11 +4,11 @@
       "id": 1,
       "title": "Initialize Project Repository and Development Environment",
       "description": "Set up the foundational project structure with Node.js 18+, Git repository, and development tooling",
-      "details": "Create new Git repository, initialize with Node.js 18+ and pnpm workspace. Set up monorepo structure with packages/web, packages/ui, and packages/backend directories. Configure VS Code workspace with recommended extensions (TypeScript, Tailwind CSS IntelliSense, MDX). Install essential development tools including Git hooks for commit linting.",
-      "testStrategy": "Verify Node.js version compatibility, test pnpm workspace commands, confirm VS Code extensions are active, and validate Git repository initialization",
-      "priority": "high",
-      "dependencies": [],
       "status": "pending",
+      "dependencies": [],
+      "priority": "high",
+      "details": "Create new Git repository, initialize with Node.js 18+ and pnpm workspace. Set up monorepo structure with packages/web, packages/ui, and packages/backend directories. Configure Cursor workspace with AI-powered development settings and recommended extensions (TypeScript, Tailwind CSS IntelliSense, MDX). Install essential development tools including Git hooks for commit linting.",
+      "testStrategy": "Verify Node.js version compatibility, test pnpm workspace commands, confirm Cursor extensions are active, and validate Git repository initialization",
       "subtasks": [
         {
           "id": 1,
@@ -16,7 +16,7 @@
           "description": "Create a new directory for the monorepo, initialize a Git repository, and establish the foundational folder structure to support multiple projects and trauma-informed content handling.",
           "dependencies": [],
           "details": "Run 'git init' in the root directory. Create subdirectories for apps, packages, and shared trauma-informed content modules. Add a README.md outlining the animal protection foundation's mission, emphasizing trauma-informed and donor trust-building principles.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 2,
@@ -26,7 +26,7 @@
             1
           ],
           "details": "Install Node.js (v16+ recommended) and pnpm. Create a 'package.json' at the root with a 'workspaces' field listing all subprojects (e.g., 'apps/*', 'packages/*'). Ensure workspace structure supports modular emergency appeal functionality and content separation for trauma-informed handling.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 3,
@@ -36,16 +36,16 @@
             2
           ],
           "details": "Create subfolders for each app (e.g., 'apps/website', 'apps/emergency-appeal') and shared packages (e.g., 'packages/trauma-content', 'packages/donor-trust'). Add placeholder files and documentation for each, specifying their roles in trauma-informed and donor-focused workflows.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 4,
-          "title": "Set Up VS Code Workspace Configuration",
-          "description": "Create a VS Code workspace file and configure recommended extensions and settings to support collaborative, trauma-informed, and secure development.",
+          "title": "Set Up Cursor Workspace Configuration",
+          "description": "Create a Cursor workspace file and configure AI-powered development settings, recommended extensions, and settings to support collaborative, trauma-informed, and secure development.",
           "dependencies": [
             3
           ],
-          "details": "Add a '.code-workspace' file at the root, including all relevant folders. Configure settings for code linting, formatting, and extensions (e.g., ESLint, Prettier, markdown preview). Document workspace recommendations for handling sensitive content and maintaining donor trust.",
+          "details": "Create a .cursor/ directory structure with workspace configuration files. Set up .cursor/settings.json with AI model preferences, code completion settings, and foundation-specific configurations. Configure .cursor/workspace.json to include all relevant project folders and AI-assisted development settings. Leverage existing .cursor/rules/ directory for project-specific AI guidance. Document Cursor's AI capabilities for animal protection foundation development, including context-aware suggestions for donor management, compliance requirements, and sensitive data handling. Establish workspace recommendations for utilizing Cursor's AI features while maintaining security and donor trust standards.",
           "status": "pending"
         },
         {
@@ -63,71 +63,81 @@
     {
       "id": 2,
       "title": "Configure Next.js 14 with App Router and TypeScript",
-      "description": "Set up Next.js 14 framework with App Router, TypeScript configuration, and essential build optimizations",
-      "details": "Install Next.js 14.0+ with App Router enabled, configure TypeScript with strict mode, set up next.config.js with image optimization and MDX support. Configure tsconfig.json with path mapping for clean imports. Enable experimental features for React Server Components and static export optimization.",
-      "testStrategy": "Create test page in app directory, verify TypeScript compilation, test hot reload functionality, and confirm App Router navigation works",
-      "priority": "high",
+      "description": "Set up Next.js 15 framework with App Router, TypeScript configuration, and essential build optimizations using MCP-enhanced workflow with Context7 integration",
+      "status": "in-progress",
       "dependencies": [
         1
       ],
-      "status": "pending",
+      "priority": "high",
+      "details": "Install Next.js 15.0+ with App Router enabled, configure TypeScript with strict mode, set up next.config.js with image optimization and MDX support. Configure tsconfig.json with path mapping for clean imports. Enable experimental features for React Server Components and static export optimization. Use Context7 MCP to verify latest 2025 best practices and avoid outdated patterns.",
+      "testStrategy": "Create test page in app directory, verify TypeScript compilation against Context7 documentation, test hot reload functionality, confirm App Router navigation works with Next.js 15 patterns, and validate MCP workflow integration",
       "subtasks": [
         {
           "id": 1,
-          "title": "Install Next.js with Required Version and Dependencies",
-          "description": "Set up a new Next.js project with the specified version and install all necessary dependencies, ensuring compatibility with TypeScript and any required experimental features.",
+          "title": "Research Next.js 15 Best Practices via Context7 MCP",
+          "description": "Use Context7 MCP to gather the latest Next.js 15 App Router patterns, configuration options, and 2025 best practices before beginning implementation.",
           "dependencies": [],
-          "details": "Use `npx create-next-app@latest --ts` to bootstrap the project with TypeScript support. If a specific Next.js version is required, specify it in the command. Install additional dependencies such as ESLint, and ensure all packages are up to date for security and stability.",
-          "status": "pending"
+          "details": "Query Context7 MCP for Next.js 15 specific documentation, App Router patterns, TypeScript configurations, and any breaking changes from Next.js 14. Document findings and create implementation plan based on latest 2025 standards.",
+          "status": "deferred"
         },
         {
           "id": 2,
-          "title": "Configure TypeScript for Trauma-Informed Content Handling",
-          "description": "Set up TypeScript with strict type checking and custom types/interfaces to support trauma-informed content structures and validation.",
+          "title": "Install Next.js 15 with Required Dependencies",
+          "description": "Set up a new Next.js 15 project with the latest version and install all necessary dependencies, ensuring compatibility with TypeScript and 2025 best practices.",
           "dependencies": [
             1
           ],
-          "details": "Ensure `tsconfig.json` is created with strict settings. Define custom types/interfaces for content modules that handle sensitive animal protection stories, ensuring type safety and validation for trauma-informed content. Migrate or create files with `.ts`/`.tsx` extensions as needed.",
-          "status": "pending"
+          "details": "Use `npx create-next-app@latest --ts` with Next.js 15 specifications. Verify exact version requirements through Context7 MCP documentation. Install additional dependencies following 2025 standards and ensure all packages are compatible with Next.js 15.",
+          "status": "done"
         },
         {
           "id": 3,
-          "title": "Customize next.config.js for Donor Trust and Emergency Appeal Features",
-          "description": "Edit `next.config.js` to enable features that support donor trust-building (e.g., security headers, image optimization) and emergency appeal functionality (e.g., API routes, redirects).",
+          "title": "Configure TypeScript for Trauma-Informed Content with Next.js 15 Standards",
+          "description": "Set up TypeScript with strict type checking and custom types/interfaces following Next.js 15 and 2025 TypeScript best practices for trauma-informed content structures.",
           "dependencies": [
             2
           ],
-          "details": "Configure security headers, image domains, and any necessary rewrites or redirects for emergency appeals. Document all changes to ensure transparency and maintainability for donor trust.",
+          "details": "Configure `tsconfig.json` with Next.js 15 recommended settings verified through Context7 MCP. Define custom types/interfaces for content modules that handle sensitive animal protection stories, ensuring compatibility with Next.js 15 App Router patterns and latest TypeScript features.",
           "status": "pending"
         },
         {
           "id": 4,
-          "title": "Set Up Path Mapping for Modular and Maintainable Codebase",
-          "description": "Configure path mapping in `tsconfig.json` to organize code for trauma-informed content, donor modules, and emergency appeal components.",
+          "title": "Customize next.config.js Using Next.js 15 Configuration Patterns",
+          "description": "Configure next.config.js following Next.js 15 best practices from Context7 MCP to support donor trust-building and emergency appeal features.",
           "dependencies": [
             3
           ],
-          "details": "Add `paths` to `tsconfig.json` to simplify imports for key modules (e.g., `@content/*`, `@donors/*`, `@emergency/*`). Ensure all relevant files and folders follow the mapped structure for clarity and maintainability.",
+          "details": "Use exact configuration examples from Context7 MCP for Next.js 15. Configure security headers, image optimization, API routes, and redirects following 2025 standards. Avoid deprecated Next.js 14 patterns and implement new Next.js 15 features where applicable.",
           "status": "pending"
         },
         {
           "id": 5,
-          "title": "Enable and Document Experimental Features Needed for Foundation Goals",
-          "description": "Activate experimental Next.js features in `next.config.js` that support advanced content handling, security, or performance as required by the foundation's needs.",
+          "title": "Set Up Path Mapping with Next.js 15 Import Conventions",
+          "description": "Configure path mapping in tsconfig.json following Next.js 15 conventions verified through Context7 MCP for modular trauma-informed content organization.",
           "dependencies": [
             4
           ],
-          "details": "Enable features such as React Server Components, middleware, or edge runtime if they enhance trauma-informed content delivery, donor trust, or emergency response. Clearly document which features are enabled and why.",
+          "details": "Implement path mapping using Next.js 15 recommended patterns from Context7 documentation. Add `paths` to `tsconfig.json` for key modules (`@content/*`, `@donors/*`, `@emergency/*`) ensuring compatibility with Next.js 15 App Router and 2025 import standards.",
           "status": "pending"
         },
         {
           "id": 6,
-          "title": "Conduct Initial Testing and Validation of Configuration",
-          "description": "Test the Next.js setup to ensure all configurations work as intended, with a focus on trauma-informed content rendering, donor trust-building modules, and emergency appeal flows.",
+          "title": "Enable Next.js 15 Features and Validate Against Context7 Documentation",
+          "description": "Activate Next.js 15 specific features and experimental options that support foundation goals, validating each configuration against Context7 MCP documentation.",
           "dependencies": [
             5
           ],
-          "details": "Run `next dev` and `next build` to validate the setup. Test type safety, path mappings, experimental features, and custom configurations. Simulate trauma-informed content, donor interactions, and emergency appeals to ensure all requirements are met.",
+          "details": "Enable Next.js 15 features such as enhanced React Server Components, improved middleware, or new edge runtime capabilities. Cross-reference all configurations with Context7 MCP to ensure 2025 compliance and avoid deprecated patterns.",
+          "status": "pending"
+        },
+        {
+          "id": 7,
+          "title": "Conduct Comprehensive Testing with Taskmaster-AI Progress Tracking",
+          "description": "Test the Next.js 15 setup comprehensively while tracking progress through taskmaster-ai subtask updates, ensuring all configurations meet 2025 standards.",
+          "dependencies": [
+            6
+          ],
+          "details": "Run `next dev` and `next build` with Next.js 15. Test type safety, path mappings, and new features. Update progress through taskmaster-ai as each validation step completes. Simulate trauma-informed content, donor interactions, and emergency appeals using Next.js 15 patterns verified through Context7 MCP.",
           "status": "pending"
         }
       ]
@@ -150,7 +160,7 @@
           "description": "Set up Tailwind CSS in the project environment with necessary dependencies and initial configuration",
           "dependencies": [],
           "details": "Install Tailwind CSS via npm, create the tailwind.config.js file, and set up the PostCSS configuration. Include the @tailwind directives in the main CSS file and configure the content paths to ensure proper purging in production.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 2,
@@ -160,7 +170,7 @@
             1
           ],
           "details": "Configure theme.colors in tailwind.config.js with the foundation's brand colors. Include semantic color variables for trauma-informed design (calming colors for sensitive content). Ensure all colors meet WCAG AA contrast requirements for text legibility. Include specific color designations for emergency appeals and donation CTAs.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 3,
@@ -170,7 +180,7 @@
             1
           ],
           "details": "Install and configure @tailwindcss/typography plugin. Customize font families, sizes, and weights in the theme configuration. Create specific typography styles for trauma-informed content, donor testimonials, and emergency appeals. Define heading hierarchies that maintain proper semantic structure while reflecting the foundation's visual identity.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 4,

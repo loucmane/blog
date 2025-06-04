@@ -25,6 +25,8 @@ Thumbs.db
 
 # Cursor MCP Config (contains API keys)
 .cursor/mcp.json
+.claude.json
+CLAUDE.md
 
 # Turbo/monorepo tools
 .turbo/
