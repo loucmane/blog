@@ -78,7 +78,7 @@ declare global {
     // Emergency system
     emergencyNotificationSystem?: {
       trigger: (alert: any) => void;
-      subscribe: (callback: Function) => void;
+      subscribe: (callback: () => void) => void;
     };
     
     // Accessibility

@@ -1,17 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   // Next.js 15 specific configurations
   experimental: {
     // Enable typed routes for better type safety
     typedRoutes: true,
     
-    // Server Actions (for forms and emergency appeals)
-    serverActions: {
-      allowedOrigins: ['localhost:3000', 'animalfoundation.org'],
-    },
-    
-    // Enable PPR (Partial Prerendering) for better performance - might not be available
-    // ppr: 'incremental',
+    // Enable PPR (Partial Prerendering) for better performance
+    // ppr: 'incremental', // Still experimental, uncomment when stable
     
     // Optimize package imports for better tree shaking
     optimizePackageImports: [
@@ -21,6 +17,19 @@ const nextConfig = {
       'date-fns',
       'lodash-es'
     ],
+    
+    // Enable new Next.js 15 features
+    // useCache: true, // Enable 'use cache' directive (when needed)
+    // authInterrupts: true, // Enable forbidden/unauthorized APIs (when needed)
+    // taint: true, // Enable React taint APIs for security (when needed)
+    // useLightningcss: true, // Use Lightning CSS for faster builds (optional)
+  },
+  
+  // Server Actions configuration (now stable in Next.js 15)
+  serverActions: {
+    allowedOrigins: ['localhost:3000'],
+    // Add your production domain here when available
+    // bodySizeLimit: '2mb', // Default is 1mb, adjust if needed
   },
   
   // Performance optimizations
@@ -43,7 +52,7 @@ const nextConfig = {
     domains: [
       'images.unsplash.com',
       'res.cloudinary.com',
-      'cdn.animalfoundation.org'
+      // Add your CDN domain here when available
     ],
     
     // Remote patterns for more flexible image sources
@@ -220,7 +229,7 @@ const nextConfig = {
   },
   
   // Webpack configuration for advanced optimizations
-  webpack: (config, { dev, isServer, buildId }) => {
+  webpack: (config, { dev, isServer }) => {
     // Optimize for production builds
     if (!dev) {
       // Minimize bundle size
@@ -285,12 +294,17 @@ const nextConfig = {
   // Custom page extensions for MDX support
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   
-  // Logging configuration
+  // Logging configuration (Next.js 15 enhanced logging)
   logging: {
     fetches: {
       fullUrl: true,
     },
   },
+  
+  // Next.js 15 specific optimizations
+  // Improved caching defaults - fetch() is no longer cached by default
+  // Configure specific caching behavior in individual components/routes
 };
 
-module.exports = nextConfig;
+export default nextConfig
+

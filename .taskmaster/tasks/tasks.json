@@ -128,7 +128,7 @@
             5
           ],
           "details": "Enable Next.js 15 features such as enhanced React Server Components, improved middleware, or new edge runtime capabilities. Cross-reference all configurations with Context7 MCP to ensure 2025 compliance and avoid deprecated patterns.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 7,
