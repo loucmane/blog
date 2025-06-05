@@ -20,6 +20,25 @@ module.exports = {
             'ultra': '1920px',   // Ultra-wide for photo galleries
         },
         extend: {
+            animation: {
+                'in': 'in 0.2s ease-out',
+                'fade-in': 'fade-in 0.2s ease-out',
+                'slide-in-from-top-1': 'slide-in-from-top-1 0.2s ease-out',
+            },
+            keyframes: {
+                'in': {
+                    '0%': { opacity: '0', transform: 'translateY(-0.25rem)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                'fade-in': {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
+                },
+                'slide-in-from-top-1': {
+                    '0%': { transform: 'translateY(-0.25rem)' },
+                    '100%': { transform: 'translateY(0)' },
+                },
+            },
             colors: {
                 // Brand Color Scales (mapped to CSS custom properties)
                 teal: {
@@ -73,6 +92,7 @@ module.exports = {
                 
                 // Semantic Colors (mapped to CSS custom properties)
                 primary: 'rgb(var(--color-primary) / <alpha-value>)',
+                'primary-foreground': 'rgb(var(--color-primary-foreground) / <alpha-value>)',
                 secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
                 background: 'rgb(var(--color-background) / <alpha-value>)',
                 foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
@@ -223,5 +243,9 @@ module.exports = {
     },
     plugins: [
         require( '@tailwindcss/typography' ),
+        function({ addVariant }) {
+            addVariant('high-contrast', '.high-contrast &')
+            addVariant('trauma-sensitive', '.trauma-sensitive &')
+        }
     ],
 }; 

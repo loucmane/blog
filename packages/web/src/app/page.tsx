@@ -1,33 +1,57 @@
+'use client'
+
+import { ModernThemeSwitcher } from '@/components/ModernThemeSwitcher'
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
+      {/* Header with Theme Switcher */}
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Animal Protection Foundation</h1>
+            <p className="text-sm text-muted-foreground">Protecting animals with compassion</p>
+          </div>
+          <ModernThemeSwitcher />
+        </div>
+      </header>
+
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-primary mb-6">
-          Animal Protection Foundation
-        </h1>
-        <p className="text-lg text-muted-foreground mb-8">
-          Welcome to our mission of protecting and rescuing animals in need.
-        </p>
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-primary mb-4">
+            Our Mission
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Welcome to our mission of protecting and rescuing animals in need. 
+            Use the theme switcher above to find the most comfortable viewing experience for you.
+          </p>
+        </div>
         
         <div className="grid md:grid-cols-2 gap-8 mb-8">
           <div className="bg-muted p-6 rounded-lg border border-border">
-            <h2 className="text-2xl font-semibold text-secondary mb-4">Our Mission</h2>
+            <h3 className="text-2xl font-semibold text-secondary mb-4">What We Do</h3>
             <p className="text-muted-foreground">
               Dedicated to providing shelter, medical care, and loving homes for animals in crisis.
             </p>
           </div>
           
           <div className="bg-muted p-6 rounded-lg border border-border">
-            <h2 className="text-2xl font-semibold text-secondary mb-4">Get Involved</h2>
+            <h3 className="text-2xl font-semibold text-secondary mb-4">Get Involved</h3>
             <p className="text-muted-foreground">
               Join our community of supporters and help make a difference in animals&apos; lives.
             </p>
           </div>
         </div>
 
-        {/* Demo of new color system */}
+        {/* Theme Switching Demo */}
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-primary mb-6">Design System Demo</h2>
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-primary mb-4">Theme Switching Demo</h2>
+            <p className="text-muted-foreground mb-6">
+              Try switching between themes using the controls above to see how our design adapts 
+              to different accessibility needs and viewing preferences.
+            </p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Emergency Appeal Demo */}

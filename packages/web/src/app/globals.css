@@ -59,6 +59,7 @@
     
     /* Primary Brand */
     --color-primary: 38 70 83;                 /* #264653 - deep teal */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
     --color-secondary: 42 157 143;             /* #2a9d8f - bright teal */
     
     /* Action Colors */
@@ -104,6 +105,7 @@
     
     /* Keep semantic colors visible in dark */
     --color-primary: 42 157 143;               /* brighter teal for dark */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
     --color-secondary: 94 234 212;             /* even brighter teal */
     --color-donate: 244 162 97;                /* keep warm orange - pops on dark */
     --color-success: 233 196 106;              /* keep golden yellow - visible */
@@ -119,15 +121,16 @@
   .high-contrast {
     --color-background: 255 255 255;           /* pure white */
     --color-foreground: 0 0 0;                 /* pure black */
-    --color-muted: 245 245 245;                /* very light gray */
-    --color-muted-foreground: 55 55 55;        /* dark gray */
-    --color-border: 0 0 0;                     /* black borders */
+    --color-muted: 230 230 230;                /* light gray for backgrounds */
+    --color-muted-foreground: 0 0 0;           /* black text on muted */
+    --color-border: 100 100 100;               /* gray borders instead of pure black */
     --color-input: 255 255 255;                /* white inputs */
     --color-ring: 0 0 0;                       /* black focus rings */
     
     /* High contrast semantic colors */
     --color-primary: 0 0 0;                    /* black */
-    --color-secondary: 55 55 55;               /* dark gray */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
+    --color-secondary: 0 0 0;                  /* black */
     --color-donate: 184 53 0;                  /* dark orange */
     --color-donate-foreground: 255 255 255;    /* white text */
     --color-emergency: 139 0 0;                /* dark red */
@@ -138,13 +141,14 @@
     /* Navigation high contrast */
     --color-nav-bg: 0 0 0;                     /* black nav */
     --color-nav-text: 255 255 255;             /* white text */
-    --color-nav-hover: 184 53 0;               /* dark orange hover */
+    --color-nav-hover: 255 255 255;            /* white hover */
   }
 
   /* Trauma-Sensitive Theme (gentler, muted colors) */
   .trauma-sensitive {
     /* Softer, desaturated versions of main colors */
     --color-primary: 95 134 142;               /* muted teal */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
     --color-secondary: 133 179 172;            /* softer teal */
     --color-donate: 222 183 149;               /* muted orange */
     --color-emergency: 251 146 60;             /* warm orange instead of coral */
@@ -152,9 +156,12 @@
     --color-success: 217 192 135;              /* muted golden */
     --color-success-foreground: 95 134 142;    /* muted teal text */
     
-    /* Softer UI elements */
+    /* Softer UI elements with better contrast for hover states */
+    --color-background: 255 255 255;           /* white background */
+    --color-foreground: 64 64 64;              /* soft dark gray */
     --color-border: 208 213 221;               /* lighter borders */
-    --color-muted: 241 243 245;                /* very light background */
+    --color-muted: 245 247 250;                /* light blue-gray background */
+    --color-muted-foreground: 95 134 142;      /* muted teal text */
     --color-ring: 133 179 172;                 /* soft teal focus */
   }
 }

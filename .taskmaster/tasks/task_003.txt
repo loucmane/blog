@@ -35,7 +35,7 @@ Install and configure @tailwindcss/typography plugin. Customize font families, s
 ### Details:
 Customize the screens object in tailwind.config.js to define breakpoints that work well for the foundation's content. Create responsive variants for critical UI components like donation forms and emergency appeals. Implement a mobile-first approach with progressive enhancement for larger screens.
 
-## 5. Implement CSS Custom Properties for Dynamic Theming [pending]
+## 5. Implement CSS Custom Properties for Dynamic Theming [done]
 ### Dependencies: 3.2
 ### Description: Set up CSS variables to enable dynamic theme switching and personalization
 ### Details:
