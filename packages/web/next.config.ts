@@ -23,13 +23,13 @@ const nextConfig: NextConfig = {
     // authInterrupts: true, // Enable forbidden/unauthorized APIs (when needed)
     // taint: true, // Enable React taint APIs for security (when needed)
     // useLightningcss: true, // Use Lightning CSS for faster builds (optional)
-  },
-  
-  // Server Actions configuration (now stable in Next.js 15)
-  serverActions: {
-    allowedOrigins: ['localhost:3000'],
-    // Add your production domain here when available
-    // bodySizeLimit: '2mb', // Default is 1mb, adjust if needed
+    
+    // Server Actions configuration (moved back to experimental in Next.js 15.3.3)
+    serverActions: {
+      allowedOrigins: ['localhost:3000'],
+      // Add your production domain here when available
+      // bodySizeLimit: '2mb', // Default is 1mb, adjust if needed
+    },
   },
   
   // Performance optimizations
