@@ -29,15 +29,35 @@ export function ModernThemeSwitcher() {
         const containerRect = containerRef.current.getBoundingClientRect()
         const buttonRect = activeButton.getBoundingClientRect()
         
-        setPillPosition({
-          left: buttonRect.left - containerRect.left,
-          width: buttonRect.width,
-        })
+        // Check if we're in icon-only mode (text is hidden)
+        const isIconOnly = window.innerWidth < 1024 // lg breakpoint
+        
+        if (isIconOnly) {
+          // For icon-only mode, make pill smaller and centered on icon
+          const pillWidth = 44 // Icon + padding size
+          const buttonCenter = buttonRect.left - containerRect.left + (buttonRect.width / 2)
+          setPillPosition({
+            left: buttonCenter - (pillWidth / 2),
+            width: pillWidth,
+          })
+        } else {
+          // For full text mode, use full button width
+          setPillPosition({
+            left: buttonRect.left - containerRect.left,
+            width: buttonRect.width,
+          })
+        }
       }
     }
 
     // Add small delay to ensure DOM is ready
     setTimeout(calculatePosition, 50)
+    
+    // Recalculate on window resize
+    const handleResize = () => setTimeout(calculatePosition, 50)
+    window.addEventListener('resize', handleResize)
+    
+    return () => window.removeEventListener('resize', handleResize)
   }, [theme, isExpanded])
 
   // Auto-collapse on mobile after selection
