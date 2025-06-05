@@ -3,32 +3,77 @@ module.exports = {
     content: ['./src/**/*.{js,jsx,ts,tsx}'],
     darkMode: 'class',
     theme: {
+        // Custom responsive breakpoints optimized for animal foundation content
+        screens: {
+            'xs': '475px',    // Small phones, emergency appeal banners
+            'sm': '640px',    // Default Tailwind - mobile landscape, donation forms
+            'md': '768px',    // Default Tailwind - tablets, story cards grid
+            'lg': '1024px',   // Default Tailwind - laptops, full layout
+            'xl': '1280px',   // Default Tailwind - desktops, hero sections
+            '2xl': '1536px',  // Default Tailwind - large desktops
+            // Custom breakpoints for specific use cases
+            'mobile': '480px',   // Mobile-first optimized
+            'tablet': '768px',   // Tablet portrait
+            'laptop': '1024px',  // Laptop screens
+            'desktop': '1280px', // Desktop screens
+            'wide': '1440px',    // Wide screens for immersive content
+            'ultra': '1920px',   // Ultra-wide for photo galleries
+        },
         extend: {
             colors: {
+                // CSS custom properties for dynamic theming
                 primary: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    400: '#38bdf8',
-                    500: '#0ea5e9',
-                    600: '#0284c7',
-                    700: '#0369a1',
-                    800: '#075985',
-                    900: '#0c4a6e',
+                    50: 'rgb(var(--color-primary-50) / <alpha-value>)',
+                    100: 'rgb(var(--color-primary-100) / <alpha-value>)',
+                    200: 'rgb(var(--color-primary-200) / <alpha-value>)',
+                    300: 'rgb(var(--color-primary-300) / <alpha-value>)',
+                    400: 'rgb(var(--color-primary-400) / <alpha-value>)',
+                    500: 'rgb(var(--color-primary-500) / <alpha-value>)',
+                    600: 'rgb(var(--color-primary-600) / <alpha-value>)',
+                    700: 'rgb(var(--color-primary-700) / <alpha-value>)',
+                    800: 'rgb(var(--color-primary-800) / <alpha-value>)',
+                    900: 'rgb(var(--color-primary-900) / <alpha-value>)',
                 },
-                gray: {
-                    50: '#f9fafb',
-                    100: '#f3f4f6',
-                    200: '#e5e7eb',
-                    300: '#d1d5db',
-                    400: '#9ca3af',
-                    500: '#6b7280',
-                    600: '#4b5563',
-                    700: '#374151',
-                    800: '#1f2937',
-                    900: '#111827',
+                // Animal Foundation brand colors using CSS custom properties
+                sage: {
+                    50: 'rgb(var(--color-sage-50) / <alpha-value>)',
+                    100: 'rgb(var(--color-sage-100) / <alpha-value>)',
+                    200: 'rgb(var(--color-sage-200) / <alpha-value>)',
+                    300: 'rgb(var(--color-sage-300) / <alpha-value>)',
+                    400: 'rgb(var(--color-sage-400) / <alpha-value>)',
+                    500: 'rgb(var(--color-sage-500) / <alpha-value>)',
+                    600: 'rgb(var(--color-sage-600) / <alpha-value>)',
+                    700: 'rgb(var(--color-sage-700) / <alpha-value>)',
+                    800: 'rgb(var(--color-sage-800) / <alpha-value>)',
+                    900: 'rgb(var(--color-sage-900) / <alpha-value>)',
                 },
+                coral: {
+                    50: 'rgb(var(--color-coral-50) / <alpha-value>)',
+                    100: 'rgb(var(--color-coral-100) / <alpha-value>)',
+                    200: 'rgb(var(--color-coral-200) / <alpha-value>)',
+                    300: 'rgb(var(--color-coral-300) / <alpha-value>)',
+                    400: 'rgb(var(--color-coral-400) / <alpha-value>)',
+                    500: 'rgb(var(--color-coral-500) / <alpha-value>)',
+                    600: 'rgb(var(--color-coral-600) / <alpha-value>)',
+                    700: 'rgb(var(--color-coral-700) / <alpha-value>)',
+                    800: 'rgb(var(--color-coral-800) / <alpha-value>)',
+                    900: 'rgb(var(--color-coral-900) / <alpha-value>)',
+                },
+                // Semantic colors for trauma-informed design
+                background: 'rgb(var(--color-background) / <alpha-value>)',
+                foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+                muted: 'rgb(var(--color-muted) / <alpha-value>)',
+                'muted-foreground': 'rgb(var(--color-muted-foreground) / <alpha-value>)',
+                border: 'rgb(var(--color-border) / <alpha-value>)',
+                input: 'rgb(var(--color-input) / <alpha-value>)',
+                ring: 'rgb(var(--color-ring) / <alpha-value>)',
+                // Emergency and donation-specific colors
+                emergency: 'rgb(var(--color-emergency) / <alpha-value>)',
+                'emergency-foreground': 'rgb(var(--color-emergency-foreground) / <alpha-value>)',
+                donate: 'rgb(var(--color-donate) / <alpha-value>)',
+                'donate-foreground': 'rgb(var(--color-donate-foreground) / <alpha-value>)',
+                success: 'rgb(var(--color-success) / <alpha-value>)',
+                'success-foreground': 'rgb(var(--color-success-foreground) / <alpha-value>)',
             },
             typography: {
                 DEFAULT: {

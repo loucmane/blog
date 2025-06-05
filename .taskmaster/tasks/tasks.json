@@ -64,7 +64,7 @@
       "id": 2,
       "title": "Configure Next.js 14 with App Router and TypeScript",
       "description": "Set up Next.js 15 framework with App Router, TypeScript configuration, and essential build optimizations using MCP-enhanced workflow with Context7 integration",
-      "status": "in-progress",
+      "status": "done",
       "dependencies": [
         1
       ],
@@ -78,7 +78,7 @@
           "description": "Use Context7 MCP to gather the latest Next.js 15 App Router patterns, configuration options, and 2025 best practices before beginning implementation.",
           "dependencies": [],
           "details": "Query Context7 MCP for Next.js 15 specific documentation, App Router patterns, TypeScript configurations, and any breaking changes from Next.js 14. Document findings and create implementation plan based on latest 2025 standards.",
-          "status": "deferred"
+          "status": "done"
         },
         {
           "id": 2,
@@ -190,7 +190,7 @@
             1
           ],
           "details": "Customize the screens object in tailwind.config.js to define breakpoints that work well for the foundation's content. Create responsive variants for critical UI components like donation forms and emergency appeals. Implement a mobile-first approach with progressive enhancement for larger screens.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 5,

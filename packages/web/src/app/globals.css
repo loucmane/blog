@@ -1,3 +1,103 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CSS Custom Properties for Dynamic Theming */
+@layer base {
+  :root {
+    /* Primary theme colors (sage green - deep, calming) */
+    --color-primary-50: 247 254 247;   /* #f7fef7 */
+    --color-primary-100: 236 252 236;  /* #ecfcec */
+    --color-primary-200: 220 247 220;  /* #dcf7dc */
+    --color-primary-300: 190 238 190;  /* #beeebe */
+    --color-primary-400: 140 220 140;  /* #8cdc8c */
+    --color-primary-500: 95 186 95;    /* #5fba5f */
+    --color-primary-600: 45 90 39;     /* #2d5a27 - brand deep sage */
+    --color-primary-700: 35 70 30;     /* #23461e */
+    --color-primary-800: 28 56 24;     /* #1c3818 */
+    --color-primary-900: 22 45 19;     /* #162d13 */
+
+    /* Sage brand colors */
+    --color-sage-50: 247 254 247;
+    --color-sage-100: 236 252 236;
+    --color-sage-200: 220 247 220;
+    --color-sage-300: 190 238 190;
+    --color-sage-400: 140 220 140;
+    --color-sage-500: 95 186 95;
+    --color-sage-600: 45 90 39;   /* #2d5a27 - primary brand */
+    --color-sage-700: 35 70 30;
+    --color-sage-800: 28 56 24;
+    --color-sage-900: 22 45 19;
+
+    /* Coral accent colors (warm, approachable) */
+    --color-coral-50: 255 249 247;    /* #fff9f7 */
+    --color-coral-100: 255 240 235;   /* #fff0eb */
+    --color-coral-200: 254 220 204;   /* #fedccc */
+    --color-coral-300: 253 186 157;   /* #fdba9d */
+    --color-coral-400: 252 143 106;   /* #fc8f6a */
+    --color-coral-500: 250 124 90;    /* #fa7c5a - brand coral */
+    --color-coral-600: 234 88 58;     /* #ea583a */
+    --color-coral-700: 196 69 42;     /* #c4452a */
+    --color-coral-800: 156 58 39;     /* #9c3a27 */
+    --color-coral-900: 128 50 35;     /* #803223 */
+
+    /* Semantic colors for trauma-informed design */
+    --color-background: 255 255 255;           /* White */
+    --color-foreground: 28 56 24;              /* Dark sage */
+    --color-muted: 247 254 247;                /* Very light sage */
+    --color-muted-foreground: 95 186 95;       /* Medium sage */
+    --color-border: 220 247 220;               /* Light sage border */
+    --color-input: 255 255 255;                /* White input */
+    --color-ring: 45 90 39;                    /* Sage focus ring */
+
+    /* Emergency and donation colors */
+    --color-emergency: 239 68 68;              /* Red-500 for urgency */
+    --color-emergency-foreground: 255 255 255; /* White text */
+    --color-donate: 250 124 90;                /* Coral for donation CTAs */
+    --color-donate-foreground: 255 255 255;    /* White text */
+    --color-success: 34 197 94;                /* Green-500 for success */
+    --color-success-foreground: 255 255 255;   /* White text */
+  }
+
+  /* Dark theme */
+  .dark {
+    --color-background: 22 45 19;              /* Dark sage */
+    --color-foreground: 247 254 247;           /* Light sage */
+    --color-muted: 28 56 24;                   /* Darker sage */
+    --color-muted-foreground: 190 238 190;     /* Light sage */
+    --color-border: 35 70 30;                  /* Medium dark sage */
+    --color-input: 28 56 24;                   /* Dark sage input */
+    --color-ring: 140 220 140;                 /* Bright sage focus */
+
+    /* Adjust emergency/donate colors for dark theme */
+    --color-emergency: 220 38 38;              /* Darker red */
+    --color-donate: 234 88 58;                 /* Darker coral */
+    --color-success: 22 163 74;                /* Darker green */
+  }
+
+  /* High contrast theme for accessibility */
+  .high-contrast {
+    --color-background: 255 255 255;
+    --color-foreground: 0 0 0;
+    --color-muted: 245 245 245;
+    --color-muted-foreground: 55 55 55;
+    --color-border: 0 0 0;
+    --color-input: 255 255 255;
+    --color-ring: 0 0 0;
+    
+    --color-emergency: 139 0 0;                /* Dark red */
+    --color-emergency-foreground: 255 255 255;
+    --color-donate: 184 53 0;                  /* Dark orange */
+    --color-donate-foreground: 255 255 255;
+    --color-success: 0 100 0;                  /* Pure green */
+    --color-success-foreground: 255 255 255;
+  }
+
+  /* Trauma-sensitive theme (softer colors) */
+  .trauma-sensitive {
+    --color-primary-600: 95 186 95;           /* Softer sage */
+    --color-coral-500: 252 143 106;           /* Softer coral */
+    --color-emergency: 251 146 60;            /* Orange instead of red */
+    --color-emergency-foreground: 255 255 255;
+  }
+}
