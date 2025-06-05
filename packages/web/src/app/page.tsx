@@ -2,7 +2,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-sage-700 mb-6">
+        <h1 className="text-4xl font-bold text-primary mb-6">
           Animal Protection Foundation
         </h1>
         <p className="text-lg text-muted-foreground mb-8">
@@ -11,14 +11,14 @@ export default function HomePage() {
         
         <div className="grid md:grid-cols-2 gap-8 mb-8">
           <div className="bg-muted p-6 rounded-lg border border-border">
-            <h2 className="text-2xl font-semibold text-sage-600 mb-4">Our Mission</h2>
+            <h2 className="text-2xl font-semibold text-secondary mb-4">Our Mission</h2>
             <p className="text-muted-foreground">
               Dedicated to providing shelter, medical care, and loving homes for animals in crisis.
             </p>
           </div>
           
           <div className="bg-muted p-6 rounded-lg border border-border">
-            <h2 className="text-2xl font-semibold text-sage-600 mb-4">Get Involved</h2>
+            <h2 className="text-2xl font-semibold text-secondary mb-4">Get Involved</h2>
             <p className="text-muted-foreground">
               Join our community of supporters and help make a difference in animals&apos; lives.
             </p>
@@ -26,8 +26,8 @@ export default function HomePage() {
         </div>
 
         {/* Demo of new color system */}
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold text-sage-700 mb-6">Design System Demo</h2>
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold text-primary mb-6">Design System Demo</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Emergency Appeal Demo */}
@@ -52,10 +52,24 @@ export default function HomePage() {
           {/* Color Palette Preview */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
             <div className="space-y-2">
-              <h4 className="font-semibold text-sage-700">Sage Colors</h4>
-              <div className="bg-sage-100 p-2 rounded text-sage-900 text-xs">Light</div>
-              <div className="bg-sage-500 p-2 rounded text-white text-xs">Medium</div>
-              <div className="bg-sage-700 p-2 rounded text-white text-xs">Dark</div>
+              <h4 className="font-semibold text-teal-700">Teal Colors</h4>
+              <div className="bg-teal-100 p-2 rounded text-teal-900 text-xs">Light</div>
+              <div className="bg-teal-500 p-2 rounded text-white text-xs">Medium</div>
+              <div className="bg-teal-700 p-2 rounded text-white text-xs">Dark</div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-semibold text-orange-700">Orange Colors</h4>
+              <div className="bg-orange-100 p-2 rounded text-orange-900 text-xs">Light</div>
+              <div className="bg-orange-500 p-2 rounded text-white text-xs">Medium</div>
+              <div className="bg-orange-700 p-2 rounded text-white text-xs">Dark</div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-semibold text-yellow-700">Golden Colors</h4>
+              <div className="bg-yellow-100 p-2 rounded text-yellow-900 text-xs">Light</div>
+              <div className="bg-yellow-500 p-2 rounded text-white text-xs">Medium</div>
+              <div className="bg-yellow-700 p-2 rounded text-white text-xs">Dark</div>
             </div>
             
             <div className="space-y-2">
@@ -64,19 +78,39 @@ export default function HomePage() {
               <div className="bg-coral-500 p-2 rounded text-white text-xs">Medium</div>
               <div className="bg-coral-700 p-2 rounded text-white text-xs">Dark</div>
             </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-semibold text-primary-700">Primary Colors</h4>
-              <div className="bg-primary-100 p-2 rounded text-primary-900 text-xs">Light</div>
-              <div className="bg-primary-500 p-2 rounded text-white text-xs">Medium</div>
-              <div className="bg-primary-700 p-2 rounded text-white text-xs">Dark</div>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-semibold">Responsive Test</h4>
-              <div className="bg-sage-500 p-2 rounded text-white text-xs xs:bg-coral-400 sm:bg-primary-500 md:bg-sage-600 lg:bg-coral-600">
-                Responsive colors
+          </div>
+
+          {/* Animal Foundation Specific Colors */}
+          <div className="mt-8">
+            <h3 className="text-2xl font-bold text-primary mb-4">Animal Foundation Specific</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-adoption-available text-success-foreground p-4 rounded-lg">
+                <h4 className="font-bold mb-2">Available for Adoption</h4>
+                <p className="text-sm">Ready to find their forever home</p>
               </div>
+              
+              <div className="bg-adoption-pending text-white p-4 rounded-lg">
+                <h4 className="font-bold mb-2">Adoption Pending</h4>
+                <p className="text-sm">Application being processed</p>
+              </div>
+              
+              <div className="bg-adoption-adopted text-white p-4 rounded-lg">
+                <h4 className="font-bold mb-2">Successfully Adopted</h4>
+                <p className="text-sm">Happy in their new home</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Responsive Breakpoint Test */}
+          <div className="mt-8">
+            <h3 className="text-2xl font-bold text-primary mb-4">Responsive Breakpoints Test</h3>
+            <div className="bg-teal-500 p-4 rounded text-white 
+                            xs:bg-yellow-500 
+                            sm:bg-orange-500 
+                            md:bg-coral-500 
+                            lg:bg-teal-600 
+                            xl:bg-primary">
+              This color changes at different breakpoints: xs/sm/md/lg/xl
             </div>
           </div>
         </div>

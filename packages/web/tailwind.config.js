@@ -21,31 +21,42 @@ module.exports = {
         },
         extend: {
             colors: {
-                // CSS custom properties for dynamic theming
-                primary: {
-                    50: 'rgb(var(--color-primary-50) / <alpha-value>)',
-                    100: 'rgb(var(--color-primary-100) / <alpha-value>)',
-                    200: 'rgb(var(--color-primary-200) / <alpha-value>)',
-                    300: 'rgb(var(--color-primary-300) / <alpha-value>)',
-                    400: 'rgb(var(--color-primary-400) / <alpha-value>)',
-                    500: 'rgb(var(--color-primary-500) / <alpha-value>)',
-                    600: 'rgb(var(--color-primary-600) / <alpha-value>)',
-                    700: 'rgb(var(--color-primary-700) / <alpha-value>)',
-                    800: 'rgb(var(--color-primary-800) / <alpha-value>)',
-                    900: 'rgb(var(--color-primary-900) / <alpha-value>)',
+                // Brand Color Scales (mapped to CSS custom properties)
+                teal: {
+                    50: 'rgb(var(--color-teal-50) / <alpha-value>)',
+                    100: 'rgb(var(--color-teal-100) / <alpha-value>)',
+                    200: 'rgb(var(--color-teal-200) / <alpha-value>)',
+                    300: 'rgb(var(--color-teal-300) / <alpha-value>)',
+                    400: 'rgb(var(--color-teal-400) / <alpha-value>)',
+                    500: 'rgb(var(--color-teal-500) / <alpha-value>)',   // bright teal
+                    600: 'rgb(var(--color-teal-600) / <alpha-value>)',   // deep teal (primary)
+                    700: 'rgb(var(--color-teal-700) / <alpha-value>)',
+                    800: 'rgb(var(--color-teal-800) / <alpha-value>)',
+                    900: 'rgb(var(--color-teal-900) / <alpha-value>)',
                 },
-                // Animal Foundation brand colors using CSS custom properties
-                sage: {
-                    50: 'rgb(var(--color-sage-50) / <alpha-value>)',
-                    100: 'rgb(var(--color-sage-100) / <alpha-value>)',
-                    200: 'rgb(var(--color-sage-200) / <alpha-value>)',
-                    300: 'rgb(var(--color-sage-300) / <alpha-value>)',
-                    400: 'rgb(var(--color-sage-400) / <alpha-value>)',
-                    500: 'rgb(var(--color-sage-500) / <alpha-value>)',
-                    600: 'rgb(var(--color-sage-600) / <alpha-value>)',
-                    700: 'rgb(var(--color-sage-700) / <alpha-value>)',
-                    800: 'rgb(var(--color-sage-800) / <alpha-value>)',
-                    900: 'rgb(var(--color-sage-900) / <alpha-value>)',
+                yellow: {
+                    50: 'rgb(var(--color-yellow-50) / <alpha-value>)',
+                    100: 'rgb(var(--color-yellow-100) / <alpha-value>)',
+                    200: 'rgb(var(--color-yellow-200) / <alpha-value>)',
+                    300: 'rgb(var(--color-yellow-300) / <alpha-value>)',
+                    400: 'rgb(var(--color-yellow-400) / <alpha-value>)',
+                    500: 'rgb(var(--color-yellow-500) / <alpha-value>)',  // golden yellow
+                    600: 'rgb(var(--color-yellow-600) / <alpha-value>)',
+                    700: 'rgb(var(--color-yellow-700) / <alpha-value>)',
+                    800: 'rgb(var(--color-yellow-800) / <alpha-value>)',
+                    900: 'rgb(var(--color-yellow-900) / <alpha-value>)',
+                },
+                orange: {
+                    50: 'rgb(var(--color-orange-50) / <alpha-value>)',
+                    100: 'rgb(var(--color-orange-100) / <alpha-value>)',
+                    200: 'rgb(var(--color-orange-200) / <alpha-value>)',
+                    300: 'rgb(var(--color-orange-300) / <alpha-value>)',
+                    400: 'rgb(var(--color-orange-400) / <alpha-value>)',
+                    500: 'rgb(var(--color-orange-500) / <alpha-value>)',  // warm orange
+                    600: 'rgb(var(--color-orange-600) / <alpha-value>)',
+                    700: 'rgb(var(--color-orange-700) / <alpha-value>)',
+                    800: 'rgb(var(--color-orange-800) / <alpha-value>)',
+                    900: 'rgb(var(--color-orange-900) / <alpha-value>)',
                 },
                 coral: {
                     50: 'rgb(var(--color-coral-50) / <alpha-value>)',
@@ -53,13 +64,16 @@ module.exports = {
                     200: 'rgb(var(--color-coral-200) / <alpha-value>)',
                     300: 'rgb(var(--color-coral-300) / <alpha-value>)',
                     400: 'rgb(var(--color-coral-400) / <alpha-value>)',
-                    500: 'rgb(var(--color-coral-500) / <alpha-value>)',
+                    500: 'rgb(var(--color-coral-500) / <alpha-value>)',   // coral
                     600: 'rgb(var(--color-coral-600) / <alpha-value>)',
                     700: 'rgb(var(--color-coral-700) / <alpha-value>)',
                     800: 'rgb(var(--color-coral-800) / <alpha-value>)',
                     900: 'rgb(var(--color-coral-900) / <alpha-value>)',
                 },
-                // Semantic colors for trauma-informed design
+                
+                // Semantic Colors (mapped to CSS custom properties)
+                primary: 'rgb(var(--color-primary) / <alpha-value>)',
+                secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
                 background: 'rgb(var(--color-background) / <alpha-value>)',
                 foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
                 muted: 'rgb(var(--color-muted) / <alpha-value>)',
@@ -67,13 +81,25 @@ module.exports = {
                 border: 'rgb(var(--color-border) / <alpha-value>)',
                 input: 'rgb(var(--color-input) / <alpha-value>)',
                 ring: 'rgb(var(--color-ring) / <alpha-value>)',
-                // Emergency and donation-specific colors
-                emergency: 'rgb(var(--color-emergency) / <alpha-value>)',
-                'emergency-foreground': 'rgb(var(--color-emergency-foreground) / <alpha-value>)',
+                
+                // Action Colors
                 donate: 'rgb(var(--color-donate) / <alpha-value>)',
                 'donate-foreground': 'rgb(var(--color-donate-foreground) / <alpha-value>)',
+                emergency: 'rgb(var(--color-emergency) / <alpha-value>)',
+                'emergency-foreground': 'rgb(var(--color-emergency-foreground) / <alpha-value>)',
                 success: 'rgb(var(--color-success) / <alpha-value>)',
                 'success-foreground': 'rgb(var(--color-success-foreground) / <alpha-value>)',
+                
+                // Navigation Colors
+                'nav-bg': 'rgb(var(--color-nav-bg) / <alpha-value>)',
+                'nav-text': 'rgb(var(--color-nav-text) / <alpha-value>)',
+                'nav-hover': 'rgb(var(--color-nav-hover) / <alpha-value>)',
+                
+                // Animal Foundation Specific
+                'adoption-available': 'rgb(var(--color-adoption-available) / <alpha-value>)',
+                'adoption-pending': 'rgb(var(--color-adoption-pending) / <alpha-value>)',
+                'adoption-adopted': 'rgb(var(--color-adoption-adopted) / <alpha-value>)',
+                'urgent-care': 'rgb(var(--color-urgent-care) / <alpha-value>)',
             },
             typography: {
                 DEFAULT: {
