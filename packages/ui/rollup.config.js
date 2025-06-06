@@ -1,10 +1,12 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
+import postcss from 'rollup-plugin-postcss';
+import copy from 'rollup-plugin-copy';
 import { dts } from 'rollup-plugin-dts';
 import { readFileSync } from 'fs';
 
-const packageJson = JSON.parse( readFileSync( new URL( './package.json', import.meta.url ) ) );
+const packageJson = JSON.parse(readFileSync(new URL('./package.json', import.meta.url)));
 
 export default [
     {
@@ -24,7 +26,20 @@ export default [
         plugins: [
             resolve(),
             commonjs(),
-            typescript( { tsconfig: './tsconfig.json' } ),
+            typescript({ tsconfig: './tsconfig.json' }),
+            postcss({
+                extract: 'styles/base.css',
+                config: {
+                    path: './postcss.config.js'
+                },
+                minimize: true,
+                sourceMap: true
+            }),
+            copy({
+                targets: [
+                    { src: 'src/styles/base.css', dest: 'dist/styles' }
+                ]
+            })
         ],
         external: ['react', 'react-dom'],
     },
@@ -33,4 +48,4 @@ export default [
         output: [{ file: 'dist/index.d.ts', format: 'esm' }],
         plugins: [dts()],
     },
-]; 
+];
