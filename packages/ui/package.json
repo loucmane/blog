@@ -8,7 +8,8 @@
     "types": "dist/types/index.d.ts",
     "files": [
         "dist",
-        "tailwind.config.js"
+        "tailwind.config.ts",
+        "src"
     ],
     "exports": {
         ".": {
@@ -21,8 +22,8 @@
             "require": "./dist/styles/base.css"
         },
         "./tailwind": {
-            "import": "./tailwind.config.js",
-            "require": "./tailwind.config.js"
+            "import": "./tailwind.config.ts",
+            "require": "./tailwind.config.ts"
         },
         "./package.json": "./package.json"
     },

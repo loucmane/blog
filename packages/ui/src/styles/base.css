@@ -3,4 +3,166 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Custom Properties will be moved here in Phase 2 */
+/* CSS Custom Properties for Dynamic Theming */
+@layer base {
+  :root {
+    /* Brand Colors - Warm & Natural Theme */
+    
+    /* Teal Scale (Primary Brand Color) */
+    --color-teal-50: 240 253 250;     /* #f0fdf4 */
+    --color-teal-100: 204 251 241;    /* #ccfbf1 */
+    --color-teal-200: 153 246 228;    /* #99f6e4 */
+    --color-teal-300: 94 234 212;     /* #5eead4 */
+    --color-teal-400: 45 212 191;     /* #2dd4bf */
+    --color-teal-500: 42 157 143;     /* #2a9d8f - bright teal */
+    --color-teal-600: 38 70 83;       /* #264653 - deep teal (primary) */
+    --color-teal-700: 30 56 66;       /* #1e3842 */
+    --color-teal-800: 24 45 53;       /* #182d35 */
+    --color-teal-900: 20 37 44;       /* #14252c */
+
+    /* Golden Yellow Scale (Success/Hope) */
+    --color-yellow-50: 254 252 232;   /* #fefce8 */
+    --color-yellow-100: 254 249 195;  /* #fef9c3 */
+    --color-yellow-200: 254 240 138;  /* #fef08a */
+    --color-yellow-300: 253 224 71;   /* #fde047 */
+    --color-yellow-400: 250 204 21;   /* #facc15 */
+    --color-yellow-500: 233 196 106;  /* #e9c46a - golden yellow */
+    --color-yellow-600: 202 138 4;    /* #ca8a04 */
+    --color-yellow-700: 161 98 7;     /* #a16207 */
+    --color-yellow-800: 133 77 14;    /* #854d0e */
+    --color-yellow-900: 113 63 18;    /* #713f12 */
+
+    /* Orange Scale (Donate/CTAs) */
+    --color-orange-50: 255 247 237;   /* #fff7ed */
+    --color-orange-100: 255 237 213;  /* #ffedd5 */
+    --color-orange-200: 254 215 170;  /* #fed7aa */
+    --color-orange-300: 253 186 116;  /* #fdba74 */
+    --color-orange-400: 251 146 60;   /* #fb923c */
+    --color-orange-500: 244 162 97;   /* #f4a261 - warm orange */
+    --color-orange-600: 234 88 12;    /* #ea580c */
+    --color-orange-700: 194 65 12;    /* #c2410c */
+    --color-orange-800: 154 52 18;    /* #9a3412 */
+    --color-orange-900: 124 45 18;    /* #7c2d12 */
+
+    /* Coral Scale (Emergency/Urgent) */
+    --color-coral-50: 254 242 242;    /* #fef2f2 */
+    --color-coral-100: 254 226 226;   /* #fee2e2 */
+    --color-coral-200: 254 202 202;   /* #fecaca */
+    --color-coral-300: 252 165 165;   /* #fca5a5 */
+    --color-coral-400: 248 113 113;   /* #f87171 */
+    --color-coral-500: 231 111 81;    /* #e76f51 - coral */
+    --color-coral-600: 220 38 38;     /* #dc2626 */
+    --color-coral-700: 185 28 28;     /* #b91c1c */
+    --color-coral-800: 153 27 27;     /* #991b1b */
+    --color-coral-900: 127 29 29;     /* #7f1d1d */
+
+    /* Semantic Color Mappings (Source of Truth) */
+    
+    /* Primary Brand */
+    --color-primary: 38 70 83;                 /* #264653 - deep teal */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
+    --color-secondary: 42 157 143;             /* #2a9d8f - bright teal */
+    
+    /* Action Colors */
+    --color-donate: 244 162 97;               /* #f4a261 - warm orange */
+    --color-donate-foreground: 255 255 255;   /* white text */
+    --color-emergency: 231 111 81;            /* #e76f51 - coral */
+    --color-emergency-foreground: 255 255 255; /* white text */
+    --color-success: 233 196 106;             /* #e9c46a - golden yellow */
+    --color-success-foreground: 38 70 83;     /* deep teal text */
+    
+    /* Layout Colors */
+    --color-background: 248 249 250;          /* #f8f9fa - nearly white */
+    --color-foreground: 33 37 41;             /* #212529 - nearly black */
+    --color-muted: 233 236 239;               /* #e9ecef - very light gray */
+    --color-muted-foreground: 108 117 125;    /* #6c757d - medium-dark gray */
+    
+    /* UI Element Colors */
+    --color-border: 222 226 230;              /* #dee2e6 - light gray */
+    --color-input: 255 255 255;               /* white */
+    --color-ring: 42 157 143;                 /* #2a9d8f - bright teal for focus */
+    
+    /* Navigation & Headers */
+    --color-nav-bg: 38 70 83;                 /* #264653 - deep teal */
+    --color-nav-text: 255 255 255;            /* white */
+    --color-nav-hover: 233 196 106;           /* #e9c46a - golden yellow */
+    
+    /* Animal Foundation Specific */
+    --color-adoption-available: 233 196 106;  /* #e9c46a - golden yellow */
+    --color-adoption-pending: 244 162 97;     /* #f4a261 - warm orange */
+    --color-adoption-adopted: 42 157 143;     /* #2a9d8f - bright teal */
+    --color-urgent-care: 231 111 81;          /* #e76f51 - coral accent */
+  }
+
+  /* Dark Theme - using your team's deep teal instead of harsh black */
+  .dark {
+    --color-background: 38 70 83;              /* #264653 - deep teal background */
+    --color-foreground: 229 229 229;           /* #e5e5e5 - light gray text */
+    --color-muted: 20 33 61;                   /* #14213d - deep navy for cards */
+    --color-muted-foreground: 173 181 189;     /* #adb5bd - medium gray */
+    --color-border: 30 56 66;                  /* darker teal for borders */
+    --color-input: 20 33 61;                   /* #14213d - deep navy inputs */
+    --color-ring: 42 157 143;                  /* #2a9d8f - bright teal focus */
+    
+    /* Keep semantic colors visible in dark */
+    --color-primary: 42 157 143;               /* brighter teal for dark */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
+    --color-secondary: 94 234 212;             /* even brighter teal */
+    --color-donate: 244 162 97;                /* keep warm orange - pops on dark */
+    --color-success: 233 196 106;              /* keep golden yellow - visible */
+    --color-emergency: 231 111 81;             /* keep coral - stands out */
+    
+    /* Navigation adjustments */
+    --color-nav-bg: 20 33 61;                  /* #14213d - deep navy nav */
+    --color-nav-text: 255 255 255;             /* white text */
+    --color-nav-hover: 233 196 106;            /* golden yellow hover */
+  }
+
+  /* High Contrast Theme for accessibility */
+  .high-contrast {
+    --color-background: 255 255 255;           /* pure white */
+    --color-foreground: 0 0 0;                 /* pure black */
+    --color-muted: 230 230 230;                /* light gray for backgrounds */
+    --color-muted-foreground: 0 0 0;           /* black text on muted */
+    --color-border: 100 100 100;               /* gray borders instead of pure black */
+    --color-input: 255 255 255;                /* white inputs */
+    --color-ring: 0 0 0;                       /* black focus rings */
+    
+    /* High contrast semantic colors */
+    --color-primary: 0 0 0;                    /* black */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
+    --color-secondary: 0 0 0;                  /* black */
+    --color-donate: 184 53 0;                  /* dark orange */
+    --color-donate-foreground: 255 255 255;    /* white text */
+    --color-emergency: 139 0 0;                /* dark red */
+    --color-emergency-foreground: 255 255 255; /* white text */
+    --color-success: 0 100 0;                  /* pure green */
+    --color-success-foreground: 255 255 255;   /* white text */
+    
+    /* Navigation high contrast */
+    --color-nav-bg: 0 0 0;                     /* black nav */
+    --color-nav-text: 255 255 255;             /* white text */
+    --color-nav-hover: 255 255 255;            /* white hover */
+  }
+
+  /* Trauma-Sensitive Theme (gentler, muted colors) */
+  .trauma-sensitive {
+    /* Softer, desaturated versions of main colors */
+    --color-primary: 95 134 142;               /* muted teal */
+    --color-primary-foreground: 255 255 255;   /* white text on primary */
+    --color-secondary: 133 179 172;            /* softer teal */
+    --color-donate: 222 183 149;               /* muted orange */
+    --color-emergency: 251 146 60;             /* warm orange instead of coral */
+    --color-emergency-foreground: 255 255 255; /* white text */
+    --color-success: 217 192 135;              /* muted golden */
+    --color-success-foreground: 95 134 142;    /* muted teal text */
+    
+    /* Softer UI elements with better contrast for hover states */
+    --color-background: 255 255 255;           /* white background */
+    --color-foreground: 64 64 64;              /* soft dark gray */
+    --color-border: 208 213 221;               /* lighter borders */
+    --color-muted: 245 247 250;                /* light blue-gray background */
+    --color-muted-foreground: 95 134 142;      /* muted teal text */
+    --color-ring: 133 179 172;                 /* soft teal focus */
+  }
+}

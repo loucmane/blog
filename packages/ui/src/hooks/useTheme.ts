@@ -1,4 +1,2 @@
-// useTheme hook will be migrated here in Phase 2
-export const useTheme = () => {
-  return {};
-};
+// Re-export useTheme from ThemeProvider for convenience
+export { useTheme } from '../providers/ThemeProvider';
