@@ -4,6 +4,15 @@
 
 The main Next.js application for the Animal Protection Foundation Blog. This package contains the user-facing website with rescue stories, field reports, and donation capabilities.
 
+## ✅ Current Status
+
+**Theme System Migration Complete**
+
+- Successfully migrated to use @minniewinnie/ui package for all theme functionality
+- All design tokens, themes, and components now imported from UI package
+- Theme switching fully operational with 4 themes (light, dark, contrast, gentle)
+- Zero duplicate theme code - fully consolidated in UI package
+
 ## Architecture
 
 ```
@@ -13,8 +22,8 @@ web/
 │   │   ├── (routes)/     # Page routes
 │   │   ├── api/          # API routes
 │   │   └── layout.tsx    # Root layout
-│   ├── components/       # React components
-│   │   ├── ui/          # shadcn/ui components
+│   ├── components/       # React components (app-specific + shadcn/ui)
+│   │   ├── ui/          # shadcn/ui components (copy-paste)
 │   │   ├── content/     # Content-specific components
 │   │   └── layout/      # Layout components
 │   ├── lib/             # Utilities and helpers

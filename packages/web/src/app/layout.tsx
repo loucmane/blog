@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { ThemeProvider } from '@/context/ThemeContext'
+import { ThemeProvider } from '@minniewinnie/ui/providers'
 
 export const metadata: Metadata = {
   title: 'Animal Protection Foundation',

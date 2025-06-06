@@ -1,6 +1,6 @@
 'use client'
 
-import { ModernThemeSwitcher } from '@/components/ModernThemeSwitcher'
+import { ThemeSwitcher } from '@minniewinnie/ui/components'
 
 export default function HomePage() {
   return (
@@ -12,7 +12,7 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold text-primary">Animal Protection Foundation</h1>
             <p className="text-sm text-muted-foreground">Protecting animals with compassion</p>
           </div>
-          <ModernThemeSwitcher />
+          <ThemeSwitcher />
         </div>
       </header>
 
