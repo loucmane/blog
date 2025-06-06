@@ -41,7 +41,7 @@ Customize the screens object in tailwind.config.js to define breakpoints that wo
 ### Details:
 Define CSS custom properties for color themes, spacing, and typography. Configure Tailwind to use these custom properties in the theme configuration. Create a system for theme switching that respects user preferences for reduced motion, contrast, and content sensitivity levels.
 
-## 6. Develop Theme Switching Functionality [pending]
+## 6. Develop Theme Switching Functionality [done]
 ### Dependencies: 3.5
 ### Description: Create mechanisms for users to switch between light, dark, and high-contrast themes
 ### Details:
@@ -52,4 +52,10 @@ Implement JavaScript functionality to toggle between themes. Store user preferen
 ### Description: Implement additional accessibility enhancements beyond color contrast
 ### Details:
 Configure focus styles that are visible in all themes. Create utility classes for screen-reader-only content. Implement reduced-motion variants for animations. Ensure all interactive elements have appropriate ARIA attributes. Create specific accessibility enhancements for donation forms and emergency appeals to build donor trust through inclusive design.
+
+## 8. Migrate Theme System to UI Package for Reusability [pending]
+### Dependencies: 3.6
+### Description: Refactor and move theme-related code from web package to ui package following monorepo best practices
+### Details:
+Move design tokens (colors, typography, spacing), theme configurations, ThemeProvider, and ThemeSwitcher component from web package to ui package. Create proper exports and update imports in web package. Ensure zero downtime during migration by implementing incrementally. Set up proper build configuration for ui package to export CSS and components.
 

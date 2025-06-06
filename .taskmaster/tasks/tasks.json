@@ -210,7 +210,7 @@
             5
           ],
           "details": "Implement JavaScript functionality to toggle between themes. Store user preferences in localStorage. Respect prefers-color-scheme media query for initial theme selection. Create UI controls for theme switching that are accessible via keyboard and screen readers. Include specific theme options for trauma-sensitive content viewing.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 7,
@@ -223,6 +223,17 @@
           ],
           "details": "Configure focus styles that are visible in all themes. Create utility classes for screen-reader-only content. Implement reduced-motion variants for animations. Ensure all interactive elements have appropriate ARIA attributes. Create specific accessibility enhancements for donation forms and emergency appeals to build donor trust through inclusive design.",
           "status": "pending"
+        },
+        {
+          "id": 8,
+          "title": "Migrate Theme System to UI Package for Reusability",
+          "description": "Refactor and move theme-related code from web package to ui package following monorepo best practices",
+          "details": "Move design tokens (colors, typography, spacing), theme configurations, ThemeProvider, and ThemeSwitcher component from web package to ui package. Create proper exports and update imports in web package. Ensure zero downtime during migration by implementing incrementally. Set up proper build configuration for ui package to export CSS and components.",
+          "status": "pending",
+          "dependencies": [
+            6
+          ],
+          "parentTaskId": 3
         }
       ]
     },
