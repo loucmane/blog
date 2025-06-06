@@ -1,0 +1,6 @@
+/* Base styles for the UI package */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Custom Properties will be moved here in Phase 2 */
