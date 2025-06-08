@@ -3,3 +3,334 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Map our UI package colors to shadcn variables */
+    --background: 48 25% 94%; /* Warm cream with green undertone, very calming */
+    --foreground: 240 6% 25%; /* Soft charcoal, not pure black */
+    --card: 48 20% 96%; /* Slightly lighter cream */
+    --card-foreground: 240 6% 25%;
+    --popover: 48 20% 96%;
+    --popover-foreground: 240 6% 25%;
+    --primary: 193 36% 18%; /* rgb(38, 70, 83) - deep teal -> hsl */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 174 58% 39%; /* rgb(42, 157, 143) - bright teal -> hsl */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 48 15% 90%; /* Warm muted with slight green tint */
+    --muted-foreground: 240 5% 38%; /* Softer than pure gray */
+    --accent: 174 58% 39%; /* bright teal as accent */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 8 74% 61%; /* rgb(231, 111, 81) - coral -> hsl */
+    --destructive-foreground: 0 0% 100%;
+    --border: 48 12% 87%; /* Soft warm border */
+    --input: 48 20% 96%; /* Match card background */
+    --ring: 174 58% 39%; /* bright teal for focus */
+    --chart-1: 36 60% 67%; /* golden yellow */
+    --chart-2: 25 61% 66%; /* warm orange */
+    --chart-3: 174 58% 39%; /* bright teal */
+    --chart-4: 8 74% 61%; /* coral */
+    --chart-5: 193 36% 18%; /* deep teal */
+    --radius: 0.5rem;
+    
+    /* Brand colors - Light theme uses original colors */
+    --teal-50: 150 40% 96%;
+    --teal-100: 166 84% 85%;
+    --teal-200: 172 76% 75%;
+    --teal-300: 174 62% 62%;
+    --teal-400: 174 66% 50%;
+    --teal-500: 174 57% 38%;
+    --teal-600: 193 37% 23%;
+    --teal-700: 193 37% 18%;
+    --teal-800: 193 38% 15%;
+    --teal-900: 194 38% 12%;
+    
+    --yellow-50: 55 92% 95%;
+    --yellow-100: 55 97% 88%;
+    --yellow-200: 48 97% 77%;
+    --yellow-300: 48 96% 64%;
+    --yellow-400: 46 96% 53%;
+    --yellow-500: 43 64% 66%;
+    --yellow-600: 36 97% 40%;
+    --yellow-700: 35 91% 33%;
+    --yellow-800: 28 80% 29%;
+    --yellow-900: 26 75% 25%;
+    
+    --orange-50: 24 100% 96%;
+    --orange-100: 24 100% 92%;
+    --orange-200: 23 100% 83%;
+    --orange-300: 20 97% 72%;
+    --orange-400: 20 94% 61%;
+    --orange-500: 27 57% 64%;
+    --orange-600: 18 92% 48%;
+    --orange-700: 15 86% 40%;
+    --orange-800: 13 75% 33%;
+    --orange-900: 12 69% 27%;
+    
+    --coral-50: 0 86% 97%;
+    --coral-100: 0 93% 94%;
+    --coral-200: 0 96% 89%;
+    --coral-300: 0 93% 82%;
+    --coral-400: 0 91% 71%;
+    --coral-500: 11 65% 60%;
+    --coral-600: 0 82% 50%;
+    --coral-700: 0 74% 42%;
+    --coral-800: 0 70% 35%;
+    --coral-900: 0 63% 31%;
+    
+    /* Semantic color foregrounds */
+    --success-foreground: 193 36% 18%; /* deep teal text on yellow */
+    --emergency-foreground: 0 0% 100%; /* white text on coral */
+    --donate-foreground: 0 0% 100%; /* white text on orange */
+    --adoption-pending-foreground: 0 0% 100%; /* white text on orange */
+    --adoption-adopted-foreground: 0 0% 100%; /* white text on teal */
+  }
+  .dark {
+    /* Map our UI package dark theme colors */
+    --background: 193 36% 18%; /* rgb(38, 70, 83) - deep teal background */
+    --foreground: 0 0% 90%; /* rgb(229, 229, 229) - light gray text */
+    --card: 226 47% 15%; /* rgb(20, 33, 61) - deep navy for cards */
+    --card-foreground: 0 0% 90%;
+    --popover: 226 47% 15%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 174 58% 39%; /* brighter teal for dark */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 175 63% 65%; /* even brighter teal */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 226 47% 15%; /* deep navy */
+    --muted-foreground: 210 14% 71%; /* medium gray */
+    --accent: 174 58% 39%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 8 74% 61%; /* coral */
+    --destructive-foreground: 0 0% 100%;
+    --border: 193 36% 23%; /* darker teal for borders */
+    --input: 226 47% 15%; /* deep navy inputs */
+    --ring: 174 58% 39%; /* bright teal focus */
+    --chart-1: 36 60% 67%; /* golden yellow */
+    --chart-2: 25 61% 66%; /* warm orange */
+    --chart-3: 174 58% 39%; /* bright teal */
+    --chart-4: 8 74% 61%; /* coral */
+    --chart-5: 175 63% 65%; /* light teal */
+    
+    /* Brand colors - Dark theme uses brighter/adjusted colors */
+    --teal-50: 168 85% 90%;
+    --teal-100: 170 80% 85%;
+    --teal-200: 172 75% 80%;
+    --teal-300: 174 70% 75%;
+    --teal-400: 174 65% 65%;
+    --teal-500: 174 60% 55%;
+    --teal-600: 174 50% 45%;
+    --teal-700: 193 40% 30%;
+    --teal-800: 193 37% 20%;
+    --teal-900: 193 37% 15%;
+    
+    --yellow-50: 53 95% 90%;
+    --yellow-100: 51 90% 85%;
+    --yellow-200: 49 85% 80%;
+    --yellow-300: 47 80% 75%;
+    --yellow-400: 45 75% 70%;
+    --yellow-500: 43 70% 60%;
+    --yellow-600: 40 65% 50%;
+    --yellow-700: 35 60% 35%;
+    --yellow-800: 28 50% 25%;
+    --yellow-900: 26 40% 15%;
+    
+    --orange-50: 33 95% 90%;
+    --orange-100: 31 90% 85%;
+    --orange-200: 29 85% 80%;
+    --orange-300: 27 80% 75%;
+    --orange-400: 25 75% 70%;
+    --orange-500: 22 80% 60%;
+    --orange-600: 18 75% 50%;
+    --orange-700: 15 70% 40%;
+    --orange-800: 13 60% 25%;
+    --orange-900: 12 50% 15%;
+    
+    --coral-50: 18 95% 90%;
+    --coral-100: 16 90% 85%;
+    --coral-200: 14 85% 80%;
+    --coral-300: 12 80% 75%;
+    --coral-400: 10 75% 70%;
+    --coral-500: 5 80% 60%;
+    --coral-600: 0 75% 50%;
+    --coral-700: 0 70% 40%;
+    --coral-800: 0 60% 30%;
+    --coral-900: 0 50% 20%;
+    
+    /* Semantic color foregrounds */
+    --success-foreground: 0 0% 100%; /* white text in dark mode */
+    --emergency-foreground: 0 0% 100%; /* white text on coral */
+    --donate-foreground: 0 0% 100%; /* white text on orange */
+    --adoption-pending-foreground: 0 0% 100%; /* white text on orange */
+    --adoption-adopted-foreground: 0 0% 100%; /* white text on teal */
+  }
+  
+  /* High Contrast Theme for accessibility */
+  .high-contrast {
+    --background: 0 0% 0%; /* pure black */
+    --foreground: 0 0% 100%; /* pure white */
+    --card: 0 0% 10%; /* very dark gray for cards */
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%; /* white */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 20%; /* dark gray for muted backgrounds */
+    --muted-foreground: 0 0% 100%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 100% 50%; /* bright red for visibility */
+    --destructive-foreground: 0 0% 0%;
+    --border: 0 0% 100%; /* white borders for contrast on black */
+    --input: 0 0% 0%; /* black inputs with white borders */
+    --ring: 0 0% 100%; /* white focus rings */
+    --chart-1: 0 0% 100%;
+    --chart-2: 0 0% 80%;
+    --chart-3: 0 0% 60%;
+    --chart-4: 0 0% 40%;
+    --chart-5: 0 0% 20%;
+    
+    /* Brand colors - High contrast inverted (white on black) */
+    --teal-50: 0 0% 0%;
+    --teal-100: 0 0% 10%;
+    --teal-200: 0 0% 20%;
+    --teal-300: 0 0% 30%;
+    --teal-400: 0 0% 60%;
+    --teal-500: 0 0% 100%;
+    --teal-600: 0 0% 100%;
+    --teal-700: 0 0% 100%;
+    --teal-800: 0 0% 100%;
+    --teal-900: 0 0% 100%;
+    
+    --yellow-50: 0 0% 0%;
+    --yellow-100: 0 0% 10%;
+    --yellow-200: 0 0% 20%;
+    --yellow-300: 0 0% 30%;
+    --yellow-400: 0 0% 60%;
+    --yellow-500: 0 0% 100%;
+    --yellow-600: 0 0% 100%;
+    --yellow-700: 0 0% 100%;
+    --yellow-800: 0 0% 100%;
+    --yellow-900: 0 0% 100%;
+    
+    --orange-50: 0 0% 0%;
+    --orange-100: 0 0% 10%;
+    --orange-200: 0 0% 20%;
+    --orange-300: 0 0% 30%;
+    --orange-400: 0 0% 60%;
+    --orange-500: 0 0% 100%;
+    --orange-600: 0 0% 100%;
+    --orange-700: 0 0% 100%;
+    --orange-800: 0 0% 100%;
+    --orange-900: 0 0% 100%;
+    
+    --coral-50: 0 0% 0%;
+    --coral-100: 0 0% 10%;
+    --coral-200: 0 0% 20%;
+    --coral-300: 0 0% 30%;
+    --coral-400: 0 0% 60%;
+    --coral-500: 0 0% 100%;
+    --coral-600: 0 0% 100%;
+    --coral-700: 0 0% 100%;
+    --coral-800: 0 0% 100%;
+    --coral-900: 0 0% 100%;
+    
+    /* Semantic color foregrounds */
+    --success-foreground: 0 0% 0%; /* black text on white in high contrast */
+    --emergency-foreground: 0 0% 0%; /* black text on white */
+    --donate-foreground: 0 0% 0%; /* black text on white */
+    --adoption-pending-foreground: 0 0% 0%; /* black text on white */
+    --adoption-adopted-foreground: 0 0% 0%; /* black text on white */
+  }
+  
+  /* Gentle Theme (softer, muted colors for sensitive viewing) */
+  .gentle {
+    --background: 32 28% 88%; /* Soft sand color, very calming */
+    --foreground: 25 12% 28%; /* Warm dark brown-gray */
+    --card: 32 24% 91%; /* Light sand */
+    --card-foreground: 25 12% 28%;
+    --popover: 32 24% 91%;
+    --popover-foreground: 25 12% 28%;
+    --primary: 188 20% 52%; /* muted teal - rgb(95, 134, 142) */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 167 20% 62%; /* softer teal - rgb(133, 179, 172) */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 32 20% 84%; /* Deeper sand color */
+    --muted-foreground: 25 10% 40%; /* Warm brown-gray text */
+    --accent: 167 20% 62%; /* soft teal */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 25 95% 60%; /* warm orange instead of harsh red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 32 16% 82%; /* Soft sand border */
+    --input: 32 24% 91%; /* Match card background */
+    --ring: 167 20% 62%; /* soft teal focus */
+    --chart-1: 37 33% 68%; /* muted golden */
+    --chart-2: 26 31% 73%; /* muted orange */
+    --chart-3: 167 20% 62%; /* soft teal */
+    --chart-4: 25 50% 70%; /* soft coral */
+    --chart-5: 188 20% 52%; /* muted teal */
+    
+    /* Brand colors - Trauma-sensitive uses soft, muted versions */
+    --teal-50: 180 20% 97%;
+    --teal-100: 180 20% 93%;
+    --teal-200: 180 20% 85%;
+    --teal-300: 180 20% 75%;
+    --teal-400: 180 20% 65%;
+    --teal-500: 180 20% 55%;
+    --teal-600: 180 20% 45%;
+    --teal-700: 180 20% 35%;
+    --teal-800: 180 20% 25%;
+    --teal-900: 180 20% 15%;
+    
+    --yellow-50: 45 20% 97%;
+    --yellow-100: 45 20% 93%;
+    --yellow-200: 45 25% 85%;
+    --yellow-300: 45 30% 75%;
+    --yellow-400: 45 35% 65%;
+    --yellow-500: 45 35% 55%;
+    --yellow-600: 45 30% 45%;
+    --yellow-700: 45 25% 35%;
+    --yellow-800: 45 20% 25%;
+    --yellow-900: 45 20% 15%;
+    
+    --orange-50: 25 25% 97%;
+    --orange-100: 25 25% 93%;
+    --orange-200: 25 30% 85%;
+    --orange-300: 25 35% 75%;
+    --orange-400: 25 40% 65%;
+    --orange-500: 25 35% 55%;
+    --orange-600: 25 30% 45%;
+    --orange-700: 25 25% 35%;
+    --orange-800: 25 20% 25%;
+    --orange-900: 25 20% 15%;
+    
+    --coral-50: 15 25% 97%;
+    --coral-100: 15 25% 93%;
+    --coral-200: 15 30% 85%;
+    --coral-300: 15 35% 75%;
+    --coral-400: 15 40% 65%;
+    --coral-500: 15 35% 55%;
+    --coral-600: 15 30% 45%;
+    --coral-700: 15 25% 35%;
+    --coral-800: 15 20% 25%;
+    --coral-900: 15 20% 15%;
+    
+    /* Semantic color foregrounds */
+    --success-foreground: 0 0% 100%; /* white text in gentle mode */
+    --emergency-foreground: 0 0% 100%; /* white text on muted coral */
+    --donate-foreground: 0 0% 100%; /* white text on muted orange */
+    --adoption-pending-foreground: 0 0% 100%; /* white text on muted orange */
+    --adoption-adopted-foreground: 0 0% 100%; /* white text on muted teal */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
