@@ -57,7 +57,7 @@ export function ThemeProvider({
     const root = document.documentElement
     
     // Remove all theme classes
-    root.classList.remove('dark', 'high-contrast', 'trauma-sensitive')
+    root.classList.remove('dark', 'high-contrast', 'gentle')
     
     // Add appropriate class based on resolved theme
     switch (resolvedTheme) {
@@ -68,7 +68,7 @@ export function ThemeProvider({
         root.classList.add('high-contrast')
         break
       case 'gentle':
-        root.classList.add('trauma-sensitive')
+        root.classList.add('gentle')
         break
       // 'light' is the default, no class needed
     }

@@ -255,7 +255,7 @@
           "description": "Set up the project environment and install necessary dependencies.",
           "dependencies": [],
           "details": "Install @shadcn/ui using npm or yarn, and configure the project structure.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 2,
@@ -265,7 +265,7 @@
             1
           ],
           "details": "Customize the theme to include trauma-informed design elements and donor trust-building visual cues.",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": 3,

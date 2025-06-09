@@ -120,24 +120,24 @@
 
   /* High Contrast Theme for accessibility */
   .high-contrast {
-    --color-background: 255 255 255;           /* pure white */
-    --color-foreground: 0 0 0;                 /* pure black */
-    --color-muted: 230 230 230;                /* light gray for backgrounds */
-    --color-muted-foreground: 0 0 0;           /* black text on muted */
-    --color-border: 100 100 100;               /* gray borders instead of pure black */
-    --color-input: 255 255 255;                /* white inputs */
-    --color-ring: 0 0 0;                       /* black focus rings */
+    --color-background: 0 0 0;                 /* pure black */
+    --color-foreground: 255 255 255;           /* pure white */
+    --color-muted: 25 25 25;                  /* very dark gray for backgrounds */
+    --color-muted-foreground: 255 255 255;     /* white text on muted */
+    --color-border: 255 255 255;               /* white borders */
+    --color-input: 0 0 0;                      /* black inputs */
+    --color-ring: 255 255 255;                 /* white focus rings */
     
     /* High contrast semantic colors */
-    --color-primary: 0 0 0;                    /* black */
-    --color-primary-foreground: 255 255 255;   /* white text on primary */
-    --color-secondary: 0 0 0;                  /* black */
-    --color-donate: 184 53 0;                  /* dark orange */
-    --color-donate-foreground: 255 255 255;    /* white text */
-    --color-emergency: 139 0 0;                /* dark red */
-    --color-emergency-foreground: 255 255 255; /* white text */
-    --color-success: 0 100 0;                  /* pure green */
-    --color-success-foreground: 255 255 255;   /* white text */
+    --color-primary: 255 255 255;              /* white */
+    --color-primary-foreground: 0 0 0;         /* black text on primary */
+    --color-secondary: 255 255 255;            /* white */
+    --color-donate: 255 255 255;               /* white */
+    --color-donate-foreground: 0 0 0;          /* black text */
+    --color-emergency: 255 255 255;            /* white */
+    --color-emergency-foreground: 0 0 0;       /* black text */
+    --color-success: 255 255 255;              /* white */
+    --color-success-foreground: 0 0 0;         /* black text */
     
     /* Navigation high contrast */
     --color-nav-bg: 0 0 0;                     /* black nav */
@@ -145,8 +145,8 @@
     --color-nav-hover: 255 255 255;            /* white hover */
   }
 
-  /* Trauma-Sensitive Theme (gentler, muted colors) */
-  .trauma-sensitive {
+  /* Gentle Theme (softer, muted colors for sensitive viewing) */
+  .gentle {
     /* Softer, desaturated versions of main colors */
     --color-primary: 95 134 142;               /* muted teal */
     --color-primary-foreground: 255 255 255;   /* white text on primary */
