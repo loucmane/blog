@@ -1,6 +1,4 @@
-'use client'
-
-import { ThemeSwitcher } from '@minniewinnie/ui/components'
+import { ThemeSwitcher } from '@minniewinnie/ui'
 
 export default function HomePage() {
   return (

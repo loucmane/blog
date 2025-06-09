@@ -585,7 +585,8 @@
       "priority": "high",
       "dependencies": [
         6,
-        7
+        7,
+        "31"
       ],
       "status": "pending",
       "subtasks": [
@@ -2761,6 +2762,188 @@
           ],
           "details": "Follow deployment checklist, coordinate with all stakeholders, and implement the website in production environment. Monitor analytics, error logs, and user feedback during initial launch period. Be prepared to activate rollback procedures if necessary.",
           "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "title": "Create Modern Blog Mockup Page with Cutting-Edge 2024-2025 Design Trends",
+      "description": "Build an experimental blog mockup page at /app/mockup showcasing advanced design patterns including bento grid layouts, extreme typography contrasts, contemporary color systems, and sophisticated micro-interactions as a design laboratory for production implementation.",
+      "details": "Create a comprehensive mockup page implementing cutting-edge 2024-2025 web design trends:\n\nBENTO GRID LAYOUT SYSTEM:\n- Implement CSS Grid with asymmetrical layout using grid-template-areas\n- Create responsive grid system with varying aspect ratios (1:1, 2:1, 1:2, 3:2)\n- Use CSS Container Queries for dynamic grid adjustments\n- Implement smooth transitions with transform: scale(1.02) and cubic-bezier(0.4, 0, 0.2, 1) easing\n- Add grid-auto-flow: dense for optimal space utilization\n\nADVANCED TYPOGRAPHY SYSTEM:\n- Configure variable fonts: Playfair Display (400-900 weight range) for headlines, Inter (300-700) for body text\n- Implement fluid typography using clamp() functions: clamp(120px, 12vw, 180px) for hero headlines\n- Create kinetic typography with Intersection Observer API for scroll-triggered animations\n- Use CSS @supports for progressive enhancement of variable font features\n- Implement word-by-word reveal animations with staggered delays\n\nCONTEMPORARY COLOR SYSTEM:\n- Define Mocha Mousse (#A0826D) as primary with CSS custom properties\n- Create dopamine accent palette: electric blue (#00D4FF), hot pink (#FF006B), vibrant yellow (#FFD700)\n- Implement mesh gradients using CSS conic-gradient and radial-gradient combinations\n- Configure true black (#000000) dark mode with prefers-color-scheme media queries\n- Add dynamic color transitions with CSS color-mix() function\n\nMICRO-INTERACTIONS & MOTION DESIGN:\n- Implement magnetic cursor effects using mouse position tracking and transform: translate()\n- Create parallax hero with transform3d for hardware acceleration\n- Use Intersection Observer for fade-in animations with opacity and translateY transforms\n- Add skeleton screens during theme transitions using CSS @keyframes shimmer effect\n- Implement progress indicators with CSS custom properties for dynamic width updates\n\nMODERN UI COMPONENTS:\n- Create glassmorphism navigation with backdrop-filter: blur(10px) and rgba backgrounds\n- Implement intelligent navbar hide/show using scroll direction detection\n- Design neumorphic elements with multiple box-shadows for depth\n- Create floating action buttons with position: fixed and z-index layering\n- Build modern form inputs with floating labels using CSS :focus-within pseudo-class\n\nCONTENT ORGANIZATION:\n- Design full-width hero section with CSS object-fit: cover for imagery\n- Create mixed grid layout with CSS Grid areas for feature boxes and post previews\n- Implement horizontal scrolling category pills with scroll-snap-type: x mandatory\n- Add animated author avatars using CSS transforms and hover states\n- Build dynamic table of contents with smooth scrolling and active section highlighting\n\nUNIQUE FEATURES:\n- Implement thin reading progress bar using scroll position calculation and CSS width updates\n- Create dynamic reading time estimation based on word count and average reading speed\n- Build reaction system with CSS animations and local storage persistence\n- Add share functionality with Clipboard API and toast notifications\n- Implement command palette (⌘K) with fuzzy search using Fuse.js library\n- Create recent searches with localStorage and search suggestions\n\nPERFORMANCE & ACCESSIBILITY:\n- Implement lazy loading with Intersection Observer and blur-up placeholder technique\n- Use next/image with priority loading for above-the-fold content\n- Add prefers-reduced-motion media queries to disable animations when requested\n- Ensure keyboard navigation with visible focus states using :focus-visible\n- Implement ARIA labels and semantic HTML structure\n- Target Lighthouse scores: Performance 95+, Accessibility 100, Best Practices 95+, SEO 95+\n\nTECHNICAL IMPLEMENTATION:\n- Create modular component structure in packages/web/src/app/mockup/\n- Use TypeScript interfaces for all props and data structures\n- Implement custom hooks for scroll detection, theme switching, and local storage\n- Create reusable animation utilities with Tailwind CSS classes\n- Set up Storybook stories for all components\n- Use CSS Modules or styled-components for component-scoped styles",
+      "testStrategy": "VISUAL TESTING:\n- Verify bento grid layout responsiveness across breakpoints (320px, 768px, 1024px, 1440px)\n- Test typography scaling and readability at different viewport sizes\n- Validate color contrast ratios meet WCAG AA standards (4.5:1 minimum)\n- Check glassmorphism effects render correctly across different browsers\n\nINTERACTION TESTING:\n- Test all micro-interactions (hover states, magnetic cursor, parallax scrolling)\n- Verify smooth transitions and animations perform at 60fps\n- Test command palette functionality with keyboard shortcuts (⌘K/Ctrl+K)\n- Validate form inputs with floating labels and error states\n- Test share functionality and clipboard API integration\n\nPERFORMANCE TESTING:\n- Run Lighthouse audits targeting 95+ scores across all metrics\n- Measure First Contentful Paint <1.5s and Time to Interactive <3.5s\n- Test lazy loading implementation with network throttling\n- Verify Cumulative Layout Shift <0.1 with dynamic content loading\n- Test bundle size optimization and code splitting effectiveness\n\nACCESSIBILITY TESTING:\n- Test keyboard navigation through all interactive elements\n- Verify screen reader compatibility with semantic HTML structure\n- Test high contrast mode and reduced motion preferences\n- Validate ARIA labels and roles for complex UI components\n- Test voice navigation compatibility\n\nCROSS-BROWSER TESTING:\n- Test in Chrome, Firefox, Safari, and Edge latest versions\n- Verify CSS Grid and Container Queries support with fallbacks\n- Test variable font rendering and fallback font loading\n- Validate backdrop-filter support with graceful degradation\n\nRESPONSIVE TESTING:\n- Test on mobile devices (iPhone, Android) for touch interactions\n- Verify horizontal scrolling components work on touch devices\n- Test grid layout adaptation on tablet and desktop viewports\n- Validate typography scaling maintains readability across all devices",
+      "status": "pending",
+      "dependencies": [
+        4
+      ],
+      "priority": "high",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Bento Grid Layout System",
+          "description": "Create the foundational CSS Grid system with asymmetrical layouts and responsive design",
+          "dependencies": [],
+          "details": "Set up CSS Grid with grid-template-areas for asymmetrical layout, implement varying aspect ratios (1:1, 2:1, 1:2, 3:2), configure CSS Container Queries for dynamic adjustments, add smooth transitions with transform: scale(1.02) and cubic-bezier easing, and implement grid-auto-flow: dense for optimal space utilization",
+          "status": "pending",
+          "testStrategy": "Verify grid responsiveness across multiple viewport sizes and ensure smooth transitions when hovering grid items"
+        },
+        {
+          "id": 2,
+          "title": "Develop Advanced Typography System",
+          "description": "Configure variable fonts, fluid typography, and kinetic text animations",
+          "dependencies": [],
+          "details": "Set up Playfair Display (400-900) for headlines and Inter (300-700) for body text, implement fluid typography with clamp() functions, create scroll-triggered text animations using Intersection Observer API, use CSS @supports for progressive enhancement, and implement word-by-word reveal animations with staggered delays",
+          "status": "pending",
+          "testStrategy": "Test typography scaling across devices and verify animation triggers function correctly on scroll"
+        },
+        {
+          "id": 3,
+          "title": "Create Contemporary Color System",
+          "description": "Implement modern color palette with dopamine accents, mesh gradients, and dark mode support",
+          "dependencies": [],
+          "details": "Define Mocha Mousse (#A0826D) as primary color using CSS custom properties, create dopamine accent palette with electric blue, hot pink, and vibrant yellow, implement mesh gradients with conic-gradient and radial-gradient combinations, configure true black dark mode with prefers-color-scheme media queries, and add dynamic color transitions with color-mix() function",
+          "status": "pending",
+          "testStrategy": "Verify color system renders correctly in both light and dark modes and test gradient performance across browsers"
+        },
+        {
+          "id": 4,
+          "title": "Develop Micro-interactions and Motion Design",
+          "description": "Implement cursor effects, parallax scrolling, and intersection-based animations",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "details": "Create magnetic cursor effects with mouse position tracking, implement hardware-accelerated parallax hero section, use Intersection Observer for fade-in animations, add skeleton screens during theme transitions with @keyframes shimmer effect, and create progress indicators with dynamic width updates",
+          "status": "pending",
+          "testStrategy": "Test animation performance using Chrome DevTools and verify reduced motion preferences are respected"
+        },
+        {
+          "id": 5,
+          "title": "Build Modern UI Components",
+          "description": "Create glassmorphism navigation, intelligent navbar, neumorphic elements, and modern form inputs",
+          "dependencies": [
+            3
+          ],
+          "details": "Implement glassmorphism navigation with backdrop-filter blur and rgba backgrounds, create intelligent navbar with scroll direction detection, design neumorphic elements with multiple box-shadows, add floating action buttons with fixed positioning, and build form inputs with floating labels using :focus-within",
+          "status": "pending",
+          "testStrategy": "Test UI components across different browsers to ensure consistent rendering and verify navbar behavior on scroll"
+        },
+        {
+          "id": 6,
+          "title": "Organize Content Structure",
+          "description": "Design hero section, mixed grid layout, and category navigation",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Create full-width hero section with object-fit: cover for imagery, implement mixed grid layout for feature boxes and post previews, add horizontal scrolling category pills with scroll-snap-type, design animated author avatars with CSS transforms, and build dynamic table of contents with smooth scrolling",
+          "status": "pending",
+          "testStrategy": "Verify content organization remains visually appealing across viewport sizes and test horizontal scrolling behavior on touch devices"
+        },
+        {
+          "id": 7,
+          "title": "Implement Unique Reading Features",
+          "description": "Add reading progress bar, reading time estimation, and reaction system",
+          "dependencies": [],
+          "details": "Create thin reading progress bar using scroll position calculation, implement dynamic reading time estimation based on word count, build reaction system with CSS animations and localStorage persistence, add share functionality with Clipboard API, and implement command palette with fuzzy search",
+          "status": "pending",
+          "testStrategy": "Test reading progress accuracy and verify reaction system persists user interactions correctly"
+        },
+        {
+          "id": 8,
+          "title": "Optimize Performance and Accessibility",
+          "description": "Implement lazy loading, reduced motion support, and keyboard navigation",
+          "dependencies": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "details": "Set up lazy loading with Intersection Observer and blur-up placeholders, use next/image with priority loading for above-the-fold content, add prefers-reduced-motion media queries, ensure keyboard navigation with visible focus states, implement ARIA labels and semantic HTML, and target high Lighthouse scores",
+          "status": "pending",
+          "testStrategy": "Run Lighthouse audits to verify performance, accessibility, best practices, and SEO scores meet targets"
+        },
+        {
+          "id": 9,
+          "title": "Set Up Technical Foundation",
+          "description": "Create component structure, TypeScript interfaces, and custom hooks",
+          "dependencies": [],
+          "details": "Establish modular component structure in packages/web/src/app/mockup/, define TypeScript interfaces for all props and data structures, implement custom hooks for scroll detection and theme switching, create reusable animation utilities with Tailwind CSS, and set up component-scoped styles",
+          "status": "pending",
+          "testStrategy": "Verify TypeScript compilation succeeds without errors and test custom hooks in isolation"
+        },
+        {
+          "id": 10,
+          "title": "Implement Scrapbook Layering Effect",
+          "description": "Create overlapping elements with z-index manipulation and shadow effects",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Design layered content blocks with slight rotations using transform: rotate(), implement overlapping elements with z-index management, add subtle drop shadows for depth perception, create staggered positioning with CSS Grid or absolute positioning, and ensure responsive behavior across viewport sizes",
+          "status": "pending",
+          "testStrategy": "Test layering effect across different screen sizes to ensure visual integrity is maintained"
+        },
+        {
+          "id": 11,
+          "title": "Develop Geometric Aesthetic Elements",
+          "description": "Create geometric patterns and shapes as decorative elements throughout the design",
+          "dependencies": [
+            3
+          ],
+          "details": "Implement geometric shapes using CSS clip-path or SVG elements, create background patterns with repeating geometric motifs, add subtle animations to geometric elements on hover or scroll, ensure color harmony with the established color system, and optimize SVG assets for performance",
+          "status": "pending",
+          "testStrategy": "Verify geometric elements render correctly across browsers and test animation performance"
+        },
+        {
+          "id": 12,
+          "title": "Create Moving Type Animations",
+          "description": "Implement dynamic typography animations for headlines and featured text",
+          "dependencies": [
+            2,
+            4
+          ],
+          "details": "Develop text animations using CSS @keyframes for letter spacing and opacity changes, implement horizontal scrolling text with CSS animations, create split-text effects with JavaScript for character-by-character animation, add hover effects for interactive text elements, and ensure animations respect reduced motion preferences",
+          "status": "pending",
+          "testStrategy": "Test typography animations across devices and verify they degrade gracefully when reduced motion is enabled"
+        },
+        {
+          "id": 13,
+          "title": "Implement Dopamine Color Palette Interactions",
+          "description": "Create interactive color transitions and vibrant hover states using the dopamine color palette",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "Implement color transitions on hover using the dopamine accent colors, create gradient shifts on interaction, add subtle background color animations, implement color highlighting for active elements, and ensure sufficient contrast for accessibility",
+          "status": "pending",
+          "testStrategy": "Test color interactions for accessibility using contrast checkers and verify transitions appear smooth"
+        },
+        {
+          "id": 14,
+          "title": "Develop Massive Footer Design",
+          "description": "Create an expanded footer section with rich content organization and visual appeal",
+          "dependencies": [
+            1,
+            3,
+            5
+          ],
+          "details": "Design expanded footer with multiple content columns using CSS Grid, implement newsletter signup with modern form styling, add social media links with hover animations, create sitemap section with organized links, and ensure responsive behavior for the footer across viewport sizes",
+          "status": "pending",
+          "testStrategy": "Test footer responsiveness across devices and verify all interactive elements are accessible"
+        },
+        {
+          "id": 15,
+          "title": "Implement Gaussian Blur Effects",
+          "description": "Add depth and focus using strategic blur effects throughout the design",
+          "dependencies": [
+            3,
+            5,
+            10
+          ],
+          "details": "Implement backdrop-filter: blur() for overlay elements, create depth-of-field effects for background elements, add hover states that adjust blur intensity, ensure blur effects complement the overall design aesthetic, and optimize performance by limiting the number of elements with blur effects",
+          "status": "pending",
+          "testStrategy": "Test blur effects across browsers for compatibility and verify they don't negatively impact performance"
         }
       ]
     }

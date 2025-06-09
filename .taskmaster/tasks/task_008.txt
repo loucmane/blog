@@ -1,7 +1,7 @@
 # Task ID: 8
 # Title: Develop Homepage with Content Listing
 # Status: pending
-# Dependencies: 6, 7
+# Dependencies: 6, 7, 31
 # Priority: high
 # Description: Create homepage featuring rescue stories, impact metrics, and content discovery with proper content classification
 # Details:

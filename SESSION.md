@@ -1,5 +1,119 @@
 # AI Development Session Log
 
+## Session: 2025-06-10 12:04 CEST
+**AI Assistant**: Claude ✓
+**Developer**: loucmane
+**Task**: "Fix theme switcher visibility issue and work on mockup homepage"
+**Task Source**: user-message
+**TaskMaster ID**: Not specified (working on existing issues)
+
+### Session Validation ✓
+- [x] Date from `date` command: 2025-06-10 12:04 CEST
+- [x] Task verified by: user message "so yesterday we had some issues with this page in the app folder"
+- [x] Git status checked: Yes
+- [x] TaskMaster tasks reviewed: Yes (ran get_tasks)
+- [x] Previous SESSION.md read: Yes
+
+### 🎯 Session Goals
+- [x] Primary: Fix theme switcher visibility issue on homepage
+- [x] Secondary: Fix errors in mockup homepage and add theme switcher
+
+### 📍 Starting Context
+User reported theme switcher not showing on the main page.tsx even though a ThemeSwitcher component exists. Also had a mockup homepage with ESLint errors that needed fixing.
+
+### 📋 Task Progress (if applicable)
+Working on general improvements and bug fixes, not a specific TaskMaster task.
+
+### 📝 Progress Log
+- **2025-06-10 11:03 CEST** - Session started, investigated theme switcher visibility issue
+- **2025-06-10 11:05 CEST** - Found missing import for ThemeSwitcher in main page.tsx
+- **2025-06-10 11:06 CEST** - Fixed import using correct package name @minniewinnie/ui
+- **2025-06-10 11:08 CEST** - Removed unused imports (Button, Card components) from main page.tsx
+- **2025-06-10 11:10 CEST** - Investigated mockup page errors at /app/mockup/page.tsx
+- **2025-06-10 11:12 CEST** - Fixed unescaped apostrophes in mockup page (Luna's → Luna&apos;s)
+- **2025-06-10 11:15 CEST** - Added ThemeSwitcher to mockup page with sticky header
+- **2025-06-10 12:04 CEST** - 🔄 Mid-session checkpoint: Fixed theme switcher issues, added to mockup
+- **2025-06-10 13:30 CEST** - 🔄 Mid-session checkpoint: Planning modern blog redesign
+  - Researched 2024-2025 cutting-edge blog design trends
+  - Identified key elements: bento grid layouts, extreme typography, micro-animations
+  - Planning to create new Task 5 "Modern Blog Mockup Development" 
+  - Will use mockup as design laboratory before implementing Task 8 (Homepage)
+  - Design goals: Implement trends from research - not animal welfare specific, but modern blog
+- **2025-06-10 15:00 CEST** - 🔄 Mid-session checkpoint: Created modern blog mockup task
+  - Created comprehensive design brief at /docs/design/modern-blog-mockup-brief.md
+  - Generated Task 31 "Create Modern Blog Mockup Page with Cutting-Edge 2024-2025 Design Trends"
+  - Used research mode to generate 15 detailed subtasks covering all design aspects
+  - Updated Task 8 dependencies to include Task 31 (mockup must complete before homepage)
+  - Decision: Keep task as #31 rather than renumbering (avoids risk of breaking dependencies)
+
+### 💻 Code Changes
+| File | Changes | Reason | Status |
+|------|---------|---------|---------|
+| web/src/app/page.tsx | Added ThemeSwitcher import | Component was used but not imported | ✅ |
+| web/src/app/page.tsx | Removed unused imports | Clean up ESLint warnings | ✅ |
+| web/src/app/mockup/page.tsx | Fixed apostrophe escaping | ESLint errors | ✅ |
+| web/src/app/mockup/page.tsx | Added ThemeSwitcher and header | Test themes on mockup | ✅ |
+| docs/design/modern-blog-mockup-brief.md | Created comprehensive design brief | Document mockup requirements | ✅ |
+| TaskMaster | Created Task 31 with 15 subtasks | Modern blog mockup development | ✅ |
+| TaskMaster | Updated Task 8 dependencies | Include mockup as prerequisite | ✅ |
+
+### 🤔 Decisions & Reasoning
+- **Import fix**: Used @minniewinnie/ui package name (found in layout.tsx) instead of guessing
+- **Sticky header**: Added sticky positioning to keep theme switcher accessible while scrolling mockup
+- **Mockup differentiation**: Added "Mockup Design" subtitle to distinguish from main page
+- **Task numbering**: Kept new mockup task as #31 instead of renumbering to avoid dependency corruption
+- **Research mode**: Used Perplexity AI to generate informed subtasks based on latest design trends
+- **Design laboratory approach**: Mockup page will experiment with bold designs before production
+
+### ❓ Open Questions for Team
+- Should we integrate the mockup design into the main homepage?
+- Which sections from the mockup should we prioritize for development?
+
+### 📊 Session Metrics
+- Files changed: 5 (2 code files, 1 design doc, 2 TaskMaster updates)
+- Lines added/removed: +220/-5 (approx)
+- Test coverage impact: N/A
+- Components affected: Homepage, Mockup page, TaskMaster tasks
+- Tasks created: 1 (Task 31 with 15 subtasks)
+
+### 🚦 Session Status
+**IN PROGRESS** - Successfully fixed all reported issues. Theme switcher now works on both main page and mockup. Created comprehensive TaskMaster task for modern blog mockup development.
+
+### 📋 Next Session Should:
+1. Complete Task 4 (shadcn/ui setup) - subtasks 4.3 through 4.6
+2. Begin Task 31 (Modern Blog Mockup) starting with subtask 31.9 (Technical Foundation)
+3. Implement bento grid layout system (subtask 31.1)
+4. Set up advanced typography system (subtask 31.2)
+
+### 📋 Key Task 31 Details:
+**Task 31: Create Modern Blog Mockup Page with Cutting-Edge 2024-2025 Design Trends**
+- Dependencies: [4] (requires shadcn/ui)
+- Priority: high
+- Total subtasks: 15
+- Key features: Bento grid, extreme typography, glassmorphism, micro-interactions
+- Location: packages/web/src/app/mockup/
+- Performance targets: Lighthouse 95+ all metrics
+
+### 🔄 To Resume:
+```bash
+# Check current location and branch
+pwd
+git branch --show-current
+git status
+
+# Review recent work
+cat SESSION.md | head -200
+
+# Start dev server
+cd packages/web && pnpm dev
+
+# View pages
+# Main page: http://localhost:3000/
+# Mockup: http://localhost:3000/mockup
+```
+
+---
+
 ## Session: 2025-06-09 12:54 CEST
 **AI Assistant**: Claude
 **Developer**: loucmane
@@ -39,6 +153,9 @@ Continuing from previous session where we added shadcn MCP configuration to .cla
 - **2025-06-09 13:01 CEST** - Installed shadcn/ui components: button, card, input, dialog, sheet
 - **2025-06-09 13:05 CEST** - Updated test page with all installed components
 - **2025-06-09 13:06 CEST** - Fixed ESLint issue with unescaped apostrophe
+- **2025-06-09 13:15 CEST** - Created shadcn component registry documentation
+- **2025-06-09 13:17 CEST** - Updated CLAUDE.md to reference component tracking
+- **2025-06-09 13:20 CEST** - Ready to commit and move to homepage design
 
 ### 💻 Code Changes
 | File | Changes | Reason | Status |
@@ -54,13 +171,13 @@ Continuing from previous session where we added shadcn MCP configuration to .cla
 - Should we investigate why shadcn MCP tools aren't appearing or continue with CLI?
 
 ### 📊 Session Metrics
-- Files changed: 1
-- Lines added/removed: +50/-0
+- Files changed: 8+
+- Lines added/removed: +500/-0 (approx)
 - Test coverage impact: N/A
-- Components affected: None yet
+- Components affected: Button, Card, Input, Dialog, Sheet
 
 ### 🚦 Session End Status
-In progress - shadcn MCP tools not available, proceeding with standard CLI approach
+Successfully installed and integrated shadcn/ui components. Created test page with all components. Ready to test theme switching. Moving on to homepage design.
 
 ### 📋 Next Session Should:
 1. Install shadcn/ui components using CLI
