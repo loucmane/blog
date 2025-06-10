@@ -585,7 +585,8 @@
       "priority": "high",
       "dependencies": [
         6,
-        7
+        7,
+        "31"
       ],
       "status": "pending",
       "subtasks": [
@@ -2773,6 +2774,189 @@
       "status": "pending",
       "dependencies": [
         4
+      ],
+      "priority": "high",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Bento Grid Layout System",
+          "description": "Create the foundational CSS Grid system with asymmetrical layouts and responsive design",
+          "dependencies": [],
+          "details": "Set up CSS Grid with grid-template-areas for asymmetrical layout, implement varying aspect ratios (1:1, 2:1, 1:2, 3:2), configure CSS Container Queries for dynamic adjustments, add smooth transitions with transform: scale(1.02) and cubic-bezier easing, and implement grid-auto-flow: dense for optimal space utilization",
+          "status": "pending",
+          "testStrategy": "Verify grid responsiveness across multiple viewport sizes and ensure smooth transitions when hovering grid items"
+        },
+        {
+          "id": 2,
+          "title": "Develop Advanced Typography System",
+          "description": "Configure variable fonts, fluid typography, and kinetic text animations",
+          "dependencies": [],
+          "details": "Set up Playfair Display (400-900) for headlines and Inter (300-700) for body text, implement fluid typography with clamp() functions, create scroll-triggered text animations using Intersection Observer API, use CSS @supports for progressive enhancement, and implement word-by-word reveal animations with staggered delays",
+          "status": "pending",
+          "testStrategy": "Test typography scaling across devices and verify animation triggers function correctly on scroll"
+        },
+        {
+          "id": 3,
+          "title": "Create Contemporary Color System",
+          "description": "Implement modern color palette with dopamine accents, mesh gradients, and dark mode support",
+          "dependencies": [],
+          "details": "Define Mocha Mousse (#A0826D) as primary color using CSS custom properties, create dopamine accent palette with electric blue, hot pink, and vibrant yellow, implement mesh gradients with conic-gradient and radial-gradient combinations, configure true black dark mode with prefers-color-scheme media queries, and add dynamic color transitions with color-mix() function",
+          "status": "pending",
+          "testStrategy": "Verify color system renders correctly in both light and dark modes and test gradient performance across browsers"
+        },
+        {
+          "id": 4,
+          "title": "Develop Micro-interactions and Motion Design",
+          "description": "Implement cursor effects, parallax scrolling, and intersection-based animations",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "details": "Create magnetic cursor effects with mouse position tracking, implement hardware-accelerated parallax hero section, use Intersection Observer for fade-in animations, add skeleton screens during theme transitions with @keyframes shimmer effect, and create progress indicators with dynamic width updates",
+          "status": "pending",
+          "testStrategy": "Test animation performance using Chrome DevTools and verify reduced motion preferences are respected"
+        },
+        {
+          "id": 5,
+          "title": "Build Modern UI Components",
+          "description": "Create glassmorphism navigation, intelligent navbar, neumorphic elements, and modern form inputs",
+          "dependencies": [
+            3
+          ],
+          "details": "Implement glassmorphism navigation with backdrop-filter blur and rgba backgrounds, create intelligent navbar with scroll direction detection, design neumorphic elements with multiple box-shadows, add floating action buttons with fixed positioning, and build form inputs with floating labels using :focus-within",
+          "status": "pending",
+          "testStrategy": "Test UI components across different browsers to ensure consistent rendering and verify navbar behavior on scroll"
+        },
+        {
+          "id": 6,
+          "title": "Organize Content Structure",
+          "description": "Design hero section, mixed grid layout, and category navigation",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Create full-width hero section with object-fit: cover for imagery, implement mixed grid layout for feature boxes and post previews, add horizontal scrolling category pills with scroll-snap-type, design animated author avatars with CSS transforms, and build dynamic table of contents with smooth scrolling",
+          "status": "pending",
+          "testStrategy": "Verify content organization remains visually appealing across viewport sizes and test horizontal scrolling behavior on touch devices"
+        },
+        {
+          "id": 7,
+          "title": "Implement Unique Reading Features",
+          "description": "Add reading progress bar, reading time estimation, and reaction system",
+          "dependencies": [],
+          "details": "Create thin reading progress bar using scroll position calculation, implement dynamic reading time estimation based on word count, build reaction system with CSS animations and localStorage persistence, add share functionality with Clipboard API, and implement command palette with fuzzy search",
+          "status": "pending",
+          "testStrategy": "Test reading progress accuracy and verify reaction system persists user interactions correctly"
+        },
+        {
+          "id": 8,
+          "title": "Optimize Performance and Accessibility",
+          "description": "Implement lazy loading, reduced motion support, and keyboard navigation",
+          "dependencies": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "details": "Set up lazy loading with Intersection Observer and blur-up placeholders, use next/image with priority loading for above-the-fold content, add prefers-reduced-motion media queries, ensure keyboard navigation with visible focus states, implement ARIA labels and semantic HTML, and target high Lighthouse scores",
+          "status": "pending",
+          "testStrategy": "Run Lighthouse audits to verify performance, accessibility, best practices, and SEO scores meet targets"
+        },
+        {
+          "id": 9,
+          "title": "Set Up Technical Foundation",
+          "description": "Create component structure, TypeScript interfaces, and custom hooks",
+          "dependencies": [],
+          "details": "Establish modular component structure in packages/web/src/app/mockup/, define TypeScript interfaces for all props and data structures, implement custom hooks for scroll detection and theme switching, create reusable animation utilities with Tailwind CSS, and set up component-scoped styles",
+          "status": "pending",
+          "testStrategy": "Verify TypeScript compilation succeeds without errors and test custom hooks in isolation"
+        },
+        {
+          "id": 10,
+          "title": "Implement Scrapbook Layering Effect",
+          "description": "Create overlapping elements with z-index manipulation and shadow effects",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Design layered content blocks with slight rotations using transform: rotate(), implement overlapping elements with z-index management, add subtle drop shadows for depth perception, create staggered positioning with CSS Grid or absolute positioning, and ensure responsive behavior across viewport sizes",
+          "status": "pending",
+          "testStrategy": "Test layering effect across different screen sizes to ensure visual integrity is maintained"
+        },
+        {
+          "id": 11,
+          "title": "Develop Geometric Aesthetic Elements",
+          "description": "Create geometric patterns and shapes as decorative elements throughout the design",
+          "dependencies": [
+            3
+          ],
+          "details": "Implement geometric shapes using CSS clip-path or SVG elements, create background patterns with repeating geometric motifs, add subtle animations to geometric elements on hover or scroll, ensure color harmony with the established color system, and optimize SVG assets for performance",
+          "status": "pending",
+          "testStrategy": "Verify geometric elements render correctly across browsers and test animation performance"
+        },
+        {
+          "id": 12,
+          "title": "Create Moving Type Animations",
+          "description": "Implement dynamic typography animations for headlines and featured text",
+          "dependencies": [
+            2,
+            4
+          ],
+          "details": "Develop text animations using CSS @keyframes for letter spacing and opacity changes, implement horizontal scrolling text with CSS animations, create split-text effects with JavaScript for character-by-character animation, add hover effects for interactive text elements, and ensure animations respect reduced motion preferences",
+          "status": "pending",
+          "testStrategy": "Test typography animations across devices and verify they degrade gracefully when reduced motion is enabled"
+        },
+        {
+          "id": 13,
+          "title": "Implement Dopamine Color Palette Interactions",
+          "description": "Create interactive color transitions and vibrant hover states using the dopamine color palette",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "Implement color transitions on hover using the dopamine accent colors, create gradient shifts on interaction, add subtle background color animations, implement color highlighting for active elements, and ensure sufficient contrast for accessibility",
+          "status": "pending",
+          "testStrategy": "Test color interactions for accessibility using contrast checkers and verify transitions appear smooth"
+        },
+        {
+          "id": 14,
+          "title": "Develop Massive Footer Design",
+          "description": "Create an expanded footer section with rich content organization and visual appeal",
+          "dependencies": [
+            1,
+            3,
+            5
+          ],
+          "details": "Design expanded footer with multiple content columns using CSS Grid, implement newsletter signup with modern form styling, add social media links with hover animations, create sitemap section with organized links, and ensure responsive behavior for the footer across viewport sizes",
+          "status": "pending",
+          "testStrategy": "Test footer responsiveness across devices and verify all interactive elements are accessible"
+        },
+        {
+          "id": 15,
+          "title": "Implement Gaussian Blur Effects",
+          "description": "Add depth and focus using strategic blur effects throughout the design",
+          "dependencies": [
+            3,
+            5,
+            10
+          ],
+          "details": "Implement backdrop-filter: blur() for overlay elements, create depth-of-field effects for background elements, add hover states that adjust blur intensity, ensure blur effects complement the overall design aesthetic, and optimize performance by limiting the number of elements with blur effects",
+          "status": "pending",
+          "testStrategy": "Test blur effects across browsers for compatibility and verify they don't negatively impact performance"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "title": "Implement Total Workflow Excellence System (TWES) for AI-Assisted Development",
+      "description": "Deploy a layered context injection documentation system that supercharges AI-assisted development by providing both detailed prompts and reference documentation for each tool.",
+      "details": "Create and organize the following documentation structure to support the Total Workflow Excellence System (TWES):\n\n1. **Tool-Specific Documentation Folders:**\n   - Establish directories for each tool (e.g., `for-claude-bridge/`, `for-taskmaster/`, `for-agent/`).\n   - Populate each with relevant prompts, usage examples, and tool-specific guidelines.\n\n2. **Shared Context Documents:**\n   - Maintain central documents for themes, file structure, performance standards, and design philosophy.\n   - Ensure these are referenced and inherited by tool-specific documentation to avoid duplication.\n\n3. **Context Bundles for Instant Loading:**\n   - Develop scripts or automation to bundle and inject context for each tool, reducing setup time from 5-10 minutes to under 1 minute.\n\n4. **Step-by-Step Protocols with Validation:**\n   - Write detailed protocols for common workflows, including validation steps to ensure correctness.\n\n5. **Troubleshooting Matrices and Error Prevention:**\n   - Create matrices for common errors, their causes, and solutions.\n   - Integrate error prevention tips into documentation and protocols.\n\n6. **Context Inheritance:**\n   - Implement a system where documentation inherits from shared context, ensuring DRY (Don’t Repeat Yourself) principles.\n\n7. **Living Metrics Dashboards:**\n   - Set up dashboards to track documentation usage, protocol effectiveness, and productivity gains.\n\n8. **Meta-Protocols for Creating New Protocols:**\n   - Document how to create and update new protocols, ensuring the system evolves with use.\n\n9. **Session Continuity Docs:**\n   - Maintain logs or docs for ongoing sessions, allowing users and AI to pick up where they left off.\n\n10. **Central Reference (CLAUDE.md):**\n    - Create a master document (`CLAUDE.md`) that references all documentation, protocols, and dashboards, ensuring everyone (humans and AI) knows where everything is and how to use it.\n\n**Technical Approach:**\n- Use Markdown for documentation and protocols for readability and version control.\n- Automate context bundling using scripts or CI/CD pipelines.\n- Integrate dashboards using lightweight analytics tools or custom-built solutions.\n- Ensure all documentation is accessible and searchable within the project repository.\n\n**Considerations:**\n- Align documentation with existing design systems and workflows (e.g., warm minimalism, Tailwind CSS, shadcn/ui, Next.js App Router).\n- Validate that all tool-specific documentation is up-to-date and references the latest shared context.\n- Monitor and iterate on the system based on usage metrics and feedback.",
+      "testStrategy": "1. **Documentation Structure Validation:**\n   - Verify that all tool-specific and shared documentation folders exist and are correctly organized.\n   - Check that `CLAUDE.md` references all documentation and protocols.\n\n2. **Context Injection Testing:**\n   - Test context bundling scripts to ensure they load required documentation in under 1 minute.\n   - Validate that context inheritance works as expected, with no duplication.\n\n3. **Protocol and Workflow Testing:**\n   - Execute step-by-step protocols for common workflows, ensuring each step is clear and validation checks pass.\n   - Confirm that troubleshooting matrices are accessible and provide actionable solutions.\n\n4. **Dashboard and Metrics Verification:**\n   - Check that living metrics dashboards display up-to-date usage and productivity data.\n   - Validate that dashboards are accessible to all relevant stakeholders.\n\n5. **Session Continuity Check:**\n   - Simulate interrupted sessions and verify that session continuity docs allow users and AI to resume work accurately.\n\n6. **Meta-Protocol Validation:**\n   - Follow meta-protocols to create a new protocol and ensure the process is documented and repeatable.\n\n7. **Cross-Referencing and Accessibility:**\n   - Ensure all documentation is cross-referenced and accessible within the project repository.\n   - Confirm that both humans and AI can navigate and use the system effectively.",
+      "status": "pending",
+      "dependencies": [
+        2,
+        3
       ],
       "priority": "high",
       "subtasks": []
