@@ -45,6 +45,17 @@ Working on general improvements and bug fixes, not a specific TaskMaster task.
   - Used research mode to generate 15 detailed subtasks covering all design aspects
   - Updated Task 8 dependencies to include Task 31 (mockup must complete before homepage)
   - Decision: Keep task as #31 rather than renumbering (avoids risk of breaking dependencies)
+- **2025-06-10 16:35 CEST** - 🔄 Mid-session checkpoint: Planning component installation for mockup
+  - Reviewed existing shadcn components: button, card, input, dialog, sheet
+  - Identified additional components needed: badge, avatar, tabs, progress, skeleton, scroll-area
+  - Updated CLAUDE.md with MCP tool usage guidelines for transparency
+  - Discussed Claude Code Bridge strategy for creating mockup with existing components
+  - Decision: Use hybrid approach - install official shadcn components + compose with Claude Code Bridge
+- **2025-06-10 16:46 CEST** - Successfully installed 13 shadcn components for mockup
+  - Installed: badge, avatar, tabs, progress, skeleton, scroll-area, separator, dropdown-menu, popover, command, switch, hover-card, aspect-ratio
+  - Updated shadcn-components.md with detailed usage map for each component
+  - Documented specific use cases to prevent components from being forgotten
+  - Ready to create modern blog mockup using these components
 
 ### 💻 Code Changes
 | File | Changes | Reason | Status |
@@ -56,6 +67,9 @@ Working on general improvements and bug fixes, not a specific TaskMaster task.
 | docs/design/modern-blog-mockup-brief.md | Created comprehensive design brief | Document mockup requirements | ✅ |
 | TaskMaster | Created Task 31 with 15 subtasks | Modern blog mockup development | ✅ |
 | TaskMaster | Updated Task 8 dependencies | Include mockup as prerequisite | ✅ |
+| CLAUDE.md | Added MCP tool usage guidelines | Ensure transparency for future sessions | ✅ |
+| web/src/components/ui/*.tsx | Added 13 shadcn components | Modern blog mockup requirements | ✅ |
+| docs/development/shadcn-components.md | Updated with new components and usage map | Document component purposes | ✅ |
 
 ### 🤔 Decisions & Reasoning
 - **Import fix**: Used @minniewinnie/ui package name (found in layout.tsx) instead of guessing
@@ -70,11 +84,12 @@ Working on general improvements and bug fixes, not a specific TaskMaster task.
 - Which sections from the mockup should we prioritize for development?
 
 ### 📊 Session Metrics
-- Files changed: 5 (2 code files, 1 design doc, 2 TaskMaster updates)
-- Lines added/removed: +220/-5 (approx)
+- Files changed: 20+ (15 component files, 2 documentation files, plus previous changes)
+- Lines added/removed: +1500/-5 (approx, including component code)
 - Test coverage impact: N/A
-- Components affected: Homepage, Mockup page, TaskMaster tasks
+- Components affected: 13 new shadcn components + previous components
 - Tasks created: 1 (Task 31 with 15 subtasks)
+- Components installed: 13 (badge, avatar, tabs, progress, skeleton, scroll-area, separator, dropdown-menu, popover, command, switch, hover-card, aspect-ratio)
 
 ### 🚦 Session Status
 **IN PROGRESS** - Successfully fixed all reported issues. Theme switcher now works on both main page and mockup. Created comprehensive TaskMaster task for modern blog mockup development.
