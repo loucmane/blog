@@ -1,5 +1,7 @@
 # Total Workflow Excellence System (TWES) - Visual Map
 
+> 📋 **Navigation**: See [TWES Index](./TWES-INDEX.md) for complete table of contents with descriptions of all documents
+
 ## System Overview
 
 ```mermaid
