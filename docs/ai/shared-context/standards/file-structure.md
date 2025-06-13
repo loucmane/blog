@@ -57,99 +57,52 @@ packages/web/
     └── e2e/                # End-to-end tests
 ```
 
-## Naming Conventions
+## File Organization Principles
 
-### Files and Directories
+### Component Organization
+Components should be organized by feature and complexity:
 
-#### Components
 ```
 components/
-├── Button.tsx              # Component file (PascalCase)
-├── Button.test.tsx         # Test file
-├── Button.stories.tsx      # Storybook file
-├── Button.module.css       # CSS module (if needed)
-└── index.ts               # Barrel export
+├── ui/                    # shadcn/ui components (shared primitives)
+├── layout/               # Layout components (Header, Footer, etc.)
+├── features/             # Feature-specific components
+└── experimental/         # Work-in-progress components
 ```
 
-#### Features
-```
-features/
-├── blog/
-│   ├── BlogList.tsx       # Feature component
-│   ├── BlogPost.tsx       # Feature component
-│   ├── hooks/             # Feature-specific hooks
-│   │   └── useBlogData.ts
-│   ├── utils/             # Feature-specific utils
-│   │   └── formatPost.ts
-│   └── types.ts           # Feature types
-```
+### Route Organization (App Router)
+Routes should follow Next.js conventions with clear grouping:
 
-#### Routes (App Router)
 ```
 app/
-├── blog/
-│   ├── page.tsx           # /blog route
-│   ├── [slug]/
-│   │   └── page.tsx       # /blog/[slug] route
-│   └── layout.tsx         # Blog layout
-├── (auth)/
-│   ├── login/
-│   │   └── page.tsx       # /login route
-│   └── layout.tsx         # Auth layout
+├── (marketing)/          # Public pages (grouped route)
+├── (protected)/          # Auth-required pages
+├── blog/                 # Blog feature
+├── api/                  # API routes
+└── mockup/              # Design experiments
 ```
 
-### File Naming Rules
+### Feature-Based Structure
+Each feature should be self-contained:
 
-#### TypeScript/JavaScript
-- Components: `PascalCase.tsx` (e.g., `BlogPost.tsx`)
-- Utilities: `camelCase.ts` (e.g., `formatDate.ts`)
-- Hooks: `use` prefix + `PascalCase.ts` (e.g., `useTheme.ts`)
-- Constants: `UPPER_SNAKE_CASE.ts` (e.g., `API_ENDPOINTS.ts`)
-- Types: `PascalCase.types.ts` (e.g., `Blog.types.ts`)
-
-#### Styles
-- CSS Modules: `Component.module.css`
-- Global styles: `kebab-case.css` (e.g., `theme-variables.css`)
-- Tailwind utilities: `utilities.css`
-
-#### Content Files
-- MDX posts: `kebab-case.mdx` (e.g., `rescue-mission-update.mdx`)
-- Data files: `kebab-case.json` (e.g., `team-members.json`)
-
-## Import Organization
-
-### Standard Import Order
-```typescript
-// 1. React/Next.js imports
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-
-// 2. Third-party packages
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
-
-// 3. Internal packages (monorepo)
-import { theme } from '@minniewinnie/ui';
-import { BlogPost } from '@minniewinnie/shared';
-
-// 4. Absolute imports (from src)
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/hooks/useAuth';
-
-// 5. Relative imports
-import { BlogCard } from './BlogCard';
-import { formatPost } from './utils';
-
-// 6. Type imports
-import type { BlogPostProps } from './types';
-
-// 7. Style imports
-import styles from './Blog.module.css';
+```
+features/blog/
+├── components/          # Feature components
+├── hooks/              # Feature hooks
+├── utils/              # Feature utilities
+├── types/              # Feature types
+└── api/                # Feature API calls
 ```
 
-### Path Aliases
-Configure in `tsconfig.json`:
+For detailed naming conventions and import patterns, see:
+- **[File Naming Conventions](/docs/ai/shared-context/patterns/codebase-patterns.md#file-and-naming-conventions)**
+- **[Import Organization](/docs/ai/shared-context/patterns/codebase-patterns.md#import-organization)**
+
+## Path Configuration
+
+### TypeScript Path Aliases
+Configure path aliases in `tsconfig.json` for cleaner imports:
+
 ```json
 {
   "compilerOptions": {

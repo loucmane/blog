@@ -7,12 +7,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useToast } from '@/hooks/use-toast'
+import { Toaster } from '@/components/ui/toaster'
 
 export default function TestPage()
 {
   const { theme, setTheme } = useTheme()
   const [ dialogOpen, setDialogOpen ] = useState(false)
   const [ sheetOpen, setSheetOpen ] = useState(false)
+  const [ selectedValue, setSelectedValue ] = useState('')
+  const [ checkboxChecked, setCheckboxChecked ] = useState(false)
+  const { toast } = useToast()
 
   return (
     <div className="container mx-auto p-8">
@@ -286,7 +295,183 @@ export default function TestPage()
             </div>
           </CardContent>
         </Card>
+
+        {/* Select & Textarea Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select & Textarea</CardTitle>
+            <CardDescription>Dropdown selections and multi-line text input</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="country" className="text-sm font-medium">Select Country</label>
+              <Select value={selectedValue} onValueChange={setSelectedValue}>
+                <SelectTrigger id="country">
+                  <SelectValue placeholder="Choose a country" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="us">United States</SelectItem>
+                  <SelectItem value="uk">United Kingdom</SelectItem>
+                  <SelectItem value="ca">Canada</SelectItem>
+                  <SelectItem value="au">Australia</SelectItem>
+                  <SelectItem value="de">Germany</SelectItem>
+                  <SelectItem value="fr">France</SelectItem>
+                  <SelectItem value="jp">Japan</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {selectedValue && <p className="text-sm text-muted-foreground">Selected: {selectedValue}</p>}
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="story" className="text-sm font-medium">Share Your Story</label>
+              <Textarea 
+                id="story" 
+                placeholder="Tell us about your experience with animal rescue..." 
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="feedback" className="text-sm font-medium">Feedback (disabled)</label>
+              <Textarea 
+                id="feedback" 
+                placeholder="This textarea is disabled" 
+                disabled
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Checkbox Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Checkbox</CardTitle>
+            <CardDescription>Form controls for multiple selections</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="terms" 
+                checked={checkboxChecked}
+                onCheckedChange={(checked) => setCheckboxChecked(!!checked)}
+              />
+              <label 
+                htmlFor="terms" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                I agree to receive updates about rescue missions
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="newsletter" />
+              <label 
+                htmlFor="newsletter" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Subscribe to monthly newsletter
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="volunteer" />
+              <label 
+                htmlFor="volunteer" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                I&apos;m interested in volunteering
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="disabled-check" disabled />
+              <label 
+                htmlFor="disabled-check" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Disabled checkbox
+              </label>
+            </div>
+            {checkboxChecked && <p className="text-sm text-muted-foreground">Thank you for subscribing!</p>}
+          </CardContent>
+        </Card>
+
+        {/* Alert Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Alerts</CardTitle>
+            <CardDescription>System notifications and warnings</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertTitle>Default Alert</AlertTitle>
+              <AlertDescription>
+                This is a standard alert message for general information.
+              </AlertDescription>
+            </Alert>
+            <Alert variant="destructive">
+              <AlertTitle>Emergency Alert</AlertTitle>
+              <AlertDescription>
+                Urgent: 15 animals need immediate medical attention. Your donation can save lives.
+              </AlertDescription>
+            </Alert>
+            <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+              <AlertTitle className="text-yellow-800 dark:text-yellow-200">Content Warning</AlertTitle>
+              <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                This story contains medical imagery that some may find distressing.
+              </AlertDescription>
+            </Alert>
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+              <AlertTitle className="text-green-800 dark:text-green-200">Success!</AlertTitle>
+              <AlertDescription className="text-green-700 dark:text-green-300">
+                Your donation has been processed. Thank you for your support!
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
+        {/* Toast Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Toast Notifications</CardTitle>
+            <CardDescription>Temporary messages for user feedback</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4 flex-wrap">
+              <Button
+                onClick={() => {
+                  toast({
+                    title: "Donation Received",
+                    description: "Thank you for your generous contribution!",
+                  })
+                }}
+              >
+                Show Success Toast
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  toast({
+                    title: "Error",
+                    description: "Something went wrong. Please try again.",
+                    variant: "destructive",
+                  })
+                }}
+              >
+                Show Error Toast
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  toast({
+                    title: "Scheduled Action",
+                    description: "Your volunteer shift has been scheduled for tomorrow.",
+                  })
+                }}
+              >
+                Show Info Toast
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+      <Toaster />
     </div>
   )
 }

@@ -123,6 +123,12 @@ Four-phase implementation roadmap with priorities and success metrics.
 - **Use when**: Building React components
 - **Key concepts**: Composition, custom hooks, error boundaries
 
+#### [Codebase Patterns](./shared-context/patterns/codebase-patterns.md) 🆕
+- **Purpose**: Comprehensive patterns guide from our actual codebase
+- **Contains**: File naming, component structure, styling, TypeScript, state management
+- **Use when**: Writing any code in the project
+- **Key concepts**: Next.js 15 patterns, React 19 features, performance optimization
+
 ## 🛠️ Tool-Specific Documentation
 
 ### Claude Code Bridge (/for-claude-bridge/)
@@ -178,6 +184,22 @@ Four-phase implementation roadmap with priorities and success metrics.
 
 #### Guidelines
 - [Collaboration Patterns](./for-multi-ai-collab/guidelines/collaboration-patterns.md) - Effective use
+
+### Zen MCP Server (/for-zen/) 🆕
+
+#### Comprehensive Guide
+- **[Zen Toolkit Guide](./for-zen/zen-toolkit-guide.md)** - Complete usage documentation
+  - All 7 tools explained (chat, thinkdeep, codereview, precommit, debug, analyze, get_version)
+  - Thinking modes (minimal to max)
+  - Multi-AI orchestration capabilities
+  - Best practices and common patterns
+  - Advanced usage examples
+
+#### Key Features
+- **Multi-model collaboration**: Orchestrates Claude, Gemini, O3, and others
+- **Extended reasoning**: Up to 32,768 tokens in max mode
+- **Web search integration**: For current best practices
+- **Automatic model selection**: Intelligently chooses best model for task
 
 ## 🧪 Testing Framework (/twes-tests/)
 

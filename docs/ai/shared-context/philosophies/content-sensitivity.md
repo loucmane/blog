@@ -80,31 +80,23 @@ const warning: ContentWarning = {
 - **Level 2**: Desaturated previews, soft blur
 - **Level 3**: No preview, text description only
 
-## Trauma-Informed Design Principles
+## Trauma-Informed Implementation
 
-### 1. User Control
-- Clear opt-in/opt-out mechanisms
-- Granular content preferences
-- Easy exit options
-- No auto-play media
+Our trauma-informed approach builds on the principles outlined in our [Development Principles](/docs/ai/shared-context/philosophies/development-principles.md#trauma-informed-design). 
 
-### 2. Predictability
-- Consistent warning patterns
-- Clear content indicators
-- No surprise reveals
-- Descriptive warnings
+### Key Implementation Points:
+- **Progressive Disclosure**: Multi-step process for sensitive content
+- **Clear Warnings**: Specific, descriptive content indicators
+- **User Agency**: Full control over viewing experience
+- **Safe Defaults**: Always err on the side of caution
+- **Support Integration**: Help resources readily available
 
-### 3. Safety First
-- Default to most restrictive
-- Clear age guidelines
-- Support resources available
-- Exit strategies prominent
-
-### 4. Respect
-- Honor user preferences
-- No judgment for choices
-- Clear value in viewing
-- Alternative ways to help
+### Design Patterns
+For specific implementation patterns, see:
+- Modal and overlay patterns for content warnings
+- Progressive image loading techniques
+- Accessible skip navigation options
+- Emergency exit UI patterns
 
 ## Content Creator Guidelines
 

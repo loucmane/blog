@@ -26,37 +26,27 @@
 - **Core Web Vitals**: LCP <1.2s, FID <100ms, CLS <0.1
 - **Global Accessibility**: Optimized for slow connections
 
-## Implementation in Code
+## Design Philosophy in Practice
 
-### Color System
-```css
-/* Light Theme */
---background: 27 20% 98%;      /* Warm cream */
---foreground: 27 5% 11%;       /* Soft black */
+### Visual Harmony
+- **Balance**: Every element has purpose and breathing room
+- **Rhythm**: Consistent spacing creates visual flow
+- **Contrast**: Subtle differences guide the eye
+- **Unity**: All elements feel part of the same system
 
-/* Dark Theme */
---background: 27 10% 10%;      /* Warm dark */
---foreground: 27 5% 90%;       /* Soft white */
+### Emotional Design
+- **Comfort**: Familiar patterns reduce cognitive load
+- **Trust**: Consistent behavior builds confidence
+- **Joy**: Small delights without overwhelming
+- **Calm**: Predictable interactions reduce anxiety
 
-/* Gentle Theme */
---background: 39 31% 88%;      /* Sand */
---foreground: 39 5% 15%;       /* Dark sand */
+### Functional Beauty
+- **Clarity**: Information hierarchy is immediately apparent
+- **Efficiency**: Common tasks require minimal effort
+- **Flexibility**: Adapts gracefully to different contexts
+- **Durability**: Timeless design that ages well
 
-/* Contrast Theme */
---background: 0 0% 0%;         /* Pure black */
---foreground: 0 0% 100%;       /* Pure white */
-```
-
-### Typography Scale
-- **Base**: 16px (1rem)
-- **Scale**: 1.125 (Major Second)
-- **Line Height**: 1.5-1.75 for body text
-- **Max Width**: 65-75ch for readability
-
-### Spacing System
-- **Base Unit**: 4px
-- **Scale**: 4, 8, 12, 16, 24, 32, 48, 64, 96
-- **Consistent**: Same scale across all breakpoints
+> **Implementation Note**: For technical specifications including color values, typography scales, and spacing systems, see the [Four Theme System](/docs/ai/shared-context/themes/four-themes.md) documentation.
 
 ## Component Guidelines
 

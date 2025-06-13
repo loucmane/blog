@@ -17,6 +17,7 @@ graph TB
         TM[TaskMaster<br/>Project Management]
         AG[Agent<br/>Search & Explore]
         MAC[Multi-AI Collab<br/>Second Opinions]
+        ZEN[Zen<br/>Deep Thinking & Orchestration]
         MCP[MCP Tools<br/>IDE & Others]
     end
 
@@ -39,6 +40,7 @@ graph TB
     SHARED --> TM
     SHARED --> AG
     SHARED --> MAC
+    SHARED --> ZEN
     SHARED --> MCP
     
     SHARED --> THEMES
@@ -50,6 +52,7 @@ graph TB
     TM --> PROTOCOLS
     AG --> PROTOCOLS
     MAC --> PROTOCOLS
+    ZEN --> PROTOCOLS
     MCP --> PROTOCOLS
     
     PROTOCOLS --> BUNDLES
@@ -64,6 +67,7 @@ graph TB
 | **TaskMaster** | • Project planning<br>• Task tracking<br>• Complexity analysis | • Simple todos<br>• Personal notes<br>• Non-dev tasks | `get_tasks`, `set_task_status`, `expand_task` |
 | **Agent** | • File discovery<br>• Pattern search<br>• Multi-round exploration | • Known file paths<br>• Simple grep<br>• Code writing | `Task` with search prompts |
 | **Multi-AI Collab** | • Code review<br>• Architecture advice<br>• Creative solutions | • Primary development<br>• Simple questions<br>• Time-critical tasks | `ask_gemini`, `gemini_code_review` |
+| **Zen** | • Deep thinking<br>• Multi-AI orchestration<br>• Code review & debugging | • Simple queries<br>• Quick fixes<br>• When speed matters | `thinkdeep`, `codereview`, `precommit` |
 | **MCP Tools** | • IDE diagnostics<br>• Library docs<br>• Code execution | • File operations<br>• Project management<br>• Complex workflows | Various `mcp__*` commands |
 
 ## Context Inheritance Flow
@@ -75,7 +79,9 @@ shared-context/
     ├── philosophies/development.md ────┼─── Inherited by ───→ tool-specific/
     └── patterns/monorepo.md ───────────┘                          ├── for-claude-bridge/
                                                                     ├── for-taskmaster/
-                                                                    └── for-agent/
+                                                                    ├── for-agent/
+                                                                    ├── for-multi-ai-collab/
+                                                                    └── for-zen/
 ```
 
 ## Success Criteria Dashboard

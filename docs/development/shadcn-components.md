@@ -26,6 +26,12 @@ This document tracks all installed shadcn/ui components and their usage across t
 | Switch | 2025-06-10 | `web/src/components/ui/switch.tsx` | `/mockup` (theme toggle) | ⏳ Testing pending |
 | HoverCard | 2025-06-10 | `web/src/components/ui/hover-card.tsx` | `/mockup` (author previews) | ⏳ Testing pending |
 | AspectRatio | 2025-06-10 | `web/src/components/ui/aspect-ratio.tsx` | `/mockup` (media sizing) | ⏳ Testing pending |
+| Select | 2025-06-13 | `web/src/components/ui/select.tsx` | `/test` page (country selector) | ⏳ Testing pending |
+| Textarea | 2025-06-13 | `web/src/components/ui/textarea.tsx` | `/test` page (multi-line input) | ⏳ Testing pending |
+| Checkbox | 2025-06-13 | `web/src/components/ui/checkbox.tsx` | `/test` page (form controls) | ⏳ Testing pending |
+| Alert | 2025-06-13 | `web/src/components/ui/alert.tsx` | `/test` page (notifications) | ⏳ Testing pending |
+| Toast | 2025-06-13 | `web/src/components/ui/toast.tsx` | `/test` page (user feedback) | ⏳ Testing pending |
+| Toaster | 2025-06-13 | `web/src/components/ui/toaster.tsx` | `/test` page (toast container) | ⏳ Testing pending |
 
 ### Test Checklist
 
@@ -147,16 +153,59 @@ This section documents how each component will be used in the modern blog mockup
 - **Location**: Blog post featured images, video embeds
 - **Example**: 16:9 for videos, 3:2 for blog images, 1:1 for avatars
 
+#### Select Component
+- [ ] Opens dropdown when clicked
+- [ ] Shows all options properly
+- [ ] Allows selection of item
+- [ ] Updates value when selected
+- [ ] Placeholder text shows when empty
+- [ ] Keyboard navigation works (arrow keys)
+- [ ] Can be disabled
+- [ ] Theme switching updates colors
+
+#### Textarea Component
+- [ ] Accepts multi-line text input
+- [ ] Rows prop adjusts height
+- [ ] Placeholder shows when empty
+- [ ] Resizes properly (if enabled)
+- [ ] Can be disabled
+- [ ] Character limit works (if set)
+- [ ] Focus states are visible
+- [ ] Theme switching updates colors
+
+#### Checkbox Component
+- [ ] Can be checked/unchecked
+- [ ] onCheckedChange fires properly
+- [ ] Can be in indeterminate state
+- [ ] Disabled state prevents interaction
+- [ ] Label click toggles checkbox
+- [ ] Keyboard navigation (space) works
+- [ ] Focus states are visible
+- [ ] Theme switching updates colors
+
+#### Alert Component
+- [ ] Default variant renders correctly
+- [ ] Destructive variant shows proper styling
+- [ ] Title and description display properly
+- [ ] Custom styling works (warning/success)
+- [ ] Icon support (if applicable)
+- [ ] Theme switching updates colors
+
+#### Toast Component
+- [ ] Toast appears when triggered
+- [ ] Auto-dismisses after timeout
+- [ ] Can be manually dismissed
+- [ ] Multiple toasts stack properly
+- [ ] Different variants work
+- [ ] Position is correct
+- [ ] Animation is smooth
+- [ ] Theme switching updates colors
+
 ### Planned Components 📋
 
 | Component | Priority | Purpose | Notes |
 |-----------|----------|---------|-------|
-| Select | High | Form dropdowns | For donation amounts, country selection |
-| Textarea | High | Multi-line input | For messages, stories |
-| Checkbox | High | Form controls | For consent, preferences |
 | Radio Group | Medium | Form options | For donation frequency |
-| Alert | High | Notifications | For emergency appeals, warnings |
-| Toast | High | User feedback | For form submissions |
 | Tooltip | Low | Help text | For complex forms |
 | Accordion | Low | Collapsible content | For FAQs |
 

@@ -8,264 +8,76 @@
 - **Consistency**: Follow existing patterns in the codebase
 - **Performance Conscious**: But not premature optimization
 
-## TypeScript Standards
+### Development Mindset
+- Write code as if the person maintaining it is a violent psychopath who knows where you live
+- Optimize for change - requirements will evolve
+- Make the easy change today that enables the right change tomorrow
+- Perfect is the enemy of good - ship iteratively
 
-### Type Safety
-```typescript
-// ✅ Good: Explicit types
-interface UserProps {
-  name: string;
-  age: number;
-  email?: string; // Optional clearly marked
-}
+## Code Style Guidelines
 
-// ❌ Bad: Using any
-const processData = (data: any) => { ... }
+### Naming Conventions
+- **Variables**: camelCase for locals, SCREAMING_SNAKE for constants
+- **Functions**: camelCase, verb-first (`calculateTotal`, `validateEmail`)
+- **Classes/Types**: PascalCase (`UserProfile`, `DonationData`)
+- **Files**: See [Codebase Patterns Guide](/docs/ai/shared-context/patterns/codebase-patterns.md#file-and-naming-conventions)
+- **Booleans**: Use is/has/should prefix (`isActive`, `hasPermission`, `shouldUpdate`)
 
-// ✅ Good: Proper typing
-const processData = (data: UserData) => { ... }
-```
+### Code Organization
+- One concept per file
+- Related functionality grouped in directories
+- Public API at the top, implementation details below
+- Exports at the bottom of the file
 
-### Interface vs Type
-- Use `interface` for object shapes (extendable)
-- Use `type` for unions, primitives, and utilities
+### TypeScript Guidelines
+- Prefer `interface` for public APIs (extendable)
+- Use `type` for internal types, unions, and utilities
+- Enable strict mode - no `any` without justification
+- Document complex types with JSDoc
+- For comprehensive TypeScript patterns, see [Codebase Patterns Guide](/docs/ai/shared-context/patterns/codebase-patterns.md#typescript-patterns)
 
-```typescript
-// Interface for objects
-interface BlogPost {
-  id: string;
-  title: string;
-  content: string;
-}
-
-// Type for unions
-type ContentLevel = 1 | 2 | 3;
-type Status = 'draft' | 'published' | 'archived';
-```
-
-### Null Handling
-```typescript
-// Use optional chaining
-const userName = user?.profile?.name ?? 'Anonymous';
-
-// Use nullish coalescing
-const count = userCount ?? 0; // Not || to preserve 0
-
-// Explicit null checks
-if (data !== null && data !== undefined) {
-  // Process data
-}
-```
-
-## React/Next.js Patterns
-
-### Component Structure
-```typescript
-// 1. Imports (grouped and ordered)
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
-// 2. Types/Interfaces
-interface ComponentProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-// 3. Component definition
-export function Component({ title, children }: ComponentProps) {
-  // 4. Hooks at the top
-  const router = useRouter();
-  const [state, setState] = useState(false);
-
-  // 5. Effects after hooks
-  useEffect(() => {
-    // Effect logic
-  }, [dependency]);
-
-  // 6. Handlers/functions
-  const handleClick = () => {
-    // Handler logic
-  };
-
-  // 7. Render
-  return (
-    <div>
-      {/* JSX */}
-    </div>
-  );
-}
-```
-
-### File Naming
-- Components: PascalCase (`BlogPost.tsx`)
-- Utilities: camelCase (`formatDate.ts`)
-- Types: PascalCase (`BlogPost.types.ts`)
-- Hooks: camelCase with 'use' prefix (`useTheme.ts`)
-
-### Import Organization
-```typescript
-// 1. React/Next
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
-// 2. External packages
-import { format } from 'date-fns';
-import { z } from 'zod';
-
-// 3. Internal packages
-import { theme } from '@minniewinnie/ui';
-import { BlogPost } from '@minniewinnie/shared';
-
-// 4. Relative imports
-import { Button } from '@/components/ui/button';
-import { formatDate } from '@/lib/utils';
-
-// 5. Types
-import type { BlogPostProps } from './types';
-```
-
-## CSS/Tailwind Guidelines
-
-### Class Organization
-```tsx
-// Use cn() for conditional classes
-<div
-  className={cn(
-    // Base classes
-    "rounded-lg border p-4",
-    // Conditional classes
-    isActive && "border-primary bg-primary/10",
-    // Responsive classes
-    "md:p-6 lg:p-8",
-    // Custom className prop
-    className
-  )}
-/>
-```
-
-### Tailwind Best Practices
-- Group related utilities
-- Order: positioning → box model → typography → visual → misc
-- Use design system values (`bg-background` not `bg-white`)
-
-```tsx
-// Good class organization
-<div className="
-  relative z-10
-  mx-auto max-w-7xl px-4
-  text-lg font-medium
-  bg-background text-foreground
-  transition-colors duration-200
-"/>
-```
-
-## State Management
-
-### Component State
-```typescript
-// Simple state for UI
-const [isOpen, setIsOpen] = useState(false);
-
-// Complex state with reducer
-const [state, dispatch] = useReducer(reducer, initialState);
-
-// Form state with react-hook-form
-const form = useForm<FormData>({
-  resolver: zodResolver(formSchema),
-  defaultValues: initialValues,
-});
-```
-
-### Global State
-- Use Context for theme, user preferences
-- Consider Zustand for complex client state
-- Server state with React Query/SWR
-
-## Error Handling
-
-### Try-Catch Patterns
-```typescript
-// Async error handling
-try {
-  const data = await fetchData();
-  return { success: true, data };
-} catch (error) {
-  console.error('Failed to fetch data:', error);
-  return { 
-    success: false, 
-    error: error instanceof Error ? error.message : 'Unknown error' 
-  };
-}
-```
-
-### Error Boundaries
-```typescript
-// Component-level error handling
-<ErrorBoundary fallback={<ErrorFallback />}>
-  <RiskyComponent />
-</ErrorBoundary>
-```
-
-## Performance Patterns
-
-### Memoization
-```typescript
-// Memoize expensive calculations
-const expensiveValue = useMemo(() => {
-  return calculateExpensiveValue(data);
-}, [data]);
-
-// Memoize callbacks
-const handleClick = useCallback(() => {
-  doSomething(id);
-}, [id]);
-
-// Memoize components
-const MemoizedComponent = memo(Component);
-```
-
-### Code Splitting
-```typescript
-// Dynamic imports
-const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
-  loading: () => <Skeleton />,
-  ssr: false,
-});
-
-// Lazy loading
-const LazyComponent = lazy(() => import('./LazyComponent'));
-```
+### Import Rules
+- Group imports by category with blank lines between
+- Order: React/Next → External → Internal → Relative → Types
+- Use absolute imports for app code (`@/components`)
+- For detailed import organization, see [Codebase Patterns Guide](/docs/ai/shared-context/patterns/codebase-patterns.md#import-organization)
 
 ## Comments and Documentation
 
 ### When to Comment
-```typescript
-// ✅ Good: Explains WHY
-// We need to delay the API call to prevent rate limiting
-setTimeout(() => fetchData(), 1000);
+- **WHY** over WHAT - Explain reasoning, not mechanics
+- Business logic and domain rules
+- Workarounds with issue links
+- Performance optimizations
+- Complex algorithms
 
-// ❌ Bad: Explains WHAT (obvious from code)
-// Set timeout to 1000ms
-setTimeout(() => fetchData(), 1000);
-```
-
-### JSDoc for Complex Functions
+### Documentation Standards
 ```typescript
 /**
- * Calculates the reading time for a blog post
- * @param content - The blog post content in markdown
- * @param wordsPerMinute - Reading speed (default: 200)
- * @returns Estimated reading time in minutes
+ * Calculate donation impact based on regional factors.
+ * Uses WHO data for cost-per-life-saved in different regions.
+ * 
+ * @param amount - Donation in USD
+ * @param region - ISO 3166-1 alpha-2 country code
+ * @returns Estimated lives impacted
+ * @throws {InvalidRegionError} If region is not supported
+ * 
+ * @example
+ * const impact = calculateImpact(100, 'KE'); // Kenya
+ * console.log(impact); // { lives: 2.3, duration: '1 month' }
  */
-function calculateReadingTime(
-  content: string, 
-  wordsPerMinute = 200
-): number {
-  const wordCount = content.split(/\s+/).length;
-  return Math.ceil(wordCount / wordsPerMinute);
-}
+```
+
+### Self-Documenting Code
+```typescript
+// ✅ Good: Clear without comments
+const isEligibleForTaxDeduction = 
+  donation.amount >= TAX_DEDUCTION_MINIMUM && 
+  donation.country === 'US' && 
+  donor.hasProvidedTaxInfo;
+
+// ❌ Bad: Needs comment to understand
+const eligible = amt >= 100 && c === 'US' && info;
 ```
 
 ## Git Commit Conventions
@@ -281,98 +93,126 @@ footer (optional)
 
 ### Types
 - `feat`: New feature
-- `fix`: Bug fix
+- `fix`: Bug fix  
 - `docs`: Documentation changes
 - `style`: Code style changes (formatting, etc)
 - `refactor`: Code refactoring
+- `perf`: Performance improvements
 - `test`: Test additions or modifications
 - `chore`: Build process or auxiliary tool changes
+- `revert`: Revert previous commit
+- `wip`: Work in progress (squash before merging)
 
-### Examples
+### Scope Examples
+- `blog`: Blog-related features
+- `auth`: Authentication system
+- `ui`: UI components
+- `api`: API endpoints
+- `deps`: Dependencies
+- `config`: Configuration files
+
+### Good Commit Messages
 ```bash
-feat(blog): add content classification system
-fix(theme): correct contrast theme text visibility
-docs(api): update authentication documentation
-refactor(components): extract shared button logic
+feat(blog): add content sensitivity warnings for rescue stories
+
+Implement three-tier content classification system:
+- Level 1: Hope stories (no warning)
+- Level 2: Medical content (soft warning)  
+- Level 3: Crisis content (strong warning)
+
+Closes #123
+
+fix(donate): prevent duplicate payment submissions
+
+Add loading state and disable submit button during processing.
+Show clear success/error messages.
+
+Fixes #456
 ```
 
-## Testing Standards
+### Pull Request Guidelines
+- Clear title summarizing the change
+- Description with what/why/how
+- Screenshots for UI changes
+- Link related issues
+- Update documentation if needed
 
-### Test File Naming
-- Unit tests: `Component.test.tsx`
-- Integration tests: `feature.integration.test.ts`
-- E2E tests: `flow.e2e.test.ts`
+## Code Review Guidelines
 
-### Test Structure
+### What We Look For
+1. **Correctness**: Does it solve the problem?
+2. **Clarity**: Is it easy to understand?
+3. **Consistency**: Does it follow our patterns?
+4. **Performance**: Will it scale?
+5. **Security**: Is it safe?
+6. **Accessibility**: Is it usable by everyone?
+
+### Review Etiquette  
+- Suggest, don't command: "Consider using..." not "Change this to..."
+- Explain the why: "This could cause memory leaks because..."
+- Praise good patterns: "Nice use of error boundaries here!"
+- Offer examples: Show don't just tell
+- Be kind: We're all learning
+
+### Common Review Comments
 ```typescript
-describe('Component', () => {
-  // Setup
-  beforeEach(() => {
-    // Common setup
-  });
+// 🟡 Suggestion: Consider memoizing this expensive calculation
+const filtered = posts.filter(p => p.category === category);
 
-  // Group related tests
-  describe('when authenticated', () => {
-    it('should display user name', () => {
-      // Arrange
-      const user = { name: 'John' };
-      
-      // Act
-      render(<Component user={user} />);
-      
-      // Assert
-      expect(screen.getByText('John')).toBeInTheDocument();
-    });
-  });
-});
-```
+// 🔴 Issue: Potential null reference - user might be undefined  
+return <div>{user.name}</div>;
 
-## Security Practices
-
-### Never Commit
-- API keys or secrets
-- Personal information
-- Debug code with sensitive data
-- Commented out code with credentials
-
-### Input Validation
-```typescript
-// Always validate user input
-const schema = z.object({
-  email: z.string().email(),
-  age: z.number().min(0).max(150),
-});
-
-const result = schema.safeParse(userInput);
-if (!result.success) {
-  // Handle validation errors
+// 🟢 Nice: Good error handling and user feedback!
+try {
+  await submitForm(data);
+  showSuccess('Saved successfully!');
+} catch (error) {
+  showError('Failed to save. Please try again.');
 }
 ```
 
-## Accessibility in Code
+## Best Practices Summary
 
-### ARIA Labels
-```tsx
-<button
-  aria-label="Close dialog"
-  aria-describedby="save-warning"
-  onClick={handleClose}
->
-  <XIcon aria-hidden="true" />
-</button>
-```
+### The Boy Scout Rule
+Leave the code better than you found it. If you touch a file:
+- Fix obvious issues
+- Update outdated patterns  
+- Improve naming
+- Add missing types
+- BUT keep changes focused - don't refactor the world
 
-### Semantic HTML
-```tsx
-// ✅ Good
-<nav aria-label="Main">
-  <ul>
-    <li><a href="/">Home</a></li>
-  </ul>
-</nav>
+### Performance Considerations
+- Measure before optimizing
+- Optimize for the common case
+- Document performance-critical code
+- Set performance budgets
+- For detailed patterns, see [Codebase Patterns Guide](/docs/ai/shared-context/patterns/codebase-patterns.md#performance-patterns)
 
-// ❌ Bad
-<div class="nav">
-  <div onclick="navigate('/')">Home</div>
-</div>
-```
+### Security Mindset
+- Never trust user input
+- Validate on both client and server
+- Use environment variables for secrets
+- Implement proper authentication/authorization
+- Regular dependency updates
+- For implementation details, see [Development Principles](/docs/ai/shared-context/philosophies/development-principles.md#security-mindset)
+
+### Accessibility First
+- Semantic HTML is the foundation
+- ARIA only when necessary
+- Keyboard navigation for everything
+- Test with screen readers
+- For patterns, see [Codebase Patterns Guide](/docs/ai/shared-context/patterns/codebase-patterns.md#accessibility-patterns)
+
+### Testing Philosophy
+- Test behavior, not implementation
+- Write tests that give confidence
+- Focus on critical user paths
+- For testing patterns, see [Codebase Patterns Guide](/docs/ai/shared-context/patterns/codebase-patterns.md#testing-patterns)
+
+## References
+
+For implementation details and code examples:
+- **[Codebase Patterns Guide](/docs/ai/shared-context/patterns/codebase-patterns.md)** - Comprehensive patterns and examples
+- **[Development Principles](/docs/ai/shared-context/philosophies/development-principles.md)** - Philosophy and mindset
+- **[Performance Standards](/docs/ai/shared-context/standards/performance.md)** - Metrics and budgets
+- **[Accessibility Standards](/docs/ai/shared-context/standards/accessibility.md)** - WCAG compliance
