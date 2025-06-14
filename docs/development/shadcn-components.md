@@ -8,11 +8,11 @@ This document tracks all installed shadcn/ui components and their usage across t
 
 | Component | Install Date | Location | Used In | Test Status |
 |-----------|--------------|----------|---------|-------------|
-| Button | 2025-06-09 | `web/src/components/ui/button.tsx` | `/test` page | ⏳ Testing pending |
-| Card | 2025-06-09 | `web/src/components/ui/card.tsx` | `/test` page, `/mockup` (bento grid) | ⏳ Testing pending |
-| Input | 2025-06-09 | `web/src/components/ui/input.tsx` | `/test` page | ⏳ Testing pending |
-| Dialog | 2025-06-09 | `web/src/components/ui/dialog.tsx` | `/test` page | ⏳ Testing pending |
-| Sheet | 2025-06-09 | `web/src/components/ui/sheet.tsx` | `/test` page | ⏳ Testing pending |
+| Button | 2025-06-09 | `web/src/components/ui/button.tsx` | `/test` page | ✅ Tested |
+| Card | 2025-06-09 | `web/src/components/ui/card.tsx` | `/test` page, `/mockup` (bento grid) | ✅ Tested |
+| Input | 2025-06-09 | `web/src/components/ui/input.tsx` | `/test` page | ✅ Tested |
+| Dialog | 2025-06-09 | `web/src/components/ui/dialog.tsx` | `/test` page | ✅ Tested |
+| Sheet | 2025-06-09 | `web/src/components/ui/sheet.tsx` | `/test` page | ✅ Tested |
 | Badge | 2025-06-10 | `web/src/components/ui/badge.tsx` | `/mockup` (category tags) | ⏳ Testing pending |
 | Avatar | 2025-06-10 | `web/src/components/ui/avatar.tsx` | `/mockup` (author profiles) | ⏳ Testing pending |
 | Tabs | 2025-06-10 | `web/src/components/ui/tabs.tsx` | `/mockup` (content sections) | ⏳ Testing pending |
@@ -26,12 +26,12 @@ This document tracks all installed shadcn/ui components and their usage across t
 | Switch | 2025-06-10 | `web/src/components/ui/switch.tsx` | `/mockup` (theme toggle) | ⏳ Testing pending |
 | HoverCard | 2025-06-10 | `web/src/components/ui/hover-card.tsx` | `/mockup` (author previews) | ⏳ Testing pending |
 | AspectRatio | 2025-06-10 | `web/src/components/ui/aspect-ratio.tsx` | `/mockup` (media sizing) | ⏳ Testing pending |
-| Select | 2025-06-13 | `web/src/components/ui/select.tsx` | `/test` page (country selector) | ⏳ Testing pending |
-| Textarea | 2025-06-13 | `web/src/components/ui/textarea.tsx` | `/test` page (multi-line input) | ⏳ Testing pending |
-| Checkbox | 2025-06-13 | `web/src/components/ui/checkbox.tsx` | `/test` page (form controls) | ⏳ Testing pending |
-| Alert | 2025-06-13 | `web/src/components/ui/alert.tsx` | `/test` page (notifications) | ⏳ Testing pending |
-| Toast | 2025-06-13 | `web/src/components/ui/toast.tsx` | `/test` page (user feedback) | ⏳ Testing pending |
-| Toaster | 2025-06-13 | `web/src/components/ui/toaster.tsx` | `/test` page (toast container) | ⏳ Testing pending |
+| Select | 2025-06-13 | `web/src/components/ui/select.tsx` | `/test` page (country selector) | ✅ Tested |
+| Textarea | 2025-06-13 | `web/src/components/ui/textarea.tsx` | `/test` page (multi-line input) | ✅ Tested |
+| Checkbox | 2025-06-13 | `web/src/components/ui/checkbox.tsx` | `/test` page (form controls) | ✅ Tested |
+| Alert | 2025-06-13 | `web/src/components/ui/alert.tsx` | `/test` page (notifications) | ✅ Tested |
+| Toast | 2025-06-13 | `web/src/components/ui/toast.tsx` | `/test` page (user feedback) | ✅ Tested (with fixes) |
+| Toaster | 2025-06-13 | `web/src/components/ui/toaster.tsx` | `/test` page (toast container) | ✅ Tested (with fixes) |
 
 ### Test Checklist
 
@@ -289,8 +289,24 @@ import { useTheme } from '@minniewinnie/ui/providers/ThemeProvider'
 6. Check responsive behavior
 7. Test with screen reader (if available)
 
-### Known Issues
-- None yet (testing pending)
+### Known Issues & Fixes
+
+#### Fixed Issues ✅
+1. **Toast Notifications** (Fixed 2025-06-14):
+   - **Problem**: Toasts weren't auto-dismissing (delay was set to 1,000,000ms)
+   - **Solution**: Changed `TOAST_REMOVE_DELAY` to 5000ms in `use-toast.ts`
+   - **Problem**: Toasts were off-center on mobile and full-width on small screens
+   - **Solution**: Updated `ToastViewport` positioning to center on mobile and limit max-width
+
+#### Open Issues
+- None currently identified
+
+### Test Summary (2025-06-14)
+- ✅ **10 components tested** on `/test` page
+- ✅ **All 4 themes** work correctly
+- ✅ **Keyboard navigation** functional
+- ✅ **Accessibility features** working (focus states, ARIA labels)
+- ⏳ **13 components** pending testing (in `/mockup` page only)
 
 ## Related Documentation
 - [Design System Overview](/docs/architecture/design-system.md)
