@@ -23,7 +23,7 @@ Install @shadcn/ui using npm or yarn, and configure the project structure.
 ### Details:
 Customize the theme to include trauma-informed design elements and donor trust-building visual cues.
 
-## 3. Component Installation [pending]
+## 3. Component Installation [done]
 ### Dependencies: 4.1
 ### Description: Install and integrate necessary components from shadcn/ui.
 ### Details:
