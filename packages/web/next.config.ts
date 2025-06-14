@@ -11,8 +11,8 @@ const nextConfig: NextConfig = {
     
     // Optimize package imports for better tree shaking
     optimizePackageImports: [
-      '@legendary-test/ui',
-      '@legendary-test/shared',
+      '@minniewinnie/ui',
+      '@minniewinnie/shared',
       'lucide-react',
       'date-fns',
       'lodash-es'
@@ -209,7 +209,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     '@legendary-test/ui',
     '@legendary-test/shared',
-    '@legendary-test/backend'
+    '@minniewinnie/backend'
   ],
   
   // Output configuration for deployment
@@ -244,7 +244,7 @@ const nextConfig: NextConfig = {
         },
         // Separate UI library chunk
         ui: {
-          test: /[\\/]node_modules[\\/](@legendary-test\/ui|@radix-ui|lucide-react)[\\/]/,
+          test: /[\\/]node_modules[\\/](@minniewinnie\/ui|@radix-ui|lucide-react)[\\/]/,
           name: 'ui',
           chunks: 'all',
           priority: 20,

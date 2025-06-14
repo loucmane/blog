@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Session Analytics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #1e293b;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #1e293b;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+        
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .metric-label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        .sessions-timeline {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+        
+        .timeline-time {
+            color: #64748b;
+            font-size: 0.875rem;
+            min-width: 80px;
+        }
+        
+        .timeline-content {
+            flex: 1;
+        }
+        
+        .timeline-developer {
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .code-quality {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .quality-metric {
+            text-align: center;
+            padding: 1rem;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+        
+        .quality-score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .quality-score.good { color: #10b981; }
+        .quality-score.warning { color: #f59e0b; }
+        .quality-score.error { color: #ef4444; }
+        
+        .ai-insights {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .insight-item {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        
+        .insight-icon {
+            font-size: 1.5rem;
+        }
+        
+        .active-session {
+            background: #1e293b;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .active-session::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            animation: progress 3s linear infinite;
+        }
+        
+        @keyframes progress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .session-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .realtime-metrics {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        
+        .realtime-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .chart-container {
+            height: 200px;
+            margin-top: 1rem;
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+        }
+        
+        .cost-tracker {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #0f172a;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>AI Development Sessions</h1>
+            <div class="live-indicator">
+                <div class="pulse"></div>
+                <span>3 Active Sessions</span>
+            </div>
+        </div>
+
+        <!-- Active Sessions -->
+        <div class="active-session">
+            <h2 style="margin-bottom: 1rem;">Currently Active Sessions</h2>
+            <div class="session-grid">
+                <div>
+                    <div class="metric">
+                        <span class="metric-label">Developer</span>
+                        <span style="color: #667eea;">@sarah</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Task</span>
+                        <span>Theme System</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="metric">
+                        <span class="metric-label">AI Assistant</span>
+                        <span>Claude</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Duration</span>
+                        <span>45 min</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="metric">
+                        <span class="metric-label">Files Changed</span>
+                        <span class="metric-value" style="font-size: 1.5rem;">12</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="metric">
+                        <span class="metric-label">Test Status</span>
+                        <span style="color: #10b981;">✓ Passing</span>
+                    </div>
+                </div>
+            </div>
+            <div class="realtime-metrics">
+                <div class="realtime-item">
+                    <span>💬 Messages:</span>
+                    <strong>23</strong>
+                </div>
+                <div class="realtime-item">
+                    <span>🔤 Tokens:</span>
+                    <strong>45.2k</strong>
+                </div>
+                <div class="realtime-item">
+                    <span>💰 Cost:</span>
+                    <strong>$1.36</strong>
+                </div>
+                <div class="realtime-item">
+                    <span>⚡ Velocity:</span>
+                    <strong>High</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid">
+            <div class="card">
+                <div class="metric">
+                    <span class="metric-label">Sessions Today</span>
+                </div>
+                <div class="metric-value">12</div>
+                <div style="color: #10b981; font-size: 0.875rem;">↑ 20% from yesterday</div>
+            </div>
+            
+            <div class="card">
+                <div class="metric">
+                    <span class="metric-label">Avg Session Time</span>
+                </div>
+                <div class="metric-value">1.5h</div>
+                <div style="color: #94a3b8; font-size: 0.875rem;">Optimal range</div>
+            </div>
+            
+            <div class="card">
+                <div class="metric">
+                    <span class="metric-label">Tasks Completed</span>
+                </div>
+                <div class="metric-value">47</div>
+                <div style="color: #10b981; font-size: 0.875rem;">This week</div>
+            </div>
+            
+            <div class="card">
+                <div class="metric">
+                    <span class="metric-label">Team Velocity</span>
+                </div>
+                <div class="metric-value">156%</div>
+                <div style="color: #667eea; font-size: 0.875rem;">vs baseline</div>
+            </div>
+        </div>
+
+        <!-- Recent Sessions Timeline -->
+        <div class="sessions-timeline">
+            <h2 style="margin-bottom: 1rem;">Recent Sessions</h2>
+            <div class="timeline-item">
+                <div class="timeline-time">2 hrs ago</div>
+                <div class="timeline-content">
+                    <div class="timeline-developer">@john</div>
+                    <div>Completed API refactoring with GPT-4 - 8 endpoints optimized</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-time">3 hrs ago</div>
+                <div class="timeline-content">
+                    <div class="timeline-developer">@maria</div>
+                    <div>Fixed authentication flow with Claude - 100% test coverage</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-time">5 hrs ago</div>
+                <div class="timeline-content">
+                    <div class="timeline-developer">@alex</div>
+                    <div>Database migration completed - 0 downtime achieved</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Quality Metrics -->
+        <div class="code-quality">
+            <h2 style="grid-column: 1 / -1; margin-bottom: 1rem;">AI-Generated Code Quality</h2>
+            <div class="quality-metric">
+                <div class="quality-score good">98%</div>
+                <div class="metric-label">Test Coverage</div>
+            </div>
+            <div class="quality-metric">
+                <div class="quality-score good">A</div>
+                <div class="metric-label">Code Grade</div>
+            </div>
+            <div class="quality-metric">
+                <div class="quality-score warning">3</div>
+                <div class="metric-label">Tech Debt Items</div>
+            </div>
+            <div class="quality-metric">
+                <div class="quality-score good">0</div>
+                <div class="metric-label">Security Issues</div>
+            </div>
+        </div>
+
+        <!-- AI Insights -->
+        <div class="ai-insights">
+            <h2 style="margin-bottom: 1rem; color: white;">AI Productivity Insights</h2>
+            <div class="insight-item">
+                <span class="insight-icon">💡</span>
+                <div>
+                    <strong>Pattern Detected:</strong> Sessions after 3pm have 40% more revisions. Consider scheduling complex tasks for morning sessions.
+                </div>
+            </div>
+            <div class="insight-item">
+                <span class="insight-icon">🚀</span>
+                <div>
+                    <strong>Optimization:</strong> Claude performs 25% better with TypeScript projects when provided with interface definitions upfront.
+                </div>
+            </div>
+            <div class="insight-item">
+                <span class="insight-icon">🎯</span>
+                <div>
+                    <strong>Team Success:</strong> Pairing Sarah + Claude on UI tasks yields 3x faster completion than average.
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Tracking -->
+        <div class="card" style="margin-top: 2rem; position: relative;">
+            <h3 style="margin-bottom: 1rem;">Weekly AI Usage Cost</h3>
+            <div class="chart-container">
+                <canvas id="costChart"></canvas>
+            </div>
+            <div class="cost-tracker">
+                Total: $127.45
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate real-time updates
+        setInterval(() => {
+            const pulseElements = document.querySelectorAll('.pulse');
+            pulseElements.forEach(el => {
+                el.style.background = '#' + Math.floor(Math.random()*16777215).toString(16);
+            });
+        }, 3000);
+
+        // Add interactive hover effects
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px) scale(1.02)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

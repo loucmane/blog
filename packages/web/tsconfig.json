@@ -72,12 +72,12 @@
       "@/analytics/*": ["./src/analytics/*"],
       
       // Workspace packages
-      "@legendary-test/ui": ["../ui/src"],
-      "@legendary-test/ui/*": ["../ui/src/*"],
-      "@legendary-test/backend": ["../backend/src"],
-      "@legendary-test/backend/*": ["../backend/src/*"],
-      "@legendary-test/shared": ["../shared/src"],
-      "@legendary-test/shared/*": ["../shared/src/*"]
+      "@minniewinnie/ui": ["../ui/src"],
+      "@minniewinnie/ui/*": ["../ui/src/*"],
+      "@minniewinnie/backend": ["../backend/src"],
+      "@minniewinnie/backend/*": ["../backend/src/*"],
+      "@minniewinnie/shared": ["../shared/src"],
+      "@minniewinnie/shared/*": ["../shared/src/*"]
     }
   },
   "include": [
