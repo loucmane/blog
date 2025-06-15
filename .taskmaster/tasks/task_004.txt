@@ -11,19 +11,19 @@ Initialize shadcn/ui with npx shadcn-ui@latest init, configure components.json w
 Test component accessibility with screen readers, verify keyboard navigation, validate custom theme application, and confirm component responsiveness
 
 # Subtasks:
-## 1. Initialization [pending]
+## 1. Initialization [done]
 ### Dependencies: None
 ### Description: Set up the project environment and install necessary dependencies.
 ### Details:
 Install @shadcn/ui using npm or yarn, and configure the project structure.
 
-## 2. Theme Token Configuration [pending]
+## 2. Theme Token Configuration [done]
 ### Dependencies: 4.1
 ### Description: Configure theme tokens to align with the animal protection foundation's brand.
 ### Details:
 Customize the theme to include trauma-informed design elements and donor trust-building visual cues.
 
-## 3. Component Installation [pending]
+## 3. Component Installation [done]
 ### Dependencies: 4.1
 ### Description: Install and integrate necessary components from shadcn/ui.
 ### Details:

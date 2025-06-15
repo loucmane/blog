@@ -45,7 +45,7 @@ const config: Config = {
     plugins: [
         function({ addVariant }: any) {
             addVariant('high-contrast', '.high-contrast &')
-            addVariant('trauma-sensitive', '.trauma-sensitive &')
+            addVariant('gentle', '.gentle &')
         }
     ],
 }

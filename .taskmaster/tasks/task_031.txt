@@ -1,0 +1,206 @@
+# Task ID: 31
+# Title: Create Modern Blog Mockup Page with Cutting-Edge 2024-2025 Design Trends
+# Status: pending
+# Dependencies: 4
+# Priority: high
+# Description: Build an experimental blog mockup page at /app/mockup showcasing advanced design patterns including bento grid layouts, extreme typography contrasts, contemporary color systems, and sophisticated micro-interactions as a design laboratory for production implementation.
+# Details:
+Create a comprehensive mockup page implementing cutting-edge 2024-2025 web design trends:
+
+BENTO GRID LAYOUT SYSTEM:
+- Implement CSS Grid with asymmetrical layout using grid-template-areas
+- Create responsive grid system with varying aspect ratios (1:1, 2:1, 1:2, 3:2)
+- Use CSS Container Queries for dynamic grid adjustments
+- Implement smooth transitions with transform: scale(1.02) and cubic-bezier(0.4, 0, 0.2, 1) easing
+- Add grid-auto-flow: dense for optimal space utilization
+
+ADVANCED TYPOGRAPHY SYSTEM:
+- Configure variable fonts: Playfair Display (400-900 weight range) for headlines, Inter (300-700) for body text
+- Implement fluid typography using clamp() functions: clamp(120px, 12vw, 180px) for hero headlines
+- Create kinetic typography with Intersection Observer API for scroll-triggered animations
+- Use CSS @supports for progressive enhancement of variable font features
+- Implement word-by-word reveal animations with staggered delays
+
+CONTEMPORARY COLOR SYSTEM:
+- Define Mocha Mousse (#A0826D) as primary with CSS custom properties
+- Create dopamine accent palette: electric blue (#00D4FF), hot pink (#FF006B), vibrant yellow (#FFD700)
+- Implement mesh gradients using CSS conic-gradient and radial-gradient combinations
+- Configure true black (#000000) dark mode with prefers-color-scheme media queries
+- Add dynamic color transitions with CSS color-mix() function
+
+MICRO-INTERACTIONS & MOTION DESIGN:
+- Implement magnetic cursor effects using mouse position tracking and transform: translate()
+- Create parallax hero with transform3d for hardware acceleration
+- Use Intersection Observer for fade-in animations with opacity and translateY transforms
+- Add skeleton screens during theme transitions using CSS @keyframes shimmer effect
+- Implement progress indicators with CSS custom properties for dynamic width updates
+
+MODERN UI COMPONENTS:
+- Create glassmorphism navigation with backdrop-filter: blur(10px) and rgba backgrounds
+- Implement intelligent navbar hide/show using scroll direction detection
+- Design neumorphic elements with multiple box-shadows for depth
+- Create floating action buttons with position: fixed and z-index layering
+- Build modern form inputs with floating labels using CSS :focus-within pseudo-class
+
+CONTENT ORGANIZATION:
+- Design full-width hero section with CSS object-fit: cover for imagery
+- Create mixed grid layout with CSS Grid areas for feature boxes and post previews
+- Implement horizontal scrolling category pills with scroll-snap-type: x mandatory
+- Add animated author avatars using CSS transforms and hover states
+- Build dynamic table of contents with smooth scrolling and active section highlighting
+
+UNIQUE FEATURES:
+- Implement thin reading progress bar using scroll position calculation and CSS width updates
+- Create dynamic reading time estimation based on word count and average reading speed
+- Build reaction system with CSS animations and local storage persistence
+- Add share functionality with Clipboard API and toast notifications
+- Implement command palette (⌘K) with fuzzy search using Fuse.js library
+- Create recent searches with localStorage and search suggestions
+
+PERFORMANCE & ACCESSIBILITY:
+- Implement lazy loading with Intersection Observer and blur-up placeholder technique
+- Use next/image with priority loading for above-the-fold content
+- Add prefers-reduced-motion media queries to disable animations when requested
+- Ensure keyboard navigation with visible focus states using :focus-visible
+- Implement ARIA labels and semantic HTML structure
+- Target Lighthouse scores: Performance 95+, Accessibility 100, Best Practices 95+, SEO 95+
+
+TECHNICAL IMPLEMENTATION:
+- Create modular component structure in packages/web/src/app/mockup/
+- Use TypeScript interfaces for all props and data structures
+- Implement custom hooks for scroll detection, theme switching, and local storage
+- Create reusable animation utilities with Tailwind CSS classes
+- Set up Storybook stories for all components
+- Use CSS Modules or styled-components for component-scoped styles
+
+# Test Strategy:
+VISUAL TESTING:
+- Verify bento grid layout responsiveness across breakpoints (320px, 768px, 1024px, 1440px)
+- Test typography scaling and readability at different viewport sizes
+- Validate color contrast ratios meet WCAG AA standards (4.5:1 minimum)
+- Check glassmorphism effects render correctly across different browsers
+
+INTERACTION TESTING:
+- Test all micro-interactions (hover states, magnetic cursor, parallax scrolling)
+- Verify smooth transitions and animations perform at 60fps
+- Test command palette functionality with keyboard shortcuts (⌘K/Ctrl+K)
+- Validate form inputs with floating labels and error states
+- Test share functionality and clipboard API integration
+
+PERFORMANCE TESTING:
+- Run Lighthouse audits targeting 95+ scores across all metrics
+- Measure First Contentful Paint <1.5s and Time to Interactive <3.5s
+- Test lazy loading implementation with network throttling
+- Verify Cumulative Layout Shift <0.1 with dynamic content loading
+- Test bundle size optimization and code splitting effectiveness
+
+ACCESSIBILITY TESTING:
+- Test keyboard navigation through all interactive elements
+- Verify screen reader compatibility with semantic HTML structure
+- Test high contrast mode and reduced motion preferences
+- Validate ARIA labels and roles for complex UI components
+- Test voice navigation compatibility
+
+CROSS-BROWSER TESTING:
+- Test in Chrome, Firefox, Safari, and Edge latest versions
+- Verify CSS Grid and Container Queries support with fallbacks
+- Test variable font rendering and fallback font loading
+- Validate backdrop-filter support with graceful degradation
+
+RESPONSIVE TESTING:
+- Test on mobile devices (iPhone, Android) for touch interactions
+- Verify horizontal scrolling components work on touch devices
+- Test grid layout adaptation on tablet and desktop viewports
+- Validate typography scaling maintains readability across all devices
+
+# Subtasks:
+## 1. Implement Bento Grid Layout System [pending]
+### Dependencies: None
+### Description: Create the foundational CSS Grid system with asymmetrical layouts and responsive design
+### Details:
+Set up CSS Grid with grid-template-areas for asymmetrical layout, implement varying aspect ratios (1:1, 2:1, 1:2, 3:2), configure CSS Container Queries for dynamic adjustments, add smooth transitions with transform: scale(1.02) and cubic-bezier easing, and implement grid-auto-flow: dense for optimal space utilization
+
+## 2. Develop Advanced Typography System [pending]
+### Dependencies: None
+### Description: Configure variable fonts, fluid typography, and kinetic text animations
+### Details:
+Set up Playfair Display (400-900) for headlines and Inter (300-700) for body text, implement fluid typography with clamp() functions, create scroll-triggered text animations using Intersection Observer API, use CSS @supports for progressive enhancement, and implement word-by-word reveal animations with staggered delays
+
+## 3. Create Contemporary Color System [pending]
+### Dependencies: None
+### Description: Implement modern color palette with dopamine accents, mesh gradients, and dark mode support
+### Details:
+Define Mocha Mousse (#A0826D) as primary color using CSS custom properties, create dopamine accent palette with electric blue, hot pink, and vibrant yellow, implement mesh gradients with conic-gradient and radial-gradient combinations, configure true black dark mode with prefers-color-scheme media queries, and add dynamic color transitions with color-mix() function
+
+## 4. Develop Micro-interactions and Motion Design [pending]
+### Dependencies: 31.1, 31.2, 31.3
+### Description: Implement cursor effects, parallax scrolling, and intersection-based animations
+### Details:
+Create magnetic cursor effects with mouse position tracking, implement hardware-accelerated parallax hero section, use Intersection Observer for fade-in animations, add skeleton screens during theme transitions with @keyframes shimmer effect, and create progress indicators with dynamic width updates
+
+## 5. Build Modern UI Components [pending]
+### Dependencies: 31.3
+### Description: Create glassmorphism navigation, intelligent navbar, neumorphic elements, and modern form inputs
+### Details:
+Implement glassmorphism navigation with backdrop-filter blur and rgba backgrounds, create intelligent navbar with scroll direction detection, design neumorphic elements with multiple box-shadows, add floating action buttons with fixed positioning, and build form inputs with floating labels using :focus-within
+
+## 6. Organize Content Structure [pending]
+### Dependencies: 31.1, 31.2
+### Description: Design hero section, mixed grid layout, and category navigation
+### Details:
+Create full-width hero section with object-fit: cover for imagery, implement mixed grid layout for feature boxes and post previews, add horizontal scrolling category pills with scroll-snap-type, design animated author avatars with CSS transforms, and build dynamic table of contents with smooth scrolling
+
+## 7. Implement Unique Reading Features [pending]
+### Dependencies: None
+### Description: Add reading progress bar, reading time estimation, and reaction system
+### Details:
+Create thin reading progress bar using scroll position calculation, implement dynamic reading time estimation based on word count, build reaction system with CSS animations and localStorage persistence, add share functionality with Clipboard API, and implement command palette with fuzzy search
+
+## 8. Optimize Performance and Accessibility [pending]
+### Dependencies: 31.4, 31.5, 31.6, 31.7
+### Description: Implement lazy loading, reduced motion support, and keyboard navigation
+### Details:
+Set up lazy loading with Intersection Observer and blur-up placeholders, use next/image with priority loading for above-the-fold content, add prefers-reduced-motion media queries, ensure keyboard navigation with visible focus states, implement ARIA labels and semantic HTML, and target high Lighthouse scores
+
+## 9. Set Up Technical Foundation [pending]
+### Dependencies: None
+### Description: Create component structure, TypeScript interfaces, and custom hooks
+### Details:
+Establish modular component structure in packages/web/src/app/mockup/, define TypeScript interfaces for all props and data structures, implement custom hooks for scroll detection and theme switching, create reusable animation utilities with Tailwind CSS, and set up component-scoped styles
+
+## 10. Implement Scrapbook Layering Effect [pending]
+### Dependencies: 31.1, 31.3
+### Description: Create overlapping elements with z-index manipulation and shadow effects
+### Details:
+Design layered content blocks with slight rotations using transform: rotate(), implement overlapping elements with z-index management, add subtle drop shadows for depth perception, create staggered positioning with CSS Grid or absolute positioning, and ensure responsive behavior across viewport sizes
+
+## 11. Develop Geometric Aesthetic Elements [pending]
+### Dependencies: 31.3
+### Description: Create geometric patterns and shapes as decorative elements throughout the design
+### Details:
+Implement geometric shapes using CSS clip-path or SVG elements, create background patterns with repeating geometric motifs, add subtle animations to geometric elements on hover or scroll, ensure color harmony with the established color system, and optimize SVG assets for performance
+
+## 12. Create Moving Type Animations [pending]
+### Dependencies: 31.2, 31.4
+### Description: Implement dynamic typography animations for headlines and featured text
+### Details:
+Develop text animations using CSS @keyframes for letter spacing and opacity changes, implement horizontal scrolling text with CSS animations, create split-text effects with JavaScript for character-by-character animation, add hover effects for interactive text elements, and ensure animations respect reduced motion preferences
+
+## 13. Implement Dopamine Color Palette Interactions [pending]
+### Dependencies: 31.3, 31.4
+### Description: Create interactive color transitions and vibrant hover states using the dopamine color palette
+### Details:
+Implement color transitions on hover using the dopamine accent colors, create gradient shifts on interaction, add subtle background color animations, implement color highlighting for active elements, and ensure sufficient contrast for accessibility
+
+## 14. Develop Massive Footer Design [pending]
+### Dependencies: 31.1, 31.3, 31.5
+### Description: Create an expanded footer section with rich content organization and visual appeal
+### Details:
+Design expanded footer with multiple content columns using CSS Grid, implement newsletter signup with modern form styling, add social media links with hover animations, create sitemap section with organized links, and ensure responsive behavior for the footer across viewport sizes
+
+## 15. Implement Gaussian Blur Effects [pending]
+### Dependencies: 31.3, 31.5, 31.10
+### Description: Add depth and focus using strategic blur effects throughout the design
+### Details:
+Implement backdrop-filter: blur() for overlay elements, create depth-of-field effects for background elements, add hover states that adjust blur intensity, ensure blur effects complement the overall design aesthetic, and optimize performance by limiting the number of elements with blur effects
+

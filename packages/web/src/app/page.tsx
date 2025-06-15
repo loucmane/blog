@@ -1,6 +1,4 @@
-'use client'
-
-import { ThemeSwitcher } from '@minniewinnie/ui/components'
+import { ThemeSwitcher } from '@minniewinnie/ui'
 
 export default function HomePage() {
   return (
@@ -78,29 +76,29 @@ export default function HomePage() {
             <div className="space-y-2">
               <h4 className="font-semibold text-teal-700">Teal Colors</h4>
               <div className="bg-teal-100 p-2 rounded text-teal-900 text-xs">Light</div>
-              <div className="bg-teal-500 p-2 rounded text-white text-xs">Medium</div>
-              <div className="bg-teal-700 p-2 rounded text-white text-xs">Dark</div>
+              <div className="bg-teal-500 p-2 rounded text-white high-contrast:text-black text-xs">Medium</div>
+              <div className="bg-teal-700 p-2 rounded text-white high-contrast:text-black text-xs">Dark</div>
             </div>
             
             <div className="space-y-2">
               <h4 className="font-semibold text-orange-700">Orange Colors</h4>
               <div className="bg-orange-100 p-2 rounded text-orange-900 text-xs">Light</div>
-              <div className="bg-orange-500 p-2 rounded text-white text-xs">Medium</div>
-              <div className="bg-orange-700 p-2 rounded text-white text-xs">Dark</div>
+              <div className="bg-orange-500 p-2 rounded text-white high-contrast:text-black text-xs">Medium</div>
+              <div className="bg-orange-700 p-2 rounded text-white high-contrast:text-black text-xs">Dark</div>
             </div>
             
             <div className="space-y-2">
               <h4 className="font-semibold text-yellow-700">Golden Colors</h4>
               <div className="bg-yellow-100 p-2 rounded text-yellow-900 text-xs">Light</div>
-              <div className="bg-yellow-500 p-2 rounded text-white text-xs">Medium</div>
-              <div className="bg-yellow-700 p-2 rounded text-white text-xs">Dark</div>
+              <div className="bg-yellow-500 p-2 rounded text-white high-contrast:text-black text-xs">Medium</div>
+              <div className="bg-yellow-700 p-2 rounded text-white high-contrast:text-black text-xs">Dark</div>
             </div>
             
             <div className="space-y-2">
               <h4 className="font-semibold text-coral-700">Coral Colors</h4>
               <div className="bg-coral-100 p-2 rounded text-coral-900 text-xs">Light</div>
-              <div className="bg-coral-500 p-2 rounded text-white text-xs">Medium</div>
-              <div className="bg-coral-700 p-2 rounded text-white text-xs">Dark</div>
+              <div className="bg-coral-500 p-2 rounded text-white high-contrast:text-black text-xs">Medium</div>
+              <div className="bg-coral-700 p-2 rounded text-white high-contrast:text-black text-xs">Dark</div>
             </div>
           </div>
 
@@ -113,12 +111,12 @@ export default function HomePage() {
                 <p className="text-sm">Ready to find their forever home</p>
               </div>
               
-              <div className="bg-adoption-pending text-white p-4 rounded-lg">
+              <div className="bg-adoption-pending text-adoption-pending-foreground p-4 rounded-lg">
                 <h4 className="font-bold mb-2">Adoption Pending</h4>
                 <p className="text-sm">Application being processed</p>
               </div>
               
-              <div className="bg-adoption-adopted text-white p-4 rounded-lg">
+              <div className="bg-adoption-adopted text-adoption-adopted-foreground p-4 rounded-lg">
                 <h4 className="font-bold mb-2">Successfully Adopted</h4>
                 <p className="text-sm">Happy in their new home</p>
               </div>
@@ -128,12 +126,12 @@ export default function HomePage() {
           {/* Responsive Breakpoint Test */}
           <div className="mt-8">
             <h3 className="text-2xl font-bold text-primary mb-4">Responsive Breakpoints Test</h3>
-            <div className="bg-teal-500 p-4 rounded text-white 
+            <div className="bg-teal-500 p-4 rounded text-white high-contrast:text-black
                             xs:bg-yellow-500 
                             sm:bg-orange-500 
                             md:bg-coral-500 
                             lg:bg-teal-600 
-                            xl:bg-primary">
+                            xl:bg-primary xl:text-primary-foreground">
               This color changes at different breakpoints: xs/sm/md/lg/xl
             </div>
           </div>
