@@ -9,6 +9,7 @@
 - **Compound Components** → [See examples](./codebase-patterns.md#component-structure-patterns)
 - **Render Props** → [See pattern](./codebase-patterns.md#component-structure-patterns)
 - **Higher-Order Components** → [See usage](./codebase-patterns.md#component-structure-patterns)
+- **shadcn/ui Components** → [See usage patterns](./shadcn-component-patterns.md)
 
 ### 📊 State Management
 - **Context Pattern** → [See implementation](./codebase-patterns.md#state-management)
