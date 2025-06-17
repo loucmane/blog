@@ -1,0 +1,151 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web comprehensive analysis",
+    "totalPatternsDiscovered": 54,
+    "overallConfidence": 0.89
+  },
+  "summary": {
+    "highConfidencePatterns": [
+      {
+        "category": "Component Structure",
+        "pattern": "Functional Components with forwardRef",
+        "confidence": 0.95,
+        "impact": "Ensures ref forwarding and TypeScript safety"
+      },
+      {
+        "category": "File Naming",
+        "pattern": "PascalCase components, kebab-case files",
+        "confidence": 0.98,
+        "impact": "Consistent file and component naming"
+      },
+      {
+        "category": "Directory Structure",
+        "pattern": "Feature-based organization",
+        "confidence": 0.96,
+        "impact": "Clear separation of concerns"
+      },
+      {
+        "category": "App Router",
+        "pattern": "Next.js 13+ conventions",
+        "confidence": 0.95,
+        "impact": "Modern routing with RSC support"
+      }
+    ],
+    "criticalConventions": [
+      "All UI components use React.forwardRef",
+      "shadcn/ui components in src/components/ui/",
+      "Types organized by domain in src/types/",
+      "'use client' directive for client components",
+      "@ alias for all src imports",
+      "Named exports over default exports",
+      "CVA for variant management",
+      "Server Components by default"
+    ],
+    "undocumentedDiscoveries": [
+      {
+        "pattern": "Compound component pattern",
+        "evidence": "Card, CardHeader, CardTitle structure",
+        "recommendation": "Document compound component creation"
+      },
+      {
+        "pattern": "Error class hierarchy",
+        "evidence": "AppError base with specific subclasses",
+        "recommendation": "Document error handling strategy"
+      },
+      {
+        "pattern": "Test file organization",
+        "evidence": "Separate tests/ directory structure",
+        "recommendation": "Document testing conventions"
+      },
+      {
+        "pattern": "Transition animations",
+        "evidence": "Consistent 'transition-all duration-300'",
+        "recommendation": "Document animation standards"
+      }
+    ],
+    "inconsistencies": [
+      {
+        "area": "Config files",
+        "issue": "Mix of .ts and .js extensions",
+        "severity": "low",
+        "recommendation": "Standardize on TypeScript where possible"
+      },
+      {
+        "area": "Test locations",
+        "issue": "Both tests/ and __tests__/ patterns found",
+        "severity": "medium",
+        "recommendation": "Choose single test directory pattern"
+      }
+    ],
+    "recommendations": {
+      "documentation": [
+        "Create component creation guide with forwardRef pattern",
+        "Document monorepo import conventions",
+        "Add error handling best practices",
+        "Create testing strategy document"
+      ],
+      "tooling": [
+        "Add ESLint rules for import ordering",
+        "Configure path aliases in all packages",
+        "Add pre-commit hooks for file naming",
+        "Set up automatic type generation"
+      ],
+      "refactoring": [
+        "Standardize all config files to TypeScript",
+        "Consolidate test file locations",
+        "Extract common error patterns to shared package",
+        "Create component template generator"
+      ]
+    }
+  },
+  "patternCategories": {
+    "components": {
+      "discovered": 6,
+      "confidence": 0.92,
+      "documented": false
+    },
+    "fileStructure": {
+      "discovered": 5,
+      "confidence": 0.94,
+      "documented": true
+    },
+    "types": {
+      "discovered": 6,
+      "confidence": 0.91,
+      "documented": false
+    },
+    "importExport": {
+      "discovered": 6,
+      "confidence": 0.89,
+      "documented": false
+    },
+    "stateManagement": {
+      "discovered": 7,
+      "confidence": 0.86,
+      "documented": false
+    },
+    "errorHandling": {
+      "discovered": 8,
+      "confidence": 0.87,
+      "documented": false
+    },
+    "testing": {
+      "discovered": 7,
+      "confidence": 0.85,
+      "documented": false
+    },
+    "routing": {
+      "discovered": 8,
+      "confidence": 0.90,
+      "documented": true
+    }
+  },
+  "nextSteps": [
+    "Synthesize patterns into coherent documentation",
+    "Validate patterns with codebase examples",
+    "Generate convention guides for developers",
+    "Create automated checks for pattern compliance"
+  ]
+}

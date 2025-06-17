@@ -1,0 +1,124 @@
+{
+  "version": "1.0.0",
+  "created": "2025-06-17",
+  "description": "Documentation Evolution Context Manifest - Tracks shared data across phases",
+  "phases": {
+    "1-discovery": {
+      "name": "Convention Discovery",
+      "status": "pending",
+      "inputs": [],
+      "outputs": {
+        "conventions": "phases/1-discovery/discovered-conventions.json",
+        "patterns": "phases/1-discovery/pattern-analysis.json",
+        "context": "phases/1-discovery/discovery-context.json"
+      },
+      "metrics": {
+        "filesAnalyzed": 0,
+        "conventionsFound": 0,
+        "executionTime": null
+      }
+    },
+    "2-synthesis": {
+      "name": "Knowledge Synthesis",
+      "status": "pending",
+      "inputs": [
+        "phases/1-discovery/discovered-conventions.json",
+        "phases/1-discovery/pattern-analysis.json"
+      ],
+      "outputs": {
+        "synthesized": "phases/2-synthesis/synthesized-knowledge.json",
+        "relationships": "phases/2-synthesis/relationship-map.json",
+        "context": "phases/2-synthesis/synthesis-context.json"
+      },
+      "metrics": {
+        "patternsProcessed": 0,
+        "relationshipsIdentified": 0,
+        "executionTime": null
+      }
+    },
+    "3-documentation": {
+      "name": "Document Generation",
+      "status": "pending",
+      "inputs": [
+        "phases/2-synthesis/synthesized-knowledge.json",
+        "phases/2-synthesis/relationship-map.json"
+      ],
+      "outputs": {
+        "documents": "phases/3-documentation/generated-docs/",
+        "structure": "phases/3-documentation/doc-structure.json",
+        "context": "phases/3-documentation/documentation-context.json"
+      },
+      "metrics": {
+        "documentsGenerated": 0,
+        "totalSections": 0,
+        "executionTime": null
+      }
+    },
+    "4-validation": {
+      "name": "Quality Validation",
+      "status": "pending",
+      "inputs": [
+        "phases/3-documentation/generated-docs/",
+        "phases/3-documentation/doc-structure.json"
+      ],
+      "outputs": {
+        "validation": "phases/4-validation/validation-report.json",
+        "corrections": "phases/4-validation/correction-suggestions.json",
+        "context": "phases/4-validation/validation-context.json"
+      },
+      "metrics": {
+        "issuesFound": 0,
+        "correctionsApplied": 0,
+        "qualityScore": null,
+        "executionTime": null
+      }
+    },
+    "5-integration": {
+      "name": "Integration & Deployment",
+      "status": "pending",
+      "inputs": [
+        "phases/3-documentation/generated-docs/",
+        "phases/4-validation/validation-report.json"
+      ],
+      "outputs": {
+        "integrated": "phases/5-integration/integration-manifest.json",
+        "deployed": "phases/5-integration/deployment-log.json",
+        "context": "phases/5-integration/integration-context.json"
+      },
+      "metrics": {
+        "filesIntegrated": 0,
+        "linksUpdated": 0,
+        "executionTime": null
+      }
+    }
+  },
+  "sharedContext": {
+    "projectRoot": "/home/loucmane/dev/javascript/MomsBlog/blog",
+    "documentationRoot": "/home/loucmane/dev/javascript/MomsBlog/blog/docs",
+    "aiContextRoot": "/home/loucmane/dev/javascript/MomsBlog/blog/docs/ai",
+    "codebasePatterns": [],
+    "knowledgeAccumulation": {}
+  },
+  "transitions": {
+    "1to2": {
+      "trigger": "phase1Complete",
+      "data": ["conventions", "patterns"],
+      "validation": ["conventionsFound > 0", "patternsIdentified > 0"]
+    },
+    "2to3": {
+      "trigger": "phase2Complete",
+      "data": ["synthesized", "relationships"],
+      "validation": ["synthesisComplete", "relationshipsMapped"]
+    },
+    "3to4": {
+      "trigger": "phase3Complete",
+      "data": ["documents", "structure"],
+      "validation": ["documentsGenerated > 0"]
+    },
+    "4to5": {
+      "trigger": "phase4Complete",
+      "data": ["validation", "corrections"],
+      "validation": ["qualityScore >= 0.8"]
+    }
+  }
+}

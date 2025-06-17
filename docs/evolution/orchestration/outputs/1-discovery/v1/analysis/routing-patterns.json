@@ -1,0 +1,169 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web/src/app",
+    "confidence": 0.90
+  },
+  "patterns": {
+    "appDirectoryStructure": {
+      "pattern": "Next.js 13+ App Router conventions",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "files": {
+            "layout.tsx": "Root layout wrapper",
+            "page.tsx": "Page components",
+            "error.tsx": "Error boundaries",
+            "loading.tsx": "Loading states",
+            "not-found.tsx": "404 handling"
+          },
+          "routing": "File-based routing"
+        }
+      ],
+      "rules": [
+        "Folder names create routes",
+        "page.tsx defines route component",
+        "layout.tsx wraps child routes",
+        "loading.tsx for route loading states",
+        "error.tsx for error boundaries"
+      ]
+    },
+    "layoutPatterns": {
+      "pattern": "Hierarchical layout composition",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "rootLayout": "app/layout.tsx",
+          "features": [
+            "HTML and body tags",
+            "Global providers",
+            "Metadata exports",
+            "Theme providers"
+          ]
+        }
+      ],
+      "rules": [
+        "Root layout contains html/body",
+        "Providers wrap at root level",
+        "Metadata exported as const",
+        "Children prop for composition",
+        "Layouts are server components by default"
+      ]
+    },
+    "metadataManagement": {
+      "pattern": "Static and dynamic metadata exports",
+      "confidence": 0.89,
+      "evidence": [
+        {
+          "static": "export const metadata: Metadata",
+          "content": {
+            "title": "Page title",
+            "description": "Meta description",
+            "keywords": "Array of keywords"
+          }
+        }
+      ],
+      "rules": [
+        "Export metadata object from pages",
+        "Use Metadata type from next",
+        "Static metadata for static pages",
+        "generateMetadata for dynamic pages",
+        "SEO-friendly titles and descriptions"
+      ]
+    },
+    "routeOrganization": {
+      "pattern": "Feature-based route grouping",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "examples": [
+            "app/test/page.tsx",
+            "app/mockup/page.tsx",
+            "app/api/ (for API routes)"
+          ],
+          "convention": "Descriptive folder names"
+        }
+      ],
+      "rules": [
+        "Group related pages in folders",
+        "Use descriptive route names",
+        "(folder) for route groups without URL",
+        "API routes in app/api",
+        "Parallel routes with @folder"
+      ]
+    },
+    "serverComponents": {
+      "pattern": "Server Components by default",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "default": "Components are server-side",
+          "clientMarker": "'use client' for client components",
+          "benefits": "Reduced bundle size, direct data fetching"
+        }
+      ],
+      "rules": [
+        "Prefer server components",
+        "Client components only when needed",
+        "Data fetching in server components",
+        "Interactive features need client",
+        "Forms can use server actions"
+      ]
+    },
+    "loadingStates": {
+      "pattern": "Streaming with loading.tsx",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "file": "app/loading.tsx",
+          "behavior": "Shows while page loads",
+          "implementation": "Skeleton or spinner UI"
+        }
+      ],
+      "rules": [
+        "loading.tsx for each route segment",
+        "Instant loading feedback",
+        "Skeleton screens preferred",
+        "Match layout of loaded content",
+        "Suspense boundaries for granular loading"
+      ]
+    },
+    "errorHandling": {
+      "pattern": "Route-level error boundaries",
+      "confidence": 0.90,
+      "evidence": [
+        {
+          "file": "app/error.tsx",
+          "type": "Client component",
+          "props": "error and reset function"
+        }
+      ],
+      "rules": [
+        "error.tsx must be client component",
+        "Catch errors in route segment",
+        "Provide reset functionality",
+        "User-friendly error messages",
+        "Log errors for monitoring"
+      ]
+    },
+    "apiRoutes": {
+      "pattern": "Route handlers in app/api",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "location": "app/api/",
+          "files": "route.ts for handlers",
+          "methods": "GET, POST, PUT, DELETE exports"
+        }
+      ],
+      "rules": [
+        "route.ts defines API endpoints",
+        "Export named HTTP methods",
+        "Type-safe with NextRequest/NextResponse",
+        "Can be dynamic or static",
+        "Middleware for auth/validation"
+      ]
+    }
+  }
+}

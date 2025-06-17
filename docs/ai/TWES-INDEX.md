@@ -129,6 +129,15 @@ Four-phase implementation roadmap with priorities and success metrics.
 - **Use when**: Writing any code in the project
 - **Key concepts**: Next.js 15 patterns, React 19 features, performance optimization
 
+#### [Discovered Patterns](./shared-context/discovered-patterns/) 🔬
+- **Purpose**: High-confidence patterns extracted by documentation evolution system
+- **Contains**: Component conventions (92% confidence), performance patterns (99 Lighthouse), development workflows
+- **Use when**: Need proven patterns with real metrics, implementing new features, optimizing performance
+- **Key files**:
+  - [Component Conventions](./shared-context/discovered-patterns/component-conventions.md) - React.forwardRef, accessibility
+  - [Performance Code Splitting](./shared-context/discovered-patterns/performance-code-splitting.tsx) - Dynamic imports, bundle optimization
+  - [Add Blog Feature Guide](./shared-context/discovered-patterns/add-blog-feature-guide.md) - Step-by-step workflow
+
 ## 🛠️ Tool-Specific Documentation
 
 ### Claude Code Bridge (/for-claude-bridge/)

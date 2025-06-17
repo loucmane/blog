@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "description": "Accumulated knowledge across all documentation evolution phases",
+  "categories": {
+    "conventions": {
+      "description": "Discovered codebase conventions",
+      "items": []
+    },
+    "patterns": {
+      "description": "Identified patterns and practices",
+      "items": []
+    },
+    "relationships": {
+      "description": "Component and module relationships",
+      "items": []
+    },
+    "insights": {
+      "description": "AI-generated insights and recommendations",
+      "items": []
+    },
+    "validations": {
+      "description": "Quality checks and validation results",
+      "items": []
+    }
+  },
+  "metadata": {
+    "lastUpdated": null,
+    "totalItems": 0,
+    "phases": {
+      "1-discovery": { "contributions": 0 },
+      "2-synthesis": { "contributions": 0 },
+      "3-documentation": { "contributions": 0 },
+      "4-validation": { "contributions": 0 },
+      "5-integration": { "contributions": 0 }
+    }
+  }
+}

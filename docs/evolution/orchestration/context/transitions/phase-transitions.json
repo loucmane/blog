@@ -1,0 +1,7 @@
+{
+  "description": "Tracks phase transitions and data handoffs",
+  "transitions": [],
+  "currentPhase": "1-discovery",
+  "lastTransition": null,
+  "transitionLog": []
+}

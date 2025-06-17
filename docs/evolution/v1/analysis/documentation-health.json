@@ -1,0 +1,149 @@
+{
+  "timestamp": "2025-01-17T11:48:00Z",
+  "scope": "packages/web",
+  "overall_health": 68,
+  "metrics": {
+    "coverage": {
+      "score": 45,
+      "status": "critical",
+      "details": {
+        "documented_files": 2,
+        "total_source_files": 43,
+        "percentage": 4.65,
+        "missing_areas": [
+          "Component documentation",
+          "Hook documentation",
+          "Utility function documentation",
+          "API route documentation",
+          "Configuration documentation",
+          "Testing documentation"
+        ]
+      }
+    },
+    "accuracy": {
+      "score": 82,
+      "status": "good",
+      "details": {
+        "up_to_date": true,
+        "reflects_migration": true,
+        "matches_implementation": true,
+        "concerns": [
+          "No documentation for new theme system usage",
+          "Missing MDX content workflow details"
+        ]
+      }
+    },
+    "discoverability": {
+      "score": 65,
+      "status": "needs_work",
+      "details": {
+        "documentation_files": 2,
+        "cross_references": 0,
+        "search_optimization": false,
+        "navigation_structure": "minimal",
+        "issues": [
+          "No component catalog",
+          "No API documentation",
+          "No searchable index",
+          "Limited cross-linking"
+        ]
+      }
+    },
+    "clarity": {
+      "score": 78,
+      "status": "good",
+      "details": {
+        "readability": "high",
+        "examples_provided": true,
+        "consistent_format": true,
+        "improvements_needed": [
+          "More code examples",
+          "Visual diagrams for architecture",
+          "Step-by-step guides"
+        ]
+      }
+    },
+    "connectivity": {
+      "score": 35,
+      "status": "critical",
+      "details": {
+        "internal_links": 0,
+        "external_references": 5,
+        "orphaned_docs": 0,
+        "broken_links": 0,
+        "missing_connections": [
+          "No links to UI package docs",
+          "No links to shared package",
+          "No links to development guides",
+          "No links to architecture docs"
+        ]
+      }
+    }
+  },
+  "critical_gaps": [
+    {
+      "area": "Component Documentation",
+      "severity": "critical",
+      "impact": "Developers don't know available components or usage patterns",
+      "files_affected": 20
+    },
+    {
+      "area": "Theme Integration Guide",
+      "severity": "high",
+      "impact": "Unclear how to use new @minniewinnie/ui theme system",
+      "files_affected": 10
+    },
+    {
+      "area": "Content Management Workflow",
+      "severity": "high",
+      "impact": "MDX workflow and content sensitivity system undocumented",
+      "files_affected": 15
+    },
+    {
+      "area": "Performance Optimization Guide",
+      "severity": "high",
+      "impact": "No clear path to achieve 98+ Lighthouse scores",
+      "files_affected": 8
+    },
+    {
+      "area": "Testing Documentation",
+      "severity": "medium",
+      "impact": "Test structure exists but no testing guides",
+      "files_affected": 5
+    }
+  ],
+  "strong_areas": [
+    {
+      "area": "Package Overview",
+      "strength": "Clear high-level architecture and purpose",
+      "score": 85
+    },
+    {
+      "area": "Development Commands",
+      "strength": "Well-documented build and dev scripts",
+      "score": 90
+    },
+    {
+      "area": "Environment Variables",
+      "strength": "Complete list with clear purposes",
+      "score": 88
+    }
+  ],
+  "recommendations": {
+    "immediate": [
+      "Create component documentation catalog",
+      "Document theme system integration",
+      "Add content workflow guides"
+    ],
+    "short_term": [
+      "Build comprehensive API documentation",
+      "Create performance optimization guides",
+      "Establish documentation templates"
+    ],
+    "long_term": [
+      "Implement searchable documentation",
+      "Create interactive examples",
+      "Build automated doc generation"
+    ]
+  }
+}

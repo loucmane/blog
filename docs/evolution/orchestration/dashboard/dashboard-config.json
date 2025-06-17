@@ -1,0 +1,85 @@
+{
+  "version": "1.0.0",
+  "description": "Documentation Evolution Coordination Dashboard Configuration",
+  "views": {
+    "phaseStatus": {
+      "title": "Phase Execution Status",
+      "type": "pipeline",
+      "components": [
+        {
+          "id": "phase-tracker",
+          "type": "status-tracker",
+          "dataSource": "context/context-manifest.json",
+          "refreshInterval": 30
+        }
+      ]
+    },
+    "contextFlow": {
+      "title": "Context Data Flow",
+      "type": "flow-diagram",
+      "components": [
+        {
+          "id": "context-visualizer",
+          "type": "sankey-diagram",
+          "dataSource": "context/transitions/phase-transitions.json",
+          "showDataVolume": true
+        }
+      ]
+    },
+    "progressIndicators": {
+      "title": "Evolution Progress",
+      "type": "metrics",
+      "components": [
+        {
+          "id": "progress-bars",
+          "type": "progress-indicator",
+          "metrics": [
+            "filesAnalyzed",
+            "conventionsFound",
+            "docsGenerated",
+            "qualityScore"
+          ]
+        }
+      ]
+    },
+    "qualityMetrics": {
+      "title": "Quality Metrics",
+      "type": "dashboard",
+      "components": [
+        {
+          "id": "quality-gauges",
+          "type": "gauge-chart",
+          "metrics": [
+            "documentationCoverage",
+            "conventionAdherence",
+            "linkIntegrity",
+            "readabilityScore"
+          ]
+        },
+        {
+          "id": "trend-chart",
+          "type": "line-chart",
+          "dataSource": "metrics/tracking-system.json",
+          "timeRange": "30d"
+        }
+      ]
+    }
+  },
+  "alerts": {
+    "phaseFailure": {
+      "condition": "phase.status === 'failed'",
+      "severity": "high",
+      "notification": "Phase {phase.name} has failed"
+    },
+    "lowQuality": {
+      "condition": "qualityScore < 0.7",
+      "severity": "medium",
+      "notification": "Quality score below threshold"
+    },
+    "longExecution": {
+      "condition": "executionTime > expectedTime * 1.5",
+      "severity": "low",
+      "notification": "Phase execution taking longer than expected"
+    }
+  }
+}

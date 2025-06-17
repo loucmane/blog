@@ -1,0 +1,101 @@
+{
+  "phase": "1-discovery",
+  "name": "Convention Discovery Context Package",
+  "version": "1.0.0",
+  "created": "2025-06-17",
+  "description": "Context package for convention discovery phase",
+  "inputs": {
+    "projectRoot": "/home/loucmane/dev/javascript/MomsBlog/blog",
+    "scanPaths": [
+      "packages/web/src",
+      "packages/ui/src",
+      "packages/shared/src",
+      "packages/backend/src"
+    ],
+    "documentationPaths": [
+      "docs/ai/shared-context/patterns",
+      "docs/ai/shared-context/standards",
+      "docs/development"
+    ],
+    "filePatterns": {
+      "components": ["*.tsx", "*.jsx"],
+      "styles": ["*.css", "*.scss", "*.module.css"],
+      "configs": ["*.config.js", "*.config.ts", "tsconfig.json", "package.json"],
+      "tests": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"]
+    }
+  },
+  "objectives": {
+    "primary": [
+      "Discover naming conventions across the codebase",
+      "Identify file structure patterns",
+      "Find component organization patterns",
+      "Detect testing strategies",
+      "Map import/export conventions"
+    ],
+    "secondary": [
+      "Calculate confidence scores for each pattern",
+      "Identify inconsistencies and outliers",
+      "Propose new conventions for gaps",
+      "Create pattern usage heatmap"
+    ]
+  },
+  "expectedOutputs": {
+    "conventions": {
+      "path": "discovered-conventions.json",
+      "schema": {
+        "conventions": [
+          {
+            "name": "string",
+            "category": "string",
+            "pattern": "string",
+            "confidence": "number",
+            "occurrences": "number",
+            "examples": ["string"],
+            "violations": ["string"]
+          }
+        ]
+      }
+    },
+    "patterns": {
+      "path": "pattern-analysis.json",
+      "schema": {
+        "fileStructure": {},
+        "namingPatterns": {},
+        "codePatterns": {},
+        "importPatterns": {}
+      }
+    },
+    "metrics": {
+      "path": "discovery-metrics.json",
+      "schema": {
+        "filesAnalyzed": "number",
+        "patternsFound": "number",
+        "confidenceDistribution": {},
+        "executionTime": "string"
+      }
+    }
+  },
+  "analysisStrategies": {
+    "fileNaming": {
+      "strategy": "regex-pattern-matching",
+      "confidence": "frequency-based",
+      "grouping": "by-directory"
+    },
+    "codeStructure": {
+      "strategy": "ast-analysis",
+      "confidence": "consistency-scoring",
+      "grouping": "by-feature"
+    },
+    "imports": {
+      "strategy": "dependency-graph",
+      "confidence": "usage-frequency",
+      "grouping": "by-module"
+    }
+  },
+  "confidenceFactors": {
+    "frequency": 0.4,
+    "consistency": 0.3,
+    "recency": 0.2,
+    "authoritative": 0.1
+  }
+}

@@ -2,6 +2,12 @@
 
 A simple guide to automatically improve your documentation using AI-powered evolution.
 
+## Command Location
+The infinite-documentation command is located at:
+```
+.claude/commands/infinite-documentation.md
+```
+
 ## Quick Start (Run Everything)
 
 In a new Claude session, run this single command:

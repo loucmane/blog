@@ -1,0 +1,118 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web/src",
+    "confidence": 0.94
+  },
+  "patterns": {
+    "directoryStructure": {
+      "pattern": "Feature-based organization with clear separation",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "path": "src/components/ui/",
+          "purpose": "All shadcn/ui components",
+          "convention": "One component per file"
+        },
+        {
+          "path": "src/types/",
+          "purpose": "TypeScript type definitions",
+          "convention": "Domain-specific type files + index barrel"
+        },
+        {
+          "path": "src/app/",
+          "purpose": "Next.js 13+ app directory",
+          "convention": "File-based routing"
+        }
+      ],
+      "rules": [
+        "components/ui/ contains only shadcn/ui components",
+        "types/ has domain-specific files (content.ts, donor.ts, etc.)",
+        "app/ follows Next.js conventions (layout.tsx, page.tsx)",
+        "Feature directories at root level (emergency/, donor/, trauma-informed/)",
+        "Utility functions in lib/ or utils/"
+      ]
+    },
+    "barrelExports": {
+      "pattern": "Index files for clean imports",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "file": "types/index.ts",
+          "pattern": "Central export for all types",
+          "exports": ["export * from './content'", "export * from './donor'"]
+        }
+      ],
+      "rules": [
+        "Index.ts files aggregate related exports",
+        "Prefer named exports over default exports",
+        "Barrel exports for type definitions",
+        "Individual component files export directly"
+      ]
+    },
+    "testFileOrganization": {
+      "pattern": "Tests mirror source structure",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "source": "src/components/",
+          "test": "tests/components/",
+          "convention": "Parallel directory structure"
+        },
+        {
+          "pattern": "Integration tests in tests/integration/",
+          "example": "ui-package-imports.test.ts"
+        }
+      ],
+      "rules": [
+        "Unit tests adjacent to source files or in tests/",
+        "Integration tests in tests/integration/",
+        "Test files named *.test.ts or *.test.tsx",
+        "Mock data in __mocks__/ directories"
+      ]
+    },
+    "configurationFiles": {
+      "pattern": "Root-level configuration with TypeScript",
+      "confidence": 0.93,
+      "evidence": [
+        {
+          "file": "next.config.ts",
+          "pattern": "TypeScript config files",
+          "note": "Using .ts instead of .js"
+        },
+        {
+          "file": "tsconfig.json",
+          "pattern": "Path aliases configured",
+          "aliases": ["@/* -> ./src/*"]
+        }
+      ],
+      "rules": [
+        "Prefer TypeScript for config files when supported",
+        "Path aliases defined in tsconfig.json",
+        "Environment types in types/global.d.ts",
+        "Package-specific configs at package root"
+      ]
+    },
+    "assetOrganization": {
+      "pattern": "Domain-specific asset directories",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "directory": "public/",
+          "convention": "Static assets served directly"
+        },
+        {
+          "directory": "src/styles/",
+          "convention": "Global styles and CSS modules"
+        }
+      ],
+      "rules": [
+        "Public assets in public/ directory",
+        "Global styles in src/app/globals.css",
+        "Component-specific styles co-located",
+        "No CSS-in-JS, use Tailwind classes"
+      ]
+    }
+  }
+}

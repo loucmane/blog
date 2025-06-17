@@ -1,0 +1,132 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web",
+    "confidence": 0.89
+  },
+  "patterns": {
+    "importOrdering": {
+      "pattern": "Consistent import grouping and ordering",
+      "confidence": 0.94,
+      "evidence": [
+        {
+          "order": [
+            "React and Next.js imports",
+            "External package imports",
+            "Internal package imports (@minniewinnie/*)",
+            "Alias imports (@/*)",
+            "Relative imports (./)",
+            "Type imports"
+          ],
+          "example": [
+            "import * as React from 'react'",
+            "import { Slot } from '@radix-ui/react-slot'",
+            "import { cva } from 'class-variance-authority'",
+            "import { cn } from '@/lib/utils'",
+            "import type { VariantProps } from 'class-variance-authority'"
+          ]
+        }
+      ],
+      "rules": [
+        "Group imports by source type",
+        "Blank line between import groups",
+        "Sort imports alphabetically within groups",
+        "Use named imports over namespace imports",
+        "Type imports at the end or inline"
+      ]
+    },
+    "pathAliases": {
+      "pattern": "@ alias for src directory",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "alias": "@/",
+          "resolves": "./src/",
+          "usage": ["@/lib/utils", "@/components/ui/button", "@/types"]
+        }
+      ],
+      "rules": [
+        "Use @/ for all src imports",
+        "Never use relative imports across directories",
+        "Relative imports only for same directory",
+        "Absolute imports for node_modules",
+        "Package imports for monorepo packages"
+      ]
+    },
+    "exportPatterns": {
+      "pattern": "Named exports with selective re-exports",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "componentExports": "export { Component, componentVariants }",
+          "typeExports": "export type { ComponentProps }",
+          "barrelExports": "export * from './module'"
+        }
+      ],
+      "rules": [
+        "Prefer named exports over default",
+        "Export component and its variants together",
+        "Export types separately with 'export type'",
+        "Use barrel exports for type collections",
+        "No export default for components"
+      ]
+    },
+    "monorepoImports": {
+      "pattern": "Scoped package imports",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "uiPackage": "@minniewinnie/ui",
+          "imports": [
+            "@minniewinnie/ui/providers",
+            "@minniewinnie/ui/tokens/colors",
+            "@minniewinnie/ui/hooks/useTheme"
+          ]
+        }
+      ],
+      "rules": [
+        "Import from package name, not relative paths",
+        "Use subpath exports for specific modules",
+        "Types from @minniewinnie/shared",
+        "UI tokens from @minniewinnie/ui",
+        "Never import from other package's src"
+      ]
+    },
+    "dynamicImports": {
+      "pattern": "Lazy loading for code splitting",
+      "confidence": 0.84,
+      "evidence": [
+        {
+          "pattern": "const Component = dynamic(() => import('./Component'))",
+          "usage": "Heavy components and route-based splitting"
+        }
+      ],
+      "rules": [
+        "Use next/dynamic for client-only components",
+        "Lazy load heavy third-party libraries",
+        "Route-based code splitting automatic",
+        "Provide loading states for dynamic imports",
+        "Preload critical dynamic imports"
+      ]
+    },
+    "typeImports": {
+      "pattern": "Explicit type imports for clarity",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "inline": "import { type ButtonProps } from './button'",
+          "separate": "import type { Metadata } from 'next'",
+          "preference": "Separate type imports for external packages"
+        }
+      ],
+      "rules": [
+        "Use 'import type' for type-only imports",
+        "Inline type imports for mixed imports",
+        "Separate type imports from different packages",
+        "Type imports help with tree-shaking",
+        "Consistent within each file"
+      ]
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web/src/types",
+    "confidence": 0.91
+  },
+  "patterns": {
+    "typeOrganization": {
+      "pattern": "Domain-driven type files with central barrel export",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "structure": {
+            "index.ts": "Barrel export and utility types",
+            "content.ts": "Content-related types (BlogPost, RescueStory)",
+            "donor.ts": "Donation and supporter types",
+            "emergency.ts": "Emergency appeal types",
+            "trauma-informed.ts": "Content sensitivity types",
+            "analytics.ts": "Tracking and metrics types",
+            "ui.ts": "UI component prop types"
+          }
+        }
+      ],
+      "rules": [
+        "One file per domain/feature area",
+        "Index.ts exports all domain types",
+        "Utility types defined in index.ts",
+        "Interface over type for object shapes",
+        "Type for unions and primitives"
+      ]
+    },
+    "namingConventions": {
+      "pattern": "Descriptive names with consistent suffixes",
+      "confidence": 0.93,
+      "evidence": [
+        {
+          "interfaces": ["Author", "SEOMetadata", "BaseContent"],
+          "types": ["ContentType", "Optional<T>", "DeepPartial<T>"],
+          "enums": ["Role", "Status", "UrgencyLevel"]
+        }
+      ],
+      "rules": [
+        "Interfaces use PascalCase without 'I' prefix",
+        "Generic types use single letters (T, K, P)",
+        "Props interfaces end with 'Props' suffix",
+        "Response types include 'Response' suffix",
+        "Error classes extend base Error class"
+      ]
+    },
+    "typeComposition": {
+      "pattern": "Interface extension and type unions",
+      "confidence": 0.90,
+      "evidence": [
+        {
+          "example": "BlogPost extends BaseContent",
+          "pattern": "Common base interfaces extended by specific types"
+        },
+        {
+          "example": "type ContentType = BlogPost | RescueStory | EmergencyAppeal",
+          "pattern": "Union types for variants"
+        }
+      ],
+      "rules": [
+        "Use interface extension for shared properties",
+        "Union types for mutually exclusive variants",
+        "Discriminated unions with 'type' field",
+        "Generic constraints for reusable types",
+        "Utility types for transformations"
+      ]
+    },
+    "errorHandling": {
+      "pattern": "Custom error classes with inheritance",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "baseClass": "AppError",
+          "extendedClasses": ["ValidationError", "NotFoundError", "UnauthorizedError"],
+          "properties": ["code", "statusCode", "details"]
+        }
+      ],
+      "rules": [
+        "Custom error classes extend AppError",
+        "Include error code and HTTP status",
+        "Optional details object for context",
+        "Specific error types for different scenarios",
+        "Error names match class names"
+      ]
+    },
+    "apiTypes": {
+      "pattern": "Standardized API response wrappers",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "wrappers": ["ApiResponse<T>", "PaginatedResponse<T>"],
+          "structure": {
+            "success": "boolean",
+            "data": "T",
+            "error": "optional error object",
+            "pagination": "metadata for lists"
+          }
+        }
+      ],
+      "rules": [
+        "Generic wrappers for API responses",
+        "Consistent success/error structure",
+        "Pagination metadata for list responses",
+        "Type-safe error objects",
+        "Optional fields marked explicitly"
+      ]
+    },
+    "utilityTypes": {
+      "pattern": "Custom utility types for common transformations",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "utilities": {
+            "Optional<T, K>": "Make specific fields optional",
+            "RequireFields<T, K>": "Make specific fields required",
+            "DeepPartial<T>": "Recursive partial type"
+          }
+        }
+      ],
+      "rules": [
+        "Define reusable utility types in index.ts",
+        "Use TypeScript built-ins when available",
+        "Document complex utility types",
+        "Prefer readability over brevity",
+        "Test utility types with examples"
+      ]
+    }
+  }
+}

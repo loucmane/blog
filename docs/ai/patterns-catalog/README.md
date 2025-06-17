@@ -54,6 +54,12 @@ Experiment with patterns in real-time:
    /generated/hooks/         # Custom hook patterns
    /generated/providers/     # Context provider patterns
    /generated/styles/        # Styling patterns
+   
+   # High-confidence patterns from documentation evolution
+   /shared-context/discovered-patterns/
+   ├── component-conventions.md      # 92% confidence patterns
+   ├── performance-code-splitting.tsx # 99 Lighthouse patterns
+   └── add-blog-feature-guide.md     # Development workflows
    ```
 
 2. **Search by Quality**

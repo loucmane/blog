@@ -1,0 +1,163 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web error handling",
+    "confidence": 0.87
+  },
+  "patterns": {
+    "errorBoundaries": {
+      "pattern": "Next.js error.tsx for error boundaries",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "file": "app/error.tsx",
+          "pattern": "Client component error boundary",
+          "props": ["error", "reset"],
+          "ui": "User-friendly error message with retry"
+        }
+      ],
+      "rules": [
+        "error.tsx at each route level",
+        "Must be a client component",
+        "Provide reset functionality",
+        "Log errors for monitoring",
+        "Show user-friendly messages"
+      ]
+    },
+    "customErrorClasses": {
+      "pattern": "Inheritance-based error hierarchy",
+      "confidence": 0.89,
+      "evidence": [
+        {
+          "baseClass": "AppError",
+          "properties": ["message", "code", "statusCode", "details"],
+          "subclasses": ["ValidationError", "NotFoundError", "UnauthorizedError"]
+        }
+      ],
+      "rules": [
+        "Extend AppError for custom errors",
+        "Include error code for identification",
+        "HTTP status codes for API errors",
+        "Optional details for debugging",
+        "Meaningful error messages"
+      ]
+    },
+    "loadingStates": {
+      "pattern": "Dedicated loading.tsx files",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "file": "app/loading.tsx",
+          "pattern": "Loading UI component",
+          "implementation": "Skeleton screens or spinners"
+        }
+      ],
+      "rules": [
+        "loading.tsx for route segments",
+        "Skeleton screens over spinners",
+        "Match layout of loaded content",
+        "Accessible loading announcements",
+        "Prevent layout shift"
+      ]
+    },
+    "notFoundHandling": {
+      "pattern": "Custom 404 pages with helpful navigation",
+      "confidence": 0.90,
+      "evidence": [
+        {
+          "file": "app/not-found.tsx",
+          "pattern": "Custom 404 component",
+          "features": ["Friendly message", "Navigation options"]
+        }
+      ],
+      "rules": [
+        "not-found.tsx for 404 pages",
+        "Helpful error message",
+        "Navigation back to safety",
+        "Search functionality if applicable",
+        "Maintain site branding"
+      ]
+    },
+    "apiErrorResponses": {
+      "pattern": "Standardized API error format",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "format": {
+            "success": false,
+            "error": {
+              "code": "ERROR_CODE",
+              "message": "Human readable message",
+              "details": {}
+            }
+          }
+        }
+      ],
+      "rules": [
+        "Consistent error response structure",
+        "Machine-readable error codes",
+        "Human-friendly messages",
+        "Optional details for debugging",
+        "Appropriate HTTP status codes"
+      ]
+    },
+    "formValidation": {
+      "pattern": "Client-side validation with server verification",
+      "confidence": 0.84,
+      "evidence": [
+        {
+          "clientSide": "Immediate feedback on input",
+          "serverSide": "Final validation before processing",
+          "errors": "Field-specific error messages"
+        }
+      ],
+      "rules": [
+        "Validate on blur and submit",
+        "Clear error messages per field",
+        "Prevent submission with errors",
+        "Server validates all inputs",
+        "Graceful degradation without JS"
+      ]
+    },
+    "asyncErrorHandling": {
+      "pattern": "Try-catch with proper error propagation",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "pattern": "Async/await with try-catch blocks",
+          "logging": "Console.error in development",
+          "userFeedback": "Toast notifications or inline messages"
+        }
+      ],
+      "rules": [
+        "Wrap async operations in try-catch",
+        "Log errors for debugging",
+        "User-friendly error messages",
+        "Retry logic for transient failures",
+        "Loading states during operations"
+      ]
+    },
+    "errorRecovery": {
+      "pattern": "Graceful degradation and recovery options",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "strategies": [
+            "Retry buttons for failed operations",
+            "Fallback content when available",
+            "Offline states for network errors",
+            "Partial functionality degradation"
+          ]
+        }
+      ],
+      "rules": [
+        "Always provide recovery options",
+        "Cache data for offline access",
+        "Fallback to default values",
+        "Progressive enhancement approach",
+        "Clear communication about limitations"
+      ]
+    }
+  }
+}

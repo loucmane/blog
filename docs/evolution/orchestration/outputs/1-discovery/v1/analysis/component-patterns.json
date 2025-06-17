@@ -1,0 +1,131 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web/src/components",
+    "confidence": 0.92
+  },
+  "patterns": {
+    "componentStructure": {
+      "pattern": "Functional Components with forwardRef",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "file": "ui/button.tsx",
+          "pattern": "React.forwardRef with TypeScript generics",
+          "example": "const Button = React.forwardRef<HTMLButtonElement, ButtonProps>"
+        },
+        {
+          "file": "ui/card.tsx",
+          "pattern": "Compound components with individual exports",
+          "example": "Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter"
+        }
+      ],
+      "rules": [
+        "All UI components use React.forwardRef for ref forwarding",
+        "Components accept className prop for style customization",
+        "Props interfaces extend HTML element attributes",
+        "Display names are always set for debugging"
+      ]
+    },
+    "namingConventions": {
+      "pattern": "PascalCase components, kebab-case files",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "fileName": "button.tsx",
+          "componentName": "Button",
+          "exportName": "Button"
+        },
+        {
+          "fileName": "dropdown-menu.tsx",
+          "componentName": "DropdownMenu",
+          "exportName": "DropdownMenu"
+        }
+      ],
+      "rules": [
+        "File names use kebab-case (e.g., dropdown-menu.tsx)",
+        "Component names use PascalCase (e.g., DropdownMenu)",
+        "Compound components use parent prefix (e.g., CardHeader, CardTitle)",
+        "Variant exports use camelCase (e.g., buttonVariants)"
+      ]
+    },
+    "importPatterns": {
+      "pattern": "Consistent import ordering and aliasing",
+      "confidence": 0.93,
+      "evidence": [
+        {
+          "order": [
+            "React imports",
+            "External library imports (@radix-ui, lucide-react)",
+            "Internal utility imports (@/lib/utils)",
+            "Type imports"
+          ]
+        }
+      ],
+      "rules": [
+        "React imports always come first",
+        "External dependencies grouped together",
+        "Internal imports use @ alias",
+        "Blank line separates import groups"
+      ]
+    },
+    "stylingPatterns": {
+      "pattern": "CVA (class-variance-authority) with Tailwind",
+      "confidence": 0.90,
+      "evidence": [
+        {
+          "file": "ui/button.tsx",
+          "pattern": "cva() for variant management",
+          "utilities": ["cn() for className merging"]
+        }
+      ],
+      "rules": [
+        "Use CVA for components with multiple variants",
+        "cn() utility for merging className prop with defaults",
+        "Tailwind classes for all styling",
+        "Consistent transition classes: 'transition-all duration-300'"
+      ]
+    },
+    "accessibilityPatterns": {
+      "pattern": "ARIA-compliant with Radix UI primitives",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "pattern": "Minimum touch targets (min-w-[44px])",
+          "usage": "Button components enforce 44px minimum"
+        },
+        {
+          "pattern": "Focus visible states",
+          "usage": "focus-visible:ring-2 focus-visible:ring-ring"
+        }
+      ],
+      "rules": [
+        "All interactive elements have focus-visible states",
+        "Minimum 44px touch targets for mobile",
+        "Radix UI for complex ARIA patterns",
+        "Semantic HTML elements where possible"
+      ]
+    },
+    "stateManagement": {
+      "pattern": "Hooks for local state, providers for global",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "file": "hooks/use-toast.ts",
+          "pattern": "Custom hooks for reusable state logic"
+        },
+        {
+          "file": "app/layout.tsx",
+          "pattern": "ThemeProvider at root level"
+        }
+      ],
+      "rules": [
+        "Custom hooks in src/hooks/ directory",
+        "Providers wrap app at layout level",
+        "No prop drilling - use context for deep state",
+        "Client components marked with 'use client'"
+      ]
+    }
+  }
+}

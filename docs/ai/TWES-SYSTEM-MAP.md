@@ -77,11 +77,11 @@ shared-context/
     ├── themes/warm-minimalism.md ─────┐
     ├── standards/performance.md ───────┤
     ├── philosophies/development.md ────┼─── Inherited by ───→ tool-specific/
-    └── patterns/monorepo.md ───────────┘                          ├── for-claude-bridge/
-                                                                    ├── for-taskmaster/
-                                                                    ├── for-agent/
-                                                                    ├── for-multi-ai-collab/
-                                                                    └── for-zen/
+    ├── patterns/monorepo.md ───────────┤                          ├── for-claude-bridge/
+    └── discovered-patterns/ 🔬 ────────┘                          ├── for-taskmaster/
+        ├── component-conventions.md                                ├── for-agent/
+        ├── performance-code-splitting.tsx                          ├── for-multi-ai-collab/
+        └── add-blog-feature-guide.md                              └── for-zen/
 ```
 
 ## Success Criteria Dashboard

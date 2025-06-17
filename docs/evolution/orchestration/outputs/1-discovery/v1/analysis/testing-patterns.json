@@ -1,0 +1,139 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web testing",
+    "confidence": 0.85
+  },
+  "patterns": {
+    "testOrganization": {
+      "pattern": "Separate tests directory with categorization",
+      "confidence": 0.89,
+      "evidence": [
+        {
+          "structure": {
+            "tests/integration/": "Integration tests",
+            "tests/components/": "Component tests",
+            "__tests__/": "Unit tests (alternative)"
+          },
+          "naming": "*.test.ts or *.test.tsx"
+        }
+      ],
+      "rules": [
+        "Tests in dedicated tests/ directory",
+        "Mirror source structure in tests",
+        "Integration tests separate from unit",
+        "Descriptive test file names",
+        "Group related tests in describe blocks"
+      ]
+    },
+    "integrationTesting": {
+      "pattern": "Package import verification",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "file": "tests/integration/ui-package-imports.test.ts",
+          "purpose": "Verify monorepo package linking",
+          "approach": "Import and validate exports"
+        }
+      ],
+      "rules": [
+        "Test cross-package imports",
+        "Verify export structure",
+        "Check TypeScript types",
+        "Validate theme configurations",
+        "Ensure provider functionality"
+      ]
+    },
+    "testingLibraries": {
+      "pattern": "Jest with Testing Library",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "testRunner": "Jest",
+          "assertions": "expect() syntax",
+          "utilities": "Testing Library for React"
+        }
+      ],
+      "rules": [
+        "Jest for test runner and assertions",
+        "Testing Library for component tests",
+        "Mock external dependencies",
+        "Test user interactions over implementation",
+        "Accessibility testing included"
+      ]
+    },
+    "testStructure": {
+      "pattern": "AAA pattern (Arrange, Act, Assert)",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "example": "describe -> test -> expect pattern",
+          "grouping": "Related tests in describe blocks",
+          "naming": "Descriptive test names"
+        }
+      ],
+      "rules": [
+        "Group related tests with describe",
+        "Clear test names describing behavior",
+        "One assertion per test ideally",
+        "Setup shared state in beforeEach",
+        "Cleanup in afterEach if needed"
+      ]
+    },
+    "mockingPatterns": {
+      "pattern": "Minimal mocking with clear boundaries",
+      "confidence": 0.83,
+      "evidence": [
+        {
+          "approach": "Mock external dependencies only",
+          "location": "__mocks__/ directories",
+          "strategy": "Return realistic data"
+        }
+      ],
+      "rules": [
+        "Mock external services and APIs",
+        "Don't mock what you own",
+        "Realistic mock data",
+        "Type-safe mocks with TypeScript",
+        "Clear mock reset between tests"
+      ]
+    },
+    "componentTesting": {
+      "pattern": "Behavior-driven component tests",
+      "confidence": 0.84,
+      "evidence": [
+        {
+          "focus": "User interactions and outcomes",
+          "queries": "getByRole, getByText preferred",
+          "assertions": "Visible behavior, not implementation"
+        }
+      ],
+      "rules": [
+        "Test from user's perspective",
+        "Use semantic queries (role, label)",
+        "Test accessibility features",
+        "Verify error states",
+        "Check loading states"
+      ]
+    },
+    "coverageTargets": {
+      "pattern": "Pragmatic coverage goals",
+      "confidence": 0.81,
+      "evidence": [
+        {
+          "target": "Not explicit in codebase",
+          "inference": "Quality over quantity approach",
+          "focus": "Critical paths covered"
+        }
+      ],
+      "rules": [
+        "Test critical user paths",
+        "Cover error scenarios",
+        "Test edge cases",
+        "Integration over unit tests",
+        "Meaningful tests over coverage percentage"
+      ]
+    }
+  }
+}

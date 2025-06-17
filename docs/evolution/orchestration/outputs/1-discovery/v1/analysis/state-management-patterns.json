@@ -1,0 +1,136 @@
+{
+  "discoveryMetadata": {
+    "timestamp": "2025-06-17T10:00:00Z",
+    "agent": "Pattern Scanner (Agent 1)",
+    "scope": "packages/web state management",
+    "confidence": 0.86
+  },
+  "patterns": {
+    "clientServerSeparation": {
+      "pattern": "Explicit client/server component boundaries",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "clientMarkers": "'use client' directive at file top",
+          "examples": ["app/error.tsx", "components/ui/dialog.tsx"],
+          "serverByDefault": "Components without directive are server components"
+        }
+      ],
+      "rules": [
+        "Mark client components with 'use client'",
+        "Server components by default",
+        "Interactive components must be client",
+        "Forms and event handlers require client",
+        "Data fetching happens in server components"
+      ]
+    },
+    "contextProviders": {
+      "pattern": "Provider pattern for global state",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "provider": "ThemeProvider",
+          "location": "app/layout.tsx",
+          "scope": "Entire application"
+        }
+      ],
+      "rules": [
+        "Providers wrap app at layout level",
+        "One provider per concern",
+        "Providers from @minniewinnie/ui",
+        "Custom hooks to consume context",
+        "Default values for all contexts"
+      ]
+    },
+    "customHooks": {
+      "pattern": "Hooks for reusable stateful logic",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "location": "src/hooks/",
+          "examples": ["use-toast.ts"],
+          "naming": "use- prefix for all hooks"
+        }
+      ],
+      "rules": [
+        "Custom hooks in src/hooks directory",
+        "Prefix with 'use' following React convention",
+        "Return object with named properties",
+        "Handle loading and error states",
+        "Provide TypeScript types for returns"
+      ]
+    },
+    "formStateManagement": {
+      "pattern": "Controlled components with React state",
+      "confidence": 0.83,
+      "evidence": [
+        {
+          "pattern": "useState for form fields",
+          "validation": "Client-side with error states",
+          "submission": "Server actions or API routes"
+        }
+      ],
+      "rules": [
+        "Controlled inputs with value/onChange",
+        "Form validation before submission",
+        "Loading states during submission",
+        "Error handling with user feedback",
+        "Reset form on successful submission"
+      ]
+    },
+    "dataFetching": {
+      "pattern": "Server components for data, client for interaction",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "serverFetch": "async components with direct data access",
+          "clientFetch": "useEffect or SWR for client-side",
+          "caching": "Next.js built-in caching"
+        }
+      ],
+      "rules": [
+        "Fetch data in server components when possible",
+        "Use loading.tsx for loading states",
+        "Error boundaries for error handling",
+        "Revalidate data with revalidatePath",
+        "Client fetching only when necessary"
+      ]
+    },
+    "optimisticUpdates": {
+      "pattern": "Immediate UI updates with rollback",
+      "confidence": 0.80,
+      "evidence": [
+        {
+          "pattern": "Update UI before server confirmation",
+          "rollback": "Revert on error",
+          "feedback": "Toast notifications for status"
+        }
+      ],
+      "rules": [
+        "Update UI optimistically for better UX",
+        "Store previous state for rollback",
+        "Show success/error feedback",
+        "Retry failed operations",
+        "Sync with server state eventually"
+      ]
+    },
+    "globalStateAvoidance": {
+      "pattern": "Minimal global state, prefer composition",
+      "confidence": 0.84,
+      "evidence": [
+        {
+          "observation": "No Redux or Zustand found",
+          "preference": "React context for cross-cutting concerns",
+          "locality": "Component state for local concerns"
+        }
+      ],
+      "rules": [
+        "Keep state as local as possible",
+        "Lift state only when necessary",
+        "Use URL state for shareable state",
+        "Server state as source of truth",
+        "Context only for true globals (theme, auth)"
+      ]
+    }
+  }
+}

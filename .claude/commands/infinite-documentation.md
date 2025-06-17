@@ -147,20 +147,23 @@ Based on spec type and current state:
 Deploy specialized Sub Agents for different aspects of documentation improvement:
 
 **For mode="orchestrated" - Strategic Sequential Execution:**
-Deploy orchestrator first, then execute specs based on strategic plan:
-- **Phase 0**: Orchestrator analyzes and plans (5 agents)
-- **Phase 1-N**: Execute specs in optimal order per plan
-- Context shared between phases
-- Adaptive execution based on discoveries
+Deploy orchestrator first using Task tool, then execute specs based on strategic plan:
+- **Phase 0**: Launch 5 orchestrator agents in parallel using Task tool
+  - Each orchestrator agent analyzes different aspects simultaneously
+  - Agents work independently then share findings
+- **Phase 1-N**: Execute documentation specs using Task tool based on plan
+  - Deploy spec agents in waves as determined by orchestrator
+  - Context shared between phases
+  - Adaptive execution based on discoveries
 Total: Variable agents based on orchestrator decisions
 
 **For mode="all" - Quadruple Parallel Execution:**
-Deploy four complete agent teams simultaneously:
-- **Team Bridge**: 5 agents for bridge standards evolution
-- **Team Convention**: 5 agents for convention discovery
-- **Team Network**: 5 agents for documentation network
-- **Team Tasks**: 5 agents for task-based guides
-Total: 20 parallel agents working on different documentation aspects
+Deploy four complete agent teams simultaneously using Task tool:
+- **Team Bridge**: 5 agents for bridge standards evolution (launched via Task tool)
+- **Team Convention**: 5 agents for convention discovery (launched via Task tool)
+- **Team Network**: 5 agents for documentation network (launched via Task tool)
+- **Team Tasks**: 5 agents for task-based guides (launched via Task tool)
+Total: 20 parallel agents working on different documentation aspects via Task tool
 
 Each team operates independently in their designated output directory:
 - Team Bridge → `{output_dir}/bridges/performance/v[N]/`
@@ -237,6 +240,14 @@ COORDINATION:
 - Reference other files in the set appropriately
 - Report file sizes and impact metrics for dry-run
 ```
+
+**Parallel Execution Management:**
+- Launch all assigned Sub Agents simultaneously using Task tool
+- Monitor agent progress and completion in real-time
+- Each agent works independently on their assigned documentation aspect
+- Handle any agent failures by reassigning tasks
+- Collect and validate all generated documentation files
+- Ensure consistent version numbering across all outputs
 
 **PHASE 4.5: DRY-RUN REPORTING**
 If dry_run=true, generate comprehensive preview:
@@ -428,7 +439,7 @@ Before beginning generation, think deeply about:
 - What feedback to collect?
 - How to validate impact?
 
-Begin execution with deep consideration of documentation quality impact, then orchestrate specialized agents to generate comprehensive file sets that measurably improve the developer experience.
+Begin execution with deep consideration of documentation quality impact, then deploy Sub Agents using the Task tool to work in parallel. Each Sub Agent should independently generate their assigned documentation files according to their specialization. Monitor all agents' progress and ensure comprehensive file sets are created that measurably improve the developer experience.
 
 **USAGE EXAMPLES:**
 

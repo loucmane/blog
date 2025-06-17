@@ -1,4 +1,4 @@
-# Documentation Evolution Implementation Plan
+i# Documentation Evolution Implementation Plan
 
 Based on Gemini's excellent feedback, here's our roadmap to enhance the documentation evolution system.
 
@@ -22,7 +22,7 @@ Based on Gemini's excellent feedback, here's our roadmap to enhance the document
 - Knowledge synthesis features
 
 ### 🚀 Ready to Use
-The documentation evolution system is now operational with:
+The documentation evolution system is now operational. The command is located at `.claude/commands/infinite-documentation.md` and can be run with:
 ```bash
 # Run all specs concurrently
 /infinite-documentation mode=all output_dir=/docs/evolution count=3
