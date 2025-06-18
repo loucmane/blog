@@ -1,0 +1,256 @@
+# Interface Contract Template for TaskMaster Infinite System
+# This ensures consistency across all parallel implementations
+
+version: 1.0
+metadata:
+  taskId: "Task-[ID]"
+  componentNames: ["ComponentA", "ComponentB"]
+  owner: "@team-name"
+  created: "YYYY-MM-DD"
+  lastModified: "YYYY-MM-DD"
+
+# 1. Functional Contract (The API)
+# Define the exact interface that all implementations must follow
+functional:
+  ComponentName:
+    props:
+      - name: "propName"
+        type: "string | number | CustomType"
+        required: true
+        default: "defaultValue"
+        description: "What this prop does and why it exists"
+        examples:
+          - value: "example1"
+            result: "What happens with this value"
+          - value: "example2"
+            result: "What happens with this value"
+    
+    methods:
+      - name: "methodName"
+        params:
+          - name: "param1"
+            type: "string"
+            required: true
+          - name: "param2"
+            type: "number"
+            required: false
+            default: 0
+        returns: "Promise<ReturnType>"
+        description: "What this method does"
+        throws:
+          - type: "ErrorType"
+            when: "Condition that causes this error"
+    
+    events:
+      - name: "onEventName"
+        payload: "EventPayloadType"
+        description: "When this event fires"
+
+# 2. Behavioral Contract (User Interactions)
+# Define how the component behaves from the user's perspective
+behavioral:
+  - id: "keyboard-navigation"
+    description: "All interactive elements must be keyboard accessible"
+    appliesTo: ["ComponentA", "ComponentB"]
+    testCase: "User can navigate using Tab/Shift+Tab"
+    acceptance:
+      - "Tab moves focus forward through all interactive elements"
+      - "Shift+Tab moves focus backward"
+      - "Enter/Space activates focused element"
+  
+  - id: "loading-feedback"
+    description: "Loading states must be indicated within 100ms"
+    appliesTo: ["ComponentA"]
+    testCase: "Spinner appears after 100ms of API call"
+    acceptance:
+      - "No UI freeze during loading"
+      - "Clear visual indication of loading state"
+      - "Loading can be cancelled by user"
+
+  - id: "error-handling"
+    description: "Errors must be communicated clearly to users"
+    appliesTo: ["all"]
+    testCase: "Error messages appear in accessible format"
+    acceptance:
+      - "Error messages are in plain language"
+      - "Errors don't break the UI"
+      - "Users can recover from errors"
+
+# 3. Visual Contract (Design System Adherence)
+visual:
+  - id: "theme-compliance"
+    description: "Must use only theme CSS variables for colors"
+    enforcement: "No hex codes or rgb() values allowed"
+    appliesTo: ["all"]
+    exceptions: []
+    validation:
+      - regex: "/(#[0-9a-fA-F]{3,6}|rgb\\(|rgba\\()/"
+        shouldMatch: false
+        errorMessage: "Direct color values not allowed"
+  
+  - id: "spacing-system"
+    description: "Use only spacing tokens from design system"
+    enforcement: "var(--spacing-*) for all margins/padding"
+    appliesTo: ["all"]
+    allowedValues:
+      - "var(--spacing-xs)"  # 4px
+      - "var(--spacing-sm)"  # 8px
+      - "var(--spacing-md)"  # 16px
+      - "var(--spacing-lg)"  # 24px
+      - "var(--spacing-xl)"  # 32px
+  
+  - id: "touch-targets"
+    description: "Minimum touch target of 44px"
+    enforcement: "All interactive elements >= 44x44px"
+    appliesTo: ["all"]
+    exceptions:
+      - "Inline text links may be smaller if line-height provides 44px"
+  
+  - id: "responsive-design"
+    description: "Components must work on all screen sizes"
+    breakpoints:
+      - name: "mobile"
+        maxWidth: "640px"
+        requirements: ["Stack vertically", "Full width"]
+      - name: "tablet"
+        maxWidth: "1024px"
+        requirements: ["2-column layout max"]
+      - name: "desktop"
+        minWidth: "1025px"
+        requirements: ["Optimal at 1440px"]
+
+# 4. Accessibility Contract
+accessibility:
+  - id: "aria-labels"
+    description: "Proper ARIA labels for all interactive elements"
+    enforcement: "Automated axe-core testing"
+    appliesTo: ["all"]
+    requirements:
+      - "All buttons have accessible names"
+      - "Form inputs have associated labels"
+      - "Images have alt text"
+      - "Decorative images use alt=''"
+  
+  - id: "focus-indicators"
+    description: "Focus indicators visible and high contrast"
+    enforcement: "4.5:1 contrast ratio minimum"
+    appliesTo: ["all"]
+    requirements:
+      - "Never remove outline without replacement"
+      - "Focus indicator at least 2px wide"
+      - "Visible in all color themes"
+  
+  - id: "screen-reader"
+    description: "Full screen reader support"
+    appliesTo: ["all"]
+    requirements:
+      - "Semantic HTML structure"
+      - "Proper heading hierarchy"
+      - "Live regions for dynamic content"
+      - "Skip links where appropriate"
+  
+  - id: "color-contrast"
+    description: "Text meets WCAG color contrast requirements"
+    requirements:
+      - "Normal text: 4.5:1 minimum"
+      - "Large text: 3:1 minimum"
+      - "Active elements: 3:1 minimum"
+
+# 5. Performance Contract
+performance:
+  - id: "bundle-size"
+    description: "Component bundle size limits"
+    limits:
+      - component: "ComponentA"
+        maxSize: "10kb"
+        gzipped: true
+      - component: "ComponentB"
+        maxSize: "15kb"
+        gzipped: true
+  
+  - id: "render-performance"
+    description: "Components must render efficiently"
+    requirements:
+      - "No unnecessary re-renders"
+      - "Memoization where appropriate"
+      - "Virtualization for long lists (>100 items)"
+  
+  - id: "lighthouse-scores"
+    description: "Minimum Lighthouse scores"
+    scores:
+      - metric: "Performance"
+        minimum: 90
+      - metric: "Accessibility"
+        minimum: 100
+      - metric: "Best Practices"
+        minimum: 95
+
+# 6. Testing Requirements
+testing:
+  unitTests:
+    required: true
+    coverage: 80
+    frameworks: ["Jest", "React Testing Library"]
+  
+  integrationTests:
+    required: true
+    frameworks: ["Playwright", "Cypress"]
+  
+  visualTests:
+    required: false
+    frameworks: ["Chromatic", "Percy"]
+  
+  accessibilityTests:
+    required: true
+    tools: ["axe-core", "pa11y"]
+
+# 7. Documentation Requirements
+documentation:
+  - id: "component-docs"
+    description: "Each component must have comprehensive docs"
+    requirements:
+      - "Props documentation with examples"
+      - "Usage examples for common scenarios"
+      - "Accessibility notes"
+      - "Performance considerations"
+  
+  - id: "rationale"
+    description: "Implementation rationale document"
+    requirements:
+      - "Architectural decisions explained"
+      - "Trade-offs documented"
+      - "Alternative approaches considered"
+
+# 8. Validation Rules
+# These can be used by automated tools to validate implementations
+validation:
+  rules:
+    - id: "no-console-logs"
+      description: "No console.log statements in production code"
+      type: "lint"
+      severity: "error"
+    
+    - id: "prop-types"
+      description: "All props must have TypeScript types"
+      type: "typescript"
+      severity: "error"
+    
+    - id: "no-inline-styles"
+      description: "No inline style attributes"
+      type: "lint"
+      severity: "warning"
+      exceptions: ["Dynamic styles that cannot be pre-computed"]
+
+# 9. Migration Path
+# If replacing existing components
+migration:
+  replacements:
+    - old: "OldComponentName"
+      new: "ComponentA"
+      breaking: false
+      migrationGuide: "link/to/guide.md"
+  
+  deprecation:
+    timeline: "6 months"
+    warnings: true
+    codemod: "link/to/codemod"

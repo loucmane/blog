@@ -34,6 +34,14 @@ Strategic guidance:
 Technical details:
 - `commands.md` - Complete command reference with examples
 
+### 🚀 taskmaster-infinite/
+Advanced multi-agent task implementation system:
+- `README.md` - Overview of the TaskMaster Infinite System
+- `implementation-guide.md` - Step-by-step implementation guide
+- `orchestrate-usage.md` - How to use the orchestrate-task command
+- `implementation-notes.md` - Technical details and confidence assessment
+- `worktree-example.md` - Practical example using git worktrees
+
 ## When TaskMaster Shines ✨
 
 ### Perfect For:

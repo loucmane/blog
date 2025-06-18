@@ -138,6 +138,14 @@ Four-phase implementation roadmap with priorities and success metrics.
   - [Performance Code Splitting](./shared-context/discovered-patterns/performance-code-splitting.tsx) - Dynamic imports, bundle optimization
   - [Add Blog Feature Guide](./shared-context/discovered-patterns/add-blog-feature-guide.md) - Step-by-step workflow
 
+### 📋 Guidelines
+
+#### [Git Worktrees](./shared-context/guidelines/git-worktrees.md) 🆕
+- **Purpose**: Isolated testing environments for generated code
+- **Contains**: Worktree concepts, commands, integration with orchestrate-task
+- **Use when**: Testing AI-generated implementations, comparing versions side-by-side
+- **Key concepts**: Multiple working directories, branch isolation, safe testing
+
 ## 🛠️ Tool-Specific Documentation
 
 ### Claude Code Bridge (/for-claude-bridge/)
@@ -170,6 +178,13 @@ Four-phase implementation roadmap with priorities and success metrics.
 
 #### Reference
 - [Commands](./for-taskmaster/reference/commands.md) - Complete API reference
+
+#### TaskMaster Infinite System 🆕
+- **[Overview](./for-taskmaster/taskmaster-infinite/README.md)** - Multi-agent orchestration for task implementation
+- **[Implementation Guide](./for-taskmaster/taskmaster-infinite/implementation-guide.md)** - Step-by-step setup
+- **[Orchestrate Usage](./for-taskmaster/taskmaster-infinite/orchestrate-usage.md)** - Using the orchestrate-task command
+- **[Implementation Notes](./for-taskmaster/taskmaster-infinite/implementation-notes.md)** - Technical details
+- **[Worktree Example](./for-taskmaster/taskmaster-infinite/worktree-example.md)** - Git worktree integration
 
 ### Agent Tool (/for-agent/)
 

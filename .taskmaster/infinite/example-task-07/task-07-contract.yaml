@@ -1,0 +1,313 @@
+# Interface Contract for Task 7: Layout Components
+
+version: 1.0
+metadata:
+  taskId: "Task-7"
+  componentNames: ["Box", "Stack", "Grid"]
+  owner: "@ui-platform-team"
+  created: "2025-01-18"
+
+# 1. Functional Contract (The API)
+functional:
+  Box:
+    description: "Base layout component with polymorphic rendering"
+    props:
+      - name: "as"
+        type: "React.ElementType"
+        required: false
+        default: "'div'"
+        description: "HTML element or component to render as"
+      
+      - name: "children"
+        type: "React.ReactNode"
+        required: false
+        description: "Child elements to render"
+      
+      - name: "className"
+        type: "string"
+        required: false
+        description: "Additional CSS classes"
+      
+      - name: "style"
+        type: "React.CSSProperties"
+        required: false
+        description: "Inline styles (use sparingly)"
+    
+    requirements:
+      - "Must forward refs to underlying element"
+      - "Must pass through all HTML attributes"
+      - "Must have displayName for debugging"
+  
+  Stack:
+    description: "Vertical or horizontal stacking layout"
+    extends: "Box"
+    props:
+      - name: "direction"
+        type: "'vertical' | 'horizontal'"
+        required: false
+        default: "'vertical'"
+        description: "Stack direction"
+      
+      - name: "gap"
+        type: "SpacingToken | number"
+        required: false
+        default: "0"
+        description: "Space between children (design token or number)"
+        examples:
+          - value: "'md'"
+            result: "16px gap (from theme)"
+          - value: "4"
+            result: "16px gap (4 * 4px base)"
+          - value: "0"
+            result: "No gap"
+      
+      - name: "align"
+        type: "'start' | 'center' | 'end' | 'stretch'"
+        required: false
+        default: "'stretch'"
+        description: "Cross-axis alignment"
+      
+      - name: "justify"
+        type: "'start' | 'center' | 'end' | 'between' | 'around' | 'evenly'"
+        required: false
+        default: "'start'"
+        description: "Main-axis alignment"
+      
+      - name: "wrap"
+        type: "boolean"
+        required: false
+        default: "false"
+        description: "Allow items to wrap"
+      
+      - name: "divider"
+        type: "React.ReactElement"
+        required: false
+        description: "Element to render between children"
+  
+  Grid:
+    description: "CSS Grid-based layout component"
+    extends: "Box"
+    props:
+      - name: "columns"
+        type: "number | string"
+        required: false
+        default: "1"
+        description: "Number of columns or grid-template-columns value"
+        examples:
+          - value: "3"
+            result: "3 equal columns"
+          - value: "'1fr 2fr 1fr'"
+            result: "Custom column sizes"
+      
+      - name: "rows"
+        type: "number | string"
+        required: false
+        description: "Number of rows or grid-template-rows value"
+      
+      - name: "gap"
+        type: "SpacingToken | number"
+        required: false
+        default: "0"
+        description: "Gap between grid items"
+      
+      - name: "columnGap"
+        type: "SpacingToken | number"
+        required: false
+        description: "Override horizontal gap"
+      
+      - name: "rowGap"
+        type: "SpacingToken | number"
+        required: false
+        description: "Override vertical gap"
+      
+      - name: "align"
+        type: "'start' | 'center' | 'end' | 'stretch'"
+        required: false
+        default: "'stretch'"
+        description: "Align items in their grid areas"
+      
+      - name: "justify"
+        type: "'start' | 'center' | 'end' | 'stretch'"
+        required: false
+        default: "'stretch'"
+        description: "Justify items in their grid areas"
+
+# 2. Behavioral Contract
+behavioral:
+  - id: "ref-forwarding"
+    description: "All components must forward refs"
+    appliesTo: ["Box", "Stack", "Grid"]
+    testCase: "Ref provides access to DOM element"
+    acceptance:
+      - "ref.current is the underlying DOM element"
+      - "Works with useRef and callback refs"
+  
+  - id: "prop-passthrough"
+    description: "Unknown props pass to underlying element"
+    appliesTo: ["all"]
+    testCase: "data-* and aria-* attributes work"
+    acceptance:
+      - "All valid HTML attributes are passed through"
+      - "Event handlers work correctly"
+      - "No React warnings about unknown props"
+  
+  - id: "responsive-behavior"
+    description: "Components respond to container/viewport changes"
+    appliesTo: ["all"]
+    testCase: "Layout updates on resize"
+    acceptance:
+      - "No layout shift during resize"
+      - "Smooth transitions if applicable"
+      - "Maintains accessibility during changes"
+
+# 3. Visual Contract
+visual:
+  - id: "spacing-tokens"
+    description: "Use only theme spacing tokens"
+    enforcement: "No hardcoded pixel values"
+    appliesTo: ["Stack", "Grid"]
+    validation:
+      - regex: "/\\d+px/"
+        shouldMatch: false
+        errorMessage: "Direct pixel values not allowed in gap props"
+    allowedValues:
+      - "var(--spacing-xs)"   # 4px
+      - "var(--spacing-sm)"   # 8px
+      - "var(--spacing-md)"   # 16px
+      - "var(--spacing-lg)"   # 24px
+      - "var(--spacing-xl)"   # 32px
+      - "var(--spacing-2xl)"  # 48px
+  
+  - id: "no-default-styling"
+    description: "Components have no visual styling by default"
+    appliesTo: ["all"]
+    requirements:
+      - "No default margins or padding"
+      - "No default colors or borders"
+      - "No default typography styles"
+      - "Inherit font properties from parent"
+  
+  - id: "theme-aware"
+    description: "Respect theme context and CSS variables"
+    appliesTo: ["all"]
+    requirements:
+      - "Use CSS custom properties for all values"
+      - "Support all 4 theme variants"
+      - "No style conflicts between themes"
+
+# 4. Accessibility Contract
+accessibility:
+  - id: "semantic-html"
+    description: "Use appropriate HTML elements"
+    appliesTo: ["all"]
+    requirements:
+      - "Default to semantic HTML5 elements"
+      - "Support role prop for overrides"
+      - "Maintain proper document outline"
+  
+  - id: "keyboard-navigation"
+    description: "Don't interfere with keyboard navigation"
+    appliesTo: ["all"]
+    requirements:
+      - "No keyboard traps"
+      - "Maintain natural tab order"
+      - "Focus visible on interactive children"
+  
+  - id: "screen-reader-support"
+    description: "Work correctly with screen readers"
+    appliesTo: ["all"]
+    requirements:
+      - "No unnecessary ARIA attributes"
+      - "Proper heading hierarchy in children"
+      - "Layout changes don't confuse screen readers"
+  
+  - id: "reduced-motion"
+    description: "Respect prefers-reduced-motion"
+    appliesTo: ["all"]
+    requirements:
+      - "Disable animations when preferred"
+      - "Instant layout changes in reduced motion"
+
+# 5. Performance Contract
+performance:
+  - id: "bundle-size"
+    limits:
+      - component: "Box"
+        maxSize: "1kb"
+        gzipped: true
+      - component: "Stack"
+        maxSize: "1.5kb"
+        gzipped: true
+      - component: "Grid"
+        maxSize: "1.5kb"
+        gzipped: true
+      - component: "Total"
+        maxSize: "4kb"
+        gzipped: true
+  
+  - id: "runtime-performance"
+    requirements:
+      - "No layout thrashing"
+      - "Use CSS for all layouts (no JS calculations)"
+      - "No unnecessary re-renders"
+      - "Memoize only if measurable benefit"
+  
+  - id: "css-performance"
+    requirements:
+      - "Use CSS Grid/Flexbox native features"
+      - "Avoid complex selectors"
+      - "Minimize specificity conflicts"
+
+# 6. Testing Requirements
+testing:
+  unitTests:
+    required: true
+    coverage: 90
+    requirements:
+      - "Test all prop combinations"
+      - "Test ref forwarding"
+      - "Test responsive behavior"
+  
+  visualTests:
+    required: true
+    requirements:
+      - "Snapshot all component states"
+      - "Test all theme variants"
+      - "Test responsive breakpoints"
+  
+  accessibilityTests:
+    required: true
+    requirements:
+      - "Zero violations from axe-core"
+      - "Keyboard navigation tests"
+      - "Screen reader announcements"
+
+# 7. TypeScript Contract
+typescript:
+  - id: "strict-types"
+    requirements:
+      - "No implicit any"
+      - "Strict null checks"
+      - "Exhaustive prop types"
+      - "Exported types for all props"
+  
+  - id: "polymorphic-types"
+    description: "Proper typing for 'as' prop"
+    requirements:
+      - "Infer HTML attributes from 'as' prop"
+      - "Type safety for component props"
+      - "No type errors in consumer code"
+
+# 8. Documentation Requirements
+documentation:
+  - id: "api-docs"
+    requirements:
+      - "JSDoc for every prop"
+      - "Usage examples for common cases"
+      - "Migration guide from previous system"
+  
+  - id: "storybook"
+    requirements:
+      - "Story for each component"
+      - "Stories for all prop combinations"
+      - "Stories showing responsive behavior"
