@@ -180,11 +180,11 @@ Four-phase implementation roadmap with priorities and success metrics.
 - [Commands](./for-taskmaster/reference/commands.md) - Complete API reference
 
 #### TaskMaster Infinite System 🆕
-- **[Overview](./for-taskmaster/taskmaster-infinite/README.md)** - Multi-agent orchestration for task implementation
-- **[Implementation Guide](./for-taskmaster/taskmaster-infinite/implementation-guide.md)** - Step-by-step setup
-- **[Orchestrate Usage](./for-taskmaster/taskmaster-infinite/orchestrate-usage.md)** - Using the orchestrate-task command
-- **[Implementation Notes](./for-taskmaster/taskmaster-infinite/implementation-notes.md)** - Technical details
-- **[Worktree Example](./for-taskmaster/taskmaster-infinite/worktree-example.md)** - Git worktree integration
+- **[System Documentation](./for-taskmaster/taskmaster-infinite/system-documentation.md)** - Complete system overview and architecture
+- **[Implementation Guide](./for-taskmaster/taskmaster-infinite/implementation-guide.md)** - Step-by-step setup guide
+- **[Orchestrate V2 Guide](./for-taskmaster/taskmaster-infinite/orchestrate-v2-guide.md)** - Direct worktree deployment
+- **[Unified Workflow Guide](./for-taskmaster/taskmaster-infinite/unified-workflow-guide.md)** - Streamlined developer workflow
+- **[Templates](./for-taskmaster/taskmaster-infinite/templates/)** - Ready-to-use templates
 
 ### Agent Tool (/for-agent/)
 

@@ -11,7 +11,18 @@
     "dev": "pnpm --parallel dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "worktree:dev": "./scripts/worktree-dev.sh",
+    "worktree:dev:concurrent": "node ./scripts/worktree-dev-concurrent.js",
+    "worktree:dev:tmux": "./scripts/worktree-tmux.sh",
+    "worktree:dev:1": "cd .worktrees/*-1 2>/dev/null && pnpm dev || echo 'No worktree 1 found'",
+    "worktree:dev:2": "cd .worktrees/*-2 2>/dev/null && pnpm dev || echo 'No worktree 2 found'",
+    "worktree:dev:3": "cd .worktrees/*-3 2>/dev/null && pnpm dev || echo 'No worktree 3 found'",
+    "worktree:dev:4": "cd .worktrees/*-4 2>/dev/null && pnpm dev || echo 'No worktree 4 found'",
+    "worktree:dev:5": "cd .worktrees/*-5 2>/dev/null && pnpm dev || echo 'No worktree 5 found'",
+    "worktree:dev:6": "cd .worktrees/*-6 2>/dev/null && pnpm dev || echo 'No worktree 6 found'",
+    "worktree:list": "git worktree list",
+    "worktree:clean": "git worktree list | grep -E '\\.worktrees/' | awk '{print $1}' | xargs -I {} git worktree remove {} --force"
   },
   "devDependencies": {
     "eslint": "^8.54.0",
