@@ -143,18 +143,196 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 sed -i 's/status: initializing/status: orchestrating/' "$STATE_FILE"
 ```
 
-**IMPORTANT: Now use the Task tool to run the orchestrate-task-v3 command**
+**IMPORTANT: Now deploy the orchestration agents directly**
 
-Deploy the orchestration using the Task tool with these parameters:
-- task_id=${task_id}
-- specialists=${specialists}
-- depth=${depth}
-- deployment_mode=worktree-all
-- worktree_prefix=${WORKTREE_PREFIX}
+The orchestration agents are deployed through specific prompts that guide their implementation work.
 
-This will deploy approximately 23 agents (Master Orchestrator, 5 Specialist Orchestrators, 15 Sub-Agents, Evaluation Orchestrator, and Synthesis Orchestrator).
+**Deploy Master Orchestrator using Task tool:**
 
-The orchestration will write implementations to the worktrees created in Phase 1.
+Deploy the Master Orchestrator agent with this prompt:
+
+```
+TASK: Master Orchestrator for Task ${task_id} - Unified Workflow Orchestration
+
+You are the Master Orchestrator for a sophisticated multi-agent system implementing Task ${task_id}.
+
+Your deployment configuration:
+- Task ID: ${task_id}
+- Specialists: ${specialists}
+- Depth: ${depth} sub-agents per specialist
+- Deployment Mode: worktree-all
+- Worktree Prefix: ${worktree_prefix}
+- Target Path: packages/web/src/components
+
+Your responsibilities:
+1. Coordinate deployment of 5 Specialist Orchestrators
+2. Each specialist will deploy ${depth} sub-agents for implementation
+3. Monitor implementation progress across all worktrees
+4. Ensure consistent quality and integration
+5. Prepare for synthesis phase
+
+Specialist worktree assignments:
+- Performance: .worktrees/${worktree_prefix}-1-performance/
+- Architecture: .worktrees/${worktree_prefix}-2-architecture/
+- UX/DX: .worktrees/${worktree_prefix}-3-ux_dx/
+- Accessibility: .worktrees/${worktree_prefix}-4-accessibility/
+- Innovation: .worktrees/${worktree_prefix}-5-innovation/
+- Synthesis: .worktrees/${worktree_prefix}-6-synthesis/
+
+Begin by analyzing Task ${task_id} requirements and preparing deployment strategy.
+```
+
+**Deploy Specialist Orchestrators using Task tool (5 agents in parallel):**
+
+Deploy these 5 specialist orchestrators simultaneously:
+
+```
+SPECIALIST 1 - PERFORMANCE:
+TASK: Performance Specialist Orchestrator for Task ${task_id}
+
+You are the Performance Specialist Orchestrator.
+Your worktree: .worktrees/${worktree_prefix}-1-performance/
+Your focus: Bundle size, runtime performance, memory efficiency
+
+Deploy ${depth} sub-agents to create implementations in:
+- _implementations/bundle-optimizer/
+- _implementations/runtime-optimizer/
+- _implementations/memory-optimizer/
+
+Each implementation should be complete and functional.
+```
+
+```
+SPECIALIST 2 - ARCHITECTURE:
+TASK: Architecture Specialist Orchestrator for Task ${task_id}
+
+You are the Architecture Specialist Orchestrator.
+Your worktree: .worktrees/${worktree_prefix}-2-architecture/
+Your focus: Code organization, maintainability, scalability
+
+Deploy ${depth} sub-agents to create implementations in:
+- _implementations/modular-design/
+- _implementations/maintainability-focused/
+- _implementations/scalability-optimized/
+```
+
+```
+SPECIALIST 3 - UX/DX:
+TASK: UX/DX Specialist Orchestrator for Task ${task_id}
+
+You are the UX/DX Specialist Orchestrator.
+Your worktree: .worktrees/${worktree_prefix}-3-ux_dx/
+Your focus: User experience, developer experience, API design
+
+Deploy ${depth} sub-agents to create implementations in:
+- _implementations/intuitive-api/
+- _implementations/enhanced-ux/
+- _implementations/developer-friendly/
+```
+
+```
+SPECIALIST 4 - ACCESSIBILITY:
+TASK: Accessibility Specialist Orchestrator for Task ${task_id}
+
+You are the Accessibility Specialist Orchestrator.
+Your worktree: .worktrees/${worktree_prefix}-4-accessibility/
+Your focus: WCAG compliance, screen reader support, keyboard navigation
+
+Deploy ${depth} sub-agents to create implementations in:
+- _implementations/wcag-compliant/
+- _implementations/screen-reader-optimized/
+- _implementations/keyboard-first/
+```
+
+```
+SPECIALIST 5 - INNOVATION:
+TASK: Innovation Specialist Orchestrator for Task ${task_id}
+
+You are the Innovation Specialist Orchestrator.
+Your worktree: .worktrees/${worktree_prefix}-5-innovation/
+Your focus: Cutting-edge features, creative solutions, future-proofing
+
+Deploy ${depth} sub-agents to create implementations in:
+- _implementations/ai-enhanced/
+- _implementations/experimental-features/
+- _implementations/future-proof/
+```
+
+**Deploy Sub-Agents (15 total, 3 per specialist) using Task tool:**
+
+Each specialist orchestrator deploys their sub-agents. Example for Performance:
+
+```
+PERFORMANCE SUB-AGENT 1:
+TASK: Implement bundle-optimized version of Task ${task_id}
+
+You are a Performance Sub-Agent focused on bundle optimization.
+Write your implementation to: .worktrees/${worktree_prefix}-1-performance/packages/web/src/components/_implementations/bundle-optimizer/
+
+Focus on:
+- Minimal bundle size
+- Tree-shaking optimization
+- Code splitting strategies
+```
+
+[Similar patterns for all 15 sub-agents]
+
+**Deploy Evaluation Orchestrator using Task tool:**
+
+```
+TASK: Evaluation Orchestrator for Task ${task_id}
+
+You are the Evaluation Orchestrator.
+
+Analyze all implementations across all worktrees:
+- Performance: 3 implementations
+- Architecture: 3 implementations  
+- UX/DX: 3 implementations
+- Accessibility: 3 implementations
+- Innovation: 3 implementations
+
+Total: 15 implementations to evaluate
+
+Create evaluation reports and select the best from each category.
+Update manifest.json files with scores and metrics.
+```
+
+**Deploy Synthesis Orchestrator using Task tool:**
+
+```
+TASK: Synthesis Orchestrator for Task ${task_id}
+
+You are the Synthesis Orchestrator.
+Your worktree: .worktrees/${worktree_prefix}-6-synthesis/
+
+Access all 15 implementations from other worktrees.
+Create the ultimate synthesis by:
+1. Cherry-picking best features from each implementation
+2. Ensuring all perspectives are represented
+3. Creating a cohesive, integrated solution
+
+Your synthesis should represent the best of all worlds.
+```
+
+**Implementation Structure:**
+
+Each worktree will have this structure after orchestration:
+```
+packages/web/src/components/
+├── _implementations/
+│   ├── [impl-name-1]/
+│   │   └── [complete implementation]
+│   ├── [impl-name-2]/
+│   │   └── [complete implementation]
+│   ├── [impl-name-3]/
+│   │   └── [complete implementation]
+│   ├── manifest.json
+│   ├── ACTIVE
+│   └── switch.sh
+└── [active implementation files]
+```
+
+The orchestration will take approximately ${EST_TIME} seconds to complete.
 
 **PHASE 3: AUTO-START DEV SERVERS**
 
