@@ -9,9 +9,16 @@ A single command that handles the entire orchestration workflow: creates worktre
 - auto_start_servers: $ARGUMENTS (optional, default: true)
 - reuse_worktrees: $ARGUMENTS (optional, default: false)
 
+**IMPORTANT: Execute this command by running the bash commands below and using the Task tool for orchestration**
+
+When this command is invoked, you should:
+1. Execute the bash commands in each phase using the Bash tool
+2. Use the Task tool to deploy agents during the orchestration phase
+3. Create actual worktrees and run actual commands, not just display templates
+
 **PHASE 0: PRE-FLIGHT CHECKS**
 
-Before doing anything expensive, validate environment:
+Before doing anything expensive, validate environment using the Bash tool:
 
 ```bash
 # 1. Check git status
@@ -134,17 +141,20 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Update state
 sed -i 's/status: initializing/status: orchestrating/' "$STATE_FILE"
-
-# Run orchestration with progress callback
-/orchestrate-task-v3 task_id=${task_id} \
-  specialists=${specialists} \
-  depth=${depth} \
-  deployment_mode=worktree-all \
-  worktree_prefix=${WORKTREE_PREFIX} \
-  progress_callback=".taskmaster/report-progress.sh"
-
-# The progress callback updates our state file as specialists complete
 ```
+
+**IMPORTANT: Now use the Task tool to run the orchestrate-task-v3 command**
+
+Deploy the orchestration using the Task tool with these parameters:
+- task_id=${task_id}
+- specialists=${specialists}
+- depth=${depth}
+- deployment_mode=worktree-all
+- worktree_prefix=${WORKTREE_PREFIX}
+
+This will deploy approximately 23 agents (Master Orchestrator, 5 Specialist Orchestrators, 15 Sub-Agents, Evaluation Orchestrator, and Synthesis Orchestrator).
+
+The orchestration will write implementations to the worktrees created in Phase 1.
 
 **PHASE 3: AUTO-START DEV SERVERS**
 
