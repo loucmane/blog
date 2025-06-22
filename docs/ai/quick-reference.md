@@ -29,7 +29,7 @@ Last Updated: 2025-06-10 17:30 CEST
 1. `/docs/ai/core/file-structure.md` - Where everything lives
 2. `/docs/ai/core/theme-system.md` - 4-theme implementation details
 3. `/docs/ai/core/component-patterns.md` - Component best practices
-4. `/docs/ai/tools/claude-bridge-mockup.md` - Mockup creation guide
+4. `/docs/ai/tools/agent-mockup.md` - Mockup creation guide (using Agent tool)
 
 See `/docs/ai/documentation-structure-plan.md` for complete plan
 
@@ -42,7 +42,7 @@ See `/docs/ai/documentation-structure-plan.md` for complete plan
 
 ## Next Immediate Steps
 1. Create Phase 1 AI documentation (see list above)
-2. Use Claude Code Bridge to create mockup
+2. Use Agent Tool to create mockup (replaces Claude Code Bridge)
 3. Provide BOTH detailed prompt AND reference docs to tool
 
 ### Example of Layered Approach:

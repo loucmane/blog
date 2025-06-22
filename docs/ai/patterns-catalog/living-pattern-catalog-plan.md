@@ -400,7 +400,7 @@ describe('useTheme', () => {
 - Show real implementations of guidelines
 
 ### 2. AI Tools
-- **Claude Code Bridge**: Provide pattern examples
+- **Agent Tool**: Provide pattern examples
 - **TaskMaster**: Better task estimation with pattern data
 - **Multi-AI Collab**: Pattern review and suggestions
 - **Agent**: Pattern search and discovery

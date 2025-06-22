@@ -60,7 +60,7 @@ Based on this research, your proposed hybrid system aligns well with industry be
 
 For the modular pieces (themes.md, components.md, file-structure.md), implement **smart assembly algorithms** that combine relevant modules based on current development context. This AI-driven assembly can reduce the need for manual selection while ensuring comprehensive coverage. Consider adding **context persistence** across sessions, allowing developers to maintain their working context even when switching between tasks.
 
-Integration with MCP tools like Claude Code Bridge and TaskMaster can be enhanced through **semantic chunking** that optimizes content for AI processing. Ensure each context bundle includes structured metadata that helps AI systems understand relationships between components. Implement **progressive disclosure interfaces** that show essential information immediately while keeping detailed documentation accessible on demand.
+Integration with MCP tools like Agent and TaskMaster can be enhanced through **semantic chunking** that optimizes content for AI processing. Ensure each context bundle includes structured metadata that helps AI systems understand relationships between components. Implement **progressive disclosure interfaces** that show essential information immediately while keeping detailed documentation accessible on demand.
 
 To achieve the 80% time reduction goal, focus on **predictive context loading** that anticipates developer needs based on current activities. Implement **comprehensive search** with fuzzy matching and contextual understanding. Add **real-time synchronization** that updates context bundles as code changes occur, eliminating the lag between implementation and documentation.
 

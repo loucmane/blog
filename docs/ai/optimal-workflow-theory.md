@@ -10,7 +10,7 @@
 5. Added git alias (gac) documentation
 
 ### Where We Are
-- Ready to create mockup using Claude Code Bridge
+- Ready to create mockup using Agent Tool
 - Identified need for modular documentation system
 - Created initial plan in documentation-structure-plan.md
 
@@ -158,14 +158,14 @@ Priority 3: As Needed
 
 1. Create `quick-reference.md` with current state
 2. Create Phase 1 core docs
-3. Test with Claude Code Bridge on mockup
+3. Test with Agent Tool on mockup
 4. Refine based on results
 
 ### Remember for Next Session
 
 - We're ready to create mockup (Task 31)
 - 18 shadcn components installed
-- Need to create AI docs before using Claude Code Bridge
+- Need to create AI docs before using Agent Tool
 - Start with quick-reference.md
 
 ---

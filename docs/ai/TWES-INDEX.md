@@ -148,21 +148,39 @@ Four-phase implementation roadmap with priorities and success metrics.
 
 ## 🛠️ Tool-Specific Documentation
 
-### Claude Code Bridge (/for-claude-bridge/)
+### Serena MCP (/for-serena/)
 
 #### Prompts
-- [Comprehensive Documentation](./for-claude-bridge/prompts/comprehensive-documentation.md) - Complex doc creation
-- [Feature Implementation](./for-claude-bridge/prompts/feature-implementation.md) - Full feature development
-- [Multi-File Refactoring](./for-claude-bridge/prompts/multi-file-refactoring.md) - Large-scale changes
+- [Find and Refactor](./for-serena/prompts/find-and-refactor.md) - Systematic refactoring
+- [Explore Codebase](./for-serena/prompts/explore-codebase.md) - Understanding new code
+- [Debug with Semantics](./for-serena/prompts/debug-with-semantics.md) - Semantic debugging
 
 #### Examples
-- [Emergency Appeal Banner](./for-claude-bridge/examples/emergency-appeal-banner.md) - Real implementation
+- [Theme System Exploration](./for-serena/examples/theme-system-exploration.md) - Real discovery process
+- [Button Refactoring](./for-serena/examples/button-refactoring.md) - 44px accessibility update
+- [Cross-Package Navigation](./for-serena/examples/cross-package-navigation.md) - Monorepo tracing
 
 #### Guidelines
-- [Best Practices](./for-claude-bridge/guidelines/best-practices.md) - When and how to use
+- [Serena Workflows](./for-serena/guidelines/serena-workflows.md) - Integration patterns
+- [Serena Monorepo Guide](./for-serena/guidelines/serena-monorepo-guide.md) - MomsBlog-specific
 
 #### Reference
-- [Capabilities](./for-claude-bridge/reference/capabilities.md) - Technical details
+- [Serena Overview](./for-serena/reference/serena-overview.md) - Capabilities and use cases
+- [Serena Commands](./for-serena/reference/serena-commands.md) - Complete command reference
+
+### Agent Tool (/for-agent/)
+
+#### Migration
+- [Claude Code Bridge Migration](./for-agent/CLAUDE-BRIDGE-MIGRATION.md) - Replacing Bridge with Agent
+
+#### Prompts
+- [Codebase Exploration](./for-agent/prompts/codebase-exploration.md) - Search strategies
+
+#### Examples
+- [Finding Patterns](./for-agent/examples/finding-patterns.md) - Performance audit
+
+#### Guidelines
+- [Search Strategies](./for-agent/guidelines/search-strategies.md) - Advanced techniques
 
 ### TaskMaster (/for-taskmaster/)
 
@@ -435,10 +453,11 @@ This section provides quick access to our common implementation patterns and wor
 - **Approach**: Right tool for right job, explain before using, batch operations when possible
 - **Location**: Various based on task
 - **Command/Example**:
-  - **Claude Code Bridge**: Complex multi-file operations
+  - **Serena**: Semantic navigation and refactoring
+  - **Agent**: Complex multi-step operations (replaces Claude Code Bridge)
   - **TaskMaster**: Project planning and tracking
-  - **Agent**: Search and exploration
   - **Multi-AI**: Reviews and second opinions
+  - **Zen**: Deep thinking and code review
 - **See**: Tool-specific docs in `/docs/ai/for-*/`
 
 ### Testing & Quality

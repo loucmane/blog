@@ -314,7 +314,7 @@ Pattern definitions become their own tech debt.
 
 ## 7. Integration with AI Tools
 
-### Claude Code Bridge Integration
+### Agent Tool Integration
 
 **As Prompt Enhancer**:
 ```typescript
@@ -405,7 +405,7 @@ interface BugCorrelation {
 4. Automated refactoring for top 5 patterns
 
 ### Integration Priority
-1. Claude Code Bridge prompt enhancement
+1. Agent Tool prompt enhancement
 2. TaskMaster tech debt automation
 3. CI/CD pattern validation
 4. PR comment integration

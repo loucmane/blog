@@ -55,7 +55,7 @@ Technical capabilities (coming soon)
 - **Know exact location** → Read tool
 - **Simple string search** → Grep tool  
 - **Need to edit** → Edit/Write tools
-- **Complex refactoring** → Claude Code Bridge
+- **Complex refactoring** → Use Agent Tool with detailed prompts
 
 ## Core Concepts
 
@@ -120,12 +120,13 @@ Planning to refactor [FEATURE]. Find:
 3. TaskMaster: Create targeted tasks
 ```
 
-### Agent + Claude Code Bridge
+### Agent for Multi-Step Tasks
 ```
 1. Agent: "Show me form validation patterns"
-2. Agent finds: "3 different approaches"
-3. Claude Code Bridge: Standardize them
+2. Agent finds: "3 different approaches"  
+3. Agent: "Standardize these patterns across the codebase"
 ```
+Note: We use Agent for complex operations instead of Claude Code Bridge to avoid API token usage.
 
 ## Pro Tips
 

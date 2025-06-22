@@ -13,12 +13,11 @@ graph TB
     end
 
     subgraph "Tool Documentation"
-        CB[Claude Code Bridge<br/>Complex Operations]
+        SERENA[Serena<br/>Semantic Navigation]
+        AG[Agent<br/>Complex Operations]
         TM[TaskMaster<br/>Project Management]
-        AG[Agent<br/>Search & Explore]
         MAC[Multi-AI Collab<br/>Second Opinions]
         ZEN[Zen<br/>Deep Thinking & Orchestration]
-        SERENA[Serena<br/>Semantic Navigation]
         MCP[MCP Tools<br/>IDE & Others]
     end
 
@@ -37,12 +36,11 @@ graph TB
 
     CLAUDE --> SESSION
     CLAUDE --> SHARED
-    SHARED --> CB
-    SHARED --> TM
+    SHARED --> SERENA
     SHARED --> AG
+    SHARED --> TM
     SHARED --> MAC
     SHARED --> ZEN
-    SHARED --> SERENA
     SHARED --> MCP
     
     SHARED --> THEMES
@@ -50,12 +48,11 @@ graph TB
     SHARED --> PHILOSOPHY
     SHARED --> PATTERNS
     
-    CB --> PROTOCOLS
-    TM --> PROTOCOLS
+    SERENA --> PROTOCOLS
     AG --> PROTOCOLS
+    TM --> PROTOCOLS
     MAC --> PROTOCOLS
     ZEN --> PROTOCOLS
-    SERENA --> PROTOCOLS
     MCP --> PROTOCOLS
     
     PROTOCOLS --> BUNDLES
@@ -66,12 +63,11 @@ graph TB
 
 | Tool | Best For | Not For | Key Commands |
 |------|----------|---------|--------------|
-| **Claude Code Bridge** | • Complex documents<br>• Multi-step operations<br>• Research & synthesis | • Simple edits<br>• Learning/debugging<br>• When transparency needed | `mcp__claude-code-bridge__claude_code` |
+| **Serena** | • Semantic code navigation<br>• Cross-package tracing<br>• Refactoring workflows | • File operations<br>• Non-code files<br>• Running commands | `find_symbol`, `find_referencing_symbols`, `replace_symbol_body` |
+| **Agent** | • Complex documents<br>• Multi-step operations<br>• Research & synthesis | • Simple edits<br>• When you need control<br>• Quick searches | `Task` with detailed prompts |
 | **TaskMaster** | • Project planning<br>• Task tracking<br>• Complexity analysis | • Simple todos<br>• Personal notes<br>• Non-dev tasks | `get_tasks`, `set_task_status`, `expand_task` |
-| **Agent** | • File discovery<br>• Pattern search<br>• Multi-round exploration | • Known file paths<br>• Simple grep<br>• Code writing | `Task` with search prompts |
 | **Multi-AI Collab** | • Code review<br>• Architecture advice<br>• Creative solutions | • Primary development<br>• Simple questions<br>• Time-critical tasks | `ask_gemini`, `gemini_code_review` |
 | **Zen** | • Deep thinking<br>• Multi-AI orchestration<br>• Code review & debugging | • Simple queries<br>• Quick fixes<br>• When speed matters | `thinkdeep`, `codereview`, `precommit` |
-| **Serena** | • Semantic code navigation<br>• Cross-package tracing<br>• Refactoring workflows | • File operations<br>• Non-code files<br>• Running commands | `find_symbol`, `find_referencing_symbols`, `replace_symbol_body` |
 | **MCP Tools** | • IDE diagnostics<br>• Library docs<br>• Code execution | • File operations<br>• Project management<br>• Complex workflows | Various `mcp__*` commands |
 
 ## Context Inheritance Flow
@@ -81,12 +77,12 @@ shared-context/
     ├── themes/warm-minimalism.md ─────┐
     ├── standards/performance.md ───────┤
     ├── philosophies/development.md ────┼─── Inherited by ───→ tool-specific/
-    ├── patterns/monorepo.md ───────────┤                          ├── for-claude-bridge/
-    └── discovered-patterns/ 🔬 ────────┘                          ├── for-taskmaster/
-        ├── component-conventions.md                                ├── for-agent/
+    ├── patterns/monorepo.md ───────────┤                          ├── for-serena/
+    └── discovered-patterns/ 🔬 ────────┘                          ├── for-agent/
+        ├── component-conventions.md                                ├── for-taskmaster/
         ├── performance-code-splitting.tsx                          ├── for-multi-ai-collab/
         └── add-blog-feature-guide.md                              ├── for-zen/
-                                                                   └── for-serena/
+                                                                   └── for-mcp-tools/
 ```
 
 ## Success Criteria Dashboard
@@ -116,8 +112,8 @@ cat docs/ai/shared-context/README.md
 # Run TaskMaster
 mcp__taskmaster-ai__get_tasks --projectRoot $(pwd)
 
-# Use Claude Code Bridge
-# First read: docs/ai/for-claude-bridge/README.md
+# Use Agent for complex operations (replaces Claude Code Bridge)
+# See: docs/ai/for-agent/CLAUDE-BRIDGE-MIGRATION.md
 
 # Get second opinion
 mcp__multi-ai-collab__gemini_code_review --code "$(cat file.ts)"

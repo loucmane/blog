@@ -21,7 +21,31 @@ When this command is invoked, you should:
 Before doing anything expensive, validate environment using the Bash tool:
 
 ```bash
+# Enable strict error handling
+set -euo pipefail
+
+# Initialize phase tracking
+CURRENT_PHASE="initializing"
+
+# Error handler function
+handle_error() {
+  local exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+    echo "❌ Orchestration failed during phase: ${CURRENT_PHASE}"
+    # Save error state if STATE_FILE exists
+    if [ -n "${STATE_FILE:-}" ] && [ -f "$STATE_FILE" ]; then
+      echo "" >> "$STATE_FILE"
+      echo "error:" >> "$STATE_FILE"
+      echo "  phase: ${CURRENT_PHASE}" >> "$STATE_FILE"
+      echo "  exit_code: $exit_code" >> "$STATE_FILE"
+      echo "  timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> "$STATE_FILE"
+    fi
+  fi
+}
+trap handle_error EXIT
+
 # 1. Check git status
+CURRENT_PHASE="pre-flight-checks"
 if [ -n "$(git status --porcelain)" ]; then
   echo "⚠️  WARNING: You have uncommitted changes"
   echo "It's recommended to commit or stash before orchestrating."
@@ -30,13 +54,19 @@ if [ -n "$(git status --porcelain)" ]; then
   # Wait for user confirmation
 fi
 
-# 2. Derive worktree prefix from task
+# 2. Validate task_id for security
+if [[ ! "${task_id}" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  echo "❌ Invalid task_id. Only alphanumeric characters, hyphens, and underscores are allowed."
+  exit 1
+fi
+
+# 3. Derive worktree prefix from task
 WORKTREE_PREFIX="task-${task_id}-orch"
 echo "📁 Using worktree prefix: ${WORKTREE_PREFIX}"
 
-# 3. Check for existing worktrees
+# 4. Check for existing worktrees
 EXISTING_WORKTREES=$(git worktree list | grep -c "${WORKTREE_PREFIX}" || true)
-if [ $EXISTING_WORKTREES -gt 0 ]; then
+if [ "$EXISTING_WORKTREES" -gt 0 ]; then
   if [ "${reuse_worktrees}" = "true" ]; then
     echo "♻️  Reusing existing worktrees"
   else
@@ -50,7 +80,7 @@ if [ $EXISTING_WORKTREES -gt 0 ]; then
   fi
 fi
 
-# 4. Check available ports
+# 5. Check available ports
 REQUIRED_PORTS=6
 if [ "${specialists}" != "all" ]; then
   SPECIALIST_COUNT=$(echo "${specialists}" | tr ',' '\n' | wc -l)
@@ -58,9 +88,9 @@ if [ "${specialists}" != "all" ]; then
 fi
 
 echo "🔍 Checking port availability (3001-300${REQUIRED_PORTS})..."
-for i in $(seq 1 $REQUIRED_PORTS); do
+for i in $(seq 1 "$REQUIRED_PORTS"); do
   PORT=$((3000 + i))
-  if lsof -i:$PORT > /dev/null 2>&1; then
+  if lsof -i:"$PORT" > /dev/null 2>&1; then
     echo "❌ Port $PORT is already in use"
     echo "Please free up ports 3001-300${REQUIRED_PORTS} or adjust configuration"
     exit 1
@@ -68,8 +98,16 @@ for i in $(seq 1 $REQUIRED_PORTS); do
 done
 echo "✅ All required ports are available"
 
-# 5. Check for state file
-STATE_FILE=".taskmaster/orchestration-state.yaml"
+# 6. Setup orchestration output directory
+ORCH_OUTPUT_DIR="docs/ai/for-agentic-loops/orchestration-outputs/task-${task_id}"
+mkdir -p "${ORCH_OUTPUT_DIR}"
+mkdir -p "${ORCH_OUTPUT_DIR}/state"
+mkdir -p "${ORCH_OUTPUT_DIR}/analysis"
+mkdir -p "${ORCH_OUTPUT_DIR}/synthesis"
+mkdir -p "${ORCH_OUTPUT_DIR}/logs"
+
+# 7. Check for state file
+STATE_FILE="${ORCH_OUTPUT_DIR}/state/orchestration-state.yaml"
 if [ -f "$STATE_FILE" ]; then
   LAST_TASK=$(grep "task_id:" "$STATE_FILE" | awk '{print $2}')
   if [ "$LAST_TASK" = "${task_id}" ]; then
@@ -79,11 +117,101 @@ if [ -f "$STATE_FILE" ]; then
   fi
 fi
 
-# 6. Estimate time
+# 8. Estimate time
 AGENT_COUNT=$((${depth} * 5 + 2))  # specialists * depth + evaluation + synthesis
 EST_TIME=$((AGENT_COUNT * 10))  # ~10 seconds per agent
 echo "⏱️  Estimated orchestration time: ~${EST_TIME} seconds"
 echo ""
+```
+
+**PHASE 0.5: PRE-ANALYSIS - CONTRACT GENERATION**
+
+Run analysis to create shared contracts before any implementation work:
+
+```bash
+CURRENT_PHASE="pre-analysis"
+echo ""
+echo "🔍 PHASE 0.5: Pre-Analysis - Generating Implementation Contracts"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Create contracts directory
+CONTRACTS_DIR="${ORCH_OUTPUT_DIR}/contracts"
+mkdir -p "${CONTRACTS_DIR}"
+
+# Update state - we're already past initializing
+echo "pre_analysis_started: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> "$STATE_FILE"
+```
+
+**Deploy Pre-Analysis Agent using Task tool:**
+
+This agent analyzes the task and generates contracts that all other agents will follow:
+
+```
+TASK: Pre-Analysis Agent for Task ${task_id} - Contract Generation
+
+You are the Pre-Analysis Agent responsible for creating implementation contracts that will guide all other agents.
+
+**Your Critical Mission**: Analyze Task ${task_id} and generate contracts that will ensure all 15+ implementations are coherent and compatible.
+
+**Contract Files to Generate**:
+
+1. **${CONTRACTS_DIR}/interface-contract.yaml**
+   - Component props/API interface
+   - Event handlers and callbacks
+   - Type definitions
+   - Return value contracts
+
+2. **${CONTRACTS_DIR}/behavior-contract.yaml**
+   - Core functionality requirements
+   - User interaction patterns
+   - State management approach
+   - Error handling behavior
+
+3. **${CONTRACTS_DIR}/integration-contract.yaml**
+   - File naming conventions
+   - Import/export patterns
+   - Theme integration approach
+   - Testing requirements
+
+4. **${CONTRACTS_DIR}/constraints.yaml**
+   - Performance budgets
+   - Accessibility requirements
+   - Browser support targets
+   - Dependencies allowed/forbidden
+
+**Analysis Approach**:
+1. Read the task description from TaskMaster
+2. Analyze existing codebase patterns
+3. Consider all 5 specialist perspectives
+4. Generate contracts that allow creativity while ensuring compatibility
+
+**Key Principles**:
+- Contracts should be specific enough to ensure compatibility
+- But flexible enough to allow specialist creativity
+- Focus on interfaces, not implementations
+- Think about edge cases and error states
+
+Begin by analyzing Task ${task_id} and the current codebase patterns.
+```
+
+After the Pre-Analysis Agent completes, update the agent prompts to reference the contracts:
+
+```bash
+# Verify contracts were generated
+if [ ! -f "${CONTRACTS_DIR}/interface-contract.yaml" ]; then
+  echo "❌ Pre-analysis failed to generate contracts"
+  exit 1
+fi
+
+echo "✅ Implementation contracts generated successfully"
+echo ""
+echo "📄 Contract files:"
+ls -la "${CONTRACTS_DIR}/"
+echo ""
+
+# Update state
+echo "contracts_generated: true" >> "$STATE_FILE"
+echo "contracts_path: ${CONTRACTS_DIR}" >> "$STATE_FILE"
 ```
 
 **PHASE 1: SMART WORKTREE CREATION**
@@ -91,10 +219,11 @@ echo ""
 If worktrees need to be created:
 
 ```bash
+CURRENT_PHASE="worktree-creation"
 echo "🌳 Creating ${REQUIRED_PORTS} worktrees..."
 
 # Create state directory
-mkdir -p .taskmaster/orchestration-state
+echo "📁 Orchestration outputs will be in: $ORCH_OUTPUT_DIR"
 
 # Save initial state
 cat > "$STATE_FILE" << EOF
@@ -135,6 +264,7 @@ echo "✅ Worktrees created and dependencies installed"
 Launch orchestration with better progress reporting:
 
 ```bash
+CURRENT_PHASE="orchestration"
 echo ""
 echo "🤖 Starting orchestration for Task ${task_id}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -163,6 +293,7 @@ Your deployment configuration:
 - Deployment Mode: worktree-all
 - Worktree Prefix: ${worktree_prefix}
 - Target Path: packages/web/src/components
+- Analysis Output: ${ORCH_OUTPUT_DIR}/analysis/
 
 Your responsibilities:
 1. Coordinate deployment of 5 Specialist Orchestrators
@@ -170,6 +301,15 @@ Your responsibilities:
 3. Monitor implementation progress across all worktrees
 4. Ensure consistent quality and integration
 5. Prepare for synthesis phase
+6. Write analysis and coordination docs to ${ORCH_OUTPUT_DIR}/analysis/
+
+**CRITICAL**: Read and enforce the implementation contracts:
+- ${CONTRACTS_DIR}/interface-contract.yaml - All components MUST follow this interface
+- ${CONTRACTS_DIR}/behavior-contract.yaml - All implementations MUST exhibit these behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - All code MUST follow these patterns
+- ${CONTRACTS_DIR}/constraints.yaml - All implementations MUST respect these limits
+
+Ensure ALL specialist orchestrators receive and understand these contracts.
 
 Specialist worktree assignments:
 - Performance: .worktrees/${worktree_prefix}-1-performance/
@@ -193,6 +333,7 @@ TASK: Performance Specialist Orchestrator for Task ${task_id}
 You are the Performance Specialist Orchestrator.
 Your worktree: .worktrees/${worktree_prefix}-1-performance/
 Your focus: Bundle size, runtime performance, memory efficiency
+Analysis output: ${ORCH_OUTPUT_DIR}/analysis/performance/
 
 Deploy ${depth} sub-agents to create implementations in:
 - _implementations/bundle-optimizer/
@@ -200,6 +341,14 @@ Deploy ${depth} sub-agents to create implementations in:
 - _implementations/memory-optimizer/
 
 Each implementation should be complete and functional.
+
+**MANDATORY**: All implementations MUST adhere to:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Stay within performance budgets
+
+Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/performance/decisions.md
 ```
 
 ```
@@ -209,11 +358,22 @@ TASK: Architecture Specialist Orchestrator for Task ${task_id}
 You are the Architecture Specialist Orchestrator.
 Your worktree: .worktrees/${worktree_prefix}-2-architecture/
 Your focus: Code organization, maintainability, scalability
+Analysis output: ${ORCH_OUTPUT_DIR}/analysis/architecture/
 
 Deploy ${depth} sub-agents to create implementations in:
 - _implementations/modular-design/
 - _implementations/maintainability-focused/
 - _implementations/scalability-optimized/
+
+Each implementation should be complete and functional.
+
+**MANDATORY**: All implementations MUST adhere to:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Respect architectural patterns
+
+Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/architecture/decisions.md
 ```
 
 ```
@@ -223,11 +383,22 @@ TASK: UX/DX Specialist Orchestrator for Task ${task_id}
 You are the UX/DX Specialist Orchestrator.
 Your worktree: .worktrees/${worktree_prefix}-3-ux_dx/
 Your focus: User experience, developer experience, API design
+Analysis output: ${ORCH_OUTPUT_DIR}/analysis/ux_dx/
 
 Deploy ${depth} sub-agents to create implementations in:
 - _implementations/intuitive-api/
 - _implementations/enhanced-ux/
 - _implementations/developer-friendly/
+
+Each implementation should be complete and functional.
+
+**MANDATORY**: All implementations MUST adhere to:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Maintain UX/DX standards
+
+Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/ux_dx/decisions.md
 ```
 
 ```
@@ -237,11 +408,22 @@ TASK: Accessibility Specialist Orchestrator for Task ${task_id}
 You are the Accessibility Specialist Orchestrator.
 Your worktree: .worktrees/${worktree_prefix}-4-accessibility/
 Your focus: WCAG compliance, screen reader support, keyboard navigation
+Analysis output: ${ORCH_OUTPUT_DIR}/analysis/accessibility/
 
 Deploy ${depth} sub-agents to create implementations in:
 - _implementations/wcag-compliant/
 - _implementations/screen-reader-optimized/
 - _implementations/keyboard-first/
+
+Each implementation should be complete and functional.
+
+**MANDATORY**: All implementations MUST adhere to:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Meet all accessibility requirements
+
+Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/accessibility/decisions.md
 ```
 
 ```
@@ -251,11 +433,22 @@ TASK: Innovation Specialist Orchestrator for Task ${task_id}
 You are the Innovation Specialist Orchestrator.
 Your worktree: .worktrees/${worktree_prefix}-5-innovation/
 Your focus: Cutting-edge features, creative solutions, future-proofing
+Analysis output: ${ORCH_OUTPUT_DIR}/analysis/innovation/
 
 Deploy ${depth} sub-agents to create implementations in:
 - _implementations/ai-enhanced/
 - _implementations/experimental-features/
 - _implementations/future-proof/
+
+Each implementation should be complete and functional.
+
+**MANDATORY**: All implementations MUST adhere to:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Stay within innovation boundaries
+
+Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/innovation/decisions.md
 ```
 
 **Deploy Sub-Agents (15 total, 3 per specialist) using Task tool:**
@@ -273,6 +466,14 @@ Focus on:
 - Minimal bundle size
 - Tree-shaking optimization
 - Code splitting strategies
+
+**STRICT REQUIREMENTS**: Your implementation MUST comply with:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Use ONLY the defined props and types
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement ALL required behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - Follow exact file/import patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Stay under bundle size limits
+
+Document your optimization decisions in a README.md in your implementation directory.
 ```
 
 [Similar patterns for all 15 sub-agents]
@@ -295,6 +496,15 @@ Total: 15 implementations to evaluate
 
 Create evaluation reports and select the best from each category.
 Update manifest.json files with scores and metrics.
+
+**EVALUATION CRITERIA**: Use the contracts as your rubric:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Verify ALL implementations use correct interface
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Test ALL required behaviors work correctly
+- ${CONTRACTS_DIR}/integration-contract.yaml - Check code follows patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Measure against defined limits
+
+Any implementation that violates contracts should be marked as non-compliant.
+Write evaluation summary to: ${ORCH_OUTPUT_DIR}/analysis/evaluation-report.md
 ```
 
 **Deploy Synthesis Orchestrator using Task tool:**
@@ -312,7 +522,27 @@ Create the ultimate synthesis by:
 3. Creating a cohesive, integrated solution
 
 Your synthesis should represent the best of all worlds.
+
+**SYNTHESIS CONSTRAINTS**: Your final implementation MUST:
+- ${CONTRACTS_DIR}/interface-contract.yaml - Maintain the exact interface
+- ${CONTRACTS_DIR}/behavior-contract.yaml - Include ALL required behaviors
+- ${CONTRACTS_DIR}/integration-contract.yaml - Follow established patterns
+- ${CONTRACTS_DIR}/constraints.yaml - Meet ALL constraints simultaneously
+
+Read the evaluation report from: ${ORCH_OUTPUT_DIR}/analysis/evaluation-report.md
+Document synthesis decisions in: ${ORCH_OUTPUT_DIR}/synthesis/synthesis-rationale.md
 ```
+
+**Enhanced Coordination Through Decision Logs:**
+
+Each specialist writes decisions to help other agents understand their approach:
+- Performance: ${ORCH_OUTPUT_DIR}/analysis/performance/decisions.md
+- Architecture: ${ORCH_OUTPUT_DIR}/analysis/architecture/decisions.md
+- UX/DX: ${ORCH_OUTPUT_DIR}/analysis/ux_dx/decisions.md
+- Accessibility: ${ORCH_OUTPUT_DIR}/analysis/accessibility/decisions.md
+- Innovation: ${ORCH_OUTPUT_DIR}/analysis/innovation/decisions.md
+
+These logs help the Synthesis agent understand trade-offs and make informed decisions.
 
 **Implementation Structure:**
 
@@ -339,11 +569,12 @@ The orchestration will take approximately ${EST_TIME} seconds to complete.
 If auto_start_servers=true:
 
 ```bash
+CURRENT_PHASE="server-startup"
 echo ""
 echo "🚀 Starting development servers..."
 
 # Create a session management script
-cat > ".taskmaster/orchestration-servers.sh" << 'EOF'
+cat > "$ORCH_OUTPUT_DIR/orchestration-servers.sh" << 'EOF'
 #!/bin/bash
 # Auto-generated server management script
 WORKTREE_PREFIX="${WORKTREE_PREFIX}"
@@ -375,8 +606,8 @@ for i in ${!PORTS[@]}; do
 done
 EOF
 
-chmod +x ".taskmaster/orchestration-servers.sh"
-./.taskmaster/orchestration-servers.sh
+chmod +x "$ORCH_OUTPUT_DIR/orchestration-servers.sh"
+./$ORCH_OUTPUT_DIR/orchestration-servers.sh
 
 echo "✅ All servers started in tmux session 'orchestration'"
 ```
@@ -385,8 +616,11 @@ echo "✅ All servers started in tmux session 'orchestration'"
 
 Generate a simple HTML dashboard:
 
-```html
-<!-- .taskmaster/comparison-dashboard.html -->
+```bash
+CURRENT_PHASE="dashboard-creation"
+# Create comparison dashboard
+cat > "$ORCH_OUTPUT_DIR/comparison-dashboard.html" << 'EOF'
+<!-- orchestration-outputs/task-{id}/comparison-dashboard.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -424,19 +658,23 @@ Generate a simple HTML dashboard:
   </script>
 </body>
 </html>
+EOF
 ```
 
 **PHASE 5: FINAL SUMMARY**
 
 ```bash
+CURRENT_PHASE="completion"
 echo ""
 echo "✅ ORCHESTRATION COMPLETE!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📊 Summary:"
 echo "  • Task ID: ${task_id}"
+echo "  • Contracts generated: 4 files"
 echo "  • Implementations: ${AGENT_COUNT} generated"
 echo "  • Worktrees: ${REQUIRED_PORTS} created"
+echo "  • Decision logs: 5 specialist perspectives"
 echo "  • Time taken: $(calculate_duration)"
 echo ""
 echo "🔗 Quick Links:"
@@ -447,13 +685,15 @@ echo "  • Accessibility: http://localhost:3004/test-orchestrated"
 echo "  • Innovation:    http://localhost:3005/test-orchestrated"
 echo "  • Synthesis:     http://localhost:3006/test-orchestrated"
 echo ""
-echo "  • Comparison:    file://$(pwd)/.taskmaster/comparison-dashboard.html"
+echo "  • Comparison:    file://$(pwd)/$ORCH_OUTPUT_DIR/comparison-dashboard.html"
 echo ""
 echo "💡 Next Steps:"
-echo "  1. Review implementations in your browser"
-echo "  2. Switch implementations: cd .worktrees/<name> && switch-impl <impl>"
-echo "  3. View server logs: tmux attach -t orchestration"
-echo "  4. Clean up: /orchestrate-cleanup task_id=${task_id}"
+echo "  1. Review contracts: cat $CONTRACTS_DIR/*.yaml"
+echo "  2. Review implementations in your browser"
+echo "  3. Read decision logs: cat $ORCH_OUTPUT_DIR/analysis/*/decisions.md"
+echo "  4. Switch implementations: cd .worktrees/<name> && switch-impl <impl>"
+echo "  5. View server logs: tmux attach -t orchestration"
+echo "  6. Clean up: /orchestrate-cleanup task_id=${task_id}"
 echo ""
 
 # Update final state
@@ -480,7 +720,7 @@ echo ""
 echo "The system state has been saved. You can:"
 echo "  1. Resume: /orchestrate-and-test task_id=${task_id} resume=true"
 echo "  2. Start over: /orchestrate-cleanup task_id=${task_id} && /orchestrate-and-test task_id=${task_id}"
-echo "  3. Check logs: cat .taskmaster/orchestration.log"
+echo "  3. Check logs: tail -f $ORCH_OUTPUT_DIR/logs/*.log"
 ```
 
 **USAGE:**

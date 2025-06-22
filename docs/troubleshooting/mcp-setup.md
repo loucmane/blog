@@ -2,7 +2,7 @@
 
 ## Available MCP Servers
 - `taskmaster-ai`: Project task management (configured locally)
-- `claude-code-bridge`: Code analysis tools (configured globally)
+- `claude-code-bridge`: **[DEPRECATED - Use Agent Tool instead]** - See `/docs/ai/for-agent/CLAUDE-BRIDGE-MIGRATION.md`
 - `context7`: External context service (configured globally)
 
 ## Context7 Tools Usage
@@ -69,6 +69,8 @@ topic="configuration"       # Then find Next.js config patterns
 ## MCP Connection Issues
 
 ### claude-code-bridge Connection Error
+
+> **⚠️ DEPRECATED**: Claude Code Bridge has been replaced by the Agent Tool to avoid API token usage on Max plan. See `/docs/ai/for-agent/CLAUDE-BRIDGE-MIGRATION.md`
 
 **Problem**: MCP server failing with "Connection closed" error
 

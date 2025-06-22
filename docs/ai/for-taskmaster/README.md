@@ -143,15 +143,11 @@ Use `--research true` for informed planning.
 
 ## Integration Tips
 
-### With Claude Code Bridge
+### With Agent Tool
 1. Plan feature with TaskMaster
-2. Implement with Claude Code Bridge
+2. Implement complex operations with Agent Tool
 3. Update TaskMaster with discoveries
-
-### With Agent
-1. Use Agent to explore codebase
-2. Update TaskMaster with findings
-3. Plan refactoring tasks
+4. Use Agent to explore codebase when needed
 
 ### With Multi-AI Collab
 1. Get Gemini's opinion on approach

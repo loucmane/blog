@@ -25,8 +25,8 @@ This document outlines the plan for creating a modular documentation system that
 │   └── performance-standards.md     # Lighthouse targets
 │
 ├── tools/                            # Tool-specific guides
-│   ├── claude-bridge-mockup.md      # Mockup creation guide
-│   ├── claude-bridge-components.md  # Component creation guide
+│   ├── agent-mockup.md            # Mockup creation guide
+│   ├── agent-components.md         # Component creation guide
 │   ├── taskmaster-patterns.md       # Task structuring guide
 │   └── mcp-tool-selection.md       # When to use which tool
 │
@@ -98,7 +98,7 @@ Complete example showing desired output.
 1. `file-structure.md` - Critical for all tools
 2. `theme-system.md` - Essential for UI work
 3. `component-patterns.md` - For mockup creation
-4. `claude-bridge-mockup.md` - For upcoming mockup task
+4. `agent-mockup.md` - For upcoming mockup task
 
 ### Phase 2: Workflow Documentation (Next Session)
 1. `session-protocol.md` - Extract from CLAUDE.md
@@ -126,16 +126,16 @@ Passes both to MCP tool →
 Tool has full context
 ```
 
-### Example: Creating Mockup with Claude Code Bridge
+### Example: Creating Mockup with Agent Tool
 ```javascript
-// AI's instruction to Claude Code Bridge:
+// AI's instruction to Agent Tool:
 "Create a modern blog mockup page implementing bento grid layout.
 
 For complete context, refer to:
 - /docs/ai/core/file-structure.md
 - /docs/ai/core/theme-system.md  
 - /docs/ai/core/component-patterns.md
-- /docs/ai/tools/claude-bridge-mockup.md
+- /docs/ai/tools/agent-mockup.md
 - /docs/design/modern-blog-mockup-brief.md
 
 Focus on: [specific task details]"
@@ -176,7 +176,7 @@ When using MCP tools for complex tasks, reference relevant documentation.
 
 1. Create `/docs/ai/` directory structure
 2. Write Phase 1 core documents
-3. Test with Claude Code Bridge for mockup creation
+3. Test with Agent Tool for mockup creation
 4. Refine based on results
 5. Extract relevant sections from CLAUDE.md
 
