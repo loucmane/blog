@@ -225,6 +225,32 @@ Four-phase implementation roadmap with priorities and success metrics.
 - **Web search integration**: For current best practices
 - **Automatic model selection**: Intelligently chooses best model for task
 
+### Serena MCP (/for-serena/) 🆕
+
+#### Prompts
+- [Find and Refactor](./for-serena/prompts/find-and-refactor.md) - Systematic refactoring
+- [Explore Codebase](./for-serena/prompts/explore-codebase.md) - Understanding new code
+- [Debug with Semantics](./for-serena/prompts/debug-with-semantics.md) - Semantic debugging
+
+#### Examples
+- [Theme System Exploration](./for-serena/examples/theme-system-exploration.md) - Real discovery process
+- [Button Refactoring](./for-serena/examples/button-refactoring.md) - 44px accessibility update
+- [Cross-Package Navigation](./for-serena/examples/cross-package-navigation.md) - Monorepo tracing
+
+#### Guidelines
+- [Serena Workflows](./for-serena/guidelines/serena-workflows.md) - Integration patterns
+- [Serena Monorepo Guide](./for-serena/guidelines/serena-monorepo-guide.md) - MomsBlog-specific
+
+#### Reference
+- [Serena Overview](./for-serena/reference/serena-overview.md) - Capabilities and use cases
+- [Serena Commands](./for-serena/reference/serena-commands.md) - Complete command reference
+
+#### Key Features
+- **Semantic navigation**: Find code by meaning, not location
+- **Memory system**: Persistent context across sessions
+- **Cross-package awareness**: Navigate monorepos intelligently
+- **Reference tracking**: Understand code relationships
+
 ## 🧪 Testing Framework (/twes-tests/)
 
 ### Scenarios
@@ -232,6 +258,9 @@ Four-phase implementation roadmap with priorities and success metrics.
 - [Emergency Appeal Component](./twes-tests/scenarios/emergency-appeal-component.md)
 - [Performance Optimization](./twes-tests/scenarios/performance-optimization.md)
 - [Task 04 shadcn Installation](./twes-tests/scenarios/task-04-shadcn-installation.md)
+- [Serena Symbol Navigation](./twes-tests/scenarios/serena-symbol-navigation.md) 🆕
+- [Serena Refactoring Workflow](./twes-tests/scenarios/serena-refactoring-workflow.md) 🆕
+- [Serena Debugging Investigation](./twes-tests/scenarios/serena-debugging-investigation.md) 🆕
 
 ### Results
 - [2025-06-11 Modern Homepage](./twes-tests/results/2025-06-11-modern-homepage.md) - 70% baseline
@@ -246,6 +275,7 @@ Four-phase implementation roadmap with priorities and success metrics.
 ## 📚 Protocols
 
 - [TWES Testing Protocol](./protocols/twes-testing-protocol.md) - Systematic testing methodology
+- [Semantic Workflow Protocol](./protocols/semantic-workflow-protocol.md) - Step-by-step Serena navigation 🆕
 
 ## 🔍 Quick Topic Finder
 

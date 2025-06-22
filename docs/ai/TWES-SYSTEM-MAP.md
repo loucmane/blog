@@ -18,6 +18,7 @@ graph TB
         AG[Agent<br/>Search & Explore]
         MAC[Multi-AI Collab<br/>Second Opinions]
         ZEN[Zen<br/>Deep Thinking & Orchestration]
+        SERENA[Serena<br/>Semantic Navigation]
         MCP[MCP Tools<br/>IDE & Others]
     end
 
@@ -41,6 +42,7 @@ graph TB
     SHARED --> AG
     SHARED --> MAC
     SHARED --> ZEN
+    SHARED --> SERENA
     SHARED --> MCP
     
     SHARED --> THEMES
@@ -53,6 +55,7 @@ graph TB
     AG --> PROTOCOLS
     MAC --> PROTOCOLS
     ZEN --> PROTOCOLS
+    SERENA --> PROTOCOLS
     MCP --> PROTOCOLS
     
     PROTOCOLS --> BUNDLES
@@ -68,6 +71,7 @@ graph TB
 | **Agent** | • File discovery<br>• Pattern search<br>• Multi-round exploration | • Known file paths<br>• Simple grep<br>• Code writing | `Task` with search prompts |
 | **Multi-AI Collab** | • Code review<br>• Architecture advice<br>• Creative solutions | • Primary development<br>• Simple questions<br>• Time-critical tasks | `ask_gemini`, `gemini_code_review` |
 | **Zen** | • Deep thinking<br>• Multi-AI orchestration<br>• Code review & debugging | • Simple queries<br>• Quick fixes<br>• When speed matters | `thinkdeep`, `codereview`, `precommit` |
+| **Serena** | • Semantic code navigation<br>• Cross-package tracing<br>• Refactoring workflows | • File operations<br>• Non-code files<br>• Running commands | `find_symbol`, `find_referencing_symbols`, `replace_symbol_body` |
 | **MCP Tools** | • IDE diagnostics<br>• Library docs<br>• Code execution | • File operations<br>• Project management<br>• Complex workflows | Various `mcp__*` commands |
 
 ## Context Inheritance Flow
@@ -81,7 +85,8 @@ shared-context/
     └── discovered-patterns/ 🔬 ────────┘                          ├── for-taskmaster/
         ├── component-conventions.md                                ├── for-agent/
         ├── performance-code-splitting.tsx                          ├── for-multi-ai-collab/
-        └── add-blog-feature-guide.md                              └── for-zen/
+        └── add-blog-feature-guide.md                              ├── for-zen/
+                                                                   └── for-serena/
 ```
 
 ## Success Criteria Dashboard
