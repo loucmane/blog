@@ -125,34 +125,31 @@ Key discoveries:
 Created memory for next session: `session_2025-06-23_phase_1_testing_attempt_2_ready`
 
 ### 📋 Next Session Should:
-1. **Start with this exact prompt**:
-   ```
-   Activate project blog, read memory session_2025-06-23_phase_1_testing_attempt_2_ready, and help me test the Phase 1 orchestration improvements.
-   ```
 
-2. **Then run the orchestration test**:
-   ```
-   /orchestrate-and-test task_id=7 depth=1
-   ```
+**STEP 1 - Open a new Claude session and type this as your first message:**
+```
+Activate project blog, read memory session_2025-06-23_phase_1_testing_attempt_2_ready, and help me test the Phase 1 orchestration improvements.
+```
 
-3. **Monitor execution in real-time**:
-   ```bash
-   # In a separate terminal, run:
-   tail -f docs/ai/for-agentic-loops/orchestration-outputs/task-7/logs/orchestration.log
-   
-   # Or use the monitoring commands from:
-   cat /tmp/test-monitoring-commands.txt
-   ```
+**STEP 2 - After Claude responds and is ready, YOU run this command:**
+```
+/orchestrate-and-test task_id=7 depth=1
+```
 
-4. **Verify Phase 1 features are working**:
-   - Progressive Summarization: Check `/summaries/` directory
-   - Real-time Monitoring: Check `orchestration.log` has timestamps
-   - Document results in implementation tracker
+**STEP 3 - While the command is running, monitor in a SEPARATE terminal:**
+```bash
+# Open a new terminal window and run:
+tail -f docs/ai/for-agentic-loops/orchestration-outputs/task-7/logs/orchestration.log
+```
 
-5. **If it still doesn't execute**:
-   - Check if bash commands are running
-   - Check if any agents are being deployed
-   - Consider simpler test approach
+**STEP 4 - After execution completes, verify these features worked:**
+- Progressive Summarization: Check if `/summaries/` directory has 5 files
+- Real-time Monitoring: Check if `orchestration.log` has timestamps
+- Document results in implementation tracker
+
+**STEP 5 - If it still only shows the template:**
+- Tell Claude what happened
+- We may need a different approach
 
 ### 🔄 To Resume:
 ```bash
