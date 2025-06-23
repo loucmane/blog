@@ -17,7 +17,20 @@ Parse the following arguments from "$ARGUMENTS":
 4. `auto_start_servers` - Whether to start development servers after orchestration
 5. `reuse_worktrees` - Whether to reuse existing worktrees from previous runs
 
-**PHASE 0: PRE-FLIGHT CHECKS**
+**PHASE 0: TASK SPECIFICATION ANALYSIS**
+
+Read the task specification file at `.taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt`.
+
+Extract and analyze:
+- Task ID, title, status, and priority
+- Task description and detailed implementation requirements
+- Test strategy for validation
+- All subtasks with their descriptions, dependencies, and status
+- Store complete task specification for all agents to reference
+
+This task specification will be the foundation for all agent implementations.
+
+**PHASE 1: PRE-FLIGHT CHECKS**
 
 Validate the environment before beginning orchestration:
 
@@ -41,59 +54,66 @@ Validate the environment before beginning orchestration:
    - If previous state exists for same task, offer to resume
 8. **Time Estimation**: Calculate and display estimated time based on agent count (depth × 5 + 2 agents)
 
-**PHASE 0.5: PRE-ANALYSIS - CONTRACT GENERATION**
+**PHASE 2: PRE-ANALYSIS - CONTRACT GENERATION**
 
 Before any implementation work begins, generate shared contracts that will ensure all implementations are compatible:
 
 Create a contracts directory in the orchestration output path and deploy a Pre-Analysis Agent using the Task tool.
 
-**Deploy Pre-Analysis Agent using Task tool:**
-
-The Pre-Analysis Agent analyzes Task {task_id} and generates contracts that guide all other agents:
+```
+TASK: Generate implementation contracts for Task ${task_id}
 
 You are the Pre-Analysis Agent responsible for creating implementation contracts that will guide all other agents.
 
-**Your Critical Mission**: Analyze Task ${task_id} and generate contracts that will ensure all 15+ implementations are coherent and compatible.
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Task subtasks: ${task_subtasks}
+- Output Directory: ${CONTRACTS_DIR}
+- Purpose: Ensure all 15+ implementations are coherent and compatible
+- Current Branch: ${CURRENT_BRANCH}
+- Project Root: ${PROJECT_ROOT}
 
-**Contract Files to Generate**:
+REQUIREMENTS:
+1. Analyze the provided task specification thoroughly
+2. Study existing codebase patterns and conventions
+3. Consider all 5 specialist perspectives (Performance, Architecture, UX/DX, Accessibility, Innovation)
+4. Generate 4 critical contract files:
 
-1. **${CONTRACTS_DIR}/interface-contract.yaml**
-   - Component props/API interface
-   - Event handlers and callbacks
-   - Type definitions
-   - Return value contracts
+   a) ${CONTRACTS_DIR}/interface-contract.yaml
+      - Component props/API interface specifications
+      - Event handlers and callback signatures
+      - TypeScript type definitions
+      - Return value contracts
 
-2. **${CONTRACTS_DIR}/behavior-contract.yaml**
-   - Core functionality requirements
-   - User interaction patterns
-   - State management approach
-   - Error handling behavior
+   b) ${CONTRACTS_DIR}/behavior-contract.yaml
+      - Core functionality requirements
+      - User interaction patterns
+      - State management approach
+      - Error handling behavior
 
-3. **${CONTRACTS_DIR}/integration-contract.yaml**
-   - File naming conventions
-   - Import/export patterns
-   - Theme integration approach
-   - Testing requirements
+   c) ${CONTRACTS_DIR}/integration-contract.yaml
+      - File naming conventions
+      - Import/export patterns
+      - Theme integration approach
+      - Testing requirements
 
-4. **${CONTRACTS_DIR}/constraints.yaml**
-   - Performance budgets
-   - Accessibility requirements
-   - Browser support targets
-   - Dependencies allowed/forbidden
+   d) ${CONTRACTS_DIR}/constraints.yaml
+      - Performance budgets
+      - Accessibility requirements (WCAG 2.1 AA)
+      - Browser support targets
+      - Dependencies allowed/forbidden
 
-**Analysis Approach**:
-1. Read the task description from TaskMaster
-2. Analyze existing codebase patterns
-3. Consider all 5 specialist perspectives
-4. Generate contracts that allow creativity while ensuring compatibility
+5. Ensure contracts are specific enough for compatibility but flexible for creativity
+6. Focus on interfaces and behaviors, not implementation details
+7. Consider edge cases and error states
 
-**Key Principles**:
-- Contracts should be specific enough to ensure compatibility
-- But flexible enough to allow specialist creativity
-- Focus on interfaces, not implementations
-- Think about edge cases and error states
-
-Begin by analyzing Task ${task_id} and the current codebase patterns.
+DELIVERABLES:
+- Four YAML contract files in ${CONTRACTS_DIR}
+- Each contract should enable coherent multi-agent implementation
+- Contracts must be parseable and actionable by all subsequent agents
+```
 
 After the Pre-Analysis Agent completes:
 - Verify that all four contract files were generated successfully
@@ -101,7 +121,7 @@ After the Pre-Analysis Agent completes:
 - Update state to indicate contracts are ready
 - All subsequent agents will reference these contracts
 
-**PHASE 1: SMART WORKTREE CREATION**
+**PHASE 3: SMART WORKTREE CREATION**
 
 Create dedicated worktrees for each specialist to enable parallel implementation:
 
@@ -116,7 +136,7 @@ Create dedicated worktrees for each specialist to enable parallel implementation
 3. **Install Dependencies**: Run pnpm install in each worktree (can be done in parallel)
 4. **Track Worktree State**: Record each worktree's path, assigned port, and specialist in the state file
 
-**PHASE 2: ORCHESTRATION WITH PROGRESS TRACKING**
+**PHASE 4: ORCHESTRATION WITH PROGRESS TRACKING**
 
 Begin the main orchestration phase with real-time monitoring:
 
@@ -124,167 +144,295 @@ Begin the main orchestration phase with real-time monitoring:
 2. **Log Phase Start**: Record orchestration phase start with timestamp in orchestration.log
 3. **Deploy Orchestration Agents**: Launch the multi-tier agent system
 
-**Deploy Master Orchestrator using Task tool:**
+```
+TASK: Orchestrate multi-agent implementation system for Task ${task_id}
 
-The Master Orchestrator coordinates the entire multi-agent system for Task {task_id}:
+You are the Master Orchestrator for Task ${task_id}, coordinating a sophisticated multi-agent system.
 
-You are the Master Orchestrator for a sophisticated multi-agent system implementing Task ${task_id}.
-
-Your deployment configuration:
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
 - Task ID: ${task_id}
+- Task title: ${task_title}
+- Task subtasks: ${task_subtasks}
 - Specialists: ${specialists}
 - Depth: ${depth} sub-agents per specialist
 - Deployment Mode: worktree-all
 - Worktree Prefix: ${worktree_prefix}
 - Target Path: packages/web/src/components
 - Analysis Output: ${ORCH_OUTPUT_DIR}/analysis/
+- Contracts Directory: ${CONTRACTS_DIR}
 
-Your responsibilities:
-1. Coordinate deployment of 5 Specialist Orchestrators
-2. Each specialist will deploy ${depth} sub-agents for implementation
-3. Monitor implementation progress across all worktrees
-4. Ensure consistent quality and integration
-5. Prepare for synthesis phase
-6. Write analysis and coordination docs to ${ORCH_OUTPUT_DIR}/analysis/
+REQUIREMENTS:
+1. Read and understand all implementation contracts:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Component interfaces
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - Required behaviors
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Code patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - Implementation limits
 
-**CRITICAL**: Read and enforce the implementation contracts:
-- ${CONTRACTS_DIR}/interface-contract.yaml - All components MUST follow this interface
-- ${CONTRACTS_DIR}/behavior-contract.yaml - All implementations MUST exhibit these behaviors
-- ${CONTRACTS_DIR}/integration-contract.yaml - All code MUST follow these patterns
-- ${CONTRACTS_DIR}/constraints.yaml - All implementations MUST respect these limits
+2. Deploy and coordinate 5 Specialist Orchestrators:
+   - Performance Specialist → .worktrees/${worktree_prefix}-1-performance/
+   - Architecture Specialist → .worktrees/${worktree_prefix}-2-architecture/
+   - UX/DX Specialist → .worktrees/${worktree_prefix}-3-ux_dx/
+   - Accessibility Specialist → .worktrees/${worktree_prefix}-4-accessibility/
+   - Innovation Specialist → .worktrees/${worktree_prefix}-5-innovation/
 
-Ensure ALL specialist orchestrators receive and understand these contracts.
+3. Ensure each specialist:
+   - Receives and understands the contracts
+   - Deploys ${depth} sub-agents for implementation
+   - Works within their assigned worktree
+   - Follows project standards and conventions
 
-Specialist worktree assignments:
-- Performance: .worktrees/${worktree_prefix}-1-performance/
-- Architecture: .worktrees/${worktree_prefix}-2-architecture/
-- UX/DX: .worktrees/${worktree_prefix}-3-ux_dx/
-- Accessibility: .worktrees/${worktree_prefix}-4-accessibility/
-- Innovation: .worktrees/${worktree_prefix}-5-innovation/
-- Synthesis: .worktrees/${worktree_prefix}-6-synthesis/
+4. Monitor and coordinate:
+   - Track implementation progress across all worktrees
+   - Ensure consistent quality and integration
+   - Resolve conflicts between specialist approaches
+   - Prepare synthesis strategy
 
-Begin by analyzing Task ${task_id} requirements and preparing deployment strategy.
+5. Document orchestration decisions:
+   - Write analysis to ${ORCH_OUTPUT_DIR}/analysis/master-coordination.md
+   - Track specialist deployment status
+   - Log key decisions and trade-offs
 
-After Master Orchestrator deployment, log completion with timestamp.
+DELIVERABLES:
+- Deployed specialist orchestrators following contracts
+- Coordination documentation in analysis directory
+- Prepared synthesis strategy for final implementation
+```
+
+**Parallel Execution Management:**
+- Deploy Master Orchestrator using Task tool
+- Wait for master coordination strategy before deploying specialists
+- Log completion with timestamp to orchestration.log
 
 **Deploy Specialist Orchestrators using Task tool (5 agents in parallel):**
 
 Deploy five specialist orchestrators simultaneously, each focusing on their domain of expertise:
 
-**SPECIALIST 1 - PERFORMANCE**:
+```
 TASK: Performance Specialist Orchestrator for Task ${task_id}
 
 You are the Performance Specialist Orchestrator.
-Your worktree: .worktrees/${worktree_prefix}-1-performance/
-Your focus: Bundle size, runtime performance, memory efficiency
-Analysis output: ${ORCH_OUTPUT_DIR}/analysis/performance/
 
-Deploy ${depth} sub-agents to create implementations in:
-- _implementations/bundle-optimizer/
-- _implementations/runtime-optimizer/
-- _implementations/memory-optimizer/
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-1-performance/
+- Focus: Bundle size, runtime performance, memory efficiency
+- Analysis output: ${ORCH_OUTPUT_DIR}/analysis/performance/
+- Sub-agent count: ${depth}
+- Contracts: ${CONTRACTS_DIR}
 
-Each implementation should be complete and functional.
+REQUIREMENTS:
+1. Read and understand all implementation contracts:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Component interfaces
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - Required behaviors
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Code patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - Performance budgets
 
-**MANDATORY**: All implementations MUST adhere to:
-- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
-- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
-- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
-- ${CONTRACTS_DIR}/constraints.yaml - Stay within performance budgets
+2. Deploy ${depth} sub-agents to create implementations:
+   - Bundle Optimizer → _implementations/bundle-optimizer/
+   - Runtime Optimizer → _implementations/runtime-optimizer/
+   - Memory Optimizer → _implementations/memory-optimizer/
 
-Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/performance/decisions.md
+3. Ensure each implementation:
+   - Is complete and functional
+   - Strictly adheres to ALL contracts
+   - Optimizes for performance metrics
+   - Can be tested independently
 
-**SPECIALIST 2 - ARCHITECTURE**:
+4. Document your orchestration decisions:
+   - Write decision log to ${ORCH_OUTPUT_DIR}/analysis/performance/decisions.md
+   - Explain trade-offs between implementations
+   - Note performance metrics and benchmarks
+
+DELIVERABLES:
+- ${depth} complete implementations in designated folders
+- Decision log documenting approach and trade-offs
+- All implementations compliant with contracts
+```
+
+```
 TASK: Architecture Specialist Orchestrator for Task ${task_id}
 
 You are the Architecture Specialist Orchestrator.
-Your worktree: .worktrees/${worktree_prefix}-2-architecture/
-Your focus: Code organization, maintainability, scalability
-Analysis output: ${ORCH_OUTPUT_DIR}/analysis/architecture/
 
-Deploy ${depth} sub-agents to create implementations in:
-- _implementations/modular-design/
-- _implementations/maintainability-focused/
-- _implementations/scalability-optimized/
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-2-architecture/
+- Focus: Code organization, maintainability, scalability
+- Analysis output: ${ORCH_OUTPUT_DIR}/analysis/architecture/
+- Sub-agent count: ${depth}
+- Contracts: ${CONTRACTS_DIR}
 
-Each implementation should be complete and functional.
+REQUIREMENTS:
+1. Read and understand all implementation contracts:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Component interfaces
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - Required behaviors
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Code patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - Architectural patterns
 
-**MANDATORY**: All implementations MUST adhere to:
-- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
-- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
-- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
-- ${CONTRACTS_DIR}/constraints.yaml - Respect architectural patterns
+2. Deploy ${depth} sub-agents to create implementations:
+   - Modular Design → _implementations/modular-design/
+   - Maintainability Focused → _implementations/maintainability-focused/
+   - Scalability Optimized → _implementations/scalability-optimized/
 
-Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/architecture/decisions.md
+3. Ensure each implementation:
+   - Is complete and functional
+   - Strictly adheres to ALL contracts
+   - Demonstrates architectural best practices
+   - Supports future extensibility
 
-**SPECIALIST 3 - UX/DX**:
+4. Document your orchestration decisions:
+   - Write decision log to ${ORCH_OUTPUT_DIR}/analysis/architecture/decisions.md
+   - Explain architectural choices
+   - Note patterns and structures used
+
+DELIVERABLES:
+- ${depth} complete implementations in designated folders
+- Decision log documenting architectural approach
+- All implementations compliant with contracts
+```
+
+```
 TASK: UX/DX Specialist Orchestrator for Task ${task_id}
 
 You are the UX/DX Specialist Orchestrator.
-Your worktree: .worktrees/${worktree_prefix}-3-ux_dx/
-Your focus: User experience, developer experience, API design
-Analysis output: ${ORCH_OUTPUT_DIR}/analysis/ux_dx/
 
-Deploy ${depth} sub-agents to create implementations in:
-- _implementations/intuitive-api/
-- _implementations/enhanced-ux/
-- _implementations/developer-friendly/
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-3-ux_dx/
+- Focus: User experience, developer experience, API design
+- Analysis output: ${ORCH_OUTPUT_DIR}/analysis/ux_dx/
+- Sub-agent count: ${depth}
+- Contracts: ${CONTRACTS_DIR}
 
-Each implementation should be complete and functional.
+REQUIREMENTS:
+1. Read and understand all implementation contracts:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Component interfaces
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - Required behaviors
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Code patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - UX/DX standards
 
-**MANDATORY**: All implementations MUST adhere to:
-- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
-- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
-- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
-- ${CONTRACTS_DIR}/constraints.yaml - Maintain UX/DX standards
+2. Deploy ${depth} sub-agents to create implementations:
+   - Intuitive API → _implementations/intuitive-api/
+   - Enhanced UX → _implementations/enhanced-ux/
+   - Developer Friendly → _implementations/developer-friendly/
 
-Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/ux_dx/decisions.md
+3. Ensure each implementation:
+   - Is complete and functional
+   - Strictly adheres to ALL contracts
+   - Optimizes for user and developer experience
+   - Can be tested independently
 
-**SPECIALIST 4 - ACCESSIBILITY**:
+4. Document your orchestration decisions:
+   - Write decision log to ${ORCH_OUTPUT_DIR}/analysis/ux_dx/decisions.md
+   - Explain UX/DX trade-offs
+   - Note usability metrics and API design choices
+
+DELIVERABLES:
+- ${depth} complete implementations in designated folders
+- Decision log documenting UX/DX approach
+- All implementations compliant with contracts
+```
+
+```
 TASK: Accessibility Specialist Orchestrator for Task ${task_id}
 
 You are the Accessibility Specialist Orchestrator.
-Your worktree: .worktrees/${worktree_prefix}-4-accessibility/
-Your focus: WCAG compliance, screen reader support, keyboard navigation
-Analysis output: ${ORCH_OUTPUT_DIR}/analysis/accessibility/
 
-Deploy ${depth} sub-agents to create implementations in:
-- _implementations/wcag-compliant/
-- _implementations/screen-reader-optimized/
-- _implementations/keyboard-first/
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-4-accessibility/
+- Focus: WCAG compliance, screen reader support, keyboard navigation
+- Analysis output: ${ORCH_OUTPUT_DIR}/analysis/accessibility/
+- Sub-agent count: ${depth}
+- Contracts: ${CONTRACTS_DIR}
 
-Each implementation should be complete and functional.
+REQUIREMENTS:
+1. Read and understand all implementation contracts:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Component interfaces
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - Required behaviors
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Code patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - Accessibility requirements
 
-**MANDATORY**: All implementations MUST adhere to:
-- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
-- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
-- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
-- ${CONTRACTS_DIR}/constraints.yaml - Meet all accessibility requirements
+2. Deploy ${depth} sub-agents to create implementations:
+   - WCAG Compliant → _implementations/wcag-compliant/
+   - Screen Reader Optimized → _implementations/screen-reader-optimized/
+   - Keyboard First → _implementations/keyboard-first/
 
-Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/accessibility/decisions.md
+3. Ensure each implementation:
+   - Is complete and functional
+   - Strictly adheres to ALL contracts
+   - Meets WCAG 2.1 AA standards
+   - Can be tested independently
 
-**SPECIALIST 5 - INNOVATION**:
+4. Document your orchestration decisions:
+   - Write decision log to ${ORCH_OUTPUT_DIR}/analysis/accessibility/decisions.md
+   - Explain accessibility trade-offs
+   - Note ARIA usage and semantic HTML choices
+
+DELIVERABLES:
+- ${depth} complete implementations in designated folders
+- Decision log documenting accessibility approach
+- All implementations compliant with contracts
+```
+
+```
 TASK: Innovation Specialist Orchestrator for Task ${task_id}
 
 You are the Innovation Specialist Orchestrator.
-Your worktree: .worktrees/${worktree_prefix}-5-innovation/
-Your focus: Cutting-edge features, creative solutions, future-proofing
-Analysis output: ${ORCH_OUTPUT_DIR}/analysis/innovation/
 
-Deploy ${depth} sub-agents to create implementations in:
-- _implementations/ai-enhanced/
-- _implementations/experimental-features/
-- _implementations/future-proof/
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-5-innovation/
+- Focus: Cutting-edge features, creative solutions, future-proofing
+- Analysis output: ${ORCH_OUTPUT_DIR}/analysis/innovation/
+- Sub-agent count: ${depth}
+- Contracts: ${CONTRACTS_DIR}
 
-Each implementation should be complete and functional.
+REQUIREMENTS:
+1. Read and understand all implementation contracts:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Component interfaces
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - Required behaviors
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Code patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - Innovation boundaries
 
-**MANDATORY**: All implementations MUST adhere to:
-- ${CONTRACTS_DIR}/interface-contract.yaml - Use exact props/API defined here
-- ${CONTRACTS_DIR}/behavior-contract.yaml - Implement all required behaviors
-- ${CONTRACTS_DIR}/integration-contract.yaml - Follow naming/import patterns
-- ${CONTRACTS_DIR}/constraints.yaml - Stay within innovation boundaries
+2. Deploy ${depth} sub-agents to create implementations:
+   - AI Enhanced → _implementations/ai-enhanced/
+   - Experimental Features → _implementations/experimental-features/
+   - Future Proof → _implementations/future-proof/
 
-Write a decision log to: ${ORCH_OUTPUT_DIR}/analysis/innovation/decisions.md
+3. Ensure each implementation:
+   - Is complete and functional
+   - Strictly adheres to ALL contracts
+   - Pushes boundaries while maintaining stability
+   - Can be tested independently
+
+4. Document your orchestration decisions:
+   - Write decision log to ${ORCH_OUTPUT_DIR}/analysis/innovation/decisions.md
+   - Explain innovative approaches
+   - Note future-proofing strategies
+
+DELIVERABLES:
+- ${depth} complete implementations in designated folders
+- Decision log documenting innovation approach
+- All implementations compliant with contracts
+```
+
+**Parallel Execution Management:**
+- Deploy all 5 Specialist Orchestrators using Task tool in parallel
+- Each specialist will deploy their own 3 sub-agents
+- Monitor orchestration.log for deployment progress
+- Wait for all specialists to complete before evaluation phase
 
 **Deploy Sub-Agents (15 total, 3 per specialist) using Task tool:**
 
@@ -323,63 +471,315 @@ All sub-agents must:
 - Document their design decisions in README files
 - Log their deployment and completion to orchestration.log
 
-**Deploy Evaluation Orchestrator using Task tool:**
+```
+TASK: Evaluation Orchestrator for Task ${task_id}
 
-Deploy an Evaluation Orchestrator to analyze all 15 implementations across the worktrees. The evaluator should:
+You are the Evaluation Orchestrator responsible for analyzing all implementations.
 
-- Analyze all 3 implementations from each of the 5 specialist worktrees
-- Use the Pre-Analysis contracts as the evaluation rubric
-- Verify interface compliance, behavior correctness, integration patterns, and constraint adherence
-- Create evaluation reports and score each implementation
-- Update manifest.json files with metrics and rankings
-- Identify any non-compliant implementations
-- Write comprehensive evaluation summary to the analysis directory
-- Log evaluation progress with timestamps to orchestration.log
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Total implementations: 15 (3 per specialist across 5 worktrees)
+- Contracts: ${CONTRACTS_DIR}
+- Evaluation output: ${ORCH_OUTPUT_DIR}/analysis/evaluation/
+- Worktree prefix: ${worktree_prefix}
+
+REQUIREMENTS:
+1. Analyze all 15 implementations across the 5 specialist worktrees:
+   - Performance worktree: 3 implementations
+   - Architecture worktree: 3 implementations
+   - UX/DX worktree: 3 implementations
+   - Accessibility worktree: 3 implementations
+   - Innovation worktree: 3 implementations
+
+2. Use the Pre-Analysis contracts as evaluation rubric:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Verify API compliance
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - Check behavior correctness
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Validate patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - Ensure constraint adherence
+
+3. Create comprehensive evaluation:
+   - Score each implementation on contract compliance
+   - Update manifest.json files with metrics and rankings
+   - Identify any non-compliant implementations
+   - Note strengths and weaknesses of each approach
+
+4. Write evaluation summary to:
+   - ${ORCH_OUTPUT_DIR}/analysis/evaluation/summary.md
+   - Include rankings, compliance scores, and recommendations
+   - Log evaluation progress with timestamps to orchestration.log
+
+DELIVERABLES:
+- Evaluation report for all 15 implementations
+- Updated manifest.json files with scores
+- Comprehensive summary for synthesis guidance
+```
+
+**Parallel Execution Management:**
+- Deploy Evaluation Orchestrator using Task tool
+- Wait for all specialist implementations to complete first
+- Log evaluation progress to orchestration.log
 
 **Deploy Progressive Summarization Agents using Task tool (5 agents in parallel):**
 
 To prevent context window overload during the synthesis phase, deploy 5 summarization agents in parallel - one for each specialist. Log the summarization phase start with timestamp to orchestration.log.
 
-Each summarization agent should:
-- Read and analyze the 3 implementations from their specialist worktree
-- Create a concise summary (maximum 500 words) in a standardized format
-- Include key features, trade-offs, unique innovations, recommendations, and synthesis guidance
-- Write the summary to the summaries directory in the orchestration output
+```
+TASK: Performance Summarization Agent for Task ${task_id}
 
-**Summarization Focus by Specialist:**
+You are the Performance Summarization Agent.
 
-- **Performance Summarizer**: Analyze bundle-optimizer, runtime-optimizer, and memory-optimizer implementations
-- **Architecture Summarizer**: Review modular-design, maintainability-focused, and scalability-optimized implementations  
-- **UX/DX Summarizer**: Examine intuitive-api, enhanced-ux, and developer-friendly implementations
-- **Accessibility Summarizer**: Assess wcag-compliant, screen-reader-optimized, and keyboard-first implementations
-- **Innovation Summarizer**: Evaluate ai-enhanced, experimental-features, and future-proof implementations
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-1-performance/
+- Implementations to analyze:
+  - _implementations/bundle-optimizer/
+  - _implementations/runtime-optimizer/
+  - _implementations/memory-optimizer/
+- Summary output: ${ORCH_OUTPUT_DIR}/summaries/performance-summary.md
 
-Each summary should follow a consistent structure documenting the focus, key features, trade-offs, best use cases, and synthesis recommendations for each implementation. This allows the Synthesis Orchestrator to make informed decisions without reading all 15 full implementations.
-Log all summarization agent deployments and completions with timestamps to orchestration.log.
+REQUIREMENTS:
+1. Read and analyze all 3 performance implementations
+2. Create a concise summary (maximum 500 words) covering:
+   - Key features of each implementation
+   - Performance trade-offs and metrics
+   - Unique optimizations and innovations
+   - Best use cases for each approach
+   - Synthesis recommendations
 
-**Deploy Synthesis Orchestrator using Task tool:**
+3. Use standardized structure:
+   - Overview (50 words)
+   - Implementation Analysis (300 words)
+   - Synthesis Guidance (150 words)
 
-Log the synthesis phase start with timestamp to orchestration.log, then deploy the Synthesis Orchestrator.
+4. Focus on performance-specific aspects:
+   - Bundle size impacts
+   - Runtime performance metrics
+   - Memory usage patterns
+   - Optimization techniques used
 
-The Synthesis Orchestrator works in the dedicated synthesis worktree and creates the ultimate implementation by:
+DELIVERABLE: Structured summary in ${ORCH_OUTPUT_DIR}/summaries/performance-summary.md
+```
 
-**Reading Summaries Instead of Full Implementations:**
-- Read all 5 specialist summaries (500 words each) to prevent context overload
-- Review the evaluation report to understand implementation quality
-- Access decision logs to understand specialist trade-offs
+```
+TASK: Architecture Summarization Agent for Task ${task_id}
 
-**Creating the Ultimate Synthesis:**
-- Cherry-pick the best features identified in each summary
-- Follow synthesis recommendations from specialists
-- Ensure all 5 perspectives are represented in the final solution
-- Selectively read specific implementations mentioned in summaries when needed
+You are the Architecture Summarization Agent.
 
-**Maintaining Contract Compliance:**
-- Strictly adhere to all 4 contracts from Pre-Analysis phase
-- Ensure the synthesis meets ALL constraints simultaneously
-- Document synthesis decisions and rationale
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-2-architecture/
+- Implementations to analyze:
+  - _implementations/modular-design/
+  - _implementations/maintainability-focused/
+  - _implementations/scalability-optimized/
+- Summary output: ${ORCH_OUTPUT_DIR}/summaries/architecture-summary.md
 
-The Synthesis Orchestrator represents the culmination of the multi-agent process, combining the best aspects of all 15 implementations into one cohesive solution.
+REQUIREMENTS:
+1. Read and analyze all 3 architecture implementations
+2. Create a concise summary (maximum 500 words) covering:
+   - Key architectural patterns used
+   - Code organization approaches
+   - Maintainability strategies
+   - Scalability considerations
+   - Synthesis recommendations
+
+3. Use standardized structure:
+   - Overview (50 words)
+   - Implementation Analysis (300 words)
+   - Synthesis Guidance (150 words)
+
+4. Focus on architecture-specific aspects:
+   - Component structure
+   - Separation of concerns
+   - Design patterns employed
+   - Future extensibility
+
+DELIVERABLE: Structured summary in ${ORCH_OUTPUT_DIR}/summaries/architecture-summary.md
+```
+
+```
+TASK: UX/DX Summarization Agent for Task ${task_id}
+
+You are the UX/DX Summarization Agent.
+
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-3-ux_dx/
+- Implementations to analyze:
+  - _implementations/intuitive-api/
+  - _implementations/enhanced-ux/
+  - _implementations/developer-friendly/
+- Summary output: ${ORCH_OUTPUT_DIR}/summaries/ux-dx-summary.md
+
+REQUIREMENTS:
+1. Read and analyze all 3 UX/DX implementations
+2. Create a concise summary (maximum 500 words) covering:
+   - API design choices
+   - User experience enhancements
+   - Developer ergonomics
+   - Documentation approaches
+   - Synthesis recommendations
+
+3. Use standardized structure:
+   - Overview (50 words)
+   - Implementation Analysis (300 words)
+   - Synthesis Guidance (150 words)
+
+4. Focus on UX/DX-specific aspects:
+   - API intuitiveness
+   - Error handling
+   - Developer tooling
+   - User interaction patterns
+
+DELIVERABLE: Structured summary in ${ORCH_OUTPUT_DIR}/summaries/ux-dx-summary.md
+```
+
+```
+TASK: Accessibility Summarization Agent for Task ${task_id}
+
+You are the Accessibility Summarization Agent.
+
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-4-accessibility/
+- Implementations to analyze:
+  - _implementations/wcag-compliant/
+  - _implementations/screen-reader-optimized/
+  - _implementations/keyboard-first/
+- Summary output: ${ORCH_OUTPUT_DIR}/summaries/accessibility-summary.md
+
+REQUIREMENTS:
+1. Read and analyze all 3 accessibility implementations
+2. Create a concise summary (maximum 500 words) covering:
+   - WCAG compliance levels
+   - Screen reader optimizations
+   - Keyboard navigation patterns
+   - ARIA usage strategies
+   - Synthesis recommendations
+
+3. Use standardized structure:
+   - Overview (50 words)
+   - Implementation Analysis (300 words)
+   - Synthesis Guidance (150 words)
+
+4. Focus on accessibility-specific aspects:
+   - Semantic HTML usage
+   - Focus management
+   - Color contrast approaches
+   - Assistive technology support
+
+DELIVERABLE: Structured summary in ${ORCH_OUTPUT_DIR}/summaries/accessibility-summary.md
+```
+
+```
+TASK: Innovation Summarization Agent for Task ${task_id}
+
+You are the Innovation Summarization Agent.
+
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-5-innovation/
+- Implementations to analyze:
+  - _implementations/ai-enhanced/
+  - _implementations/experimental-features/
+  - _implementations/future-proof/
+- Summary output: ${ORCH_OUTPUT_DIR}/summaries/innovation-summary.md
+
+REQUIREMENTS:
+1. Read and analyze all 3 innovation implementations
+2. Create a concise summary (maximum 500 words) covering:
+   - Innovative features introduced
+   - AI/ML integrations
+   - Experimental technologies used
+   - Future-proofing strategies
+   - Synthesis recommendations
+
+3. Use standardized structure:
+   - Overview (50 words)
+   - Implementation Analysis (300 words)
+   - Synthesis Guidance (150 words)
+
+4. Focus on innovation-specific aspects:
+   - Cutting-edge technologies
+   - Novel interaction patterns
+   - Progressive enhancement
+   - Technology adoption risks
+
+DELIVERABLE: Structured summary in ${ORCH_OUTPUT_DIR}/summaries/innovation-summary.md
+```
+
+**Parallel Execution Management:**
+- Deploy all 5 Summarization Agents using Task tool in parallel
+- Each reads from their respective specialist worktree
+- Creates standardized 500-word summaries
+- Log all deployments and completions to orchestration.log
+
+```
+TASK: Synthesis Orchestrator for Task ${task_id}
+
+You are the Synthesis Orchestrator, creating the ultimate implementation.
+
+CONTEXT:
+- Task specification: [Full content from .taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt]
+- Task ID: ${task_id}
+- Task title: ${task_title}
+- Worktree: .worktrees/${worktree_prefix}-6-synthesis/
+- Contracts: ${CONTRACTS_DIR}
+- Summaries: ${ORCH_OUTPUT_DIR}/summaries/
+- Evaluation: ${ORCH_OUTPUT_DIR}/analysis/evaluation/summary.md
+- Decision logs: ${ORCH_OUTPUT_DIR}/analysis/*/decisions.md
+- Target: packages/web/src/components/
+
+REQUIREMENTS:
+1. Read ALL synthesis inputs to prevent context overload:
+   - ${ORCH_OUTPUT_DIR}/summaries/performance-summary.md (500 words)
+   - ${ORCH_OUTPUT_DIR}/summaries/architecture-summary.md (500 words)
+   - ${ORCH_OUTPUT_DIR}/summaries/ux-dx-summary.md (500 words)
+   - ${ORCH_OUTPUT_DIR}/summaries/accessibility-summary.md (500 words)
+   - ${ORCH_OUTPUT_DIR}/summaries/innovation-summary.md (500 words)
+   - ${ORCH_OUTPUT_DIR}/analysis/evaluation/summary.md
+
+2. Create the ultimate synthesis by:
+   - Cherry-picking best features from each summary
+   - Following synthesis recommendations
+   - Balancing all 5 specialist perspectives
+   - Selectively reading specific implementations only when needed
+
+3. Ensure complete contract compliance:
+   - ${CONTRACTS_DIR}/interface-contract.yaml - Exact API match
+   - ${CONTRACTS_DIR}/behavior-contract.yaml - All behaviors included
+   - ${CONTRACTS_DIR}/integration-contract.yaml - Proper patterns
+   - ${CONTRACTS_DIR}/constraints.yaml - All constraints met
+
+4. Document synthesis approach:
+   - Write to ${ORCH_OUTPUT_DIR}/analysis/synthesis/decisions.md
+   - Explain feature selection rationale
+   - Note trade-off resolutions
+   - Log progress to orchestration.log
+
+DELIVERABLES:
+- Complete, production-ready implementation in worktree
+- Synthesis decision documentation
+- Implementation that represents best of all 15 approaches
+```
+
+**Parallel Execution Management:**
+- Deploy Synthesis Orchestrator using Task tool
+- Wait for all summarization agents to complete first
+- Log synthesis progress to orchestration.log
+- Final implementation represents culmination of multi-agent process
 
 **Enhanced Coordination Through Decision Logs:**
 
@@ -414,7 +814,7 @@ The orchestration will take approximately ${EST_TIME} seconds to complete.
 
 Log the Synthesis Orchestrator completion and final orchestration summary with timestamps. Record the total number of agents deployed (28 total: 1 pre-analysis + 5 specialists + 15 sub-agents + 1 evaluation + 5 summarization + 1 synthesis) and provide the command to monitor real-time progress.
 
-**PHASE 3: AUTO-START DEV SERVERS**
+**PHASE 5: AUTO-START DEV SERVERS**
 
 If auto_start_servers is true, automatically start development servers for all worktrees:
 
@@ -432,7 +832,7 @@ If auto_start_servers is true, automatically start development servers for all w
 
 4. **Provide Access Information**: Display URLs for each implementation and instructions for viewing server logs
 
-**PHASE 4: CREATE COMPARISON DASHBOARD**
+**PHASE 6: CREATE COMPARISON DASHBOARD**
 
 Generate an HTML comparison dashboard in the orchestration output directory that allows side-by-side comparison of all implementations. The dashboard should:
 
@@ -442,7 +842,7 @@ Generate an HTML comparison dashboard in the orchestration output directory that
 - Provide a clean, professional interface for evaluating different approaches
 - Save the dashboard as comparison-dashboard.html in the orchestration output directory
 
-**PHASE 5: FINAL SUMMARY**
+**PHASE 7: FINAL SUMMARY**
 
 Display a comprehensive summary of the orchestration results:
 
