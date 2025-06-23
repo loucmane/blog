@@ -9,12 +9,13 @@ A single command that handles the entire orchestration workflow: creates worktre
 - auto_start_servers: $ARGUMENTS (optional, default: true)
 - reuse_worktrees: $ARGUMENTS (optional, default: false)
 
-**IMPORTANT: Execute this command by running the bash commands below and using the Task tool for orchestration**
+**IMPORTANT: This is an EXECUTABLE command, not documentation. When invoked, you MUST:**
 
-When this command is invoked, you should:
-1. Execute the bash commands in each phase using the Bash tool
-2. Use the Task tool to deploy agents during the orchestration phase
-3. Create actual worktrees and run actual commands, not just display templates
+1. **IMMEDIATELY start executing Phase 0** by running the bash commands below using the Bash tool
+2. **When you see "Deploy X Agent using Task tool:"**, invoke the Task tool with that agent's prompt
+3. **Continue through ALL phases** - do not stop after showing the template
+
+**EXECUTION STARTS NOW - Run the Phase 0 bash commands:**
 
 **PHASE 0: PRE-FLIGHT CHECKS**
 
@@ -162,12 +163,12 @@ echo "pre_analysis_started: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> "$STATE_FILE
 log_agent "Pre-Analysis Agent" "DEPLOYING"
 ```
 
-**Deploy Pre-Analysis Agent using Task tool:**
-
-This agent analyzes the task and generates contracts that all other agents will follow:
+**NOW DEPLOY Pre-Analysis Agent - Invoke the Task tool with this prompt:**
 
 ```
-TASK: Pre-Analysis Agent for Task ${task_id} - Contract Generation
+description: "Pre-Analysis Agent for Task ${task_id}"
+prompt: |
+  TASK: Pre-Analysis Agent for Task ${task_id} - Contract Generation
 
 You are the Pre-Analysis Agent responsible for creating implementation contracts that will guide all other agents.
 
@@ -303,16 +304,18 @@ echo "=== Orchestration Phase Started: $(date '+%Y-%m-%d %H:%M:%S') ===" >> "$OR
 
 The orchestration agents are deployed through specific prompts that guide their implementation work.
 
-**Deploy Master Orchestrator using Task tool:**
+**NOW DEPLOY Master Orchestrator - Run this bash command first:**
 
 ```bash
 log_agent "Master Orchestrator" "DEPLOYING"
 ```
 
-Deploy the Master Orchestrator agent with this prompt:
+**Then IMMEDIATELY invoke the Task tool with this prompt:**
 
 ```
-TASK: Master Orchestrator for Task ${task_id} - Unified Workflow Orchestration
+description: "Master Orchestrator for Task ${task_id}"
+prompt: |
+  TASK: Master Orchestrator for Task ${task_id} - Unified Workflow Orchestration
 
 You are the Master Orchestrator for a sophisticated multi-agent system implementing Task ${task_id}.
 
@@ -357,7 +360,7 @@ Begin by analyzing Task ${task_id} requirements and preparing deployment strateg
 log_agent "Master Orchestrator" "DEPLOYED - Coordinating specialists"
 ```
 
-**Deploy Specialist Orchestrators using Task tool (5 agents in parallel):**
+**NOW DEPLOY 5 Specialist Orchestrators - First run these bash commands:**
 
 ```bash
 log_agent "Performance Specialist" "DEPLOYING"
@@ -367,7 +370,7 @@ log_agent "Accessibility Specialist" "DEPLOYING"
 log_agent "Innovation Specialist" "DEPLOYING"
 ```
 
-Deploy these 5 specialist orchestrators simultaneously:
+**Then IMMEDIATELY invoke the Task tool 5 times in parallel with these prompts:**
 
 ```
 SPECIALIST 1 - PERFORMANCE:
