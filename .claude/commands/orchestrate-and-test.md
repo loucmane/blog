@@ -1,13 +1,14 @@
 **ORCHESTRATE AND TEST - Unified Workflow Command**
 
-Think deeply about orchestrating a comprehensive multi-agent implementation workflow for the given task. This command creates worktrees, deploys specialized agents, manages state, and provides real-time monitoring.
+Think deeply about this task implementation challenge. You are about to guide a sophisticated multi-perspective creation process that explores optimal solutions through diverse specialist viewpoints.
 
 **Variables:**
-- task_id: $ARGUMENTS (required)
-- specialists: $ARGUMENTS (optional, default: "all")
-- depth: $ARGUMENTS (optional, default: 3)
-- auto_start_servers: $ARGUMENTS (optional, default: true)
-- reuse_worktrees: $ARGUMENTS (optional, default: false)
+
+task_id: $ARGUMENTS
+specialists: $ARGUMENTS
+depth: $ARGUMENTS
+auto_start_servers: $ARGUMENTS
+reuse_worktrees: $ARGUMENTS
 
 **ARGUMENTS PARSING:**
 Parse the following arguments from "$ARGUMENTS":
@@ -56,9 +57,7 @@ Validate the environment before beginning orchestration:
 
 **PHASE 2: PRE-ANALYSIS - CONTRACT GENERATION**
 
-Before any implementation work begins, generate shared contracts that will ensure all implementations are compatible:
-
-Create a contracts directory in the orchestration output path and deploy a Pre-Analysis Agent using the Task tool.
+Before any implementation work begins, you need to discover the shared contracts that will harmonize all perspectives:
 
 ```
 TASK: Generate implementation contracts for Task ${task_id}
@@ -199,14 +198,9 @@ DELIVERABLES:
 - Prepared synthesis strategy for final implementation
 ```
 
-**Parallel Execution Management:**
-- Deploy Master Orchestrator using Task tool
-- Wait for master coordination strategy before deploying specialists
-- Log completion with timestamp to orchestration.log
+Now the Master Orchestrator emerges to coordinate the specialist perspectives:
 
-**Deploy Specialist Orchestrators using Task tool (5 agents in parallel):**
-
-Deploy five specialist orchestrators simultaneously, each focusing on their domain of expertise:
+After the master coordination strategy is established, five specialist perspectives will explore the implementation space in parallel:
 
 ```
 TASK: Performance Specialist Orchestrator for Task ${task_id}
@@ -428,17 +422,9 @@ DELIVERABLES:
 - All implementations compliant with contracts
 ```
 
-**Parallel Execution Management:**
-- Deploy all 5 Specialist Orchestrators using Task tool in parallel
-- Each specialist will deploy their own 3 sub-agents
-- Monitor orchestration.log for deployment progress
-- Wait for all specialists to complete before evaluation phase
+As the specialist perspectives unfold simultaneously, each one will spawn three unique implementation approaches, creating a rich exploration space of 15 different solutions:
 
-**Deploy Sub-Agents (15 total, 3 per specialist) using Task tool:**
-
-Each specialist orchestrator deploys 3 sub-agents to create different implementations. Log all deployments with timestamps to orchestration.log.
-
-Each specialist orchestrator should deploy their 3 sub-agents to create diverse implementations:
+**The Sub-Agent Perspectives Emerge:**
 
 **Performance Sub-Agents (3 agents):**
 - Bundle Optimizer: Focus on minimal bundle size, tree-shaking, and code splitting
@@ -516,14 +502,11 @@ DELIVERABLES:
 - Comprehensive summary for synthesis guidance
 ```
 
-**Parallel Execution Management:**
-- Deploy Evaluation Orchestrator using Task tool
-- Wait for all specialist implementations to complete first
-- Log evaluation progress to orchestration.log
+Now the Evaluation Orchestrator assesses all implementations:
 
-**Deploy Progressive Summarization Agents using Task tool (5 agents in parallel):**
+**PHASE 5: PROGRESSIVE SUMMARIZATION**
 
-To prevent context window overload during the synthesis phase, deploy 5 summarization agents in parallel - one for each specialist. Log the summarization phase start with timestamp to orchestration.log.
+To prepare for the final synthesis, five summarization perspectives emerge in parallel, each distilling the essence of their specialist domain:
 
 ```
 TASK: Performance Summarization Agent for Task ${task_id}
@@ -720,11 +703,7 @@ REQUIREMENTS:
 DELIVERABLE: Structured summary in ${ORCH_OUTPUT_DIR}/summaries/innovation-summary.md
 ```
 
-**Parallel Execution Management:**
-- Deploy all 5 Summarization Agents using Task tool in parallel
-- Each reads from their respective specialist worktree
-- Creates standardized 500-word summaries
-- Log all deployments and completions to orchestration.log
+The summarization agents work simultaneously, each condensing their specialist insights into structured summaries:
 
 ```
 TASK: Synthesis Orchestrator for Task ${task_id}
@@ -775,11 +754,7 @@ DELIVERABLES:
 - Implementation that represents best of all 15 approaches
 ```
 
-**Parallel Execution Management:**
-- Deploy Synthesis Orchestrator using Task tool
-- Wait for all summarization agents to complete first
-- Log synthesis progress to orchestration.log
-- Final implementation represents culmination of multi-agent process
+Finally, the Synthesis Orchestrator emerges to weave together all perspectives into the ultimate implementation:
 
 **Enhanced Coordination Through Decision Logs:**
 
