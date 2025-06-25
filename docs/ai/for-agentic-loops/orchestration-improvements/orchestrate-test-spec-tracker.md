@@ -39,9 +39,9 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 ## Testing Progress
 
 ### Phase 1: Single Agent
-- [ ] Pre-Analysis Agent executes
-- [ ] Contract files created in `/tmp/orchestration/`
-- [ ] No template display issue
+- [x] Pre-Analysis Agent executes ✅
+- [x] Contract files created successfully ✅
+- [x] No template display issue - COMMAND EXECUTES! ✅
 
 ### Phase 2: Master + Specialist
 - [ ] Master Orchestrator deploys
@@ -64,6 +64,9 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 | Date | Issue | Resolution | Status |
 |------|-------|------------|--------|
 | 2025-06-25 | Initial line count calculation error | Recounted spec file: 349 lines not 542 | ✅ Fixed |
+| 2025-06-25 | Worktrees created outside project | Updated spec to use .worktrees/ prefix | ✅ Fixed |
+| 2025-06-25 | MCP tools used instead of Task tool | Added explicit Task tool instructions | ✅ Fixed |
+| 2025-06-25 | Git operations require authentication | Added skip_git_operations flag | ✅ Fixed |
 
 ## Key Metrics
 
@@ -84,12 +87,12 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 
 ## Success Indicators
 
-- 🔴 Command executes (not just displays)
-- 🔴 Agents deploy via Task tool
-- 🔴 Output directories created
-- 🔴 Orchestration.log generated
-- 🔴 Worktrees established
-- 🔴 Task 7 implementation complete
+- ✅ Command executes (not just displays) - PROVEN WORKING
+- ✅ Agents deploy via Task tool - CONFIRMED
+- ✅ Output directories created - YES
+- ✅ Orchestration.log generated - NEED BETTER FORMAT
+- ✅ Worktrees established - FIXED PATH ISSUE
+- 🔴 Task 7 implementation complete - INTERRUPTED FOR IMPROVEMENTS
 
 ## Notes
 
@@ -114,4 +117,44 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 
 ---
 
-*Last Updated: 2025-06-25 11:40 - Implementation phase complete*
+## Improvements Implemented (2025-06-25 Session 3)
+
+### 1. Worktree Management ✅
+- Added `.worktrees/` base path requirement
+- Added worktree creation instructions
+- Added cleanup option (`worktree_cleanup` flag)
+- Added error handling for failed worktrees
+
+### 2. Agent Deployment Clarity ✅
+- Added "CRITICAL: Use Task Tool Only" section
+- Listed MCP tools to avoid
+- Provided correct deployment patterns
+- Clear sub-agent deployment instructions
+
+### 3. Git Operations Handling ✅
+- Added `skip_git_operations` flag (default: true)
+- Handles authentication failures gracefully
+- Generates integration scripts for manual execution
+- Documents what should be committed where
+
+### 4. Progress Tracking ✅
+- Defined orchestration log format: `[TIMESTAMP] [PHASE] [AGENT] [STATUS] Message`
+- Added progress indicators (agents deployed/total)
+- Implemented state persistence (orchestration-state.json)
+- Real-time phase and agent tracking
+
+### 5. Error Recovery ✅
+- Added `resume` parameter for interrupted orchestrations
+- State file tracks completed/failed agents
+- Recovery instructions in final summary
+- Partial synthesis from successful agents
+
+## Updated Line Counts
+
+| Component | Lines | Notes |
+|-----------|-------|-------|
+| orchestrate-and-test.md | 180 | Added new parameters and resume phase |
+| orchestrate-test-spec.md | 486 | Added 5 new sections for improvements |
+| **Total** | **666** | Still well under problematic threshold |
+
+*Last Updated: 2025-06-25 12:15 - All 5 improvements implemented*

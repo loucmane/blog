@@ -19,6 +19,41 @@ Implement a TaskMaster task through multi-perspective exploration, where 5 speci
 - **depth**: Number of sub-agents per specialist (affects total implementations)
 - **auto_start_servers**: Whether to start development servers after orchestration
 - **reuse_worktrees**: Whether to reuse existing worktrees from previous runs
+- **worktree_cleanup**: Whether to clean up worktrees after synthesis (default: false)
+- **skip_git_operations**: Skip git add/commit operations that require authentication (default: true)
+
+## TWES Compliance Requirements
+
+ALL agents MUST load and follow the Total Workflow Excellence System (TWES):
+
+### Required Reading for Every Agent
+1. **Standards** (`/docs/ai/shared-context/standards/`)
+   - `coding-conventions.md` - Import order, naming, patterns
+   - `performance.md` - 98+ Lighthouse, bundle limits
+   - `accessibility.md` - WCAG 2.1 AA, 44px touch targets
+   - `file-structure.md` - Project organization
+
+2. **Themes** (`/docs/ai/shared-context/themes/`)
+   - `four-themes.md` - Light/Dark/Warm/Cool implementation
+   - `warm-minimalism.md` - Design philosophy
+
+3. **Patterns** (`/docs/ai/shared-context/patterns/`)
+   - `common-patterns.md` - React patterns, compound components
+   - `monorepo-structure.md` - Package boundaries
+   - Discovered patterns from documentation evolution
+
+4. **Project Rules** (`CLAUDE.md`)
+   - ALWAYS use pnpm
+   - UI package = design tokens only
+   - Web package = all shadcn/ui components
+   - Four themes required
+
+### Contract Generation Must Include
+- TWES compliance requirements
+- Performance budgets from standards
+- Accessibility requirements
+- Theme integration approach
+- Import order conventions
 
 ## Agent Specifications
 
@@ -38,8 +73,14 @@ Implement a TaskMaster task through multi-perspective exploration, where 5 speci
 **Requirements**:
 1. Analyze the provided task specification thoroughly
 2. Study existing codebase patterns and conventions
-3. Consider all 5 specialist perspectives (Performance, Architecture, UX/DX, Accessibility, Innovation)
-4. Generate 4 critical contract files:
+3. Load and follow TWES documentation:
+   - `/docs/ai/shared-context/standards/` - All coding and performance standards
+   - `/docs/ai/shared-context/themes/` - Four theme system requirements
+   - `/docs/ai/shared-context/patterns/` - Common patterns and discovered patterns
+   - `/docs/ai/shared-context/philosophies/` - Development principles
+   - `CLAUDE.md` - Project-specific conventions and rules
+4. Consider all 5 specialist perspectives (Performance, Architecture, UX/DX, Accessibility, Innovation)
+5. Generate 4 critical contract files that enforce TWES compliance:
 
    a) `${CONTRACTS_DIR}/interface-contract.yaml`
       - Component props/API interface specifications
@@ -129,9 +170,13 @@ Deploy ${depth} Performance Sub-Agents, each exploring different optimization st
 - Additional agents explore combinations and advanced techniques
 
 **Implementation Requirements**:
-- Each sub-agent creates in worktree: `task-${task_id}-orch-perf-{number}`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-perf-{number}`
 - Follow contracts from ${CONTRACTS_DIR}
-- Focus on 98+ Lighthouse scores
+- **MUST follow TWES standards**:
+  - Performance standards from `/docs/ai/shared-context/standards/performance.md`
+  - 98+ Lighthouse scores per requirements
+  - Bundle size limits per TWES
+  - Code splitting patterns from discovered patterns
 - Implement performance monitoring
 - Document optimization decisions
 
@@ -154,7 +199,7 @@ Deploy ${depth} Architecture Sub-Agents exploring different patterns:
 - Additional agents explore hybrid approaches
 
 **Implementation Requirements**:
-- Each sub-agent creates in worktree: `task-${task_id}-orch-arch-{number}`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-arch-{number}`
 - Emphasize clean code principles
 - Strong TypeScript usage
 - Clear module boundaries
@@ -179,7 +224,7 @@ Deploy ${depth} UX/DX Sub-Agents focusing on experience:
 - Additional agents explore specific use cases
 
 **Implementation Requirements**:
-- Each sub-agent creates in worktree: `task-${task_id}-orch-ux-{number}`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-ux-{number}`
 - Include usage examples
 - Storybook stories if applicable
 - Clear error messages
@@ -204,7 +249,7 @@ Deploy ${depth} Accessibility Sub-Agents with different approaches:
 - Additional agents explore assistive technology optimizations
 
 **Implementation Requirements**:
-- Each sub-agent creates in worktree: `task-${task_id}-orch-a11y-{number}`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-a11y-{number}`
 - WCAG 2.1 AAA compliance where possible
 - Keyboard navigation documentation
 - Screen reader testing notes
@@ -229,7 +274,7 @@ Deploy ${depth} Innovation Sub-Agents exploring possibilities:
 - Additional agents combine innovations
 
 **Implementation Requirements**:
-- Each sub-agent creates in worktree: `task-${task_id}-orch-innov-{number}`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-innov-{number}`
 - Document browser compatibility
 - Provide fallbacks
 - Explain innovative aspects
@@ -348,3 +393,137 @@ docs/ai/for-agentic-loops/orchestration-outputs/task-{task_id}/
 - Real-time monitoring via orchestration.log
 - State management enables resumption
 - Resource allocation prevents conflicts
+
+## Worktree Management
+
+### Worktree Locations
+All worktrees MUST be created as subdirectories within the project:
+- Base path: `${PROJECT_ROOT}/.worktrees/`
+- Pattern: `.worktrees/task-${task_id}-orch-${specialist}-${number}`
+- Example: `.worktrees/task-7-orch-perf-1`
+
+### Worktree Creation
+1. Create `.worktrees/` directory if it doesn't exist
+2. Use git worktree add with unique branch names
+3. Each worktree gets its own branch: `orch/${task_id}/${specialist}-${number}`
+4. Example: `git worktree add .worktrees/task-7-orch-perf-1 -b orch/7/perf-1`
+
+### Worktree Cleanup
+If `worktree_cleanup` is true:
+1. After synthesis, remove all worktrees for this task
+2. Delete associated branches
+3. Clean up `.worktrees/task-${task_id}-*` directories
+4. Log cleanup actions in orchestration.log
+
+### Error Handling
+- If worktree creation fails, log error and continue with remaining agents
+- Track failed worktrees in state for manual cleanup
+- Provide recovery instructions in final summary
+
+## Agent Deployment Instructions
+
+### CRITICAL: Use Task Tool Only
+All agents MUST be deployed using the Task tool. Do NOT use any MCP tools for agent deployment.
+
+**Correct Pattern**:
+```
+TASK: Deploy Performance Specialist using Task tool
+
+You are a Performance Specialist Orchestrator. Your role is to deploy ${depth} sub-agents...
+```
+
+**NEVER Use**:
+- zen:chat, zen:thinkdeep, zen:codereview
+- claude-code-bridge:claude_code
+- multi-ai-collab tools
+- Any other MCP tools
+
+### Sub-Agent Deployment
+When specialist orchestrators deploy sub-agents, they should:
+1. Use Task tool to create new agent instances
+2. Provide each sub-agent with specific worktree location
+3. Pass contracts and focus area to each sub-agent
+4. Monitor sub-agent completion via file outputs
+
+### Git Operations Handling
+If `skip_git_operations` is true (default):
+1. Skip all git add/commit operations
+2. Leave implementations in worktrees for manual review
+3. Generate integration script for user to run manually
+4. Document which files should be committed where
+
+If `skip_git_operations` is false:
+1. Attempt git operations with clear error handling
+2. If authentication fails, fall back to skip mode
+3. Log all git operation attempts and results
+
+## Progress Tracking
+
+### Orchestration Log Format
+All log entries must follow this format:
+```
+[TIMESTAMP] [PHASE] [AGENT] [STATUS] Message
+```
+
+Example entries:
+```
+[2025-06-25 14:30:15] [PHASE-4] [Pre-Analysis] [STARTED] Deploying Pre-Analysis Agent
+[2025-06-25 14:30:45] [PHASE-4] [Pre-Analysis] [COMPLETED] Generated 4 contract files
+[2025-06-25 14:31:00] [PHASE-5] [Master] [STARTED] Deploying Master Orchestrator
+[2025-06-25 14:31:30] [PHASE-6] [Performance-1] [STARTED] Creating worktree .worktrees/task-7-orch-perf-1
+[2025-06-25 14:31:35] [PHASE-6] [Performance-1] [WORKING] Implementing Header component
+[2025-06-25 14:32:00] [PHASE-6] [Performance-1] [COMPLETED] Implementation saved to worktree
+```
+
+### Progress Indicators
+- Track total agents: deployed/planned (e.g., "15/28 agents deployed")
+- Track phases: completed/total (e.g., "Phase 4/10 complete")
+- Estimate remaining time based on average agent completion
+- Show current active agents in parallel execution
+
+### State Persistence
+Save progress to `${ORCHESTRATION_DIR}/state/orchestration-state.json`:
+```json
+{
+  "task_id": 7,
+  "started_at": "2025-06-25T14:30:00Z",
+  "current_phase": 6,
+  "agents_deployed": 15,
+  "agents_total": 28,
+  "completed_agents": ["pre-analysis", "master", "perf-1", "perf-2"],
+  "failed_agents": [],
+  "worktrees_created": ["task-7-orch-perf-1", "task-7-orch-perf-2"],
+  "last_checkpoint": "2025-06-25T14:35:00Z"
+}
+```
+
+## Error Recovery
+
+### Resumption Capability
+If orchestration is interrupted:
+1. Check for existing `orchestration-state.json`
+2. Identify last successful checkpoint
+3. Skip already completed agents
+4. Resume from next pending agent
+5. Log resumption details
+
+### Recovery Command
+Add `resume` parameter to command:
+```
+/orchestrate-and-test task_id=7 resume=true
+```
+
+### Failure Handling
+For each failed agent:
+1. Log detailed error information
+2. Continue with remaining agents
+3. Track failures in state file
+4. Provide recovery instructions in final summary
+5. Generate partial synthesis from successful agents
+
+### Cleanup on Failure
+If orchestration fails completely:
+1. Save current state for debugging
+2. List all created worktrees
+3. Provide manual cleanup commands
+4. Suggest retry strategy
