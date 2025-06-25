@@ -105,15 +105,67 @@ After 2 days of failed attempts with orchestrate-and-test command, user asked to
 - ✅ TWES compliance enforced for all agents
 - ✅ Ready for full Task 7 orchestration
 
-#### Testing Phase (13:02-ongoing)
+#### Testing Phase (13:02-14:50)
 - **13:02** - User initiated `/orchestrate-and-test 7` command
 - **13:03** - Command accepted and processing started
-- **13:03** - Monitoring for outputs (none visible yet after ~1 minute)
-- Status: Command appears to be running but no visible outputs in:
-  - `docs/ai/for-agentic-loops/orchestration-outputs/task-7/`
-  - `.worktrees/` directory
-  - Orchestration log files
-- Next: Continue monitoring for outputs
+- **13:05** - User cancelled - no outputs being generated
+- **13:10** - ❌ Issue discovered: Improvements broke the working command!
+- **13:15** - Created revert plan documenting all changes
+- **13:20** - Reverted to working version (spec: 349 lines, command: 164 lines)
+- **13:30** - Applied minimal fixes incrementally:
+  - ✅ Worktree location fix (`.worktrees/` prefix)
+  - ✅ Git operations note (but this broke execution!)
+- **13:35** - Removed Git operations note, spec back to 350 lines
+- **14:30** - User tested again with `/orchestrate-and-test 7`
+- **14:35** - ✅ PARTIAL SUCCESS! Command executed and reached Phase 6
+  - Created orchestration.log and directories
+  - Started deploying specialists
+  - BUT: Used MCP tools (zen:thinkdeep, claude-code-bridge) instead of Task tool
+  - User corrected: "Use Task tool to deploy sub-agents"
+- **14:40** - 💥 Memory crash! Out of memory with 15 parallel agents
+- **14:50** - Created comprehensive documentation of partial success
+
+### Key Discoveries
+1. **Git Operations Note at end of spec breaks execution** ❌
+2. **Command works with just worktree path changes** ✅
+3. **Agents use MCP tools without explicit Task tool instruction** 🚨
+4. **15 parallel agents cause memory issues** 💥
+
+### Next Steps
+1. Add explicit "use Task tool only" instruction to spec
+2. Consider reducing parallelism (depth or sequential execution)
+3. Find alternative way to skip git operations
+
+#### Task Tool Fix Implementation (15:00-15:17)
+- **15:00** - Created backups of working files (.backup-working)
+- **15:05** - Applied minimal Task tool fixes:
+  - Master Orchestrator: Added "Use Task tool for deployment (not MCP tools)" to line 102
+  - All 5 specialists: Added "using Task tool" to Sub-Agent Deployment lines
+  - Preserved exact format, tone, and structure
+  - File still 350 lines (no bloat)
+- **15:10** - Cleaned up previous test artifacts:
+  - Removed orchestration-outputs/task-7/ directory
+  - Removed 12 worktrees from .worktrees/
+  - Deleted 14 orchestration branches
+- **15:17** - Created memory and updated documentation
+
+### 🚦 Session Status
+**READY FOR TESTING** - Task tool fixes applied:
+- ✅ Minimal changes to preserve working state
+- ✅ Task tool instructions added strategically
+- ✅ Environment cleaned and ready
+- ⏳ Ready to test with `/orchestrate-and-test 7`
+
+### 📋 To Resume This Work:
+```bash
+# Activate project and read latest memory
+Activate project MomsBlog, read memory session_2025-06-25_task_tool_fix_implemented and SESSION.md
+
+# Test the command
+/orchestrate-and-test 7
+
+# Monitor for Task tool usage and memory issues
+```
 
 ---
 

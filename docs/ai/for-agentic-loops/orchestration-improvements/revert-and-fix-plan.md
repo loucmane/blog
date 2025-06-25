@@ -157,8 +157,45 @@ Test after each addition:
 
 ## Immediate Actions
 
-1. Save this plan
-2. Create backup of broken version
-3. Revert files
-4. Test to confirm working
-5. Begin incremental improvements
+1. Save this plan ✅
+2. Create backup of broken version ✅
+3. Revert files ✅
+4. Test to confirm working ✅
+5. Begin incremental improvements ⏳
+
+## Test Results Update (2025-06-25 14:30)
+
+### What We Learned
+1. **Git Operations Note Breaks Execution** ❌
+   - Adding the note at end of spec prevented execution
+   - Removed it and command works again
+   
+2. **Command Executes Successfully** ✅
+   - With just worktree path changes (350 lines)
+   - Reaches Phase 6 and deploys specialists
+   - Creates orchestration.log and directories
+   
+3. **Critical Issues Found**
+   - **MCP Tool Usage**: Agents use zen:thinkdeep and claude-code-bridge instead of Task tool
+   - **Memory Crash**: Out of memory with 15 parallel agents
+   - **Missing Instruction**: Need explicit "use Task tool only"
+
+### Revised Incremental Plan
+1. **CRITICAL - Task Tool Instruction**
+   - Add minimal instruction: "Deploy sub-agents using Task tool ONLY"
+   - No MCP tools for agent deployment
+   - Test thoroughly
+   
+2. **Parallelism Reduction Options**
+   - Option A: Reduce depth from 3 to 2 sub-agents
+   - Option B: Sequential specialist deployment
+   - Option C: Batch sub-agents (5 at a time)
+   
+3. **Alternative Git Skip Approach**
+   - Don't add as separate section
+   - Embed in agent instructions: "Do not use git add/commit/push"
+   
+4. **Defer Complex Additions**
+   - TWES compliance - too large
+   - Full error recovery - later
+   - State persistence - later

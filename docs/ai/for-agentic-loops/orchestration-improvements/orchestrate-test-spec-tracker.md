@@ -211,3 +211,55 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 - Command should create worktrees in `.worktrees/` subdirectory
 - Git operations should be skipped
 - All other functionality preserved from working version
+
+### Testing Results (14:30)
+1. **With Git Operations Note**: ❌ Command didn't execute
+2. **Without Git Operations Note**: ✅ Command executed!
+   - Reached Phase 6: Specialist deployment
+   - Created orchestration.log
+   - Started deploying agents
+   
+### Critical Issues Found
+1. **MCP Tool Usage** 🚨
+   - Agents used zen:thinkdeep and claude-code-bridge
+   - Should use Task tool ONLY for sub-agent deployment
+   
+2. **Memory Crash** 💥
+   - Out of memory when running 15 agents in parallel
+   - Need to reduce parallelism or depth
+
+### Next Fix Required
+- Add explicit "use Task tool only" instruction to spec ✅
+- Consider parallelism reduction strategy
+
+### Task Tool Fix Applied (15:05)
+
+**Exact Changes Made to `.claude/specs/orchestrate-test-spec.md`:**
+
+1. **Line 102** - Master Orchestrator deployment list:
+   - Added: `- Use Task tool for deployment (not MCP tools)`
+
+2. **Line 125-126** - Performance Specialist:
+   - Changed: `Deploy ${depth} Performance Sub-Agents, each exploring...`
+   - To: `Deploy ${depth} Performance Sub-Agents using Task tool, each exploring...`
+
+3. **Line 150-151** - Architecture Specialist:
+   - Changed: `Deploy ${depth} Architecture Sub-Agents exploring...`
+   - To: `Deploy ${depth} Architecture Sub-Agents using Task tool exploring...`
+
+4. **Line 175-176** - UX/DX Specialist:
+   - Changed: `Deploy ${depth} UX/DX Sub-Agents focusing...`
+   - To: `Deploy ${depth} UX/DX Sub-Agents using Task tool focusing...`
+
+5. **Line 200-201** - Accessibility Specialist:
+   - Changed: `Deploy ${depth} Accessibility Sub-Agents with...`
+   - To: `Deploy ${depth} Accessibility Sub-Agents using Task tool with...`
+
+6. **Line 225-226** - Innovation Specialist:
+   - Changed: `Deploy ${depth} Innovation Sub-Agents exploring...`
+   - To: `Deploy ${depth} Innovation Sub-Agents using Task tool exploring...`
+
+**Results:**
+- File size: Still 350 lines ✅
+- Minimal changes only ✅
+- Ready for testing
