@@ -1,0 +1,307 @@
+# Constraints Contract for Task 7: Core Layout Components
+# This contract defines performance, accessibility, and quality constraints
+
+version: "1.0"
+task_id: 7
+created: "2025-06-25"
+purpose: "Define hard constraints and quality standards for layout components"
+
+# Performance Constraints
+
+performance_constraints:
+  lighthouse_scores:
+    performance: 98  # Minimum required
+    accessibility: 98
+    best_practices: 98
+    seo: 98
+    
+  bundle_size:
+    header_component:
+      max_size: "15KB"
+      includes: "Component + styles + icons"
+      critical: true
+    footer_component:
+      max_size: "20KB"
+      includes: "Component + social icons + styles"
+      critical: false  # Can be lazy loaded
+    main_layout_component:
+      max_size: "5KB"
+      includes: "Wrapper logic only"
+      critical: true
+    total_layout_bundle:
+      max_size: "40KB"
+      note: "All layout components combined"
+  
+  runtime_performance:
+    first_paint: "<100ms"
+    interactive_time: "<200ms"
+    layout_shift: 0  # No CLS from layout components
+    render_blocking: "None"
+    
+  optimization_requirements:
+    - "No synchronous external scripts"
+    - "CSS-in-JS must be extracted at build time"
+    - "Icons must be tree-shakeable"
+    - "No runtime style calculations"
+    - "Memoize expensive computations"
+
+# Accessibility Constraints
+
+accessibility_constraints:
+  wcag_compliance:
+    level: "AA"
+    version: "2.1"
+    
+  keyboard_navigation:
+    - "All interactive elements keyboard accessible"
+    - "Visible focus indicators (2px minimum)"
+    - "Logical tab order (left to right, top to bottom)"
+    - "No keyboard traps"
+    - "Skip links functional"
+    
+  screen_reader_support:
+    - "Semantic HTML structure"
+    - "ARIA landmarks properly labeled"
+    - "Descriptive link text (no 'click here')"
+    - "Dynamic content announced"
+    - "Error messages associated with inputs"
+    
+  color_contrast:
+    normal_text: 4.5  # Minimum ratio
+    large_text: 3.0
+    ui_components: 3.0
+    focus_indicators: 3.0
+    
+  touch_targets:
+    minimum_size: "44px"
+    spacing: "8px minimum between targets"
+    
+  motion_sensitivity:
+    - "Respect prefers-reduced-motion"
+    - "Provide animation toggles"
+    - "No auto-playing videos"
+    - "Smooth scroll can be disabled"
+
+# Browser Support Constraints
+
+browser_support:
+  minimum_versions:
+    chrome: "90"
+    firefox: "88"
+    safari: "14"
+    edge: "90"
+    ios_safari: "14"
+    chrome_android: "90"
+    
+  progressive_enhancement:
+    - "Core functionality without JavaScript"
+    - "Basic layout with CSS only"
+    - "Enhanced features as progressive enhancement"
+    - "Graceful degradation for older browsers"
+    
+  polyfills_budget: "5KB maximum"
+
+# Theme Support Constraints
+
+theme_constraints:
+  required_themes:
+    - name: "light"
+      description: "Default light theme"
+    - name: "dark"
+      description: "Dark mode support"
+    - name: "contrast"
+      description: "High contrast for accessibility"
+    - name: "gentle"
+      description: "Low contrast, soft colors"
+      
+  theme_requirements:
+    - "Smooth transitions between themes"
+    - "No flash of unstyled content"
+    - "Persist user preference"
+    - "System preference detection"
+    - "All themes meet contrast requirements"
+    
+  css_variable_usage: |
+    /* Required CSS variables for themes */
+    --background: rgb(255 253 248);
+    --foreground: rgb(67 46 38);
+    --primary: rgb(38 70 83);
+    --border: rgb(229 229 229);
+    /* Must use RGB format for opacity support */
+
+# Mobile Constraints
+
+mobile_constraints:
+  viewport_support:
+    minimum_width: "320px"
+    maximum_width: "No limit"
+    
+  network_performance:
+    - "Functional on 2G connections"
+    - "Total page weight <300KB"
+    - "Critical CSS inlined"
+    - "Non-critical resources deferred"
+    
+  mobile_specific:
+    - "No horizontal scrolling"
+    - "Readable without zooming"
+    - "Touch-friendly interactions"
+    - "Appropriate font sizes (16px minimum)"
+
+# Code Quality Constraints
+
+code_quality_constraints:
+  typescript:
+    strict_mode: true
+    no_any: true
+    no_implicit_any: true
+    exhaustive_checks: true
+    
+  react_patterns:
+    - "Must use React.forwardRef for all components"
+    - "Props interfaces extend HTML attributes"
+    - "No direct DOM manipulation"
+    - "Controlled components preferred"
+    - "Hooks rules followed"
+    
+  testing_coverage:
+    statements: 90
+    branches: 85
+    functions: 90
+    lines: 90
+    
+  linting_rules:
+    - "ESLint must pass with no warnings"
+    - "Prettier formatting required"
+    - "Import order enforced"
+    - "No unused variables"
+    - "No console.log in production"
+
+# Security Constraints
+
+security_constraints:
+  content_security:
+    - "Sanitize all user-generated content"
+    - "No inline scripts"
+    - "No eval() usage"
+    - "XSS prevention measures"
+    
+  link_security:
+    - "External links use rel='noopener noreferrer'"
+    - "User-generated links validated"
+    - "No javascript: URLs"
+    
+  data_handling:
+    - "No PII in URLs"
+    - "Secure form submissions"
+    - "HTTPS enforced"
+
+# SEO Constraints
+
+seo_constraints:
+  meta_requirements:
+    - "Unique page titles"
+    - "Meta descriptions present"
+    - "Canonical URLs set"
+    - "Open Graph tags included"
+    
+  structured_data:
+    - "Organization schema for footer"
+    - "Navigation schema for header"
+    - "Breadcrumb schema where applicable"
+    
+  crawlability:
+    - "No blocking in robots.txt"
+    - "Sitemap.xml maintained"
+    - "Clean URL structure"
+
+# Maintenance Constraints
+
+maintenance_constraints:
+  documentation:
+    - "Component API documented"
+    - "Usage examples provided"
+    - "Change log maintained"
+    - "Migration guides for breaking changes"
+    
+  versioning:
+    - "Semantic versioning followed"
+    - "Breaking changes avoided"
+    - "Deprecation warnings provided"
+    - "Backward compatibility maintained"
+    
+  dependency_management:
+    - "Minimal external dependencies"
+    - "Security updates applied promptly"
+    - "Lock files committed"
+    - "Audit vulnerabilities regularly"
+
+# Validation Rules
+
+validation_rules:
+  pre_commit_checks:
+    - "TypeScript compilation passes"
+    - "All tests pass"
+    - "Linting passes"
+    - "Bundle size within limits"
+    
+  ci_cd_checks:
+    - "Lighthouse CI passes"
+    - "Accessibility tests pass"
+    - "Cross-browser tests pass"
+    - "Performance budgets met"
+    
+  manual_checks:
+    - "Keyboard navigation tested"
+    - "Screen reader tested"
+    - "Mobile devices tested"
+    - "Slow network tested"
+
+# Non-Negotiable Constraints
+
+non_negotiable:
+  - "WCAG 2.1 AA compliance mandatory"
+  - "44px touch targets required"
+  - "Semantic HTML structure required"
+  - "React.forwardRef pattern required"
+  - "TypeScript types required"
+  - "Mobile-first approach required"
+  - "Theme support for all 4 themes required"
+  - "98+ Lighthouse scores required"
+
+# Flexibility Allowed
+
+flexibility_allowed:
+  - "Icon library choice (lucide-react preferred)"
+  - "Animation library (framer-motion, CSS, or none)"
+  - "Specific styling approaches within Tailwind"
+  - "Component internal structure"
+  - "Test framework choice (Jest/Vitest)"
+  - "Documentation format (JSDoc/Markdown)"
+
+# Red Flags to Avoid
+
+red_flags:
+  performance:
+    - "Runtime style calculations"
+    - "Synchronous network requests"
+    - "Large bundle sizes"
+    - "Layout shifts"
+    
+  accessibility:
+    - "Div with onClick instead of button"
+    - "Missing alt text"
+    - "Low contrast colors"
+    - "Missing focus indicators"
+    
+  code_quality:
+    - "Any TypeScript 'any' usage"
+    - "Direct DOM manipulation"
+    - "Inline styles"
+    - "Hard-coded values"
+    
+  security:
+    - "dangerouslySetInnerHTML with user content"
+    - "Missing rel='noopener'"
+    - "Unvalidated URLs"
+    - "Exposed API keys"

@@ -348,7 +348,3 @@ docs/ai/for-agentic-loops/orchestration-outputs/task-{task_id}/
 - Real-time monitoring via orchestration.log
 - State management enables resumption
 - Resource allocation prevents conflicts
-
-## Git Operations Note
-
-Agents should NOT perform any git add, commit, or push operations. All implementations should be left in their worktrees for manual review and integration by the developer.

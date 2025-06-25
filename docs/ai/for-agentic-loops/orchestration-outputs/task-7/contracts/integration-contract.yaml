@@ -1,0 +1,314 @@
+# Integration Contract for Task 7: Core Layout Components
+# This contract defines file structures, import patterns, and integration requirements
+
+version: "1.0"
+task_id: 7
+created: "2025-06-25"
+purpose: "Define how layout components integrate with the codebase"
+
+# File Structure Requirements
+
+file_structure:
+  location: "packages/web/src/components/layout/"
+  required_files:
+    - name: "Header.tsx"
+      description: "Main header component"
+      exports: ["Header", "HeaderProps"]
+    - name: "Footer.tsx"
+      description: "Main footer component"
+      exports: ["Footer", "FooterProps"]
+    - name: "MainLayout.tsx"
+      description: "Main layout wrapper"
+      exports: ["MainLayout", "MainLayoutProps"]
+    - name: "index.ts"
+      description: "Barrel export file"
+      exports: ["Header", "Footer", "MainLayout", "all type exports"]
+  
+  optional_files:
+    - name: "MobileNav.tsx"
+      description: "Extracted mobile navigation (if needed)"
+    - name: "SkipLinks.tsx"
+      description: "Skip navigation component (if extracted)"
+    - name: "types.ts"
+      description: "Shared types for layout components"
+  
+  example_structure: |
+    packages/web/src/components/layout/
+    ├── Header.tsx
+    ├── Footer.tsx
+    ├── MainLayout.tsx
+    ├── index.ts
+    └── __tests__/
+        ├── Header.test.tsx
+        ├── Footer.test.tsx
+        └── MainLayout.test.tsx
+
+# Import Patterns
+
+import_requirements:
+  order:
+    - "React and Next.js imports"
+    - "External package imports"
+    - "Monorepo package imports (@minniewinnie/*)"
+    - "Absolute imports from app (@/*)"
+    - "Relative imports (only when necessary)"
+    - "Type imports"
+  
+  header_imports: |
+    // Header.tsx typical imports
+    'use client'
+    
+    import * as React from 'react'
+    import Link from 'next/link'
+    import { Menu, X } from 'lucide-react'
+    import { ThemeSwitcher } from '@minniewinnie/ui'
+    import { Button } from '@/components/ui/button'
+    import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+    import { cn } from '@/lib/utils'
+    import type { HeaderProps } from './types'
+  
+  footer_imports: |
+    // Footer.tsx typical imports
+    import * as React from 'react'
+    import Link from 'next/link'
+    import { Heart, Shield, Award, Facebook, Twitter, Instagram, Youtube } from 'lucide-react'
+    import { cn } from '@/lib/utils'
+    import type { FooterProps } from './types'
+  
+  main_layout_imports: |
+    // MainLayout.tsx typical imports
+    import * as React from 'react'
+    import { Header } from './Header'
+    import { Footer } from './Footer'
+    import { cn } from '@/lib/utils'
+    import type { MainLayoutProps } from './types'
+
+# Integration with UI Package
+
+ui_package_integration:
+  description: "How to use @minniewinnie/ui components"
+  required_components:
+    - component: "ThemeSwitcher"
+      usage: "Theme switching in header"
+      import: "import { ThemeSwitcher } from '@minniewinnie/ui'"
+  
+  theme_tokens:
+    - "Use color tokens from @minniewinnie/ui"
+    - "Use spacing tokens for consistency"
+    - "Use typography tokens for text"
+    - "Use animation tokens for transitions"
+  
+  example_usage: |
+    // Using UI package tokens
+    import { spacing, colors } from '@minniewinnie/ui'
+    
+    // In styles
+    style={{ 
+      padding: spacing.md,
+      color: colors.primary 
+    }}
+
+# Integration with shadcn/ui
+
+shadcn_integration:
+  description: "How to use shadcn/ui components"
+  location: "packages/web/src/components/ui/"
+  required_components:
+    - name: "Sheet"
+      usage: "Mobile navigation drawer"
+      imports: ["Sheet", "SheetContent", "SheetHeader", "SheetTitle", "SheetTrigger"]
+    - name: "Button"
+      usage: "Interactive elements"
+      imports: ["Button"]
+  
+  guidelines:
+    - "Import from @/components/ui/*"
+    - "Do not modify shadcn components directly"
+    - "Use cn() utility for className merging"
+    - "Follow shadcn patterns for consistency"
+
+# Route Integration
+
+route_integration:
+  app_layout: |
+    // app/layout.tsx integration
+    import { MainLayout } from '@/components/layout'
+    
+    export default function RootLayout({ children }) {
+      return (
+        <html>
+          <body>
+            <MainLayout>
+              {children}
+            </MainLayout>
+          </body>
+        </html>
+      )
+    }
+  
+  page_specific_layouts: |
+    // For pages needing custom layout props
+    import { MainLayout } from '@/components/layout'
+    
+    export default function BlogPage() {
+      return (
+        <MainLayout
+          headerProps={{ sticky: false }}
+          footerProps={{ compactMode: true }}
+          asideContent={<BlogSidebar />}
+        >
+          <BlogContent />
+        </MainLayout>
+      )
+    }
+  
+  standalone_usage: |
+    // Using components individually
+    import { Header, Footer } from '@/components/layout'
+    
+    export default function CustomLayout() {
+      return (
+        <>
+          <Header navItems={customNav} />
+          <main>{/* Custom content */}</main>
+          <Footer sections={customSections} />
+        </>
+      )
+    }
+
+# Type Definitions Integration
+
+type_integration:
+  shared_types_location: "packages/shared/src/types/"
+  web_types_location: "packages/web/src/types/"
+  
+  layout_types: |
+    // In packages/web/src/types/layout.ts
+    export interface NavigationItem {
+      href: string
+      label: string
+      icon?: React.ComponentType<{ className?: string }>
+      external?: boolean
+      highlight?: boolean
+    }
+    
+    export interface FooterSection {
+      title: string
+      links: FooterLink[]
+    }
+    
+    export interface FooterLink {
+      href: string
+      label: string
+      external?: boolean
+    }
+  
+  component_exports: |
+    // Each component file should export its types
+    export type { HeaderProps } from './Header'
+    export type { FooterProps } from './Footer'
+    export type { MainLayoutProps } from './MainLayout'
+
+# Style Integration
+
+style_integration:
+  css_approach: "Tailwind CSS with CSS variables"
+  
+  theme_classes: |
+    // Use semantic color classes
+    className="bg-background text-foreground"
+    className="border-border"
+    className="bg-primary text-primary-foreground"
+  
+  responsive_classes: |
+    // Mobile-first responsive design
+    className="px-4 md:px-6 lg:px-8"
+    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+  
+  dark_mode_support: |
+    // Automatic dark mode with CSS variables
+    className="bg-white dark:bg-gray-900"
+    // Better: use semantic classes
+    className="bg-background"
+  
+  animation_classes: |
+    // Consistent animations
+    className="transition-colors duration-200"
+    className="motion-safe:transition-all motion-reduce:transition-none"
+
+# Testing Integration
+
+testing_integration:
+  test_location: "packages/web/src/components/layout/__tests__/"
+  test_utilities: "@/test/utils"
+  
+  test_setup: |
+    // Example test setup
+    import { render, screen } from '@testing-library/react'
+    import userEvent from '@testing-library/user-event'
+    import { Header } from '../Header'
+    
+    describe('Header', () => {
+      it('renders navigation items', () => {
+        render(<Header />)
+        expect(screen.getByText('Home')).toBeInTheDocument()
+      })
+    })
+  
+  test_requirements:
+    - "Test all props"
+    - "Test responsive behavior"
+    - "Test keyboard navigation"
+    - "Test accessibility"
+    - "Test theme integration"
+
+# Bundle and Performance Integration
+
+bundle_integration:
+  code_splitting: |
+    // For heavy components in layout
+    const HeavyMap = dynamic(
+      () => import('@/components/Map'),
+      { ssr: false }
+    )
+  
+  optimization_patterns:
+    - "Use React.memo for static components"
+    - "Lazy load non-critical components"
+    - "Optimize images with next/image"
+    - "Minimize bundle imports"
+  
+  monitoring: |
+    // Add performance marks
+    performance.mark('header-render-start')
+    // Component render
+    performance.mark('header-render-end')
+    performance.measure('header-render', 'header-render-start', 'header-render-end')
+
+# Documentation Integration
+
+documentation_requirements:
+  component_docs: "Each component should have JSDoc comments"
+  storybook: "Optional: Add Storybook stories"
+  readme: "Update layout/README.md with usage examples"
+  
+  jsdoc_example: |
+    /**
+     * Header component with responsive navigation
+     * 
+     * @example
+     * <Header sticky={false} navItems={customItems} />
+     */
+    export const Header = React.forwardRef<HTMLElement, HeaderProps>(...)
+
+# Validation Checklist
+
+integration_validation:
+  - "Files in correct location"
+  - "Imports follow order convention"
+  - "Types properly exported"
+  - "Barrel exports working"
+  - "Theme integration functional"
+  - "Tests passing"
+  - "No circular dependencies"
+  - "Bundle size acceptable"

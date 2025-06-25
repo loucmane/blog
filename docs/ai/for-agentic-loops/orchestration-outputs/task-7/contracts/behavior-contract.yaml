@@ -1,0 +1,282 @@
+# Behavior Contract for Task 7: Core Layout Components
+# This contract defines the functional requirements and behavioral specifications
+
+version: "1.0"
+task_id: 7
+created: "2025-06-25"
+purpose: "Define expected behaviors and functionality for layout components"
+
+# Header Component Behaviors
+
+header_behaviors:
+  responsive_navigation:
+    description: "Navigation adapts to screen size"
+    requirements:
+      - "Desktop: Show inline navigation links"
+      - "Mobile: Show hamburger menu icon"
+      - "Breakpoint transition must be smooth"
+      - "No layout shift during resize"
+    mobile_menu:
+      - "Opens from right side using Sheet component"
+      - "Traps focus while open"
+      - "Closes on ESC key"
+      - "Closes on outside click"
+      - "Closes when navigation item clicked"
+      - "Animates smoothly (respects prefers-reduced-motion)"
+    implementation_example: |
+      const [isOpen, setIsOpen] = useState(false)
+      
+      // Close on navigation
+      const handleNavClick = (item) => {
+        setIsOpen(false)
+        // Allow custom handler
+        onNavClick?.(item)
+      }
+  
+  sticky_behavior:
+    description: "Header can stick to viewport top"
+    requirements:
+      - "Smooth transition when becoming sticky"
+      - "Add shadow or border when stuck"
+      - "Maintain consistent height"
+      - "Don't cause layout shifts"
+    implementation_hints:
+      - "Use CSS sticky positioning"
+      - "Add backdrop blur for better readability"
+      - "Ensure z-index handles overlaps"
+  
+  skip_navigation:
+    description: "Skip to main content link for accessibility"
+    requirements:
+      - "Hidden visually but available to screen readers"
+      - "Becomes visible on focus"
+      - "Links to main content area"
+      - "First focusable element"
+    example_code: |
+      <a
+        href={`#${skipToContentId}`}
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4"
+      >
+        Skip to main content
+      </a>
+  
+  theme_switching:
+    description: "Theme switcher integration"
+    requirements:
+      - "Must use ThemeSwitcher from @minniewinnie/ui"
+      - "Visible in both desktop and mobile views"
+      - "Persists user preference"
+      - "Smooth theme transitions"
+
+# Footer Component Behaviors
+
+footer_behaviors:
+  responsive_layout:
+    description: "Footer adapts to screen size"
+    requirements:
+      - "Desktop: Multi-column layout"
+      - "Tablet: 2-column layout"
+      - "Mobile: Single column"
+      - "Sections stack appropriately"
+    compact_mode:
+      - "Shows only essential links on mobile"
+      - "Collapsible sections optional"
+      - "Maintains all legal/compliance links"
+  
+  social_links:
+    description: "Social media link handling"
+    requirements:
+      - "Opens in new tab (target='_blank')"
+      - "Includes rel='noopener noreferrer'"
+      - "Has appropriate aria-label"
+      - "44px touch targets"
+      - "Hover states for desktop"
+    implementation: |
+      {socialLinks.map((social) => (
+        <a
+          key={social.platform}
+          href={social.href}
+          aria-label={social.label}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="h-11 w-11 flex items-center justify-center"
+        >
+          <social.icon className="h-5 w-5" />
+        </a>
+      ))}
+  
+  trust_signals:
+    description: "Display trust and transparency indicators"
+    requirements:
+      - "Show charity ratings"
+      - "Display SSL secured badge"
+      - "Include nonprofit status"
+      - "Link to transparency reports"
+      - "Accessible descriptions"
+
+# MainLayout Component Behaviors
+
+main_layout_behaviors:
+  semantic_structure:
+    description: "Proper HTML landmark structure"
+    requirements:
+      - "Header with role='banner'"
+      - "Main with role='main'"
+      - "Footer with role='contentinfo'"
+      - "Optional aside with role='complementary'"
+      - "Skip links functional"
+    example_structure: |
+      <div className="min-h-screen flex flex-col">
+        <a href="#main-content" className="skip-link">Skip to main</a>
+        <Header role="banner" />
+        <div className="flex-1 flex">
+          {asideContent && asidePosition === 'left' && (
+            <aside role="complementary">{asideContent}</aside>
+          )}
+          <main id="main-content" role="main">
+            {children}
+          </main>
+          {asideContent && asidePosition === 'right' && (
+            <aside role="complementary">{asideContent}</aside>
+          )}
+        </div>
+        <Footer role="contentinfo" />
+      </div>
+  
+  layout_flexibility:
+    description: "Support various page layouts"
+    requirements:
+      - "Full width option"
+      - "Contained width option"
+      - "With/without sidebars"
+      - "Maintains vertical rhythm"
+    patterns:
+      - "Blog layout: contained with right sidebar"
+      - "Landing page: full width sections"
+      - "Story page: contained, no sidebar"
+  
+  scroll_restoration:
+    description: "Handle scroll behavior properly"
+    requirements:
+      - "Restore scroll on navigation"
+      - "Scroll to top on route change"
+      - "Respect anchor links"
+      - "Smooth scrolling for in-page links"
+
+# Interaction Behaviors
+
+interaction_behaviors:
+  keyboard_navigation:
+    description: "Full keyboard support"
+    requirements:
+      - "Tab through all interactive elements"
+      - "Visible focus indicators"
+      - "Logical tab order"
+      - "No keyboard traps"
+      - "Skip links functional"
+    testing_checklist:
+      - "Tab forward and backward"
+      - "Enter/Space activate buttons"
+      - "ESC closes overlays"
+      - "Arrow keys for menus (optional)"
+  
+  touch_interactions:
+    description: "Mobile-friendly touch targets"
+    requirements:
+      - "Minimum 44px touch targets"
+      - "Adequate spacing between targets"
+      - "No hover-dependent functionality"
+      - "Swipe gestures optional"
+    implementation: |
+      // Ensure touch targets
+      className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+  
+  animation_behavior:
+    description: "Smooth, accessible animations"
+    requirements:
+      - "Respect prefers-reduced-motion"
+      - "No jarring transitions"
+      - "Consistent timing functions"
+      - "Performance optimized"
+    example: |
+      const prefersReducedMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      ).matches
+      
+      const transition = prefersReducedMotion 
+        ? 'transition-none' 
+        : 'transition-all duration-200 ease-out'
+
+# Performance Behaviors
+
+performance_behaviors:
+  lazy_loading:
+    description: "Optimize component loading"
+    requirements:
+      - "Heavy components load on demand"
+      - "Critical CSS inlined"
+      - "Non-critical styles deferred"
+      - "Images optimized"
+  
+  render_optimization:
+    description: "Minimize re-renders"
+    requirements:
+      - "Use React.memo where appropriate"
+      - "Stable callback references"
+      - "Avoid inline function definitions"
+      - "Optimize context usage"
+    example: |
+      const Header = React.memo(React.forwardRef((props, ref) => {
+        // Stable callbacks
+        const handleNavClick = useCallback((item) => {
+          // Handle click
+        }, [])
+        
+        return <header ref={ref}>...</header>
+      }))
+
+# Error Handling
+
+error_behaviors:
+  graceful_degradation:
+    description: "Handle missing or invalid props"
+    requirements:
+      - "Provide sensible defaults"
+      - "Never crash on bad data"
+      - "Log warnings in development"
+      - "Fallback UI for errors"
+  
+  loading_states:
+    description: "Handle async content"
+    requirements:
+      - "Show skeletons while loading"
+      - "Prevent layout shifts"
+      - "Maintain consistent heights"
+      - "Progressive enhancement"
+
+# Testing Requirements
+
+testing_requirements:
+  unit_tests:
+    - "All props render correctly"
+    - "Responsive behaviors work"
+    - "Keyboard navigation functions"
+    - "ARIA attributes present"
+  
+  integration_tests:
+    - "Components work together"
+    - "Theme switching works"
+    - "Navigation flows complete"
+    - "Mobile menu interactions"
+  
+  accessibility_tests:
+    - "Screen reader navigation"
+    - "Keyboard-only usage"
+    - "Color contrast passing"
+    - "Focus management correct"
+  
+  performance_tests:
+    - "Bundle size within budget"
+    - "No layout shifts"
+    - "Fast interaction response"
+    - "Lighthouse scores 98+"
