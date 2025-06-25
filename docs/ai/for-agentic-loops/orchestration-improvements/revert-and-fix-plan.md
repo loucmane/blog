@@ -199,3 +199,45 @@ Test after each addition:
    - TWES compliance - too large
    - Full error recovery - later
    - State persistence - later
+
+### Fresh Instance Test (2025-06-25 16:46-17:26)
+
+**What Happened:**
+- Command executed (not template) ✅
+- But no todo list created ❌
+- Master Orchestrator used taskmaster-ai:add_task (MCP tool) ❌
+
+**Root Cause:**
+Command file TASK blocks are too vague:
+```
+TASK: Deploy Master Orchestrator using specification from orchestrate-test-spec.md
+```
+This doesn't say HOW to deploy (which tool to use).
+
+**Solution Needed:**
+Update command file TASK blocks to be explicit:
+```
+TASK: Deploy Master Orchestrator using specification from orchestrate-test-spec.md
+
+CRITICAL: Use Task tool to deploy agents. Do NOT use MCP tools.
+```
+
+**Key Learning:**
+Spec file instructions aren't enough - the command file TASK blocks must also be explicit about tool usage.
+
+### Command File Fix Applied (2025-06-25 17:40)
+
+**What Was Done:**
+1. Added critical deployment rule at top of command
+2. Added Phase 2.5 for explicit todo list creation  
+3. Updated ALL TASK blocks with:
+   - "CRITICAL: Use Task tool ONLY to deploy this agent"
+   - "Do NOT use MCP tools like zen:chat, claude-code-bridge, or taskmaster-ai"
+   - Explicit instructions to use Task tool throughout
+4. File size: 188 lines (still safe under 200)
+
+**Expected Results:**
+- Consistent todo list creation
+- All agents deployed via Task tool only
+- No MCP tool usage for deployments
+- Clear execution pattern across instances

@@ -263,3 +263,43 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 - File size: Still 350 lines ✅
 - Minimal changes only ✅
 - Ready for testing
+
+### Fresh Instance Test Results (16:46-17:26)
+
+**Test Setup:**
+- Completely fresh Claude instance
+- Command: `/orchestrate-and-test 7`
+- Files: Command (164 lines) + Spec (350 lines with Task tool mentions)
+
+**Results:**
+1. **Command Execution**: ✅ Works (not template display)
+2. **Pre-flight Validation**: ✅ Completes successfully  
+3. **Todo List Creation**: ❌ Not created (inconsistent with earlier runs)
+4. **Task Tool Usage**: ❌ Still using MCP tools (taskmaster-ai:add_task)
+
+### Root Cause Analysis
+- Command file TASK blocks are too vague:
+  - "Deploy Master Orchestrator" - doesn't specify HOW
+  - "Deploy [N] Specialist Orchestrators in parallel" - no tool specified
+- Spec says "using Task tool" but command doesn't reinforce it
+- Todo list creation was agent's own initiative, not commanded
+- Claude instances have inconsistent execution patterns
+
+### Required Command File Fixes
+1. **Add Phase 2.5**: Explicit todo list creation instruction
+2. **Update TASK blocks**: Add "using Task tool ONLY" to each deployment
+3. **Add warnings**: "Do NOT use MCP tools" at critical points
+4. **Example TASK**: Show proper sub-agent deployment pattern
+
+### Command File Fix Applied (17:40)
+
+**Changes Made:**
+1. Added Phase 2.5 for explicit todo list creation
+2. Added "CRITICAL: Use Task tool ONLY" to EVERY TASK block
+3. Added global warning at top of command
+4. Explicitly listed MCP tools NOT to use
+5. Reinforced Task tool usage throughout
+
+**File Size:** 188 lines (still under 200 threshold) ✅
+
+**Ready for Testing:** Command should now consistently use Task tool for all agent deployments.
