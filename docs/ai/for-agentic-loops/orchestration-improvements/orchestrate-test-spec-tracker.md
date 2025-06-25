@@ -158,3 +158,56 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 | **Total** | **666** | Still well under problematic threshold |
 
 *Last Updated: 2025-06-25 12:15 - All 5 improvements implemented*
+
+## CRITICAL FAILURE - Improvements Broke Working Command (13:05)
+
+### What Was Working (11:00-11:41)
+- Command executed successfully
+- Agents deployed
+- Worktrees created
+- Contracts generated
+
+### What We Changed (12:06-12:28)
+1. Added TWES Compliance section to spec (Lines 25-57)
+2. Added Worktree Management section (Lines 354-378)
+3. Added Agent Deployment Instructions section (Lines 380-415)
+4. Added Progress Tracking section (Lines 417-455)
+5. Added Error Recovery section (Lines 457-486)
+6. Updated command file with new parameters
+7. Added Phase 1.5 for resume check
+
+### Result: COMMAND NO LONGER EXECUTES
+
+### Root Cause Analysis Needed
+- Total spec size increased from 349 to 528 lines
+- Command size increased from 160 to 179 lines
+- Something in our additions is preventing execution
+- Need to revert and test each change individually
+
+### Action Plan
+1. Document all changes in detail ✅
+2. Revert to last working version ✅
+3. Test to confirm it works again ⏳
+4. Apply improvements one at a time with testing
+
+### Revert Completed (13:10)
+- Saved broken versions as .broken files
+- Reverted to commit f4e4822
+- Spec back to 349 lines (from 528)
+- Command back to 164 lines (from 179)
+- Ready to test working version
+
+### Incremental Fixes Applied (13:30)
+1. **Worktree Location Fix** ✅
+   - Added `.worktrees/` prefix to all 5 worktree paths
+   - No other changes to maintain stability
+   
+2. **Git Operations Skip** ✅
+   - Added clear note to skip git add/commit/push
+   - Only 4 lines added to spec
+   - Final spec: 353 lines
+
+### Ready for Testing
+- Command should create worktrees in `.worktrees/` subdirectory
+- Git operations should be skipped
+- All other functionality preserved from working version

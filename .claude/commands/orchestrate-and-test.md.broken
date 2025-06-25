@@ -10,6 +10,9 @@ specialists: $ARGUMENTS
 depth: $ARGUMENTS
 auto_start_servers: $ARGUMENTS
 reuse_worktrees: $ARGUMENTS
+worktree_cleanup: $ARGUMENTS
+skip_git_operations: $ARGUMENTS
+resume: $ARGUMENTS
 
 **ARGUMENTS PARSING:**
 Parse the following arguments from "$ARGUMENTS":
@@ -19,11 +22,20 @@ Parse the following arguments from "$ARGUMENTS":
 4. `depth` - Number of sub-agents per specialist (default: 3)
 5. `auto_start_servers` - Whether to start development servers after orchestration (default: true)
 6. `reuse_worktrees` - Whether to reuse existing worktrees from previous runs (default: false)
+7. `worktree_cleanup` - Whether to clean up worktrees after synthesis (default: false)
+8. `skip_git_operations` - Skip git add/commit operations that require authentication (default: true)
+9. `resume` - Resume from previous interrupted orchestration (default: false)
 
 **PHASE 1: SPECIFICATION LOADING**
 1. Load the orchestration specification from `spec_file` (or use default if not provided)
 2. This specification contains all agent definitions and orchestration patterns
 3. Parse and understand the complete orchestration framework
+
+**PHASE 1.5: RESUME CHECK** (if resume=true)
+1. Check for existing `orchestration-state.json` in output directory
+2. Load previous state and identify last checkpoint
+3. Skip to appropriate phase based on completion status
+4. Log resumption details to orchestration.log
 
 **PHASE 2: TASK ANALYSIS**
 Read the task specification file at `.taskmaster/tasks/task_${String(task_id).padStart(3, '0')}.txt` and extract:
@@ -162,4 +174,7 @@ Monitor progress: `tail -f docs/ai/for-agentic-loops/orchestration-outputs/task-
 - With custom spec (positional): `/orchestrate-and-test 7 .claude/specs/orchestrate-test-spec.md`
 - Named arguments: `/orchestrate-and-test task_id=7 spec_file=.claude/specs/orchestrate-test-spec.md`
 - Limited specialists: `/orchestrate-and-test 7 default performance,architecture 2`
-- All options (named): `/orchestrate-and-test task_id=7 specialists=performance,architecture depth=2 auto_start_servers=false`
+- Skip git operations: `/orchestrate-and-test task_id=7 skip_git_operations=true`
+- Resume interrupted: `/orchestrate-and-test task_id=7 resume=true`
+- Clean up after: `/orchestrate-and-test task_id=7 worktree_cleanup=true`
+- All options: `/orchestrate-and-test task_id=7 specialists=performance,architecture depth=2 auto_start_servers=false skip_git_operations=true`
