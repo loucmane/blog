@@ -1,5 +1,5 @@
 # Constraints Contract for Task 7: Build Core Layout Components
-# This contract defines performance, accessibility, and quality constraints
+# This contract defines performance budgets, browser support, and compliance standards
 
 version: "1.0"
 task_id: 7
@@ -7,197 +7,259 @@ title: "Build Core Layout Components"
 
 # Performance Constraints
 performance:
+  metrics:
+    first_contentful_paint: "< 1.2s"
+    largest_contentful_paint: "< 1.8s"
+    cumulative_layout_shift: "< 0.1"
+    first_input_delay: "< 100ms"
+    time_to_interactive: "< 3.5s"
+    
+  bundle_size:
+    header_component: "< 15KB gzipped"
+    footer_component: "< 10KB gzipped"
+    mainlayout_component: "< 5KB gzipped"
+    total_layout_bundle: "< 30KB gzipped"
+    
+  runtime_performance:
+    initial_render: "< 50ms"
+    re_render: "< 16ms"
+    mobile_menu_open: "< 100ms"
+    theme_switch: "< 50ms"
+    
   lighthouse_scores:
     performance: ">= 98"
     accessibility: ">= 98"
     best_practices: ">= 98"
     seo: ">= 98"
-    
-  core_web_vitals:
-    LCP: "< 1.2s"  # Largest Contentful Paint
-    FID: "< 100ms" # First Input Delay
-    CLS: "< 0.1"   # Cumulative Layout Shift
-    
-  bundle_size:
-    Header: "< 15KB gzipped (including dependencies)"
-    Footer: "< 10KB gzipped (including dependencies)"
-    MainLayout: "< 5KB gzipped"
-    total_layout: "< 30KB gzipped for all layout components"
-    
-  runtime_performance:
-    - "No layout shifts during navigation"
-    - "Smooth 60fps animations"
-    - "Debounced scroll events (100ms minimum)"
-    - "Memoized expensive computations"
-    - "Virtual DOM updates minimized"
-    
-  loading_requirements:
-    - "Header must render within first paint"
-    - "No JavaScript required for basic layout"
-    - "Progressive enhancement for interactions"
-    - "Critical CSS inlined or loaded first"
 
-# Accessibility Constraints (WCAG 2.1 AA)
-accessibility:
-  keyboard_navigation:
-    - "All interactive elements keyboard accessible"
-    - "Logical tab order maintained"
-    - "Focus visible on all elements"
-    - "No keyboard traps"
-    - "Skip links functional"
-    
-  screen_reader_support:
-    - "Proper ARIA landmarks"
-    - "Meaningful link text (no 'click here')"
-    - "State changes announced"
-    - "Error messages associated with inputs"
-    - "Loading states announced"
-    
-  visual_requirements:
-    - "Color contrast >= 4.5:1 for normal text"
-    - "Color contrast >= 3:1 for large text"
-    - "Focus indicators with >= 3:1 contrast"
-    - "No color-only information"
-    - "Zoom to 200% without horizontal scroll"
-    
-  interaction_requirements:
-    - "Touch targets >= 44x44px"
-    - "Adequate spacing between targets"
-    - "No time limits on interactions"
-    - "Predictable navigation behavior"
-    - "Clear error recovery"
-
-# Theme Constraints
-theme_support:
-  required_themes:
-    - name: "light"
-      description: "Default warm minimalist theme"
-      
-    - name: "dark"
-      description: "Low-light viewing theme"
-      
-    - name: "contrast"
-      description: "High contrast for accessibility"
-      
-    - name: "gentle"
-      description: "Reduced visual stimulation"
-      
-  theme_requirements:
-    - "Instant theme switching"
-    - "No flash of wrong theme"
-    - "Persist user preference"
-    - "Respect system preference initially"
-    - "All components support all themes"
-
-# Browser Support Constraints
+# Browser Support
 browser_support:
-  modern_browsers:
-    - "Chrome/Edge: Last 2 versions"
-    - "Firefox: Last 2 versions"
-    - "Safari: Last 2 versions"
-    - "Mobile Safari: iOS 14+"
-    - "Chrome Mobile: Last 2 versions"
+  minimum_versions:
+    chrome: "90+"
+    firefox: "88+"
+    safari: "14+"
+    edge: "90+"
+    
+  mobile_browsers:
+    ios_safari: "14+"
+    chrome_android: "90+"
+    samsung_internet: "14+"
+    
+  required_features:
+    - "CSS Grid"
+    - "Flexbox"
+    - "CSS Variables"
+    - "IntersectionObserver"
+    - "ResizeObserver"
+    - "CSS backdrop-filter (with fallback)"
     
   progressive_enhancement:
-    - "Basic layout works without JavaScript"
-    - "CSS Grid with Flexbox fallback"
-    - "Modern CSS with fallbacks"
-    - "No dependency on bleeding-edge features"
+    - "Blur effects degrade gracefully"
+    - "Animations respect prefers-reduced-motion"
+    - "JavaScript enhances but isn't required for navigation"
 
-# Code Quality Constraints
-code_quality:
-  typescript:
-    - "Strict mode enabled"
-    - "No any types without justification"
-    - "Proper type exports"
-    - "Generic types where appropriate"
-    
-  react_patterns:
-    - "Must use forwardRef for all components"
-    - "Proper prop spreading"
-    - "Memoization where beneficial"
-    - "Clean effect cleanup"
-    - "No memory leaks"
-    
-  testing_coverage:
-    - "Minimum 80% code coverage"
-    - "All user interactions tested"
-    - "Accessibility tests included"
-    - "Responsive behavior tested"
-    - "Theme switching tested"
-
-# Design System Constraints
-design_system:
-  spacing:
-    - "Use design system spacing tokens"
-    - "Consistent padding/margins"
-    - "Mobile-first spacing adjustments"
-    
-  typography:
-    - "Use system font stack"
-    - "Readable font sizes (16px minimum)"
-    - "Proper heading hierarchy"
-    - "Line height for readability"
-    
-  colors:
-    - "Use CSS variables for all colors"
-    - "Support theme switching"
-    - "Accessible color combinations"
-    - "Consistent hover/focus states"
-
-# Mobile Constraints
-mobile_first:
-  breakpoints:
-    - "Base: 0-767px (mobile)"
-    - "md: 768px+ (tablet)"
-    - "lg: 1024px+ (desktop)"
-    - "xl: 1280px+ (large desktop)"
+# Accessibility Standards
+accessibility:
+  wcag_compliance:
+    level: "AA"
+    version: "2.1"
     
   requirements:
-    - "Touch-friendly interactions"
-    - "No hover-dependent functionality"
-    - "Optimized for slow connections"
-    - "Minimal JavaScript for mobile"
-    - "Responsive images"
+    color_contrast:
+      normal_text: "4.5:1 minimum"
+      large_text: "3:1 minimum"
+      interactive_elements: "3:1 minimum"
+      focus_indicators: "3:1 minimum"
+      
+    keyboard_navigation:
+      - "All interactive elements keyboard accessible"
+      - "Logical tab order"
+      - "No keyboard traps"
+      - "Visible focus indicators"
+      - "Skip links functional"
+      
+    screen_readers:
+      - "Semantic HTML structure"
+      - "ARIA landmarks properly labeled"
+      - "Meaningful link text"
+      - "Image alt text required"
+      - "Announce state changes"
+      
+    touch_targets:
+      minimum_size: "44x44px"
+      spacing: "8px minimum between targets"
+      
+    motion:
+      - "Respect prefers-reduced-motion"
+      - "Provide pause/stop controls for animations"
+      - "No auto-playing content"
+
+# Design Constraints
+design:
+  spacing:
+    - "Use spacing tokens from ui package"
+    - "Consistent padding/margins"
+    - "Mobile-first responsive design"
+    
+  typography:
+    - "Use typography tokens"
+    - "Minimum font size: 14px"
+    - "Line height: 1.5 minimum"
+    
+  colors:
+    - "Use theme CSS variables only"
+    - "No hardcoded color values"
+    - "Support all four themes"
+    
+  layout:
+    - "Max container width: 1280px"
+    - "Responsive breakpoints: sm(640px), md(768px), lg(1024px), xl(1280px)"
+    - "Mobile-first approach"
+
+# Technical Constraints
+technical:
+  react_version: "19.1.0"
+  nextjs_version: "15.3.3"
+  typescript: "strict mode"
+  
+  required_patterns:
+    - "Use forwardRef for all components"
+    - "Include displayName"
+    - "Type all props"
+    - "Use 'use client' directive where needed"
+    
+  forbidden_patterns:
+    - "No inline styles"
+    - "No !important in CSS"
+    - "No any types"
+    - "No console.logs in production"
+    
+  dependencies:
+    allowed:
+      - "@radix-ui/* (via shadcn/ui)"
+      - "lucide-react (for icons)"
+      - "class-variance-authority"
+      - "clsx"
+      - "tailwind-merge"
+      
+    forbidden:
+      - "No heavy UI libraries (Material-UI, Ant Design)"
+      - "No jQuery or similar"
+      - "No CSS-in-JS libraries"
+      - "No animation libraries over 10KB"
+
+# Content Constraints
+content:
+  navigation:
+    max_items_desktop: 7
+    max_items_mobile: 10
+    max_nesting_depth: 1
+    
+  footer:
+    max_link_sections: 5
+    max_links_per_section: 8
+    max_social_links: 6
+    
+  text_limits:
+    header_tagline: "50 characters max"
+    footer_description: "150 characters max"
+    link_text: "30 characters max"
 
 # Security Constraints
 security:
-  - "Sanitize all user inputs"
-  - "Proper rel attributes on external links"
-  - "No inline scripts"
-  - "CSP header compatible"
-  - "XSS prevention measures"
+  links:
+    - "External links must use rel='noopener noreferrer'"
+    - "Validate all URLs"
+    - "Sanitize user-generated content"
+    
+  content_security_policy:
+    - "No inline scripts"
+    - "No eval() usage"
+    - "Strict CSP headers"
 
 # SEO Constraints
 seo:
-  - "Semantic HTML structure"
-  - "Proper heading hierarchy"
-  - "Descriptive link text"
-  - "Alt text for images"
-  - "Structured data support"
-  - "Fast initial page load"
-
-# Monitoring and Analytics
-monitoring:
-  required_tracking:
-    - "Navigation clicks"
-    - "Theme preference changes"
-    - "Mobile menu usage"
-    - "Error boundary triggers"
+  requirements:
+    - "Semantic HTML5 structure"
+    - "Proper heading hierarchy"
+    - "Meta tags support"
+    - "Schema.org markup ready"
+    - "Open Graph tags ready"
     
-  performance_monitoring:
-    - "Core Web Vitals tracking"
-    - "JavaScript error logging"
-    - "Bundle size tracking"
-    - "Lighthouse CI integration"
+  performance:
+    - "Server-side rendering compatible"
+    - "No layout shifts"
+    - "Fast initial paint"
 
-# Non-Negotiable Constraints
-critical_requirements:
-  - "Must maintain 98+ Lighthouse scores"
-  - "Must support all 4 themes perfectly"
-  - "Must be fully keyboard accessible"
-  - "Must work on 3G connections"
-  - "Must have 44px minimum touch targets"
-  - "Must use semantic HTML"
-  - "Must follow monorepo structure"
-  - "Must integrate with existing design system"
+# Responsive Design Constraints
+responsive:
+  breakpoints:
+    mobile: "< 768px"
+    tablet: "768px - 1023px"
+    desktop: ">= 1024px"
+    
+  requirements:
+    - "Mobile-first CSS"
+    - "No horizontal scrolling"
+    - "Readable at 200% zoom"
+    - "Works in portrait and landscape"
+    
+  testing_viewports:
+    - "320px (small mobile)"
+    - "375px (iPhone)"
+    - "768px (tablet)"
+    - "1024px (desktop)"
+    - "1440px (large desktop)"
+
+# Theme Constraints
+themes:
+  required_support:
+    - "Light (default)"
+    - "Dark"
+    - "High Contrast"
+    - "Gentle (trauma-informed)"
+    
+  implementation:
+    - "CSS variables for all colors"
+    - "No flash of unstyled content"
+    - "Smooth transitions between themes"
+    - "Persist user preference"
+    - "Respect system preference"
+
+# Testing Constraints
+testing:
+  coverage:
+    unit_tests: ">= 80%"
+    integration_tests: "All critical paths"
+    accessibility_tests: "All components"
+    
+  required_tests:
+    - "Render without errors"
+    - "Prop validation"
+    - "Keyboard navigation"
+    - "Screen reader compatibility"
+    - "Responsive behavior"
+    - "Theme switching"
+    
+  performance_tests:
+    - "Bundle size regression"
+    - "Render performance"
+    - "Memory leaks"
+
+# Maintenance Constraints
+maintenance:
+  code_quality:
+    - "ESLint compliance"
+    - "Prettier formatting"
+    - "TypeScript strict mode"
+    - "No type errors"
+    
+  documentation:
+    - "JSDoc for complex functions"
+    - "README for setup"
+    - "Storybook for components"
+    
+  versioning:
+    - "Semantic versioning"
+    - "Changelog maintenance"
+    - "Migration guides"

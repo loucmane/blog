@@ -33,6 +33,33 @@ components:
               label: string
               external?: boolean
               icon?: React.ComponentType
+              badge?: string | number
+              highlighted?: boolean
+            }
+        
+        - name: "logoSrc"
+          type: "string"
+          description: "Custom logo image source"
+          
+        - name: "logoAlt"
+          type: "string"
+          default: "Animal Protection Foundation"
+          description: "Alt text for logo"
+          
+        - name: "showEmergencyBanner"
+          type: "boolean"
+          default: false
+          description: "Show emergency appeal banner above header"
+          
+        - name: "emergencyBannerContent"
+          type: "EmergencyBanner"
+          description: "Emergency banner configuration"
+          interface: |
+            interface EmergencyBanner {
+              message: string
+              ctaText: string
+              ctaHref: string
+              priority: 'info' | 'warning' | 'urgent'
             }
             
     # Component must extend HTMLElement props
@@ -44,13 +71,14 @@ components:
     
     # Required child components/features
     features:
-      - "Logo/branding area"
+      - "Logo/branding area with responsive text"
       - "Desktop navigation menu"
       - "Mobile hamburger menu (Sheet component)"
       - "Theme switcher integration"
-      - "Responsive breakpoints"
+      - "Responsive breakpoints (md)"
       - "Keyboard navigation support"
       - "ARIA landmarks and labels"
+      - "44px minimum touch targets"
 
   Footer:
     description: "Footer component with foundation info, links, and trust signals"

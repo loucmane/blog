@@ -1,5 +1,5 @@
 # Behavior Contract for Task 7: Build Core Layout Components
-# This contract defines the functional behaviors and interactions required
+# This contract defines the core functionality and behavioral requirements
 
 version: "1.0"
 task_id: 7
@@ -10,146 +10,188 @@ behaviors:
   Header:
     navigation:
       desktop:
-        - "Display horizontal navigation menu on screens >= 768px"
-        - "Show all primary navigation items inline"
-        - "Highlight current/active page in navigation"
-        - "Support keyboard navigation (Tab, Enter, Arrow keys)"
-        - "Focus visible indicators on all interactive elements"
+        - "Navigation items display horizontally on screens >= md breakpoint"
+        - "Links have hover states with smooth transitions"
+        - "Active/current page indication through styling"
+        - "Keyboard navigation with Tab/Shift+Tab"
+        - "Enter/Space activates links"
+        - "Focus indicators visible and clear (ring-2)"
         
       mobile:
-        - "Show hamburger menu button on screens < 768px"
-        - "Open Sheet/Drawer from right side on menu click"
-        - "Trap focus within mobile menu when open"
-        - "Close menu on Escape key or outside click"
-        - "Close menu when navigation item clicked"
-        - "Animate menu open/close (respecting prefers-reduced-motion)"
+        - "Hamburger menu appears on screens < md breakpoint"
+        - "Sheet slides in from right side"
+        - "Menu items stack vertically with adequate spacing"
+        - "Touch targets minimum 44x44px"
+        - "Sheet closes on item selection"
+        - "Sheet closes on Escape key"
+        - "Focus trapped within open Sheet"
+        - "Focus returns to trigger button on close"
         
     sticky_behavior:
-      - "When sticky=true, fix header to viewport top on scroll"
-      - "Add shadow or border when scrolled (not at top)"
-      - "Ensure smooth transition when becoming sticky"
-      - "Maintain layout stability (no content jump)"
+      - "When sticky=true, header remains fixed at top on scroll"
+      - "Smooth transition when becoming sticky"
+      - "Z-index ensures header stays above content (z-50)"
+      - "Background blur effect when scrolled"
+      - "No layout shift when becoming sticky"
       
-    theme_integration:
-      - "Theme switcher always visible and accessible"
-      - "Support all 4 themes (light, dark, contrast, gentle)"
-      - "Persist theme choice to localStorage"
-      - "Apply theme instantly without page reload"
+    theme_switcher:
+      - "Theme switcher always visible"
+      - "Accessible via keyboard"
+      - "Persists selection to localStorage"
+      - "No flash of unstyled content on reload"
+      - "Smooth theme transitions"
       
-    accessibility:
-      - "Announce navigation state changes to screen readers"
-      - "Support keyboard-only navigation"
-      - "44px minimum touch targets for mobile"
-      - "Proper ARIA labels and roles"
-      - "Skip navigation functionality"
+    emergency_banner:
+      - "Appears above main header when active"
+      - "Different visual styles for priority levels"
+      - "Dismissible with close button (if enabled)"
+      - "Dismissal persisted to sessionStorage"
+      - "Accessible announcements for screen readers"
+      - "Smooth slide-in animation"
 
   Footer:
-    layout_behavior:
-      - "Always stick to bottom of viewport (flex-grow on main)"
-      - "Responsive grid: 1 column mobile, multi-column desktop"
-      - "Links grouped logically with clear headings"
-      - "Social links open in new tab with proper rel attributes"
+    layout:
+      - "Responsive grid layout"
+      - "Mobile: Single column"
+      - "Tablet: 2 columns"
+      - "Desktop: 4-5 columns"
+      - "Consistent spacing between sections"
       
-    interaction_patterns:
-      - "All links keyboard navigable"
-      - "Focus visible on all interactive elements"
-      - "Hover states for all links (color change)"
-      - "Social icons increase hit area to 44px minimum"
+    links:
+      - "Grouped by logical categories"
+      - "Clear visual hierarchy with section headings"
+      - "Hover states for all interactive elements"
+      - "External links open in new tab with rel='noopener noreferrer'"
+      - "Keyboard navigable with proper focus order"
+      
+    social_links:
+      - "Icon buttons with adequate touch targets (44x44px)"
+      - "Accessible labels for screen readers"
+      - "Hover/focus states"
+      - "Open in new tabs"
       
     trust_signals:
-      - "Display relevant certifications/badges"
-      - "Show nonprofit status prominently"
-      - "Include SSL/security indicators"
-      - "Link to transparency/impact reports"
+      - "Display certifications and badges"
+      - "Links to verification sources (when applicable)"
+      - "Visual consistency across different signals"
+      - "Responsive sizing"
       
-    responsive_behavior:
-      - "Stack link columns on mobile"
-      - "Center-align content on small screens"
-      - "Maintain readability at all breakpoints"
-      - "Hide less critical links on mobile (progressive disclosure)"
+    accessibility:
+      - "Semantic HTML structure"
+      - "ARIA landmarks (contentinfo)"
+      - "Proper heading hierarchy"
+      - "Color contrast compliance (4.5:1 minimum)"
 
   MainLayout:
-    layout_structure:
-      - "Minimum height 100vh to push footer down"
-      - "Flexible main content area with flex-grow"
-      - "Proper semantic HTML5 structure"
-      - "Support both full-width and contained layouts"
+    structure:
+      - "Flexbox layout with min-height: 100vh"
+      - "Header at top"
+      - "Main content area expands to fill space"
+      - "Footer pushed to bottom"
+      - "No content overflow issues"
       
     skip_navigation:
-      - "Hidden by default, visible on focus"
-      - "First focusable element on page"
-      - "Jumps directly to main content area"
-      - "Clearly visible when focused"
-      - "Works with screen readers"
+      - "Skip link visually hidden by default"
+      - "Becomes visible on focus"
+      - "Jumps to main content area"
+      - "Styled prominently when visible"
+      - "Works with keyboard and screen readers"
       
-    landmark_navigation:
-      - "Banner role on header"
-      - "Main role on content area" 
-      - "Contentinfo role on footer"
-      - "Navigation role on nav elements"
-      - "Proper heading hierarchy maintained"
+    semantic_structure:
+      - "Proper HTML5 landmarks"
+      - "header[role='banner']"
+      - "main[role='main']"
+      - "footer[role='contentinfo']"
+      - "Unique IDs for jump targets"
       
-    scroll_behavior:
-      - "Smooth scroll for in-page navigation"
-      - "Respect prefers-reduced-motion"
-      - "Focus management on route changes"
-      - "Scroll restoration on browser back/forward"
+    responsive:
+      - "Adapts to all screen sizes"
+      - "No horizontal scrolling"
+      - "Content remains accessible at 200% zoom"
+      - "Touch-friendly on mobile devices"
 
-# State Management Requirements
-state_management:
-  mobile_menu:
-    - "Track open/closed state (useState)"
-    - "Close on route change"
-    - "Close on escape key"
-    - "Prevent body scroll when open"
+# State Management
+state:
+  Header:
+    - "isMenuOpen: boolean - Mobile menu open state"
+    - "isSticky: boolean - Header sticky state (if needed)"
+    - "emergencyDismissed: boolean - Banner dismissal state"
     
-  scroll_position:
-    - "Track scroll position for sticky header"
-    - "Debounce scroll events for performance"
-    - "Clean up listeners on unmount"
+  Footer:
+    - "No internal state required"
     
-  active_navigation:
-    - "Detect current route/page"
-    - "Update active state dynamically"
-    - "Support nested route matching"
+  MainLayout:
+    - "No internal state required"
 
-# Animation and Transition Behaviors
-animations:
-  required:
-    - "Respect prefers-reduced-motion setting"
-    - "No animations if user prefers reduced motion"
-    - "Smooth transitions for theme switching"
+# Event Handlers
+events:
+  Header:
+    - "onMenuToggle: Handle mobile menu open/close"
+    - "onMenuItemClick: Close menu and navigate"
+    - "onEscapeKey: Close mobile menu"
+    - "onBannerDismiss: Hide emergency banner"
+    - "onLogoClick: Navigate to home"
     
-  optional_enhancements:
-    - "Subtle hover transitions (200-300ms)"
-    - "Mobile menu slide animation"
-    - "Sticky header transition"
-    - "Focus ring animations"
-    - "Loading states for dynamic content"
+  Footer:
+    - "onSocialClick: Track social link clicks (optional)"
+    - "onLinkClick: Handle internal navigation"
+    
+  MainLayout:
+    - "No specific event handlers required"
 
-# Error Handling Behaviors
-error_handling:
-  - "Graceful fallbacks for missing navigation data"
-  - "Handle theme switching errors silently"
-  - "Provide fallback for failed icon loads"
-  - "Ensure layout doesn't break with long text"
-  - "Handle missing/undefined props gracefully"
-
-# Performance Behaviors
+# Performance Requirements
 performance:
-  - "Lazy load social media icons"
-  - "Use CSS containment for layout stability"
-  - "Debounce scroll events (100ms)"
-  - "Memoize navigation items if passed as props"
-  - "Code split mobile menu component"
+  - "Header renders within 50ms"
+  - "Mobile menu opens within 100ms"
+  - "No layout shifts during interactions"
+  - "Smooth 60fps animations"
+  - "Efficient re-renders (memo where appropriate)"
+  - "Sheet component lazy loaded for mobile"
 
-# Testing Behaviors
-testable_behaviors:
-  - "Menu opens/closes correctly"
-  - "Keyboard navigation works throughout"
-  - "Active page highlighting accurate"
-  - "Theme switching persists"
-  - "Responsive breakpoints trigger correctly"
-  - "Focus trap works in mobile menu"
-  - "Skip link functions properly"
-  - "All links are reachable"
+# Error Handling
+error_handling:
+  - "Graceful fallbacks for missing props"
+  - "Default navigation items if none provided"
+  - "Handle missing logo gracefully"
+  - "Catch navigation errors"
+  - "Console warnings for development only"
+
+# Testing Requirements
+testing:
+  unit_tests:
+    - "Component renders without errors"
+    - "Props are properly applied"
+    - "Keyboard navigation works correctly"
+    - "Mobile menu opens/closes properly"
+    - "Skip navigation functions"
+    - "Theme switcher integration"
+    
+  integration_tests:
+    - "Layout components work together"
+    - "Navigation between pages"
+    - "Responsive behavior at breakpoints"
+    - "Focus management in mobile menu"
+    
+  accessibility_tests:
+    - "ARIA landmarks present"
+    - "Keyboard navigation complete"
+    - "Screen reader announcements"
+    - "Color contrast passes"
+    - "Touch targets adequate size"
+
+# Animation and Transitions
+animations:
+  Header:
+    - "Sticky transition: 200ms ease-out"
+    - "Menu icon hover: 150ms ease"
+    - "Link hover: 150ms color transition"
+    - "Emergency banner slide: 300ms ease-out"
+    
+  Mobile_Menu:
+    - "Sheet slide-in: 300ms ease-out"
+    - "Backdrop fade: 200ms ease"
+    - "Item hover: 150ms background transition"
+    
+  Footer:
+    - "Link hover: 150ms color transition"
+    - "Social icon hover: 200ms transform scale(1.05)"

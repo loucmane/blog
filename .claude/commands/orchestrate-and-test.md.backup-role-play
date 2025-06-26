@@ -71,151 +71,47 @@ Deploy the Pre-Analysis Agent using Task tool to generate:
 - constraints-contract.yaml
 ```
 
-**PHASE 5: MASTER ORCHESTRATOR ROLE**
-You will now assume the role of the Master Orchestrator to analyze and plan the specialist deployments:
+**PHASE 5: SPECIALIST ORCHESTRATION**
+Deploy the Master Orchestrator to coordinate specialist perspectives:
 
 ```
-ROLE: Master Orchestrator
+TASK: Deploy Master Orchestrator using specification from orchestrate-test-spec.md
 
-As the Master Orchestrator, you will:
-1. **Analyze Contracts**: Review all 4 generated contracts thoroughly
-2. **Plan Strategy**: Determine optimal deployment order and approach
-3. **Document Approach**: Create and log your orchestration strategy
-4. **Prepare Contexts**: Set up deployment contexts for each specialist
+CRITICAL: Use the built-in Task function to deploy this agent. Do NOT use MCP tools like zen:chat, claude-code-bridge, or taskmaster-ai.
 
-Specific actions:
-- Read and analyze all contracts in contracts/
-- Create orchestration-strategy.md documenting your deployment plan
-- Log strategy decisions to orchestration.log with timestamps
-- Prepare specialist deployment parameters for Phase 6
-- Document which specialists will be activated based on ${specialists}
-- Plan how to distribute the task across ${depth} sub-agents per specialist
-
-Context available:
+Context:
 - Task specification: [From task file]
 - Requested specialists: ${specialists}
-- Sub-agent depth: ${depth}
-- All 4 contracts from Pre-Analysis phase
+- Depth: ${depth}
+- Agent definition: Section 2 from orchestrate-test-spec.md
+
+The Master Orchestrator must:
+1. Use built-in Task function ONLY to deploy Specialist Orchestrators
+2. NOT use any MCP tools for agent deployment
+3. Coordinate deployment of selected Specialist Orchestrators:
+   - Performance (if requested)
+   - Architecture (if requested)
+   - UX/DX (if requested)
+   - Accessibility (if requested)
+   - Innovation (if requested)
 ```
 
-**PHASE 6: SPECIALIST ORCHESTRATOR ROLES**
-You will now sequentially assume each Specialist Orchestrator role and deploy their sub-agents:
+**PHASE 6: PARALLEL SPECIALIST DEPLOYMENT**
+Deploy all selected Specialist Orchestrators simultaneously:
 
 ```
-SEQUENTIAL ROLE EXECUTION
-
-For each specialist in ${specialists}, you will:
-1. Assume the specialist role
-2. Create their worktree
-3. Deploy ${depth} sub-agents using the built-in Task function
-4. Log deployments and transition to next role
+TASK: Deploy [N] Specialist Orchestrators in parallel
 
 CRITICAL: Use the built-in Task function for ALL agent deployments. Do NOT use MCP tools.
 
-Execute these roles in order (only if included in ${specialists}):
+For each selected specialist:
+- Load their definition from orchestrate-test-spec.md (Sections 3-7)
+- Create dedicated worktree
+- Deploy using built-in Task function with ${depth} sub-agents
+- Each Specialist MUST use built-in Task function to deploy their sub-agents
+- NO MCP tools (zen, claude-code-bridge, taskmaster-ai, etc.)
+- Monitor via orchestration.log
 ```
-
-## Performance Specialist Role
-If "performance" is in ${specialists}:
-```
-ROLE: Performance Specialist Orchestrator
-
-You are now the Performance Specialist. Your focus: speed, efficiency, and optimization.
-
-Actions:
-1. Review performance-related contracts from contracts/
-2. Create worktree: `.worktrees/task-${task_id}-orch-perf`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-perf`
-4. Deploy ${depth} sub-agents using the built-in Task function:
-   - Sub-Agent 1: Focus on render optimization and initial load
-   - Sub-Agent 2: Focus on bundle efficiency and code splitting
-   - (Sub-Agent 3 if depth=3: Focus on runtime performance)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
-```
-
-## Architecture Specialist Role
-If "architecture" is in ${specialists}:
-```
-ROLE: Architecture Specialist Orchestrator
-
-You are now the Architecture Specialist. Your focus: modularity, scalability, and maintainability.
-
-Actions:
-1. Review architecture-related contracts from contracts/
-2. Create worktree: `.worktrees/task-${task_id}-orch-arch`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-arch`
-4. Deploy ${depth} sub-agents using the built-in Task function:
-   - Sub-Agent 1: Focus on component modularity and separation
-   - Sub-Agent 2: Focus on system scalability and extensibility
-   - (Sub-Agent 3 if depth=3: Focus on dependency management)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
-```
-
-## UX/DX Specialist Role
-If "ux" is in ${specialists}:
-```
-ROLE: UX/DX Specialist Orchestrator
-
-You are now the UX/DX Specialist. Your focus: developer and user experience.
-
-Actions:
-1. Review UX/DX-related contracts from contracts/
-2. Create worktree: `.worktrees/task-${task_id}-orch-ux`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-ux`
-4. Deploy ${depth} sub-agents using the built-in Task function:
-   - Sub-Agent 1: Focus on developer ergonomics and API design
-   - Sub-Agent 2: Focus on user interactions and interfaces
-   - (Sub-Agent 3 if depth=3: Focus on documentation and examples)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
-```
-
-## Accessibility Specialist Role
-If "accessibility" is in ${specialists}:
-```
-ROLE: Accessibility Specialist Orchestrator
-
-You are now the Accessibility Specialist. Your focus: WCAG compliance and inclusive design.
-
-Actions:
-1. Review accessibility-related contracts from contracts/
-2. Create worktree: `.worktrees/task-${task_id}-orch-a11y`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-a11y`
-4. Deploy ${depth} sub-agents using the built-in Task function:
-   - Sub-Agent 1: Focus on WCAG 2.1 AA compliance
-   - Sub-Agent 2: Focus on assistive technology support
-   - (Sub-Agent 3 if depth=3: Focus on keyboard navigation)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
-```
-
-## Innovation Specialist Role
-If "innovation" is in ${specialists}:
-```
-ROLE: Innovation Specialist Orchestrator
-
-You are now the Innovation Specialist. Your focus: emerging patterns and future-proofing.
-
-Actions:
-1. Review innovation opportunities in contracts/
-2. Create worktree: `.worktrees/task-${task_id}-orch-innov`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-innov`
-4. Deploy ${depth} sub-agents using the built-in Task function:
-   - Sub-Agent 1: Focus on cutting-edge patterns and techniques
-   - Sub-Agent 2: Focus on future adaptability and evolution
-   - (Sub-Agent 3 if depth=3: Focus on experimental features)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Complete specialist phases
-```
-
-Note: Execute each role completely before moving to the next. This is sequential, not parallel.
 
 **PHASE 7: EVALUATION**
 Deploy the Evaluation Orchestrator to analyze all implementations:

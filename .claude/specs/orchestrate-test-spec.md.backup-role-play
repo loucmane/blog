@@ -84,51 +84,41 @@ Implement a TaskMaster task through multi-perspective exploration, where 5 speci
 - Provide specific values, not just categories
 - Save all files to ${CONTRACTS_DIR}/
 
-### 2. Master Orchestrator (Role)
+### 2. Master Orchestrator
 
-**Purpose**: A role assumed by the main session to analyze contracts and plan specialist deployments.
+**Purpose**: Deploy and coordinate specialist orchestrators based on task requirements.
 
-**Role Definition**: The main session temporarily becomes the Master Orchestrator to coordinate the multi-perspective implementation strategy.
-
-**Context Available**:
+**Context Variables**:
 - Task specification: [Full content from task file]
 - Requested specialists: ${specialists}
 - Depth per specialist: ${depth}
 - Contracts directory: ${CONTRACTS_DIR}
 - Orchestration output: ${ORCHESTRATION_DIR}
-- All 4 generated contracts
+- Monitoring enabled: true
 
-**Actions in this Role**:
-1. Read and thoroughly analyze all implementation contracts
-2. Create comprehensive orchestration strategy document
-3. Determine specialist execution order based on ${specialists}
-4. Document deployment approach in orchestration-strategy.md
-5. Log strategic decisions to orchestration.log
-6. Prepare deployment contexts for each specialist role
-7. Plan distribution of work across ${depth} sub-agents per specialist
+**Deployment Strategy**:
+1. Read and validate the implementation contracts
+2. Determine which specialists to deploy (based on ${specialists} parameter)
+3. Deploy each specialist orchestrator with:
+   - Their specific focus area
+   - Access to contracts
+   - Depth parameter for sub-agent count
+   - Output directory for their implementations
+   - Use built-in Task function for deployment (not MCP tools)
+4. Monitor deployment progress via orchestration.log
+5. Coordinate parallel execution
+6. Track completion status
 
-**Specialist Execution Order** (if all selected):
-1. Performance Specialist Role
-2. Architecture Specialist Role  
-3. UX/DX Specialist Role
-4. Accessibility Specialist Role
-5. Innovation Specialist Role
+**Specialist Deployment Order** (if all selected):
+1. Performance Specialist Orchestrator
+2. Architecture Specialist Orchestrator  
+3. UX/DX Specialist Orchestrator
+4. Accessibility Specialist Orchestrator
+5. Innovation Specialist Orchestrator
 
-**Note**: This is a ROLE played by the main session, not a separate deployed agent.
-
-### 3. Performance Specialist Orchestrator (Role)
+### 3. Performance Specialist Orchestrator
 
 **Purpose**: Create high-performance implementations focusing on speed and efficiency.
-
-**Role Transition**: The main session assumes this specialist role after completing the Master Orchestrator role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-perf`
-- All Performance Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Load time optimization
@@ -138,32 +128,22 @@ When the main session assumes this role, it operates from the worktree directory
 - Network optimization
 
 **Sub-Agent Deployment**:
-In this role, the main session directly deploys ${depth} Performance Sub-Agents using the built-in Task function, each exploring different optimization strategies:
+Deploy ${depth} Performance Sub-Agents using built-in Task function, each exploring different optimization strategies:
 - Agent 1: Aggressive code splitting and lazy loading
 - Agent 2: SSG/ISR optimization with minimal client JS
 - Agent 3: Web Worker offloading for heavy computations
 - Additional agents explore combinations and advanced techniques
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-perf`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-perf-{number}`
 - Follow contracts from ${CONTRACTS_DIR}
 - Focus on 98+ Lighthouse scores
 - Implement performance monitoring
 - Document optimization decisions
 
-### 4. Architecture Specialist Orchestrator (Role)
+### 4. Architecture Specialist Orchestrator
 
 **Purpose**: Create well-structured, maintainable implementations with excellent patterns.
-
-**Role Transition**: The main session assumes this specialist role after completing the Performance Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-arch`
-- All Architecture Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Component composition patterns
@@ -173,32 +153,22 @@ When the main session assumes this role, it operates from the worktree directory
 - Type safety
 
 **Sub-Agent Deployment**:
-In this role, the main session directly deploys ${depth} Architecture Sub-Agents using the built-in Task function exploring different patterns:
+Deploy ${depth} Architecture Sub-Agents using built-in Task function exploring different patterns:
 - Agent 1: Compound component pattern with maximum flexibility
 - Agent 2: Atomic design with strict hierarchy
 - Agent 3: Feature-sliced design for modularity
 - Additional agents explore hybrid approaches
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-arch`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-arch-{number}`
 - Emphasize clean code principles
 - Strong TypeScript usage
 - Clear module boundaries
 - Comprehensive documentation
 
-### 5. UX/DX Specialist Orchestrator (Role)
+### 5. UX/DX Specialist Orchestrator
 
 **Purpose**: Create implementations optimizing both user and developer experience.
-
-**Role Transition**: The main session assumes this specialist role after completing the Architecture Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-ux`
-- All UX/DX Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Intuitive user interactions
@@ -208,32 +178,22 @@ When the main session assumes this role, it operates from the worktree directory
 - Documentation quality
 
 **Sub-Agent Deployment**:
-In this role, the main session directly deploys ${depth} UX/DX Sub-Agents using the built-in Task function focusing on experience:
+Deploy ${depth} UX/DX Sub-Agents using built-in Task function focusing on experience:
 - Agent 1: Maximum user delight with micro-interactions
 - Agent 2: Developer-first with excellent APIs
 - Agent 3: Balanced approach with great defaults
 - Additional agents explore specific use cases
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-ux`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-ux-{number}`
 - Include usage examples
 - Storybook stories if applicable
 - Clear error messages
 - Intuitive prop names
 
-### 6. Accessibility Specialist Orchestrator (Role)
+### 6. Accessibility Specialist Orchestrator
 
 **Purpose**: Create implementations exceeding WCAG standards with inclusive design.
-
-**Role Transition**: The main session assumes this specialist role after completing the UX/DX Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-a11y`
-- All Accessibility Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Screen reader optimization
@@ -243,32 +203,22 @@ When the main session assumes this role, it operates from the worktree directory
 - ARIA implementation
 
 **Sub-Agent Deployment**:
-In this role, the main session directly deploys ${depth} Accessibility Sub-Agents using the built-in Task function with different approaches:
+Deploy ${depth} Accessibility Sub-Agents using built-in Task function with different approaches:
 - Agent 1: ARIA-first with comprehensive announcements
 - Agent 2: Semantic HTML maximalist approach
 - Agent 3: Progressive enhancement focus
 - Additional agents explore assistive technology optimizations
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-a11y`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-a11y-{number}`
 - WCAG 2.1 AAA compliance where possible
 - Keyboard navigation documentation
 - Screen reader testing notes
 - Focus flow diagrams
 
-### 7. Innovation Specialist Orchestrator (Role)
+### 7. Innovation Specialist Orchestrator
 
 **Purpose**: Create boundary-pushing implementations with creative solutions.
-
-**Role Transition**: The main session assumes this specialist role after completing the Accessibility Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-innov`
-- All Innovation Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Novel interaction patterns
@@ -278,14 +228,14 @@ When the main session assumes this role, it operates from the worktree directory
 - Future-facing patterns
 
 **Sub-Agent Deployment**:
-In this role, the main session directly deploys ${depth} Innovation Sub-Agents using the built-in Task function exploring possibilities:
+Deploy ${depth} Innovation Sub-Agents using built-in Task function exploring possibilities:
 - Agent 1: Cutting-edge CSS and animations
 - Agent 2: AI-enhanced interactions
 - Agent 3: Novel state management approaches
 - Additional agents combine innovations
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-innov`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-innov-{number}`
 - Document browser compatibility
 - Provide fallbacks
 - Explain innovative aspects

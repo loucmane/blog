@@ -1,5 +1,5 @@
 # Integration Contract for Task 7: Build Core Layout Components
-# This contract defines file structure, naming conventions, and integration patterns
+# This contract defines file structure, naming conventions, imports, and integration patterns
 
 version: "1.0"
 task_id: 7
@@ -11,11 +11,11 @@ file_structure:
   
   required_files:
     - path: "Header.tsx"
-      description: "Header component with navigation"
+      description: "Header component implementation"
       exports: ["Header", "type HeaderProps"]
       
     - path: "Footer.tsx"
-      description: "Footer component with links and trust signals"
+      description: "Footer component implementation"
       exports: ["Footer", "type FooterProps"]
       
     - path: "MainLayout.tsx"
@@ -24,39 +24,30 @@ file_structure:
       
     - path: "index.ts"
       description: "Barrel export for all layout components"
-      content: |
-        // Layout component exports
-        export { Header } from './Header'
-        export { Footer } from './Footer'
-        export { MainLayout } from './MainLayout'
-        
-        // Type exports
-        export type { HeaderProps } from './Header'
-        export type { FooterProps } from './Footer'
-        export type { MainLayoutProps } from './MainLayout'
-        
+      exports: ["Header", "Footer", "MainLayout", "all type exports"]
+      
   optional_files:
-    - path: "MobileNav.tsx"
-      description: "Separate mobile navigation component (if extracted)"
-      
-    - path: "SkipLink.tsx"
-      description: "Skip navigation component (if extracted)"
-      
     - path: "types.ts"
       description: "Shared types for layout components"
+      note: "Can also be defined in each component file"
       
-    - path: "__tests__/"
-      description: "Component tests directory"
+    - path: "MobileMenu.tsx"
+      description: "Extracted mobile menu component"
+      note: "Can be part of Header.tsx"
+      
+    - path: "EmergencyBanner.tsx"
+      description: "Standalone emergency banner component"
+      note: "Can be part of Header.tsx"
 
-# Import Patterns
-import_requirements:
+# Import Conventions
+imports:
   order:
-    - "React and Next.js imports first"
-    - "External packages (lucide-react, etc)"
-    - "Internal monorepo packages (@minniewinnie/ui)"
-    - "Absolute imports (@/components, @/lib)"
-    - "Relative imports (only if necessary)"
-    - "Type imports last"
+    - "React and Next.js imports"
+    - "External library imports"
+    - "Monorepo package imports"
+    - "Local component imports"
+    - "Utility imports"
+    - "Type imports"
     
   examples:
     Header: |
@@ -67,157 +58,189 @@ import_requirements:
       import { Menu, X } from 'lucide-react'
       import { ThemeSwitcher } from '@minniewinnie/ui'
       import { Button } from '@/components/ui/button'
-      import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+      import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
       import { cn } from '@/lib/utils'
       import type { HeaderProps } from './types'
+      
+    Footer: |
+      import * as React from 'react'
+      import Link from 'next/link'
+      import { Facebook, Twitter, Instagram, Youtube, Heart, Shield, Award } from 'lucide-react'
+      import { cn } from '@/lib/utils'
+      import type { FooterProps } from './types'
+      
+    MainLayout: |
+      import * as React from 'react'
+      import { Header } from './Header'
+      import { Footer } from './Footer'
+      import { cn } from '@/lib/utils'
+      import type { MainLayoutProps } from './types'
+
+# Theme Integration
+theme_integration:
+  css_variables:
+    - "Use CSS variables for all colors"
+    - "Access via Tailwind classes (bg-background, text-foreground)"
+    - "Support all four themes automatically"
+    
+  tailwind_classes:
+    required_patterns:
+      - "bg-background" # Instead of hardcoded colors
+      - "text-foreground" # For primary text
+      - "border-border" # For borders
+      - "text-muted-foreground" # For secondary text
+      
+  theme_aware_components:
+    - "ThemeSwitcher from @minniewinnie/ui"
+    - "Must be integrated in Header"
+    - "Respect system preferences"
 
 # Component Integration Patterns
-component_patterns:
-  forwardRef_usage:
-    description: "All layout components must use React.forwardRef"
-    pattern: |
-      const Component = React.forwardRef<HTMLElement, ComponentProps>(
-        ({ className, ...props }, ref) => {
-          // Component implementation
-        }
-      )
-      Component.displayName = 'ComponentName'
+integration_patterns:
+  with_shadcn_ui:
+    - "Use Sheet component for mobile menu"
+    - "Use Button component for interactive elements"
+    - "Import from @/components/ui/*"
+    - "Follow shadcn/ui conventions"
+    
+  with_next_js:
+    - "Use 'use client' directive for interactive components"
+    - "Use next/link for navigation"
+    - "Use next/image for optimized images (if logos)"
+    - "Support Next.js App Router"
+    
+  with_monorepo:
+    - "Import ThemeSwitcher from @minniewinnie/ui"
+    - "Import shared types from @minniewinnie/shared"
+    - "Use design tokens from ui package"
 
-  className_merging:
-    description: "Use cn() utility for className merging"
-    pattern: |
-      className={cn(
-        "base-classes",
-        conditionalClass && "conditional-classes",
-        className // User-provided className always last
-      )}
+# Naming Conventions
+naming:
+  components:
+    - "PascalCase for component names"
+    - "Include displayName for all components"
+    - "Match filename to component name"
+    
+  props:
+    - "ComponentNameProps pattern"
+    - "Export type alongside component"
+    
+  variables:
+    - "camelCase for variables and functions"
+    - "Boolean props start with 'is', 'has', 'should'"
+    - "Event handlers start with 'on'"
+    
+  css_classes:
+    - "Use cn() utility for conditional classes"
+    - "Kebab-case for custom CSS classes"
+    - "Semantic class names"
 
-  responsive_utilities:
-    description: "Mobile-first responsive design"
-    breakpoints:
-      - "Base styles (mobile): default"
-      - "Tablet styles: md: prefix (768px+)"
-      - "Desktop styles: lg: prefix (1024px+)"
-      - "Large desktop: xl: prefix (1280px+)"
-
-# Style Integration
-styling:
-  approach: "Tailwind CSS with design tokens"
-  
-  required_patterns:
-    - "Use CSS variables for theme-aware colors"
-    - "Use spacing tokens from design system"
-    - "Support all 4 theme variants"
-    - "Mobile-first responsive classes"
+# Export Requirements
+exports:
+  individual_components: |
+    // Header.tsx
+    export { Header }
+    export type { HeaderProps }
     
-  theme_classes:
-    background: "bg-background"
-    foreground: "text-foreground"
-    primary: "text-primary bg-primary"
-    border: "border-border"
-    muted: "text-muted-foreground bg-muted"
+    // Footer.tsx
+    export { Footer }
+    export type { FooterProps }
     
-  example: |
-    // Theme-aware styling
-    <header className="bg-background/95 backdrop-blur 
-                      supports-[backdrop-filter]:bg-background/60
-                      border-b border-border">
-      
-    // Responsive padding
-    <div className="px-4 md:px-6 lg:px-8">
+    // MainLayout.tsx
+    export { MainLayout }
+    export type { MainLayoutProps }
     
-    // Dark mode variant
-    <nav className="text-foreground dark:text-foreground">
-
-# Package Dependencies
-dependencies:
-  required:
-    "@minniewinnie/ui":
-      - "ThemeSwitcher component"
-      - "Theme tokens and types"
-      
-    "shadcn/ui components":
-      - "Sheet (for mobile menu)"
-      - "Button"
-      - "Any other UI primitives needed"
-      
-    "lucide-react":
-      - "Menu icon"
-      - "Social media icons"
-      - "Trust signal icons"
-      
-  utilities:
-    "@/lib/utils":
-      - "cn() function for className merging"
-      
-    "@/hooks":
-      - "useMediaQuery (if needed)"
-      - "Custom hooks for scroll, etc"
-
-# Integration with Existing System
-system_integration:
-  app_router:
-    - "Components must be marked 'use client' if using hooks/interactivity"
-    - "Support both app directory and potential pages usage"
-    - "Work with Next.js metadata system"
-    
-  layout_usage: |
-    // app/layout.tsx
-    import { MainLayout } from '@/components/layout'
-    
-    export default function RootLayout({ children }) {
-      return (
-        <html>
-          <body>
-            <MainLayout>
-              {children}
-            </MainLayout>
-          </body>
-        </html>
-      )
-    }
-    
-  page_usage: |
-    // For pages needing custom header/footer props
-    import { MainLayout } from '@/components/layout'
-    
-    export default function CustomPage() {
-      return (
-        <MainLayout 
-          headerProps={{ sticky: false }}
-          footerProps={{ showSocialLinks: false }}
-        >
-          <div>Page content</div>
-        </MainLayout>
-      )
-    }
+  barrel_export: |
+    // index.ts
+    export { Header } from './Header'
+    export { Footer } from './Footer'
+    export { MainLayout } from './MainLayout'
+    export type { HeaderProps, FooterProps, MainLayoutProps } from './types'
 
 # Testing Integration
 testing:
   structure:
-    - "__tests__/Header.test.tsx"
-    - "__tests__/Footer.test.tsx"
-    - "__tests__/MainLayout.test.tsx"
+    - "Co-locate tests with components"
+    - "Use *.test.tsx naming convention"
+    - "Test files in same directory as component"
     
-  patterns:
-    - "Test responsive behavior"
-    - "Test keyboard navigation"
-    - "Test theme switching"
-    - "Test accessibility features"
-    - "Use testing-library/react"
+  test_ids:
+    - "Use data-testid for test targeting"
+    - "Semantic naming: 'header-nav-desktop'"
+    - "Avoid production data-testid attributes"
+
+# Documentation Requirements
+documentation:
+  component_level:
+    - "JSDoc comments for complex props"
+    - "Usage examples in comments"
+    - "Accessibility notes where relevant"
+    
+  storybook:
+    - "Create *.stories.tsx for each component"
+    - "Include all prop variations"
+    - "Document interactive behaviors"
 
 # Build and Bundle Considerations
-build_optimization:
-  - "Components should be tree-shakeable"
-  - "Mobile menu can be code-split with dynamic import"
-  - "Icons can be lazy loaded"
-  - "CSS should be scoped and minimal"
-  - "Support SSR and SSG"
+build:
+  tree_shaking:
+    - "Ensure proper named exports"
+    - "Avoid barrel exports with side effects"
+    - "Use ES modules"
+    
+  code_splitting:
+    - "Sheet component should be dynamically imported"
+    - "Consider lazy loading heavy icons"
+    - "Optimize for initial page load"
 
 # Migration Path
 migration:
   from_existing:
     - "Preserve existing component APIs where possible"
-    - "Maintain backward compatibility"
-    - "Update imports in existing pages"
-    - "Test all existing page layouts"
+    - "Add deprecation warnings for breaking changes"
+    - "Provide codemod scripts if needed"
+    
+  versioning:
+    - "Use semantic versioning for updates"
+    - "Document breaking changes"
+    - "Maintain backwards compatibility"
+
+# Integration Examples
+examples:
+  basic_page: |
+    // app/page.tsx
+    import { MainLayout } from '@/components/layout'
+    
+    export default function HomePage() {
+      return (
+        <MainLayout>
+          <div className="container mx-auto px-4 py-8">
+            <h1>Welcome to Animal Protection Foundation</h1>
+          </div>
+        </MainLayout>
+      )
+    }
+    
+  with_custom_props: |
+    // app/about/page.tsx
+    <MainLayout
+      headerProps={{ sticky: false }}
+      footerProps={{ showTrustSignals: true }}
+      className="about-page"
+    >
+      <AboutContent />
+    </MainLayout>
+    
+  standalone_header: |
+    // components/CustomLayout.tsx
+    import { Header, Footer } from '@/components/layout'
+    
+    export function CustomLayout({ children }) {
+      return (
+        <>
+          <Header navItems={customNavItems} />
+          <div className="custom-wrapper">{children}</div>
+          <Footer />
+        </>
+      )
+    }

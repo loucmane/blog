@@ -122,14 +122,6 @@ Implement a TaskMaster task through multi-perspective exploration, where 5 speci
 
 **Role Transition**: The main session assumes this specialist role after completing the Master Orchestrator role.
 
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-perf`
-- All Performance Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
-
 **Focus Areas**:
 - Load time optimization
 - Runtime performance
@@ -145,7 +137,7 @@ In this role, the main session directly deploys ${depth} Performance Sub-Agents 
 - Additional agents explore combinations and advanced techniques
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-perf`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-perf-{number}`
 - Follow contracts from ${CONTRACTS_DIR}
 - Focus on 98+ Lighthouse scores
 - Implement performance monitoring
@@ -156,14 +148,6 @@ In this role, the main session directly deploys ${depth} Performance Sub-Agents 
 **Purpose**: Create well-structured, maintainable implementations with excellent patterns.
 
 **Role Transition**: The main session assumes this specialist role after completing the Performance Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-arch`
-- All Architecture Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Component composition patterns
@@ -180,7 +164,7 @@ In this role, the main session directly deploys ${depth} Architecture Sub-Agents
 - Additional agents explore hybrid approaches
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-arch`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-arch-{number}`
 - Emphasize clean code principles
 - Strong TypeScript usage
 - Clear module boundaries
@@ -191,14 +175,6 @@ In this role, the main session directly deploys ${depth} Architecture Sub-Agents
 **Purpose**: Create implementations optimizing both user and developer experience.
 
 **Role Transition**: The main session assumes this specialist role after completing the Architecture Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-ux`
-- All UX/DX Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Intuitive user interactions
@@ -215,7 +191,7 @@ In this role, the main session directly deploys ${depth} UX/DX Sub-Agents using 
 - Additional agents explore specific use cases
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-ux`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-ux-{number}`
 - Include usage examples
 - Storybook stories if applicable
 - Clear error messages
@@ -226,14 +202,6 @@ In this role, the main session directly deploys ${depth} UX/DX Sub-Agents using 
 **Purpose**: Create implementations exceeding WCAG standards with inclusive design.
 
 **Role Transition**: The main session assumes this specialist role after completing the UX/DX Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-a11y`
-- All Accessibility Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Screen reader optimization
@@ -250,7 +218,7 @@ In this role, the main session directly deploys ${depth} Accessibility Sub-Agent
 - Additional agents explore assistive technology optimizations
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-a11y`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-a11y-{number}`
 - WCAG 2.1 AAA compliance where possible
 - Keyboard navigation documentation
 - Screen reader testing notes
@@ -261,14 +229,6 @@ In this role, the main session directly deploys ${depth} Accessibility Sub-Agent
 **Purpose**: Create boundary-pushing implementations with creative solutions.
 
 **Role Transition**: The main session assumes this specialist role after completing the Accessibility Specialist role.
-
-**Working Directory Context**: 
-When the main session assumes this role, it operates from the worktree directory to ensure all deployed sub-agents work in the correct isolation. The context switch is part of assuming the role.
-
-**Worktree Details**:
-- Main session creates and enters: `.worktrees/task-${task_id}-orch-innov`
-- All Innovation Sub-Agents deployed from this directory will work within it
-- Sub-agents inherit this working directory automatically
 
 **Focus Areas**:
 - Novel interaction patterns
@@ -285,7 +245,7 @@ In this role, the main session directly deploys ${depth} Innovation Sub-Agents u
 - Additional agents combine innovations
 
 **Implementation Requirements**:
-- All sub-agents work in the same worktree: `.worktrees/task-${task_id}-orch-innov`
+- Each sub-agent creates in worktree: `.worktrees/task-${task_id}-orch-innov-{number}`
 - Document browser compatibility
 - Provide fallbacks
 - Explain innovative aspects

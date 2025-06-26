@@ -125,14 +125,12 @@ You are now the Performance Specialist. Your focus: speed, efficiency, and optim
 Actions:
 1. Review performance-related contracts from contracts/
 2. Create worktree: `.worktrees/task-${task_id}-orch-perf`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-perf`
-4. Deploy ${depth} sub-agents using the built-in Task function:
+3. Deploy ${depth} sub-agents using the built-in Task function:
    - Sub-Agent 1: Focus on render optimization and initial load
    - Sub-Agent 2: Focus on bundle efficiency and code splitting
    - (Sub-Agent 3 if depth=3: Focus on runtime performance)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
+4. Log deployments to orchestration.log
+5. Transition to next role
 ```
 
 ## Architecture Specialist Role
@@ -145,14 +143,12 @@ You are now the Architecture Specialist. Your focus: modularity, scalability, an
 Actions:
 1. Review architecture-related contracts from contracts/
 2. Create worktree: `.worktrees/task-${task_id}-orch-arch`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-arch`
-4. Deploy ${depth} sub-agents using the built-in Task function:
+3. Deploy ${depth} sub-agents using the built-in Task function:
    - Sub-Agent 1: Focus on component modularity and separation
    - Sub-Agent 2: Focus on system scalability and extensibility
    - (Sub-Agent 3 if depth=3: Focus on dependency management)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
+4. Log deployments to orchestration.log
+5. Transition to next role
 ```
 
 ## UX/DX Specialist Role
@@ -165,14 +161,12 @@ You are now the UX/DX Specialist. Your focus: developer and user experience.
 Actions:
 1. Review UX/DX-related contracts from contracts/
 2. Create worktree: `.worktrees/task-${task_id}-orch-ux`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-ux`
-4. Deploy ${depth} sub-agents using the built-in Task function:
+3. Deploy ${depth} sub-agents using the built-in Task function:
    - Sub-Agent 1: Focus on developer ergonomics and API design
    - Sub-Agent 2: Focus on user interactions and interfaces
    - (Sub-Agent 3 if depth=3: Focus on documentation and examples)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
+4. Log deployments to orchestration.log
+5. Transition to next role
 ```
 
 ## Accessibility Specialist Role
@@ -185,14 +179,12 @@ You are now the Accessibility Specialist. Your focus: WCAG compliance and inclus
 Actions:
 1. Review accessibility-related contracts from contracts/
 2. Create worktree: `.worktrees/task-${task_id}-orch-a11y`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-a11y`
-4. Deploy ${depth} sub-agents using the built-in Task function:
+3. Deploy ${depth} sub-agents using the built-in Task function:
    - Sub-Agent 1: Focus on WCAG 2.1 AA compliance
    - Sub-Agent 2: Focus on assistive technology support
    - (Sub-Agent 3 if depth=3: Focus on keyboard navigation)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Transition to next role
+4. Log deployments to orchestration.log
+5. Transition to next role
 ```
 
 ## Innovation Specialist Role
@@ -205,14 +197,12 @@ You are now the Innovation Specialist. Your focus: emerging patterns and future-
 Actions:
 1. Review innovation opportunities in contracts/
 2. Create worktree: `.worktrees/task-${task_id}-orch-innov`
-3. Switch working context: `cd .worktrees/task-${task_id}-orch-innov`
-4. Deploy ${depth} sub-agents using the built-in Task function:
+3. Deploy ${depth} sub-agents using the built-in Task function:
    - Sub-Agent 1: Focus on cutting-edge patterns and techniques
    - Sub-Agent 2: Focus on future adaptability and evolution
    - (Sub-Agent 3 if depth=3: Focus on experimental features)
-5. Return to main directory: `cd ${PROJECT_ROOT}`
-6. Log deployments to orchestration.log
-7. Complete specialist phases
+4. Log deployments to orchestration.log
+5. Complete specialist phases
 ```
 
 Note: Execute each role completely before moving to the next. This is sequential, not parallel.

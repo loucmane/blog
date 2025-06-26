@@ -59,7 +59,7 @@ Planning phase complete. Ready to implement changes to command and spec files.
 
 ## How to Initialize Next Session
 ```
-Activate project blog, read memory session_2025-06-26_orchestrate_role_play_approach and SESSION.md.
+Activate project /home/loucmane/dev/javascript/MomsBlog/blog, read memory session_2025-06-26_orchestrate_role_play_approach and SESSION.md.
 Continue implementing the role-playing orchestration approach by updating command and spec files.
 ```
 
