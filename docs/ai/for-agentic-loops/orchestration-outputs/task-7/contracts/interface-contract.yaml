@@ -1,0 +1,195 @@
+# Interface Contract for Task 7: Build Core Layout Components
+# This contract defines the component APIs and prop interfaces that all implementations must follow
+
+version: "1.0"
+task_id: 7
+title: "Build Core Layout Components"
+
+# Component Interface Specifications
+components:
+  Header:
+    description: "Responsive header component with navigation and mobile menu"
+    props:
+      # Required props
+      required: []
+      
+      # Optional props
+      optional:
+        - name: "sticky"
+          type: "boolean"
+          default: true
+          description: "Whether header sticks to top of viewport on scroll"
+          
+        - name: "className"
+          type: "string"
+          description: "Additional CSS classes for styling"
+          
+        - name: "navItems"
+          type: "NavItem[]"
+          description: "Array of navigation items to display"
+          interface: |
+            interface NavItem {
+              href: string
+              label: string
+              external?: boolean
+              icon?: React.ComponentType
+            }
+            
+    # Component must extend HTMLElement props
+    extends: "React.HTMLAttributes<HTMLElement>"
+    
+    # Must use forwardRef
+    forwardRef: true
+    displayName: "Header"
+    
+    # Required child components/features
+    features:
+      - "Logo/branding area"
+      - "Desktop navigation menu"
+      - "Mobile hamburger menu (Sheet component)"
+      - "Theme switcher integration"
+      - "Responsive breakpoints"
+      - "Keyboard navigation support"
+      - "ARIA landmarks and labels"
+
+  Footer:
+    description: "Footer component with foundation info, links, and trust signals"
+    props:
+      optional:
+        - name: "className"
+          type: "string"
+          description: "Additional CSS classes"
+          
+        - name: "showTrustSignals"
+          type: "boolean"
+          default: true
+          description: "Whether to display trust/certification badges"
+          
+        - name: "showSocialLinks"
+          type: "boolean"
+          default: true
+          description: "Whether to display social media links"
+          
+    extends: "React.HTMLAttributes<HTMLElement>"
+    forwardRef: true
+    displayName: "Footer"
+    
+    features:
+      - "Multi-column link organization"
+      - "Social media links"
+      - "Trust signals (SSL, nonprofit status, ratings)"
+      - "Copyright and legal info"
+      - "Responsive grid layout"
+      - "Accessible link groups"
+      - "Semantic HTML structure"
+
+  MainLayout:
+    description: "Main layout wrapper with semantic structure and accessibility"
+    props:
+      required:
+        - name: "children"
+          type: "React.ReactNode"
+          description: "Page content to wrap"
+          
+      optional:
+        - name: "className"
+          type: "string"
+          description: "Additional CSS classes for main wrapper"
+          
+        - name: "headerProps"
+          type: "React.ComponentPropsWithoutRef<typeof Header>"
+          description: "Props to pass to Header component"
+          
+        - name: "footerProps"
+          type: "React.ComponentPropsWithoutRef<typeof Footer>"
+          description: "Props to pass to Footer component"
+          
+        - name: "skipToContentId"
+          type: "string"
+          default: "main-content"
+          description: "ID for skip navigation link target"
+          
+        - name: "fullWidth"
+          type: "boolean"
+          default: false
+          description: "Whether content should span full width"
+          
+    forwardRef: true
+    displayName: "MainLayout"
+    
+    features:
+      - "Skip to main content link"
+      - "Semantic HTML5 landmarks"
+      - "Flexible content area"
+      - "Min-height screen layout"
+      - "Header and Footer integration"
+      - "ARIA landmark roles"
+
+# Shared Types and Interfaces
+shared_types:
+  NavigationConfig:
+    description: "Configuration for navigation structure"
+    interface: |
+      interface NavigationConfig {
+        primary: NavItem[]
+        secondary?: NavItem[]
+        mobile?: {
+          showDonateButton?: boolean
+          groupedSections?: NavSection[]
+        }
+      }
+      
+      interface NavSection {
+        title: string
+        items: NavItem[]
+      }
+
+  FooterLinkGroup:
+    description: "Grouped footer links"
+    interface: |
+      interface FooterLinkGroup {
+        title: string
+        links: Array<{
+          href: string
+          label: string
+          external?: boolean
+        }>
+      }
+
+  TrustSignal:
+    description: "Trust/certification badges"
+    interface: |
+      interface TrustSignal {
+        icon: React.ComponentType
+        label: string
+        href?: string
+      }
+
+# Component Composition Rules
+composition:
+  - "Header must be usable standalone or within MainLayout"
+  - "Footer must be usable standalone or within MainLayout"
+  - "MainLayout must compose Header and Footer with prop forwarding"
+  - "All components must support theme variants through className/CSS variables"
+  - "Components must be tree-shakeable (proper exports)"
+
+# Export Requirements
+exports:
+  from_layout_folder:
+    - "export { Header } from './Header'"
+    - "export { Footer } from './Footer'"
+    - "export { MainLayout } from './MainLayout'"
+    - "export type { HeaderProps, FooterProps, MainLayoutProps } from './types'"
+  
+  barrel_export:
+    path: "components/layout/index.ts"
+    description: "Single export point for all layout components"
+
+# Flexibility Guidelines
+flexibility:
+  - "Navigation items can be hardcoded or passed as props"
+  - "Footer link structure can vary but must include key sections"
+  - "Trust signals can be different but must convey legitimacy"
+  - "Mobile menu implementation can vary (Sheet, Drawer, Overlay)"
+  - "Styling approach flexible within Tailwind + cn() pattern"
+  - "Animation/transition styles can vary by specialist focus"

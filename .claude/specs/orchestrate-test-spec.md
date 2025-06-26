@@ -20,6 +20,11 @@ Implement a TaskMaster task through multi-perspective exploration, where 5 speci
 - **auto_start_servers**: Whether to start development servers after orchestration
 - **reuse_worktrees**: Whether to reuse existing worktrees from previous runs
 
+## Important Clarification
+
+- **Task function**: The built-in capability to deploy autonomous AI agents
+- **MCP tools**: External tools starting with "mcp__" (do NOT use for agent deployment)
+
 ## Agent Specifications
 
 ### 1. Pre-Analysis Agent
@@ -99,7 +104,7 @@ Implement a TaskMaster task through multi-perspective exploration, where 5 speci
    - Access to contracts
    - Depth parameter for sub-agent count
    - Output directory for their implementations
-   - Use Task tool for deployment (not MCP tools)
+   - Use built-in Task function for deployment (not MCP tools)
 4. Monitor deployment progress via orchestration.log
 5. Coordinate parallel execution
 6. Track completion status
@@ -123,7 +128,7 @@ Implement a TaskMaster task through multi-perspective exploration, where 5 speci
 - Network optimization
 
 **Sub-Agent Deployment**:
-Deploy ${depth} Performance Sub-Agents using Task tool, each exploring different optimization strategies:
+Deploy ${depth} Performance Sub-Agents using built-in Task function, each exploring different optimization strategies:
 - Agent 1: Aggressive code splitting and lazy loading
 - Agent 2: SSG/ISR optimization with minimal client JS
 - Agent 3: Web Worker offloading for heavy computations
@@ -148,7 +153,7 @@ Deploy ${depth} Performance Sub-Agents using Task tool, each exploring different
 - Type safety
 
 **Sub-Agent Deployment**:
-Deploy ${depth} Architecture Sub-Agents using Task tool exploring different patterns:
+Deploy ${depth} Architecture Sub-Agents using built-in Task function exploring different patterns:
 - Agent 1: Compound component pattern with maximum flexibility
 - Agent 2: Atomic design with strict hierarchy
 - Agent 3: Feature-sliced design for modularity
@@ -173,7 +178,7 @@ Deploy ${depth} Architecture Sub-Agents using Task tool exploring different patt
 - Documentation quality
 
 **Sub-Agent Deployment**:
-Deploy ${depth} UX/DX Sub-Agents using Task tool focusing on experience:
+Deploy ${depth} UX/DX Sub-Agents using built-in Task function focusing on experience:
 - Agent 1: Maximum user delight with micro-interactions
 - Agent 2: Developer-first with excellent APIs
 - Agent 3: Balanced approach with great defaults
@@ -198,7 +203,7 @@ Deploy ${depth} UX/DX Sub-Agents using Task tool focusing on experience:
 - ARIA implementation
 
 **Sub-Agent Deployment**:
-Deploy ${depth} Accessibility Sub-Agents using Task tool with different approaches:
+Deploy ${depth} Accessibility Sub-Agents using built-in Task function with different approaches:
 - Agent 1: ARIA-first with comprehensive announcements
 - Agent 2: Semantic HTML maximalist approach
 - Agent 3: Progressive enhancement focus
@@ -223,7 +228,7 @@ Deploy ${depth} Accessibility Sub-Agents using Task tool with different approach
 - Future-facing patterns
 
 **Sub-Agent Deployment**:
-Deploy ${depth} Innovation Sub-Agents using Task tool exploring possibilities:
+Deploy ${depth} Innovation Sub-Agents using built-in Task function exploring possibilities:
 - Agent 1: Cutting-edge CSS and animations
 - Agent 2: AI-enhanced interactions
 - Agent 3: Novel state management approaches

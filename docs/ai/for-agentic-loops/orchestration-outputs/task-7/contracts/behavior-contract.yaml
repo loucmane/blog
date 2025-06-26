@@ -1,0 +1,155 @@
+# Behavior Contract for Task 7: Build Core Layout Components
+# This contract defines the functional behaviors and interactions required
+
+version: "1.0"
+task_id: 7
+title: "Build Core Layout Components"
+
+# Core Behavioral Requirements
+behaviors:
+  Header:
+    navigation:
+      desktop:
+        - "Display horizontal navigation menu on screens >= 768px"
+        - "Show all primary navigation items inline"
+        - "Highlight current/active page in navigation"
+        - "Support keyboard navigation (Tab, Enter, Arrow keys)"
+        - "Focus visible indicators on all interactive elements"
+        
+      mobile:
+        - "Show hamburger menu button on screens < 768px"
+        - "Open Sheet/Drawer from right side on menu click"
+        - "Trap focus within mobile menu when open"
+        - "Close menu on Escape key or outside click"
+        - "Close menu when navigation item clicked"
+        - "Animate menu open/close (respecting prefers-reduced-motion)"
+        
+    sticky_behavior:
+      - "When sticky=true, fix header to viewport top on scroll"
+      - "Add shadow or border when scrolled (not at top)"
+      - "Ensure smooth transition when becoming sticky"
+      - "Maintain layout stability (no content jump)"
+      
+    theme_integration:
+      - "Theme switcher always visible and accessible"
+      - "Support all 4 themes (light, dark, contrast, gentle)"
+      - "Persist theme choice to localStorage"
+      - "Apply theme instantly without page reload"
+      
+    accessibility:
+      - "Announce navigation state changes to screen readers"
+      - "Support keyboard-only navigation"
+      - "44px minimum touch targets for mobile"
+      - "Proper ARIA labels and roles"
+      - "Skip navigation functionality"
+
+  Footer:
+    layout_behavior:
+      - "Always stick to bottom of viewport (flex-grow on main)"
+      - "Responsive grid: 1 column mobile, multi-column desktop"
+      - "Links grouped logically with clear headings"
+      - "Social links open in new tab with proper rel attributes"
+      
+    interaction_patterns:
+      - "All links keyboard navigable"
+      - "Focus visible on all interactive elements"
+      - "Hover states for all links (color change)"
+      - "Social icons increase hit area to 44px minimum"
+      
+    trust_signals:
+      - "Display relevant certifications/badges"
+      - "Show nonprofit status prominently"
+      - "Include SSL/security indicators"
+      - "Link to transparency/impact reports"
+      
+    responsive_behavior:
+      - "Stack link columns on mobile"
+      - "Center-align content on small screens"
+      - "Maintain readability at all breakpoints"
+      - "Hide less critical links on mobile (progressive disclosure)"
+
+  MainLayout:
+    layout_structure:
+      - "Minimum height 100vh to push footer down"
+      - "Flexible main content area with flex-grow"
+      - "Proper semantic HTML5 structure"
+      - "Support both full-width and contained layouts"
+      
+    skip_navigation:
+      - "Hidden by default, visible on focus"
+      - "First focusable element on page"
+      - "Jumps directly to main content area"
+      - "Clearly visible when focused"
+      - "Works with screen readers"
+      
+    landmark_navigation:
+      - "Banner role on header"
+      - "Main role on content area" 
+      - "Contentinfo role on footer"
+      - "Navigation role on nav elements"
+      - "Proper heading hierarchy maintained"
+      
+    scroll_behavior:
+      - "Smooth scroll for in-page navigation"
+      - "Respect prefers-reduced-motion"
+      - "Focus management on route changes"
+      - "Scroll restoration on browser back/forward"
+
+# State Management Requirements
+state_management:
+  mobile_menu:
+    - "Track open/closed state (useState)"
+    - "Close on route change"
+    - "Close on escape key"
+    - "Prevent body scroll when open"
+    
+  scroll_position:
+    - "Track scroll position for sticky header"
+    - "Debounce scroll events for performance"
+    - "Clean up listeners on unmount"
+    
+  active_navigation:
+    - "Detect current route/page"
+    - "Update active state dynamically"
+    - "Support nested route matching"
+
+# Animation and Transition Behaviors
+animations:
+  required:
+    - "Respect prefers-reduced-motion setting"
+    - "No animations if user prefers reduced motion"
+    - "Smooth transitions for theme switching"
+    
+  optional_enhancements:
+    - "Subtle hover transitions (200-300ms)"
+    - "Mobile menu slide animation"
+    - "Sticky header transition"
+    - "Focus ring animations"
+    - "Loading states for dynamic content"
+
+# Error Handling Behaviors
+error_handling:
+  - "Graceful fallbacks for missing navigation data"
+  - "Handle theme switching errors silently"
+  - "Provide fallback for failed icon loads"
+  - "Ensure layout doesn't break with long text"
+  - "Handle missing/undefined props gracefully"
+
+# Performance Behaviors
+performance:
+  - "Lazy load social media icons"
+  - "Use CSS containment for layout stability"
+  - "Debounce scroll events (100ms)"
+  - "Memoize navigation items if passed as props"
+  - "Code split mobile menu component"
+
+# Testing Behaviors
+testable_behaviors:
+  - "Menu opens/closes correctly"
+  - "Keyboard navigation works throughout"
+  - "Active page highlighting accurate"
+  - "Theme switching persists"
+  - "Responsive breakpoints trigger correctly"
+  - "Focus trap works in mobile menu"
+  - "Skip link functions properly"
+  - "All links are reachable"

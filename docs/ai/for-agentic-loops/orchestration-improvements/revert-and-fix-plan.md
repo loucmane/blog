@@ -241,3 +241,31 @@ Spec file instructions aren't enough - the command file TASK blocks must also be
 - All agents deployed via Task tool only
 - No MCP tool usage for deployments
 - Clear execution pattern across instances
+
+### Final Test Results (2025-06-25 20:45-21:00)
+
+**Partial Success:**
+- ✅ Command executed properly
+- ✅ Todo list created (Phase 2.5 working)
+- ✅ Pre-Analysis Agent worked
+- ✅ No MCP tool attempts
+- ✅ No memory crashes with depth=2
+
+**Critical Failure:**
+- ❌ Master Orchestrator didn't deploy specialists
+- ❌ No sub-agents were deployed
+- ❌ Agents write ABOUT deployment instead of DOING it
+
+**New Understanding:**
+Even with explicit "built-in Task function" instructions, deployed agents don't actually USE the Task function. They document what should happen rather than making it happen.
+
+**Hypotheses:**
+1. Deployed agents might not have Task function access
+2. Need even more explicit instructions (e.g., "Call Task() with these parameters")
+3. Fundamental architecture mismatch - nested agent deployment might not be possible
+
+**Tomorrow's Options:**
+1. Test if deployed agents can access Task function
+2. Have main session deploy all 23 agents directly
+3. Redesign to have specialists create implementations directly without sub-agents
+4. Add example Task() calls to the spec

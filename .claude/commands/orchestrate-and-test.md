@@ -2,7 +2,7 @@
 
 Think deeply about this multi-perspective implementation challenge. You are about to guide a sophisticated orchestration process.
 
-**⚠️ CRITICAL DEPLOYMENT RULE**: ALL agents MUST be deployed using Task tool ONLY. Do NOT use MCP tools (zen, claude-code-bridge, taskmaster-ai, etc.) for agent deployment.
+**⚠️ CRITICAL DEPLOYMENT RULE**: ALL agents MUST be deployed using the built-in Task function ONLY. Do NOT use MCP tools (zen, claude-code-bridge, taskmaster-ai, etc.) for agent deployment.
 
 **Variables:**
 
@@ -18,7 +18,7 @@ Parse the following arguments from "$ARGUMENTS":
 1. `task_id` - The TaskMaster task ID to implement (REQUIRED)
 2. `spec_file` - Path to the orchestration specification file (default: .claude/specs/orchestrate-test-spec.md)
 3. `specialists` - Which specialist perspectives to include (default: "all")
-4. `depth` - Number of sub-agents per specialist (default: 3)
+4. `depth` - Number of sub-agents per specialist (default: 2)
 5. `auto_start_servers` - Whether to start development servers after orchestration (default: true)
 6. `reuse_worktrees` - Whether to reuse existing worktrees from previous runs (default: false)
 
@@ -57,7 +57,7 @@ Deploy the Pre-Analysis Agent to generate implementation contracts:
 ```
 TASK: Deploy Pre-Analysis Agent using specification from orchestrate-test-spec.md
 
-CRITICAL: Use Task tool ONLY to deploy this agent. Do NOT use MCP tools like zen:chat, claude-code-bridge, or taskmaster-ai.
+CRITICAL: Use the built-in Task function to deploy this agent. Do NOT use MCP tools like zen:chat, claude-code-bridge, or taskmaster-ai.
 
 Context:
 - Task specification: [From task file]
@@ -77,7 +77,7 @@ Deploy the Master Orchestrator to coordinate specialist perspectives:
 ```
 TASK: Deploy Master Orchestrator using specification from orchestrate-test-spec.md
 
-CRITICAL: Use Task tool ONLY to deploy this agent. Do NOT use MCP tools like zen:chat, claude-code-bridge, or taskmaster-ai.
+CRITICAL: Use the built-in Task function to deploy this agent. Do NOT use MCP tools like zen:chat, claude-code-bridge, or taskmaster-ai.
 
 Context:
 - Task specification: [From task file]
@@ -86,7 +86,7 @@ Context:
 - Agent definition: Section 2 from orchestrate-test-spec.md
 
 The Master Orchestrator must:
-1. Use Task tool ONLY to deploy Specialist Orchestrators
+1. Use built-in Task function ONLY to deploy Specialist Orchestrators
 2. NOT use any MCP tools for agent deployment
 3. Coordinate deployment of selected Specialist Orchestrators:
    - Performance (if requested)
@@ -102,13 +102,13 @@ Deploy all selected Specialist Orchestrators simultaneously:
 ```
 TASK: Deploy [N] Specialist Orchestrators in parallel
 
-CRITICAL: Use Task tool ONLY for ALL agent deployments. Do NOT use MCP tools.
+CRITICAL: Use the built-in Task function for ALL agent deployments. Do NOT use MCP tools.
 
 For each selected specialist:
 - Load their definition from orchestrate-test-spec.md (Sections 3-7)
 - Create dedicated worktree
-- Deploy using Task tool with ${depth} sub-agents
-- Each Specialist MUST use Task tool to deploy their sub-agents
+- Deploy using built-in Task function with ${depth} sub-agents
+- Each Specialist MUST use built-in Task function to deploy their sub-agents
 - NO MCP tools (zen, claude-code-bridge, taskmaster-ai, etc.)
 - Monitor via orchestration.log
 ```
@@ -126,7 +126,7 @@ Context:
 - Contracts for compliance checking
 - Agent definition: Section 8 from orchestrate-test-spec.md
 
-Deploy using Task tool to analyze all implementations and create evaluation matrix.
+Deploy using built-in Task function to analyze all implementations and create evaluation matrix.
 ```
 
 **PHASE 8: SUMMARIZATION**
@@ -135,7 +135,7 @@ Deploy all Summarization Agents in parallel:
 ```
 TASK: Deploy 5 Summarization Agents using specifications from orchestrate-test-spec.md
 
-CRITICAL: Use Task tool ONLY for ALL agent deployments. Do NOT use MCP tools.
+CRITICAL: Use the built-in Task function for ALL agent deployments. Do NOT use MCP tools.
 
 Deploy simultaneously using Task tool:
 - Performance Summarizer (Section 9)
@@ -161,7 +161,7 @@ Context:
 - Contracts for compliance
 - Agent definition: Section 14 from orchestrate-test-spec.md
 
-Deploy using Task tool to create optimal implementation combining best elements.
+Deploy using built-in Task function to create optimal implementation combining best elements.
 ```
 
 **PHASE 10: SERVER MANAGEMENT**
@@ -172,11 +172,11 @@ If auto_start_servers is true:
 4. Generate comparison dashboard HTML
 
 **EXECUTION SUMMARY:**
-Total agents deployed: 28
+Total agents deployed: 23 (with default depth=2)
 - 1 Pre-Analysis Agent
 - 1 Master Orchestrator
 - 5 Specialist Orchestrators
-- 15 Sub-Agents (3 per specialist)
+- 10 Sub-Agents (2 per specialist)
 - 1 Evaluation Orchestrator
 - 5 Summarization Agents
 - 1 Synthesis Orchestrator

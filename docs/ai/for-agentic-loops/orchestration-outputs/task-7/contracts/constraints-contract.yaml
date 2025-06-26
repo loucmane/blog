@@ -1,0 +1,203 @@
+# Constraints Contract for Task 7: Build Core Layout Components
+# This contract defines performance, accessibility, and quality constraints
+
+version: "1.0"
+task_id: 7
+title: "Build Core Layout Components"
+
+# Performance Constraints
+performance:
+  lighthouse_scores:
+    performance: ">= 98"
+    accessibility: ">= 98"
+    best_practices: ">= 98"
+    seo: ">= 98"
+    
+  core_web_vitals:
+    LCP: "< 1.2s"  # Largest Contentful Paint
+    FID: "< 100ms" # First Input Delay
+    CLS: "< 0.1"   # Cumulative Layout Shift
+    
+  bundle_size:
+    Header: "< 15KB gzipped (including dependencies)"
+    Footer: "< 10KB gzipped (including dependencies)"
+    MainLayout: "< 5KB gzipped"
+    total_layout: "< 30KB gzipped for all layout components"
+    
+  runtime_performance:
+    - "No layout shifts during navigation"
+    - "Smooth 60fps animations"
+    - "Debounced scroll events (100ms minimum)"
+    - "Memoized expensive computations"
+    - "Virtual DOM updates minimized"
+    
+  loading_requirements:
+    - "Header must render within first paint"
+    - "No JavaScript required for basic layout"
+    - "Progressive enhancement for interactions"
+    - "Critical CSS inlined or loaded first"
+
+# Accessibility Constraints (WCAG 2.1 AA)
+accessibility:
+  keyboard_navigation:
+    - "All interactive elements keyboard accessible"
+    - "Logical tab order maintained"
+    - "Focus visible on all elements"
+    - "No keyboard traps"
+    - "Skip links functional"
+    
+  screen_reader_support:
+    - "Proper ARIA landmarks"
+    - "Meaningful link text (no 'click here')"
+    - "State changes announced"
+    - "Error messages associated with inputs"
+    - "Loading states announced"
+    
+  visual_requirements:
+    - "Color contrast >= 4.5:1 for normal text"
+    - "Color contrast >= 3:1 for large text"
+    - "Focus indicators with >= 3:1 contrast"
+    - "No color-only information"
+    - "Zoom to 200% without horizontal scroll"
+    
+  interaction_requirements:
+    - "Touch targets >= 44x44px"
+    - "Adequate spacing between targets"
+    - "No time limits on interactions"
+    - "Predictable navigation behavior"
+    - "Clear error recovery"
+
+# Theme Constraints
+theme_support:
+  required_themes:
+    - name: "light"
+      description: "Default warm minimalist theme"
+      
+    - name: "dark"
+      description: "Low-light viewing theme"
+      
+    - name: "contrast"
+      description: "High contrast for accessibility"
+      
+    - name: "gentle"
+      description: "Reduced visual stimulation"
+      
+  theme_requirements:
+    - "Instant theme switching"
+    - "No flash of wrong theme"
+    - "Persist user preference"
+    - "Respect system preference initially"
+    - "All components support all themes"
+
+# Browser Support Constraints
+browser_support:
+  modern_browsers:
+    - "Chrome/Edge: Last 2 versions"
+    - "Firefox: Last 2 versions"
+    - "Safari: Last 2 versions"
+    - "Mobile Safari: iOS 14+"
+    - "Chrome Mobile: Last 2 versions"
+    
+  progressive_enhancement:
+    - "Basic layout works without JavaScript"
+    - "CSS Grid with Flexbox fallback"
+    - "Modern CSS with fallbacks"
+    - "No dependency on bleeding-edge features"
+
+# Code Quality Constraints
+code_quality:
+  typescript:
+    - "Strict mode enabled"
+    - "No any types without justification"
+    - "Proper type exports"
+    - "Generic types where appropriate"
+    
+  react_patterns:
+    - "Must use forwardRef for all components"
+    - "Proper prop spreading"
+    - "Memoization where beneficial"
+    - "Clean effect cleanup"
+    - "No memory leaks"
+    
+  testing_coverage:
+    - "Minimum 80% code coverage"
+    - "All user interactions tested"
+    - "Accessibility tests included"
+    - "Responsive behavior tested"
+    - "Theme switching tested"
+
+# Design System Constraints
+design_system:
+  spacing:
+    - "Use design system spacing tokens"
+    - "Consistent padding/margins"
+    - "Mobile-first spacing adjustments"
+    
+  typography:
+    - "Use system font stack"
+    - "Readable font sizes (16px minimum)"
+    - "Proper heading hierarchy"
+    - "Line height for readability"
+    
+  colors:
+    - "Use CSS variables for all colors"
+    - "Support theme switching"
+    - "Accessible color combinations"
+    - "Consistent hover/focus states"
+
+# Mobile Constraints
+mobile_first:
+  breakpoints:
+    - "Base: 0-767px (mobile)"
+    - "md: 768px+ (tablet)"
+    - "lg: 1024px+ (desktop)"
+    - "xl: 1280px+ (large desktop)"
+    
+  requirements:
+    - "Touch-friendly interactions"
+    - "No hover-dependent functionality"
+    - "Optimized for slow connections"
+    - "Minimal JavaScript for mobile"
+    - "Responsive images"
+
+# Security Constraints
+security:
+  - "Sanitize all user inputs"
+  - "Proper rel attributes on external links"
+  - "No inline scripts"
+  - "CSP header compatible"
+  - "XSS prevention measures"
+
+# SEO Constraints
+seo:
+  - "Semantic HTML structure"
+  - "Proper heading hierarchy"
+  - "Descriptive link text"
+  - "Alt text for images"
+  - "Structured data support"
+  - "Fast initial page load"
+
+# Monitoring and Analytics
+monitoring:
+  required_tracking:
+    - "Navigation clicks"
+    - "Theme preference changes"
+    - "Mobile menu usage"
+    - "Error boundary triggers"
+    
+  performance_monitoring:
+    - "Core Web Vitals tracking"
+    - "JavaScript error logging"
+    - "Bundle size tracking"
+    - "Lighthouse CI integration"
+
+# Non-Negotiable Constraints
+critical_requirements:
+  - "Must maintain 98+ Lighthouse scores"
+  - "Must support all 4 themes perfectly"
+  - "Must be fully keyboard accessible"
+  - "Must work on 3G connections"
+  - "Must have 44px minimum touch targets"
+  - "Must use semantic HTML"
+  - "Must follow monorepo structure"
+  - "Must integrate with existing design system"

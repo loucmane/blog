@@ -1,0 +1,223 @@
+# Integration Contract for Task 7: Build Core Layout Components
+# This contract defines file structure, naming conventions, and integration patterns
+
+version: "1.0"
+task_id: 7
+title: "Build Core Layout Components"
+
+# File Structure Requirements
+file_structure:
+  base_path: "packages/web/src/components/layout"
+  
+  required_files:
+    - path: "Header.tsx"
+      description: "Header component with navigation"
+      exports: ["Header", "type HeaderProps"]
+      
+    - path: "Footer.tsx"
+      description: "Footer component with links and trust signals"
+      exports: ["Footer", "type FooterProps"]
+      
+    - path: "MainLayout.tsx"
+      description: "Main layout wrapper component"
+      exports: ["MainLayout", "type MainLayoutProps"]
+      
+    - path: "index.ts"
+      description: "Barrel export for all layout components"
+      content: |
+        // Layout component exports
+        export { Header } from './Header'
+        export { Footer } from './Footer'
+        export { MainLayout } from './MainLayout'
+        
+        // Type exports
+        export type { HeaderProps } from './Header'
+        export type { FooterProps } from './Footer'
+        export type { MainLayoutProps } from './MainLayout'
+        
+  optional_files:
+    - path: "MobileNav.tsx"
+      description: "Separate mobile navigation component (if extracted)"
+      
+    - path: "SkipLink.tsx"
+      description: "Skip navigation component (if extracted)"
+      
+    - path: "types.ts"
+      description: "Shared types for layout components"
+      
+    - path: "__tests__/"
+      description: "Component tests directory"
+
+# Import Patterns
+import_requirements:
+  order:
+    - "React and Next.js imports first"
+    - "External packages (lucide-react, etc)"
+    - "Internal monorepo packages (@minniewinnie/ui)"
+    - "Absolute imports (@/components, @/lib)"
+    - "Relative imports (only if necessary)"
+    - "Type imports last"
+    
+  examples:
+    Header: |
+      'use client'
+      
+      import * as React from 'react'
+      import Link from 'next/link'
+      import { Menu, X } from 'lucide-react'
+      import { ThemeSwitcher } from '@minniewinnie/ui'
+      import { Button } from '@/components/ui/button'
+      import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+      import { cn } from '@/lib/utils'
+      import type { HeaderProps } from './types'
+
+# Component Integration Patterns
+component_patterns:
+  forwardRef_usage:
+    description: "All layout components must use React.forwardRef"
+    pattern: |
+      const Component = React.forwardRef<HTMLElement, ComponentProps>(
+        ({ className, ...props }, ref) => {
+          // Component implementation
+        }
+      )
+      Component.displayName = 'ComponentName'
+
+  className_merging:
+    description: "Use cn() utility for className merging"
+    pattern: |
+      className={cn(
+        "base-classes",
+        conditionalClass && "conditional-classes",
+        className // User-provided className always last
+      )}
+
+  responsive_utilities:
+    description: "Mobile-first responsive design"
+    breakpoints:
+      - "Base styles (mobile): default"
+      - "Tablet styles: md: prefix (768px+)"
+      - "Desktop styles: lg: prefix (1024px+)"
+      - "Large desktop: xl: prefix (1280px+)"
+
+# Style Integration
+styling:
+  approach: "Tailwind CSS with design tokens"
+  
+  required_patterns:
+    - "Use CSS variables for theme-aware colors"
+    - "Use spacing tokens from design system"
+    - "Support all 4 theme variants"
+    - "Mobile-first responsive classes"
+    
+  theme_classes:
+    background: "bg-background"
+    foreground: "text-foreground"
+    primary: "text-primary bg-primary"
+    border: "border-border"
+    muted: "text-muted-foreground bg-muted"
+    
+  example: |
+    // Theme-aware styling
+    <header className="bg-background/95 backdrop-blur 
+                      supports-[backdrop-filter]:bg-background/60
+                      border-b border-border">
+      
+    // Responsive padding
+    <div className="px-4 md:px-6 lg:px-8">
+    
+    // Dark mode variant
+    <nav className="text-foreground dark:text-foreground">
+
+# Package Dependencies
+dependencies:
+  required:
+    "@minniewinnie/ui":
+      - "ThemeSwitcher component"
+      - "Theme tokens and types"
+      
+    "shadcn/ui components":
+      - "Sheet (for mobile menu)"
+      - "Button"
+      - "Any other UI primitives needed"
+      
+    "lucide-react":
+      - "Menu icon"
+      - "Social media icons"
+      - "Trust signal icons"
+      
+  utilities:
+    "@/lib/utils":
+      - "cn() function for className merging"
+      
+    "@/hooks":
+      - "useMediaQuery (if needed)"
+      - "Custom hooks for scroll, etc"
+
+# Integration with Existing System
+system_integration:
+  app_router:
+    - "Components must be marked 'use client' if using hooks/interactivity"
+    - "Support both app directory and potential pages usage"
+    - "Work with Next.js metadata system"
+    
+  layout_usage: |
+    // app/layout.tsx
+    import { MainLayout } from '@/components/layout'
+    
+    export default function RootLayout({ children }) {
+      return (
+        <html>
+          <body>
+            <MainLayout>
+              {children}
+            </MainLayout>
+          </body>
+        </html>
+      )
+    }
+    
+  page_usage: |
+    // For pages needing custom header/footer props
+    import { MainLayout } from '@/components/layout'
+    
+    export default function CustomPage() {
+      return (
+        <MainLayout 
+          headerProps={{ sticky: false }}
+          footerProps={{ showSocialLinks: false }}
+        >
+          <div>Page content</div>
+        </MainLayout>
+      )
+    }
+
+# Testing Integration
+testing:
+  structure:
+    - "__tests__/Header.test.tsx"
+    - "__tests__/Footer.test.tsx"
+    - "__tests__/MainLayout.test.tsx"
+    
+  patterns:
+    - "Test responsive behavior"
+    - "Test keyboard navigation"
+    - "Test theme switching"
+    - "Test accessibility features"
+    - "Use testing-library/react"
+
+# Build and Bundle Considerations
+build_optimization:
+  - "Components should be tree-shakeable"
+  - "Mobile menu can be code-split with dynamic import"
+  - "Icons can be lazy loaded"
+  - "CSS should be scoped and minimal"
+  - "Support SSR and SSG"
+
+# Migration Path
+migration:
+  from_existing:
+    - "Preserve existing component APIs where possible"
+    - "Maintain backward compatibility"
+    - "Update imports in existing pages"
+    - "Test all existing page layouts"

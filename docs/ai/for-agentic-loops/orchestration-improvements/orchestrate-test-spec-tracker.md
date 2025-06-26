@@ -303,3 +303,58 @@ Tracking the migration from inline prompts (898 lines) to external spec architec
 **File Size:** 188 lines (still under 200 threshold) ✅
 
 **Ready for Testing:** Command should now consistently use Task tool for all agent deployments.
+
+### Task Function Clarification Applied (20:15)
+
+**Changes Made:**
+1. Replaced "Task tool" → "built-in Task function" throughout both files
+2. Added "Important Clarification" section to spec
+3. Command file: 190 lines, Spec file: 355 lines (both safe)
+
+### Final Test Results (20:45-21:00)
+
+**What Worked:**
+- ✅ Command executed (not template)
+- ✅ Todo list created (Phase 2.5 working)
+- ✅ Pre-Analysis Agent deployed and created contracts
+- ✅ No MCP tool usage attempts
+- ✅ No memory crashes with depth=2
+
+**Critical Discovery:**
+- ❌ Master Orchestrator did NOT deploy specialists
+- ❌ No sub-agents were deployed
+- ❌ Master Orchestrator just wrote logs about deployment
+
+**Root Cause:**
+Deployed agents don't understand they should actually USE the Task function. They write ABOUT deployment instead of DOING deployment. Possible reasons:
+1. Deployed agents might not have access to Task function
+2. Instructions still not explicit enough about calling Task()
+3. Fundamental capability mismatch
+
+**Next Steps:**
+1. Test if deployed agents can even access Task function
+2. Consider having main session deploy all agents directly
+3. Add ultra-explicit instructions like "You MUST call Task() function"
+
+### Root Cause Confirmed by Deployed Agent (21:10)
+
+The Master Orchestrator agent itself explained why it failed:
+
+**Fundamental Limitation**: Agents deployed via Task function cannot deploy other agents. They either:
+1. Don't have access to the Task function themselves
+2. Interpret deployment instructions as documentation tasks
+3. Complete and return before sub-deployments can happen
+
+**Evidence**:
+- Master Orchestrator logged what it "deployed" but didn't create any agents
+- No specialist logs were created
+- No implementation directories were created
+- Agents write ABOUT deployment instead of DOING deployment
+
+**Confirmed Solutions**:
+1. **Direct Deployment**: Main session deploys all 23 agents directly
+2. **Single Comprehensive Agent**: One agent creates all implementations
+3. **Worktree-Based**: Create worktrees first, then deploy agents
+4. **Implementation-Only**: Agents focus on creating code, not deploying
+
+The orchestration architecture assumes nested deployment capability that doesn't exist.
