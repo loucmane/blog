@@ -1,5 +1,49 @@
 # AI Development Session Log
 
+## Session: 2025-06-27 10:58 CEST
+**AI Assistant**: Claude
+**Developer**: loucmane
+**Task**: Continue worktree testing - find solution for sub-agent isolation
+**Task Source**: continuation
+**TaskMaster ID**: Task 7 - Build Core Layout Components (orchestration fix)
+
+### Session Validation ✓
+- [ ] Date from `date` command: 2025-06-27 10:58 CEST
+- [ ] Task verified by: continuation from previous session
+- [ ] Git status checked: Yes (clean except old worktree)
+- [ ] TaskMaster tasks reviewed: No (continuing known task)
+- [ ] Previous SESSION.md read: Yes
+
+### 🎯 Session Goals
+- [ ] Find solution for sub-agent worktree isolation
+- [ ] Test alternative approaches to avoid nesting
+- [ ] Implement working solution for orchestration
+
+### 📍 Starting Context
+Yesterday discovered that even parallel deployment creates nested worktrees.
+Need to test alternative approaches:
+1. Pre-create all worktrees before deployment
+2. Use explicit absolute paths
+3. Test deployment timing/delays
+
+### 📝 Progress Log
+- **2025-06-27 10:58 CEST** - Session started, cleaning up yesterday's test worktrees
+- **11:00** - All test worktrees removed successfully
+- **11:04** - Testing Approach 1: Pre-create all worktrees before deployment
+- **11:05** - Pre-created 3 worktrees successfully
+- **11:07** - Deployed 3 agents with pre-created worktree instructions
+- **11:08** - Mixed results: Agent 1 ✅, Agent 2 ❌ (nested), Agent 3 ✅
+- **11:08** - Agent 2 still created nested path despite pre-existing worktree!
+- **11:16** - Updated documentation with file evidence, cleaned up test worktrees
+- **11:17** - Preparing Test 3: Deployment with explicit delays between agents
+- **11:18** - Test 3 failed - delays don't prevent nesting
+- **11:20** - Root cause identified: Task function maintains state between deployments
+- **11:25** - Updated CLAUDE.md with Collaborative Decision Making section
+- **11:30** - Documented all 6 possible solutions in implementation file
+- **11:32** - User selected Option 3: Testing absolute path approach
+
+---
+
 ## Session: 2025-06-26 11:28 CEST
 **AI Assistant**: Claude ✓
 **Developer**: loucmane

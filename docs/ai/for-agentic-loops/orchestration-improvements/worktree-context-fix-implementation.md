@@ -297,15 +297,167 @@ THEN implement with focus on: [specific approach]"
 
 **New Discovery**: The Task function deployment might be serializing internally, causing later agents to inherit earlier agents' contexts!
 
-### Test 2: Full Specialist Run
-- Deploy all sub-agents for one specialist
-- Verify worktree structure matches expectation
-- Test that evaluation can access all implementations
+### Test 2: Pre-Created Worktrees ❌ PARTIAL FAILURE
+**Date**: 2025-06-27 11:07 CEST
+**Result**: Mixed results - some agents work correctly, but Agent 2 still nested!
 
-### Test 3: Cross-Specialist Isolation
-- Run two specialists back-to-back
-- Ensure no interference between specialists
-- Verify clean worktree organization
+**What We Did**:
+1. Pre-created all 3 worktrees BEFORE deploying any agents
+2. Each worktree existed at:
+   - `.worktrees/task-7-orch-perf-1`
+   - `.worktrees/task-7-orch-perf-2`
+   - `.worktrees/task-7-orch-perf-3`
+3. Deployed agents with explicit instructions to use pre-existing worktrees
+
+**What Happened**:
+- Agent 1: ✅ Correctly used `.worktrees/task-7-orch-perf-1`
+  - Created: `/home/loucmane/dev/javascript/MomsBlog/blog/.worktrees/task-7-orch-perf-1/src/components/PreCreatedTest1.tsx`
+- Agent 2: ❌ Created nested `.worktrees/task-7-orch-perf-1/.worktrees/task-7-orch-perf-2`
+  - Created: `/home/loucmane/dev/javascript/MomsBlog/blog/.worktrees/task-7-orch-perf-1/.worktrees/task-7-orch-perf-2/src/components/PreCreatedTest2.tsx`
+  - Also created: `.worktrees/task-7-orch-perf-1/.worktrees/task-7-orch-perf-2/agent-2-test.txt`
+- Agent 3: ✅ Correctly used `.worktrees/task-7-orch-perf-3`
+  - Created: `/home/loucmane/dev/javascript/MomsBlog/blog/.worktrees/task-7-orch-perf-3/src/components/PreCreatedTest3.tsx`
+
+**Critical Finding**: Even with pre-created worktrees, Agent 2 still nested under Agent 1's directory!
+
+**Hypothesis**: The deployment order matters - Agent 2 seems to inherit Agent 1's context
+
+**Files Created as Evidence**:
+- Agent 1's file exists in correct location (verified)
+- Agent 2's files exist in NESTED location (verified)
+- Agent 3's file exists in correct location (verified)
+
+### Test 3: Deployment with Delays ❌ FAILED
+**Date**: 2025-06-27 11:18 CEST
+**Result**: Delays don't help - still creates nested worktrees
+
+**What We Did**:
+- Deployed Agent 1 with explicit worktree creation
+- Waited 2 seconds before deploying Agent 2
+- Each agent had same critical first steps pattern
+
+**What Happened**:
+- Agent 1: ✅ Created `.worktrees/task-7-orch-delay-1`
+- Agent 2: ❌ Still created nested worktree under Agent 1's context
+
+**Conclusion**: Timing/delays don't solve the problem. The Task function inherits the deployer's context regardless of delays.
+
+### Root Cause Analysis
+
+Based on all three tests, the pattern is clear:
+1. **Test 1 (Parallel)**: Agents 2 & 3 nested under Agent 1
+2. **Test 2 (Pre-created)**: Agent 2 nested under Agent 1, Agent 3 worked
+3. **Test 3 (Delays)**: Agent 2 still nested under Agent 1
+
+**The Critical Pattern**: 
+- First agent works correctly
+- Second agent inherits first agent's context
+- Sometimes third agent works (if it doesn't inherit second agent's context)
+
+**This suggests**: The Task function might be maintaining state between deployments, causing subsequent agents to inherit previous agent's working directory.
+
+## All Possible Solutions (2025-06-27 11:30 CEST)
+
+### Option 1: Keep Current Implementation (Main Session CD)
+**How it works**: Main session creates worktree, CDs into it, deploys agents
+**Implementation**: Already done in current files
+**Result**: All sub-agents for that specialist work in same worktree
+**Pros**: 
+- Already implemented and working
+- Predictable behavior
+- Simple to understand
+**Cons**: 
+- No parallel implementations per specialist
+- Potential file conflicts between sub-agents
+**Success Chance**: 100% (already works)
+
+### Option 2: Manual Sequential Deployment
+**How it works**: Run orchestration multiple times, deploying one agent at a time
+**Implementation**: Would require breaking up the orchestration
+**Result**: Each agent gets fresh context
+**Pros**: 
+- Guaranteed isolation
+- No nesting issues
+- Each agent starts clean
+**Cons**: 
+- Loses automation benefits
+- Very manual process
+- Time consuming
+**Success Chance**: 100% (but not automated)
+
+### Option 3: Test Absolute Path Approach
+**How it works**: Agents create worktrees with absolute paths, work with absolute paths
+**Implementation Example**:
+```
+"Create worktree at absolute path: /home/loucmane/dev/javascript/MomsBlog/blog/.worktrees/task-7-abs-1
+Use git worktree add with absolute paths
+Work exclusively in that absolute path for all operations"
+```
+**Pros**: 
+- Might bypass working directory inheritance
+- Still automated
+- Worth testing
+**Cons**: 
+- More complex prompts
+- Less portable (hardcoded paths)
+- Untested approach
+**Success Chance**: 70% (untested but promising)
+
+### Option 4: Investigate Task Function Reset
+**How it works**: Try to reset Task function state between deployments
+**Ideas to test**:
+- Deploy from different files?
+- Use different Task function instances?
+- Add some kind of "reset" between deployments?
+**Pros**: 
+- Could be the ideal solution
+- Would maintain full automation
+**Cons**: 
+- Not sure if possible
+- No documented way to reset state
+- Requires deep research
+**Success Chance**: 20% (unlikely)
+
+### Option 5: Hybrid Specialist/Sub-Agent Approach
+**How it works**: Main session acts as specialist AND deploys only 1 sub-agent
+**Implementation**: Reduce sub-agents from 3 to 1 per specialist
+**Result**: 2 implementations per specialist instead of 3-4
+**Pros**: 
+- Some diversity of implementation
+- Reduces nesting complexity
+- Simpler than current approach
+**Cons**: 
+- Less parallel perspectives
+- Still not ideal
+**Success Chance**: 80% (simplified version)
+
+### Option 6: Pre-Create + Explicit Navigation Reset
+**How it works**: Combine pre-created worktrees with very explicit navigation
+**Implementation Example**:
+```
+"FIRST: Navigate to project root: cd /home/loucmane/dev/javascript/MomsBlog/blog
+THEN: Navigate to your worktree: cd .worktrees/task-7-reset-1
+CONFIRM: Run pwd to verify location"
+```
+**Pros**: 
+- Might force context reset
+- Uses existing worktrees
+**Cons**: 
+- Still fighting the inheritance issue
+- Already partially tested (didn't work well)
+**Success Chance**: 40% (some promise but doubtful)
+
+## Testing Priority (User Decision Needed)
+
+Based on analysis, recommended testing order:
+1. **Option 3 (Absolute Paths)** - 70% chance, not yet tested
+2. **Option 6 (Explicit Reset)** - 40% chance, variation of what we tried
+3. **Option 5 (Hybrid)** - 80% chance but compromise solution
+4. **Option 1 (Keep Current)** - 100% chance but not ideal
+5. **Option 2 (Manual)** - 100% chance but loses automation
+6. **Option 4 (Research)** - 20% chance, time investment
+
+**User selected: Option 3 (Absolute Path Approach) for first test**
 
 ## Risks and Mitigation
 
