@@ -1,100 +1,94 @@
-# Task 7 Implementation Contracts
+# Implementation Contracts for Task 7: Build Core Layout Components
 
-These contracts define the requirements for building core layout components (Header, Footer, MainLayout) for the Animal Protection Foundation website.
+These contracts guide all agents implementing Task 7, ensuring consistency while allowing for diverse implementation approaches.
 
 ## Contract Files
 
-### 1. `interface-contract.yaml`
-Defines the component APIs and prop interfaces that all implementations must follow.
+### 1. interface-contract.yaml
+Defines the component APIs, props, types, and event handlers. All implementations must adhere to these interfaces to ensure compatibility.
 
-**Key Points:**
-- Header component with sticky behavior, navigation, emergency banner support
-- Footer with social links, trust signals, and multi-column layout
-- MainLayout wrapper with semantic HTML and accessibility features
-- All components use forwardRef and have proper TypeScript types
-- Support for theme switching and responsive design
+**Key Elements:**
+- Component prop definitions with types and defaults
+- TypeScript interfaces for all custom types
+- Event handler signatures
+- Accessibility requirements for each component
 
-### 2. `behavior-contract.yaml`
-Specifies the core functionality and behavioral requirements for each component.
+### 2. behavior-contract.yaml
+Specifies the functional requirements and user interaction patterns that must be implemented.
 
-**Key Points:**
-- Mobile-first responsive behavior with breakpoint at md (768px)
-- Keyboard navigation and focus management
-- 44x44px minimum touch targets
-- Sheet component for mobile navigation
-- Smooth animations and transitions
-- Performance targets (render < 50ms, menu open < 100ms)
+**Key Elements:**
+- Responsive behavior specifications
+- State management requirements
+- User interaction flows
+- Error handling strategies
+- Trauma-informed behavior patterns
 
-### 3. `integration-contract.yaml`
-Defines file structure, naming conventions, imports, and integration patterns.
+### 3. integration-contract.yaml
+Establishes file structures, import patterns, and integration requirements with the existing codebase.
 
-**Key Points:**
-- Files located in `packages/web/src/components/layout/`
-- Specific import order and conventions
-- Integration with shadcn/ui components (Sheet, Button)
-- Theme integration using CSS variables
-- Export patterns for tree-shaking
-- Testing and documentation requirements
+**Key Elements:**
+- File naming and location conventions
+- Import order and patterns
+- Theme integration approach
+- Testing requirements
+- Dependency specifications
 
-### 4. `constraints-contract.yaml`
-Sets performance budgets, browser support, and compliance standards.
+### 4. constraints-contract.yaml
+Sets performance budgets, compatibility requirements, and quality standards.
 
-**Key Points:**
-- Lighthouse scores >= 98 across all categories
-- WCAG 2.1 AA accessibility compliance
-- Bundle size limits (< 30KB total for layout components)
-- Support for four themes (Light, Dark, High Contrast, Gentle)
-- Browser support: Chrome 90+, Firefox 88+, Safari 14+
-- Mobile-first with specific breakpoints
+**Key Elements:**
+- Bundle size limits
+- Performance metrics (Core Web Vitals)
+- Browser compatibility matrix
+- Accessibility compliance levels
+- Code style requirements
 
-## Implementation Guidelines
+## Usage by Agents
 
-### For All Agents
+Each specialist agent should:
+1. Read all contracts before implementation
+2. Ensure their implementation satisfies all contract requirements
+3. Document any necessary deviations with justification
+4. Validate their work against the contracts
 
-1. **Read All Contracts**: Each contract provides different perspectives on the requirements
-2. **Maintain Compatibility**: Your implementation must work with other agents' code
-3. **Follow Conventions**: Use the established patterns from the codebase
-4. **Test Your Work**: Ensure your implementation meets the performance and accessibility standards
+## Key Considerations
 
-### Specialist Focus Areas
+### For Performance Specialists
+- Stay within bundle size budgets (40KB total for layout components)
+- Optimize for Core Web Vitals targets
+- Implement code splitting where beneficial
+- Ensure smooth 60fps scroll performance
 
-- **Performance Agent**: Focus on bundle size, render performance, code splitting
-- **Architecture Agent**: Focus on component structure, reusability, maintainability
-- **UX/DX Agent**: Focus on developer experience, intuitive APIs, documentation
-- **Accessibility Agent**: Focus on WCAG compliance, keyboard navigation, screen readers
-- **Innovation Agent**: Focus on creative solutions while maintaining compatibility
+### For Architecture Specialists
+- Follow the established monorepo structure
+- Use existing UI package components
+- Maintain clean separation of concerns
+- Ensure proper TypeScript typing
 
-### Key Requirements Summary
+### For UX/DX Specialists
+- Implement all responsive breakpoints
+- Ensure smooth user interactions
+- Provide helpful error messages
+- Create intuitive navigation patterns
 
-1. **Components to Build**:
-   - Header with desktop/mobile navigation
-   - Footer with links and trust signals
-   - MainLayout wrapper component
+### For Accessibility Specialists
+- Maintain WCAG 2.1 AA compliance
+- Implement proper ARIA labels and landmarks
+- Ensure keyboard navigation works perfectly
+- Test with screen readers
 
-2. **Must Support**:
-   - Four theme system
-   - Mobile-first responsive design
-   - 44x44px touch targets
-   - Keyboard navigation
-   - Screen reader compatibility
+### For Innovation Specialists
+- Consider progressive enhancement opportunities
+- Explore performance optimizations
+- Suggest improvements while maintaining contracts
+- Research best practices for trauma-informed design
 
-3. **Technical Requirements**:
-   - React 19.1.0 with forwardRef
-   - Next.js 15.3.3 App Router
-   - TypeScript strict mode
-   - Tailwind CSS with cn() utility
+## Contract Flexibility
 
-4. **Performance Targets**:
-   - 98+ Lighthouse scores
-   - < 30KB total bundle size
-   - < 50ms initial render
+While these contracts are comprehensive, they allow for:
+- Different implementation approaches
+- Creative solutions within constraints
+- Progressive enhancement beyond requirements
+- Innovation in user experience
 
-## Contract Validation
-
-Your implementation will be considered successful if it:
-- Implements all required props and features from `interface-contract.yaml`
-- Exhibits all behaviors specified in `behavior-contract.yaml`
-- Follows the patterns in `integration-contract.yaml`
-- Meets the standards in `constraints-contract.yaml`
-
-Remember: These contracts enable diversity in implementation while ensuring compatibility. Be creative within the boundaries!
+The contracts ensure compatibility and quality while not prescribing exact implementation details.

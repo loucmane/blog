@@ -1,265 +1,222 @@
 # Constraints Contract for Task 7: Build Core Layout Components
-# This contract defines performance budgets, browser support, and compliance standards
+# This contract defines performance, compatibility, and code quality constraints
 
-version: "1.0"
-task_id: 7
-title: "Build Core Layout Components"
-
-# Performance Constraints
-performance:
-  metrics:
-    first_contentful_paint: "< 1.2s"
-    largest_contentful_paint: "< 1.8s"
-    cumulative_layout_shift: "< 0.1"
-    first_input_delay: "< 100ms"
-    time_to_interactive: "< 3.5s"
-    
+performance_constraints:
   bundle_size:
     header_component: "< 15KB gzipped"
     footer_component: "< 10KB gzipped"
-    mainlayout_component: "< 5KB gzipped"
-    total_layout_bundle: "< 30KB gzipped"
-    
+    main_layout: "< 5KB gzipped"
+    mobile_menu: "< 10KB gzipped (including Sheet dependency)"
+    total_layout_bundle: "< 40KB gzipped"
+  
   runtime_performance:
-    initial_render: "< 50ms"
-    re_render: "< 16ms"
+    first_contentful_paint: "< 1.2s"
+    largest_contentful_paint: "< 1.8s"
+    cumulative_layout_shift: "< 0.05"
+    first_input_delay: "< 50ms"
+    time_to_interactive: "< 2.5s"
+  
+  specific_metrics:
+    header_render: "< 16ms"
     mobile_menu_open: "< 100ms"
     theme_switch: "< 50ms"
-    
-  lighthouse_scores:
-    performance: ">= 98"
-    accessibility: ">= 98"
-    best_practices: ">= 98"
-    seo: ">= 98"
+    scroll_handler: "Throttled to 16ms (60fps)"
+    emergency_banner_render: "< 100ms"
 
-# Browser Support
-browser_support:
-  minimum_versions:
+browser_compatibility:
+  minimum_support:
     chrome: "90+"
     firefox: "88+"
     safari: "14+"
     edge: "90+"
-    
-  mobile_browsers:
-    ios_safari: "14+"
-    chrome_android: "90+"
-    samsung_internet: "14+"
-    
-  required_features:
-    - "CSS Grid"
-    - "Flexbox"
-    - "CSS Variables"
-    - "IntersectionObserver"
-    - "ResizeObserver"
-    - "CSS backdrop-filter (with fallback)"
-    
+    mobile_chrome: "90+"
+    mobile_safari: "14+"
+  
+  feature_requirements:
+    - "CSS Grid support required"
+    - "CSS custom properties required"
+    - "IntersectionObserver for scroll behavior"
+    - "ResizeObserver for responsive behavior"
+    - "Flexbox with gap support"
+  
+  polyfills_needed:
+    - "None required for target browsers"
+    - "Optional: Smooth scroll behavior"
+  
   progressive_enhancement:
-    - "Blur effects degrade gracefully"
-    - "Animations respect prefers-reduced-motion"
-    - "JavaScript enhances but isn't required for navigation"
+    - "Core functionality works without JavaScript"
+    - "Theme switching requires JavaScript"
+    - "Mobile menu requires JavaScript"
+    - "Skip nav works without JavaScript"
 
-# Accessibility Standards
-accessibility:
+accessibility_constraints:
   wcag_compliance:
     level: "AA"
     version: "2.1"
-    
-  requirements:
-    color_contrast:
-      normal_text: "4.5:1 minimum"
-      large_text: "3:1 minimum"
-      interactive_elements: "3:1 minimum"
-      focus_indicators: "3:1 minimum"
-      
-    keyboard_navigation:
-      - "All interactive elements keyboard accessible"
-      - "Logical tab order"
-      - "No keyboard traps"
-      - "Visible focus indicators"
-      - "Skip links functional"
-      
-    screen_readers:
-      - "Semantic HTML structure"
-      - "ARIA landmarks properly labeled"
-      - "Meaningful link text"
-      - "Image alt text required"
-      - "Announce state changes"
-      
-    touch_targets:
-      minimum_size: "44x44px"
-      spacing: "8px minimum between targets"
-      
-    motion:
-      - "Respect prefers-reduced-motion"
-      - "Provide pause/stop controls for animations"
-      - "No auto-playing content"
-
-# Design Constraints
-design:
-  spacing:
-    - "Use spacing tokens from ui package"
-    - "Consistent padding/margins"
-    - "Mobile-first responsive design"
-    
-  typography:
-    - "Use typography tokens"
-    - "Minimum font size: 14px"
-    - "Line height: 1.5 minimum"
-    
-  colors:
-    - "Use theme CSS variables only"
-    - "No hardcoded color values"
-    - "Support all four themes"
-    
-  layout:
-    - "Max container width: 1280px"
-    - "Responsive breakpoints: sm(640px), md(768px), lg(1024px), xl(1280px)"
-    - "Mobile-first approach"
-
-# Technical Constraints
-technical:
-  react_version: "19.1.0"
-  nextjs_version: "15.3.3"
-  typescript: "strict mode"
+    testing: "Automated + manual required"
   
-  required_patterns:
-    - "Use forwardRef for all components"
-    - "Include displayName"
-    - "Type all props"
-    - "Use 'use client' directive where needed"
-    
-  forbidden_patterns:
-    - "No inline styles"
-    - "No !important in CSS"
-    - "No any types"
-    - "No console.logs in production"
-    
-  dependencies:
-    allowed:
-      - "@radix-ui/* (via shadcn/ui)"
-      - "lucide-react (for icons)"
-      - "class-variance-authority"
-      - "clsx"
-      - "tailwind-merge"
-      
-    forbidden:
-      - "No heavy UI libraries (Material-UI, Ant Design)"
-      - "No jQuery or similar"
-      - "No CSS-in-JS libraries"
-      - "No animation libraries over 10KB"
-
-# Content Constraints
-content:
-  navigation:
-    max_items_desktop: 7
-    max_items_mobile: 10
-    max_nesting_depth: 1
-    
-  footer:
-    max_link_sections: 5
-    max_links_per_section: 8
-    max_social_links: 6
-    
-  text_limits:
-    header_tagline: "50 characters max"
-    footer_description: "150 characters max"
-    link_text: "30 characters max"
-
-# Security Constraints
-security:
-  links:
-    - "External links must use rel='noopener noreferrer'"
-    - "Validate all URLs"
-    - "Sanitize user-generated content"
-    
-  content_security_policy:
-    - "No inline scripts"
-    - "No eval() usage"
-    - "Strict CSP headers"
-
-# SEO Constraints
-seo:
-  requirements:
-    - "Semantic HTML5 structure"
+  color_contrast:
+    normal_text: "4.5:1 minimum"
+    large_text: "3:1 minimum"
+    interactive_elements: "3:1 minimum"
+    focus_indicators: "3:1 minimum"
+  
+  keyboard_navigation:
+    - "All interactive elements reachable"
+    - "Logical tab order maintained"
+    - "No keyboard traps"
+    - "Skip links functional"
+    - "ESC key closes overlays"
+  
+  screen_reader:
     - "Proper heading hierarchy"
-    - "Meta tags support"
-    - "Schema.org markup ready"
-    - "Open Graph tags ready"
-    
-  performance:
-    - "Server-side rendering compatible"
-    - "No layout shifts"
-    - "Fast initial paint"
+    - "Landmarks correctly labeled"
+    - "Dynamic content announced"
+    - "Links have descriptive text"
+    - "Images have appropriate alt text"
+  
+  touch_targets:
+    minimum_size: "44x44px"
+    spacing: "8px minimum between targets"
+    exceptions: "Inline text links only"
 
-# Responsive Design Constraints
-responsive:
+code_style_constraints:
+  typescript:
+    strict_mode: true
+    no_any: true
+    no_implicit_any: true
+    explicit_return_types: true
+    exhaustive_switches: true
+  
+  react_patterns:
+    - "Functional components only"
+    - "Hooks for state management"
+    - "forwardRef for all components"
+    - "Proper prop spreading"
+    - "No inline function definitions in render"
+  
+  naming:
+    components: "PascalCase"
+    props: "camelCase"
+    types: "PascalCase"
+    constants: "UPPER_SNAKE_CASE"
+    files: "PascalCase.tsx for components"
+  
+  imports:
+    order:
+      - "React and Next.js"
+      - "External packages"
+      - "Monorepo packages"
+      - "Local absolute imports"
+      - "Local relative imports"
+      - "Types"
+    grouping: "Blank line between groups"
+    sorting: "Alphabetical within groups"
+
+security_constraints:
+  xss_prevention:
+    - "No dangerouslySetInnerHTML"
+    - "Sanitize any user input"
+    - "Escape special characters"
+    - "Use Next.js Link component"
+  
+  csp_compliance:
+    - "No inline styles"
+    - "No inline scripts"
+    - "External resources from allowlist only"
+  
+  external_links:
+    - "rel='noopener noreferrer' on all"
+    - "target='_blank' for external only"
+    - "Warn users about external navigation"
+
+seo_constraints:
+  semantic_html:
+    - "Proper heading hierarchy (h1-h6)"
+    - "Nav element for navigation"
+    - "Main element for content"
+    - "Footer element for footer"
+    - "Article/section where appropriate"
+  
+  meta_requirements:
+    - "Page title updates with navigation"
+    - "Description meta tag present"
+    - "Open Graph tags configured"
+    - "Twitter Card tags configured"
+    - "Canonical URLs set"
+  
+  structured_data:
+    - "Organization schema on footer"
+    - "SiteNavigationElement on header"
+    - "BreadcrumbList where applicable"
+
+responsive_constraints:
   breakpoints:
-    mobile: "< 768px"
-    tablet: "768px - 1023px"
-    desktop: ">= 1024px"
-    
-  requirements:
-    - "Mobile-first CSS"
-    - "No horizontal scrolling"
-    - "Readable at 200% zoom"
-    - "Works in portrait and landscape"
-    
-  testing_viewports:
-    - "320px (small mobile)"
-    - "375px (iPhone)"
-    - "768px (tablet)"
-    - "1024px (desktop)"
-    - "1440px (large desktop)"
+    mobile: "0-639px"
+    tablet: "640-1023px"
+    desktop: "1024px+"
+  
+  layout_rules:
+    - "Mobile-first approach required"
+    - "No horizontal scroll at any size"
+    - "Text remains readable when zoomed to 200%"
+    - "Images scale appropriately"
+    - "Touch targets grow on mobile"
+  
+  testing_requirements:
+    - "Test at all major breakpoints"
+    - "Test with browser zoom 50-200%"
+    - "Test in portrait and landscape"
+    - "Test with dynamic viewport (mobile browser chrome)"
 
-# Theme Constraints
-themes:
-  required_support:
-    - "Light (default)"
-    - "Dark"
-    - "High Contrast"
-    - "Gentle (trauma-informed)"
-    
-  implementation:
-    - "CSS variables for all colors"
+content_constraints:
+  text_content:
+    - "Foundation name consistent throughout"
+    - "Navigation labels clear and concise"
+    - "Error messages helpful and actionable"
+    - "Loading states have descriptive text"
+  
+  imagery:
+    - "Logo has text fallback"
+    - "Icons have labels or tooltips"
+    - "Decorative images marked as such"
+    - "Content images have descriptions"
+  
+  emergency_content:
+    - "Clear urgency indicators"
+    - "Action-oriented language"
+    - "Time-sensitive info prominent"
+    - "Contact information easily found"
+
+theme_constraints:
+  css_variables:
+    - "All colors from theme variables"
+    - "No hard-coded color values"
+    - "Proper variable fallbacks"
+    - "Theme-aware shadows and borders"
+  
+  theme_switching:
     - "No flash of unstyled content"
     - "Smooth transitions between themes"
-    - "Persist user preference"
-    - "Respect system preference"
+    - "Preferences persist across sessions"
+    - "System preference respected initially"
+  
+  gentle_theme_adaptations:
+    - "Reduce visual complexity"
+    - "Softer contrasts where appropriate"
+    - "Calmer color transitions"
+    - "Less aggressive CTAs"
 
-# Testing Constraints
-testing:
-  coverage:
-    unit_tests: ">= 80%"
-    integration_tests: "All critical paths"
-    accessibility_tests: "All components"
-    
-  required_tests:
-    - "Render without errors"
-    - "Prop validation"
-    - "Keyboard navigation"
-    - "Screen reader compatibility"
-    - "Responsive behavior"
-    - "Theme switching"
-    
-  performance_tests:
-    - "Bundle size regression"
-    - "Render performance"
-    - "Memory leaks"
-
-# Maintenance Constraints
-maintenance:
-  code_quality:
-    - "ESLint compliance"
-    - "Prettier formatting"
-    - "TypeScript strict mode"
-    - "No type errors"
-    
-  documentation:
-    - "JSDoc for complex functions"
-    - "README for setup"
-    - "Storybook for components"
-    
-  versioning:
-    - "Semantic versioning"
-    - "Changelog maintenance"
-    - "Migration guides"
+testing_constraints:
+  coverage_requirements:
+    unit_tests: "90% minimum"
+    integration_tests: "Required for all user flows"
+    accessibility_tests: "100% of components"
+    visual_regression: "All themes and breakpoints"
+  
+  test_patterns:
+    - "Test user interactions, not implementation"
+    - "Mock external dependencies"
+    - "Test error states and edge cases"
+    - "Test loading and empty states"
+    - "Test with different theme contexts"

@@ -1,197 +1,186 @@
 # Behavior Contract for Task 7: Build Core Layout Components
-# This contract defines the core functionality and behavioral requirements
+# This contract defines the functional requirements and interaction patterns
 
-version: "1.0"
-task_id: 7
-title: "Build Core Layout Components"
-
-# Core Behavioral Requirements
-behaviors:
-  Header:
-    navigation:
-      desktop:
-        - "Navigation items display horizontally on screens >= md breakpoint"
-        - "Links have hover states with smooth transitions"
-        - "Active/current page indication through styling"
-        - "Keyboard navigation with Tab/Shift+Tab"
-        - "Enter/Space activates links"
-        - "Focus indicators visible and clear (ring-2)"
-        
-      mobile:
-        - "Hamburger menu appears on screens < md breakpoint"
-        - "Sheet slides in from right side"
-        - "Menu items stack vertically with adequate spacing"
-        - "Touch targets minimum 44x44px"
-        - "Sheet closes on item selection"
-        - "Sheet closes on Escape key"
-        - "Focus trapped within open Sheet"
-        - "Focus returns to trigger button on close"
-        
-    sticky_behavior:
-      - "When sticky=true, header remains fixed at top on scroll"
-      - "Smooth transition when becoming sticky"
-      - "Z-index ensures header stays above content (z-50)"
-      - "Background blur effect when scrolled"
-      - "No layout shift when becoming sticky"
-      
-    theme_switcher:
-      - "Theme switcher always visible"
-      - "Accessible via keyboard"
-      - "Persists selection to localStorage"
-      - "No flash of unstyled content on reload"
-      - "Smooth theme transitions"
-      
-    emergency_banner:
-      - "Appears above main header when active"
-      - "Different visual styles for priority levels"
-      - "Dismissible with close button (if enabled)"
-      - "Dismissal persisted to sessionStorage"
-      - "Accessible announcements for screen readers"
-      - "Smooth slide-in animation"
-
-  Footer:
-    layout:
-      - "Responsive grid layout"
-      - "Mobile: Single column"
-      - "Tablet: 2 columns"
-      - "Desktop: 4-5 columns"
-      - "Consistent spacing between sections"
-      
-    links:
-      - "Grouped by logical categories"
-      - "Clear visual hierarchy with section headings"
-      - "Hover states for all interactive elements"
-      - "External links open in new tab with rel='noopener noreferrer'"
-      - "Keyboard navigable with proper focus order"
-      
-    social_links:
-      - "Icon buttons with adequate touch targets (44x44px)"
-      - "Accessible labels for screen readers"
-      - "Hover/focus states"
-      - "Open in new tabs"
-      
-    trust_signals:
-      - "Display certifications and badges"
-      - "Links to verification sources (when applicable)"
-      - "Visual consistency across different signals"
-      - "Responsive sizing"
-      
-    accessibility:
-      - "Semantic HTML structure"
-      - "ARIA landmarks (contentinfo)"
-      - "Proper heading hierarchy"
-      - "Color contrast compliance (4.5:1 minimum)"
-
-  MainLayout:
-    structure:
-      - "Flexbox layout with min-height: 100vh"
-      - "Header at top"
-      - "Main content area expands to fill space"
-      - "Footer pushed to bottom"
-      - "No content overflow issues"
-      
-    skip_navigation:
-      - "Skip link visually hidden by default"
-      - "Becomes visible on focus"
-      - "Jumps to main content area"
-      - "Styled prominently when visible"
-      - "Works with keyboard and screen readers"
-      
-    semantic_structure:
-      - "Proper HTML5 landmarks"
-      - "header[role='banner']"
-      - "main[role='main']"
-      - "footer[role='contentinfo']"
-      - "Unique IDs for jump targets"
-      
-    responsive:
-      - "Adapts to all screen sizes"
-      - "No horizontal scrolling"
-      - "Content remains accessible at 200% zoom"
-      - "Touch-friendly on mobile devices"
-
-# State Management
-state:
-  Header:
-    - "isMenuOpen: boolean - Mobile menu open state"
-    - "isSticky: boolean - Header sticky state (if needed)"
-    - "emergencyDismissed: boolean - Banner dismissal state"
+header_behavior:
+  responsive_navigation:
+    desktop:
+      - "Show full navigation links horizontally"
+      - "Theme switcher visible in navigation"
+      - "Logo click navigates to home"
+      - "Active page highlighted in nav"
+      - "Hover states on all interactive elements"
+    mobile:
+      - "Navigation collapses to hamburger menu at breakpoint"
+      - "Hamburger menu opens Sheet component from right"
+      - "Sheet contains vertical navigation"
+      - "Theme switcher remains visible outside menu"
+      - "Menu closes on navigation or outside click"
+      - "Menu traps focus when open"
+      - "ESC key closes menu"
     
-  Footer:
-    - "No internal state required"
-    
-  MainLayout:
-    - "No internal state required"
+  scroll_behavior:
+    sticky_enabled:
+      - "Header sticks to top on scroll down"
+      - "Adds shadow/border on scroll"
+      - "Optional: Hide on scroll down, show on scroll up"
+    sticky_disabled:
+      - "Header scrolls with page content"
+      - "No position changes on scroll"
+  
+  accessibility:
+    - "Skip navigation link as first focusable element"
+    - "Logical tab order through navigation"
+    - "Mobile menu announces open/close state"
+    - "Current page indicated with aria-current"
+    - "All interactive elements keyboard accessible"
+    - "44px minimum touch targets on mobile"
 
-# Event Handlers
-events:
-  Header:
-    - "onMenuToggle: Handle mobile menu open/close"
-    - "onMenuItemClick: Close menu and navigate"
-    - "onEscapeKey: Close mobile menu"
-    - "onBannerDismiss: Hide emergency banner"
-    - "onLogoClick: Navigate to home"
-    
-  Footer:
-    - "onSocialClick: Track social link clicks (optional)"
-    - "onLinkClick: Handle internal navigation"
-    
-  MainLayout:
-    - "No specific event handlers required"
+footer_behavior:
+  layout:
+    - "Responsive grid layout for link sections"
+    - "Social links as icon buttons"
+    - "Trust signals centered and prominent"
+    - "Copyright and tax info at bottom"
+  
+  interactions:
+    - "All links keyboard navigable"
+    - "External links open in new tab with proper rel attributes"
+    - "Social links have hover tooltips"
+    - "Trust signal badges may link to verification"
+  
+  responsive:
+    mobile:
+      - "Single column layout"
+      - "Collapsible sections optional"
+      - "Social links remain horizontal"
+    tablet:
+      - "Two column layout for link sections"
+      - "Trust signals in single row"
+    desktop:
+      - "Multi-column layout (4-5 columns)"
+      - "All content visible without scrolling"
 
-# Performance Requirements
-performance:
-  - "Header renders within 50ms"
-  - "Mobile menu opens within 100ms"
-  - "No layout shifts during interactions"
-  - "Smooth 60fps animations"
-  - "Efficient re-renders (memo where appropriate)"
-  - "Sheet component lazy loaded for mobile"
+main_layout_behavior:
+  structure:
+    - "Flexbox column layout (header, main, footer)"
+    - "Main content area expands to fill viewport"
+    - "Footer pushed to bottom (no floating)"
+    - "Proper semantic HTML structure"
+  
+  skip_navigation:
+    - "Hidden by default, visible on focus"
+    - "Jumps to main content area"
+    - "Styled prominently when focused"
+    - "Works with screen readers"
+  
+  emergency_banner:
+    when_visible:
+      - "Appears above header"
+      - "Pushes all content down"
+      - "Remains visible on scroll"
+      - "Dismissible with preference memory"
+      - "Auto-expires based on date"
+    urgency_levels:
+      low: "Info background, dismissible"
+      medium: "Warning background, prominent CTA"
+      high: "Alert background, sticky, large CTA"
+      critical: "Danger background, not dismissible, immediate action"
+  
+  content_sensitivity:
+    - "Integrates with content gate system"
+    - "Progressive disclosure for sensitive content"
+    - "User preferences remembered"
+    - "Clear content warnings"
+    - "Safe viewing modes"
 
-# Error Handling
+state_management:
+  mobile_menu:
+    state: "isOpen: boolean"
+    actions:
+      - "open(): Sets isOpen to true"
+      - "close(): Sets isOpen to false"
+      - "toggle(): Inverts isOpen"
+    side_effects:
+      - "Body scroll locked when open"
+      - "Focus trapped in menu"
+      - "Closes on route change"
+  
+  theme:
+    state: "current: 'light' | 'dark' | 'contrast' | 'gentle'"
+    persistence: "localStorage"
+    system_preference: "Detected on mount"
+    keyboard_shortcut: "Ctrl/Cmd + Shift + T cycles themes"
+  
+  scroll:
+    state: "scrollY: number, isScrollingUp: boolean"
+    threshold: "5px minimum before triggering"
+    debounce: "Throttled to 16ms (60fps)"
+  
+  emergency_banner:
+    state: "dismissed: boolean, expiryTime: Date | null"
+    persistence: "sessionStorage or localStorage"
+    auto_dismiss: "Based on urgency level"
+
 error_handling:
-  - "Graceful fallbacks for missing props"
-  - "Default navigation items if none provided"
-  - "Handle missing logo gracefully"
-  - "Catch navigation errors"
-  - "Console warnings for development only"
+  navigation_failures:
+    - "Graceful fallback for failed navigation"
+    - "Error boundary around navigation components"
+    - "Offline mode indicators"
+  
+  image_loading:
+    - "Logo fallback to text"
+    - "Social icon fallbacks"
+    - "Progressive image loading"
+  
+  theme_switching:
+    - "Fallback to system preference"
+    - "Handle localStorage errors"
+    - "Prevent flash of wrong theme"
+  
+  mobile_menu:
+    - "Handle touch and click events"
+    - "Prevent double-toggle on fast clicks"
+    - "Close on browser back button"
 
-# Testing Requirements
-testing:
-  unit_tests:
-    - "Component renders without errors"
-    - "Props are properly applied"
-    - "Keyboard navigation works correctly"
-    - "Mobile menu opens/closes properly"
-    - "Skip navigation functions"
-    - "Theme switcher integration"
-    
-  integration_tests:
-    - "Layout components work together"
-    - "Navigation between pages"
-    - "Responsive behavior at breakpoints"
-    - "Focus management in mobile menu"
-    
-  accessibility_tests:
-    - "ARIA landmarks present"
-    - "Keyboard navigation complete"
-    - "Screen reader announcements"
-    - "Color contrast passes"
-    - "Touch targets adequate size"
+user_interactions:
+  keyboard:
+    - "Tab: Navigate through focusable elements"
+    - "Enter/Space: Activate buttons and links"
+    - "Escape: Close mobile menu or dialogs"
+    - "Arrow keys: Navigate menu items (optional)"
+  
+  mouse:
+    - "Hover states on all interactive elements"
+    - "Click outside to close mobile menu"
+    - "No hover-only functionality"
+  
+  touch:
+    - "44px minimum touch targets"
+    - "Swipe to close mobile menu (optional)"
+    - "No touch-only functionality"
+    - "Proper touch event handling"
+  
+  screen_reader:
+    - "Announce navigation state changes"
+    - "Read navigation hierarchy correctly"
+    - "Announce current page"
+    - "Describe trust signals"
 
-# Animation and Transitions
-animations:
-  Header:
-    - "Sticky transition: 200ms ease-out"
-    - "Menu icon hover: 150ms ease"
-    - "Link hover: 150ms color transition"
-    - "Emergency banner slide: 300ms ease-out"
-    
-  Mobile_Menu:
-    - "Sheet slide-in: 300ms ease-out"
-    - "Backdrop fade: 200ms ease"
-    - "Item hover: 150ms background transition"
-    
-  Footer:
-    - "Link hover: 150ms color transition"
-    - "Social icon hover: 200ms transform scale(1.05)"
+trauma_informed_behavior:
+  gentle_interactions:
+    - "No sudden layout shifts"
+    - "Smooth transitions (respecting prefers-reduced-motion)"
+    - "Predictable navigation patterns"
+    - "Clear visual feedback"
+  
+  content_warnings:
+    - "Integrated into layout when needed"
+    - "Non-intrusive but clear"
+    - "User control maintained"
+    - "Easy exit options"
+  
+  emergency_appeals:
+    - "Balance urgency with sensitivity"
+    - "Provide clear actions"
+    - "Include support resources"
+    - "Respect user boundaries"

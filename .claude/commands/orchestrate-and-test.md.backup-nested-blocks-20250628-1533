@@ -102,6 +102,7 @@ Context available:
 **PHASE 6: SPECIALIST ORCHESTRATOR ROLES**
 You will now sequentially assume each Specialist Orchestrator role and deploy their sub-agents:
 
+```
 SEQUENTIAL ROLE EXECUTION
 
 For each specialist in ${specialists}, you will:
@@ -113,86 +114,87 @@ For each specialist in ${specialists}, you will:
 CRITICAL: Use the built-in Task function for ALL agent deployments. Do NOT use MCP tools.
 
 Execute these roles in order (only if included in ${specialists}):
+```
 
 ## Performance Specialist Role
 If "performance" is in ${specialists}:
-
-TASK: Deploy Performance Specialist Orchestrator
+```
+ROLE: Performance Specialist Orchestrator
 
 You are now the Performance Specialist. Your focus: speed, efficiency, and optimization.
 
 Actions:
 1. Review performance-related contracts from contracts/
-2. Deploy ${depth} Performance Sub-Agents IN PARALLEL using the built-in Task function
-   - CRITICAL: Deploy all sub-agents in a single message with multiple Task invocations for parallel execution
+2. Deploy ${depth} Performance Sub-Agents using the built-in Task function
    - Load deployment instructions from spec file Section "Sub-Agent Deployment Instructions" → "3. Performance Sub-Agents"
    - Each sub-agent gets its own isolated worktree
 3. Log deployments to orchestration.log
 4. Transition to next role
+```
 
 ## Architecture Specialist Role
 If "architecture" is in ${specialists}:
-
-TASK: Deploy Architecture Specialist Orchestrator
+```
+ROLE: Architecture Specialist Orchestrator
 
 You are now the Architecture Specialist. Your focus: modularity, scalability, and maintainability.
 
 Actions:
 1. Review architecture-related contracts from contracts/
-2. Deploy ${depth} Architecture Sub-Agents IN PARALLEL using the built-in Task function
-   - CRITICAL: Deploy all sub-agents in a single message with multiple Task invocations for parallel execution
+2. Deploy ${depth} Architecture Sub-Agents using the built-in Task function
    - Load deployment instructions from spec file Section "Sub-Agent Deployment Instructions" → "4. Architecture Sub-Agents"
    - Each sub-agent gets its own isolated worktree
 3. Log deployments to orchestration.log
 4. Transition to next role
+```
 
 ## UX/DX Specialist Role
 If "ux" is in ${specialists}:
-
-TASK: Deploy UX/DX Specialist Orchestrator
+```
+ROLE: UX/DX Specialist Orchestrator
 
 You are now the UX/DX Specialist. Your focus: developer and user experience.
 
 Actions:
 1. Review UX/DX-related contracts from contracts/
-2. Deploy ${depth} UX/DX Sub-Agents IN PARALLEL using the built-in Task function
-   - CRITICAL: Deploy all sub-agents in a single message with multiple Task invocations for parallel execution
+2. Deploy ${depth} UX/DX Sub-Agents using the built-in Task function
    - Load deployment instructions from spec file Section "Sub-Agent Deployment Instructions" → "5. UX/DX Sub-Agents"
    - Each sub-agent gets its own isolated worktree
 3. Log deployments to orchestration.log
 4. Transition to next role
+```
 
 ## Accessibility Specialist Role
 If "accessibility" is in ${specialists}:
-
-TASK: Deploy Accessibility Specialist Orchestrator
+```
+ROLE: Accessibility Specialist Orchestrator
 
 You are now the Accessibility Specialist. Your focus: WCAG compliance and inclusive design.
 
 Actions:
 1. Review accessibility-related contracts from contracts/
-2. Deploy ${depth} Accessibility Sub-Agents IN PARALLEL using the built-in Task function
-   - CRITICAL: Deploy all sub-agents in a single message with multiple Task invocations for parallel execution
+2. Deploy ${depth} Accessibility Sub-Agents using the built-in Task function
    - Load deployment instructions from spec file Section "Sub-Agent Deployment Instructions" → "6. Accessibility Sub-Agents"
    - Each sub-agent gets its own isolated worktree
 3. Log deployments to orchestration.log
 4. Transition to next role
+```
 
 ## Innovation Specialist Role
 If "innovation" is in ${specialists}:
-
-TASK: Deploy Innovation Specialist Orchestrator
+```
+ROLE: Innovation Specialist Orchestrator
 
 You are now the Innovation Specialist. Your focus: emerging patterns and future-proofing.
 
 Actions:
 1. Review innovation opportunities in contracts/
-2. Deploy ${depth} Innovation Sub-Agents IN PARALLEL using the built-in Task function
-   - CRITICAL: Deploy all sub-agents in a single message with multiple Task invocations for parallel execution
+2. Deploy ${depth} Innovation Sub-Agents using the built-in Task function
    - Load deployment instructions from spec file Section "Sub-Agent Deployment Instructions" → "7. Innovation Sub-Agents"
    - Each sub-agent gets its own isolated worktree
 3. Log deployments to orchestration.log
 4. Complete specialist phases
+```
 
 Note: Execute each role completely before moving to the next. This is sequential, not parallel.
 
@@ -220,7 +222,7 @@ TASK: Deploy 5 Summarization Agents using specifications from orchestrate-test-s
 
 CRITICAL: Use the built-in Task function for ALL agent deployments. Do NOT use MCP tools.
 
-Deploy ALL 5 summarizers IN A SINGLE MESSAGE with multiple Task invocations for true parallel execution:
+Deploy simultaneously using Task tool:
 - Performance Summarizer (Section 9)
 - Architecture Summarizer (Section 10)
 - UX/DX Summarizer (Section 11)

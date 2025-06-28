@@ -1,246 +1,201 @@
 # Integration Contract for Task 7: Build Core Layout Components
-# This contract defines file structure, naming conventions, imports, and integration patterns
+# This contract defines file structures, import patterns, and testing requirements
 
-version: "1.0"
-task_id: 7
-title: "Build Core Layout Components"
-
-# File Structure Requirements
 file_structure:
-  base_path: "packages/web/src/components/layout"
+  components:
+    location: "packages/web/src/components/layout/"
+    files:
+      - "Header.tsx           # Main header component"
+      - "Footer.tsx           # Main footer component"
+      - "MainLayout.tsx       # Layout wrapper component"
+      - "MobileMenu.tsx       # Mobile navigation component"
+      - "SkipNavigation.tsx   # Skip to content component"
+      - "EmergencyBanner.tsx  # Emergency appeal banner"
+      - "index.ts             # Barrel exports"
   
-  required_files:
-    - path: "Header.tsx"
-      description: "Header component implementation"
-      exports: ["Header", "type HeaderProps"]
-      
-    - path: "Footer.tsx"
-      description: "Footer component implementation"
-      exports: ["Footer", "type FooterProps"]
-      
-    - path: "MainLayout.tsx"
-      description: "Main layout wrapper component"
-      exports: ["MainLayout", "type MainLayoutProps"]
-      
-    - path: "index.ts"
-      description: "Barrel export for all layout components"
-      exports: ["Header", "Footer", "MainLayout", "all type exports"]
-      
-  optional_files:
-    - path: "types.ts"
-      description: "Shared types for layout components"
-      note: "Can also be defined in each component file"
-      
-    - path: "MobileMenu.tsx"
-      description: "Extracted mobile menu component"
-      note: "Can be part of Header.tsx"
-      
-    - path: "EmergencyBanner.tsx"
-      description: "Standalone emergency banner component"
-      note: "Can be part of Header.tsx"
+  hooks:
+    location: "packages/web/src/hooks/"
+    files:
+      - "use-mobile-menu.ts   # Mobile menu state"
+      - "use-scroll-header.ts # Header scroll behavior"
+      - "use-emergency-banner.ts # Banner state management"
+  
+  types:
+    location: "packages/web/src/types/"
+    files:
+      - "layout.ts # Layout-specific types"
+    integration:
+      - "Import from existing ui.ts for base types"
+      - "Import from emergency.ts for emergency types"
+  
+  tests:
+    location: "packages/web/src/components/layout/__tests__/"
+    files:
+      - "Header.test.tsx"
+      - "Footer.test.tsx"
+      - "MainLayout.test.tsx"
+      - "MobileMenu.test.tsx"
+      - "integration.test.tsx"
 
-# Import Conventions
-imports:
-  order:
-    - "React and Next.js imports"
-    - "External library imports"
-    - "Monorepo package imports"
-    - "Local component imports"
-    - "Utility imports"
-    - "Type imports"
+import_patterns:
+  component_imports:
+    # React and Next.js - always first
+    - "import * as React from 'react'"
+    - "import Link from 'next/link'"
+    - "import { useRouter } from 'next/navigation'"
     
-  examples:
-    Header: |
-      'use client'
-      
-      import * as React from 'react'
-      import Link from 'next/link'
-      import { Menu, X } from 'lucide-react'
-      import { ThemeSwitcher } from '@minniewinnie/ui'
-      import { Button } from '@/components/ui/button'
-      import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-      import { cn } from '@/lib/utils'
-      import type { HeaderProps } from './types'
-      
-    Footer: |
-      import * as React from 'react'
-      import Link from 'next/link'
-      import { Facebook, Twitter, Instagram, Youtube, Heart, Shield, Award } from 'lucide-react'
-      import { cn } from '@/lib/utils'
-      import type { FooterProps } from './types'
-      
-    MainLayout: |
-      import * as React from 'react'
-      import { Header } from './Header'
-      import { Footer } from './Footer'
-      import { cn } from '@/lib/utils'
-      import type { MainLayoutProps } from './types'
+    # External packages - alphabetical
+    - "import { Menu, X, ChevronDown } from 'lucide-react'"
+    
+    # Monorepo packages
+    - "import { ThemeSwitcher } from '@minniewinnie/ui'"
+    
+    # Local absolute imports
+    - "import { Button } from '@/components/ui/button'"
+    - "import { Sheet, SheetContent } from '@/components/ui/sheet'"
+    - "import { cn } from '@/lib/utils'"
+    
+    # Local relative imports
+    - "import { useScrollHeader } from '../../hooks/use-scroll-header'"
+    
+    # Types - always last
+    - "import type { HeaderProps } from '@/types/layout'"
+  
+  export_patterns:
+    named_exports:
+      - "export { Header }"
+      - "export { Footer }"
+      - "export { MainLayout }"
+    
+    barrel_exports:
+      - "export * from './Header'"
+      - "export * from './Footer'"
+      - "export * from './MainLayout'"
+    
+    type_exports:
+      - "export type { HeaderProps, FooterProps, MainLayoutProps }"
 
-# Theme Integration
+naming_conventions:
+  components:
+    pattern: "PascalCase"
+    examples:
+      - "Header"
+      - "MobileMenu"
+      - "EmergencyBanner"
+  
+  files:
+    pattern: "PascalCase for components, kebab-case for others"
+    examples:
+      - "Header.tsx"
+      - "use-mobile-menu.ts"
+      - "layout.types.ts"
+  
+  props_interfaces:
+    pattern: "ComponentNameProps"
+    examples:
+      - "HeaderProps"
+      - "FooterProps"
+      - "MainLayoutProps"
+  
+  hooks:
+    pattern: "use-kebab-case"
+    examples:
+      - "useMobileMenu"
+      - "useScrollHeader"
+      - "useEmergencyBanner"
+
 theme_integration:
   css_variables:
-    - "Use CSS variables for all colors"
-    - "Access via Tailwind classes (bg-background, text-foreground)"
-    - "Support all four themes automatically"
-    
-  tailwind_classes:
-    required_patterns:
-      - "bg-background" # Instead of hardcoded colors
-      - "text-foreground" # For primary text
-      - "border-border" # For borders
-      - "text-muted-foreground" # For secondary text
-      
-  theme_aware_components:
-    - "ThemeSwitcher from @minniewinnie/ui"
-    - "Must be integrated in Header"
-    - "Respect system preferences"
+    - "Use theme-aware Tailwind classes"
+    - "Examples: bg-background, text-foreground, border-border"
+    - "Never use hard-coded colors"
+  
+  component_adaptation:
+    - "Header shadow varies by theme"
+    - "Mobile menu background respects theme"
+    - "Trust signals adapt to contrast theme"
+    - "Emergency banner colors theme-aware"
+  
+  gentle_theme_specific:
+    - "Softer shadows on header"
+    - "Reduced visual weight on borders"
+    - "Muted emergency banner colors"
+    - "Calmer transition effects"
 
-# Component Integration Patterns
-integration_patterns:
-  with_shadcn_ui:
-    - "Use Sheet component for mobile menu"
-    - "Use Button component for interactive elements"
-    - "Import from @/components/ui/*"
-    - "Follow shadcn/ui conventions"
-    
-  with_next_js:
-    - "Use 'use client' directive for interactive components"
-    - "Use next/link for navigation"
-    - "Use next/image for optimized images (if logos)"
-    - "Support Next.js App Router"
-    
-  with_monorepo:
-    - "Import ThemeSwitcher from @minniewinnie/ui"
-    - "Import shared types from @minniewinnie/shared"
-    - "Use design tokens from ui package"
+testing_requirements:
+  unit_tests:
+    - "Component renders correctly"
+    - "Props are applied properly"
+    - "ARIA attributes present"
+    - "Event handlers called"
+    - "Responsive behavior works"
+  
+  integration_tests:
+    - "Navigation flow works end-to-end"
+    - "Theme switching affects all components"
+    - "Mobile menu interaction complete"
+    - "Skip navigation functions"
+    - "Emergency banner lifecycle"
+  
+  accessibility_tests:
+    - "Keyboard navigation complete"
+    - "Screen reader announces correctly"
+    - "Color contrast passes WCAG AA"
+    - "Focus management works"
+    - "Touch targets are 44px+"
+  
+  visual_regression:
+    - "All themes render correctly"
+    - "Responsive breakpoints work"
+    - "No layout shifts occur"
+    - "Animations respect preferences"
 
-# Naming Conventions
-naming:
-  components:
-    - "PascalCase for component names"
-    - "Include displayName for all components"
-    - "Match filename to component name"
-    
-  props:
-    - "ComponentNameProps pattern"
-    - "Export type alongside component"
-    
-  variables:
-    - "camelCase for variables and functions"
-    - "Boolean props start with 'is', 'has', 'should'"
-    - "Event handlers start with 'on'"
-    
-  css_classes:
-    - "Use cn() utility for conditional classes"
-    - "Kebab-case for custom CSS classes"
-    - "Semantic class names"
+  performance_tests:
+    - "First paint under threshold"
+    - "No cumulative layout shift"
+    - "Bundle size within budget"
+    - "Lighthouse score 98+"
 
-# Export Requirements
-exports:
-  individual_components: |
-    // Header.tsx
-    export { Header }
-    export type { HeaderProps }
-    
-    // Footer.tsx
-    export { Footer }
-    export type { FooterProps }
-    
-    // MainLayout.tsx
-    export { MainLayout }
-    export type { MainLayoutProps }
-    
-  barrel_export: |
-    // index.ts
-    export { Header } from './Header'
-    export { Footer } from './Footer'
-    export { MainLayout } from './MainLayout'
-    export type { HeaderProps, FooterProps, MainLayoutProps } from './types'
+dependency_requirements:
+  existing_ui_components:
+    - "Sheet (from shadcn/ui)"
+    - "Button (from shadcn/ui)"
+    - "Separator (optional)"
+    - "Tooltip (for trust signals)"
+  
+  ui_package:
+    - "ThemeSwitcher component"
+    - "Theme context/hooks"
+    - "Design tokens"
+  
+  shared_package:
+    - "Type definitions"
+    - "Validation schemas"
+    - "Constants"
+  
+  external:
+    - "lucide-react for icons"
+    - "clsx/cn for classnames"
+    - "@radix-ui/react-slot (if needed)"
 
-# Testing Integration
-testing:
-  structure:
-    - "Co-locate tests with components"
-    - "Use *.test.tsx naming convention"
-    - "Test files in same directory as component"
-    
-  test_ids:
-    - "Use data-testid for test targeting"
-    - "Semantic naming: 'header-nav-desktop'"
-    - "Avoid production data-testid attributes"
-
-# Documentation Requirements
-documentation:
-  component_level:
-    - "JSDoc comments for complex props"
-    - "Usage examples in comments"
-    - "Accessibility notes where relevant"
-    
-  storybook:
-    - "Create *.stories.tsx for each component"
-    - "Include all prop variations"
-    - "Document interactive behaviors"
-
-# Build and Bundle Considerations
-build:
-  tree_shaking:
-    - "Ensure proper named exports"
-    - "Avoid barrel exports with side effects"
-    - "Use ES modules"
-    
-  code_splitting:
-    - "Sheet component should be dynamically imported"
-    - "Consider lazy loading heavy icons"
-    - "Optimize for initial page load"
-
-# Migration Path
-migration:
-  from_existing:
-    - "Preserve existing component APIs where possible"
-    - "Add deprecation warnings for breaking changes"
-    - "Provide codemod scripts if needed"
-    
-  versioning:
-    - "Use semantic versioning for updates"
-    - "Document breaking changes"
-    - "Maintain backwards compatibility"
-
-# Integration Examples
-examples:
-  basic_page: |
-    // app/page.tsx
-    import { MainLayout } from '@/components/layout'
-    
-    export default function HomePage() {
-      return (
-        <MainLayout>
-          <div className="container mx-auto px-4 py-8">
-            <h1>Welcome to Animal Protection Foundation</h1>
-          </div>
-        </MainLayout>
-      )
-    }
-    
-  with_custom_props: |
-    // app/about/page.tsx
-    <MainLayout
-      headerProps={{ sticky: false }}
-      footerProps={{ showTrustSignals: true }}
-      className="about-page"
-    >
-      <AboutContent />
-    </MainLayout>
-    
-  standalone_header: |
-    // components/CustomLayout.tsx
-    import { Header, Footer } from '@/components/layout'
-    
-    export function CustomLayout({ children }) {
-      return (
-        <>
-          <Header navItems={customNavItems} />
-          <div className="custom-wrapper">{children}</div>
-          <Footer />
-        </>
-      )
-    }
+code_patterns:
+  forwardRef_usage:
+    - "All layout components use React.forwardRef"
+    - "Proper TypeScript typing for refs"
+    - "displayName set on all components"
+  
+  prop_spreading:
+    - "Spread props after className merge"
+    - "Omit handled props from spread"
+    - "Maintain prop priority order"
+  
+  event_handling:
+    - "Stable references with useCallback"
+    - "Proper cleanup in useEffect"
+    - "Event delegation where appropriate"
+  
+  performance:
+    - "Memoize expensive computations"
+    - "Lazy load non-critical components"
+    - "Use React.memo for pure components"
+    - "Debounce scroll events"

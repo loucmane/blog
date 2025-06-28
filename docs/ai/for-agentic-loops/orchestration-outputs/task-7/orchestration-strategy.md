@@ -1,132 +1,152 @@
-# Master Orchestrator Strategy for Task 7: Build Core Layout Components
+# Task 7 Orchestration Strategy
+## Build Core Layout Components
 
-## Contract Analysis Summary
+### Executive Summary
+This orchestration will deploy 5 specialist orchestrators with 2 sub-agents each to create diverse implementations of the core layout components (Header, Footer, MainLayout). Each specialist brings unique expertise while adhering to the defined contracts.
 
-After analyzing all four implementation contracts, I've identified key patterns and requirements that will guide the multi-perspective implementation strategy.
+### Task Overview
+- **Task ID**: 7
+- **Title**: Build Core Layout Components
+- **Components**: Header, Footer, MainLayout, MobileMenu, SkipNavigation, EmergencyBanner
+- **Key Requirements**: 
+  - Mobile-first responsive design
+  - 98+ Lighthouse scores
+  - WCAG 2.1 AA compliance
+  - Trauma-informed design patterns
+  - Four-theme system support
 
-### Key Insights from Contracts
+### Contract Analysis Summary
 
-1. **Interface Contract Highlights**:
-   - Components must use forwardRef pattern
-   - Flexible prop interfaces allowing customization
-   - Emergency banner support for urgent appeals
-   - Theme integration required
-   - 44px minimum touch targets
+#### Interface Contract
+- Well-defined component props with TypeScript types
+- ForwardRef pattern required for all components
+- Comprehensive event handlers for interactions
+- Support for emergency banner and content sensitivity features
 
-2. **Behavior Contract Highlights**:
-   - Mobile-first responsive design (md breakpoint)
-   - Keyboard navigation and focus management critical
-   - Smooth animations (60fps requirement)
-   - Sheet component for mobile menu
-   - Performance targets: <50ms render time
+#### Behavior Contract
+- Mobile menu using Sheet component from shadcn/ui
+- Sticky header with scroll behavior options
+- Keyboard navigation and screen reader support
+- State management for theme, menu, and emergency banner
 
-3. **Integration Contract Highlights**:
-   - Clear file structure in packages/web/src/components/layout
-   - Must integrate with existing shadcn/ui components
-   - Theme CSS variables required
-   - Next.js 15 App Router compatibility
-   - Proper import ordering conventions
+#### Integration Contract
+- Components in `packages/web/src/components/layout/`
+- Strict import order: React → External → Monorepo → Local → Types
+- Testing requirements: unit, integration, accessibility, visual regression
+- Existing UI components: Sheet, Button, ThemeSwitcher
 
-4. **Constraints Contract Highlights**:
-   - Bundle size limit: 30KB total for all layout components
-   - 98+ Lighthouse scores required
-   - WCAG 2.1 AA compliance mandatory
-   - Four theme system support
-   - Mobile-first with specific breakpoints
+#### Constraints Contract
+- Performance: <40KB total bundle, LCP <1.8s, CLS <0.05
+- Browser support: Chrome 90+, Firefox 88+, Safari 14+
+- Accessibility: WCAG 2.1 AA, 44px touch targets, 4.5:1 contrast
+- Code style: TypeScript strict mode, functional components only
 
-## Specialist Deployment Strategy
+### Specialist Deployment Strategy
 
-### Execution Order and Rationale
+#### 1. Performance Specialist (Focus: Speed & Efficiency)
+**Sub-Agent 1**: Render optimization and initial load
+- Aggressive code splitting for mobile menu
+- Lazy loading non-critical components
+- Optimized bundle sizes with tree shaking
+- CSS-in-JS vs utility-first performance comparison
 
-I will deploy specialists in this sequential order to maximize efficiency and build upon each other's work:
+**Sub-Agent 2**: Bundle efficiency and runtime performance
+- Web Worker for theme calculations
+- Virtualized navigation for many items
+- Prefetching strategies for navigation
+- Progressive enhancement approach
 
-1. **Performance Specialist** (First)
-   - Establishes lightweight foundation
-   - Sets bundle size boundaries
-   - Creates optimized base that others can enhance
+#### 2. Architecture Specialist (Focus: Scalability & Patterns)
+**Sub-Agent 1**: Component modularity and composition
+- Compound component pattern for Header/Footer
+- Slot-based architecture for extensibility
+- Provider pattern for layout context
+- Clean separation of concerns
 
-2. **Architecture Specialist** (Second)  
-   - Builds robust component structure
-   - Implements proper composition patterns
-   - Creates extensible foundation for features
+**Sub-Agent 2**: System scalability and state management
+- Centralized layout state management
+- Event-driven architecture for components
+- Plugin system for extending functionality
+- Micro-frontend ready architecture
 
-3. **UX/DX Specialist** (Third)
-   - Enhances developer and user experience
-   - Adds intuitive APIs and interactions
-   - Improves on architectural foundation
+#### 3. UX/DX Specialist (Focus: Developer & User Experience)
+**Sub-Agent 1**: Developer ergonomics and API design
+- Intuitive prop APIs with sensible defaults
+- Comprehensive JSDoc documentation
+- Storybook stories for all variations
+- Copy-paste friendly examples
 
-4. **Accessibility Specialist** (Fourth)
-   - Ensures WCAG compliance
-   - Adds comprehensive keyboard support
-   - Enhances existing implementations
+**Sub-Agent 2**: User interactions and polish
+- Micro-interactions for delightful UX
+- Smart defaults for common use cases
+- Progressive disclosure patterns
+- Contextual help and tooltips
 
-5. **Innovation Specialist** (Last)
-   - Explores cutting-edge features
-   - Adds creative enhancements
-   - Pushes boundaries within constraints
+#### 4. Accessibility Specialist (Focus: Inclusive Design)
+**Sub-Agent 1**: WCAG compliance and screen readers
+- ARIA-first implementation approach
+- Live regions for dynamic content
+- Comprehensive keyboard navigation
+- Screen reader optimized markup
 
-### Deployment Parameters per Specialist
+**Sub-Agent 2**: Assistive technology and adaptability
+- High contrast mode enhancements
+- Reduced motion preferences
+- Voice navigation optimization
+- Cognitive accessibility features
 
-Each specialist will deploy 2 sub-agents (depth=2) with specific focus areas:
+#### 5. Innovation Specialist (Focus: Future-Facing Solutions)
+**Sub-Agent 1**: Cutting-edge patterns and APIs
+- View Transitions API for navigation
+- Container queries for responsive design
+- CSS Houdini for custom properties
+- Web Components shadow DOM exploration
 
-#### Performance Specialist Sub-Agents:
-1. **Bundle Optimization Agent**: Focus on code splitting, lazy loading, and minimal runtime
-2. **SSG/Performance Agent**: Focus on static generation, caching, and render optimization
+**Sub-Agent 2**: AI-enhanced and experimental features
+- Smart navigation prediction
+- Adaptive layouts based on usage
+- Voice-controlled navigation
+- Gesture-based interactions
 
-#### Architecture Specialist Sub-Agents:
-1. **Component Modularity Agent**: Focus on composition patterns and separation of concerns
-2. **System Scalability Agent**: Focus on extensibility and maintainability patterns
+### Execution Plan
 
-#### UX/DX Specialist Sub-Agents:
-1. **Developer Ergonomics Agent**: Focus on intuitive APIs and excellent documentation
-2. **User Experience Agent**: Focus on smooth interactions and delightful details
+#### Phase 1: Parallel Specialist Deployment (Sequential)
+1. Deploy Performance Specialist → 2 sub-agents
+2. Deploy Architecture Specialist → 2 sub-agents  
+3. Deploy UX/DX Specialist → 2 sub-agents
+4. Deploy Accessibility Specialist → 2 sub-agents
+5. Deploy Innovation Specialist → 2 sub-agents
 
-#### Accessibility Specialist Sub-Agents:
-1. **WCAG Compliance Agent**: Focus on standards compliance and screen reader support
-2. **Keyboard Navigation Agent**: Focus on comprehensive keyboard support and focus management
+#### Phase 2: Implementation Generation
+Each sub-agent will:
+1. Create their own git worktree (task-7-orch-{specialist}-{number})
+2. Implement all 6 components with their perspective
+3. Include tests and documentation
+4. Log progress to orchestration.log
 
-#### Innovation Specialist Sub-Agents:
-1. **Creative Interactions Agent**: Focus on modern CSS and animation techniques
-2. **Future Features Agent**: Focus on progressive enhancement and experimental APIs
+#### Phase 3: Evaluation & Synthesis
+1. Evaluation Orchestrator reviews all 10 implementations
+2. 5 Summarizers extract key learnings per perspective
+3. Synthesis Orchestrator combines best elements
 
-## Key Coordination Points
+### Success Metrics
+- All 10 implementations pass contract validation
+- Each brings unique value from its perspective
+- Synthesis creates optimal combined solution
+- 98+ Lighthouse scores achieved
+- WCAG 2.1 AA compliance verified
 
-### Shared Requirements All Specialists Must Follow:
-1. Use forwardRef pattern for all components
-2. Integrate with existing shadcn/ui Sheet component
-3. Support all four themes via CSS variables
-4. Maintain <30KB total bundle size
-5. Ensure 44px minimum touch targets
-6. Include emergency banner capability
+### Risk Mitigation
+- Memory management: 2 sub-agents per specialist (vs 3)
+- Absolute paths prevent worktree nesting issues
+- Clear contract boundaries ensure compatibility
+- Comprehensive logging for debugging
 
-### Critical Integration Points:
-1. **Mobile Menu**: Must use shadcn/ui Sheet component
-2. **Theme Switcher**: Must integrate from @minniewinnie/ui package
-3. **Navigation**: Support both hardcoded and prop-based approaches
-4. **Performance**: Initial render must be <50ms
+### Timeline Estimate
+- Specialist deployment: ~10 minutes
+- Implementation generation: ~20 minutes
+- Evaluation and synthesis: ~10 minutes
+- Total orchestration: ~40 minutes
 
-### Risk Mitigation:
-1. Each implementation must be independently functional
-2. All must follow the same prop interfaces from contracts
-3. Bundle size monitoring critical for Performance specialist
-4. Accessibility specialist must not break performance gains
-
-## Success Metrics
-
-Each specialist's implementations will be evaluated on:
-1. Contract compliance (100% required)
-2. Specialist focus area excellence
-3. Integration compatibility
-4. Performance within constraints
-5. Code quality and documentation
-
-## Monitoring and Logging
-
-Throughout execution, I will:
-1. Log each specialist role transition
-2. Track sub-agent deployments
-3. Monitor worktree creation
-4. Ensure sequential execution
-5. Validate contract compliance
-
-This strategy ensures diverse yet compatible implementations that can be synthesized into an optimal solution combining the best elements from each perspective.
+### Next Steps
+Proceed to Phase 6 to begin sequential specialist deployment, starting with the Performance Specialist role.
