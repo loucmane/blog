@@ -1,222 +1,361 @@
 # Constraints Contract for Task 7: Build Core Layout Components
-# This contract defines performance, compatibility, and code quality constraints
+# This contract defines performance budgets, compatibility requirements, and quality standards
+# that all specialist agents must adhere to when implementing layout components
 
-performance_constraints:
-  bundle_size:
-    header_component: "< 15KB gzipped"
-    footer_component: "< 10KB gzipped"
-    main_layout: "< 5KB gzipped"
-    mobile_menu: "< 10KB gzipped (including Sheet dependency)"
-    total_layout_bundle: "< 40KB gzipped"
+# Performance Budgets
+
+javascript_bundle:
+  initial_load:
+    max_size: "100KB"
+    critical_components:
+      - "Header: <15KB gzipped"
+      - "Footer: <10KB gzipped"
+      - "MainLayout: <5KB gzipped"
+      - "MobileNav: <20KB gzipped (lazy loaded)"
+    measurement: "Gzipped size after minification"
   
-  runtime_performance:
-    first_contentful_paint: "< 1.2s"
-    largest_contentful_paint: "< 1.8s"
-    cumulative_layout_shift: "< 0.05"
-    first_input_delay: "< 50ms"
-    time_to_interactive: "< 2.5s"
+  total_size:
+    max_size: "300KB"
+    includes: "All layout components + dependencies"
+    excludes: "Third-party analytics, external fonts"
+
+css_budget:
+  critical_css:
+    max_size: "20KB"
+    inline: true
+    includes:
+      - "Above-the-fold styles"
+      - "Layout structure"
+      - "Theme variables"
   
-  specific_metrics:
-    header_render: "< 16ms"
-    mobile_menu_open: "< 100ms"
-    theme_switch: "< 50ms"
+  total_css:
+    max_size: "50KB"
+    optimization:
+      - "Remove unused Tailwind classes via PurgeCSS"
+      - "Merge duplicate rules"
+      - "Minify and compress"
+
+performance_metrics:
+  core_web_vitals:
+    LCP: 
+      target: "<1.2s"
+      measurement: "Largest header/hero element"
+      optimization: "Preload critical resources"
+    
+    FID:
+      target: "<100ms"
+      measurement: "Mobile menu interaction"
+      optimization: "Use passive event listeners"
+    
+    CLS:
+      target: "<0.1"
+      measurement: "Layout shift from sticky header"
+      optimization: "Reserve space for dynamic content"
+  
+  lighthouse_scores:
+    performance: "98+"
+    accessibility: "98+"
+    best_practices: "98+"
+    seo: "98+"
+  
+  specific_interactions:
+    header_render: "<16ms"
+    mobile_menu_open: "<100ms"
+    theme_switch: "<50ms"
     scroll_handler: "Throttled to 16ms (60fps)"
-    emergency_banner_render: "< 100ms"
 
-browser_compatibility:
-  minimum_support:
-    chrome: "90+"
-    firefox: "88+"
-    safari: "14+"
-    edge: "90+"
-    mobile_chrome: "90+"
-    mobile_safari: "14+"
-  
-  feature_requirements:
-    - "CSS Grid support required"
-    - "CSS custom properties required"
-    - "IntersectionObserver for scroll behavior"
-    - "ResizeObserver for responsive behavior"
-    - "Flexbox with gap support"
-  
-  polyfills_needed:
-    - "None required for target browsers"
-    - "Optional: Smooth scroll behavior"
-  
-  progressive_enhancement:
-    - "Core functionality works without JavaScript"
-    - "Theme switching requires JavaScript"
-    - "Mobile menu requires JavaScript"
-    - "Skip nav works without JavaScript"
+# Browser Compatibility Requirements
 
-accessibility_constraints:
-  wcag_compliance:
-    level: "AA"
-    version: "2.1"
-    testing: "Automated + manual required"
+browser_support:
+  desktop:
+    chrome: "Last 2 versions (currently 119+)"
+    firefox: "Last 2 versions (currently 119+)"
+    safari: "Last 2 versions (currently 17+)"
+    edge: "Last 2 versions (currently 119+)"
+  
+  mobile:
+    ios_safari: "iOS 14+"
+    chrome_android: "Last 3 versions"
+    samsung_internet: "Last 2 versions"
+  
+  required_features:
+    css:
+      - "CSS Grid (display: grid)"
+      - "Flexbox with gap support"
+      - "CSS Custom Properties (--var)"
+      - "Transform and Transition"
+      - "Clamp() for fluid typography"
+    
+    javascript:
+      - "ES6+ syntax (transpiled via Next.js)"
+      - "Intersection Observer API"
+      - "ResizeObserver API"
+      - "matchMedia API"
+      - "localStorage API"
+
+progressive_enhancement:
+  javascript_disabled:
+    - "Core navigation remains functional via SSR"
+    - "Content fully accessible"
+    - "Forms submit to server endpoints"
+    - "Theme defaults to system preference"
+  
+  css_disabled:
+    - "Semantic HTML provides basic structure"
+    - "Content remains readable"
+    - "Navigation links functional"
+  
+  slow_network:
+    - "Critical CSS inlined in <head>"
+    - "Above-fold content prioritized"
+    - "Progressive image loading with blur placeholders"
+    - "Service worker caching for repeat visits"
+
+# Accessibility Standards
+
+wcag_compliance:
+  level: "WCAG 2.1 AA minimum"
   
   color_contrast:
     normal_text: "4.5:1 minimum"
-    large_text: "3:1 minimum"
-    interactive_elements: "3:1 minimum"
-    focus_indicators: "3:1 minimum"
+    large_text: "3:1 minimum (18pt+)"
+    ui_components: "3:1 minimum"
+    focus_indicators: "3:1 minimum against all backgrounds"
   
   keyboard_navigation:
-    - "All interactive elements reachable"
-    - "Logical tab order maintained"
-    - "No keyboard traps"
-    - "Skip links functional"
-    - "ESC key closes overlays"
+    requirements:
+      - "All interactive elements keyboard accessible"
+      - "Visible focus indicators (2px minimum)"
+      - "Logical tab order (left-to-right, top-to-bottom)"
+      - "No keyboard traps"
+      - "Skip links as first focusable element"
+    
+    shortcuts:
+      - "ESC closes mobile menu and modals"
+      - "Enter/Space activates buttons"
+      - "Arrow keys for menu navigation (optional)"
   
   screen_reader:
-    - "Proper heading hierarchy"
-    - "Landmarks correctly labeled"
-    - "Dynamic content announced"
-    - "Links have descriptive text"
-    - "Images have appropriate alt text"
+    requirements:
+      - "Proper heading hierarchy (single h1, sequential)"
+      - "ARIA landmarks for all major sections"
+      - "Live regions for dynamic updates"
+      - "Descriptive link text (no 'click here')"
+      - "Meaningful alt text for informative images"
+    
+    announcements:
+      - "Mobile menu open/close state"
+      - "Theme changes"
+      - "Loading states"
+      - "Error messages"
   
   touch_targets:
     minimum_size: "44x44px"
     spacing: "8px minimum between targets"
     exceptions: "Inline text links only"
+    implementation: "Use padding, not just visual size"
 
-code_style_constraints:
-  typescript:
-    strict_mode: true
-    no_any: true
-    no_implicit_any: true
-    explicit_return_types: true
-    exhaustive_switches: true
-  
-  react_patterns:
-    - "Functional components only"
-    - "Hooks for state management"
-    - "forwardRef for all components"
-    - "Proper prop spreading"
-    - "No inline function definitions in render"
-  
-  naming:
-    components: "PascalCase"
-    props: "camelCase"
-    types: "PascalCase"
-    constants: "UPPER_SNAKE_CASE"
-    files: "PascalCase.tsx for components"
-  
-  imports:
-    order:
-      - "React and Next.js"
-      - "External packages"
-      - "Monorepo packages"
-      - "Local absolute imports"
-      - "Local relative imports"
-      - "Types"
-    grouping: "Blank line between groups"
-    sorting: "Alphabetical within groups"
+# Code Style Constraints
 
-security_constraints:
+typescript:
+  config:
+    strict: true
+    noImplicitAny: true
+    strictNullChecks: true
+    noUnusedLocals: true
+    noUnusedParameters: true
+  
+  type_safety:
+    - "All function parameters must be typed"
+    - "All function return types explicit"
+    - "No use of 'any' type"
+    - "Proper generic constraints"
+    - "Exhaustive switch statements"
+  
+  naming_conventions:
+    components: "PascalCase (e.g., Header, MainLayout)"
+    props: "camelCase (e.g., showDonateButton)"
+    types: "PascalCase with suffix (e.g., HeaderProps)"
+    enums: "PascalCase (e.g., ThemeMode)"
+    constants: "UPPER_SNAKE_CASE (e.g., MAX_WIDTH)"
+
+react_patterns:
+  component_rules:
+    - "Functional components only (no class components)"
+    - "All layout components use React.forwardRef"
+    - "displayName set on all exported components"
+    - "Props interfaces extend appropriate HTML attributes"
+    - "Destructure props in function parameters"
+  
+  hooks_rules:
+    - "Follow Rules of Hooks without exception"
+    - "Custom hooks prefixed with 'use'"
+    - "Complete dependency arrays (no missing deps)"
+    - "Cleanup functions for side effects"
+    - "Avoid excessive re-renders"
+  
+  performance_patterns:
+    - "React.memo for components with stable props"
+    - "useCallback for event handlers passed as props"
+    - "useMemo for expensive computations"
+    - "Lazy load components below the fold"
+    - "Virtualize long lists (if applicable)"
+
+css_conventions:
+  methodology: "Utility-first with Tailwind CSS"
+  
+  custom_styles:
+    when_allowed:
+      - "Complex keyframe animations"
+      - "Third-party component overrides"
+      - "Print-specific styles"
+    approach: "CSS modules or styled-jsx"
+    location: "Co-located with component"
+  
+  class_ordering:
+    template: "layout | flexbox/grid | spacing | sizing | typography | colors | borders | effects"
+    example: "flex items-center gap-4 px-6 py-3 text-sm font-medium text-primary border rounded-lg hover:bg-accent"
+  
+  responsive_design:
+    approach: "Mobile-first"
+    breakpoints: "sm: md: lg: xl: 2xl:"
+    avoid: "max-width queries, inline responsive styles"
+
+# Security Constraints
+
+content_security:
   xss_prevention:
-    - "No dangerouslySetInnerHTML"
-    - "Sanitize any user input"
-    - "Escape special characters"
-    - "Use Next.js Link component"
+    - "Never use dangerouslySetInnerHTML"
+    - "Sanitize all user-generated content"
+    - "Validate URLs before rendering as hrefs"
+    - "Use Next.js built-in protections"
   
-  csp_compliance:
-    - "No inline styles"
-    - "No inline scripts"
-    - "External resources from allowlist only"
-  
-  external_links:
-    - "rel='noopener noreferrer' on all"
-    - "target='_blank' for external only"
-    - "Warn users about external navigation"
+  external_resources:
+    links:
+      - "Always use rel='noopener noreferrer' with target='_blank'"
+      - "Validate external URLs against allowlist"
+      - "Show external link indicators"
+    
+    scripts:
+      - "No inline scripts"
+      - "Subresource integrity for CDN resources"
+      - "Content Security Policy headers configured"
 
-seo_constraints:
-  semantic_html:
-    - "Proper heading hierarchy (h1-h6)"
-    - "Nav element for navigation"
-    - "Main element for content"
-    - "Footer element for footer"
-    - "Article/section where appropriate"
+data_handling:
+  storage:
+    - "No sensitive data in localStorage"
+    - "Use httpOnly cookies for auth tokens"
+    - "Implement proper CORS policies"
+    - "No PII in URLs or query parameters"
   
-  meta_requirements:
-    - "Page title updates with navigation"
-    - "Description meta tag present"
-    - "Open Graph tags configured"
-    - "Twitter Card tags configured"
-    - "Canonical URLs set"
-  
-  structured_data:
-    - "Organization schema on footer"
-    - "SiteNavigationElement on header"
-    - "BreadcrumbList where applicable"
+  forms:
+    - "CSRF protection on all forms"
+    - "Rate limiting on submissions"
+    - "Server-side validation required"
+    - "Client-side validation for UX only"
 
-responsive_constraints:
-  breakpoints:
-    mobile: "0-639px"
-    tablet: "640-1023px"
-    desktop: "1024px+"
-  
-  layout_rules:
-    - "Mobile-first approach required"
-    - "No horizontal scroll at any size"
-    - "Text remains readable when zoomed to 200%"
-    - "Images scale appropriately"
-    - "Touch targets grow on mobile"
-  
-  testing_requirements:
-    - "Test at all major breakpoints"
-    - "Test with browser zoom 50-200%"
-    - "Test in portrait and landscape"
-    - "Test with dynamic viewport (mobile browser chrome)"
+# Testing Constraints
 
-content_constraints:
-  text_content:
-    - "Foundation name consistent throughout"
-    - "Navigation labels clear and concise"
-    - "Error messages helpful and actionable"
-    - "Loading states have descriptive text"
+test_coverage:
+  minimum_thresholds:
+    statements: "80%"
+    branches: "75%"
+    functions: "80%"
+    lines: "80%"
   
-  imagery:
-    - "Logo has text fallback"
-    - "Icons have labels or tooltips"
-    - "Decorative images marked as such"
-    - "Content images have descriptions"
-  
-  emergency_content:
-    - "Clear urgency indicators"
-    - "Action-oriented language"
-    - "Time-sensitive info prominent"
-    - "Contact information easily found"
+  required_test_types:
+    unit:
+      - "Component renders without errors"
+      - "Props behave as documented"
+      - "Event handlers fire correctly"
+      - "Conditional rendering works"
+    
+    integration:
+      - "Navigation flow complete"
+      - "Theme switching persists"
+      - "Mobile menu interactions"
+      - "Form submissions"
+    
+    accessibility:
+      - "axe-core passes with no violations"
+      - "Keyboard navigation complete"
+      - "Screen reader friendly"
+      - "Color contrast valid"
 
-theme_constraints:
-  css_variables:
-    - "All colors from theme variables"
-    - "No hard-coded color values"
-    - "Proper variable fallbacks"
-    - "Theme-aware shadows and borders"
+test_quality:
+  requirements:
+    - "No skipped tests in CI"
+    - "No console errors/warnings"
+    - "Tests run in <5 seconds"
+    - "Deterministic results"
+    - "Proper test isolation"
   
-  theme_switching:
-    - "No flash of unstyled content"
-    - "Smooth transitions between themes"
-    - "Preferences persist across sessions"
-    - "System preference respected initially"
-  
-  gentle_theme_adaptations:
-    - "Reduce visual complexity"
-    - "Softer contrasts where appropriate"
-    - "Calmer color transitions"
-    - "Less aggressive CTAs"
-
-testing_constraints:
-  coverage_requirements:
-    unit_tests: "90% minimum"
-    integration_tests: "Required for all user flows"
-    accessibility_tests: "100% of components"
-    visual_regression: "All themes and breakpoints"
-  
-  test_patterns:
-    - "Test user interactions, not implementation"
+  patterns:
+    - "Test user behavior, not implementation"
+    - "Use React Testing Library queries"
     - "Mock external dependencies"
-    - "Test error states and edge cases"
-    - "Test loading and empty states"
-    - "Test with different theme contexts"
+    - "Test error boundaries"
+    - "Test loading states"
+
+# Documentation Constraints
+
+code_documentation:
+  required_comments:
+    when:
+      - "Complex business logic"
+      - "Performance optimizations"
+      - "Accessibility workarounds"
+      - "Browser compatibility hacks"
+      - "Security considerations"
+    
+    format: "JSDoc for public APIs, inline for clarification"
+  
+  component_docs:
+    required:
+      - "Purpose and usage description"
+      - "Props documentation with types"
+      - "Usage examples"
+      - "Accessibility notes"
+      - "Theme variant behaviors"
+    
+    format: |
+      /**
+       * Header component for main site navigation
+       * 
+       * @example
+       * <Header sticky={false} showDonateButton />
+       * 
+       * @accessibility
+       * - Skip link for keyboard navigation
+       * - ARIA landmarks for screen readers
+       * - Mobile menu traps focus when open
+       */
+
+# Monitoring Requirements
+
+observability:
+  performance_tracking:
+    metrics:
+      - "Component render times"
+      - "Interaction response times"
+      - "Bundle size per deployment"
+      - "Core Web Vitals scores"
+    
+    implementation:
+      - "Use web-vitals library"
+      - "Send to analytics provider"
+      - "Set up alerting for regressions"
+      - "Track by component and route"
+  
+  error_tracking:
+    requirements:
+      - "Error boundaries on all layouts"
+      - "Graceful fallback UI"
+      - "User-friendly error messages"
+      - "Automatic error reporting"
+    
+    error_budgets:
+      - "JavaScript errors: <0.1% of sessions"
+      - "Failed navigations: <0.01%"
+      - "Component crashes: 0%"
+      - "API timeouts: <1%"

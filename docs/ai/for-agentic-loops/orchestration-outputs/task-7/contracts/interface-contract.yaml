@@ -1,7 +1,10 @@
 # Interface Contract for Task 7: Build Core Layout Components
-# This contract defines the component APIs, props, and type definitions
+# This contract defines the component APIs, props, and TypeScript interfaces
+# that all specialist agents must adhere to when implementing layout components
 
-header_component:
+# Core Layout Component Interfaces
+
+Header:
   name: "Header"
   props:
     sticky:
@@ -11,37 +14,36 @@ header_component:
     className:
       type: "string"
       optional: true
-      description: "Additional CSS classes"
-    logoSrc:
-      type: "string"
-      optional: true
-      default: "null"
-      description: "Custom logo image path"
-    navigationItems:
-      type: "NavigationItem[]"
+      description: "Additional CSS classes for customization"
+    navItems:
+      type: "NavItem[]"
       optional: true
       default: "defaultNavItems"
-      description: "Array of navigation links"
-    showThemeSwitcher:
+      description: "Override default navigation items"
+    showDonateButton:
       type: "boolean"
       default: true
-      description: "Whether to show theme switcher"
-    onLogoClick:
-      type: "() => void"
+      description: "Show prominent donate button in header"
+    emergencyBanner:
+      type: "React.ReactNode"
       optional: true
-      description: "Custom logo click handler"
-    mobileBreakpoint:
-      type: "'sm' | 'md' | 'lg'"
-      default: "'md'"
-      description: "Breakpoint for mobile menu"
+      description: "Emergency appeal banner component to render above header"
+  
+  forwardRef: true
   extends: "React.HTMLAttributes<HTMLElement>"
-  ref_type: "HTMLElement"
-  aria_requirements:
-    - "Must have role='banner' when used as page header"
-    - "Mobile menu button must have aria-label"
-    - "Mobile menu must announce open/close state"
+  htmlElement: "HTMLElement"
+  ariaRole: "banner"
+  
+  NavItem:
+    href: "string"
+    label: "string"
+    icon: "LucideIcon?"
+    external: "boolean?"
+    highlight: "boolean?"
+    mobileOnly: "boolean?"
+    desktopOnly: "boolean?"
 
-footer_component:
+Footer:
   name: "Footer"
   props:
     className:
@@ -51,44 +53,36 @@ footer_component:
     showSocialLinks:
       type: "boolean"
       default: true
-      description: "Whether to display social media links"
-    socialLinks:
-      type: "SocialLink[]"
-      optional: true
-      description: "Custom social media links"
+      description: "Display social media links"
     showTrustSignals:
       type: "boolean"
       default: true
-      description: "Whether to show trust badges"
-    trustSignals:
-      type: "TrustSignal[]"
+      description: "Display trust badges and certifications"
+    customLinks:
+      type: "FooterLinkSection[]"
       optional: true
-      description: "Custom trust signals/badges"
-    showDonorInfo:
-      type: "boolean"
-      default: true
-      description: "Whether to show tax info"
-    footerSections:
-      type: "FooterSection[]"
-      optional: true
-      description: "Custom footer link sections"
+      description: "Override default footer link sections"
+  
+  forwardRef: true
   extends: "React.HTMLAttributes<HTMLElement>"
-  ref_type: "HTMLElement"
-  aria_requirements:
-    - "Must have role='contentinfo' when used as page footer"
-    - "Social links must have aria-labels"
+  htmlElement: "HTMLElement"
+  ariaRole: "contentinfo"
+  
+  FooterLinkSection:
+    title: "string"
+    links: "Array<{href: string, label: string, external?: boolean}>"
 
-main_layout_component:
+MainLayout:
   name: "MainLayout"
   props:
-    children:
+    children: 
       type: "React.ReactNode"
       required: true
       description: "Page content"
     className:
       type: "string"
       optional: true
-      description: "Additional CSS classes"
+      description: "Additional CSS classes for layout wrapper"
     headerProps:
       type: "React.ComponentPropsWithoutRef<typeof Header>"
       optional: true
@@ -99,98 +93,122 @@ main_layout_component:
       description: "Props to pass to Footer component"
     skipToContentId:
       type: "string"
-      default: "'main-content'"
-      description: "ID for skip navigation target"
-    showEmergencyBanner:
-      type: "boolean"
-      default: false
-      description: "Whether to show emergency appeal banner"
-    emergencyBannerContent:
-      type: "EmergencyBannerContent"
-      optional: true
-      description: "Emergency banner configuration"
-    contentSensitivityGate:
-      type: "ContentGateConfig"
-      optional: true
-      description: "Content sensitivity configuration"
+      default: "main-content"
+      description: "ID for skip link target"
+  
+  forwardRef: true
   extends: "React.HTMLAttributes<HTMLDivElement>"
-  ref_type: "HTMLDivElement"
-  aria_requirements:
-    - "Skip link must be first focusable element"
-    - "Main content must have role='main'"
-    - "Must support landmark navigation"
+  htmlElement: "HTMLDivElement"
 
-# Type Definitions
-type_definitions:
-  NavigationItem:
-    href: "string"
-    label: "string"
-    isExternal: "boolean?"
-    icon: "React.ComponentType?"
-    badge: "string?"
-    requiresAuth: "boolean?"
-    mobileOnly: "boolean?"
-    desktopOnly: "boolean?"
+# Mobile Navigation Component (using Sheet)
+MobileNav:
+  name: "MobileNav"
+  props:
+    isOpen:
+      type: "boolean"
+      required: true
+      description: "Control sheet open state"
+    onOpenChange:
+      type: "(open: boolean) => void"
+      required: true
+      description: "Handle open state changes"
+    navItems:
+      type: "NavItem[]"
+      required: true
+      description: "Navigation items to display"
+    currentPath:
+      type: "string"
+      required: true
+      description: "Current page path for active state"
+    className:
+      type: "string"
+      optional: true
+  
+  # Leverages shadcn/ui Sheet component internally
+  sheetProps:
+    side: "right"
+    className: "w-[300px] sm:w-[400px]"
 
-  SocialLink:
-    platform: "'facebook' | 'twitter' | 'instagram' | 'youtube' | 'linkedin'"
-    href: "string"
-    label: "string"
-    icon: "React.ComponentType"
-
-  TrustSignal:
-    type: "'ssl' | 'charity-rating' | 'nonprofit-status' | 'certification'"
-    label: "string"
-    icon: "React.ComponentType"
-    href: "string?"
-    tooltip: "string?"
-
-  FooterSection:
-    title: "string"
-    links: "Array<{href: string, label: string}>"
-    columns: "1 | 2 | 3 | 4"
-
-  EmergencyBannerContent:
-    title: "string"
-    description: "string"
-    ctaText: "string"
-    ctaHref: "string"
-    urgencyLevel: "'low' | 'medium' | 'high' | 'critical'"
-    dismissible: "boolean"
-    expiresAt: "Date?"
-
-  ContentGateConfig:
-    enabled: "boolean"
-    defaultLevel: "1 | 2 | 3"
-    rememberChoice: "boolean"
+# Type Exports
+exports:
+  - "HeaderProps"
+  - "FooterProps"
+  - "MainLayoutProps"
+  - "MobileNavProps"
+  - "NavItem"
+  - "FooterLinkSection"
 
 # Event Handlers
-event_handlers:
+events:
+  onNavigate:
+    description: "Fired when navigation item is clicked"
+    payload: "{ href: string, external: boolean }"
+  
+  onThemeChange:
+    description: "Fired when theme is changed via header"
+    payload: "{ theme: ThemeMode }"
+  
+  onScrollToTop:
+    description: "Fired when back to top is clicked"
+    payload: "{ scrollY: number }"
+
+# Composition Patterns
+composition:
+  - "All components use forwardRef for ref access"
+  - "Props spread to root elements for extensibility"
+  - "Support className merging via cn() utility"
+  - "Accept children for content composition"
+  - "Use semantic HTML elements"
+
+# Import/Export Requirements
+imports:
+  required:
+    - "import * as React from 'react'"
+    - "import { cn } from '@/lib/utils'"
+    - "import Link from 'next/link'"
+  
+  fromUI:
+    - "import { ThemeSwitcher } from '@minniewinnie/ui'"
+  
+  fromShadcnUI:
+    - "import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'"
+    - "import { Button } from '@/components/ui/button'"
+  
+  icons:
+    - "import { Menu, X, ChevronUp, Heart, Shield, Award } from 'lucide-react'"
+
+# Component File Structure
+fileStructure:
+  "src/components/layout/":
+    - "Header.tsx"
+    - "Footer.tsx"
+    - "MainLayout.tsx"
+    - "MobileNav.tsx"
+    - "index.ts  # Re-exports all components"
+
+# Accessibility Requirements
+accessibility:
   header:
-    onNavigate: "(item: NavigationItem) => void"
-    onMobileMenuToggle: "(isOpen: boolean) => void"
-    onThemeChange: "(theme: ThemeMode) => void"
+    - "Mobile menu button must have aria-label='Open navigation menu'"
+    - "Mobile menu state must be announced (aria-expanded)"
+    - "Current page indicated with aria-current='page'"
+    - "Logo link must have descriptive text"
   
   footer:
-    onSocialClick: "(platform: string, event: React.MouseEvent) => void"
-    onFooterLinkClick: "(href: string, section: string) => void"
+    - "Social links must have aria-labels"
+    - "External links marked with aria-label including '(opens in new tab)'"
+    - "Trust signals must have descriptive alt text or aria-labels"
   
-  main_layout:
-    onSkipToContent: "() => void"
-    onEmergencyBannerAction: "(action: 'dismiss' | 'cta') => void"
-    onContentGateAction: "(action: 'allow' | 'deny', level: number) => void"
+  mainLayout:
+    - "Skip to main content link must be first focusable element"
+    - "Main element must have id matching skipToContentId"
+    - "Proper heading hierarchy maintained"
+    - "ARIA landmarks properly nested"
 
-# Return Values
-return_values:
-  hooks:
-    useMobileMenu:
-      returns: "{isOpen: boolean, toggle: () => void, close: () => void}"
-      description: "Mobile menu state management"
-    
-    useScrollHeader:
-      returns: "{isVisible: boolean, isSticky: boolean}"
-      description: "Header scroll behavior"
-    
-    useEmergencyBanner:
-      returns: "{isVisible: boolean, dismiss: () => void, timeRemaining: number?}"
-      description: "Emergency banner state"
+# Performance Considerations
+performance:
+  - "Use dynamic imports for heavy components"
+  - "Implement intersection observer for sticky header"
+  - "Lazy load social media icons"
+  - "Minimize re-renders with React.memo where appropriate"
+  - "Use CSS transforms for animations"

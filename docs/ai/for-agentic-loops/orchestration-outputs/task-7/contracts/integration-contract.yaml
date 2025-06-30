@@ -1,201 +1,290 @@
 # Integration Contract for Task 7: Build Core Layout Components
-# This contract defines file structures, import patterns, and testing requirements
+# This contract defines file organization, import patterns, and integration requirements
+# to ensure consistent implementation across all specialist agents
 
-file_structure:
+# File Naming Conventions
+
+component_files:
+  naming_pattern: "PascalCase.tsx"
+  location: "packages/web/src/components/layout/"
+  required_files:
+    - "Header.tsx           # Main header component"
+    - "Footer.tsx           # Main footer component"
+    - "MainLayout.tsx       # Layout wrapper component"
+    - "MobileNav.tsx        # Mobile navigation using Sheet"
+    - "index.ts             # Barrel exports"
+  
+  optional_files:
+    - "EmergencyBanner.tsx  # Emergency appeal banner"
+    - "NavigationLandmarks.tsx # ARIA landmark management"
+    - "BackToTop.tsx        # Scroll to top button"
+
+type_files:
+  pattern: "types.ts or ComponentName.types.ts"
+  location: "Same directory as component"
+  exports: "Named exports only"
+
+test_files:
+  pattern: "ComponentName.test.tsx"
+  location: "__tests__ folder in component directory"
+  framework: "Jest + React Testing Library"
+
+# Import/Export Patterns
+
+import_order:
+  description: "Consistent import ordering across all files"
+  order:
+    1_react: "React and React-related imports"
+    2_next: "Next.js specific imports"
+    3_external: "Third-party libraries"
+    4_ui_package: "Imports from @minniewinnie/ui"
+    5_shadcn: "shadcn/ui components"
+    6_internal: "Internal project imports"
+    7_types: "Type imports"
+    8_styles: "CSS/style imports"
+  
+  example: |
+    // React
+    import * as React from 'react'
+    import { useState, useEffect } from 'react'
+    
+    // Next.js
+    import Link from 'next/link'
+    import { useRouter } from 'next/navigation'
+    
+    // External libraries
+    import { Menu, X, ChevronUp } from 'lucide-react'
+    
+    // UI package
+    import { ThemeSwitcher } from '@minniewinnie/ui'
+    
+    // shadcn/ui
+    import { Button } from '@/components/ui/button'
+    import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+    
+    // Internal
+    import { cn } from '@/lib/utils'
+    
+    // Types
+    import type { HeaderProps } from './types'
+
+export_patterns:
   components:
-    location: "packages/web/src/components/layout/"
-    files:
-      - "Header.tsx           # Main header component"
-      - "Footer.tsx           # Main footer component"
-      - "MainLayout.tsx       # Layout wrapper component"
-      - "MobileMenu.tsx       # Mobile navigation component"
-      - "SkipNavigation.tsx   # Skip to content component"
-      - "EmergencyBanner.tsx  # Emergency appeal banner"
-      - "index.ts             # Barrel exports"
+    pattern: "Named exports with displayName"
+    example: |
+      const Header = React.forwardRef<HTMLElement, HeaderProps>(
+        ({ className, ...props }, ref) => {
+          // Component implementation
+        }
+      )
+      Header.displayName = 'Header'
+      
+      export { Header }
   
-  hooks:
-    location: "packages/web/src/hooks/"
-    files:
-      - "use-mobile-menu.ts   # Mobile menu state"
-      - "use-scroll-header.ts # Header scroll behavior"
-      - "use-emergency-banner.ts # Banner state management"
-  
-  types:
-    location: "packages/web/src/types/"
-    files:
-      - "layout.ts # Layout-specific types"
-    integration:
-      - "Import from existing ui.ts for base types"
-      - "Import from emergency.ts for emergency types"
-  
-  tests:
-    location: "packages/web/src/components/layout/__tests__/"
-    files:
-      - "Header.test.tsx"
-      - "Footer.test.tsx"
-      - "MainLayout.test.tsx"
-      - "MobileMenu.test.tsx"
-      - "integration.test.tsx"
+  barrel_exports: |
+    // index.ts
+    export { Header } from './Header'
+    export { Footer } from './Footer'
+    export { MainLayout } from './MainLayout'
+    export { MobileNav } from './MobileNav'
+    
+    // Export types
+    export type { HeaderProps, FooterProps, MainLayoutProps } from './types'
 
-import_patterns:
-  component_imports:
-    # React and Next.js - always first
-    - "import * as React from 'react'"
-    - "import Link from 'next/link'"
-    - "import { useRouter } from 'next/navigation'"
-    
-    # External packages - alphabetical
-    - "import { Menu, X, ChevronDown } from 'lucide-react'"
-    
-    # Monorepo packages
-    - "import { ThemeSwitcher } from '@minniewinnie/ui'"
-    
-    # Local absolute imports
-    - "import { Button } from '@/components/ui/button'"
-    - "import { Sheet, SheetContent } from '@/components/ui/sheet'"
-    - "import { cn } from '@/lib/utils'"
-    
-    # Local relative imports
-    - "import { useScrollHeader } from '../../hooks/use-scroll-header'"
-    
-    # Types - always last
-    - "import type { HeaderProps } from '@/types/layout'"
-  
-  export_patterns:
-    named_exports:
-      - "export { Header }"
-      - "export { Footer }"
-      - "export { MainLayout }"
-    
-    barrel_exports:
-      - "export * from './Header'"
-      - "export * from './Footer'"
-      - "export * from './MainLayout'"
-    
-    type_exports:
-      - "export type { HeaderProps, FooterProps, MainLayoutProps }"
+# Theme Integration Approach
 
-naming_conventions:
-  components:
-    pattern: "PascalCase"
-    examples:
-      - "Header"
-      - "MobileMenu"
-      - "EmergencyBanner"
-  
-  files:
-    pattern: "PascalCase for components, kebab-case for others"
-    examples:
-      - "Header.tsx"
-      - "use-mobile-menu.ts"
-      - "layout.types.ts"
-  
-  props_interfaces:
-    pattern: "ComponentNameProps"
-    examples:
-      - "HeaderProps"
-      - "FooterProps"
-      - "MainLayoutProps"
-  
-  hooks:
-    pattern: "use-kebab-case"
-    examples:
-      - "useMobileMenu"
-      - "useScrollHeader"
-      - "useEmergencyBanner"
-
-theme_integration:
+theme_system:
   css_variables:
-    - "Use theme-aware Tailwind classes"
-    - "Examples: bg-background, text-foreground, border-border"
-    - "Never use hard-coded colors"
+    description: "Use CSS variables for all theme values"
+    required_classes:
+      backgrounds:
+        - "bg-background"     # Main background
+        - "bg-foreground"     # Inverted areas
+        - "bg-primary"        # Primary actions
+        - "bg-muted"          # Subtle backgrounds
+      
+      text:
+        - "text-foreground"   # Main text
+        - "text-muted-foreground" # Secondary text
+        - "text-primary-foreground" # Text on primary bg
+      
+      borders:
+        - "border-border"     # Default borders
+        - "border-input"      # Form borders
+        - "border-primary"    # Emphasized borders
   
-  component_adaptation:
-    - "Header shadow varies by theme"
-    - "Mobile menu background respects theme"
-    - "Trust signals adapt to contrast theme"
-    - "Emergency banner colors theme-aware"
-  
-  gentle_theme_specific:
-    - "Softer shadows on header"
-    - "Reduced visual weight on borders"
-    - "Muted emergency banner colors"
-    - "Calmer transition effects"
+  theme_switching:
+    component: "ThemeSwitcher from @minniewinnie/ui"
+    placement: "Header component, visible on all screen sizes"
+    integration: |
+      // In Header.tsx
+      import { ThemeSwitcher } from '@minniewinnie/ui'
+      
+      // Desktop placement
+      <nav className="hidden md:flex items-center space-x-6">
+        {/* Nav items */}
+        <ThemeSwitcher />
+      </nav>
+      
+      // Mobile placement (outside menu)
+      <div className="flex md:hidden items-center space-x-2">
+        <ThemeSwitcher />
+        <Button variant="ghost" size="icon">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
 
-testing_requirements:
-  unit_tests:
-    - "Component renders correctly"
-    - "Props are applied properly"
-    - "ARIA attributes present"
-    - "Event handlers called"
-    - "Responsive behavior works"
-  
-  integration_tests:
-    - "Navigation flow works end-to-end"
-    - "Theme switching affects all components"
-    - "Mobile menu interaction complete"
-    - "Skip navigation functions"
-    - "Emergency banner lifecycle"
-  
-  accessibility_tests:
-    - "Keyboard navigation complete"
-    - "Screen reader announces correctly"
-    - "Color contrast passes WCAG AA"
-    - "Focus management works"
-    - "Touch targets are 44px+"
-  
-  visual_regression:
-    - "All themes render correctly"
-    - "Responsive breakpoints work"
-    - "No layout shifts occur"
-    - "Animations respect preferences"
+# Testing Requirements
 
-  performance_tests:
-    - "First paint under threshold"
-    - "No cumulative layout shift"
-    - "Bundle size within budget"
-    - "Lighthouse score 98+"
+unit_tests:
+  coverage_target: "80% minimum"
+  test_structure: |
+    describe('Header', () => {
+      // Rendering tests
+      it('renders without crashing', () => {})
+      it('applies className prop correctly', () => {})
+      it('forwards ref properly', () => {})
+      
+      // Prop tests
+      it('respects sticky prop', () => {})
+      it('shows/hides donate button based on prop', () => {})
+      
+      // Accessibility tests
+      it('has proper ARIA landmarks', () => {})
+      it('announces mobile menu state', () => {})
+      it('maintains focus trap in mobile menu', () => {})
+      
+      // Interaction tests
+      it('opens mobile menu on button click', () => {})
+      it('closes mobile menu on ESC key', () => {})
+      it('closes mobile menu on navigation', () => {})
+      
+      // Responsive tests
+      it('shows desktop nav at md breakpoint', () => {})
+      it('shows mobile menu button below md', () => {})
+    })
 
-dependency_requirements:
-  existing_ui_components:
-    - "Sheet (from shadcn/ui)"
-    - "Button (from shadcn/ui)"
-    - "Separator (optional)"
-    - "Tooltip (for trust signals)"
-  
-  ui_package:
-    - "ThemeSwitcher component"
-    - "Theme context/hooks"
-    - "Design tokens"
-  
-  shared_package:
-    - "Type definitions"
-    - "Validation schemas"
-    - "Constants"
-  
-  external:
-    - "lucide-react for icons"
-    - "clsx/cn for classnames"
-    - "@radix-ui/react-slot (if needed)"
+integration_tests:
+  scenarios:
+    - "Theme persistence across page navigation"
+    - "Mobile menu state reset on route change"
+    - "Skip link focuses main content"
+    - "Scroll behavior with sticky header"
 
-code_patterns:
-  forwardRef_usage:
-    - "All layout components use React.forwardRef"
-    - "Proper TypeScript typing for refs"
-    - "displayName set on all components"
+accessibility_tests:
+  automated:
+    - "axe-core via jest-axe"
+    - "Color contrast validation"
+    - "ARIA attribute validation"
+    - "Keyboard navigation flow"
   
-  prop_spreading:
-    - "Spread props after className merge"
-    - "Omit handled props from spread"
-    - "Maintain prop priority order"
+  manual:
+    - "Screen reader testing (NVDA/JAWS)"
+    - "Keyboard-only navigation"
+    - "Touch device testing"
+    - "Reduced motion preferences"
+
+# Package Integration
+
+monorepo_dependencies:
+  "@minniewinnie/ui":
+    imports:
+      - "ThemeSwitcher"
+      - "Design tokens via CSS variables"
+    usage: |
+      // ThemeSwitcher is a complete component
+      import { ThemeSwitcher } from '@minniewinnie/ui'
+      
+      // Use directly in Header
+      <ThemeSwitcher />
   
-  event_handling:
-    - "Stable references with useCallback"
-    - "Proper cleanup in useEffect"
-    - "Event delegation where appropriate"
+  "shadcn/ui components":
+    location: "packages/web/src/components/ui/"
+    used_components:
+      - "Button"
+      - "Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger"
+      - "Tooltip (optional for trust signals)"
+      - "Separator (optional for footer)"
   
-  performance:
-    - "Memoize expensive computations"
-    - "Lazy load non-critical components"
-    - "Use React.memo for pure components"
-    - "Debounce scroll events"
+  "@/lib/utils":
+    cn_utility: |
+      import { cn } from '@/lib/utils'
+      
+      // Usage
+      className={cn(
+        "base-classes",
+        sticky && "sticky-classes",
+        className
+      )}
+
+# Build and Bundle Considerations
+
+code_splitting:
+  lazy_loaded_components:
+    - "MobileNav (load on first interaction)"
+    - "Footer sections (below the fold)"
+    - "EmergencyBanner (conditional)"
+  
+  implementation: |
+    // Lazy load mobile navigation
+    const MobileNav = React.lazy(() => 
+      import('./MobileNav').then(module => ({ 
+        default: module.MobileNav 
+      }))
+    )
+    
+    // Use with Suspense
+    <React.Suspense fallback={<div className="h-10 w-10" />}>
+      <MobileNav {...props} />
+    </React.Suspense>
+
+performance_optimizations:
+  - "Use React.memo for pure components"
+  - "Implement useCallback for event handlers"
+  - "Debounce scroll events (16ms throttle)"
+  - "Preload critical fonts"
+  - "Optimize images with next/image"
+
+# Style Integration
+
+tailwind_conventions:
+  spacing:
+    - "Use spacing scale: 0, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24"
+    - "Container padding: px-4 sm:px-6 lg:px-8"
+    - "Section spacing: py-8 md:py-12 lg:py-16"
+  
+  responsive_prefixes:
+    - "sm: 640px"   # Mobile landscape
+    - "md: 768px"   # Tablet
+    - "lg: 1024px"  # Desktop
+    - "xl: 1280px"  # Wide desktop
+    - "2xl: 1536px" # Ultra wide
+  
+  animation_classes:
+    - "transition-all duration-300"
+    - "animate-in slide-in-from-right"
+    - "animate-out slide-out-to-right"
+    - "data-[state=open]:animate-in"
+
+# Documentation Requirements
+
+component_documentation:
+  required_elements:
+    - "Component description JSDoc"
+    - "Props interface with descriptions"
+    - "Usage examples"
+    - "Accessibility notes"
+    - "Theme variant behaviors"
+  
+  example: |
+    /**
+     * Header component providing main site navigation
+     * 
+     * @example
+     * <Header sticky navItems={customItems} />
+     * 
+     * @accessibility
+     * - Provides skip navigation link
+     * - Mobile menu traps focus when open
+     * - All interactive elements keyboard accessible
+     */

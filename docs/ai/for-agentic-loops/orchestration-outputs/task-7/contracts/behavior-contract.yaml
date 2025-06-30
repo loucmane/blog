@@ -1,186 +1,272 @@
 # Behavior Contract for Task 7: Build Core Layout Components
-# This contract defines the functional requirements and interaction patterns
+# This contract defines the functional behavior, interactions, and state management
+# that all specialist agents must implement consistently
+
+# Core Functionality Requirements
 
 header_behavior:
-  responsive_navigation:
-    desktop:
-      - "Show full navigation links horizontally"
-      - "Theme switcher visible in navigation"
-      - "Logo click navigates to home"
-      - "Active page highlighted in nav"
-      - "Hover states on all interactive elements"
-    mobile:
-      - "Navigation collapses to hamburger menu at breakpoint"
-      - "Hamburger menu opens Sheet component from right"
-      - "Sheet contains vertical navigation"
-      - "Theme switcher remains visible outside menu"
-      - "Menu closes on navigation or outside click"
-      - "Menu traps focus when open"
-      - "ESC key closes menu"
-    
-  scroll_behavior:
-    sticky_enabled:
-      - "Header sticks to top on scroll down"
-      - "Adds shadow/border on scroll"
-      - "Optional: Hide on scroll down, show on scroll up"
-    sticky_disabled:
-      - "Header scrolls with page content"
-      - "No position changes on scroll"
+  sticky_scroll:
+    description: "Header visibility and positioning on scroll"
+    requirements:
+      - "Hide on scroll down, show on scroll up"
+      - "Always visible when at top of page"
+      - "Smooth transition with 300ms duration"
+      - "Threshold of 5px before triggering"
+      - "Respect prefers-reduced-motion"
+    implementation:
+      - "Use intersection observer for performance"
+      - "Track scroll direction with useRef"
+      - "Debounce scroll events"
+      - "Apply transform: translateY() for GPU acceleration"
   
-  accessibility:
-    - "Skip navigation link as first focusable element"
-    - "Logical tab order through navigation"
-    - "Mobile menu announces open/close state"
-    - "Current page indicated with aria-current"
-    - "All interactive elements keyboard accessible"
-    - "44px minimum touch targets on mobile"
+  mobile_navigation:
+    description: "Mobile menu behavior and animations"
+    requirements:
+      - "Open/close with hamburger button"
+      - "Close on route navigation"
+      - "Close on ESC key press"
+      - "Trap focus when open"
+      - "Prevent body scroll when open"
+      - "Smooth slide-in animation from right"
+    touch_targets:
+      - "Minimum 44x44px for all interactive elements"
+      - "8px minimum spacing between targets"
+      - "Visual feedback on touch"
+  
+  theme_persistence:
+    description: "Theme selection and storage"
+    requirements:
+      - "Persist theme choice to localStorage"
+      - "Apply theme before first paint to prevent flash"
+      - "Sync across tabs/windows"
+      - "Respect system preference as default"
+      - "Provide visual feedback on change"
 
 footer_behavior:
-  layout:
-    - "Responsive grid layout for link sections"
-    - "Social links as icon buttons"
-    - "Trust signals centered and prominent"
-    - "Copyright and tax info at bottom"
+  social_links:
+    description: "Social media link interactions"
+    requirements:
+      - "Open in new tab with rel='noopener noreferrer'"
+      - "Track clicks for analytics"
+      - "Hover state with scale transform"
+      - "Keyboard navigable"
+      - "Announce 'opens in new tab' to screen readers"
   
-  interactions:
-    - "All links keyboard navigable"
-    - "External links open in new tab with proper rel attributes"
-    - "Social links have hover tooltips"
-    - "Trust signal badges may link to verification"
+  trust_signals:
+    description: "Trust badge interactions"
+    requirements:
+      - "Show tooltip on hover/focus"
+      - "Link to verification pages where applicable"
+      - "Lazy load badge images"
+      - "Fallback for failed image loads"
   
-  responsive:
-    mobile:
-      - "Single column layout"
-      - "Collapsible sections optional"
-      - "Social links remain horizontal"
-    tablet:
-      - "Two column layout for link sections"
-      - "Trust signals in single row"
-    desktop:
-      - "Multi-column layout (4-5 columns)"
-      - "All content visible without scrolling"
+  newsletter_signup:
+    description: "Email collection behavior"
+    requirements:
+      - "Validate email format client-side"
+      - "Show loading state during submission"
+      - "Display success/error messages"
+      - "Prevent duplicate submissions"
+      - "Clear form on success"
 
 main_layout_behavior:
-  structure:
-    - "Flexbox column layout (header, main, footer)"
-    - "Main content area expands to fill viewport"
-    - "Footer pushed to bottom (no floating)"
-    - "Proper semantic HTML structure"
-  
   skip_navigation:
-    - "Hidden by default, visible on focus"
-    - "Jumps to main content area"
-    - "Styled prominently when focused"
-    - "Works with screen readers"
+    description: "Skip to content functionality"
+    requirements:
+      - "Visible on focus only"
+      - "Move focus to main content on activation"
+      - "Announce to screen readers"
+      - "Positioned absolutely to avoid layout shift"
   
-  emergency_banner:
-    when_visible:
-      - "Appears above header"
-      - "Pushes all content down"
-      - "Remains visible on scroll"
-      - "Dismissible with preference memory"
-      - "Auto-expires based on date"
-    urgency_levels:
-      low: "Info background, dismissible"
-      medium: "Warning background, prominent CTA"
-      high: "Alert background, sticky, large CTA"
-      critical: "Danger background, not dismissible, immediate action"
+  scroll_restoration:
+    description: "Scroll position management"
+    requirements:
+      - "Restore scroll on browser back/forward"
+      - "Reset scroll on route change"
+      - "Smooth scroll for in-page anchors"
+      - "Account for sticky header offset"
   
-  content_sensitivity:
-    - "Integrates with content gate system"
-    - "Progressive disclosure for sensitive content"
-    - "User preferences remembered"
-    - "Clear content warnings"
-    - "Safe viewing modes"
+  back_to_top:
+    description: "Scroll to top button"
+    requirements:
+      - "Show after scrolling 400px down"
+      - "Fade in/out with opacity transition"
+      - "Smooth scroll animation"
+      - "Fixed position in bottom-right"
+      - "Respect prefers-reduced-motion"
 
-state_management:
-  mobile_menu:
-    state: "isOpen: boolean"
-    actions:
-      - "open(): Sets isOpen to true"
-      - "close(): Sets isOpen to false"
-      - "toggle(): Inverts isOpen"
-    side_effects:
-      - "Body scroll locked when open"
-      - "Focus trapped in menu"
-      - "Closes on route change"
-  
-  theme:
-    state: "current: 'light' | 'dark' | 'contrast' | 'gentle'"
-    persistence: "localStorage"
-    system_preference: "Detected on mount"
-    keyboard_shortcut: "Ctrl/Cmd + Shift + T cycles themes"
-  
-  scroll:
-    state: "scrollY: number, isScrollingUp: boolean"
-    threshold: "5px minimum before triggering"
-    debounce: "Throttled to 16ms (60fps)"
-  
-  emergency_banner:
-    state: "dismissed: boolean, expiryTime: Date | null"
-    persistence: "sessionStorage or localStorage"
-    auto_dismiss: "Based on urgency level"
+# User Interaction Patterns
 
-error_handling:
-  navigation_failures:
-    - "Graceful fallback for failed navigation"
-    - "Error boundary around navigation components"
-    - "Offline mode indicators"
+keyboard_navigation:
+  tab_order:
+    - "Skip link (when focused)"
+    - "Logo/home link"
+    - "Main navigation items"
+    - "Theme switcher"
+    - "Mobile menu button (when visible)"
+    - "Main content"
+    - "Footer links by section"
+    - "Social media links"
   
-  image_loading:
-    - "Logo fallback to text"
-    - "Social icon fallbacks"
+  shortcuts:
+    - "ESC: Close mobile menu"
+    - "Enter/Space: Activate buttons"
+    - "Arrow keys: Navigate within menus"
+  
+  focus_management:
+    - "Visible focus indicators (2px outline minimum)"
+    - "Focus trapped in mobile menu when open"
+    - "Focus returns to trigger on close"
+    - "Skip repetitive navigation option"
+
+touch_interactions:
+  gestures:
+    - "Swipe right to close mobile menu"
+    - "Tap outside to close mobile menu"
+    - "Pull-to-refresh disabled to prevent conflicts"
+  
+  feedback:
+    - "Touch targets show pressed state"
+    - "Haptic feedback on capable devices"
+    - "Visual ripple effect on buttons"
+
+# State Management Approach
+
+component_state:
+  header:
+    local:
+      - "isVisible: boolean"
+      - "isSticky: boolean"
+      - "mobileMenuOpen: boolean"
+      - "scrollDirection: 'up' | 'down'"
+    context:
+      - "currentTheme from ThemeProvider"
+      - "user authentication status"
+  
+  footer:
+    local:
+      - "newsletterEmail: string"
+      - "newsletterStatus: 'idle' | 'loading' | 'success' | 'error'"
+      - "expandedSections: Set<string> (mobile)"
+  
+  main_layout:
+    local:
+      - "showBackToTop: boolean"
+      - "contentHeight: number"
+    context:
+      - "emergency banner visibility"
+      - "content sensitivity level"
+
+state_persistence:
+  localStorage:
+    - "theme preference"
+    - "mobile menu preference (expanded sections)"
+    - "dismissed banners"
+    - "content sensitivity choice"
+  
+  sessionStorage:
+    - "scroll positions by route"
+    - "form input values (newsletter)"
+  
+  url_state:
+    - "active section (via hash)"
+    - "search/filter parameters"
+
+# Error Handling Behavior
+
+error_scenarios:
+  network_failures:
+    newsletter_submission:
+      - "Show user-friendly error message"
+      - "Preserve form input"
+      - "Offer retry option"
+      - "Log to error tracking"
+    
+    image_loading:
+      - "Show placeholder/skeleton"
+      - "Retry with exponential backoff"
+      - "Fall back to text alternative"
+  
+  javascript_disabled:
+    - "Core navigation remains functional"
+    - "Forms work with server-side processing"
+    - "Theme defaults to system preference"
+    - "Mobile menu degrades to jump links"
+  
+  validation_errors:
+    - "Inline error messages"
+    - "Don't clear valid fields"
+    - "Focus first error field"
+    - "Announce errors to screen readers"
+
+error_recovery:
+  - "Graceful degradation for all features"
+  - "Clear error states on successful retry"
+  - "Timeout long-running operations"
+  - "Provide alternative actions"
+
+# Animation and Transition Behavior
+
+animations:
+  timing_functions:
+    - "ease-out for enter animations"
+    - "ease-in for exit animations"
+    - "linear for continuous animations"
+  
+  durations:
+    - "Micro interactions: 150ms"
+    - "Panel slides: 300ms"
+    - "Page transitions: 400ms"
+    - "Skeleton loading: 1.5s pulse"
+  
+  performance:
+    - "Use transform and opacity only"
+    - "Will-change for predictable animations"
+    - "GPU acceleration where beneficial"
+    - "Disable on battery saver mode"
+
+reduced_motion:
+  - "Respect prefers-reduced-motion media query"
+  - "Instant transitions instead of animations"
+  - "No auto-playing animations"
+  - "Static loading states"
+
+# Content Loading Behavior
+
+progressive_enhancement:
+  initial_render:
+    - "Server-side render critical content"
+    - "Inline critical CSS"
+    - "Defer non-critical JavaScript"
     - "Progressive image loading"
   
-  theme_switching:
-    - "Fallback to system preference"
-    - "Handle localStorage errors"
-    - "Prevent flash of wrong theme"
+  lazy_loading:
+    - "Footer content below the fold"
+    - "Social media icons"
+    - "Trust signal images"
+    - "Analytics scripts"
   
-  mobile_menu:
-    - "Handle touch and click events"
-    - "Prevent double-toggle on fast clicks"
-    - "Close on browser back button"
+  skeleton_screens:
+    - "Show during data fetching"
+    - "Match actual content layout"
+    - "Smooth transition to real content"
+    - "Prevent layout shift"
 
-user_interactions:
-  keyboard:
-    - "Tab: Navigate through focusable elements"
-    - "Enter/Space: Activate buttons and links"
-    - "Escape: Close mobile menu or dialogs"
-    - "Arrow keys: Navigate menu items (optional)"
-  
-  mouse:
-    - "Hover states on all interactive elements"
-    - "Click outside to close mobile menu"
-    - "No hover-only functionality"
-  
-  touch:
-    - "44px minimum touch targets"
-    - "Swipe to close mobile menu (optional)"
-    - "No touch-only functionality"
-    - "Proper touch event handling"
-  
-  screen_reader:
-    - "Announce navigation state changes"
-    - "Read navigation hierarchy correctly"
-    - "Announce current page"
-    - "Describe trust signals"
+# Responsive Behavior
 
-trauma_informed_behavior:
-  gentle_interactions:
-    - "No sudden layout shifts"
-    - "Smooth transitions (respecting prefers-reduced-motion)"
-    - "Predictable navigation patterns"
-    - "Clear visual feedback"
+breakpoint_transitions:
+  mobile_to_desktop:
+    - "768px: Show desktop navigation"
+    - "1024px: Show full footer layout"
+    - "1280px: Maximum content width"
   
-  content_warnings:
-    - "Integrated into layout when needed"
-    - "Non-intrusive but clear"
-    - "User control maintained"
-    - "Easy exit options"
+  layout_changes:
+    - "Stack footer columns on mobile"
+    - "Collapse navigation into hamburger"
+    - "Adjust touch target sizes"
+    - "Reflow trust signals"
   
-  emergency_appeals:
-    - "Balance urgency with sensitivity"
-    - "Provide clear actions"
-    - "Include support resources"
-    - "Respect user boundaries"
+  performance_optimization:
+    - "Load mobile-specific code only on mobile"
+    - "Lazy load desktop enhancements"
+    - "Optimize images per viewport"

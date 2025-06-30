@@ -1,117 +1,208 @@
-'use client'
-
 import * as React from 'react'
 import Link from 'next/link'
-import { Menu } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Menu, Heart } from 'lucide-react'
 import { ThemeSwitcher } from '@minniewinnie/ui'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useScrollDirection } from './hooks/useScrollDirection'
+import { useViewTransition } from './hooks/useViewTransition'
+import { MobileNav } from './MobileNav'
 
-interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
-  sticky?: boolean
+// Types
+export interface NavItem {
+  href: string
+  label: string
+  icon?: React.ComponentType<{ className?: string }>
+  external?: boolean
+  highlight?: boolean
+  mobileOnly?: boolean
+  desktopOnly?: boolean
 }
 
-const Header = React.forwardRef<HTMLElement, HeaderProps>(
-  ({ className, sticky = true, ...props }, ref) => {
-    const [isOpen, setIsOpen] = React.useState(false)
+export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
+  sticky?: boolean
+  navItems?: NavItem[]
+  showDonateButton?: boolean
+  emergencyBanner?: React.ReactNode
+}
 
-    // Navigation items
-    const navItems = [
-      { href: '/', label: 'Home' },
-      { href: '/stories', label: 'Rescue Stories' },
-      { href: '/donate', label: 'Donate' },
-      { href: '/about', label: 'About Us' },
-      { href: '/contact', label: 'Contact' },
-    ]
+// Default navigation items
+const defaultNavItems: NavItem[] = [
+  { href: '/', label: 'Home' },
+  { href: '/stories', label: 'Rescue Stories' },
+  { href: '/updates', label: 'Field Updates' },
+  { href: '/about', label: 'About Us' },
+  { href: '/donate', label: 'Donate', highlight: true, mobileOnly: true },
+]
+
+/**
+ * Header component for main site navigation
+ * Performance-optimized with sticky behavior and mobile responsiveness
+ * 
+ * @example
+ * <Header sticky={false} showDonateButton />
+ * 
+ * @accessibility
+ * - Skip link for keyboard navigation
+ * - ARIA landmarks for screen readers
+ * - Mobile menu traps focus when open
+ */
+export const Header = React.forwardRef<HTMLElement, HeaderProps>(
+  ({ 
+    className, 
+    sticky = true, 
+    navItems = defaultNavItems,
+    showDonateButton = true,
+    emergencyBanner,
+    ...props 
+  }, ref) => {
+    const router = useRouter()
+    const navigate = useViewTransition()
+    const { scrollDirection, isAtTop } = useScrollDirection()
+    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+    
+    // Determine header visibility
+    const isVisible = sticky ? (scrollDirection === 'up' || isAtTop) : true
+
+    // Close mobile menu on route change
+    React.useEffect(() => {
+      setMobileMenuOpen(false)
+    }, [router])
+
+    // Prevent body scroll when mobile menu is open
+    React.useEffect(() => {
+      if (mobileMenuOpen) {
+        document.body.style.overflow = 'hidden'
+      } else {
+        document.body.style.overflow = ''
+      }
+      return () => {
+        document.body.style.overflow = ''
+      }
+    }, [mobileMenuOpen])
+
+    const handleNavClick = React.useCallback((href: string, external?: boolean) => {
+      if (!external) {
+        navigate(href)
+      }
+    }, [navigate])
 
     return (
-      <header
-        ref={ref}
-        className={cn(
-          "border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-          sticky && "sticky top-0 z-50",
-          className
-        )}
-        {...props}
-      >
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo and Branding */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-primary">
-                  Animal Protection Foundation
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Protecting animals with compassion
-                </span>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <ThemeSwitcher />
-            </nav>
-
-            {/* Mobile Navigation */}
-            <div className="flex md:hidden items-center space-x-2">
-              <ThemeSwitcher />
-              <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10"
-                    aria-label="Open navigation menu"
-                  >
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px]">
-                  <SheetHeader>
-                    <SheetTitle>Navigation Menu</SheetTitle>
-                  </SheetHeader>
-                  <nav className="mt-6 flex flex-col space-y-4">
-                    {navItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                        className="flex h-11 items-center rounded-md px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                    <div className="pt-4 border-t">
-                      <Link
-                        href="/donate"
-                        onClick={() => setIsOpen(false)}
-                        className="flex h-11 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                      >
-                        Donate Now
-                      </Link>
-                    </div>
-                  </nav>
-                </SheetContent>
-              </Sheet>
-            </div>
+      <>
+        {emergencyBanner && (
+          <div className="bg-destructive text-destructive-foreground px-4 py-2 text-center">
+            {emergencyBanner}
           </div>
-        </div>
-      </header>
+        )}
+        
+        <header
+          ref={ref}
+          className={cn(
+            'bg-background border-b border-border transition-transform duration-300 will-change-transform',
+            sticky && 'sticky top-0 z-50',
+            isVisible ? 'translate-y-0' : '-translate-y-full',
+            className
+          )}
+          role="banner"
+          {...props}
+        >
+          {/* Skip to main content link */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 
+                     bg-background px-4 py-2 rounded-md focus:outline-none focus:ring-2 
+                     focus:ring-primary z-50"
+          >
+            Skip to main content
+          </a>
+
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="flex items-center justify-between h-16" aria-label="Main navigation">
+              {/* Logo */}
+              <Link 
+                href="/" 
+                className="flex items-center space-x-2 text-foreground hover:text-primary 
+                         transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-md px-2 py-1"
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleNavClick('/')
+                }}
+              >
+                <Heart className="h-6 w-6" aria-hidden="true" />
+                <span className="font-semibold text-lg">Animal Protection</span>
+              </Link>
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-6">
+                {navItems
+                  .filter(item => !item.mobileOnly)
+                  .map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'text-sm font-medium transition-colors hover:text-primary',
+                        'focus:outline-none focus:ring-2 focus:ring-primary rounded-md px-2 py-1',
+                        item.highlight 
+                          ? 'text-primary hover:text-primary/80' 
+                          : 'text-muted-foreground'
+                      )}
+                      target={item.external ? '_blank' : undefined}
+                      rel={item.external ? 'noopener noreferrer' : undefined}
+                      aria-label={item.external ? `${item.label} (opens in new tab)` : undefined}
+                      onClick={(e) => {
+                        if (!item.external) {
+                          e.preventDefault()
+                          handleNavClick(item.href)
+                        }
+                      }}
+                    >
+                      {item.label}
+                      {item.external && <span aria-hidden="true"> ↗</span>}
+                    </Link>
+                  ))}
+                <ThemeSwitcher />
+                {showDonateButton && (
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleNavClick('/donate')}
+                    className="min-h-[44px] min-w-[44px]"
+                  >
+                    <Heart className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Donate
+                  </Button>
+                )}
+              </div>
+
+              {/* Mobile Navigation Controls */}
+              <div className="flex md:hidden items-center space-x-2">
+                <ThemeSwitcher />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMobileMenuOpen(true)}
+                  aria-label="Open navigation menu"
+                  aria-expanded={mobileMenuOpen}
+                  className="min-h-[44px] min-w-[44px]"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </div>
+            </nav>
+          </div>
+        </header>
+
+        {/* Mobile Navigation */}
+        <MobileNav
+          isOpen={mobileMenuOpen}
+          onOpenChange={setMobileMenuOpen}
+          navItems={navItems}
+          currentPath={router.pathname || '/'}
+        />
+      </>
     )
   }
 )
 
 Header.displayName = 'Header'
-
-export { Header }

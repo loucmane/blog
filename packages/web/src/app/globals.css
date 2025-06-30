@@ -334,3 +334,53 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Ripple effect animation */
+  @keyframes ripple {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+  
+  .animate-ripple {
+    animation: ripple 0.6s ease-out;
+  }
+  
+  /* Smooth scroll behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    
+    .motion-safe\:transition-all {
+      transition: none !important;
+    }
+    
+    .motion-safe\:transition-transform {
+      transition: none !important;
+    }
+    
+    .motion-safe\:transition-colors {
+      transition: none !important;
+    }
+    
+    .motion-safe\:animate-in {
+      animation: none !important;
+    }
+    
+    .animate-ripple {
+      animation: none !important;
+    }
+  }
+}
