@@ -3,202 +3,218 @@
 ## Objective
 Transform the current monolithic CLAUDE.md into a modular, reusable template system that can be quickly deployed to new projects while preserving all proven workflows and patterns.
 
-## Approach: CLAUDE.md as Aggregator
+## Updated Approach (2025-01-03): Extraction-First Strategy
 
-The CLAUDE.md file will be lightweight, primarily referencing other modular files that contain the actual content. This allows for easy maintenance and project-specific customization.
+Based on our design discussion, we're taking an extraction-first approach:
+1. Extract content from working CLAUDE.md into modular structure
+2. Test the modular system on current project
+3. Only create templates after proven to work
+4. Develop in parallel with current system (no disruption)
 
-## Phase 1: Content Analysis & Extraction (Current)
+## Phase 1: Content Extraction & Documentation ✅ COMPLETED
 
-### 1.1 Map Current CLAUDE.md Sections
-Analyze the current CLAUDE.md and determine which content belongs in which module:
+### 1.1 Created Architecture Decisions
+Documented the rationale for 5-file modular structure with focus on:
+- Context-aware loading (200-600 lines vs 1400)
+- Clear separation of concerns
+- Friction minimization strategies
 
-- **WORKFLOWS.md**: SESSION.md management, memory patterns, todo discipline, documentation workflow
-- **TOOLS.md**: MCP integrations (Serena, TaskMaster, Agent, Zen), usage guidelines
-- **CONVENTIONS.md**: Git workflow, coding standards, naming patterns
-- **PROJECT.md**: Project-specific content (name, tech stack, architecture decisions)
-- **Keep in CLAUDE.md**: High-level overview, references to other files, quick reminders
+### 1.2 Created Content Mapping
+Line-by-line mapping showing exactly where each section goes:
+- Universal patterns → WORKFLOWS.md
+- MCP configurations → TOOLS.md
+- Standards → CONVENTIONS.md
+- Project specifics → PROJECT-BLOG.md
+- Navigation → CLAUDE-NEW.md
 
-### 1.2 Identify Reusable vs Project-Specific Content
-- Mark sections that are universal (SESSION.md workflow)
-- Mark sections that need placeholders ([PROJECT_NAME], [TECH_STACK])
-- Mark sections that are personal preferences (gac alias, specific tools)
+## Complete Implementation Plan - Claude Template System
 
-## Phase 2: Template Creation
+### Phase 1: Knowledge Persistence Layer (NEW)
+**Purpose**: Prevent circular discussions and maintain momentum
 
-### 2.1 Create Core Template Files
+#### 1.1 Create DECISIONS.md
+Document all settled decisions:
+- 5-file modular structure (with rationale)
+- Extraction-first approach
+- Improvement-while-building methodology
+- Knowledge persistence system
+- Integration over complexity
+- Modular system refinement
 
-#### CLAUDE.md Template Structure:
-```markdown
-# [PROJECT_NAME] Development Guide
+#### 1.2 Create EVOLUTION.md
+Timeline of our journey:
+- Phase 1: Initial template concept (2025-01-02)
+- Phase 2: Design discussion and refinement (2025-01-03)
+- Phase 3: Realized it's a modular evolution
+- Current understanding and insights
+- Lessons learned
 
-This project uses my standard AI-assisted development workflow.
+#### 1.3 Create SESSION-BRIDGE.md
+Bridge for next session:
+- Current status: Ready to extract
+- Don't revisit: Architecture decisions
+- Continue with: CLAUDE-NEW.md creation
+- Active improvements to test
 
-## Quick Reference
-- **Project**: [PROJECT_NAME]
-- **Path**: [PROJECT_PATH]
-- **Type**: [PROJECT_TYPE]
-- **Created**: [DATE]
+### Phase 2: Parallel Implementation (Current)
 
-## System Components
-- [Workflows](./WORKFLOWS.md) - Development patterns and processes
-- [Tools](./TOOLS.md) - MCP tools configuration and usage
-- [Conventions](./CONVENTIONS.md) - Coding and git standards
-- [Project Config](./PROJECT.md) - Project-specific details
+#### 2.1 Extract Content to Modular Files
 
-## Quick Start
-1. Start new session: See [WORKFLOWS.md](./WORKFLOWS.md#session-management)
-2. Review project details: See [PROJECT.md](./PROJECT.md)
-3. Check available tools: See [TOOLS.md](./TOOLS.md)
+Create these files in `templates/` directory by extracting from current CLAUDE.md:
 
-[Any critical reminders or project-specific notes]
-```
+1. **CLAUDE-NEW.md** (~150 lines)
+   - Navigation hub with quick links
+   - Critical reminders only
+   - Common task shortcuts
+   - References to other files
 
-#### WORKFLOWS.md Structure:
-- Session Management
-  - Pre-flight checklist
-  - Session initialization
-  - Mid-session updates
-  - Session closure
-- Memory Management
-  - Serena patterns
-  - Naming conventions
-  - Content structure
-- Task Management
-  - TodoWrite/Read usage
-  - Priority levels
-  - Progress tracking
-- Documentation Workflow
-  - Tracker documents
-  - Implementation plans
-  - Journey documents
+2. **WORKFLOWS.md** (~400 lines)
+   - SESSION.md complete lifecycle
+   - Memory management patterns
+   - Todo tracking discipline  
+   - Documentation workflow
+   - Pre-flight checklists
 
-#### TOOLS.md Structure:
-- Available MCP Tools
-  - Serena configuration
-  - TaskMaster setup
-  - Agent tool usage
-  - Other tools
-- Tool Selection Guide
-  - When to use which tool
-  - Common patterns
-  - Integration tips
+3. **TOOLS.md** (~300 lines)
+   - MCP tool registry
+   - Tool selection matrix
+   - Serena patterns
+   - Tool-specific guidelines
 
-#### CONVENTIONS.md Structure:
-- Git Workflow
-  - Branch naming
-  - Commit messages
-  - PR process
-- Coding Standards
-  - File naming
-  - Import order
-  - Code style
-- Documentation Standards
-  - Markdown formatting
-  - Comment style
-  - README structure
+4. **CONVENTIONS.md** (~200 lines)
+   - Git workflow (gac alias)
+   - Commit message format
+   - Branch naming patterns
+   - Code standards
+   - Communication style
 
-#### PROJECT.md Template:
-```markdown
-# Project Configuration: [PROJECT_NAME]
+5. **PROJECT-BLOG.md** (~300 lines)
+   - All blog-specific content
+   - Tech stack details
+   - Architecture decisions
+   - Performance targets
+   - Package structure
 
-## Basic Information
-- **Name**: [PROJECT_NAME]
-- **Description**: [PROJECT_DESCRIPTION]
-- **Repository**: [REPO_URL]
-- **Created**: [DATE]
-- **Status**: [Active|Maintenance|Archive]
+#### 2.2 Update Existing Documentation
 
-## Technical Stack
-- **Language**: [PRIMARY_LANGUAGE]
-- **Framework**: [FRAMEWORK]
-- **Package Manager**: [npm|pnpm|yarn]
-- **Key Dependencies**:
-  - [DEPENDENCY_1]
-  - [DEPENDENCY_2]
+1. **Update tracker.md** ✅
+   - Add knowledge persistence section
+   - Add modular system approach
+   - Update with settled decisions
+   - Reference new files
 
-## Project Structure
-[PROJECT_STRUCTURE]
+2. **Update README.md**
+   - Add system architecture section
+   - Explain modular system concept
+   - Add navigation to knowledge files
+   - Current status block
 
-## Development Setup
-[SETUP_COMMANDS]
+3. **Create SYSTEM-DESIGN.md**
+   - Compare with previous approaches
+   - Explain integration benefits
+   - Document the "why" behind approach
+   - Future vision
 
-## Available Scripts
-[SCRIPT_LIST]
+#### 2.3 Add Cross-References
 
-## Architecture Decisions
-[KEY_DECISIONS]
+Each file needs smart navigation:
+- "See also" sections
+- Quick links for common paths
+- No dead ends
+- Context-aware helpers
 
-## Project-Specific Patterns
-[CUSTOM_PATTERNS]
+#### 2.4 Implementation Order
 
-## Important Notes
-[CRITICAL_INFORMATION]
-```
+1. Knowledge persistence files first
+2. Update existing documentation
+3. Start with CLAUDE-NEW.md (navigation hub)
+4. Extract WORKFLOWS.md (most universal)
+5. Extract TOOLS.md (MCP configurations)
+6. Extract CONVENTIONS.md (standards)
+7. Extract PROJECT-BLOG.md (blog-specific)
+8. Add all cross-references
+9. Test with actual work session
 
-### 2.2 Create Document Templates
+## Phase 3: Parallel Testing
 
-- **SESSION.md.template**: Standard session structure with placeholders
-- **memory.md.template**: Serena memory format
-- **tracker.md.template**: Project tracker format
+### 3.1 Test on Current Project
+- Use CLAUDE-NEW.md for some sessions
+- Keep current CLAUDE.md active
+- Compare efficiency and friction
+- Note any missing information
+- Refine based on actual usage
 
-## Phase 3: Testing & Validation
+### 3.2 Success Criteria
+- No lost functionality
+- Faster AI loading (50-70% less content)
+- No noticeable workflow friction
+- Clear navigation between files
+- All cross-references work
 
-### 3.1 Create Example Implementation
-Use the current blog project as a test case:
-- Extract content into the new structure
-- Verify all workflows function correctly
-- Document any issues or improvements
+## Phase 4: Meta-Process Documentation
 
-### 3.2 Test New Project Setup
-1. Create a dummy project
-2. Copy template files
-3. Fill in PROJECT.md
-4. Run through a complete development session
-5. Measure setup time (target: <5 minutes)
+### 4.1 Create BUILDING-BETTER.md
+Document HOW we're improving:
+- What improvements we're testing
+- What's working/not working
+- Patterns discovered
+- Applied learnings
+- Meta-process insights
 
-## Phase 4: Documentation & Refinement
+### 4.2 Final Documentation
+- Update SESSION.md with complete work
+- Create comprehensive handoff
+- Document lessons learned
+- Prepare for template creation
 
-### 4.1 Create Setup Guide
-- Step-by-step instructions
-- Common customizations
+## Phase 5: Template Creation (Only After Testing)
+
+### 5.1 Convert to Templates
+- Replace project-specific content with placeholders
+- Create PROJECT.md template
+- Add setup instructions
+- Create example configurations
+
+### 5.2 Documentation
+- Quick start guide
+- Migration guide from monolithic CLAUDE.md
+- Customization examples
 - Troubleshooting tips
 
-### 4.2 Optional: Setup Automation
-- Consider a simple bash script
-- Interactive prompts for project details
-- Auto-generate initial SESSION.md
+## Future Considerations
 
-## Phase 5: Future Enhancements
+- Monorepo template integration
+- Framework-specific extensions
+- Automation if manual setup proves painful
+- Community sharing (if valuable beyond personal use)
 
-### 5.1 Potential Additions
-- Framework-specific templates (Next.js, Django, etc.)
-- Team collaboration patterns
-- CI/CD integration templates
-- Testing workflow templates
+## Safety Mechanisms
 
-### 5.2 Version Management
-- Consider semantic versioning for templates
-- Changelog for improvements
-- Migration guides between versions
+1. **No Disruption** - Current CLAUDE.md remains active
+2. **Parallel Testing** - Both systems available
+3. **Easy Rollback** - Can revert anytime
+4. **Incremental Migration** - Test section by section if needed
 
-## Implementation Timeline
+## Key Insights from Design Discussion
 
-1. **Week 1**: Content extraction and template creation
-2. **Week 2**: Testing and refinement
-3. **Week 3**: Documentation and examples
-4. **Ongoing**: Improvements based on usage
+1. **AI Usage Pattern** - AI loads different content based on task type
+2. **Current Pain** - 1400 lines loaded every time, much irrelevant
+3. **Solution** - Context-aware loading with clear navigation
+4. **User Preference** - Keep current system until new one proven
 
-## Success Metrics
+## Implementation Summary
 
-- Setup time for new project: <5 minutes
-- All core workflows preserved
-- No productivity loss vs current system
-- Easy to customize for different project types
-- Clear enough to use after time away
+This plan creates a self-documenting, self-improving system that:
+- Builds on previous systems but with better integration
+- Prevents circular discussions through knowledge persistence
+- Improves workflows while building them
+- Tests on real work before templating
+- Maintains current system until proven
 
-## Risk Mitigation
+## Next Immediate Steps
 
-- **Over-engineering**: Keep it simple, add complexity only when needed
-- **Maintenance burden**: Modular design should reduce, not increase maintenance
-- **Learning curve**: Comprehensive examples and documentation
-- **Tool changes**: Abstract tool-specific details where possible
+1. Create knowledge persistence files (DECISIONS, EVOLUTION, SESSION-BRIDGE)
+2. Update remaining documentation with modular concepts
+3. Begin extraction with CLAUDE-NEW.md
+4. Test improvements in real-time
+5. Document what we learn in BUILDING-BETTER.md
