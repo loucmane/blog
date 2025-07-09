@@ -85,7 +85,19 @@ Create in `/docs/ai/work-tracking/active/`:
 └── handoff.md            # Next session instructions
 ```
 
-**Naming Convention**: `20250108-phase3-claude-new-review-ACTIVE/`
+**Naming Convention**: `20250709-phase3-claude-new-review-ACTIVE/`
+
+**TodoWrite Integration**: Always create todos BEFORE creating files:
+```markdown
+- [ ] Create work folder structure
+- [ ] Create tracker.md with initial goals
+- [ ] Create implementation.md with approach
+- [ ] Create findings.md for discoveries
+- [ ] Create decisions.md for rationale
+- [ ] Create memory-refs.md with references
+- [ ] Create handoff.md with next steps
+```
+This ensures nothing is forgotten and provides clear progress tracking.
 
 ### 3. Create All 6 Core Files
 Every work folder MUST have these 6 files:
@@ -106,17 +118,101 @@ Typical structure:
 - Small tasks: 10-15 items
 - Medium tasks: 15-25 items
 - Large tasks: 25-40 items
+- Complex initiatives: 40-70+ items (like template system overhaul)
+
+#### Breaking Down Complex Work
+For major initiatives, create EXTENSIVE todo lists that capture EVERY step:
+
+```markdown
+Example: Template System Phase 3 (60+ todos)
+- [ ] Create session entry in SESSION.md
+- [ ] Read existing tracker to understand scope
+- [ ] Read implementation plan for methodology
+- [ ] Analyze CLAUDE-NEW.md section by section
+- [ ] Document findings for each component
+- [ ] Create work tracking folder structure
+- [ ] Create tracker.md with progress tracking
+- [ ] Create implementation.md with approach
+- [ ] Create findings.md for discoveries
+- [ ] Create decisions.md for rationale
+- [ ] Create memory-refs.md for continuity
+- [ ] Create handoff.md for next session
+- [ ] Update main documentation with discoveries
+- [ ] Add Integration Principle to workflows
+- [ ] Test each integration point
+- [ ] Create rollback mechanisms
+- [ ] Document friction points discovered
+- [ ] ... (continues for all subtasks)
+```
+
+#### Benefits of Comprehensive Todo Lists
+- **Nothing forgotten**: Every step is tracked
+- **Clear progress**: See exactly what's done/remaining
+- **Easy handoff**: Next session knows exact status
+- **Prevents duplication**: Won't redo completed work
+- **Mental clarity**: Offload tracking to the system
+
+#### Todo List Best Practices
+1. **Granular tasks**: Break down to atomic actions
+2. **Logical ordering**: Dependencies respected
+3. **Clear descriptions**: Each todo self-explanatory
+4. **Status tracking**: Update in real-time
+5. **Review regularly**: Ensure list stays relevant
 
 ### 5. During Work
 - Update SESSION.md progress log regularly
 - Mark todos as in_progress/completed in real-time
 - Document decisions and reasoning
 
-### 6. End of Session
-- Create Serena memory: `session_$(date +%Y-%m-%d)_work_description`
-- Update SESSION.md with final status
-- Include "How to Initialize Next Session" in memory
-- Commit changes with clear message
+### 6. End of Session - Handoff Best Practices
+
+#### Required Steps (in order):
+1. **Update SESSION.md completely**:
+   - Final progress log entry with timestamp
+   - Update all sections (Code Changes, Current Status, Next Actions)
+   - Add "Session End Status" with accomplishments
+
+2. **Update work tracking handoff.md**:
+   - Current state summary
+   - What's been tested/verified
+   - Known issues or blockers
+   - Specific next steps
+
+3. **Create Serena memory**:
+   ```bash
+   # Format: session_YYYY-MM-DD_descriptive_name
+   session_$(date +%Y-%m-%d)_template_system_integration
+   ```
+   
+   **Must include**:
+   - Work completed with specific file names
+   - Unfinished tasks with exact status
+   - Important decisions and rationale
+   - "How to Initialize Next Session" section with memory name
+   
+4. **Update todos final status**:
+   - Mark all completed items as done
+   - Leave in-progress items clearly marked
+   - Add any discovered tasks
+
+5. **Commit with descriptive message**:
+   ```bash
+   gac "feat: implement template system Phase 3 - added 12 critical integrations"
+   ```
+
+6. **Provide initialization message to user**:
+   ```
+   Session complete! Next session, start with:
+   "Activate project MomsBlog, read memory session_2025-07-09_template_system_integration and SESSION.md"
+   ```
+
+#### Handoff Quality Checklist:
+- [ ] Can someone else continue exactly where you left off?
+- [ ] Are all file locations clearly documented?
+- [ ] Is the current branch and git status noted?
+- [ ] Are test results and verification steps included?
+- [ ] Is the next logical step obvious?
+- [ ] Did you tell the user how to initialize next session?
 
 ### 7. Document Journey (If Applicable)
 For tasks with discoveries or complex debugging:
@@ -157,11 +253,33 @@ docs/ai/work-tracking/
 └── INDEX.md                     # Master tracking file
 ```
 
+### Naming Convention
+**Format**: `YYYYMMDD-phase-topic-STATUS`
+- **YYYYMMDD**: Run `date +%Y%m%d` - NEVER type from memory!
+- **phase**: Current project phase (e.g., phase3)
+- **topic**: Brief descriptive name (kebab-case)
+- **STATUS**: -ACTIVE, -DONE, or -BLOCKED
+
+**Example**: `20250709-phase3-template-system-ACTIVE`
+
 ### Work Lifecycle
 1. **Start**: Create folder in `active/` with -ACTIVE suffix
 2. **Complete**: Change suffix to -DONE, move to `completed/YYYY/MM-month/`
 3. **Block**: Change suffix to -BLOCKED, move to `blocked/` with reason
 4. **Archive**: After 6 months, move from completed to `archive/`
+
+### When to Create New Work vs Continue Existing
+**Create NEW work folder when**:
+- Starting a completely different initiative
+- Different phase of project (Phase 2 → Phase 3)
+- Unrelated feature or system
+
+**Continue EXISTING work folder when**:
+- Same overall initiative (e.g., all template system work)
+- Related subtasks (review → implement → test)
+- Natural progression of the same work
+
+**Warning**: Creating multiple folders for related work defeats the purpose!
 
 ### Integration Requirements
 **Nothing is "done" until integrated into main documentation:**
@@ -172,9 +290,16 @@ docs/ai/work-tracking/
 
 ## Workflow Improvement Protocol
 
+**Core Principle**: "We need to make sure we do things correctly all the time"
+
 When you discover ANY workflow gap or missed expected behavior:
 
-### 1. Immediate Documentation
+### 1. Immediate Gap Recognition
+- STOP what you're doing
+- Document it immediately
+- Don't continue until it's captured
+
+### 2. Immediate Documentation
 Add to current work's findings.md:
 ```markdown
 ### [Number]. [Gap Name]
@@ -185,21 +310,29 @@ Add to current work's findings.md:
 **Fix Needed**: [What should change]
 ```
 
-### 2. Create Todo
+### 3. Create Todo
 - Add todo for updating the relevant workflow
 - Mark as high priority if affects daily work
+- Include which file needs updating
 
-### 3. Update the Workflow
+### 4. Update the Workflow
 - Add explicit instruction where gap occurred
 - Include "why" explanations for critical steps
 - Test the improvement immediately
+- Verify it prevents the gap
 
-### 4. Examples from Practice
+### 5. Examples from Practice
 - **Gap**: Not updating todos when creating files
 - **Fix**: Added "Create todo BEFORE creating each file"
 
 - **Gap**: Guessing timestamps
 - **Fix**: Added "ALWAYS run `date` command"
+
+- **Gap**: Creating files in wrong location
+- **Fix**: Added "Check directory structure FIRST"
+
+### 6. Continuous Improvement
+Every gap is an opportunity to improve the system. The goal: Make workflows so complete and explicit that they work correctly every time.
 
 ## Integration Principle
 

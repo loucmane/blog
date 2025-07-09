@@ -18,6 +18,7 @@ git status                        # Check for changes
 
 ### By Task Type
 - **Starting new work** → WORKFLOWS.md (Session Management)
+- **Tracking work progress** → WORKFLOWS.md (Work Tracking Organization)
 - **Writing code** → CONVENTIONS.md (Standards)
 - **Using MCP tools** → TOOLS.md (Configurations)
 - **Project details** → PROJECT-BLOG.md (Specifics)
@@ -86,6 +87,11 @@ git status                        # Check for changes
 - Decisions need reasoning
 - Create trackers for complex work
 - Memory prevents repetition
+
+### Continuous Improvement
+- When you find gaps, improve the workflow immediately
+- Nothing is done until integrated where it will be used
+- Track all work in organized folders (see WORKFLOWS.md)
 
 ## 📚 See Also
 
