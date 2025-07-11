@@ -1688,57 +1688,28 @@ These templates embed best practices directly into common workflows, removing de
 ```
 
 ### Bug Fix Template
-
-#### 🔒 STEP 1: State the Bug (REQUIRED FIRST)
-**This step is LOCKED until you complete:**
-- [ ] State: "The bug is: [specific description]"
-- [ ] State: "It happens when: [reproduction steps]"
-- [ ] State: "Expected behavior: [what should happen]"
-
-**Cannot proceed?** → You don't understand the bug yet.
-
-#### 🔒 STEP 2: Reproduction (LOCKED until Step 1 complete)
-**First show:** "Bug description: [paste from Step 1]"
-**Then use:**
 ```yaml
-REPRODUCTION (Pre-selected: Bash + Read)
+1. REPRODUCTION (Pre-selected: Bash + Read)
+   □ STATE: "I need to reproduce the issue"
    □ USE: Bash → run failing command/test
    □ USE: Read → examine error output
-   □ CAPTURE: Exact error message
-```
-**Output:** Must paste actual error before proceeding
-
-#### 🔒 STEP 3: Investigation (LOCKED until error shown)
-**First paste:** "Error output: [paste from Step 2]"
-**Then use:**
-```yaml
-INVESTIGATION (Pre-selected: Serena)
+   
+2. INVESTIGATION (Pre-selected: Serena)
+   □ STATE: "I need to find the root cause"
    □ USE: mcp__serena__search_for_pattern → find error patterns
    □ USE: mcp__serena__find_symbol → locate problematic code
    □ USE: mcp__serena__find_referencing_symbols → trace data flow
-```
-**Output:** Must state root cause before proceeding
-
-#### 🔒 STEP 4: Fix (LOCKED until root cause stated)
-**First state:** "Root cause: [explanation from Step 3]"
-**Then choose:**
-```yaml
-FIX (Pre-selected: Edit tools)
+   
+3. FIX (Pre-selected: Edit tools)
    □ Point fix: Edit
    □ Multiple locations: MultiEdit
    □ Refactor function: mcp__serena__replace_symbol_body
-```
-
-#### 🔒 STEP 5: Verification (LOCKED until fix applied)
-**First confirm:** "Applied fix to: [list files changed]"
-**Then verify:**
-```yaml
-VERIFICATION (Pre-selected: Bash)
+   
+4. VERIFICATION (Pre-selected: Bash)
    □ Re-run failing test → should pass
    □ Run full test suite → no regressions
    □ Check related functionality
 ```
-**Output:** Must show passing tests
 
 ### Code Review Template
 ```yaml

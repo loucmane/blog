@@ -1,11 +1,11 @@
 # CRITICAL Missing Integrations - Must Fix Before Testing
 
 ## Progress Update (2025-07-09)
-✅ **Major Progress Made**: 22 of 27 critical items now integrated!
-- CLAUDE.md: Added Quick Reference + Key Principles + Common Workflows + Tool guide link
+✅ **Major Progress Made**: 24 of 27 critical items now integrated! (89% complete)
+- CLAUDE.md: Added Quick Reference + Key Principles + Common Workflows + Decision Matrix
 - WORKFLOWS.md: Added TodoWrite integration + Work folder guidance + Session handoff + Workflow improvement
 - CONVENTIONS.md: Added naming conventions + date validation + memory conventions + 6-file guidelines
-- TOOLS.md: Enhanced with comprehensive Serena capabilities guide
+- TOOLS.md: Enhanced with comprehensive Serena guide + Tool Selection Matrix
 
 ## The Problem
 We've created improvements but never integrated them into the actual templates. This defeats the entire purpose of the new system.
@@ -40,8 +40,8 @@ We've created improvements but never integrated them into the actual templates. 
 - [x] **Date validation reminder** (always use actual date command) ✅
 
 ### 4. TOOLS.md Missing:
-- [ ] **Tool selection matrix**
-- [ ] **When to use Agent vs native tools**
+- [x] **Tool selection matrix** ✅ (Quick Tool Finder + Decision Tree)
+- [ ] **When to use Task vs native tools** (partially covered in matrix)
 - [ ] **MCP troubleshooting**
 
 ### 5. Templates Missing:

@@ -59,6 +59,11 @@
   - Added 6-file structure guidelines to CONVENTIONS.md
   - Added Workflow Improvement Protocol to WORKFLOWS.md
   - TOTAL: 22 of 27 critical integrations complete (81% done!)
+- **2025-07-09 15:10 CEST** - DECISION MATRICES ADDED:
+  - Added comprehensive Decision Matrix to CLAUDE.md
+  - Added Tool Selection Matrix to TOOLS.md
+  - Updated critical-missing-integrations.md
+  - TOTAL: 24 of 27 critical integrations complete (89% done!)
 
 ## Implementation Steps
 1. **Review** ✅
@@ -80,7 +85,7 @@
 4. **Testing** 🔄
    - [x] Discover organizational issues
    - [x] Create testing framework
-   - [x] Fix critical missing integrations (12/27 done)
+   - [x] Fix critical missing integrations (24/27 done - 89%)
    - [ ] Run test scenarios
    - [ ] Document friction points
 
@@ -103,13 +108,11 @@
 1. ✅ Consolidated all Phase 3 work into this single tracker
 2. ✅ Archived the incorrectly-named folders
 3. ✅ Created testing framework documents
-4. ✅ Fixed 22 of 27 critical missing integrations
+4. ✅ Fixed 24 of 27 critical missing integrations (89% complete!)
 5. Remaining integrations to complete:
-   - Tool selection matrix in TOOLS.md
-   - When to use Agent vs native tools
+   - When to use Task vs native tools (expand existing coverage)
    - MCP troubleshooting guide
    - Integration checklist template
-   - Quick reference template
 6. Begin actual usage testing with new template system
 7. Document friction points as they occur
 

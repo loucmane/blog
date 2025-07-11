@@ -7,6 +7,7 @@ This index tracks all work folders across the project. Updated when work moves b
 | Folder | Topic | Started | Last Active | Phase |
 |--------|-------|---------|-------------|--------|
 | `20250709-phase3-template-system-ACTIVE` | Template System (Review/Deploy/Test) | 2025-07-09 | 2025-07-09 | Phase 3 |
+| `20250709-workflow-patterns-ACTIVE` | Workflow Patterns System | 2025-07-09 | 2025-07-09 | Enhancement |
 
 ## ✅ Completed Work
 
@@ -24,20 +25,21 @@ This index tracks all work folders across the project. Updated when work moves b
 
 ## 📊 Statistics
 
-- **Active**: 1
+- **Active**: 2
 - **Completed**: 0
 - **Blocked**: 0
-- **Total**: 1
+- **Total**: 2
 - **Archived**: 4 (with incorrect dates)
 
 ## 🔍 Quick Find
 
 ### By Phase
 - **Phase 3**: template-system
+- **Enhancement**: workflow-patterns
 
 ### By Topic
-- **Infrastructure**: template-system
-- **Documentation**: (included in template-system)
+- **Infrastructure**: template-system, workflow-patterns
+- **Documentation**: workflow-patterns
 - **Features**: (none yet)
 
 ## 📝 Notes
@@ -48,4 +50,4 @@ This index tracks all work folders across the project. Updated when work moves b
 - Update this index when work status changes
 
 ## 🔄 Last Updated
-2025-07-09 - Consolidated multiple folders into single template-system folder; Fixed date errors
+2025-07-09 - Added workflow-patterns initiative to address friction points discovered during template testing
