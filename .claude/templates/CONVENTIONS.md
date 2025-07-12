@@ -30,6 +30,7 @@ This document contains all coding conventions, communication patterns, and decis
 - **[Session Conventions](#session-conventions)** - Documentation standards
 - **[Serena Workflow Patterns](#serena-workflow-patterns)** - Semantic code navigation
 - **[Core Development Principles](#core-development-principles)** - Guiding principles with WHYs
+- **[Convention Handlers](#convention-handlers)** - NEW! Protocol navigation handlers
 - **[Common Convention Violations](#common-convention-violations)** - Mistakes to avoid
 
 ## 🚫 VIOLATION TRAPS - If You're Here, You're About to Make a Mistake!
@@ -477,6 +478,25 @@ DO Deploy Specialist When:
 
 ### SESSION.md Standards
 
+#### Critical Entry Order Rule
+
+```yaml
+SESSION ENTRIES MUST BE:
+  - At the TOP of the file (after Current Focus)
+  - In reverse chronological order (newest first)
+  - NEVER appended at the bottom
+  
+❌ WRONG: Adding new session at end of file
+✅ RIGHT: Adding new session after Current Focus section
+
+Structure:
+1. # Session Documentation
+2. ## Current Focus
+3. ## Session: [TODAY'S DATE] <- NEW ENTRIES GO HERE
+4. ## Previous Session: [OLDER DATE]
+5. (older sessions follow...)
+```
+
 #### Required Information Sources
 
 ```yaml
@@ -577,6 +597,47 @@ When to Create New Work vs Continue Existing:
     - Same overall initiative (e.g., all template system work)
     - Related subtasks (review → implement → test)
     - Natural progression of same work
+
+Work Preservation Principle:
+  ALWAYS preserve iteration history:
+    - Append new findings, don't overwrite
+    - Track what didn't work and why
+    - Document abandoned approaches
+    - Keep evolution visible
+
+Work Tracking File Structure:
+  tracker.md MUST follow this exact structure:
+    1. Header section (title, dates, status)
+    2. ## Goals (checklist format)
+    3. ## Progress Log (chronological entries)
+    4. ## Current State (present status)
+    5. ## Next Steps (upcoming actions)
+  
+  NEVER append progress entries to wrong sections:
+    ❌ WRONG: Adding progress under "Next Steps"
+    ✅ RIGHT: Adding progress under "Progress Log"
+  
+  Before editing tracker.md:
+    1. Find the "## Progress Log" section
+    2. Add new entries at the END of that section
+    3. Verify you're not in Current State or Next Steps
+    
+  CRITICAL: When updating tracker.md:
+    - Progress Log: APPEND new timestamped entries
+    - Current State: UPDATE/REPLACE with current status
+    - Next Steps: UPDATE/REPLACE with new priorities
+    - NEVER append to Current State section!
+  
+  Example:
+    ## Attempt 1: [Approach Name]
+    What we tried: [Description]
+    Why it failed: [Reasons]
+    
+    ## Attempt 2: [Improved Approach]
+    What changed: [Modifications]
+    Result: [Outcome]
+    
+  This prevents working in circles!
     - Avoiding proliferation of folders
     
   One Folder Per Initiative:
@@ -845,11 +906,386 @@ These principles guide all development decisions and interactions.
 - Verify understanding before proceeding
 - Test assumptions with small experiments
 
+### Development Process (D-D-I-I)
+**Document → Draft → Iterate → Implement**
+- **Document First** - Track work, capture findings, record decisions
+  - WHY: Prevents work loss and circular thinking
+- **Draft Second** - Create initial designs in work tracking
+  - WHY: Cheap to change text vs code
+- **Iterate Third** - Refine based on feedback and testing
+  - WHY: Catches issues before coding
+- **Implement Last** - Only code after design is solid
+  - WHY: Reduces rework and technical debt
+
+This mirrors our ultrathinking approach: think deeply before acting
+
 ### Continuous Improvement
 - When you find gaps, improve the workflow immediately
 - Nothing is done until integrated where it will be used
 - Track all work in organized folders
 - Apply lessons learned immediately
+
+## Convention Handlers
+
+This section defines how to handle convention enforcement requests when routed from CLAUDE.md's protocol-based navigation.
+
+### Evidence Handlers
+
+#### Handler: verify-claim
+**Triggers**: "prove X is true", "verify that Y", "confirm Z"
+**Target Pattern**: Extract claim to verify
+**Pre-conditions**: 
+- Claim is specific and verifiable
+- Code/documentation accessible
+**Process**:
+1. Parse claim into verifiable components
+2. **PRIMARY**: Use Serena to find evidence:
+   - Symbol definitions for code claims
+   - Pattern search for implementation claims
+   - Reference search for usage claims
+3. Gather concrete file:line references
+4. Present evidence with context
+5. State confidence level
+**Success**: Claim verified with evidence
+**Failure**: Cannot verify, show what was checked
+**Examples**:
+- "prove the auth system uses JWT" → Find JWT imports/usage
+- "verify all tests pass" → Run tests and show results
+
+#### Handler: gather-evidence
+**Triggers**: "find evidence for X", "gather proof of Y", "show support for Z"
+**Target Pattern**: Topic needing evidence
+**Pre-conditions**: 
+- Clear evidence target
+- Relevant sources available
+**Process**:
+1. Identify evidence types needed
+2. **PRIMARY**: Serena searches:
+   - Code implementation
+   - Documentation
+   - Test coverage
+   - Comments/commits
+3. **SECONDARY**: External evidence:
+   - Package.json dependencies
+   - Config files
+   - Git history
+4. Organize by relevance
+5. Summarize findings
+**Success**: Multiple evidence sources found
+**Failure**: Limited evidence available
+**Examples**:
+- "find evidence of performance optimization" → Code patterns + commits
+- "gather proof of security measures" → Auth code + tests
+
+#### Handler: cite-source
+**Triggers**: "where does this come from", "what's the source", "cite your reference"
+**Target Pattern**: Information needing citation
+**Pre-conditions**: 
+- Previous claim or information stated
+- Source should be traceable
+**Process**:
+1. Identify information to cite
+2. **PRIMARY**: Trace to source:
+   - Code location (file:line)
+   - Documentation section
+   - Tool output
+   - Memory reference
+3. Provide exact reference
+4. Include relevant context
+5. Link to full source
+**Success**: Source cited with precision
+**Failure**: Source unclear, explain search
+**Examples**:
+- "where does that error come from" → Stack trace file:line
+- "cite the naming convention" → CONVENTIONS.md:section
+
+### Naming Handlers
+
+#### Handler: check-naming
+**Triggers**: "is X named correctly", "check naming of Y", "validate name Z"
+**Target Pattern**: Name to validate
+**Pre-conditions**: 
+- Name type identifiable
+- Conventions documented
+**Process**:
+1. Identify name type:
+   - File/folder
+   - Function/method
+   - Variable/constant
+   - Component/class
+2. **PRIMARY**: Check against conventions:
+   - Read naming section
+   - Apply specific rules
+   - Check similar examples
+3. Use Serena to find patterns
+4. Compare and validate
+5. Provide verdict with reasoning
+**Success**: Clear pass/fail with explanation
+**Failure**: Ambiguous case, show options
+**Examples**:
+- "is getUserData named correctly" → Check camelCase convention
+- "validate component name" → Check PascalCase rule
+
+#### Handler: suggest-name
+**Triggers**: "what should I call X", "suggest name for Y", "naming ideas for Z"
+**Target Pattern**: Thing needing a name
+**Pre-conditions**: 
+- Purpose is clear
+- Context available
+**Process**:
+1. Understand purpose and context
+2. **PRIMARY**: Use Serena to find similar items
+3. Extract naming patterns
+4. Apply conventions:
+   - Correct case style
+   - Meaningful prefixes
+   - Domain terminology
+5. Generate 3-5 suggestions
+6. Explain reasoning for each
+**Success**: Quality name suggestions provided
+**Failure**: Need more context
+**Examples**:
+- "name for auth helper" → `validateToken`, `checkAuth`
+- "suggest test file name" → `auth.test.ts`, `auth.spec.ts`
+
+#### Handler: validate-path
+**Triggers**: "is this the right location", "check file placement", "validate path"
+**Target Pattern**: File path to validate
+**Pre-conditions**: 
+- Path or file type clear
+- Project structure known
+**Process**:
+1. Parse path components
+2. **PRIMARY**: Use Serena to find similar files
+3. Check project structure conventions
+4. Validate against patterns:
+   - Source organization
+   - Test colocation
+   - Asset placement
+5. Provide assessment
+**Success**: Path validated with reasoning
+**Failure**: Multiple valid options exist
+**Examples**:
+- "is src/utils/auth.ts correct" → Validate utils pattern
+- "check test file location" → Confirm colocation rule
+
+### Code Style Handlers
+
+#### Handler: check-style
+**Triggers**: "does X follow conventions", "check style of Y", "review code style"
+**Target Pattern**: Code to style-check
+**Pre-conditions**: 
+- Code accessible
+- Style rules defined
+**Process**:
+1. Read code section
+2. **PRIMARY**: Apply style checks:
+   - Indentation (spaces/tabs)
+   - Line length
+   - Brace style
+   - Comment format
+3. Use Serena for pattern comparison
+4. Check against linter rules
+5. List all violations found
+**Success**: Style issues identified
+**Failure**: Style rules unclear
+**Examples**:
+- "check function style" → Validate formatting
+- "does this follow conventions" → Full style review
+
+#### Handler: format-code
+**Triggers**: "format X properly", "fix formatting", "clean up style"
+**Target Pattern**: Code needing formatting
+**Pre-conditions**: 
+- Code readable
+- Format rules clear
+**Process**:
+1. Identify code boundaries
+2. **PRIMARY**: Determine format rules:
+   - Language-specific
+   - Project preferences
+   - Linter config
+3. Apply formatting:
+   - Fix indentation
+   - Adjust line breaks
+   - Align elements
+4. Preserve functionality
+5. Show before/after
+**Success**: Code properly formatted
+**Failure**: Formatter conflicts
+**Examples**:
+- "format this function" → Apply standard style
+- "fix indentation" → Correct spacing
+
+#### Handler: review-patterns
+**Triggers**: "is this idiomatic", "check patterns", "review approach"
+**Target Pattern**: Code pattern to review
+**Pre-conditions**: 
+- Pattern identifiable
+- Best practices known
+**Process**:
+1. Identify pattern type
+2. **PRIMARY**: Use Serena to find examples
+3. Compare against:
+   - Language idioms
+   - Framework patterns
+   - Project conventions
+4. Assess idiomaticity
+5. Suggest improvements
+**Success**: Pattern assessed with alternatives
+**Failure**: Novel pattern, needs discussion
+**Examples**:
+- "is this React pattern idiomatic" → Check hooks usage
+- "review error handling" → Validate try/catch patterns
+
+### Git Convention Handlers
+
+#### Handler: check-commit-msg
+**Triggers**: "is this commit message valid", "check commit format", "validate message"
+**Target Pattern**: Commit message to validate
+**Pre-conditions**: 
+- Message provided
+- Format rules defined
+**Process**:
+1. Parse message structure
+2. **PRIMARY**: Check format:
+   - Type prefix (feat/fix/etc)
+   - Scope (optional)
+   - Description length
+   - Body format
+3. Validate against conventional commits
+4. Check project-specific rules
+5. Provide pass/fail with fixes
+**Success**: Message validated
+**Failure**: Format violations found
+**Examples**:
+- "check: feat: add auth" → Validate prefix format
+- "is this message ok" → Full format check
+
+#### Handler: suggest-commit-type
+**Triggers**: "what type is this change", "commit type for X", "should this be feat or fix"
+**Target Pattern**: Change description
+**Pre-conditions**: 
+- Changes understood
+- Commit types defined
+**Process**:
+1. Analyze change nature
+2. **PRIMARY**: Match to types:
+   - feat: New feature
+   - fix: Bug fix
+   - docs: Documentation
+   - style: Formatting
+   - refactor: Code restructure
+   - test: Test changes
+   - chore: Maintenance
+3. Consider impact
+4. Recommend type with reasoning
+**Success**: Clear type recommendation
+**Failure**: Ambiguous change type
+**Examples**:
+- "added login button" → feat
+- "fixed typo in readme" → docs
+
+### Documentation Handlers
+
+#### Handler: check-docs-needed
+**Triggers**: "does X need documentation", "should I document Y", "docs required?"
+**Target Pattern**: Code element to assess
+**Pre-conditions**: 
+- Code element identified
+- Documentation standards exist
+**Process**:
+1. Identify element type:
+   - Public API
+   - Complex logic
+   - Configuration
+   - User-facing feature
+2. **PRIMARY**: Check requirements:
+   - Public interfaces → Yes
+   - Complex algorithms → Yes
+   - Non-obvious behavior → Yes
+   - Internal helpers → Maybe
+3. Use Serena to check existing docs
+4. Provide recommendation
+**Success**: Clear yes/no with reasoning
+**Failure**: Edge case, explain factors
+**Examples**:
+- "does this API need docs" → Check public interface
+- "document this helper?" → Assess complexity
+
+#### Handler: validate-comments
+**Triggers**: "are these comments good", "check comment quality", "review documentation"
+**Target Pattern**: Comments to validate
+**Pre-conditions**: 
+- Comments present
+- Quality standards defined
+**Process**:
+1. Read comments in context
+2. **PRIMARY**: Validate against principles:
+   - Explain WHY not WHAT
+   - Add value beyond code
+   - Stay up-to-date
+   - Be concise
+3. Check for anti-patterns:
+   - Obvious comments
+   - Outdated information
+   - TODO without dates
+4. Assess overall quality
+5. Suggest improvements
+**Success**: Comments assessed with feedback
+**Failure**: No clear standards
+**Examples**:
+- "review these comments" → Quality assessment
+- "are comments appropriate" → Check value-add
+
+### Action Pre-Check Handlers
+
+#### Handler: check-conventions-first
+**Triggers**: Internal trigger before any action that has conventions
+**Target Pattern**: Action type to check conventions for
+**Pre-conditions**: 
+- About to perform an action
+- Convention may exist for action
+**Process**:
+1. **MANDATORY FIRST STEP**: Identify action type:
+   - Git operations → Check Git Conventions
+   - File naming → Check Naming Conventions
+   - Code writing → Check Code Conventions
+   - Tool usage → Check Tool Router
+   - Timestamps → Check timestamp format
+2. **PRIMARY**: Read relevant convention section
+3. Extract specific rules for action
+4. Apply rules to intended action
+5. Proceed only if compliant
+**Success**: Convention checked before action
+**Failure**: No convention check → STOP and check
+**Examples**:
+- Before commit message → Check git conventions first
+- Before creating file → Check naming conventions first
+- Before using tool → Check tool router first
+
+#### Handler: enforce-pre-flight
+**Triggers**: "enforce conventions", "make sure I check", "prevent mistakes"
+**Target Pattern**: System-wide enforcement request
+**Pre-conditions**: 
+- User wants stricter enforcement
+- Patterns of violations identified
+**Process**:
+1. Acknowledge enforcement request
+2. **PRIMARY**: List all pre-action checks:
+   - Git → CONVENTIONS.md#git-conventions
+   - Files → CONVENTIONS.md#naming-conventions
+   - Code → CONVENTIONS.md#code-conventions
+   - Tools → TOOLS.md#mandatory-tool-router
+   - Claims → Evidence-based approach
+3. Create mental checklist
+4. Commit to checking BEFORE acting
+5. Report when conventions checked
+**Success**: Systematic pre-checks established
+**Failure**: Continuing without checks
+**Examples**:
+- "Stop making git mistakes" → Enforce git pre-checks
+- "Always check first" → Universal pre-flight protocol
 
 ## 📚 See Also
 

@@ -2,6 +2,14 @@
 
 This document captures the meta-process of creating and evolving the Claude Template System itself. It's a guide for improving the guide.
 
+## 🎯 Quick Navigation
+
+- **[The Journey](#the-journey)** - How the system evolved
+- **[Lessons Learned](#lessons-learned)** - Key insights from development
+- **[Evolution Patterns](#evolution-patterns)** - How to improve the system
+- **[Cross-System Integration Handlers](#cross-system-integration-handlers)** - NEW! Handler interconnections
+- **[Meta-Process](#meta-process-for-meta-process)** - Improving this document
+
 ## 🎯 The Journey
 
 ### From Chaos to Clarity
@@ -174,6 +182,8 @@ Good patterns share characteristics:
 4. **Evolve Continuously**
    - Documentation is living
    - Capture learnings immediately
+   - Preserve iteration history (append, don't overwrite)
+   - Track what didn't work and why
 
 ## 🚀 Future Evolution Ideas
 
@@ -237,6 +247,116 @@ Even this document should evolve. When improving it:
 2. **Capture Failures** - What didn't work and why
 3. **Link Changes** - To specific commits/sessions
 4. **Stay Concrete** - Avoid abstract meta-discussion
+
+## Cross-System Integration Handlers
+
+These handlers manage interactions between different parts of the template system.
+
+### Handler Interconnections
+
+#### Handler: workflow-to-tool
+**Triggers**: Workflow step requires specific tool
+**Target Pattern**: Tool needed within workflow context
+**Pre-conditions**: 
+- Active workflow in progress
+- Tool requirement identified
+**Process**:
+1. Identify required tool capability
+2. Route to TOOLS.md tool selection
+3. Execute tool with workflow context
+4. Return results to workflow
+**Success**: Tool completes, workflow continues
+**Failure**: Suggest alternative tools or manual steps
+**Examples**:
+- Bug fix workflow needs search → Routes to search-code handler
+- Refactoring needs symbol analysis → Routes to find-references
+
+#### Handler: tool-to-convention
+**Triggers**: Tool usage must follow conventions
+**Target Pattern**: Convention check needed before tool use
+**Pre-conditions**: 
+- Tool selected for use
+- Conventions apply to operation
+**Process**:
+1. Identify applicable conventions
+2. Route to CONVENTIONS.md checks
+3. Validate tool parameters
+4. Execute with convention compliance
+**Success**: Tool runs with proper conventions
+**Failure**: Show convention violations, correct and retry
+**Examples**:
+- Git commit → Check commit message conventions
+- File naming → Validate naming standards
+
+#### Handler: convention-to-workflow
+**Triggers**: Convention violation requires workflow
+**Target Pattern**: Fix process needed for violation
+**Pre-conditions**: 
+- Convention violation detected
+- Workflow exists for correction
+**Process**:
+1. Identify violation type
+2. Route to correction workflow
+3. Guide through fix process
+4. Verify convention compliance
+**Success**: Violation corrected via workflow
+**Failure**: Manual intervention needed
+**Examples**:
+- Wrong timestamp format → Route to timestamp workflow
+- Missing evidence → Route to evidence gathering
+
+### State Management Handlers
+
+#### Handler: save-context
+**Triggers**: "save state", "checkpoint progress", switching tasks
+**Target Pattern**: Current state needs preservation
+**Pre-conditions**: 
+- Active work in progress
+- State worth preserving
+**Process**:
+1. Gather current context (todos, files, decisions)
+2. **PRIMARY**: Update work tracking files
+3. **FALLBACK**: Create memory snapshot
+4. Mark resumption point
+**Success**: State saved for easy resume
+**Failure**: Partial save with warnings
+**Examples**:
+- Before switching tasks → Save to handoff.md
+- Mid-session checkpoint → Update tracker.md
+
+#### Handler: restore-context
+**Triggers**: "resume work", "continue from", "pick up where"
+**Target Pattern**: Previous state to restore
+**Pre-conditions**: 
+- Saved state exists
+- No conflicting active work
+**Process**:
+1. **PRIMARY**: Read work folder files
+2. Load todos and progress
+3. Restore file context
+4. Show last actions
+**Success**: Context restored, ready to continue
+**Failure**: Partial restore, need user guidance
+**Examples**:
+- "continue yesterday's work" → Load from work folder
+- "resume feature X" → Restore full context
+
+#### Handler: switch-context
+**Triggers**: "work on something else", "switch to", "pause this"
+**Target Pattern**: Change from one context to another
+**Pre-conditions**: 
+- Current context active
+- Target context identified
+**Process**:
+1. Execute save-context for current
+2. Clear active todos
+3. Load target context
+4. Confirm switch complete
+**Success**: Clean context switch
+**Failure**: Rollback to previous context
+**Examples**:
+- "switch to bug fix" → Save feature, load bug context
+- "work on PR instead" → Full context swap
 
 ## Key Takeaways
 

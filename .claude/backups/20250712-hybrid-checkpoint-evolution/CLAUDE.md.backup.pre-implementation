@@ -1,0 +1,142 @@
+# 🛑 STOP - Checkpoint System Active
+
+⚠️ YOUR RESPONSE MUST START WITH:
+```
+CHECKPOINT CHECK: [action]
+→ ROUTING TO: Checkpoint 2[X]
+→ REQUIREMENTS: [list]
+```
+
+IF YOU DON'T SEE THIS ↑ IN THE RESPONSE, TELL CLAUDE TO RESTART
+
+████████████████████████████████████
+█ CHECKPOINT CHECK REQUIRED FIRST █
+████████████████████████████████████
+
+Users: If Claude's response doesn't start with CHECKPOINT CHECK,
+reply with: "CHECKPOINT VIOLATION - Restart with proper format"
+
+You CANNOT proceed without completing these checkpoints IN ORDER.them
+
+## 🚨 CHECKPOINT 1: What Are You Doing?
+**STATE IT NOW** before ANY action:
+- [ ] "STARTING new session" → Go to Checkpoint 2A
+- [ ] "CONTINUING work" → Go to Checkpoint 2B
+- [ ] "USING a tool" → Go to Checkpoint 2C
+- [ ] "MAKING a claim" → Go to Checkpoint 2D
+- [ ] "DEPLOYING specialist" → Go to Checkpoint 2E
+
+**Can't categorize?** You're not ready to act. Think first.
+
+---
+
+## 🛑 CHECKPOINT 2A: Starting New Session
+**FORBIDDEN** to proceed without:
+- [ ] Run: `date "+%Y-%m-%d %H:%M %Z"` (COPY output)
+- [ ] Update SESSION.md with timestamp
+- [ ] Check git status and branch
+- [ ] Create TodoWrite for session goals
+- [ ] State which workflows apply
+
+**Missing any?** → Do them NOW or system fails
+
+## 🛑 CHECKPOINT 2B: Continuing Work
+**FORBIDDEN** to proceed without:
+- [ ] Read previous SESSION.md entry COMPLETELY
+- [ ] Check current todos
+- [ ] State what was already completed
+- [ ] Identify what NOT to repeat
+
+**Missing any?** → Review first or duplicate work
+
+## 🛑 CHECKPOINT 2C: Using a Tool
+**FORBIDDEN** to use ANY tool without:
+- [ ] State: "I need to [specific action]"
+- [ ] Check Tool Router below
+- [ ] Found exact match?
+
+### ⚡ TOOL ROUTER (NO EXCEPTIONS)
+| Need | MUST Use | NEVER Use |
+|------|----------|-----------|
+| Search code | `mcp__serena__search_for_pattern` | grep, find |
+| Find function | `mcp__serena__find_symbol` | grep, Glob |
+| Edit function | `mcp__serena__replace_symbol_body` | Edit (without reading) |
+| Timestamp | `date "+%Y-%m-%d %H:%M %Z"` | Typing from memory |
+| Complex task | Task tool with constraints | No constraints |
+
+**Need full router?** → Check TOOLS.md
+**Wrong tool?** → STOP. Find correct tool or ask.
+
+## 🛑 CHECKPOINT 2D: Making a Claim
+**FORBIDDEN** to claim without:
+- [ ] Gathered actual data (not assumptions)
+- [ ] Have specific evidence
+- [ ] Can cite exact locations/numbers
+
+**Missing evidence?** → Say "I need to verify" instead
+
+## 🛑 CHECKPOINT 2E: Deploying Specialist
+**FORBIDDEN** to deploy without:
+- [ ] Added MANDATORY CONSTRAINTS section
+- [ ] Listed FORBIDDEN tools (zen, gemini, etc.)
+- [ ] Stated SESSION.md is forbidden
+- [ ] Specified ONLY allowed tools
+
+**Missing constraints?** → [Get template](WORKFLOWS.md#specialist-deployment-flow)
+
+---
+
+## 🔥 CRITICAL REMINDERS (After Checkpoint Cleared)
+
+### The 5 Commandments
+1. **ULTRATHINK ALWAYS** → Deploy specialist for 3+ steps/subtasks
+2. **SESSION.md SACRED** → ONLY main Claude edits (subagents NEVER touch)
+3. **EVIDENCE ONLY** → Data speaks, not assumptions ("X appears Y times")
+4. **UPDATE CONSTANTLY** → SESSION.md every 30min + after milestones
+5. **TIMESTAMP DISCIPLINE** → `date "+%Y-%m-%d %H:%M %Z"` copy-paste ALWAYS
+
+### Quick Decision Tree
+```yaml
+Complex (3+ steps)?    → Deploy specialist with constraints
+Security/auth/a11y?    → ALWAYS deploy specialist
+Need a tool?          → Check router FIRST (no exceptions)
+Making claim?         → Evidence or say "I'm not certain"
+Session ending?       → Memory + full update + handoff
+Lost/confused?        → State it, check abort procedures
+```
+
+### Essential Commands (COPY, never type!)
+```bash
+date "+%Y-%m-%d %H:%M %Z"        # Timestamps (2025-07-10 15:45 CEST)
+date +%Y%m%d                      # Folder names (20250710)
+gac "commit message"              # Git commits (single quotes inside)
+pwd && git branch --show-current  # Check location
+```
+
+### Session Lifecycle TL;DR
+**START**: Checkpoint → Update SESSION.md → Create todos → State goals
+**DURING**: Follow workflows → Update todos real-time → Test always → 30min updates
+**END**: Final SESSION.md → Create memory `session_$(date +%Y-%m-%d)_desc` → Handoff
+
+### Work Tracking Format
+**Folder**: `YYYYMMDD-topic-STATUS` (run `date +%Y%m%d` for date)
+**Required**: tracker.md, implementation.md, findings.md, decisions.md, memory-refs.md, handoff.md
+**Rule**: One folder per initiative (don't fragment related work)
+
+---
+
+## 🔄 PRE-FLIGHT → DURING → POST Protocol
+**EVERY action requires**:
+- **PRE-FLIGHT**: "I'm about to [action]"
+- **CHECK**: "Need [workflow/tool]"
+- **VERIFY**: "Ready because [requirements met]"
+- **ACTION**: Execute
+- **POST-FLIGHT**: "Completed with [result]"
+
+---
+
+## 📁 Full Documentation (After Checkpoints)
+- [Workflows](WORKFLOWS.md) - Complete templates & protocols
+- [Tools](TOOLS.md) - Full tool router & usage
+- [Conventions](CONVENTIONS.md) - All standards & patterns
+- [Emergency Help](WORKFLOWS.md#emergency-help) - When stuck

@@ -104,6 +104,7 @@ If you find yourself wanting to:
 - **[Serena MCP Integration](#serena-mcp-integration)** - Semantic code analysis
 - **[TaskMaster Integration](#taskmaster-integration)** - Project planning
 - **[Tool Selection Guide](#tool-selection-guide)** - When to use what
+- **[Tool Selection Handlers](#tool-selection-handlers)** - NEW! Protocol navigation handlers
 - **[Anti-Patterns](#anti-patterns-to-avoid)** - What NOT to do
 
 ## Core Tools Overview
@@ -764,6 +765,374 @@ graph LR
 ```
 
 Remember: Tools serve the workflow, not the other way around. The unified approach means all tools work together toward the same goal, tracked in the same places, creating a seamless development experience.
+
+## Tool Selection Handlers
+
+This section defines how to handle tool selection requests when routed from CLAUDE.md's protocol-based navigation.
+
+**CORE PRINCIPLE**: Always prefer Serena tools when available. Only use alternatives as fallback.
+
+### Search Handlers
+
+#### Handler: search-code
+**Triggers**: "find X", "search for Y", "look for Z in code"
+**Target Pattern**: Extract search term after action verb
+**Pre-conditions**: 
+- Clear search target
+- Code context (not general files)
+**Process**:
+1. Identify search pattern/term
+2. **PRIMARY**: Use Serena tools
+   - Code patterns → `mcp__serena__search_for_pattern`
+   - Symbol names → `mcp__serena__find_symbol`
+   - File names → `mcp__serena__find_file`
+3. **FALLBACK** only if Serena unavailable:
+   - Glob for file patterns
+   - Grep for text search (avoid!)
+4. Configure search parameters
+5. Present results clearly
+**Success**: Relevant results found and shown
+**Failure**: No results, suggest alternatives
+**Examples**:
+- "find authentication logic" → Serena pattern search
+- "search for TODO comments" → Serena with "TODO" pattern
+
+#### Handler: find-symbol
+**Triggers**: "where is X defined", "find class Y", "locate function Z"
+**Target Pattern**: Symbol name after key phrases
+**Pre-conditions**: 
+- Valid symbol type (class, function, etc.)
+- Project context active
+**Process**:
+1. Extract symbol name
+2. **PRIMARY**: `mcp__serena__find_symbol`
+   - Set depth for nested symbols
+   - Include body if needed
+3. **FALLBACK**: `mcp__serena__search_for_pattern` with "class X" pattern
+4. Show definition with context
+5. Offer to show references
+**Success**: Symbol found with location
+**Failure**: Symbol not found, show similar
+**Examples**:
+- "where is UserAuth class defined" → Find class definition
+- "find handleLogin function" → Locate function
+
+#### Handler: find-references
+**Triggers**: "what uses X", "find references to Y", "who calls Z"
+**Target Pattern**: Symbol to find references for
+**Pre-conditions**: 
+- Symbol exists in codebase
+- Valid symbol path available
+**Process**:
+1. **PRIMARY**: `mcp__serena__find_referencing_symbols`
+2. **FALLBACK**: `mcp__serena__search_for_pattern` with symbol name
+3. Categorize by reference type
+4. Show usage contexts
+5. Highlight critical usages
+**Success**: All references found and categorized
+**Failure**: No references found
+**Examples**:
+- "what uses the auth service" → Find all imports/calls
+- "find references to User class" → Show all usages
+
+#### Handler: grep-pattern
+**Triggers**: "grep for X", "search pattern Y", "find regex Z"
+**Target Pattern**: Pattern or regex after action
+**Pre-conditions**: 
+- Valid pattern/regex
+- Clear scope (files/directories)
+**Process**:
+1. **PRIMARY**: `mcp__serena__search_for_pattern`
+   - Supports full regex
+   - Context lines available
+2. **FALLBACK**: `Grep` tool (if Serena fails)
+3. Never use bash grep/rg directly
+4. Format results with line numbers
+**Success**: Pattern matches found
+**Failure**: No matches or invalid pattern
+**Examples**:
+- "grep for console.log" → Find debug statements
+- "search pattern /api/.*POST" → Find POST endpoints
+
+### File Operation Handlers
+
+#### Handler: read-file
+**Triggers**: "show me X", "what's in Y", "display Z file"
+**Target Pattern**: File path after action phrase
+**Pre-conditions**: 
+- File path identifiable
+- Read permission available
+**Process**:
+1. Extract file path
+2. **PRIMARY**: `Read` tool (no Serena equivalent)
+3. Handle large files with offset/limit
+4. Display with line numbers
+5. For symbols in file: suggest Serena overview
+**Success**: File contents displayed
+**Failure**: File not found or too large
+**Examples**:
+- "show me package.json" → Display package file
+- "what's in the config" → Read configuration
+
+#### Handler: edit-file
+**Triggers**: "change X to Y", "update Z", "modify file"
+**Target Pattern**: File and changes specified
+**Pre-conditions**: 
+- File exists and readable
+- Clear change description
+**Process**:
+1. Read file first (mandatory)
+2. **PRIMARY** for code edits:
+   - Whole symbols → `mcp__serena__replace_symbol_body`
+   - Insert after → `mcp__serena__insert_after_symbol`
+   - Insert before → `mcp__serena__insert_before_symbol`
+   - Regex patterns → `mcp__serena__replace_regex`
+3. **FALLBACK** for text edits:
+   - Small changes → `Edit`
+   - Multiple changes → `MultiEdit`
+4. Verify changes
+**Success**: Changes applied correctly
+**Failure**: Can't locate text or conflicts
+**Examples**:
+- "change function body" → Serena symbol replace
+- "update config value" → Edit tool
+
+#### Handler: create-file
+**Triggers**: "create new file X", "make file Y", "new Z"
+**Target Pattern**: File path and type
+**Pre-conditions**: 
+- Valid file path
+- Directory exists
+- No file conflict
+**Process**:
+1. Extract file path
+2. Check existing patterns with Serena
+3. **PRIMARY**: `Write` tool (no Serena equivalent)
+4. For code files:
+   - Use Serena to find similar files first
+   - Copy patterns and conventions
+5. Add to git if needed
+**Success**: File created with correct content
+**Failure**: File exists or invalid path
+**Examples**:
+- "create new component Button" → Component file
+- "make config file" → Configuration template
+
+#### Handler: delete-file
+**Triggers**: "remove X", "delete file Y", "get rid of Z"
+**Target Pattern**: File to remove
+**Pre-conditions**: 
+- File exists
+- Not critical system file
+**Process**:
+1. **PRIMARY**: Check references with `mcp__serena__find_referencing_symbols`
+2. Verify safe to delete
+3. **EXECUTE**: `rm` via Bash (no Serena delete)
+4. Update imports if needed
+5. Clean up with Serena tools
+**Success**: File removed cleanly
+**Failure**: File in use or protected
+**Examples**:
+- "remove old-component.js" → Delete unused file
+- "delete temp files" → Clean up temporary files
+
+### Git Handlers
+
+#### Handler: check-status
+**Triggers**: "what's changed", "git status", "show changes"
+**Target Pattern**: Optional scope filter
+**Pre-conditions**: 
+- Git repository active
+- Working directory accessible
+**Process**:
+1. **EXECUTE**: `git status` via Bash (no Serena git)
+2. Parse output for clarity
+3. For changed files:
+   - Use Serena to show symbol changes
+   - Highlight structural modifications
+4. Format summary
+**Success**: Clear status summary shown
+**Failure**: Not a git repository
+**Examples**:
+- "what's changed" → Full git status
+- "show staged changes" → Filtered view
+
+#### Handler: commit-changes
+**Triggers**: "commit with message X", "save changes", "commit Y"
+**Target Pattern**: Commit message or description
+**Pre-conditions**: 
+- Changes staged or stageable
+- Valid commit message
+**Process**:
+1. Check status first
+2. Use Serena to understand changes:
+   - What symbols modified
+   - What functionality affected
+3. **EXECUTE**: `gac` alias or git commit
+4. Update SESSION.md
+**Success**: Changes committed successfully
+**Failure**: No changes or commit hook fails
+**Examples**:
+- "commit auth changes" → Auto-format message
+- "commit with 'fix: login bug'" → Direct message
+
+#### Handler: create-branch
+**Triggers**: "new branch for X", "create branch Y", "branch off"
+**Target Pattern**: Branch name or feature
+**Pre-conditions**: 
+- Clean working directory
+- Valid branch name
+**Process**:
+1. Generate branch name
+2. **EXECUTE**: Git commands via Bash
+3. Use Serena to:
+   - Document branch purpose
+   - Track related symbols
+4. Update tracking
+**Success**: Branch created and checked out
+**Failure**: Branch exists or dirty working dir
+**Examples**:
+- "new branch for auth feature" → feat/auth-feature
+- "create bugfix branch" → fix/issue-description
+
+#### Handler: view-history
+**Triggers**: "show recent commits", "git log", "history"
+**Target Pattern**: Optional filter or count
+**Pre-conditions**: 
+- Git repository active
+- History available
+**Process**:
+1. **EXECUTE**: Git log via Bash
+2. For each commit:
+   - Use Serena to analyze changes
+   - Show affected symbols
+3. Format nicely
+**Success**: History displayed clearly
+**Failure**: No commits found
+**Examples**:
+- "show last 5 commits" → Recent history
+- "history of auth.js" → File-specific log
+
+### Analysis Handlers
+
+#### Handler: analyze-code
+**Triggers**: "analyze X for issues", "check Y quality", "review Z"
+**Target Pattern**: Code location to analyze
+**Pre-conditions**: 
+- Code exists and accessible
+- Analysis type clear
+**Process**:
+1. **PRIMARY**: Serena analysis tools
+   - `mcp__serena__get_symbols_overview` for structure
+   - `mcp__serena__find_referencing_symbols` for usage
+   - Pattern search for code smells
+2. **ENHANCED**: Deploy Task with expert for deep analysis
+3. Categorize findings
+4. Prioritize by severity
+**Success**: Issues found and prioritized
+**Failure**: No issues or unclear scope
+**Examples**:
+- "analyze auth module" → Full module review
+- "check for memory leaks" → Specific analysis
+
+#### Handler: check-dependencies
+**Triggers**: "what does X depend on", "show Y dependencies", "imports"
+**Target Pattern**: Module or file to check
+**Pre-conditions**: 
+- Valid module/file
+- Dependency tracking possible
+**Process**:
+1. **PRIMARY**: Use Serena to:
+   - Find imports in file
+   - Track symbol usage
+   - Map relationships
+2. **FALLBACK**: Parse package.json
+3. Build dependency graph
+4. Show clear summary
+**Success**: Dependencies mapped clearly
+**Failure**: Can't resolve dependencies
+**Examples**:
+- "what does auth depend on" → Import analysis
+- "show package dependencies" → npm/yarn deps
+
+#### Handler: measure-complexity
+**Triggers**: "how complex is X", "complexity of Y", "analyze complexity"
+**Target Pattern**: Code section to measure
+**Pre-conditions**: 
+- Code section identified
+- Complexity metrics defined
+**Process**:
+1. **PRIMARY**: Use Serena to:
+   - Get symbol structure
+   - Count nesting levels
+   - Analyze branching
+2. **ENHANCED**: Task tool for detailed metrics
+3. Calculate complexity scores
+4. Compare to thresholds
+5. Suggest improvements
+**Success**: Complexity metrics provided
+**Failure**: Can't calculate metrics
+**Examples**:
+- "complexity of auth flow" → Flow analysis
+- "how complex is this function" → Function metrics
+
+### External Tool Handlers
+
+#### Handler: run-tests
+**Triggers**: "run tests", "test the code", "execute test suite"
+**Target Pattern**: Optional test filter
+**Pre-conditions**: 
+- Test framework configured
+- Tests exist
+**Process**:
+1. Use Serena to find test files
+2. Check test patterns
+3. **EXECUTE**: Run via Bash
+4. Monitor output
+5. Use Serena to link failures to code
+**Success**: Tests run with clear results
+**Failure**: No tests or setup issues
+**Examples**:
+- "run all tests" → npm test
+- "test auth module" → Filtered test run
+
+#### Handler: check-lint
+**Triggers**: "check code style", "run linter", "lint the code"
+**Target Pattern**: Optional scope
+**Pre-conditions**: 
+- Linter configured
+- Lint rules defined
+**Process**:
+1. Use Serena to identify files
+2. **EXECUTE**: Linter via Bash
+3. For each issue:
+   - Use Serena to show context
+   - Link to symbol definition
+4. Group by severity
+**Success**: Lint results categorized
+**Failure**: No linter configured
+**Examples**:
+- "check style" → Run default linter
+- "lint src folder" → Scoped linting
+
+#### Handler: build-project
+**Triggers**: "build the project", "compile code", "run build"
+**Target Pattern**: Optional build target
+**Pre-conditions**: 
+- Build system configured
+- Dependencies installed
+**Process**:
+1. Check build config
+2. **EXECUTE**: Build via Bash
+3. On errors:
+   - Use Serena to find error locations
+   - Show symbol context
+4. Report results
+**Success**: Build completed successfully
+**Failure**: Build errors occurred
+**Examples**:
+- "build project" → npm run build
+- "production build" → Build with prod flag
 
 ## 📚 See Also
 

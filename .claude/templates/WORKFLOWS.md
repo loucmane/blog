@@ -15,6 +15,7 @@ This document contains all workflow patterns, session management, and orchestrat
 - **[Testing Workflows](#testing-workflows)** - Simulation-based testing for any system
 - **[Subagent Simulation Testing](#subagent-simulation-testing)** - Deploy subagents for testing/validation
 - **[Behavioral Templates](#behavioral-templates)** - Pre-selected tool sequences for common tasks
+- **[Intent Handlers](#intent-handlers)** - NEW! Protocol navigation handlers for user intents
 - **[Common Mistakes](#common-mistakes-that-break-sessions)** - What to avoid
 
 ## Task Management
@@ -108,11 +109,16 @@ This ensures nothing is forgotten and provides clear progress tracking.
 ### 3. Create All 6 Core Files
 Every work folder MUST have these 6 files:
 - **tracker.md** - Shows WHERE we are (progress)
-- **implementation.md** - Shows HOW we're doing it (approach)
+- **implementation.md** - Shows HOW we're doing it (approach, designs, drafts)
 - **findings.md** - Shows WHAT we discovered (insights)
 - **decisions.md** - Shows WHY we made choices (rationale)
 - **memory-refs.md** - Shows CONTEXT from past (continuity)
 - **handoff.md** - Shows WHAT'S NEXT (session bridge)
+
+**🚫 CRITICAL RULE: NO OTHER FILES ALLOWED**
+- All drafts, designs, iterations → Append to implementation.md
+- Never create: draft-v1.md, design-final.md, new-approach.md
+- If tempted to create a new file, ask: "Which of the 6 does this belong in?"
 
 ### 4. Create Comprehensive Todo List
 Always use TodoWrite with priority levels:
@@ -1300,6 +1306,81 @@ Create a memory about [feature name] including:
    - Use Desktop Commander for file operations
    - Document progress in SESSION.md
 
+## Context Compaction Workflow
+
+### When to Compact
+
+User says:
+- "we need to compact"
+- "context is getting full"
+- "prepare for compaction"
+- "we're at X% context"
+
+### Pre-Compaction Checklist
+
+1. **Ensure Documentation Complete**
+   - [ ] SESSION.md fully updated with all progress
+   - [ ] Work tracking folder has all 6 files updated
+   - [ ] Session memory created with descriptive name
+   - [ ] All code changes documented
+
+2. **Create Compaction Summary**
+   ```markdown
+   ## Compaction Summary
+   
+   **Session**: [Date and main work]
+   **Key Accomplishments**: [2-3 bullet points]
+   **Files Changed**: [List main files]
+   **Next Steps**: [What to do after compaction]
+   ```
+
+3. **Generate Optimal Resume Message**
+   The AI provides user with exact message to use post-compaction:
+   ```
+   Activate project [path], read memory session_YYYY-MM-DD_[description] and SESSION.md.
+   Continue with [specific next action based on current work].
+   ```
+
+### Compaction Protocol
+
+1. **Final Updates** (5 minutes before compaction)
+   - Update SESSION.md with final progress
+   - Create/update session memory
+   - Save any work in progress
+   - Update todos with current state
+
+2. **Provide Resume Instructions**
+   ```markdown
+   ## 📦 Ready for Compaction
+   
+   **Current Context Usage**: [X%]
+   
+   **To Resume After Compaction**, use this exact message:
+   ---
+   Activate project /home/loucmane/dev/javascript/MomsBlog/blog, 
+   read memory session_2025-07-12_checkpoint_to_protocol_navigation and SESSION.md.
+   Continue implementing [specific task/feature].
+   ---
+   
+   **Key Context to Preserve**:
+   - [Critical decision or approach]
+   - [Important file locations]
+   - [Unfinished work item]
+   ```
+
+3. **Final Verification**
+   - Confirm all work saved
+   - Verify memory created
+   - Check resume message includes all needed context
+
+### Post-Compaction Recovery
+
+When user returns with the resume message:
+1. **Restore Context** from memory and SESSION.md
+2. **Verify State** by checking git status and recent changes
+3. **Continue Work** from documented next steps
+4. **Update Progress** in SESSION.md marking continuation
+
 ## Quick Reference Commands
 
 ```yaml
@@ -1832,6 +1913,457 @@ VERIFICATION (Pre-selected: Bash)
 | Update docs | Documentation Update |
 | Fix urgent issue | Emergency Debug |
 | Something else | Create new template! |
+
+## Intent Handlers
+
+This section defines how to handle specific user intents when they're routed from CLAUDE.md's protocol-based navigation.
+
+### Development Handlers
+
+#### Handler: start-new-work
+**Triggers**: "I want to work on X", "Let's build Y", "start working on Z"
+**Target Pattern**: Extract feature/component name after "on" or "build"
+**Pre-conditions**: 
+- Valid project context exists
+- No active work folder for same feature
+**Process**:
+1. Extract feature name from input
+2. Create work folder: `YYYYMMDD-{feature-name}-ACTIVE`
+3. Initialize 6-file structure
+4. Update SESSION.md with new work
+5. Create initial todos with TodoWrite
+6. Route to Standard Development Workflow
+**Success**: Work folder created, todos initialized
+**Failure**: Ask for clarification on feature name
+**Examples**:
+- "work on authentication" → Creates 20250712-authentication-ACTIVE
+- "Let's build a meta flow creator" → Creates 20250712-meta-flow-creator-ACTIVE
+
+#### Handler: continue-work
+**Triggers**: "continue with X", "back to Y", "resume Z"
+**Target Pattern**: Extract work identifier after key verb
+**Pre-conditions**: 
+- Existing work folder must exist
+- SESSION.md has record of work
+**Process**:
+1. Search for matching work folder
+2. Read current state from tracker.md
+3. Check TodoWrite for in-progress items
+4. Show current status to user
+5. Resume from last checkpoint
+**Success**: Previous context restored, work resumed
+**Failure**: No matching work found, show available options
+**Examples**:
+- "continue with auth" → Finds *-authentication-ACTIVE folder
+- "back to the flow creator" → Resumes meta-flow-creator work
+
+#### Handler: standard-dev-workflow
+**Triggers**: "implement X", "add feature Y", "create functionality Z"
+**Target Pattern**: Feature specification after action verb
+**Pre-conditions**: 
+- Clear feature requirements
+- Work folder exists or will be created
+**Process**:
+1. If no work folder, route to start-new-work first
+2. Break down into implementation steps
+3. Create detailed todos
+4. Begin with research/exploration
+5. Follow TDD if applicable
+6. Document as you go
+**Success**: Feature implemented with tests and docs
+**Failure**: Requirements unclear, needs clarification
+**Examples**:
+- "implement user login" → Full auth flow
+- "add dark mode" → Theme system implementation
+
+#### Handler: create-component  
+**Triggers**: "create a new component", "build component X", "new component for Y"
+**Target Pattern**: Component name and type
+**Pre-conditions**: 
+- Component doesn't already exist
+- Valid component location identified
+**Process**:
+1. Check existing component patterns
+2. Determine component type (UI, logic, hybrid)
+3. Create component file(s)
+4. Add necessary imports/exports
+5. Create basic tests
+6. Update component index if exists
+**Success**: Component created following patterns
+**Failure**: Component exists, suggest alternative
+**Examples**:
+- "create a Button component" → UI component with styles
+- "new auth provider component" → Context/provider pattern
+
+#### Handler: refactor-code
+**Triggers**: "refactor X", "clean up Y", "improve Z code"
+**Target Pattern**: Code location or pattern to refactor
+**Pre-conditions**: 
+- Code exists and is working
+- Tests exist (or will be added first)
+**Process**:
+1. Analyze current implementation
+2. Identify refactoring opportunities
+3. Ensure tests cover current behavior
+4. Apply refactoring patterns
+5. Verify tests still pass
+6. Update documentation
+**Success**: Cleaner code, same behavior, tests pass
+**Failure**: No tests exist, add tests first
+**Examples**:
+- "refactor the auth service" → Service pattern improvements
+- "clean up the API calls" → Extract to service layer
+
+### Task Management Handlers
+
+#### Handler: create-todos
+**Triggers**: "plan out X", "break down Y", "create tasks for Z"
+**Target Pattern**: Work item to decompose
+**Pre-conditions**: 
+- Clear understanding of overall goal
+- TodoWrite tool available
+**Process**:
+1. Analyze work scope
+2. Break into logical phases
+3. Create hierarchical task structure
+4. Set appropriate priorities
+5. Add to TodoWrite
+6. Show task breakdown to user
+**Success**: Comprehensive task list created
+**Failure**: Scope unclear, needs discussion
+**Examples**:
+- "plan out the migration" → Detailed migration steps
+- "break down the feature" → Implementation tasks
+
+#### Handler: update-todos
+**Triggers**: "mark X as done", "update task Y", "Z is complete"
+**Target Pattern**: Task identifier or description
+**Pre-conditions**: 
+- Task exists in TodoWrite
+- Valid status transition
+**Process**:
+1. Find matching task(s)
+2. Update status appropriately
+3. Check for dependent tasks
+4. Update any blockers
+5. Show updated task list
+**Success**: Task status updated
+**Failure**: No matching task found
+**Examples**:
+- "mark auth tests as done" → Updates specific task
+- "API integration is complete" → Finds and updates task
+
+#### Handler: check-progress
+**Triggers**: "where are we?", "what's left?", "show progress"
+**Target Pattern**: Optional scope filter
+**Pre-conditions**: 
+- Active todos exist
+- Work context established  
+**Process**:
+1. Read current todos
+2. Calculate completion percentage
+3. Identify blockers
+4. Show completed/remaining breakdown
+5. Highlight next priorities
+**Success**: Clear progress summary shown
+**Failure**: No active tasks found
+**Examples**:
+- "where are we?" → Overall progress summary
+- "what's left on auth?" → Filtered progress view
+
+### Session Management Handlers
+
+#### Handler: show-capabilities
+**Triggers**: "what can you do", "help", "show commands", "list features", "show capabilities"
+**Target Pattern**: Optional focus area (e.g., "help with testing")
+**Pre-conditions**: 
+- None - always available
+**Process**:
+1. **PRIMARY**: Show categorized capabilities
+   ```
+   🛠️ Development: start work, create components, refactor
+   🐛 Problem Solving: fix bugs, debug issues, analyze code
+   🔍 Search & Navigate: find code, search patterns, explore
+   📝 Documentation: explain code, write docs, add comments
+   🧪 Testing: run tests, create tests, check coverage
+   📊 Git Operations: commit, branch, check status
+   ```
+2. Highlight most common: "work on X", "fix Y", "search for Z"
+3. Show example phrases for each category
+4. **FALLBACK**: Link to full HANDLERS.md
+**Success**: User understands available commands
+**Failure**: Redirect to specific documentation
+**Examples**:
+- "what can you do?" → Full capability overview
+- "help with testing" → Testing-specific capabilities
+
+#### Handler: start-session
+**Triggers**: "let's start", "begin work", "start today's session"
+**Target Pattern**: Optional continuation context
+**Pre-conditions**: 
+- Git repository accessible
+- Previous session checked
+**Process**:
+1. Run date command for timestamp
+2. Check git status
+3. Read SESSION.md
+4. Review recent commits
+5. Ask what to work on
+6. Update SESSION.md
+**Success**: Session context established
+**Failure**: Git issues, resolve first
+**Examples**:
+- "let's start" → Full session initialization
+- "start working" → Quick session start
+
+#### Handler: update-session
+**Triggers**: "update SESSION.md", "record progress", "checkpoint session"
+**Target Pattern**: Optional specific updates
+**Pre-conditions**: 
+- SESSION.md exists
+- Work has progressed
+**Process**:
+1. Gather current state
+2. Summarize achievements
+3. Note any blockers
+4. Update SESSION.md
+5. Commit if requested
+**Success**: Session record updated
+**Failure**: No changes to record
+**Examples**:
+- "update session" → Auto-summarize progress
+- "checkpoint our work" → Detailed state capture
+
+#### Handler: end-session
+**Triggers**: "let's wrap up", "end for today", "finish session"
+**Target Pattern**: Optional handoff notes
+**Pre-conditions**: 
+- Active work exists
+- Changes need preservation
+**Process**:
+1. Final todo status check
+2. Update all work tracking files
+3. Create handoff notes
+4. Update SESSION.md
+5. Suggest commit message
+6. Clean up any temp files
+**Success**: Clean session end, ready for handoff
+**Failure**: Uncommitted changes need attention
+**Examples**:
+- "let's wrap up" → Full end-session flow
+- "done for today" → Quick wrap with essentials
+
+#### Handler: checkpoint-session
+**Triggers**: Mid-session progress saves
+**Target Pattern**: Automatic based on time/progress
+**Pre-conditions**: 
+- Significant progress made
+- Time threshold passed
+**Process**:
+1. Auto-save current state
+2. Update progress markers
+3. Quick SESSION.md append
+4. No interruption to flow
+**Success**: Progress preserved
+**Failure**: Silent skip
+**Examples**:
+- After major milestone → Auto-checkpoint
+- Every 2 hours → Time-based checkpoint
+
+### Specialist Deployment Handlers
+
+#### Handler: deploy-ultrathink
+**Triggers**: "think deeply about X", "ultrathink on Y", "need deep analysis of Z"
+**Target Pattern**: Topic for analysis
+**Pre-conditions**: 
+- Complex problem identified
+- Constraints documented
+**Process**:
+1. Formulate clear question
+2. Gather relevant context
+3. Set analysis constraints
+4. Deploy ultrathink
+5. Process response
+6. Integrate insights
+**Success**: Deep insights obtained
+**Failure**: Question too vague
+**Examples**:
+- "think deeply about the architecture" → System design analysis
+- "ultrathink on performance issues" → Optimization insights
+
+#### Handler: deploy-specialist
+**Triggers**: "get expert help on X", "need specialist for Y", "deploy expert"
+**Target Pattern**: Expertise area needed
+**Pre-conditions**: 
+- Clear task for specialist
+- Constraints defined
+**Process**:
+1. Identify specialist type
+2. Prepare task description
+3. Set clear constraints
+4. Deploy specialist
+5. Integrate results
+**Success**: Expert solution provided
+**Failure**: Task unclear for specialist
+**Examples**:
+- "need expert on database design" → DB specialist
+- "get security expert" → Security analysis
+
+#### Handler: orchestrate-complex
+**Triggers**: "this needs multiple experts", "orchestrate X", "coordinate specialists for Y"
+**Target Pattern**: Complex multi-domain task
+**Pre-conditions**: 
+- Task spans multiple domains
+- Clear decomposition possible
+**Process**:
+1. Decompose into specialist tasks
+2. Identify dependencies
+3. Deploy in correct order
+4. Coordinate results
+5. Synthesize solutions
+**Success**: Coordinated solution achieved
+**Failure**: Dependencies block progress
+**Examples**:
+- "orchestrate full feature" → Multi-specialist flow
+- "coordinate auth implementation" → Security + DB + API experts
+
+### Testing Handlers
+
+#### Handler: create-test-checkpoint
+**Triggers**: "test X", "create tests for Y", "add test coverage"
+**Target Pattern**: Feature or component to test
+**Pre-conditions**: 
+- Code exists to test
+- Test framework available
+**Process**:
+1. Analyze code structure
+2. Identify test scenarios
+3. Create test structure
+4. Write test cases
+5. Run and verify
+6. Update coverage metrics
+**Success**: Tests pass, coverage improved
+**Failure**: Test framework issues
+**Examples**:
+- "test the auth flow" → Integration tests
+- "add unit tests" → Component testing
+
+#### Handler: simulation-test
+**Triggers**: "simulate X", "test workflow Y", "dry run Z"
+**Target Pattern**: Workflow or process to simulate
+**Pre-conditions**: 
+- Workflow defined
+- Simulation possible
+**Process**:
+1. Set up simulation env
+2. Create test scenario
+3. Run simulation
+4. Capture results
+5. Analyze outcomes
+6. Report findings
+**Success**: Simulation reveals insights
+**Failure**: Can't simulate accurately
+**Examples**:
+- "simulate the migration" → Process validation
+- "test the deployment flow" → Deploy simulation
+
+#### Handler: validate-changes
+**Triggers**: "verify X works", "validate the changes", "confirm Y is working"
+**Target Pattern**: Changes to validate
+**Pre-conditions**: 
+- Changes implemented
+- Validation criteria clear
+**Process**:
+1. Identify validation points
+2. Run test suites
+3. Manual testing if needed
+4. Check edge cases
+5. Verify requirements met
+6. Document results
+**Success**: All validations pass
+**Failure**: Issues found, document them
+**Examples**:
+- "verify auth works" → Full auth validation
+- "validate the refactoring" → Behavior preservation
+
+### Work Tracking Handlers
+
+#### Handler: create-work-folder
+**Triggers**: Automatic from other handlers
+**Target Pattern**: Work item name
+**Pre-conditions**: 
+- No existing folder for work
+- Valid work item name
+**Process**:
+1. Create folder with timestamp
+2. Initialize 6 files:
+   - tracker.md
+   - implementation.md
+   - findings.md
+   - decisions.md
+   - memory-refs.md
+   - handoff.md
+3. Add initial content
+4. Update SESSION.md
+**Success**: 6-file structure ready
+**Failure**: Folder exists already
+**Examples**:
+- Via start-new-work → Auto-created
+- "create work folder for X" → Direct creation
+
+#### Handler: update-tracker
+**Triggers**: "update progress", "log work done", "record status"
+**Target Pattern**: Progress information
+**Pre-conditions**: 
+- Work folder exists
+- Progress to record
+**Process**:
+1. Open tracker.md
+2. Find Progress Log section
+3. Add timestamped entry
+4. Update Current State
+5. Adjust Next Steps
+**Success**: Progress recorded
+**Failure**: No work folder found
+**Examples**:
+- "update progress" → Auto-summary
+- "log that we finished X" → Specific entry
+
+#### Handler: document-findings  
+**Triggers**: "I discovered X", "found that Y", "learned Z"
+**Target Pattern**: Discovery or insight
+**Pre-conditions**: 
+- Work context exists
+- Finding is significant
+**Process**:
+1. Open findings.md
+2. Categorize finding
+3. Add with context
+4. Link to evidence
+5. Note implications
+**Success**: Finding documented
+**Failure**: Finding too vague
+**Examples**:
+- "discovered the bug source" → Root cause doc
+- "found performance issue" → Technical finding
+
+#### Handler: record-decision
+**Triggers**: "decided to X", "choosing Y approach", "going with Z"
+**Target Pattern**: Decision and rationale  
+**Pre-conditions**: 
+- Decision point reached
+- Rationale available
+**Process**:
+1. Open decisions.md
+2. Document decision
+3. Add rationale
+4. List alternatives considered
+5. Note implications
+**Success**: Decision preserved
+**Failure**: Rationale unclear
+**Examples**:
+- "decided to use React" → Tech choice
+- "going with microservices" → Architecture decision
 
 ## Common Mistakes That Break Sessions
 
