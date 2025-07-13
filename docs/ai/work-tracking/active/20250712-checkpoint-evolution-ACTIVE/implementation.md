@@ -1535,3 +1535,85 @@ Just tell me which one, or describe what you want to test!
    - Create pattern learning system
    - Add usage analytics
    - Build recommendation engine
+
+## Realistic Tool Selection Strategy (2025-07-13)
+
+After observing actual tool usage patterns, here's a more practical approach:
+
+### Tool Strengths and Best Uses
+
+1. **Serena Tools** (mcp__serena__*)
+   - **Best for**: Code understanding, symbol finding, semantic analysis
+   - `find_symbol`: Finding classes, methods, functions by name
+   - `find_referencing_symbols`: Understanding code relationships
+   - `search_for_pattern`: Complex code pattern searches
+   - `get_symbols_overview`: Understanding file structure
+   - **Weakness**: Can be overkill for simple searches
+
+2. **Built-in Edit Tools**
+   - **Best for**: Actual file modifications
+   - `Edit`: Precise string replacements (most reliable)
+   - `Write`: Creating new files
+   - `MultiEdit`: Multiple changes in one operation
+   - **Strength**: Direct, reliable, can't fail due to semantic misunderstanding
+
+3. **Grep Tool**
+   - **Best for**: Quick pattern searches across files
+   - Fast for simple string searches
+   - Good for finding TODOs, comments, specific text
+   - **When to use**: When you know exact text to find
+
+4. **Bash**
+   - **Best for**: Git operations, system commands
+   - Running commands like `git status`, `npm test`
+   - File system operations beyond basic CRUD
+   - **Essential for**: Git commits, checking timestamps
+
+### Proposed Tool Selection Rules
+
+```yaml
+For Code Understanding:
+  - "What does X do?" → Serena find_symbol
+  - "Find all uses of Y" → Serena find_referencing_symbols  
+  - "Understand this file" → Serena get_symbols_overview
+
+For Code Search:
+  - Complex patterns → Serena search_for_pattern
+  - Simple text search → Grep
+  - "Find TODO comments" → Grep (faster)
+
+For File Modifications:
+  - Changing code → Edit (built-in)
+  - Creating files → Write (built-in)
+  - Multiple edits → MultiEdit (built-in)
+  - NEVER use Serena for editing
+
+For Information Gathering:
+  - Reading files → Read (built-in)
+  - Listing directories → LS (built-in)
+  - File discovery → Glob
+
+For System Operations:
+  - Git commands → Bash
+  - Running tests → Bash
+  - Timestamps → Bash with date command
+```
+
+### Why This Works Better
+
+1. **Matches Reality**: This is how I actually use tools
+2. **Right Tool for Job**: Each tool used where it excels
+3. **Fail-Safe**: Built-in tools for critical operations (editing)
+4. **Performance**: Grep for simple searches is much faster
+5. **Reliability**: Less chance of tool confusion
+
+### Safe Implementation Path
+
+To avoid breaking things:
+1. Document current tool usage in handlers
+2. Update handlers one at a time
+3. Test each change with real operations
+4. Keep fallback options documented
+5. Monitor what actually gets used
+
+This approach is more honest about actual behavior and more likely to be followed.

@@ -14,19 +14,15 @@ This document contains all MCP tool configurations, usage patterns, and the unif
 
 | I need to... | For... | MUST use... | BLOCKED |
 |--------------|---------|-------------|----------|
-| Search | Code patterns | `mcp__serena__search_for_pattern` | grep, find |
-| Search | File names | `Glob` | find |
+| Search | Simple text (TODO, logs) | `Grep` | - |
+| Search | Code understanding | `mcp__serena__search_for_pattern` | grep |
 | Search | Symbol definitions | `mcp__serena__find_symbol` | grep |
-| Find files | By name/pattern | `mcp__serena__find_file` or `Glob` | find |
-| List directory | Contents | `mcp__serena__list_dir` or `LS` | ls (bash) |
-| Edit | Whole function/class | `mcp__serena__replace_symbol_body` | Edit (for whole symbols) |
-| Edit | Small changes | `Edit` | - |
-| Edit | Multiple changes | `MultiEdit` | - |
-| Edit | Add after symbol | `mcp__serena__insert_after_symbol` | - |
-| Edit | Add before symbol | `mcp__serena__insert_before_symbol` | - |
-| Replace | By regex | `mcp__serena__replace_regex` | sed, awk |
-| Analyze | Code structure | `mcp__serena__get_symbols_overview` | manual reading |
+| Search | File patterns | `Glob` | find |
+| Understand | Code structure | `mcp__serena__get_symbols_overview` | manual reading |
 | Find references | To symbols | `mcp__serena__find_referencing_symbols` | grep |
+| Edit | ANY file changes | `Edit` or `MultiEdit` | Serena editing tools |
+| Create | New files | `Write` | Serena tools |
+| List directory | Contents | `LS` | ls (bash) |
 | Timestamp | Any document | `date "+%Y-%m-%d %H:%M %Z"` | manual typing |
 | Commit | Code changes | `gac "message"` | git commit |
 | Complex search | Multiple files/patterns | `Task` tool with agent | multiple greps |
@@ -770,7 +766,7 @@ Remember: Tools serve the workflow, not the other way around. The unified approa
 
 This section defines how to handle tool selection requests when routed from CLAUDE.md's protocol-based navigation.
 
-**CORE PRINCIPLE**: Always prefer Serena tools when available. Only use alternatives as fallback.
+**CORE PRINCIPLE**: Use the right tool for the right job. Each tool has strengths - use them wisely.
 
 ### Search Handlers
 
@@ -781,16 +777,26 @@ This section defines how to handle tool selection requests when routed from CLAU
 - Clear search target
 - Code context (not general files)
 **Process**:
-1. Identify search pattern/term
-2. **PRIMARY**: Use Serena tools
-   - Code patterns → `mcp__serena__search_for_pattern`
-   - Symbol names → `mcp__serena__find_symbol`
-   - File names → `mcp__serena__find_file`
-3. **FALLBACK** only if Serena unavailable:
-   - Glob for file patterns
-   - Grep for text search (avoid!)
-4. Configure search parameters
-5. Present results clearly
+1. Analyze search intent:
+   - Simple text patterns (TODO, logs) → Use `Grep` 
+   - Code semantics (how X works) → Use Serena
+   - Symbol definitions → Use `mcp__serena__find_symbol`
+   - File patterns → Use `Glob`
+
+2. **Balanced Tool Selection**:
+   ```
+   Intent                  | Tool                    | Example
+   -----------------------|-------------------------|------------------
+   Find text patterns     | Grep                    | "TODO", "FIXME"
+   Find error messages    | Grep                    | Log strings
+   Understand code flow   | Serena overview         | "How does auth work?"
+   Find specific symbol   | Serena find_symbol      | "Find UserService class"
+   Find implementations   | Serena find_references  | "What implements X?"
+   Find file patterns     | Glob                    | "*.test.js files"
+   ```
+
+3. Configure search parameters
+4. Present results clearly
 **Success**: Relevant results found and shown
 **Failure**: No results, suggest alternatives
 **Examples**:
@@ -882,13 +888,14 @@ This section defines how to handle tool selection requests when routed from CLAU
 - Clear change description
 **Process**:
 1. Read file first (mandatory)
-2. **PRIMARY** for code edits:
-   - Whole symbols → `mcp__serena__replace_symbol_body`
-   - Insert after → `mcp__serena__insert_after_symbol`
-   - Insert before → `mcp__serena__insert_before_symbol`
-   - Regex patterns → `mcp__serena__replace_regex`
-3. **FALLBACK** for text edits:
-   - Small changes → `Edit`
+2. **ALWAYS use Edit/Write for modifications**:
+   - Creating files → `Write`
+   - Editing files → `Edit` or `MultiEdit`
+   - NEVER use Serena for file modifications
+3. **Use Serena ONLY for understanding before edit**:
+   - Find symbol location → `mcp__serena__find_symbol`
+   - Understand structure → `mcp__serena__get_symbols_overview`
+   - Then use Edit/Write for actual changes
    - Multiple changes → `MultiEdit`
 4. Verify changes
 **Success**: Changes applied correctly
