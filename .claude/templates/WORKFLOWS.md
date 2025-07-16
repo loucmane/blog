@@ -110,6 +110,8 @@ This ensures nothing is forgotten and provides clear progress tracking.
 Every work folder MUST have these 6 files:
 - **tracker.md** - Shows WHERE we are (progress)
 - **implementation.md** - Shows HOW we're doing it (approach, designs, drafts)
+
+**Real-Time Updates Required**: See BEHAVIORS.md "Work Tracking" section for automatic enforcement of updates. Don't batch updates - document as you work.
 - **findings.md** - Shows WHAT we discovered (insights)
 - **decisions.md** - Shows WHY we made choices (rationale)
 - **memory-refs.md** - Shows CONTEXT from past (continuity)

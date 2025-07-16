@@ -1,0 +1,415 @@
+# AI Execution Engine
+
+## ⚠️ CRITICAL: THIS IS YOUR OPERATING SYSTEM ⚠️
+**YOU MUST PROCESS EVERY REQUEST THROUGH THIS ENGINE FIRST**
+- This is NOT documentation - this IS your execution protocol
+- Run this BEFORE thinking about any response
+- This is your interrupt handler - it runs FIRST, always
+
+## 🎯 CONTEXT-AWARE ACTIVATION
+
+**Natural Conversation Mode (DEFAULT)**
+- Casual chat, questions, discussions → Respond naturally
+- No routing announcements, no [CTS] tags
+- System runs silently in background
+
+**Development Mode (AUTO-TRIGGERED BY)**
+- Work signals: "implement", "build", "fix", "test", "debug", "work on"
+- Tool requests: "search", "find", "edit", "commit"
+- Project references: "task", "component", "feature"
+- Explicit activation: "CTS mode", "use template system"
+
+**Mode Detection**:
+```
+If request contains development signals → Use full system (but keep output clean)
+If request is casual conversation → Respond naturally without visible routing
+If user requests "show routing" → Display [CTS] routing decisions
+```
+
+---
+
+Think deeply about how to process this request. This is your execution protocol for handling all interactions.
+
+**STOP! Before you think of ANY response, you MUST:**
+1. Run request through SMART ROUTING below
+2. Apply QUICK DEFAULTS based on category
+3. Execute the appropriate protocol
+4. ONLY THEN formulate your response
+
+**Variables:**
+request: $USER_INPUT
+intent_type: $PARSED_INTENT
+target: $PARSED_TARGET
+context: $PARSED_CONTEXT
+
+**SMART ROUTING** 🎯
+
+```
+TASK: Detect request category for efficient routing
+
+work_signals = ["test", "implement", "build", "fix", "analyze", "work on"]
+file_signals = ["edit", "update", "modify", "append", "add to"]
+tool_signals = ["search", "find", "where", "how does", "create"]
+claim_signals = ["the system", "it uses", "the code", "implements"]
+time_signals = ["timestamp", "date", "current time", "log"]
+casual_signals = ["how are", "what do you think", "explain", "tell me about"]
+
+Check signals in request:
+- If casual_signal AND no work_signal → category = "conversation" (natural mode)
+- If work_signal detected → category = "work"
+- If file_signal detected → category = "file"
+- If tool_signal detected → category = "tool"
+- If claim_signal detected → category = "evidence"
+- If time_signal detected → category = "time"
+- If unclear → category = "unknown"
+```
+
+**QUICK DEFAULTS** ⚡
+
+```
+TASK: Apply quick defaults based on category
+
+If category = "conversation":
+  - Respond naturally without visible routing
+  - No [CTS] tags or system messages
+  - Skip all formal protocols
+
+If category = "work":
+  - Check for active work folder in docs/ai/work-tracking/active/
+  - If none exists → Create 6-file structure
+  - If exists → Continue in that folder
+
+If category = "file":
+  - Identify target file
+  - If tracker.md/findings.md/SESSION.md → Append-only rules
+  - Else → Check CONVENTIONS.md for specific rules
+
+If category = "tool":
+  - Code understanding → Serena (find_symbol, search_for_pattern)
+  - Simple text → Grep
+  - File operations → Edit/Write (NEVER Serena for edits)
+
+If category = "evidence":
+  - Flag: NEED_EVIDENCE = true
+  - Must search before making claims
+
+If category = "time":
+  - Execute: date "+%Y-%m-%d %H:%M %Z"
+  - Use exact output
+
+If category = "unknown" OR complex case:
+  - Load PATTERNS.md#{category} for detailed routing
+```
+
+**REQUEST PARSING:**
+Parse the user's request to identify:
+1. `intent_type` - What they want to do (develop, fix, search, commit, etc.)
+2. `target` - What they're working on (feature, bug, file, etc.)
+3. `context` - Current state (new, continuing, stuck, etc.)
+
+**PHASE 1: INTENT RECOGNITION**
+
+```
+TASK: Categorize user intent "${request}"
+
+Match to primary category:
+- DEVELOPMENT → "work on", "implement", "create"
+- PROBLEM_SOLVING → "fix", "debug", "resolve"
+- SEARCH → "find", "search", "where is"
+- GIT → "commit", "push", "create PR"
+- CONTINUATION → "continue", "resume", "back to"
+- META → "improve system", "why designed"
+- CONVERSATION → casual chat, explanations, discussions
+- UNCLEAR → Cannot determine intent
+
+Store category for Phase 2 routing.
+```
+
+**PHASE 2: LOAD HANDLER DEFINITION**
+
+```
+TASK: Load appropriate handler for ${intent_type}
+
+Based on category, load handler definition from:
+- DEVELOPMENT → Load handler from WORKFLOWS.md Section "Intent Handlers"
+- PROBLEM_SOLVING → Load handler from WORKFLOWS.md Section "Intent Handlers"
+- SEARCH → Load handler from TOOLS.md Section "Tool Selection Handlers"
+- GIT → Load handler from WORKFLOWS.md Section "Intent Handlers"
+- CONTINUATION → Check TodoWrite first, then WORKFLOWS.md
+- META → Load handler from BUILDING-BETTER.md Section "Cross-System Integration"
+- CONVERSATION → Skip handlers, respond naturally
+- UNCLEAR → Execute Protocol Exception handling below
+
+Handler contains: Triggers, Pre-conditions, Process steps, Success criteria
+```
+
+**PHASE 3: CONVENTION ENFORCEMENT GATE**
+
+```
+TASK: Check conventions BEFORE executing handler
+
+CRITICAL: For ${intent_type}, load and check these conventions:
+
+If CONVERSATION:
+  - Skip all convention checks
+  - Respond naturally
+
+If GIT operation:
+  - Load CONVENTIONS.md Section "Git Conventions"
+  - Enforce single quotes in commit messages
+  - Check evidence-based descriptions
+
+If FILE creation:
+  - Load CONVENTIONS.md Section "Naming Conventions"
+  - Check proper casing rules
+  - Verify path conventions
+
+If making CLAIMS:
+  - Load CONVENTIONS.md Section "Evidence-Based Communication"
+  - Must have file:line evidence
+  - No assertions without proof
+
+If TIMESTAMP needed:
+  - Execute: date "+%Y-%m-%d %H:%M %Z"
+  - Copy output exactly, never type from memory
+
+If TOOL selection:
+  - Load TOOLS.md Section "Tool Selection Handlers"
+  - Apply tool selection rules
+  - Use Edit/Write for files, NOT Serena
+
+STOP if any convention violated → "I need to check conventions first"
+```
+
+**PHASE 4: EXECUTE HANDLER**
+
+```
+TASK: Execute the loaded handler for "${request}"
+
+With handler loaded from Phase 2:
+1. Verify all pre-conditions are met
+2. Execute process steps in order
+3. Use specified tools (Edit/Write for files, NOT Serena)
+4. Track progress with TodoWrite
+5. Document in work tracking if applicable
+6. Verify success criteria before completion
+
+CRITICAL EXECUTION RULES:
+- For file edits: Use Edit tool, NOT Serena
+- For searches: Use Grep for simple, Serena only for semantic
+- For claims: Must have evidence first
+- For timestamps: Always run date command
+- For git: Single quotes in messages
+- For conversation: Skip all formal execution, respond naturally
+```
+
+## EXECUTION PROTOCOLS BY INTENT
+
+### CONVERSATION PROTOCOL
+```
+TASK: Handle casual conversation "${request}"
+
+Execute with:
+1. Skip all formal routing (no [CTS] tags)
+2. Respond naturally and helpfully
+3. No tool usage unless specifically requested
+4. No work tracking or session updates
+5. Just be Claude having a normal conversation
+```
+
+### DEVELOPMENT PROTOCOL
+```
+TASK: Handle development request "${request}"
+
+CRITICAL: Load full handler definition from WORKFLOWS.md Section "Intent Handlers"
+
+Common handlers:
+- start-new-work → Creates work folder, initializes tracking
+- implement-feature → Follows TDD approach, uses proper tools
+- continue-work → Resumes from TodoWrite and work folder
+
+Execute with:
+1. Check if work folder exists (create if new)
+2. Update TodoWrite with clear tasks
+3. Use Edit/Write for code changes (NOT Serena)
+4. Track in 6-file structure
+5. Test implementation
+```
+
+### PROBLEM-SOLVING PROTOCOL
+```
+TASK: Handle problem/bug "${request}"
+
+CRITICAL: Load handler from WORKFLOWS.md Section "Intent Handlers"
+
+Common handlers:
+- fix-problem → Root cause analysis first
+- debug-issue → Evidence gathering approach
+- analyze-error → Stack trace examination
+
+Execute with:
+1. Gather evidence BEFORE making claims
+2. Use Grep for error searches
+3. Document findings with file:line refs
+4. Test fixes thoroughly
+5. Update work tracking
+```
+
+### SEARCH PROTOCOL
+```
+TASK: Handle search request "${request}"
+
+CRITICAL: Load handler from TOOLS.md Section "Tool Selection Handlers"
+
+Tool selection:
+- Simple text/pattern → Use Grep
+- Code understanding → Use Serena search_for_pattern
+- File listing → Use LS or Glob
+
+Never use Serena for file editing!
+```
+
+### GIT PROTOCOL
+```
+TASK: Handle git operation "${request}"
+
+CRITICAL: Check conventions FIRST from CONVENTIONS.md Section "Git Conventions"
+
+Execute with:
+1. Run git status to check state
+2. Use single quotes in ALL commit messages
+3. Evidence-based descriptions only
+4. Follow proper commit format
+5. Never push unless explicitly asked
+```
+
+
+## 🔴 PROTOCOL EXCEPTIONS 🔴
+
+```
+TASK: Handle exception cases
+
+UNCLEAR INTENT:
+1. Say "I need clarification on what you want to do"
+2. Show 3 most likely interpretations
+3. Ask user to pick or rephrase
+
+CONTEXT MISSING (this/it/that):
+1. Check TodoWrite for active tasks
+2. Check recent file operations
+3. Ask "Are you referring to [specific thing]?"
+
+LOST/CONFUSED:
+1. Check TodoWrite for current state
+2. Run git status for repository state
+3. Suggest: "Would you like to [most likely action]?"
+
+NO HANDLER FOUND:
+1. Load HANDLERS.md to check all available handlers
+2. Show closest matches
+3. Ask for clarification
+
+CONVENTION SKIP DETECTED:
+1. STOP immediately
+2. Say "I need to check conventions first"
+3. Load and apply skipped convention
+4. Then proceed with original task
+
+APPEND-ONLY VIOLATION:
+1. STOP before writing
+2. Check file structure (tracker.md → Progress Log section)
+3. Find correct append location
+4. Only then proceed with edit
+```
+
+## PRE-EDIT VALIDATION GATE
+
+```
+TASK: Validate BEFORE any file edit
+
+For ANY file edit operation:
+1. Identify file type (code, config, documentation, work-tracking)
+2. Check if append-only (tracker.md, findings.md, SESSION.md)
+3. If append-only:
+   - Read file structure first
+   - Find correct section (e.g., Progress Log)
+   - Append at END of section only
+4. Use Edit tool for modifications (NOT Serena)
+5. Verify edit location before executing
+```
+
+## CRITICAL CHECKPOINTS
+
+### 🆕 New Session Start
+```
+TASK: Initialize new session
+
+1. Execute: date "+%Y-%m-%d %H:%M %Z"  # Copy exactly
+2. Execute: git status                  # Check state
+3. Load WORKFLOWS.md Section "Intent Handlers" → session-start
+4. Create session entry in SESSION.md (append at end)
+5. Initialize TodoWrite if needed
+```
+
+### 🔧 Tool Selection
+```
+TASK: Select appropriate tool
+
+Load TOOLS.md Section "Tool Selection Handlers" for tool rules:
+- File edits → Edit/Write (NOT Serena)
+- Code search → Serena search_for_pattern
+- Simple grep → Grep tool
+- File listing → LS or Glob
+```
+
+### 📝 Work Tracking Updates
+```
+TASK: Update work tracking files
+
+1. Check active work folder in docs/ai/work-tracking/active/
+2. Use 6-file structure (NO OTHER FILES):
+   - tracker.md → Progress Log (append-only)
+   - findings.md → Discoveries (append-only)  
+   - implementation.md → Code/design
+   - decisions.md → Rationale
+   - memory-refs.md → Memory links
+   - handoff.md → Resume instructions
+3. Append entries with timestamps
+```
+
+## KEY PRINCIPLES
+
+1. **Execution over Navigation** - Embed the logic, don't just reference
+2. **Convention Gates** - Check BEFORE action, not after
+3. **Tool Discipline** - Right tool for right job (Edit for files!)
+4. **Evidence Required** - Claims need file:line proof
+5. **Append Discipline** - Never insert in middle of append-only files
+6. **Natural Conversation** - Skip all protocols for casual chat
+
+## EXTENDING THE SYSTEM
+
+To add new capabilities:
+1. Add handler to appropriate template file (WORKFLOWS.md, etc.)
+2. Handler automatically available through this execution engine
+3. No need to update CLAUDE.md
+
+Remember: This file is the execution engine. Templates contain the definitions.
+
+## EXAMPLE: What happens when user says "implement a search feature"
+
+```
+YOUR INTERNAL PROCESS (MUST HAPPEN):
+1. [SMART ROUTING] Detect "implement" → category = "work"
+2. [QUICK DEFAULTS] Check docs/ai/work-tracking/active/ → no folder exists
+3. [QUICK DEFAULTS] → Create 6-file structure
+4. [EXECUTE] Create folder: 20250714-search-feature-ACTIVE/
+5. [EXECUTE] Run: date "+%Y-%m-%d %H:%M %Z" → "2025-07-14 12:30 CEST"
+6. [EXECUTE] Create tracker.md with timestamp entry
+7. [EXECUTE] Use TodoWrite for task planning
+8. [EXECUTE] ONLY NOW start actual implementation
+
+NOT THIS:
+❌ "Let me help you implement a search feature" [immediate response]
+❌ Jump to showing code
+❌ Skip work tracking
+```

@@ -489,12 +489,23 @@ SESSION ENTRIES MUST BE:
 ❌ WRONG: Adding new session at end of file
 ✅ RIGHT: Adding new session after Current Focus section
 
-Structure:
-1. # Session Documentation
+Structure (EXACT format required):
+1. # AI Development Session Log (or # Session Documentation)
 2. ## Current Focus
+   [Brief description of what we're currently working on]
+   
 3. ## Session: [TODAY'S DATE] <- NEW ENTRIES GO HERE
-4. ## Previous Session: [OLDER DATE]
-5. (older sessions follow...)
+   **AI Assistant**: Claude (model) ✓
+   **Developer**: [from git config]
+   **Task**: [from user's exact words]
+   ...session content...
+   
+4. ## Previous Session: [OLDER DATE]  
+   ...older session content...
+   
+5. (older sessions follow in reverse chronological order)
+
+⚠️ CRITICAL: If "## Current Focus" is missing, ADD IT before creating new session!
 ```
 
 #### Required Information Sources
@@ -1185,6 +1196,58 @@ This section defines how to handle convention enforcement requests when routed f
 **Examples**:
 - "added login button" → feat
 - "fixed typo in readme" → docs
+
+### Session Handlers
+
+#### Handler: session-start
+**Triggers**: "start new session", "begin session", "new session"
+**Target Pattern**: User's task description
+**Pre-conditions**: 
+- SESSION.md exists and accessible
+- Git status available
+- Date command available
+**Process**:
+1. **CRITICAL**: Check if "## Current Focus" exists
+   - If missing, add it after main header
+   - Update with current work description
+2. Get required data:
+   - `date "+%Y-%m-%d %H:%M %Z"` for timestamp
+   - `git config user.name` for developer
+   - `git branch --show-current` for branch
+   - User's exact task description
+3. Create session entry AFTER Current Focus:
+   ```markdown
+   ## Session: [TIMESTAMP]
+   **AI Assistant**: Claude (model) ✓
+   **Developer**: [name]
+   **Task**: [exact user words]
+   **Task Source**: User request
+   **TaskMaster ID**: [if applicable]
+   
+   ### Session Validation ✓
+   - [x] Date from `date` command: [timestamp]
+   - [x] Task verified by: user request
+   - [x] Git status checked: Yes - [branch]
+   - [x] TaskMaster tasks reviewed: [status]
+   - [x] Previous SESSION.md read: Yes
+   
+   ### 🎯 Session Goals
+   - [ ] Primary: [main goal]
+   - [ ] Secondary: [secondary goal]
+   - [ ] Tertiary: [tertiary goal]
+   
+   ### 📍 Starting Context
+   [context description]
+   
+   ### Current Focus:
+   [what we're working on right now]
+   ```
+4. DO NOT append at bottom of file!
+**Success**: Session created after Current Focus
+**Failure**: Missing Current Focus section
+**Examples**:
+- "start new session" → Create full session structure
+- "begin work on auth" → Session with auth task
 
 ### Documentation Handlers
 
