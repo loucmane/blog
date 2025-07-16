@@ -238,6 +238,12 @@ The developer uses this alias: `gac='git add . && git commit -m'`
 
 **⚠️ IMPORTANT: You MUST use SINGLE QUOTES (') inside commit messages, NEVER double quotes (")**
 
+**📝 When user asks for gac commit message:**
+- Give ONLY the raw commit message text
+- NO code blocks or formatting
+- NO "Here's your message:" prefix
+- Just the plain text they can use with gac
+
 ### ✅ CORRECT Examples
 
 ```bash

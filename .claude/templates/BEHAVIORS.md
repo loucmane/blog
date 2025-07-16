@@ -298,6 +298,23 @@ UPDATE: Progress log, session status, next steps
 
 ## Git Operations
 
+### When User Says "gac"
+```
+TRIGGER: User mentions "gac" or asks for commit message
+ACTION: Provide raw commit message without formatting
+BLOCKS: Cannot provide message in code blocks or with extra text
+FORMAT:
+- Just the commit message text
+- No code blocks
+- No "Here's your commit message:" prefix
+- No formatting or markdown
+- Follow conventional commit format
+- Use single quotes (') inside message if needed
+EXAMPLE: 
+User: "give me gac"
+AI: feat: add new feature with 'special' handling
+```
+
 ### Before Any Commit
 ```
 TRIGGER: About to commit changes

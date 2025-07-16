@@ -46,3 +46,25 @@
 - Included fallback decision tree for common scenarios
 - Added debugging steps for troubleshooting
 - Key principle: "When stuck, ask for help - don't guess"
+
+### 2025-07-16 14:20 CEST - BEHAVIORS.md Created
+- User suggested creating dedicated BEHAVIORS.md file
+- Moved all behavioral hooks from CLAUDE.md plan
+- Added comprehensive work tracking enforcement
+- Added gac commit message behavior
+- Created cross-references to other templates
+
+### 2025-07-16 14:35 CEST - gac Reminder Issue
+- User: "how do we make it so i dont have to remind you all the time?"
+- Added specific gac behavior to BEHAVIORS.md
+- Updated CONVENTIONS.md with gac response format
+- Documented implementation plan for CLAUDE.md integration
+- This will solve the reminder problem permanently
+
+### 2025-07-16 16:25 CEST - Template Integration Complete
+- Updated CLAUDE.md to reference BEHAVIORS.md
+- Updated CLAUDE.md to reference MATRICES.md
+- Updated REGISTRY.md with both new templates
+- Added behavioral hooks and decision matrices sections
+- Updated statistics to reflect new templates
+- System now fully integrated with automatic behaviors

@@ -9,6 +9,8 @@ Complete index of all handlers, patterns, tools, and conventions across the temp
 - [Convention Handlers](#convention-handlers) - Standards enforcement (CONVENTIONS.md)
 - [Execution Patterns](#execution-patterns) - Meta-routing (PATTERNS.md)
 - [Integration Handlers](#integration-handlers) - Cross-system (BUILDING-BETTER.md)
+- [Behavioral Hooks](#behavioral-hooks) - Automatic enforcement (BEHAVIORS.md)
+- [Decision Matrices](#decision-matrices) - Quick lookup tables (MATRICES.md)
 - [Special Files](#special-files) - File-specific rules (CONVENTIONS.md)
 - [Common Commands](#common-commands) - Copy-paste commands
 - [Tool Selection Matrix](#tool-selection-matrix) - Which tool when
@@ -238,14 +240,63 @@ pnpm typecheck                    # Check types
 4. **Complex tasks** → Task tool → Sequential processing
 5. **Session end** → Update tracker → Create memory
 
+## Behavioral Hooks (BEHAVIORS.md)
+
+Location: `.claude/templates/BEHAVIORS.md`
+
+### Work Tracking
+- Real-time documentation updates
+- Automatic progress tracking
+- Discovery documentation triggers
+- Decision recording requirements
+
+### File Operations
+- Convention checking before edits
+- File creation justification
+- Deletion impact analysis
+
+### Git Operations
+- gac format enforcement
+- Commit message validation
+- PR creation process
+
+### Task Management
+- TodoWrite enforcement
+- Task completion verification
+- Progress tracking requirements
+
+### Session Management
+- Compaction detection
+- Session creation rules
+- Progress documentation
+
+## Decision Matrices (MATRICES.md)
+
+Location: `.claude/templates/MATRICES.md`
+
+### Available Matrices
+- **Request Type → Handler Matrix** - Route requests to handlers
+- **File Type → Convention Matrix** - Apply file-specific rules
+- **Problem Type → Solution Matrix** - Problem-solving paths
+- **Context → Mode Matrix** - Activate appropriate modes
+- **Error → Recovery Matrix** - Error handling strategies
+
+### Usage
+- Quick visual lookup
+- Decision support
+- Pattern recognition
+- Error recovery
+
 ## Statistics
 
-- **Total Handlers**: 73+
+- **Total Handlers**: 85+
 - **Intent Handlers**: 24 (WORKFLOWS.md)
 - **Tool Handlers**: 18 (TOOLS.md)
 - **Convention Handlers**: 15 (CONVENTIONS.md)
 - **Patterns**: 13 (PATTERNS.md)  
 - **Integration Handlers**: 6 (BUILDING-BETTER.md)
+- **Behavioral Hooks**: 9 categories (BEHAVIORS.md)
+- **Decision Matrices**: 5 matrices (MATRICES.md)
 - **Protocol Exceptions**: 11 (CLAUDE.md)
 - **Common Commands**: 10+ (CONVENTIONS.md)
 

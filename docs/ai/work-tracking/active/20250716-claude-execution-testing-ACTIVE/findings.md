@@ -166,3 +166,23 @@ Clear separation of concerns emerging in template system
 - Creates web of connected knowledge
 - No orphaned behaviors or workflows
 - Complete coverage verification needed
+
+### 2025-07-16 14:35 CEST - gac Reminder Issue
+
+#### The Discovery
+User asked: "how do we make it so i dont have to remind you all the time?"
+
+#### The Problem
+- gac commit message format not automatically remembered
+- Behavioral hook exists but not being triggered
+- CLAUDE.md not yet updated to reference BEHAVIORS.md
+
+#### The Solution
+- Added "When User Says gac" behavior to BEHAVIORS.md
+- Updated CONVENTIONS.md with clear gac response format
+- Still need to update CLAUDE.md to load behaviors
+
+#### Why It Matters
+- Shows that behaviors need to be in execution engine
+- Documentation alone isn't enough - needs integration
+- CLAUDE.md update is critical for automatic behavior

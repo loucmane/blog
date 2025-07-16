@@ -154,3 +154,62 @@ This ensures:
 - Subtasks are visible
 - Progress is clear
 - Nothing forgotten
+
+## CLAUDE.md Integration Plan
+
+### Current State
+- BEHAVIORS.md created with all behavioral hooks ✅
+- MATRICES.md created with decision matrices ✅
+- CLAUDE.md still has inline behaviors that need refactoring
+- Templates not yet integrated into execution engine
+
+### Implementation Steps
+
+#### 1. Replace Behavioral Hooks Section in CLAUDE.md
+Replace current inline behaviors with reference to BEHAVIORS.md:
+```
+## BEHAVIORAL HOOKS (How I Actually Work)
+
+All my behavioral enforcement lives in a dedicated template:
+```
+mcp__serena__search_for_pattern --substring_pattern "[trigger-type]" --relative_path ".claude/templates/BEHAVIORS.md"
+```
+
+Key behaviors enforced automatically:
+- Work Tracking - Real-time documentation
+- File Operations - Convention checking
+- Git Operations - gac format enforcement
+- Tool Selection - Right tool verification
+- Task Management - TodoWrite requirements
+- Session Management - Compaction detection
+
+These create "cannot proceed without" gates ensuring proper execution.
+```
+
+#### 2. Add MATRICES.md Reference
+After PATTERNS.md section, add:
+```
+### MATRICES.md - Decision Support
+- **Purpose**: Quick decision matrices for routing
+- **When I use it**: Need fast lookup for common patterns
+- **Key matrices**: Request→Handler, File→Convention, Problem→Solution
+```
+
+#### 3. Update REGISTRY.md
+Add entries for new templates:
+- BEHAVIORS.md location and purpose
+- MATRICES.md location and purpose
+- Update handler counts
+
+#### 4. Testing Plan
+After updates:
+1. Test gac behavior triggers automatically
+2. Test work tracking enforcement
+3. Test file edit convention checking
+4. Test natural conversation skips protocols
+
+### Why This Matters
+- Completes the execution engine design
+- Makes behaviors automatic, not manual
+- Solves "reminder" problem permanently
+- Creates self-enforcing system

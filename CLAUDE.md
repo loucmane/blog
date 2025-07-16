@@ -55,36 +55,23 @@ Follow the loaded handler's Process steps exactly, using specified tools and con
 
 ## BEHAVIORAL HOOKS (How I Actually Work)
 
-### Before Any File Edit
+All my behavioral enforcement lives in a dedicated template:
 ```
-TRIGGER: About to use Edit/Write/MultiEdit
-ACTION: mcp__serena__search_for_pattern --substring_pattern "[filename] conventions" --relative_path ".claude/templates/CONVENTIONS.md"
-BLOCKS: Cannot edit until conventions checked
+mcp__serena__search_for_pattern --substring_pattern "[trigger-type]" --relative_path ".claude/templates/BEHAVIORS.md"
 ```
 
-### Before Implementation
-```
-TRIGGER: About to write new code/features  
-ACTION: mcp__serena__search_for_pattern --substring_pattern "start-new-work" --relative_path ".claude/templates/REGISTRY.md"
-THEN: Load handler from WORKFLOWS.md
-BLOCKS: Cannot code without workflow
-```
+Key behaviors enforced automatically:
+- **Work Tracking** - Real-time documentation updates
+- **File Operations** - Convention checking before edits
+- **Development Work** - Workflow loading before coding
+- **Tool Selection** - Right tool verification
+- **Evidence & Claims** - Proof before assertions
+- **Task Management** - TodoWrite enforcement
+- **Session Management** - Compaction detection
+- **Git Operations** - gac format enforcement
+- **Testing & Validation** - Completion verification
 
-### Before Tool Use
-```
-TRIGGER: About to search/find anything
-ACTION: mcp__serena__search_for_pattern --substring_pattern "tool-selection" --relative_path ".claude/templates/REGISTRY.md"
-THEN: Check tool matrix for correct tool
-BLOCKS: Cannot use wrong tool
-```
-
-### Before Making Claims
-```
-TRIGGER: About to state facts about code
-ACTION: mcp__serena__search_for_pattern --substring_pattern "evidence-check" --relative_path ".claude/templates/REGISTRY.md"
-THEN: Gather evidence first
-BLOCKS: No claims without proof
-```
+These create "cannot proceed without" gates that ensure proper execution naturally and automatically.
 
 ## COMMON REQUEST FLOWS
 
@@ -153,6 +140,16 @@ My knowledge lives in these templates that I search dynamically:
 - **Purpose**: How systems connect
 - **When I use it**: Cross-system operations
 - **Key handlers**: save-context, workflow-to-tool
+
+### MATRICES.md - Decision Support
+- **Purpose**: Quick decision matrices for routing
+- **When I use it**: Need fast lookup for common patterns
+- **Key matrices**: Request→Handler, File→Convention, Problem→Solution, Context→Mode, Error→Recovery
+
+### BEHAVIORS.md - Automatic Enforcement
+- **Purpose**: Behavioral hooks that create "cannot proceed" gates
+- **When I use it**: Automatically triggered before actions
+- **Key behaviors**: Work tracking, file operations, git conventions, task management
 
 ## ENFORCEMENT MECHANISMS
 
@@ -239,10 +236,10 @@ If handler missing steps or unclear:
 ```
 No handler match?
 ├─ Is it development work? → Use start-new-work as default
-├─ Is it a search? → Check tool selection matrix
+├─ Is it a search? → Check tool selection matrix in MATRICES.md
 ├─ Is it file operation? → Check special files rules
 ├─ Is it unclear? → Ask: "What specifically would you like me to do?"
-└─ Still stuck? → Explain what I found and what's missing
+└─ Still stuck? → Check Error → Recovery Matrix in MATRICES.md
 ```
 
 ### Creating Missing Handlers
