@@ -544,11 +544,15 @@ CRITICAL TIMESTAMP RULE:
 
 ```markdown
 ### 📝 Progress Log
-- **[TIMESTAMP]** - Regular work entry
-- **[TIMESTAMP]** - 🎭 Orchestration: Deploying UI specialist
-- **[TIMESTAMP]** - 🧪 CHECKPOINT: Awaiting user test
-- **[TIMESTAMP]** - 👤 User feedback: "Issue description"
-- **[TIMESTAMP]** - ✅ Complete: Feature approved
+- **[HH:MM]** - Regular work entry (use `date '+%H:%M'` for actual time)
+- **[HH:MM]** - 🎭 Orchestration: Deploying UI specialist
+- **[HH:MM]** - 🧪 CHECKPOINT: Awaiting user test
+- **[HH:MM]** - 👤 User feedback: "Issue description"
+- **[HH:MM]** - ✅ Complete: Feature approved
+
+⚠️ CRITICAL: Always run `date '+%H:%M'` to get actual timestamp
+❌ NEVER make up times like "14:15" without checking
+✅ ALWAYS use the output from date command
 ```
 
 ### Memory Naming Convention

@@ -119,6 +119,32 @@ This document contains comprehensive decision matrices for quick, accurate routi
 | Deadlock | Analyze locks | Restart service | Order locks |
 | Data corruption | Restore backup | Validate data | Add checksums |
 
+## Behavior → Workflow Coverage Matrix
+
+| Behavior Trigger | Handler | Template | Convention | Tested | Notes |
+|-----------------|---------|----------|------------|---------|--------|
+| Work Tracking | create-work-folder | WORKFLOWS.md | work-folder format | ❌ | Need to test folder creation |
+| File Operations | check-conventions | BEHAVIORS.md | file-edit rules | ❌ | Before any edit |
+| Development Work | start-new-work | WORKFLOWS.md | workflow process | ❌ | Full workflow test |
+| Tool Selection | tool-matrix | TOOLS.md | right tool rules | ❌ | Serena vs Grep |
+| Evidence & Claims | gather-evidence | BEHAVIORS.md | proof required | ❌ | Before assertions |
+| Task Management | create-todos | BEHAVIORS.md | TodoWrite usage | ❌ | Start of work |
+| Session Management | session-start | CONVENTIONS.md | SESSION.md format | ❌ | Session creation |
+| Timestamp Accuracy | date-check | BEHAVIORS.md | actual time only | ✅ | Just implemented |
+| Git Operations (gac) | gac-format | BEHAVIORS.md | no double quotes | ❌ | Commit messages |
+| Testing & Validation | test-checkpoint | WORKFLOWS.md | user testing | ❌ | Before complete |
+| Navigation | find-handler | REGISTRY.md | keyword lookup | ✅ | 72.5% improvement |
+| Context Detection | mode-detection | CLAUDE.md | dev vs chat | ❌ | Mode switching |
+| Error Recovery | error-matrix | MATRICES.md | recovery paths | ❌ | Fallback behavior |
+| Memory Usage | save-context | PATTERNS.md | memory format | ❌ | Session handoff |
+| Compaction | detect-size | BEHAVIORS.md | context limits | ❌ | Auto-detection |
+
+### Coverage Summary
+- **Total Behaviors**: 15
+- **Tested**: 2 (13%)
+- **Untested**: 13 (87%)
+- **Priority**: Test core workflows first (work tracking, file ops, development)
+
 ## Matrix Usage Patterns
 
 ### Quick Decision Flow

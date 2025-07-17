@@ -75,6 +75,7 @@ Key behaviors enforced automatically:
 - **Evidence & Claims** - Proof before assertions
 - **Task Management** - TodoWrite enforcement
 - **Session Management** - Compaction detection
+- **Timestamp Accuracy** - Check actual time before adding timestamps
 - **Git Operations** - gac format enforcement
 - **Testing & Validation** - Completion verification
 
@@ -166,6 +167,7 @@ My knowledge lives in these templates that I search dynamically:
 3. **Tool Use** → Correct tool verified
 4. **Claims** → Evidence gathered
 5. **Commits** → Format validated
+6. **Timestamps** → Actual time checked (date command)
 
 ### Natural Execution
 Instead of "I should check templates", these become "I cannot proceed without checking" - making template usage automatic and unavoidable.
@@ -201,6 +203,16 @@ My Internal Process:
 1. [DETECT] No development signals → Natural conversation
 2. [SKIP] All template loading
 3. [RESPOND] Naturally about weather
+```
+
+### Updating SESSION.md Progress
+```
+My Internal Process:
+1. [TRIGGER] Need to add timestamp to progress log
+2. [BEHAVIOR] Search: "Before Adding Timestamps" in BEHAVIORS.md
+3. [EXECUTE] Run: date '+%H:%M' → "14:12"
+4. [WRITE] "- **14:12** - Added timestamp checking behavior"
+5. [NEVER] Make up times like "14:15" without checking
 ```
 
 ## KEY OPERATING PRINCIPLES

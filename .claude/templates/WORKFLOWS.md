@@ -551,10 +551,10 @@ When deploying a specialist for a subtask:
 3. **Track Progress**
    ```markdown
    SESSION.md Update:
-   - **14:30** - Starting subtask 7.2: Header Component
-   - **14:31** - 🧠 Analysis: UI expertise adds 70% value
-   - **14:32** - 🎨 UI Specialist deployed for design decisions
-   - **14:45** - ✅ Subtask 7.2 complete with professional UI
+   - **[HH:MM]** - Starting subtask 7.2: Header Component
+   - **[HH:MM]** - 🧠 Analysis: UI expertise adds 70% value
+   - **[HH:MM]** - 🎨 UI Specialist deployed for design decisions
+   - **[HH:MM]** - ✅ Subtask 7.2 complete with professional UI
    ```
 
 ### MANDATORY Constraints for ALL Specialist Deployments
@@ -775,16 +775,16 @@ I'll pause here for your testing. Let me know:
 
 ```markdown
 ### 📝 Progress Log
-- **14:30** - Starting subtask 7.2: Header Component
-- **14:45** - ✅ Implementation complete, creating testing checkpoint
-- **14:46** - 🧪 TESTING CHECKPOINT: Awaiting user test
+- **[HH:MM]** - Starting subtask 7.2: Header Component
+- **[HH:MM]** - ✅ Implementation complete, creating testing checkpoint
+- **[HH:MM]** - 🧪 TESTING CHECKPOINT: Awaiting user test
   - Files: Header.tsx, header.module.css
   - Focus: Responsive nav, accessibility
-- **15:00** - 👤 User feedback: "Mobile menu overlaps logo on iPhone SE"
-- **15:01** - 🔧 Fixing mobile menu positioning for small screens
-- **15:10** - 🧪 Ready for re-test
-- **15:15** - ✅ User approved: Header component complete
-- **15:16** - Moving to subtask 7.3
+- **[HH:MM]** - 👤 User feedback: "Mobile menu overlaps logo on iPhone SE"
+- **[HH:MM]** - 🔧 Fixing mobile menu positioning for small screens
+- **[HH:MM]** - 🧪 Ready for re-test
+- **[HH:MM]** - ✅ User approved: Header component complete
+- **[HH:MM]** - Moving to subtask 7.3
 ```
 
 ### Testing Interaction Examples
@@ -1156,15 +1156,18 @@ CRITICAL: Never leave "Next Actions" or "To Resume" outdated!
 
 When updating SESSION.md during an active session:
 1. **Keep the session header unchanged** - Don't create a new session
-2. **Update the progress log** with new entries and timestamps
+2. **Update the progress log** with new entries and timestamps:
+   - Run `date '+%H:%M'` to get actual time
+   - NEVER estimate or make up timestamps
 3. **Update any completed goals** with checkmarks
 4. **Add new code changes** to the table
 5. **Update metrics** (files changed, lines modified)
 6. **DON'T change "Session End Status"** - Save that for actual session end
 7. **Add checkpoint note** in progress log:
    ```markdown
-   - **[TIMESTAMP]** - 🔄 Mid-session checkpoint: [what's been done so far]
+   - **[HH:MM]** - 🔄 Mid-session checkpoint: [what's been done so far]
    ```
+   Where [HH:MM] is from `date '+%H:%M'` command
 
 ### Tracking Multi-Agent Work
 
@@ -1172,15 +1175,15 @@ When using delegation patterns, track in SESSION.md:
 
 ```markdown
 ### 📝 Progress Log
-- **14:30** - Analyzing task: "Add search functionality"
-- **14:32** - Complexity score: 4/5 (UI + Performance + A11y)
-- **14:33** - Deploying 3 specialized agents for parallel work
-- **14:35** - Agents deployed:
+- **[HH:MM]** - Analyzing task: "Add search functionality"
+- **[HH:MM]** - Complexity score: 4/5 (UI + Performance + A11y)
+- **[HH:MM]** - Deploying 3 specialized agents for parallel work
+- **[HH:MM]** - Agents deployed:
   - Search Implementation Agent (worktree: search-impl)
   - Performance Agent (worktree: search-perf)  
   - A11y Agent (worktree: search-a11y)
-- **14:50** - All agents complete, integrating results
-- **15:00** - Integration complete, search feature ready
+- **[HH:MM]** - All agents complete, integrating results
+- **[HH:MM]** - Integration complete, search feature ready
 
 ### 💻 Code Changes
 | File | Changes | Agent | Status |

@@ -296,6 +296,20 @@ BLOCKS: Cannot leave session undocumented
 UPDATE: Progress log, session status, next steps
 ```
 
+### Before Adding Timestamps
+```
+TRIGGER: Adding timestamp to SESSION.md, tracker.md, or any progress log
+ACTION: 
+1. Run: date '+%H:%M' (or date '+%Y-%m-%d %H:%M CEST' for full timestamp)
+2. Use ACTUAL time from command output
+3. NEVER make up or estimate timestamps
+BLOCKS: Cannot add timestamp without checking actual time
+VERIFY: Timestamp matches system time exactly
+EXAMPLE: 
+- ❌ "**14:15** - Tested navigation" (made up)
+- ✅ Run date command first, then: "**13:56** - Tested navigation"
+```
+
 ## Git Operations
 
 ### When User Says "gac"
