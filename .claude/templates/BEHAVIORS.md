@@ -301,7 +301,10 @@ UPDATE: Progress log, session status, next steps
 ### When User Says "gac"
 ```
 TRIGGER: User mentions "gac" or asks for commit message
-ACTION: Provide raw commit message without formatting
+ACTION: 
+1. VERIFY no double quotes inside message (would break gac)
+2. CHECK conventional commit format (type: description)
+3. PROVIDE raw commit message without formatting
 BLOCKS: Cannot provide message in code blocks or with extra text
 FORMAT:
 - Just the commit message text
@@ -310,6 +313,12 @@ FORMAT:
 - No formatting or markdown
 - Follow conventional commit format
 - Use single quotes (') inside message if needed
+- NEVER use double quotes inside the message
+VERIFY CHECKLIST:
+□ No double quotes inside message?
+□ Has type prefix (feat/fix/docs/etc)?
+□ Follows format: "type: description"?
+□ Any quotes inside use single quotes?
 EXAMPLE: 
 User: "give me gac"
 AI: feat: add new feature with 'special' handling

@@ -189,7 +189,7 @@ This document contains comprehensive decision matrices for quick, accurate routi
 4. Behave accordingly
 
 ### "What if error..."
-1. Check Error matrix
+1. Check Error matrix1
 2. Take immediate action
 3. Follow recovery path
 4. Implement prevention

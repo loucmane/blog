@@ -4,6 +4,7 @@ Complete index of all handlers, patterns, tools, and conventions across the temp
 
 ## 🎯 Quick Navigation
 
+- [Navigation Keywords](#navigation-keywords) - Keyword to handler mapping
 - [Intent Handlers](#intent-handlers) - User request processing (WORKFLOWS.md)
 - [Tool Selection Handlers](#tool-selection-handlers) - Tool routing (TOOLS.md)
 - [Convention Handlers](#convention-handlers) - Standards enforcement (CONVENTIONS.md)
@@ -14,6 +15,34 @@ Complete index of all handlers, patterns, tools, and conventions across the temp
 - [Special Files](#special-files) - File-specific rules (CONVENTIONS.md)
 - [Common Commands](#common-commands) - Copy-paste commands
 - [Tool Selection Matrix](#tool-selection-matrix) - Which tool when
+
+## 🔍 Navigation Keywords
+
+Quick keyword lookup for finding handlers based on natural language.
+
+### Action Keywords → Handlers
+| Keywords | Primary Handler | Secondary Options | Location |
+|----------|----------------|-------------------|----------|
+| work, working, start | start-new-work | continue-work | WORKFLOWS.md |
+| implement, implementing | implement-feature | start-new-work | WORKFLOWS.md |
+| fix, fixing, resolve | fix-problem | debug | WORKFLOWS.md |
+| debug, debugging | debug | analyze-error | WORKFLOWS.md |
+| error, failing, failed | analyze-error | debug | WORKFLOWS.md |
+| search, find, looking | search-code | find-symbol, grep-pattern | TOOLS.md |
+| edit, modify, update, change | edit-file | - | TOOLS.md |
+| commit, save | create-commit-message | commit-changes | WORKFLOWS/TOOLS |
+| create, new, make | create-component | start-new-work | WORKFLOWS.md |
+| test, testing | test-implementation | create-test-checkpoint | WORKFLOWS.md |
+
+### Context Keywords
+| Keywords | Likely Context | Handlers | Location |
+|----------|---------------|----------|----------|
+| bug, issue, problem | Problem solving | fix-problem, debug | WORKFLOWS.md |
+| feature, functionality | Development | start-new-work, implement-feature | WORKFLOWS.md |
+| component, widget, ui | UI work | create-component | WORKFLOWS.md |
+| git, repository, branch | Version control | Git handlers section | TOOLS.md |
+| code, function, class | Code search | search-code, find-symbol | TOOLS.md |
+| session, continue, resume | Session management | session-start, continue-work | WORKFLOWS/CONVENTIONS |
 
 ## Intent Handlers (WORKFLOWS.md)
 

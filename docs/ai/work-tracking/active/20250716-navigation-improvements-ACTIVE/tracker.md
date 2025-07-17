@@ -50,6 +50,25 @@
 - Only navigation improvements is truly active
 - Ready to continue tomorrow with implementation
 
+### 2025-07-17 12:11 CEST - Implementation Started
+- Added Navigation Keywords section to REGISTRY.md
+- Included both Action Keywords and Context Keywords tables
+- Added Location column to show which template contains handlers
+- Keywords now provide direct mapping to handlers
+- Ready to update CLAUDE.md navigation logic next
+
+### 2025-07-17 13:07 CEST - Work Folder Archiving Complete
+- User reminded about work folder cleanup task
+- Implemented 5-category archiving system:
+  - completed/ - Successfully finished work
+  - paused/ - Work on hold, might resume
+  - abandoned/ - Stopped, won't continue
+  - superseded/ - Replaced by newer approach
+  - active/ - Currently being worked on
+- Archived 8 obsolete folders with appropriate categories
+- Updated CONVENTIONS.md with archive naming convention
+- Only navigation-improvements folder remains active
+
 ## Current Focus
 Analyzing how the template navigation system currently works and documenting specific pain points that make navigation difficult.
 

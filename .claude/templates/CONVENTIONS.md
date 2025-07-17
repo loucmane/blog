@@ -584,7 +584,21 @@ Work Tracking Folders:
   Purpose: Organize all work documentation
   Format: [yyyymmdd]-[phase]-[topic]-[STATUS]/
   Example: 20250709-phase3-claude-new-review-ACTIVE/
-  Location: /docs/ai/work-tracking/{active|completed|blocked}/
+  Location: /docs/ai/work-tracking/{active|completed|paused|abandoned|superseded}/
+  
+  Archive Naming Convention:
+    - **active/**: Currently being worked on → folder-name-ACTIVE
+    - **completed/**: Work successfully finished → folder-name-COMPLETE
+    - **paused/**: Work on hold, might resume → folder-name-PAUSED
+    - **abandoned/**: Work stopped, won't continue → folder-name-ABANDONED  
+    - **superseded/**: Work replaced by newer approach → folder-name-SUPERSEDED
+  
+  Examples:
+    - 20250716-navigation-improvements-ACTIVE (current work)
+    - 20250715-claude-execution-serena-COMPLETE (finished successfully)
+    - 20250713-hook-system-implementation-PAUSED (built but on hold)
+    - 20250714-search-feature-ABANDONED (had errors, won't fix)
+    - 20250709-workflow-patterns-SUPERSEDED (replaced by new design)
   
   ⚠️ CRITICAL Date Format:
     - ALWAYS use: date +%Y%m%d  # Gets actual date

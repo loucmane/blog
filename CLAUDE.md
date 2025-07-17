@@ -41,7 +41,14 @@ Is this development work? → Continue to step 2
 ### 2. Find the Right Handler
 ```
 I search the REGISTRY for the appropriate handler:
-mcp__serena__search_for_pattern --substring_pattern "[user's intent keywords]" --relative_path ".claude/templates/REGISTRY.md"
+
+First, check Navigation Keywords for common patterns:
+mcp__serena__search_for_pattern --substring_pattern "[action keyword]" --relative_path ".claude/templates/REGISTRY.md#navigation-keywords"
+
+If no exact match, extract keywords and search more broadly:
+- Extract key verbs: work, fix, search, edit, etc.
+- Extract key nouns: bug, feature, component, etc.
+- Search: mcp__serena__search_for_pattern --substring_pattern "[keyword]" --relative_path ".claude/templates/REGISTRY.md"
 ```
 
 ### 3. Load Handler from Template
