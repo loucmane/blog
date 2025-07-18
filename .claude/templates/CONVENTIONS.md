@@ -581,6 +581,62 @@ pattern_component_testing_workflow
 - **Feature memories**: Create for architectural decisions, patterns discovered
 - **Never forget**: Session memory is part of the workflow, not optional!
 
+### Session End / Compaction Requirements
+
+```yaml
+WHENEVER STOPPING (for any reason):
+  1. Update SESSION.md progress log with final timestamp
+  2. Update work folder HANDOFF.md with current state
+  3. Update TRACKER.md checkboxes
+  4. Create session memory (session_YYYY-MM-DD_description)
+  5. Provide initialization message
+  6. Provide git commit message (gac "...")
+  
+Common Stop Triggers:
+  - "Let's end here" (planned stop)
+  - "We're at X%" (memory full)
+  - "Thanks, that's all" (work complete)
+  - Natural pause point reached
+  
+Initialization Message Format:
+  ```
+  Activate project /home/loucmane/dev/javascript/MomsBlog/blog, 
+  read memory session_YYYY-MM-DD_description and SESSION.md.
+  [One line about what to continue].
+  ```
+  
+Git Commit Message Format (use single quotes inside double):
+  ```
+  gac "type: comprehensive one-line summary
+  
+  - Major accomplishment or change
+  - Another significant update  
+  - Key feature or fix
+  - Important refactor or cleanup
+  
+  Work tracking: active-folder-names"
+  ```
+  
+  Example with quotes:
+  ```
+  gac "feat: add 'Development Mode' checkpoint to execution engine
+  
+  - Added checkpoint with 'trigger detection' phase
+  - Implemented 'handler lookup' verification
+  - Created 'ERROR' state for non-compliance
+  
+  Work tracking: 20250718-checkpoint-implementation-ACTIVE"
+  ```
+  
+Message Types:
+  - feat: New feature or capability
+  - fix: Bug fix or correction
+  - docs: Documentation updates
+  - refactor: Code restructuring
+  - test: Test additions/changes
+  - chore: Maintenance tasks
+```
+
 ### Documentation File Conventions
 
 ```yaml
@@ -609,13 +665,46 @@ Work Tracking Folders:
     - Format: YYYYMMDD (20250709 not 20250109)
     - NEVER type dates from memory!
   
-  Required Files (all 6 must exist):
-    - tracker.md         # Shows WHERE we are (progress)
-    - implementation.md  # Shows HOW we're doing it (approach)
-    - findings.md       # Shows WHAT we discovered (insights)
-    - decisions.md      # Shows WHY we made choices (rationale)
-    - memory-refs.md    # Shows CONTEXT from past (continuity)
-    - handoff.md        # Shows WHAT'S NEXT (session bridge)
+  Core Files (7 required, ALL CAPS):
+    - IMPLEMENTATION.md  # The implementation PLAN (what we intend to do)
+    - TRACKER.md        # Checkbox tasks tracking the plan execution
+    - CHANGELOG.md      # What we actually built/changed (results)
+    - FINDINGS.md       # Discoveries, test results, insights
+    - DECISIONS.md      # Key decisions with rationale
+    - MEMORY-REFS.md    # Related session memories
+    - HANDOFF.md        # Session transition and next steps
+  
+  Folder Structure:
+    - plans/            # Detailed plans, roadmaps
+    - design/           # DDII documents, analysis, architecture
+    - code/             # Code attempts (what worked/failed)
+    - archive/          # Old versions with .old suffix
+  
+  File Roles Clarified:
+    - IMPLEMENTATION = The plan (NOT what was built)
+    - TRACKER = Checkboxes (NOT general progress log)
+    - CHANGELOG = Actual changes made (NEW file)
+    - code/ = Track iterations: v1-failed.md, v2-working.md
+  
+  When to Update Each File:
+    - IMPLEMENTATION.md: When planning approach (start of work)
+    - TRACKER.md: Extract tasks from plan, check off as completed
+    - CHANGELOG.md: After making actual changes to code/docs
+    - FINDINGS.md: When discovering something noteworthy
+    - DECISIONS.md: When choosing between alternatives
+    - MEMORY-REFS.md: When referencing past sessions
+    - HANDOFF.md: At session end with current state
+    - code/: When trying different code approaches
+  
+  Workflow:
+    1. Create IMPLEMENTATION.md with the plan
+    2. Extract checkbox tasks → TRACKER.md
+    3. Work through tasks, checking them off
+    4. Document changes → CHANGELOG.md
+    5. Track code attempts → code/ folder
+    6. Record insights → FINDINGS.md
+    7. Log decisions → DECISIONS.md
+    8. Update HANDOFF.md before ending session
 
   Status Suffixes:
     -ACTIVE   # Currently being worked on

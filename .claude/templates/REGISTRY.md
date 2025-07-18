@@ -238,13 +238,15 @@ pnpm typecheck                    # Check types
 - `findings.md` - Discoveries section only
 - `SESSION.md` - After Current Focus section
 
-### Work Tracking Files (6-file structure)
-- `tracker.md` - Progress and status (append-only)
-- `implementation.md` - Plan and approach
-- `findings.md` - Discoveries and insights (append-only)
-- `decisions.md` - Rationale for choices
-- `memory-refs.md` - Related memories
-- `handoff.md` - Next session instructions
+### Work Tracking Files (7-file structure, ALL CAPS)
+- `IMPLEMENTATION.md` - The implementation plan (what we intend to do)
+- `TRACKER.md` - Checkbox tasks tracking plan execution
+- `CHANGELOG.md` - What actually changed/was built (results)
+- `FINDINGS.md` - Discoveries and insights
+- `DECISIONS.md` - Rationale for choices
+- `MEMORY-REFS.md` - Related memories
+- `HANDOFF.md` - Next session instructions
+Plus subfolders: plans/, design/, code/, archive/
 
 ## Key Principles
 
@@ -267,7 +269,7 @@ pnpm typecheck                    # Check types
 2. **Fix bugs** → Evidence first → Then theorize
 3. **Search code** → Serena for semantic → Grep for text
 4. **Complex tasks** → Task tool → Sequential processing
-5. **Session end** → Update tracker → Create memory
+5. **Session end** → Update docs → Memory → Init + Commit messages
 
 ## Behavioral Hooks (BEHAVIORS.md)
 

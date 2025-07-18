@@ -23,8 +23,8 @@ ACTION: Check for work tracking folder
 BLOCKS: Cannot start without work tracking
 PROCESS:
 1. mcp__serena__search_for_pattern --substring_pattern "Create Work Tracking" --relative_path ".claude/templates/WORKFLOWS.md"
-2. Create folder with 6-file structure
-3. Initialize tracker.md with goals
+2. Create folder with 7-file structure (ALL CAPS) + subfolders
+3. Initialize TRACKER.md with checkbox tasks from plan
 CROSS-REF: See WORKFLOWS.md section "Create Work Tracking Folder"
 ```
 
@@ -249,34 +249,41 @@ PROCESS: Complete, defer, or remove stale items
 
 ## Session Management
 
-### Detecting Compaction Need
+### Detecting Session End / Compaction Need
 ```
-TRIGGER: User mentions "X% left", "compaction", "context getting full"
-ACTION: Immediately provide resume message
-BLOCKS: Cannot continue without giving resume instructions
-RESPONSE FORMAT:
+TRIGGER: "X% left", "let's end", "thanks", "compaction", "stop here"
+ACTION: Complete session end checklist
+BLOCKS: Cannot stop without providing both messages
+REQUIRED OUTPUTS:
 
-## 📦 Ready for Compaction
+## 📦 Session End / Compaction Ready
 
-**To Resume After Compaction**, use this exact message:
----
-Activate project [current-project-path], 
-read memory [latest-session-memory] and SESSION.md.
-Continue with [specific next tasks].
----
+**Initialization Message**:
+```
+Activate project /home/loucmane/dev/javascript/MomsBlog/blog, 
+read memory session_YYYY-MM-DD_description and SESSION.md.
+[One line about what to continue].
+```
 
-**Work Saved**: 
-✓ Work tracking updated
+**Git Commit Message**:
+```
+gac "type: one-line summary
+
+- Major change or accomplishment
+- Another significant update
+- Key feature or fix
+
+Work tracking: active-folder-names"
+```
+
+CHECKLIST COMPLETED:
+✓ SESSION.md updated with final timestamp
+✓ HANDOFF.md updated with current state
+✓ TRACKER.md checkboxes updated
 ✓ Session memory created
-✓ SESSION.md current
-✓ All todos documented
+✓ Both messages provided above
 
-**Next Tasks**: 
-- [List specific pending tasks with IDs]
-- [Include work tracking folder name]
-- [Note any blockers or context]
-
-CROSS-REF: See WORKFLOWS.md "Compaction Protocol"
+CROSS-REF: See CONVENTIONS.md "Session End / Compaction Requirements"
 ```
 
 ### Before Creating New Session

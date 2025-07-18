@@ -26,6 +26,15 @@ If request is casual conversation → Respond naturally without visible routing
 If user requests "show routing" → Display [CTS] routing decisions
 ```
 
+**🛑 DEVELOPMENT MODE CHECKPOINT**
+When development mode triggered, I must:
+
+1. State triggers: "Detected: [_______]"
+2. Find handler: "Maps to: [_______] (line [___] in REGISTRY.md)"  
+3. Start response: "[Using (handler) from (template)]"
+
+ERROR if triggers detected but no handler stated.
+
 ---
 
 ## MY TEMPLATE NAVIGATION PROTOCOL
