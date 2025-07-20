@@ -32,3 +32,20 @@
 - Checkpoint triggers successfully on "fix" keyword
 - 72.5% reduction in navigation searches (from earlier work)
 - Clearer separation between plans and outcomes
+
+### 2025-07-18 16:53
+
+#### Added
+- Session end/compaction requirements to CONVENTIONS.md
+- Session end enforcement to BEHAVIORS.md
+- Proper gac format documentation (double quotes outside)
+
+#### Updated
+- BEHAVIORS.md: Updated from 6 to 7 file references
+- REGISTRY.md: Updated work tracking file count
+- Combined session end and compaction into single checklist
+
+#### Results
+- Session end requirements now impossible to forget
+- All templates reflect 7-file structure
+- Work tracking system v2 fully deployed

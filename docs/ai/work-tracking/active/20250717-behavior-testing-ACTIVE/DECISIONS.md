@@ -53,3 +53,16 @@
   - Simple enough to actually use
 - **Design**: "What behavior should trigger for this request?"
 - **Implementation**: Add to top of CLAUDE.md as first thing to answer
+
+### 2025-07-20: Incomplete Thought Enforcement
+- **Decision**: Modify checkpoint to create unfinished sentences requiring template content
+- **Context**: Enhanced triggers detect correctly but don't enforce template loading
+- **Rationale**:
+  - Cognitive dissonance from incomplete thoughts is unbearable
+  - Self-enforcing through visible broken sentences
+  - Natural integration into response flow
+  - Creates "syntax error" in thinking that must be fixed
+- **Design**: "Detected: X which according to _____ means I should _____"
+- **Backup**: Created CLAUDE-BACKUP-2025-07-20.md for quick revert
+- **Risk**: Might create awkward responses or break natural flow
+- **Mitigation**: Test incrementally, revert if problematic

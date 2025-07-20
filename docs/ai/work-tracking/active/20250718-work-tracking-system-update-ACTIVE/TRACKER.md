@@ -22,6 +22,6 @@ Following: plans/work-tracking-update-plan.md
 - [ ] Create memory for new system
 
 ## Phase 4: Migration
-- [ ] Update current behavior testing folder
-- [ ] Archive old structure
+- [x] Update current behavior testing folder (migrated to 7-file ALL CAPS)
+- [x] Archive old structure (lowercase names replaced)
 - [ ] Document migration process

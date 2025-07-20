@@ -12,7 +12,8 @@ Test all 15 behaviors in the execution engine to verify they work as documented 
 - [x] Set up testing plan
 
 ### Phase 2: Core Behaviors (In Progress)
-- [ ] File Operations - Test convention checking
+- [x] File Operations - Test convention checking (no enforcement found)
+- [ ] **NEXT: Implement enhanced checkpoint triggers (3-layer detection)**
 - [ ] Tool Selection - Test Serena vs Grep routing
 - [ ] Task Management - Test TodoWrite enforcement
 
