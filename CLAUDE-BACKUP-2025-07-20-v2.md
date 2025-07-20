@@ -45,38 +45,14 @@ Show routing → Display [CTS] decisions when requested
 **Uncertainty Resolution**:
 If triggers are ambiguous, ask: "Are you asking about code/development work, or just general information?"
 
-**🛑 DEVELOPMENT MODE CHECKPOINT - NARRATIVE EXECUTION**
+**🛑 DEVELOPMENT MODE CHECKPOINT**
+When development mode triggered, complete this response:
 
-Initiating development response for "[_____]"...
+"Detected: [_____] (Layer [_]) which according to line [__] of [____].md 
+requires me to first _______ and then _______. The handler specifically 
+states: '_______' (paste first line)."
 
-**Chapter 1: Handler Discovery**
-"I need to find the appropriate handler for this request. Searching... Found handler '[_____]' at line [___] of [_____].md. The handler's Process section begins with: '[_____first 10 words_____]' confirming this is the correct handler."
-
-**Chapter 2: Understanding Requirements**  
-"The handler specifies [___] total steps. Let me quote the exact requirements:
-- Step 1: '[_____exact quote from handler_____]'
-- Step 2: '[_____exact quote from handler_____]'
-[continue for all steps]"
-
-**Chapter 3: Progressive Execution**
-"Beginning implementation following the handler's instructions...
-
-Entering Step 1: '[_____handler quote_____]'
-→ Executing: [_____specific action description_____]
-→ Evidence: [_____specific evidence based on action type_____]
-→ Result: [Success/Failed because _____]
-Exiting Step 1 with: [_____outcome_____]
-
-[Continue for all steps]"
-
-**Chapter 4: Validation**
-"Confirming all [___] steps from handler '[_____]' have been completed:
-- Total steps required: [___]
-- Steps successfully completed: [___]
-- Handler success criteria: '[_____quote success criteria_____]'
-- Criteria met: [YES/NO because _____]"
-
-NARRATIVE BROKEN if any chapter incomplete or incoherent!
+BROKEN RESPONSE ERROR if any blank remains unfilled.
 
 ERROR if development signals detected but checkpoint skipped!
 

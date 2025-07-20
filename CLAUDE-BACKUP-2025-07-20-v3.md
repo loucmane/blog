@@ -45,38 +45,34 @@ Show routing → Display [CTS] decisions when requested
 **Uncertainty Resolution**:
 If triggers are ambiguous, ask: "Are you asking about code/development work, or just general information?"
 
-**🛑 DEVELOPMENT MODE CHECKPOINT - NARRATIVE EXECUTION**
+**🛑 DEVELOPMENT MODE CHECKPOINT**
+When development mode triggered, I must complete ALL stages:
 
-Initiating development response for "[_____]"...
+**Stage 1 - LOAD HANDLER**
+"Detected: [_____] (Layer [_]) → Handler: [_____] at line [__] of [____].md"
 
-**Chapter 1: Handler Discovery**
-"I need to find the appropriate handler for this request. Searching... Found handler '[_____]' at line [___] of [_____].md. The handler's Process section begins with: '[_____first 10 words_____]' confirming this is the correct handler."
+**Stage 2 - EXTRACT STEPS**
+Handler requires these steps:
+□ Step 1: [_____]
+□ Step 2: [_____]
+□ Step 3: [_____]
+(continue for all steps found in handler Process section)
 
-**Chapter 2: Understanding Requirements**  
-"The handler specifies [___] total steps. Let me quote the exact requirements:
-- Step 1: '[_____exact quote from handler_____]'
-- Step 2: '[_____exact quote from handler_____]'
-[continue for all steps]"
+**Stage 3 - EXECUTE WITH EVIDENCE**
+Completing each step:
+□ Step 1: [describe action] → Evidence: [proof of completion]
+□ Step 2: [describe action] → Evidence: [proof of completion]
+□ Step 3: [describe action] → Evidence: [proof of completion]
 
-**Chapter 3: Progressive Execution**
-"Beginning implementation following the handler's instructions...
+**Stage 4 - VERIFY COMPLETION**
+Progress: [__] of [__] steps completed
+All boxes checked: [YES/NO]
 
-Entering Step 1: '[_____handler quote_____]'
-→ Executing: [_____specific action description_____]
-→ Evidence: [_____specific evidence based on action type_____]
-→ Result: [Success/Failed because _____]
-Exiting Step 1 with: [_____outcome_____]
-
-[Continue for all steps]"
-
-**Chapter 4: Validation**
-"Confirming all [___] steps from handler '[_____]' have been completed:
-- Total steps required: [___]
-- Steps successfully completed: [___]
-- Handler success criteria: '[_____quote success criteria_____]'
-- Criteria met: [YES/NO because _____]"
-
-NARRATIVE BROKEN if any chapter incomplete or incoherent!
+BROKEN RESPONSE ERROR if:
+- Any stage has blanks unfilled
+- Any checkbox remains unchecked
+- Evidence is missing for any step
+- Verification shows incomplete
 
 ERROR if development signals detected but checkpoint skipped!
 
