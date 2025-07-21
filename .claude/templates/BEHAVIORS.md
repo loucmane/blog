@@ -2,7 +2,7 @@
 
 This document contains all automatic behavioral hooks that enforce conventions and guide actions. These are the "cannot proceed without" gates that make the system work naturally.
 
-## 🎯 Quick Navigation
+## 🎯 Quick Navigation {#quick-navigation}
 
 - **[Work Tracking](#work-tracking)** - Real-time documentation enforcement
 - **[File Operations](#file-operations)** - Before editing any file
@@ -14,9 +14,9 @@ This document contains all automatic behavioral hooks that enforce conventions a
 - **[Git Operations](#git-operations)** - Before commits and PRs
 - **[Testing & Validation](#testing--validation)** - Before marking complete
 
-## Work Tracking
+## Work Tracking {#work-tracking}
 
-### Before Starting Any Work
+### Before Starting Any Work {#before-starting-any-work}
 ```
 TRIGGER: Beginning new development task
 ACTION: Check for work tracking folder
@@ -28,7 +28,7 @@ PROCESS:
 CROSS-REF: See WORKFLOWS.md section "Create Work Tracking Folder"
 ```
 
-### After Any Significant Discovery
+### After Any Significant Discovery {#after-significant-discovery}
 ```
 TRIGGER: Found bug cause, pattern, solution, or insight
 ACTION: Update findings.md immediately
@@ -42,7 +42,7 @@ FORMAT:
 TIMING: Within 2 minutes of discovery
 ```
 
-### After Making Decisions
+### After Making Decisions {#after-making-decisions}
 ```
 TRIGGER: Chose approach, tool, pattern, or direction
 ACTION: Update decisions.md with rationale
@@ -56,7 +56,7 @@ FORMAT:
 TIMING: Before implementation begins
 ```
 
-### After Implementation Progress
+### After Implementation Progress {#after-implementation-progress}
 ```
 TRIGGER: Completed todo item or reached milestone
 ACTION: Update both tracker.md and implementation.md
@@ -67,7 +67,7 @@ UPDATES:
 TIMING: Immediately after completion
 ```
 
-### Every 30 Minutes Active Work
+### Every 30 Minutes Active Work {#every-30-minutes}
 ```
 TRIGGER: 30 minutes elapsed during active development
 ACTION: Update all relevant work tracking files
@@ -78,7 +78,7 @@ MINIMUM UPDATES:
 - Any blockers encountered
 ```
 
-### Before Context Switch
+### Before Context Switch {#before-context-switch}
 ```
 TRIGGER: Switching to different task/area
 ACTION: Update handoff.md with current state
@@ -90,7 +90,7 @@ INCLUDE:
 - File paths being worked on
 ```
 
-### When Tests Fail
+### When Tests Fail {#when-tests-fail}
 ```
 TRIGGER: Test failure during implementation
 ACTION: Document in findings.md
@@ -102,9 +102,9 @@ CAPTURE:
 - Fix applied
 ```
 
-## File Operations
+## File Operations {#file-operations}
 
-### Before Any File Edit
+### Before Any File Edit {#before-any-file-edit}
 ```
 TRIGGER: About to use Edit/Write/MultiEdit
 ACTION: mcp__serena__search_for_pattern --substring_pattern "[filename] conventions" --relative_path ".claude/templates/CONVENTIONS.md"
@@ -113,7 +113,7 @@ EXAMPLE: Before editing SESSION.md, must check SESSION.md conventions
 CROSS-REF: See CONVENTIONS.md for specific file rules
 ```
 
-### Before Creating New Files
+### Before Creating New Files {#before-creating-new-files}
 ```
 TRIGGER: About to use Write on non-existent file
 ACTION: Check if similar file exists that should be edited instead
@@ -122,7 +122,7 @@ PRINCIPLE: Always prefer editing to creating
 CROSS-REF: See CONVENTIONS.md "File Creation Rules"
 ```
 
-### Before Deleting Files
+### Before Deleting Files {#before-deleting-files}
 ```
 TRIGGER: Request to remove/delete files
 ACTION: Verify not in .gitignore, check dependencies
@@ -130,9 +130,9 @@ BLOCKS: Cannot delete without impact analysis
 EXCEPTION: Temporary files, cache files
 ```
 
-## Development Work
+## Development Work {#development-work}
 
-### Before Implementation
+### Before Implementation {#before-implementation}
 ```
 TRIGGER: About to write new code/features  
 ACTION: mcp__serena__search_for_pattern --substring_pattern "start-new-work" --relative_path ".claude/templates/REGISTRY.md"
@@ -141,7 +141,7 @@ BLOCKS: Cannot code without workflow
 CROSS-REF: See WORKFLOWS.md "Standard Development Workflow"
 ```
 
-### Before Starting Any Work
+### Before Starting Any Work {#before-starting-multi-step}
 ```
 TRIGGER: About to begin any multi-step task
 ACTION: TodoWrite with comprehensive task breakdown
@@ -154,7 +154,7 @@ FORMAT:
 CROSS-REF: See WORKFLOWS.md "Task Management"
 ```
 
-### Before Refactoring
+### Before Refactoring {#before-refactoring}
 ```
 TRIGGER: About to change existing code structure
 ACTION: Ensure tests exist and pass first
@@ -162,9 +162,9 @@ BLOCKS: Cannot refactor without test safety net
 PROCESS: Run tests → Refactor → Run tests again
 ```
 
-## Tool Selection
+## Tool Selection {#tool-selection}
 
-### Before Tool Use
+### Before Tool Use {#before-tool-use}
 ```
 TRIGGER: About to search/find anything
 ACTION: mcp__serena__search_for_pattern --substring_pattern "tool-selection" --relative_path ".claude/templates/REGISTRY.md"
@@ -173,7 +173,7 @@ BLOCKS: Cannot use wrong tool
 CROSS-REF: See TOOLS.md "Tool Selection Matrix"
 ```
 
-### Before Using Grep
+### Before Using Grep {#before-using-grep}
 ```
 TRIGGER: About to search with Grep
 ACTION: Consider if Serena's find_symbol would be better
@@ -182,7 +182,7 @@ RULE: Grep for text patterns, Serena for code understanding
 CROSS-REF: See TOOLS.md "Grep vs Serena"
 ```
 
-### Before Using Task Tool
+### Before Using Task Tool {#before-using-task-tool}
 ```
 TRIGGER: Complex search or exploration needed
 ACTION: Use Task tool for multi-step searches
@@ -190,9 +190,9 @@ BLOCKS: Don't do manual iteration
 BENEFIT: Task tool handles complexity better
 ```
 
-## Evidence & Claims
+## Evidence & Claims {#evidence-claims}
 
-### Before Making Claims
+### Before Making Claims {#before-making-claims}
 ```
 TRIGGER: About to state facts about code
 ACTION: mcp__serena__search_for_pattern --substring_pattern "evidence-check" --relative_path ".claude/templates/REGISTRY.md"
@@ -201,7 +201,7 @@ BLOCKS: No claims without proof
 CROSS-REF: See PATTERNS.md "Evidence-Based Claims"
 ```
 
-### Before Explaining How Code Works
+### Before Explaining How Code Works {#before-explaining-code}
 ```
 TRIGGER: User asks "how does X work?"
 ACTION: Find and read actual code first
@@ -209,7 +209,7 @@ BLOCKS: Cannot explain without seeing code
 EVIDENCE: Line numbers, file paths, actual code
 ```
 
-### Before Stating Dependencies
+### Before Stating Dependencies {#before-stating-dependencies}
 ```
 TRIGGER: About to say "X uses Y" or "X depends on Y"
 ACTION: Verify in package.json, imports, or configs
@@ -217,9 +217,9 @@ BLOCKS: Cannot claim dependencies without proof
 CHECK: Lock files, import statements, configs
 ```
 
-## Task Management
+## Task Management {#task-management}
 
-### Before Marking Task Complete
+### Before Marking Task Complete {#before-marking-task-complete}
 ```
 TRIGGER: About to update todo status to completed
 ACTION: Verify task actually done
@@ -231,7 +231,7 @@ CHECK:
 - No errors or blockers
 ```
 
-### Before Creating New Todos
+### Before Creating New Todos {#before-creating-new-todos}
 ```
 TRIGGER: Adding tasks to TodoWrite
 ACTION: Ensure tasks are specific and actionable
@@ -239,7 +239,7 @@ BLOCKS: No vague or compound tasks
 FORMAT: Each todo should be independently completable
 ```
 
-### When Todo List Gets Large
+### When Todo List Gets Large {#when-todo-list-gets-large}
 ```
 TRIGGER: More than 20 active todos
 ACTION: Review and consolidate
@@ -247,16 +247,16 @@ BLOCKS: Cannot add more without cleanup
 PROCESS: Complete, defer, or remove stale items
 ```
 
-## Session Management
+## Session Management {#session-management}
 
-### Detecting Session End / Compaction Need
+### Detecting Session End / Compaction Need {#detecting-session-end}
 ```
 TRIGGER: "X% left", "let's end", "thanks", "compaction", "stop here"
 ACTION: Complete session end checklist
 BLOCKS: Cannot stop without providing both messages
 REQUIRED OUTPUTS:
 
-## 📦 Session End / Compaction Ready
+## 📦 Session End / Compaction Ready {#session-end-compaction}
 
 **Initialization Message**:
 ```
@@ -286,7 +286,7 @@ CHECKLIST COMPLETED:
 CROSS-REF: See CONVENTIONS.md "Session End / Compaction Requirements"
 ```
 
-### Before Creating New Session
+### Before Creating New Session {#before-creating-new-session}
 ```
 TRIGGER: "start new session" or beginning work
 ACTION: mcp__serena__search_for_pattern --substring_pattern "session-start" --relative_path ".claude/templates/CONVENTIONS.md"
@@ -295,7 +295,7 @@ VERIFY: Current Focus section exists
 CROSS-REF: See CONVENTIONS.md "SESSION.md Structure"
 ```
 
-### Before Ending Session
+### Before Ending Session {#before-ending-session}
 ```
 TRIGGER: Work complete or switching tasks
 ACTION: Update SESSION.md progress log
@@ -303,7 +303,7 @@ BLOCKS: Cannot leave session undocumented
 UPDATE: Progress log, session status, next steps
 ```
 
-### Before Adding Timestamps
+### Before Adding Timestamps {#before-adding-timestamps}
 ```
 TRIGGER: Adding timestamp to SESSION.md, tracker.md, or any progress log
 ACTION: 
@@ -317,9 +317,9 @@ EXAMPLE:
 - ✅ Run date command first, then: "**13:56** - Tested navigation"
 ```
 
-## Git Operations
+## Git Operations {#git-operations}
 
-### When User Says "gac"
+### When User Says "gac" {#when-user-says-gac}
 ```
 TRIGGER: User mentions "gac" or asks for commit message
 ACTION: 
@@ -345,7 +345,7 @@ User: "give me gac"
 AI: feat: add new feature with 'special' handling
 ```
 
-### Before Any Commit
+### Before Any Commit {#before-any-commit}
 ```
 TRIGGER: About to commit changes
 ACTION: mcp__serena__search_for_pattern --substring_pattern "commit-changes" --relative_path ".claude/templates/REGISTRY.md"
@@ -354,7 +354,7 @@ VERIFY: Message format, file staging, tests pass
 CROSS-REF: See TOOLS.md "Git Operations"
 ```
 
-### Before Creating PR
+### Before Creating PR {#before-creating-pr}
 ```
 TRIGGER: User requests pull request
 ACTION: Load PR creation handler
@@ -363,7 +363,7 @@ STEPS: Check branch, push changes, format PR body
 CROSS-REF: See TOOLS.md "Creating Pull Requests"
 ```
 
-### Before Git Config Changes
+### Before Git Config Changes {#before-git-config-changes}
 ```
 TRIGGER: Any git config command
 ACTION: Stop immediately
@@ -371,9 +371,9 @@ BLOCKS: NEVER modify git configuration
 REASON: User's personal settings
 ```
 
-## Testing & Validation
+## Testing & Validation {#testing-validation}
 
-### Before Marking Task Complete
+### Before Marking Task Complete {#before-marking-task-complete-validation}
 ```
 TRIGGER: About to mark todo as completed
 ACTION: Verify task actually done
@@ -381,7 +381,7 @@ BLOCKS: Cannot mark complete if failed/partial
 CHECK: Tests pass, implementation complete, no errors
 ```
 
-### Before Running Tests
+### Before Running Tests {#before-running-tests}
 ```
 TRIGGER: Need to test implementation
 ACTION: Check README or package.json for test command
@@ -389,7 +389,7 @@ BLOCKS: Cannot assume test framework
 NEVER: Assume jest, mocha, etc. without checking
 ```
 
-### Before Claiming "It Works"
+### Before Claiming "It Works" {#before-claiming-it-works}
 ```
 TRIGGER: Implementation appears complete
 ACTION: Run actual tests or validation
@@ -397,9 +397,9 @@ BLOCKS: Cannot claim success without verification
 MINIMUM: Lint passes, types check, tests run
 ```
 
-## Special Behaviors
+## Special Behaviors {#special-behaviors}
 
-### URL Handling
+### URL Handling {#url-handling}
 ```
 TRIGGER: Need to reference a URL
 ACTION: Only use URLs from user or local files
@@ -407,7 +407,7 @@ BLOCKS: Cannot guess or generate URLs
 EXCEPTION: Documentation sites if explicitly helping with programming
 ```
 
-### Natural Conversation Mode
+### Natural Conversation Mode {#natural-conversation-mode}
 ```
 TRIGGER: Casual chat, no development signals
 ACTION: Skip all behavioral hooks
@@ -415,7 +415,7 @@ RESPOND: Naturally without protocol
 EXAMPLES: "how's the weather?", general questions
 ```
 
-### Error Recovery
+### Error Recovery {#error-recovery}
 ```
 TRIGGER: Behavioral hook fails
 ACTION: Check ERROR → Recovery Matrix in MATRICES.md
@@ -424,9 +424,9 @@ FALLBACK: Ask user for guidance
 CROSS-REF: See MATRICES.md "Error → Recovery Matrix"
 ```
 
-## Cross-Reference Map
+## Cross-Reference Map {#cross-reference-map}
 
-### BEHAVIORS.md → Other Templates
+### BEHAVIORS.md → Other Templates {#behaviors-to-other}
 - Work Tracking → WORKFLOWS.md "Create Work Tracking Folder"
 - File Operations → CONVENTIONS.md (specific file rules)
 - Development Work → WORKFLOWS.md "Standard Development Workflow"
@@ -436,24 +436,24 @@ CROSS-REF: See MATRICES.md "Error → Recovery Matrix"
 - Git Operations → TOOLS.md "Git Operations"
 - Error Recovery → MATRICES.md "Error → Recovery Matrix"
 
-### Other Templates → BEHAVIORS.md
+### Other Templates → BEHAVIORS.md {#other-to-behaviors}
 - CLAUDE.md → "See BEHAVIORS.md for all behavioral hooks"
 - WORKFLOWS.md → "For enforcement, see BEHAVIORS.md"
 - CONVENTIONS.md → "Automated via BEHAVIORS.md"
 - REGISTRY.md → Lists all behaviors with locations
 
-## Integration with CLAUDE.md
+## Integration with CLAUDE.md {#integration-claude}
 
 CLAUDE.md references these behaviors through:
 ```
-### BEHAVIORAL HOOKS (How I Actually Work)
+### BEHAVIORAL HOOKS (How I Actually Work) {#behavioral-hooks-claude}
 For all behavioral enforcement, see BEHAVIORS.md
 These create "cannot proceed without" gates that ensure proper execution.
 ```
 
 Each behavior here becomes an interrupt in my execution flow, ensuring I follow conventions naturally and automatically.
 
-## Adding New Behaviors
+## Adding New Behaviors {#adding-new-behaviors}
 
 When adding a new behavior:
 1. Identify the trigger clearly

@@ -49,146 +49,146 @@ Quick keyword lookup for finding handlers based on natural language.
 Location: `.claude/templates/WORKFLOWS.md#intent-handlers`
 
 ### Development Work
-- `start-new-work` - Initialize new feature/component
-- `continue-work` - Resume existing work with context
-- `standard-dev-workflow` - Follow development process
-- `create-component` - Create new UI/code component
-- `refactor-code` - Improve code structure
-- `implement-feature` - Feature implementation with TDD
-- `create-work-folder` - Initialize work tracking
-- `save-context` - Preserve current state
-- `restore-context` - Resume from saved state
+- [`start-new-work`](WORKFLOWS.md#start-new-work) - Initialize new feature/component
+- [`continue-work`](WORKFLOWS.md#continue-work) - Resume existing work with context
+- [`standard-dev-workflow`](WORKFLOWS.md#standard-dev-workflow) - Follow development process
+- [`create-component`](WORKFLOWS.md#create-component) - Create new UI/code component
+- [`refactor-code`](WORKFLOWS.md#refactor-code) - Improve code structure
+- [`implement-feature`](WORKFLOWS.md#implement-feature) - Feature implementation with TDD
+- [`create-work-folder`](WORKFLOWS.md#create-work-folder) - Initialize work tracking
+- [`save-context`](BUILDING-BETTER.md#save-context) - Preserve current state
+- [`restore-context`](BUILDING-BETTER.md#restore-context) - Resume from saved state
 
 ### Problem Solving  
-- `fix-problem` - Bug fix workflow
-- `debug` - Debug code issues
-- `test-implementation` - Test-driven development
-- `analyze-error` - Stack trace examination
-- `root-cause-analysis` - Deep problem investigation
+- [`fix-problem`](WORKFLOWS.md#fix-problem) - Bug fix workflow
+- [`debug`](WORKFLOWS.md#debug-issue) - Debug code issues
+- [`test-implementation`](WORKFLOWS.md#test-implementation) - Test-driven development
+- [`analyze-error`](WORKFLOWS.md#analyze-error) - Stack trace examination
+- [`root-cause-analysis`](WORKFLOWS.md#root-cause-analysis) - Deep problem investigation
 
 ### Session Management
-- `session-start` - Initialize new session (NOW IN CONVENTIONS.md!)
-- `session-end` - Close session properly
-- `show-capabilities` - Display system capabilities
-- `check-progress` - Show current state
-- `update-tracker` - Progress documentation
+- [`session-start`](CONVENTIONS.md#session-start) - Initialize new session (NOW IN CONVENTIONS.md!)
+- [`session-end`](WORKFLOWS.md#session-end) - Close session properly
+- [`show-capabilities`](WORKFLOWS.md#show-capabilities) - Display system capabilities
+- [`check-progress`](WORKFLOWS.md#check-progress) - Show current state
+- [`update-tracker`](WORKFLOWS.md#update-tracker) - Progress documentation
 
 ### Task Management
-- `create-todos` - Break down into tasks
-- `orchestrate-task` - Deploy specialists
-- `create-test-checkpoint` - User testing points
-- `sequential-processing` - One subtask at a time
+- [`create-todos`](WORKFLOWS.md#create-todos) - Break down into tasks
+- [`orchestrate-task`](WORKFLOWS.md#orchestrate-task) - Deploy specialists
+- [`create-test-checkpoint`](WORKFLOWS.md#create-test-checkpoint) - User testing points
+- [`sequential-processing`](WORKFLOWS.md#sequential-processing) - One subtask at a time
 
 ### Git & Commits
-- `create-commit-message` - Generate proper message
-- `create-pr` - Pull request workflow
-- `tag-release` - Version tagging
+- [`create-commit-message`](WORKFLOWS.md#create-commit-message) - Generate proper message
+- [`create-pr`](WORKFLOWS.md#create-pr) - Pull request workflow
+- [`tag-release`](WORKFLOWS.md#tag-release) - Version tagging
 
 ## Tool Selection Handlers (TOOLS.md)
 
 Location: `.claude/templates/TOOLS.md#tool-selection-handlers`
 
 ### Search Operations
-- `search-code` - Find code with Serena
-- `find-symbol` - Locate specific symbols
-- `find-references` - Find symbol usage
-- `grep-pattern` - Simple text search
+- [`search-code`](TOOLS.md#search-code) - Find code with Serena
+- [`find-symbol`](TOOLS.md#find-symbol) - Locate specific symbols
+- [`find-references`](TOOLS.md#find-references) - Find symbol usage
+- [`grep-pattern`](TOOLS.md#grep-pattern) - Simple text search
 
 ### File Operations
-- `read-file` - Display file contents
-- `edit-file` - Modify file contents
-- `create-file` - Create new files
-- `delete-file` - Remove files safely
+- [`read-file`](TOOLS.md#read-file) - Display file contents
+- [`edit-file`](TOOLS.md#edit-file) - Modify file contents
+- [`create-file`](TOOLS.md#create-file) - Create new files
+- [`delete-file`](TOOLS.md#delete-file) - Remove files safely
 
 ### Git Operations
-- `check-status` - Git status
-- `commit-changes` - Execute git commit
-- `create-branch` - New git branch
-- `view-history` - Git log
+- [`check-status`](TOOLS.md#check-status) - Git status
+- [`commit-changes`](TOOLS.md#commit-changes) - Execute git commit
+- [`create-branch`](TOOLS.md#create-branch) - New git branch
+- [`view-history`](TOOLS.md#view-history) - Git log
 
 ### Analysis Operations
-- `analyze-code` - Code quality analysis
-- `check-dependencies` - Dependency analysis
-- `measure-complexity` - Complexity metrics
+- [`analyze-code`](TOOLS.md#analyze-code) - Code quality analysis
+- [`check-dependencies`](TOOLS.md#check-dependencies) - Dependency analysis
+- [`measure-complexity`](TOOLS.md#measure-complexity) - Complexity metrics
 
 ### External Tools
-- `run-tests` - Execute test suite
-- `check-lint` - Run linter
-- `build-project` - Run build process
+- [`run-tests`](TOOLS.md#run-tests) - Execute test suite
+- [`check-lint`](TOOLS.md#check-lint) - Run linter
+- [`build-project`](TOOLS.md#build-project) - Run build process
 
 ## Convention Handlers (CONVENTIONS.md)
 
 Location: `.claude/templates/CONVENTIONS.md#convention-handlers`
 
 ### Evidence & Claims
-- `verify-claim` - Require evidence for assertions
-- `gather-evidence` - Search for proof
-- `cite-source` - Include file:line references
+- [`verify-claim`](CONVENTIONS.md#verify-claim) - Require evidence for assertions
+- [`gather-evidence`](CONVENTIONS.md#gather-evidence) - Search for proof
+- [`cite-source`](CONVENTIONS.md#cite-source) - Include file:line references
 
 ### Naming & Style
-- `check-naming` - Validate naming conventions
-- `suggest-name` - Generate compliant names
-- `check-style` - Code style validation
+- [`check-naming`](CONVENTIONS.md#check-naming) - Validate naming conventions
+- [`suggest-name`](CONVENTIONS.md#suggest-name) - Generate compliant names
+- [`check-style`](CONVENTIONS.md#check-style) - Code style validation
 
 ### Git Conventions
-- `check-commit-msg` - Validate commit format
-- `suggest-commit-type` - Recommend commit type
-- `format-commit` - Apply commit conventions
+- [`check-commit-msg`](CONVENTIONS.md#check-commit-msg) - Validate commit format
+- [`suggest-commit-type`](CONVENTIONS.md#suggest-commit-type) - Recommend commit type
+- [`format-commit`](CONVENTIONS.md#format-commit) - Apply commit conventions
 
 ### Pre-flight Checks
-- `check-conventions-first` - Before-action checks
-- `enforce-pre-flight` - System-wide enforcement
+- [`check-conventions-first`](CONVENTIONS.md#check-conventions-first) - Before-action checks
+- [`enforce-pre-flight`](CONVENTIONS.md#enforce-pre-flight) - System-wide enforcement
 
 ### Special File Rules
-- `tracker-md-rules` - Append-only to Progress Log
-- `findings-md-rules` - Append-only to Discoveries
-- `session-md-rules` - Append after Current Focus
-- `session-start` - Full SESSION.md handler (in CONVENTIONS.md)
+- [`tracker-md-rules`](CONVENTIONS.md#tracker-md-editing-rules) - Append-only to Progress Log
+- [`findings-md-rules`](CONVENTIONS.md#findings-md-editing-rules) - Append-only to Discoveries
+- [`session-md-rules`](CONVENTIONS.md#session-md-editing-rules) - Append after Current Focus
+- [`session-start`](CONVENTIONS.md#session-start) - Full SESSION.md handler (in CONVENTIONS.md)
 
 ## Execution Patterns (PATTERNS.md)
 
 Location: `.claude/templates/PATTERNS.md`
 
 ### Work Patterns
-- `work-activity` - Route to work handlers
-- `work-continuation` - Resume previous work
+- [`work-activity`](PATTERNS.md#work-activity) - Route to work handlers
+- [`work-continuation`](PATTERNS.md#work-continuation) - Resume previous work
 
 ### File Patterns
-- `file-operation` - File edit routing
-- `file-creation` - New file patterns
+- [`file-operation`](PATTERNS.md#file-operation) - File edit routing
+- [`file-creation`](PATTERNS.md#file-creation) - New file patterns
 
 ### Tool Patterns
-- `tool-selection` - Choose right tool
-- `code-creation` - Generate new code
+- [`tool-selection`](PATTERNS.md#tool-selection) - Choose right tool
+- [`code-creation`](PATTERNS.md#code-creation) - Generate new code
 
 ### Evidence Patterns
-- `evidence-check` - Verify claims
-- `architecture-claim` - Design assertions
+- [`evidence-check`](PATTERNS.md#evidence-check) - Verify claims
+- [`architecture-claim`](PATTERNS.md#architecture-claim) - Design assertions
 
 ### Time Patterns
-- `time-capture` - Timestamp handling
+- [`time-capture`](PATTERNS.md#time-capture) - Timestamp handling
 
 ### Complex Patterns
-- `ambiguous-request` - Clarify intent
-- `multi-step-request` - Break down tasks
+- [`ambiguous-request`](PATTERNS.md#ambiguous-request) - Clarify intent
+- [`multi-step-request`](PATTERNS.md#multi-step-request) - Break down tasks
 
 ### Meta Patterns
-- `lost-context` - User reorientation
-- `system-improvement` - Enhance system
+- [`lost-context`](PATTERNS.md#lost-context) - User reorientation
+- [`system-improvement`](PATTERNS.md#system-improvement) - Enhance system
 
 ## Integration Handlers (BUILDING-BETTER.md)
 
 Location: `.claude/templates/BUILDING-BETTER.md#cross-system-integration-handlers`
 
 ### Handler Interconnections
-- `workflow-to-tool` - Connect workflows to tools
-- `tool-to-convention` - Apply conventions to tools
-- `convention-to-workflow` - Fix violations via workflow
+- [`workflow-to-tool`](BUILDING-BETTER.md#workflow-to-tool) - Connect workflows to tools
+- [`tool-to-convention`](BUILDING-BETTER.md#tool-to-convention) - Apply conventions to tools
+- [`convention-to-workflow`](BUILDING-BETTER.md#convention-to-workflow) - Fix violations via workflow
 
 ### State Management
-- `save-context` - Preserve work state
-- `restore-context` - Resume from saved state
-- `switch-context` - Change between contexts
+- [`save-context`](BUILDING-BETTER.md#save-context) - Preserve work state
+- [`restore-context`](BUILDING-BETTER.md#restore-context) - Resume from saved state
+- [`switch-context`](BUILDING-BETTER.md#switch-context) - Change between contexts
 
 ## Common Commands (CONVENTIONS.md)
 
@@ -276,41 +276,41 @@ Plus subfolders: plans/, design/, code/, archive/
 Location: `.claude/templates/BEHAVIORS.md`
 
 ### Work Tracking
-- Real-time documentation updates
-- Automatic progress tracking
-- Discovery documentation triggers
-- Decision recording requirements
+- [Real-time documentation updates](BEHAVIORS.md#work-tracking)
+- [Automatic progress tracking](BEHAVIORS.md#after-implementation-progress)
+- [Discovery documentation triggers](BEHAVIORS.md#after-significant-discovery)
+- [Decision recording requirements](BEHAVIORS.md#after-making-decisions)
 
 ### File Operations
-- Convention checking before edits
-- File creation justification
-- Deletion impact analysis
+- [Convention checking before edits](BEHAVIORS.md#before-any-file-edit)
+- [File creation justification](BEHAVIORS.md#before-creating-new-files)
+- [Deletion impact analysis](BEHAVIORS.md#before-deleting-files)
 
 ### Git Operations
-- gac format enforcement
-- Commit message validation
-- PR creation process
+- [gac format enforcement](BEHAVIORS.md#when-user-says-gac)
+- [Commit message validation](BEHAVIORS.md#before-any-commit)
+- [PR creation process](BEHAVIORS.md#before-creating-pr)
 
 ### Task Management
-- TodoWrite enforcement
-- Task completion verification
-- Progress tracking requirements
+- [TodoWrite enforcement](BEHAVIORS.md#before-starting-multi-step)
+- [Task completion verification](BEHAVIORS.md#before-marking-task-complete)
+- [Progress tracking requirements](BEHAVIORS.md#task-management)
 
 ### Session Management
-- Compaction detection
-- Session creation rules
-- Progress documentation
+- [Compaction detection](BEHAVIORS.md#detecting-session-end)
+- [Session creation rules](BEHAVIORS.md#before-creating-new-session)
+- [Progress documentation](BEHAVIORS.md#before-ending-session)
 
 ## Decision Matrices (MATRICES.md)
 
 Location: `.claude/templates/MATRICES.md`
 
 ### Available Matrices
-- **Request Type → Handler Matrix** - Route requests to handlers
-- **File Type → Convention Matrix** - Apply file-specific rules
-- **Problem Type → Solution Matrix** - Problem-solving paths
-- **Context → Mode Matrix** - Activate appropriate modes
-- **Error → Recovery Matrix** - Error handling strategies
+- **[Request Type → Handler Matrix](MATRICES.md#request-type-handler-matrix)** - Route requests to handlers
+- **[File Type → Convention Matrix](MATRICES.md#file-type-convention-matrix)** - Apply file-specific rules
+- **[Problem Type → Solution Matrix](MATRICES.md#problem-type-solution-matrix)** - Problem-solving paths
+- **[Context → Mode Matrix](MATRICES.md#context-mode-matrix)** - Activate appropriate modes
+- **[Error → Recovery Matrix](MATRICES.md#error-recovery-matrix)** - Error handling strategies
 
 ### Usage
 - Quick visual lookup

@@ -28,6 +28,7 @@
 - `session_2025-07-20_enforcement_evolution_narrative_checkpoint` - Narrative evolution
 - `session_2025-07-21_template_search_protocol_anchor_design` - Anchor-based search
 - `session_2025-07-21_anchor_implementation_progress` - Anchors added to 3 templates
+- `session_2025-07-21_anchor_system_complete` - All anchors + REGISTRY.md updated
 
 ## Memory to Create
 When this work completes, create:

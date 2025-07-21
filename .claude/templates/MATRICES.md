@@ -2,7 +2,7 @@
 
 This document contains comprehensive decision matrices for quick, accurate routing of requests and actions. Each matrix provides a scannable reference for decision-making.
 
-## 🎯 Quick Navigation
+## 🎯 Quick Navigation {#quick-navigation}
 
 - **[Request Type → Handler Matrix](#request-type--handler-matrix)** - What handler for which request
 - **[File Type → Convention Matrix](#file-type--convention-matrix)** - Which rules for which files
@@ -10,7 +10,7 @@ This document contains comprehensive decision matrices for quick, accurate routi
 - **[Context → Mode Matrix](#context--mode-matrix)** - When to activate which mode
 - **[Error → Recovery Matrix](#error--recovery-matrix)** - What to do when things fail
 
-## Request Type → Handler Matrix
+## Request Type → Handler Matrix {#request-type-handler-matrix}
 
 | Request Pattern | Handler | Location | Example |
 |-----------------|---------|----------|---------|
@@ -34,7 +34,7 @@ This document contains comprehensive decision matrices for quick, accurate routi
 | "rollback X" | rollback | WORKFLOWS.md | "rollback deployment" |
 | "compare X and Y" | compare-code | PATTERNS.md | "compare v1 and v2" |
 
-## File Type → Convention Matrix
+## File Type → Convention Matrix {#file-type-convention-matrix}
 
 | File Type | Key Conventions | Handler | Special Rules |
 |-----------|----------------|---------|---------------|
@@ -54,7 +54,7 @@ This document contains comprehensive decision matrices for quick, accurate routi
 | Docker files | Multi-stage builds | docker-conventions | Minimize layers |
 | CI/CD configs | Test before merge | cicd-conventions | Validate syntax |
 
-## Problem Type → Solution Matrix
+## Problem Type → Solution Matrix {#problem-type-solution-matrix}
 
 | Problem | Primary Solution | Fallback | Tools |
 |---------|-----------------|----------|-------|
@@ -74,7 +74,7 @@ This document contains comprehensive decision matrices for quick, accurate routi
 | Circular dependency | Map dependencies | Refactor structure | find_referencing |
 | Missing handler | Search similar | Create new one | PATTERNS.md |
 
-## Context → Mode Matrix
+## Context → Mode Matrix {#context-mode-matrix}
 
 | Context Signals | Mode | Behavior | Examples |
 |----------------|------|----------|----------|
@@ -94,7 +94,7 @@ This document contains comprehensive decision matrices for quick, accurate routi
 | "monitor", "alert" | Monitoring Mode | Metrics focus | "monitor performance" |
 | "rollback", "revert" | Recovery Mode | Safe procedures | "rollback deploy" |
 
-## Error → Recovery Matrix
+## Error → Recovery Matrix {#error-recovery-matrix}
 
 | Error Pattern | Immediate Action | Recovery Path | Prevention |
 |--------------|------------------|---------------|------------|
@@ -119,7 +119,7 @@ This document contains comprehensive decision matrices for quick, accurate routi
 | Deadlock | Analyze locks | Restart service | Order locks |
 | Data corruption | Restore backup | Validate data | Add checksums |
 
-## Behavior → Workflow Coverage Matrix
+## Behavior → Workflow Coverage Matrix {#behavior-workflow-matrix}
 
 | Behavior Trigger | Handler | Template | Convention | Tested | Notes |
 |-----------------|---------|----------|------------|---------|--------|
@@ -139,82 +139,82 @@ This document contains comprehensive decision matrices for quick, accurate routi
 | Memory Usage | save-context | PATTERNS.md | memory format | ❌ | Session handoff |
 | Compaction | detect-size | BEHAVIORS.md | context limits | ❌ | Auto-detection |
 
-### Coverage Summary
+### Coverage Summary {#coverage-summary}
 - **Total Behaviors**: 15
 - **Tested**: 2 (13%)
 - **Untested**: 13 (87%)
 - **Priority**: Test core workflows first (work tracking, file ops, development)
 
-## Matrix Usage Patterns
+## Matrix Usage Patterns {#matrix-usage-patterns}
 
-### Quick Decision Flow
+### Quick Decision Flow {#quick-decision-flow}
 1. Identify request type → Find handler
 2. Check file type → Apply conventions
 3. Hit problem → Use solution matrix
 4. Detect context → Activate mode
 5. Encounter error → Follow recovery
 
-### When to Check Matrices
+### When to Check Matrices {#when-to-check-matrices}
 - Before starting any work
 - When unsure about approach
 - When something fails
 - When switching contexts
 - When helping others
 
-### Matrix Maintenance
+### Matrix Maintenance {#matrix-maintenance}
 - Update when finding gaps
 - Add new patterns discovered
 - Remove obsolete entries
 - Keep examples current
 - Test matrix accuracy
 
-## Integration Points
+## Integration Points {#integration-points}
 
-### With CLAUDE.md
+### With CLAUDE.md {#with-claude-md}
 - Matrices inform behavioral hooks
 - Support "cannot proceed" gates
 - Enable quick decisions
 - Reduce lookup time
 
-### With REGISTRY.md
+### With REGISTRY.md {#with-registry-md}
 - Registry points to handlers
 - Matrices show when to use
 - Complementary systems
 - Different purposes
 
-### With Templates
+### With Templates {#with-templates}
 - Templates have full details
 - Matrices have quick lookup
 - Use together effectively
 - Matrices first, then templates
 
-## Common Matrix Queries
+## Common Matrix Queries {#common-matrix-queries}
 
-### "What should I use for..."
+### "What should I use for..." {#what-should-i-use}
 1. Check Request Type matrix
 2. Find matching pattern
 3. Load indicated handler
 4. Execute completely
 
-### "What rules apply to..."
+### "What rules apply to..." {#what-rules-apply}
 1. Check File Type matrix
 2. Note special rules
 3. Find convention handler
 4. Apply all rules
 
-### "How do I fix..."
+### "How do I fix..." {#how-do-i-fix}
 1. Check Problem Type matrix
 2. Try primary solution
 3. Use fallback if needed
 4. Prevent future occurrence
 
-### "What mode for..."
+### "What mode for..." {#what-mode-for}
 1. Check Context matrix
 2. Identify signals
 3. Activate correct mode
 4. Behave accordingly
 
-### "What if error..."
+### "What if error..." {#what-if-error}
 1. Check Error matrix1
 2. Take immediate action
 3. Follow recovery path

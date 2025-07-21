@@ -23,7 +23,9 @@ Following: IMPLEMENTATION.md phases
 - [x] Design narrative checkpoint structure
 - [x] Document simplified execution log alternative
 - [x] Implement narrative checkpoint in CLAUDE.md ✅
-- [x] **IN PROGRESS: Add template search protocol to CLAUDE.md** (anchors added to WORKFLOWS, TOOLS, CONVENTIONS)
+- [x] Add anchors to all template files ✅ (all 9 files completed)
+- [ ] Update REGISTRY.md with anchor links
+- [ ] Update CLAUDE.md navigation protocol
 - [ ] Test Tool Selection behavior
 - [ ] Test Task Management behavior
 

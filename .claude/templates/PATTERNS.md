@@ -2,15 +2,15 @@
 
 Meta-patterns that route to appropriate handlers in template files.
 
-## Pattern Matching Rules
+## Pattern Matching Rules {#pattern-matching-rules}
 1. Check triggers in order (most specific first)
 2. First match wins
 3. Load pattern's routing rules
 4. Delegate to referenced handlers
 
-## Work Patterns
+## Work Patterns {#work-patterns}
 
-#### Pattern: work-activity
+#### Pattern: work-activity {#work-activity}
 **Triggers**: test, testing, implement, analyze, fix, document, "new feature", "work on", build, develop
 **Pre-conditions**: None (meta-pattern)
 **Process**:
@@ -25,7 +25,7 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Continue testing" → Routes to continue-work
 - "Fix the login bug" → Routes to start-new-work or continue-work
 
-#### Pattern: work-continuation
+#### Pattern: work-continuation {#work-continuation}
 **Triggers**: continue, resume, "back to", "keep working", "where were we"
 **Pre-conditions**: Previous work context exists
 **Process**:
@@ -38,9 +38,9 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Continue working on auth" → Resumes auth work
 - "Where were we?" → Shows current context
 
-## File Patterns
+## File Patterns {#file-patterns}
 
-#### Pattern: file-operation
+#### Pattern: file-operation {#file-operation}
 **Triggers**: edit, update, modify, "add to", append, change
 **Pre-conditions**: Target file identifiable
 **Process**:
@@ -58,7 +58,7 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Fix typo in code" → Standard edit
 - "Add to findings" → Append to discoveries
 
-#### Pattern: file-creation
+#### Pattern: file-creation {#file-creation}
 **Triggers**: create file, new file, "write a file", generate
 **Pre-conditions**: File type and location clear
 **Process**:
@@ -72,9 +72,9 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Create MyComponent.tsx" → Check casing conventions
 - "New test file" → Follow test naming pattern
 
-## Tool Patterns
+## Tool Patterns {#tool-patterns}
 
-#### Pattern: tool-selection
+#### Pattern: tool-selection {#tool-selection}
 **Triggers**: search, find, where, "how does", look for, locate
 **Pre-conditions**: Operation type clear
 **Process**:
@@ -91,7 +91,7 @@ Meta-patterns that route to appropriate handlers in template files.
 - "How does auth work?" → Uses Serena
 - "Where is UserService?" → Uses Serena find_symbol
 
-#### Pattern: code-creation
+#### Pattern: code-creation {#code-creation}
 **Triggers**: create, write, generate, implement, build component
 **Pre-conditions**: Clear what to create
 **Process**:
@@ -104,9 +104,9 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Create login component" → Write with conventions
 - "Generate test file" → Follow test patterns
 
-## Evidence Patterns
+## Evidence Patterns {#evidence-patterns}
 
-#### Pattern: evidence-check
+#### Pattern: evidence-check {#evidence-check}
 **Triggers**: "the system", "it uses", "the code", claims about implementation
 **Pre-conditions**: Making assertion about codebase
 **Process**:
@@ -120,7 +120,7 @@ Meta-patterns that route to appropriate handlers in template files.
 - "The system uses JWT" → Must find JWT usage
 - "It implements caching" → Must locate cache code
 
-#### Pattern: architecture-claim
+#### Pattern: architecture-claim {#architecture-claim}
 **Triggers**: "architecture", "designed to", "structured as", system claims
 **Pre-conditions**: Making design assertion
 **Process**:
@@ -133,9 +133,9 @@ Meta-patterns that route to appropriate handlers in template files.
 - "The app uses MVC" → Find structure evidence
 - "It's event-driven" → Locate event handling
 
-## Time Patterns
+## Time Patterns {#time-patterns}
 
-#### Pattern: time-capture
+#### Pattern: time-capture {#time-capture}
 **Triggers**: timestamp, date, "current time", "log entry", now
 **Pre-conditions**: Time reference needed
 **Process**:
@@ -148,9 +148,9 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Add timestamp" → 2025-07-13 14:45 CEST
 - "Log current time" → Exact system time
 
-## Complex Patterns
+## Complex Patterns {#complex-patterns}
 
-#### Pattern: ambiguous-request
+#### Pattern: ambiguous-request {#ambiguous-request}
 **Triggers**: vague terms like "it", "that", "this", "the thing"
 **Pre-conditions**: Context unclear
 **Process**:
@@ -163,7 +163,7 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Fix it" → Check what "it" refers to
 - "Update that" → Resolve "that" from context
 
-#### Pattern: multi-step-request
+#### Pattern: multi-step-request {#multi-step-request}
 **Triggers**: "and then", "after that", multiple verbs
 **Pre-conditions**: Multiple operations requested
 **Process**:
@@ -176,9 +176,9 @@ Meta-patterns that route to appropriate handlers in template files.
 - "Find bug and fix it" → Two separate operations
 - "Test, fix, and commit" → Three-step process
 
-## Meta Patterns
+## Meta Patterns {#meta-patterns}
 
-#### Pattern: lost-context
+#### Pattern: lost-context {#lost-context}
 **Triggers**: "I'm lost", "what was I doing", confused state
 **Pre-conditions**: User needs orientation
 **Process**:
@@ -192,7 +192,7 @@ Meta-patterns that route to appropriate handlers in template files.
 - "I'm lost" → Show current state
 - "What was I working on?" → Display active tasks
 
-#### Pattern: system-improvement
+#### Pattern: system-improvement {#system-improvement}
 **Triggers**: "improve system", "make better", enhancement requests
 **Pre-conditions**: Meta-work requested
 **Process**:

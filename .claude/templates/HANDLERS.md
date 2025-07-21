@@ -2,7 +2,7 @@
 
 This registry provides a unified view of all handlers across the Claude Template System. Handlers remain in their domain files but are indexed here for discovery.
 
-## 🎯 Quick Navigation
+## 🎯 Quick Navigation {#quick-navigation}
 
 **By Intent Type**:
 - [Development Work](#development-work) - Starting, continuing, creating
@@ -17,9 +17,9 @@ This registry provides a unified view of all handlers across the Claude Template
 - [Testing](#testing-disambiguation) - Workflow vs Tool?
 - [Code Review](#review-disambiguation) - Process vs Analysis?
 
-## 📍 Handler Registry
+## 📍 Handler Registry {#handler-registry}
 
-### Development Work
+### Development Work {#development-work}
 
 #### start-new-work
 **Location**: [WORKFLOWS.md#handler-start-new-work](WORKFLOWS.md#handler-start-new-work)  
@@ -51,7 +51,7 @@ This registry provides a unified view of all handlers across the Claude Template
 **Purpose**: Improve code structure  
 **Related**: `analyze-code`, `run-tests`
 
-### Problem Solving
+### Problem Solving {#problem-solving}
 
 #### fix-problem
 **Location**: [WORKFLOWS.md#handler-fix-problem](WORKFLOWS.md#handler-fix-problem)  
@@ -65,7 +65,7 @@ This registry provides a unified view of all handlers across the Claude Template
 **Purpose**: Debug code issues  
 **Related**: `analyze-code`, `check-logs`
 
-### Tool Operations
+### Tool Operations {#tool-operations}
 
 #### search-code
 **Location**: [TOOLS.md#handler-search-code](TOOLS.md#handler-search-code)  
@@ -103,7 +103,7 @@ This registry provides a unified view of all handlers across the Claude Template
 **Purpose**: Generate proper commit message following conventions  
 **Related**: `check-commit-msg`, `commit-changes`
 
-### Conventions & Standards
+### Conventions & Standards {#conventions-standards}
 
 #### verify-claim
 **Location**: [CONVENTIONS.md#handler-verify-claim](CONVENTIONS.md#handler-verify-claim)  
@@ -135,7 +135,7 @@ This registry provides a unified view of all handlers across the Claude Template
 **Purpose**: System-wide enforcement of pre-checks  
 **Related**: `check-conventions-first`
 
-### Meta & Recovery
+### Meta & Recovery {#meta-recovery}
 
 #### show-capabilities
 **Location**: [WORKFLOWS.md#handler-show-capabilities](WORKFLOWS.md#handler-show-capabilities)  
@@ -161,7 +161,7 @@ This registry provides a unified view of all handlers across the Claude Template
 **Purpose**: Correct mistaken routes  
 **Related**: `restart-flow`, `unknown-intent`
 
-### System Integration
+### System Integration {#system-integration}
 
 #### workflow-to-tool
 **Location**: [BUILDING-BETTER.md#handler-workflow-to-tool](BUILDING-BETTER.md#handler-workflow-to-tool)  
@@ -175,16 +175,16 @@ This registry provides a unified view of all handlers across the Claude Template
 **Purpose**: Preserve work context  
 **Related**: `restore-context`, `switch-context`
 
-## 🔄 Disambiguation Guide
+## 🔄 Disambiguation Guide {#disambiguation-guide}
 
-### Git Operations
+### Git Operations {#git-disambiguation}
 **"commit changes"** can mean:
 - **Execute Command** → `commit-changes` (TOOLS.md) - Run git commit
 - **Check Format** → `check-commit-msg` (CONVENTIONS.md) - Validate message
 
 **Rule**: Actions go to TOOLS, standards go to CONVENTIONS
 
-### Testing
+### Testing {#testing-disambiguation}
 **"test this"** can mean:
 - **Test Process** → `create-test-checkpoint` (WORKFLOWS.md)
 - **Run Tests** → `run-tests` (TOOLS.md)  
@@ -192,45 +192,45 @@ This registry provides a unified view of all handlers across the Claude Template
 
 **Rule**: Process = WORKFLOWS, Execution = TOOLS, Standards = CONVENTIONS
 
-### Code Review
+### Code Review {#review-disambiguation}
 **"review code"** can mean:
 - **Review Process** → `code-review-workflow` (WORKFLOWS.md)
 - **Analyze Code** → `analyze-code` (TOOLS.md)
 - **Review Standards** → `review-patterns` (CONVENTIONS.md)
 
-## 🎯 Common Patterns & Examples
+## 🎯 Common Patterns & Examples {#common-patterns}
 
-### Starting Work
+### Starting Work {#starting-work}
 - "work on authentication" → `start-new-work`
 - "let's build user profiles" → `start-new-work`
 - "create new feature X" → `start-new-work`
 - "implement the login flow" → `standard-dev-workflow`
 
-### Getting Help  
+### Getting Help {#getting-help}  
 - "I'm lost" → `im-lost` (Protocol Exception)
 - "what can you do?" → `show-capabilities`
 - "help with testing" → `show-capabilities` (filtered)
 - "how do I X?" → Specific handler for X
 
-### Vague Requests → Clarification
+### Vague Requests → Clarification {#vague-requests}
 - "make it better" → "What aspect? Code quality/Performance/UX?"
 - "fix it" → "What needs fixing? Show me the error/issue"
 - "test this" → "Test what? The changes/specific feature/entire app?"
 - "check it" → "Check what? Code quality/tests/git status?"
 
-### Context Resolution
+### Context Resolution {#context-resolution}
 - "debug this" → "What are you trying to debug? The last error/current feature?"
 - "commit it" → "Commit what? All changes/specific files?"
 - "search for that" → "Search for what? The last thing we discussed?"
 
-## 🔍 Search Tips
+## 🔍 Search Tips {#search-tips}
 
 1. **By trigger phrase**: Search for quoted phrases like "work on"
 2. **By handler name**: Search for exact handler like "start-new-work"
 3. **By category**: Jump to sections via Quick Navigation
 4. **By relationship**: Follow "Related" links
 
-## 📊 Coverage Matrix
+## 📊 Coverage Matrix {#coverage-matrix}
 
 | Category | Handlers | Location | Status |
 |----------|----------|----------|--------|
@@ -241,7 +241,7 @@ This registry provides a unified view of all handlers across the Claude Template
 | Integration Handlers | 6 | BUILDING-BETTER.md | ✅ Complete |
 | **TOTAL** | **73** | 5 files | **100%** |
 
-## 🔗 Adding New Handlers
+## 🔗 Adding New Handlers {#adding-new-handlers}
 
 1. Add handler to appropriate domain file
 2. Add registry entry here with same format
