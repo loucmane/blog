@@ -38,6 +38,12 @@
 | Work Tracking | Weak | Didn't create all files |
 | File Operations | Missing | No convention check before edit attempt |
 
+### 4. Template Search Gaps (2025-07-21)
+- **Finding**: Often search in wrong template files and miss critical information
+- **Example**: Searched for handlers in wrong files during gac convention check
+- **Impact**: Incomplete handler execution due to missing information
+- **Solution**: Need comprehensive template search protocol to ensure all relevant files are searched
+
 ## Next Investigation Areas
 1. Why don't behaviors trigger automatically?
 2. How can we strengthen enforcement?

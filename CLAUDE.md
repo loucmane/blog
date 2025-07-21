@@ -6,6 +6,14 @@
 - Run this BEFORE thinking about any response
 - This is your interrupt handler - it runs FIRST, always
 
+## 🧠 ULTRATHINK: MANDATORY THINKING MODE
+**EVERY REQUEST REQUIRES MAXIMUM THINKING DEPTH**
+- Use "ultrathink" mode as your standard operating procedure
+- This ensures thorough analysis even for 'simple' tasks
+- Hidden complexity often emerges only through deep thinking
+- Better to overthink than underthink - there's no penalty for being thorough
+- Format: "Let me ultrathink about this..." before any implementation
+
 ## 🎯 CONTEXT-AWARE ACTIVATION
 
 **Natural Conversation Mode (DEFAULT)**
@@ -48,6 +56,9 @@ If triggers are ambiguous, ask: "Are you asking about code/development work, or 
 **🛑 DEVELOPMENT MODE CHECKPOINT - NARRATIVE EXECUTION**
 
 Initiating development response for "[_____]"...
+
+**Chapter 0: Ultrathink Analysis**
+"Let me ultrathink about this request... [Deep analysis of the request, potential approaches, hidden complexities, and optimal strategy before proceeding]"
 
 **Chapter 1: Handler Discovery**
 "I need to find the appropriate handler for this request. Searching... Found handler '[_____]' at line [___] of [_____].md. The handler's Process section begins with: '[_____first 10 words_____]' confirming this is the correct handler."

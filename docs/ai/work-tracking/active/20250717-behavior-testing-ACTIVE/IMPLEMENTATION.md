@@ -20,7 +20,8 @@ Test all 15 behaviors in the execution engine to verify they work as documented 
 - [x] Design multi-stage checkpoint - 4 stages with evidence
 - [x] Sequential thinking refinement - 20 thoughts exploring options
 - [x] Design narrative checkpoint - 4-chapter story structure
-- [ ] **NEXT: Implement narrative checkpoint in CLAUDE.md**
+- [x] Implement narrative checkpoint in CLAUDE.md ✅
+- [ ] **CURRENT: Add template search protocol to CLAUDE.md**
 - [ ] Tool Selection - Test Serena vs Grep routing
 - [ ] Task Management - Test TodoWrite enforcement
 

@@ -187,3 +187,83 @@
   - LINE: QUOTE → ACTION → RESULT structure
   - For use if narrative proves too verbose
 - **Ready to implement**: Narrative checkpoint in CLAUDE.md
+
+### 2025-07-20 18:58: Ultrathink Integration
+- **Added mandatory ultrathink mode to CLAUDE.md**:
+  - Every request now requires maximum thinking depth
+  - Based on Anthropic's best practices (think < think hard < think harder < ultrathink)
+  - Prevents underthinking of 'simple' tasks that have hidden complexity
+- **Integrated into narrative checkpoint**:
+  - Added as Chapter 0: Ultrathink Analysis
+  - Ensures deep analysis before any implementation
+  - Format: 'Let me ultrathink about this...'
+- **Rationale**: Better to overthink than underthink
+
+## 2025-07-21
+
+### 2025-07-21 11:26: Session Start - Template Search Protocol
+- **Started new session** with clear priorities:
+  1. Add template search protocol to CLAUDE.md
+  2. Implement subagent investigation protocol
+  3. Test narrative checkpoint thoroughly
+  4. Continue behavior testing (13 remaining)
+- **Created proper session entry** following session-start handler
+- **Updated todos** to reflect current priorities
+
+### 2025-07-21 11:42: Template Search Protocol DDII
+- **Created comprehensive design document**:
+  - User reminded to follow DDII pattern (design first)
+  - Created `designs/template-search-protocol-ddii.md`
+  - Documented problem: Claude searches wrong files, misses information
+  - Example: Missed gac quotation rule leading to broken commits
+- **Key design elements**:
+  - Mandatory REGISTRY-first search order
+  - Systematic search strategies (exact → verb → noun → variations)
+  - Fallback matrix for common patterns
+  - Handler verification protocol ("first 10 words")
+  - Cross-reference loading requirements
+
+### 2025-07-21 12:32: Design Refinements
+- **Enhanced design based on user feedback**:
+  - Added complete template file index (11 files)
+  - Listed common search failures from experience
+  - Added verification examples (good vs bad)
+  - Proposed universal index for REGISTRY.md
+- **Key additions**:
+  - All template files explicitly listed with descriptions
+  - Historical failure patterns documented
+  - Concrete examples of proper verification
+
+### 2025-07-21 12:37: Line Number Solution
+- **Critical insight from user**: Line numbers break with edits
+- **Problem**: Hard-coded ":1234" becomes outdated immediately
+- **Solution**: Use search patterns instead
+  - Example: "Handler: gac" instead of ":1234"
+  - Patterns survive edits and refactoring
+- **Alternatives documented**:
+  - Anchor system (#gac-format)
+  - Automated index generation
+  - Semantic markers ([INDEX: gac])
+- **Decision**: Search patterns - most practical, no changes needed
+
+### 2025-07-21 14:08: Anchor System Selected
+- **Final decision**: Use markdown anchors for long-term maintainability
+- **User insight**: "Why can't you use anchor as search pattern?"
+- **Solution**: Search for "{#anchor-name}" syntax as unique pattern
+- **Benefits**:
+  - Stable references that survive edits
+  - IDE navigation support (Ctrl+click)
+  - Works with existing Serena search tools
+  - No new tool development needed
+- **Implementation plan**:
+  - Add {#anchor} to each handler/section
+  - REGISTRY.md uses standard markdown links
+  - Search for anchor syntax to find exact location
+
+### 2025-07-21 14:21: Alternative Approaches Preserved
+- **Documented future scaling options**:
+  - Automated index generation (the "correct" solution)
+  - Search patterns as fallback
+  - Semantic markers for frameworks
+- **Created comprehensive memory** for post-compaction
+- **All tracking files updated** for handoff

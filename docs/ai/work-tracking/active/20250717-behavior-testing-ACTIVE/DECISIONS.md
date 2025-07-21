@@ -93,3 +93,47 @@
 - **Alternative**: Documented simplified execution log for future use
 - **Key insight**: Make compliance easier than fabrication
 - **Implementation**: 4-chapter structure with progressive disclosure
+
+### 2025-07-21 11:40: Template Search Protocol Design
+- **Decision**: Create comprehensive search protocol before implementing
+- **Context**: User reminded to follow DDII pattern for design first
+- **Evidence**: Was about to edit CLAUDE.md directly without design
+- **Rationale**:
+  - Systematic design prevents ad-hoc implementation
+  - Documents search order and fallback strategies
+  - Creates testable success criteria
+  - Follows our established patterns
+- **Design elements**:
+  - Mandatory REGISTRY-first search order
+  - Fallback matrix for common patterns
+  - Handler verification requirements
+  - Cross-reference loading protocol
+- **Risk**: Increased complexity and search time
+- **Mitigation**: Clear mechanical steps, most hit on first search
+
+### 2025-07-21 12:37: Registry Line Number Problem
+- **Decision**: Use search patterns instead of line numbers in REGISTRY.md
+- **Context**: User identified that line numbers become outdated with edits
+- **Problem**: Hard-coded line numbers (e.g., "CONVENTIONS.md:1234") break immediately
+- **Solution Options**:
+  1. Search patterns - Most practical, no template changes needed
+  2. Anchor system (#gac-format) - Requires modifying all templates
+  3. Automated generation - Requires tooling/CI
+  4. Semantic markers - Requires template updates
+- **Choice**: Search patterns as they work with existing system
+- **Example**: Instead of ":1234", use pattern "Handler: gac"
+
+### 2025-07-21 14:08: Anchor-Based System Selected
+- **Decision**: Use markdown anchors as primary reference system
+- **Context**: Discussing long-term maintainability of approaches
+- **Rationale**: 
+  - Anchors survive any edit (unlike line numbers)
+  - Enable IDE navigation (Ctrl+click)
+  - Standard markdown feature
+  - Can search for anchor syntax itself "{#anchor-name}"
+- **Implementation**: 
+  - Add anchors to all handlers/sections
+  - Search for "{#anchor}" as unique pattern
+  - Works with existing Serena tools
+- **User insight**: "Why can't you use anchor as search pattern?"
+- **Key advantage**: Best of both worlds - stable references + existing tools
