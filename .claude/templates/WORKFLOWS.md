@@ -2,7 +2,7 @@
 
 This document contains all workflow patterns, session management, and orchestration guidelines that apply across projects.
 
-## 🎯 Quick Navigation
+## 🎯 Quick Navigation {#quick-navigation}
 
 - **[Universal Flight Protocol](#universal-flight-protocol)** - MANDATORY pre/during/post flight checks
 - **[Task Management](#task-management)** - TodoWrite/TodoRead patterns
@@ -18,11 +18,11 @@ This document contains all workflow patterns, session management, and orchestrat
 - **[Intent Handlers](#intent-handlers)** - NEW! Protocol navigation handlers for user intents
 - **[Common Mistakes](#common-mistakes-that-break-sessions)** - What to avoid
 
-## Task Management
+## Task Management {#task-management}
 
 You have access to the TodoWrite and TodoRead tools to help manage and plan tasks. Use these tools frequently to ensure you're tracking tasks and giving visibility into progress.
 
-### When to Use TodoWrite
+### When to Use TodoWrite {#when-to-use-todowrite}
 
 Use TodoWrite proactively in these scenarios:
 1. **Complex multi-step tasks** - When a task requires 3 or more distinct steps
@@ -30,7 +30,7 @@ Use TodoWrite proactively in these scenarios:
 3. **Before starting major work** - Break down the approach into manageable steps
 4. **During orchestration** - Track deployment of multiple agents or parallel work
 
-### TodoWrite Best Practices
+### TodoWrite Best Practices {#todowrite-best-practices}
 
 - Create todos BEFORE starting work, not after
 - Break large tasks into specific, actionable items
@@ -38,7 +38,7 @@ Use TodoWrite proactively in these scenarios:
 - Only have ONE task in_progress at a time
 - Mark tasks complete IMMEDIATELY when done
 
-### Example Usage
+### Example Usage {#todowrite-example}
 
 When implementing a new feature:
 1. Use TodoWrite to break it down:
@@ -50,7 +50,7 @@ When implementing a new feature:
 2. Mark each as in_progress when starting
 3. Mark as completed when done
 
-### TodoWrite for Orchestrated Tasks
+### TodoWrite for Orchestrated Tasks {#todowrite-orchestrated}
 
 When task complexity warrants delegation:
 
@@ -71,16 +71,16 @@ Mark sub-agent tasks with emoji indicators:
 - ♿ Accessibility compliance
 - 🔄 Integration work
 
-## Standard Development Workflow
+## Standard Development Workflow {#standard-development-workflow}
 
 For ALL development tasks, follow this comprehensive documentation workflow:
 
-### 1. Initialize Session (Start of Work)
+### 1. Initialize Session (Start of Work) {#initialize-session}
 - Update SESSION.md with new session entry
 - Run validation checklist (timestamp, git status, etc.)
 - State clear goals for the session
 
-### 2. Create Work Tracking Folder
+### 2. Create Work Tracking Folder {#create-work-folder-step}
 Create in `/docs/ai/work-tracking/active/`:
 ```
 [yyyymmdd]-[phase]-[topic]-ACTIVE/
@@ -106,7 +106,7 @@ Create in `/docs/ai/work-tracking/active/`:
 ```
 This ensures nothing is forgotten and provides clear progress tracking.
 
-### 3. Create All 6 Core Files
+### 3. Create All 6 Core Files {#create-core-files}
 Every work folder MUST have these 6 files:
 - **tracker.md** - Shows WHERE we are (progress)
 - **implementation.md** - Shows HOW we're doing it (approach, designs, drafts)
@@ -122,7 +122,7 @@ Every work folder MUST have these 6 files:
 - Never create: draft-v1.md, design-final.md, new-approach.md
 - If tempted to create a new file, ask: "Which of the 6 does this belong in?"
 
-### 4. Create Comprehensive Todo List
+### 4. Create Comprehensive Todo List {#create-todo-list}
 Always use TodoWrite with priority levels:
 - 🔴 **High Priority**: Core implementation
 - 🟡 **Medium Priority**: Supporting work
@@ -134,7 +134,7 @@ Typical structure:
 - Large tasks: 25-40 items
 - Complex initiatives: 40-70+ items (like template system overhaul)
 
-#### Breaking Down Complex Work
+#### Breaking Down Complex Work {#breaking-down-work}
 For major initiatives, create EXTENSIVE todo lists that capture EVERY step:
 
 ```markdown
@@ -159,28 +159,28 @@ Example: Template System Phase 3 (60+ todos)
 - [ ] ... (continues for all subtasks)
 ```
 
-#### Benefits of Comprehensive Todo Lists
+#### Benefits of Comprehensive Todo Lists {#todo-benefits}
 - **Nothing forgotten**: Every step is tracked
 - **Clear progress**: See exactly what's done/remaining
 - **Easy handoff**: Next session knows exact status
 - **Prevents duplication**: Won't redo completed work
 - **Mental clarity**: Offload tracking to the system
 
-#### Todo List Best Practices
+#### Todo List Best Practices {#todo-best-practices}
 1. **Granular tasks**: Break down to atomic actions
 2. **Logical ordering**: Dependencies respected
 3. **Clear descriptions**: Each todo self-explanatory
 4. **Status tracking**: Update in real-time
 5. **Review regularly**: Ensure list stays relevant
 
-### 5. During Work
+### 5. During Work {#during-work}
 - Update SESSION.md progress log regularly
 - Mark todos as in_progress/completed in real-time
 - Document decisions and reasoning
 
-### 6. End of Session - Handoff Best Practices
+### 6. End of Session - Handoff Best Practices {#end-of-session}
 
-#### Required Steps (in order):
+#### Required Steps (in order): {#required-steps}
 1. **Update SESSION.md completely**:
    - Final progress log entry with timestamp
    - Update all sections (Code Changes, Current Status, Next Actions)
@@ -220,7 +220,7 @@ Example: Template System Phase 3 (60+ todos)
    "Activate project MomsBlog, read memory session_2025-07-09_template_system_integration and SESSION.md"
    ```
 
-#### Handoff Quality Checklist:
+#### Handoff Quality Checklist: {#handoff-checklist}
 - [ ] Can someone else continue exactly where you left off?
 - [ ] Are all file locations clearly documented?
 - [ ] Is the current branch and git status noted?
@@ -228,18 +228,18 @@ Example: Template System Phase 3 (60+ todos)
 - [ ] Is the next logical step obvious?
 - [ ] Did you tell the user how to initialize next session?
 
-### 7. Document Journey (If Applicable)
+### 7. Document Journey (If Applicable) {#document-journey}
 For tasks with discoveries or complex debugging:
 `docs/[relevant-category]/[feature-name]-journey.md`
 
-### Benefits
+### Benefits {#workflow-benefits}
 - **Perfect continuity**: SESSION.md + Serena memory + todos
 - **Always know where you left off**: Multiple tracking layers
 - **No context loss**: Everything documented
 - **Easy handoffs**: Anyone can continue your work
 - **Knowledge building**: Creates searchable history
 
-### This Workflow Applies To:
+### This Workflow Applies To: {#workflow-applies-to}
 - ✅ New features
 - ✅ Bug fixes
 - ✅ Refactoring
@@ -250,9 +250,9 @@ For tasks with discoveries or complex debugging:
 
 Remember: "If it's not in SESSION.md and Serena memory, it didn't happen"
 
-## Work Tracking Organization
+## Work Tracking Organization {#work-tracking-org}
 
-### Directory Structure
+### Directory Structure {#directory-structure}
 ```
 docs/ai/work-tracking/
 ├── active/                      # Current work in progress
@@ -267,7 +267,7 @@ docs/ai/work-tracking/
 └── INDEX.md                     # Master tracking file
 ```
 
-### Naming Convention
+### Naming Convention {#naming-convention}
 **Format**: `YYYYMMDD-phase-topic-STATUS`
 - **YYYYMMDD**: Run `date +%Y%m%d` - NEVER type from memory!
 - **phase**: Current project phase (e.g., phase3)
@@ -276,13 +276,13 @@ docs/ai/work-tracking/
 
 **Example**: `20250709-phase3-template-system-ACTIVE`
 
-### Work Lifecycle
+### Work Lifecycle {#work-lifecycle}
 1. **Start**: Create folder in `active/` with -ACTIVE suffix
 2. **Complete**: Change suffix to -DONE, move to `completed/YYYY/MM-month/`
 3. **Block**: Change suffix to -BLOCKED, move to `blocked/` with reason
 4. **Archive**: After 6 months, move from completed to `archive/`
 
-### When to Create New Work vs Continue Existing
+### When to Create New Work vs Continue Existing {#new-vs-continue}
 **Create NEW work folder when**:
 - Starting a completely different initiative
 - Different phase of project (Phase 2 → Phase 3)
@@ -295,25 +295,25 @@ docs/ai/work-tracking/
 
 **Warning**: Creating multiple folders for related work defeats the purpose!
 
-### Integration Requirements
+### Integration Requirements {#integration-requirements}
 **Nothing is "done" until integrated into main documentation:**
 - Work tracking → This section in WORKFLOWS.md
 - New patterns → CONVENTIONS.md
 - Navigation updates → CLAUDE-NEW.md
 - Tool usage → TOOLS.md
 
-## Workflow Improvement Protocol
+## Workflow Improvement Protocol {#workflow-improvement}
 
 **Core Principle**: "We need to make sure we do things correctly all the time"
 
 When you discover ANY workflow gap or missed expected behavior:
 
-### 1. Immediate Gap Recognition
+### 1. Immediate Gap Recognition {#gap-recognition}
 - STOP what you're doing
 - Document it immediately
 - Don't continue until it's captured
 
-### 2. Immediate Documentation
+### 2. Immediate Documentation {#immediate-documentation}
 Add to current work's findings.md:
 ```markdown
 ### [Number]. [Gap Name]
@@ -324,18 +324,18 @@ Add to current work's findings.md:
 **Fix Needed**: [What should change]
 ```
 
-### 3. Create Todo
+### 3. Create Todo {#create-improvement-todo}
 - Add todo for updating the relevant workflow
 - Mark as high priority if affects daily work
 - Include which file needs updating
 
-### 4. Update the Workflow
+### 4. Update the Workflow {#update-workflow}
 - Add explicit instruction where gap occurred
 - Include "why" explanations for critical steps
 - Test the improvement immediately
 - Verify it prevents the gap
 
-### 5. Examples from Practice
+### 5. Examples from Practice {#examples-from-practice}
 - **Gap**: Not updating todos when creating files
 - **Fix**: Added "Create todo BEFORE creating each file"
 
@@ -345,20 +345,20 @@ Add to current work's findings.md:
 - **Gap**: Creating files in wrong location
 - **Fix**: Added "Check directory structure FIRST"
 
-### 6. Continuous Improvement
+### 6. Continuous Improvement {#continuous-improvement-workflow}
 Every gap is an opportunity to improve the system. The goal: Make workflows so complete and explicit that they work correctly every time.
 
-## Integration Principle
+## Integration Principle {#integration-principle}
 
 **Core Rule**: Nothing is "done" until it's integrated where it will be used.
 
-### Every Creation Needs Three Locations:
+### Every Creation Needs Three Locations: {#three-locations}
 
 1. **Creation Location** - Where it's built (work folders)
 2. **Usage Location** - Where it's needed (main docs)
 3. **Discovery Location** - Where people find it (navigation)
 
-### Integration Checklist
+### Integration Checklist {#integration-checklist}
 When creating ANYTHING useful:
 - [ ] Create it fully in work folder
 - [ ] Identify ALL usage points
@@ -367,7 +367,7 @@ When creating ANYTHING useful:
 - [ ] Test the integration
 - [ ] Update indexes/navigation
 
-### The Test
+### The Test {#integration-test}
 For every useful thing created, ask:
 1. Where will someone look for this?
 2. What workflow will trigger its use?
@@ -375,13 +375,13 @@ For every useful thing created, ask:
 
 If you can't answer all three, it's not properly integrated.
 
-## Intelligent Multi-Agent Orchestration
+## Intelligent Multi-Agent Orchestration {#multi-agent-orchestration}
 
-### Sequential Subtask Processing
+### Sequential Subtask Processing {#sequential-processing}
 
 When working on TaskMaster tasks, the AI processes subtasks sequentially with intelligent specialist deployment based on value-add analysis.
 
-### How It Works
+### How It Works {#how-orchestration-works}
 
 1. **TaskMaster Foundation**
    - Every task has subtasks (verified: all 32 tasks have them!)
@@ -409,9 +409,9 @@ When working on TaskMaster tasks, the AI processes subtasks sequentially with in
      - Clear single-file fixes
    ```
 
-### Real-World Example Flow
+### Real-World Example Flow {#real-world-example}
 
-#### Task 7: Core Layout Components
+#### Task 7: Core Layout Components {#task-7-example}
 
 ```markdown
 User: "Work on task 7"
@@ -486,7 +486,7 @@ AI: "Great! Moving to subtask 7.5: Implement Accessibility Landmarks
     Please verify accessibility compliance."
 ```
 
-### For Non-TaskMaster Work
+### For Non-TaskMaster Work {#non-taskmaster-work}
 
 When user doesn't reference a specific task:
 
@@ -502,7 +502,7 @@ AI: [No task ID, analyzing request]
     security specialist review the fix. Starting now..."
 ```
 
-### Progressive Learning
+### Progressive Learning {#progressive-learning}
 
 The system tracks patterns for continuous improvement:
 
@@ -519,7 +519,7 @@ Learning Database:
     - Decision: Always deploy for auth-related work
 ```
 
-### Specialist Deployment Protocol
+### Specialist Deployment Protocol {#specialist-deployment}
 
 When deploying a specialist for a subtask:
 
@@ -557,11 +557,11 @@ When deploying a specialist for a subtask:
    - **[HH:MM]** - ✅ Subtask 7.2 complete with professional UI
    ```
 
-### MANDATORY Constraints for ALL Specialist Deployments
+### MANDATORY Constraints for ALL Specialist Deployments {#mandatory-constraints}
 
 **CRITICAL**: Every Task tool deployment MUST include these constraints to prevent session corruption and tool misuse.
 
-#### Constraint Template (COPY THIS EXACTLY)
+#### Constraint Template (COPY THIS EXACTLY) {#constraint-template}
 ```
 === MANDATORY CONSTRAINTS ===
 FORBIDDEN TOOLS:
@@ -589,7 +589,7 @@ REQUIRED BEHAVIOR:
 === END CONSTRAINTS ===
 ```
 
-#### Example with Constraints
+#### Example with Constraints {#constraint-example}
 ```javascript
 Task("Implement authentication feature")
 Prompt: `
@@ -631,7 +631,7 @@ SUCCESS CRITERIA:
 `
 ```
 
-#### Monitoring for Violations
+#### Monitoring for Violations {#monitoring-violations}
 After specialist returns, check:
 1. Did they use any forbidden tools? (Check for zen, gemini, etc.)
 2. Did they touch SESSION.md? (Critical violation)
@@ -643,7 +643,7 @@ If violations occur:
 - Add clarification to future deployments
 - Do NOT use work if SESSION.md was modified
 
-### Future Parallel Opportunities
+### Future Parallel Opportunities {#parallel-opportunities}
 
 While processing sequentially, the system identifies patterns:
 
@@ -663,7 +663,7 @@ Task 15 Analysis:
 This data helps evolution to smart parallel processing.
 ```
 
-### Learning and Improvement
+### Learning and Improvement {#learning-improvement}
 
 After each subtask completion:
 ```yaml
@@ -679,7 +679,7 @@ Learning:
   - User satisfied with quality
 ```
 
-### Evolution Path
+### Evolution Path {#evolution-path}
 
 The system is designed to evolve:
 
@@ -698,13 +698,13 @@ The system is designed to evolve:
    - Optimal execution planning
    - Maximum efficiency
 
-## User Testing Checkpoints
+## User Testing Checkpoints {#user-testing-checkpoints}
 
-### The Reality: You Are the Tester
+### The Reality: You Are the Tester {#reality-tester}
 
 The workflow acknowledges that the user (you!) performs all testing. Each subtask implementation includes natural pause points for your testing and feedback.
 
-### Subtask Lifecycle with Testing
+### Subtask Lifecycle with Testing {#subtask-lifecycle}
 
 ```yaml
 Complete Subtask Flow:
@@ -716,7 +716,7 @@ Complete Subtask Flow:
   6. Confirmation → "✅ Subtask complete"
 ```
 
-### Testing Checkpoint Pattern
+### Testing Checkpoint Pattern {#testing-pattern}
 
 After implementing each subtask, the AI provides:
 
@@ -752,7 +752,7 @@ I'll pause here for your testing. Let me know:
 3. If you need changes before we continue
 ```
 
-### TodoWrite Pattern with Testing
+### TodoWrite Pattern with Testing {#todowrite-testing}
 
 ```markdown
 ## Main Task Todo
@@ -771,7 +771,7 @@ I'll pause here for your testing. Let me know:
     - [ ] ✅ Approval
 ```
 
-### SESSION.md Testing Tracking
+### SESSION.md Testing Tracking {#session-testing}
 
 ```markdown
 ### 📝 Progress Log
@@ -787,9 +787,9 @@ I'll pause here for your testing. Let me know:
 - **[HH:MM]** - Moving to subtask 7.3
 ```
 
-### Testing Interaction Examples
+### Testing Interaction Examples {#testing-examples}
 
-#### Successful Test
+#### Successful Test {#successful-test}
 ```
 User: "Tested the header - looks great! The mobile menu works perfectly and keyboard nav is smooth."
 
@@ -798,7 +798,7 @@ AI: "Excellent! Marking 7.2 as complete. Moving to 7.3: Develop Mobile Navigatio
     [Ultrathink: Mobile-first patterns, gesture support needed...]"
 ```
 
-#### Issues Found
+#### Issues Found {#issues-found}
 ```
 User: "The theme toggle doesn't persist after page reload, and the mobile menu doesn't close when clicking outside."
 
@@ -809,7 +809,7 @@ AI: "Got it! Let me fix both issues:
     Implementing fixes now..."
 ```
 
-#### Partial Approval
+#### Partial Approval {#partial-approval}
 ```
 User: "The functionality works but the animation feels jarring. Can we make it smoother? Otherwise good to continue."
 
@@ -819,7 +819,7 @@ AI: "I'll note that for polish later and continue with the next subtask. Added t
     Proceeding to 7.3..."
 ```
 
-### Benefits of Testing Checkpoints
+### Benefits of Testing Checkpoints {#testing-benefits}
 
 1. **Quality Assurance** - Every subtask is tested before moving forward
 2. **User Control** - You decide when implementation meets standards
@@ -827,7 +827,7 @@ AI: "I'll note that for polish later and continue with the next subtask. Added t
 4. **Clear Communication** - Explicit about what needs testing
 5. **Progress Visibility** - Testing status tracked in todos and SESSION.md
 
-### Testing Tips
+### Testing Tips {#testing-tips}
 
 - **Quick Tests First** - Basic functionality before edge cases
 - **Real Devices** - Test on actual phones/tablets when possible
@@ -835,36 +835,36 @@ AI: "I'll note that for polish later and continue with the next subtask. Added t
 - **Performance** - Note any lag or slow interactions
 - **Edge Cases** - Try unexpected interactions
 
-## ✈️ Universal Flight Protocol
+## ✈️ Universal Flight Protocol {#universal-flight-protocol}
 
 This protocol is MANDATORY for ALL operations. It ensures consistent quality and prevents common errors.
 
-### 🛫 PRE-FLIGHT (Before ANY Action)
+### 🛫 PRE-FLIGHT (Before ANY Action) {#pre-flight}
 1. **STATE**: "I'm about to [specific action]"
 2. **CHECK**: Which workflow/convention applies? (State it out loud)
 3. **TOOLS**: Need a tool? → Check [Tool Router](TOOLS.md#mandatory-tool-selection-router---check-before-every-tool-use) FIRST!
 4. **VERIFY**: Required tools ready? Dependencies checked?
 5. **ULTRATHINK**: Deploy for non-trivial tasks
 
-### ✈️ DURING FLIGHT (While Executing)
+### ✈️ DURING FLIGHT (While Executing) {#during-flight}
 1. **FOLLOW**: The workflow/convention you identified
 2. **TRACK**: Update todos in real-time
 3. **VERIFY**: Check outputs match expectations
 4. **DOCUMENT**: Note any deviations or discoveries
 
-### 🛬 POST-FLIGHT (After Completion)
+### 🛬 POST-FLIGHT (After Completion) {#post-flight}
 1. **REVIEW**: Did I follow the stated workflow?
 2. **LEARN**: What errors did I make? Add to prevention list
 3. **UPDATE**: Mark todos complete, update progress logs
 4. **IMPROVE**: If workflow needs updates, do it NOW
 
-### 🚨 ABORT PROCEDURES
+### 🚨 ABORT PROCEDURES {#abort-procedures}
 - Lost? → State "I'm lost" and re-read relevant workflow
 - Error? → Check Error Prevention in conventions
 - Unsure? → Ask user rather than guess
 - No workflow exists? → Create one using meta-flow
 
-### Flight Protocol Examples
+### Flight Protocol Examples {#flight-examples}
 
 **Example 1: Updating tracker.md**
 ```
@@ -891,9 +891,9 @@ VERIFY: "Must gather actual data, not assumptions"
 ACTION: Use Serena to extract specific examples
 ```
 
-## Session Management
+## Session Management {#session-management}
 
-### ⚠️ CRITICAL: PREVENT WRONG INFORMATION IN SESSION.md
+### ⚠️ CRITICAL: PREVENT WRONG INFORMATION IN SESSION.md {#prevent-wrong-info}
 
 **THESE WILL CAUSE SESSION FAILURE:**
 - Using any date/time except COPY-PASTED output from `date "+%Y-%m-%d %H:%M %Z"`
@@ -910,7 +910,7 @@ ACTION: Use Serena to extract specific examples
 3. Mark unknown information as "Unknown" 
 4. Ask before assuming
 
-### 🚨 Pre-Flight Checklist
+### 🚨 Pre-Flight Checklist {#session-pre-flight}
 
 **BEFORE DOING ANYTHING ELSE:**
 
@@ -938,9 +938,9 @@ ACTION: Use Serena to extract specific examples
    - No? → Ask "What task should I work on?"
    - NEVER assume based on context
 
-### Session Continuity Protocol
+### Session Continuity Protocol {#session-continuity}
 
-#### At Session Start, AI MUST:
+#### At Session Start, AI MUST: {#session-start-must}
 
 1. **FIRST RESPONSE TEMPLATE** (use every time):
    ```
@@ -975,7 +975,7 @@ ACTION: Use Serena to extract specific examples
    - Cross-reference Serena memories with SESSION.md
    - Note any discrepancies or additional context
 
-#### Session Lifecycle Rules:
+#### Session Lifecycle Rules: {#session-lifecycle-rules}
 
 1. **Session Continuation vs New Session**:
    - **If Continuation**: Keep current session entry, update progress
@@ -1000,7 +1000,7 @@ ACTION: Use Serena to extract specific examples
      ```
    - Only proceed with session closure if confirmed
 
-### Prevent Work Duplication
+### Prevent Work Duplication {#prevent-duplication}
 
 **Answer these questions BEFORE proceeding:**
 - What was completed in the last session? (List specific items)
@@ -1009,7 +1009,7 @@ ACTION: Use Serena to extract specific examples
 - What issues were already fixed?
 - What work should NOT be repeated?
 
-### TaskMaster Integration
+### TaskMaster Integration {#taskmaster-integration}
 
 Run TaskMaster commands to verify current state:
 ```bash
@@ -1023,7 +1023,7 @@ mcp__taskmaster-ai__get_task --id [ID]
 # This shows the complete picture including subtask progress
 ```
 
-### SESSION.md Required Format
+### SESSION.md Required Format {#session-required-format}
 
 **For First Session:**
 ```markdown
@@ -1036,28 +1036,28 @@ mcp__taskmaster-ai__get_task --id [ID]
 **Task Source**: [How task was determined]
 **TaskMaster ID**: [Verified ID or "Not verified"]
 
-### Session Validation ✓
+### Session Validation ✓ {#session-validation}
 - [ ] Date from `date` command: [paste output]
 - [ ] Task verified by: [method]
 - [ ] Git status checked: [Yes/No]
 - [ ] TaskMaster tasks reviewed: [Yes/No]
 - [ ] Previous SESSION.md read: [Yes/No/Not found]
 
-### 🎯 Session Goals
+### 🎯 Session Goals {#session-goals}
 - [ ] Primary: [From user or SESSION.md]
 - [ ] Secondary: [If applicable]
 
-### 📍 Starting Context
+### 📍 Starting Context {#starting-context}
 [Summary of previous work if found]
 
-### 🏁 Previous Session Summary
+### 🏁 Previous Session Summary {#previous-summary}
 **Work Completed**:
 - [List specific completed items from previous session]
 - [Include fixed issues, tested components, etc.]
 **Work NOT to Repeat**:
 - [Explicitly list work that should not be done again]
 
-### 📋 Task Progress (if applicable)
+### 📋 Task Progress (if applicable) {#task-progress}
 **Current Task**: [Task ID and Title]
 **Status**: [pending/in-progress/done]
 **Subtasks**:
@@ -1065,36 +1065,36 @@ mcp__taskmaster-ai__get_task --id [ID]
 - [ ] Subtask 2 - [status]
 - [ ] Subtask 3 - [status]
 
-### 📝 Progress Log
+### 📝 Progress Log {#progress-log}
 - **[DATE AND TIME from date command]** - [Action with reason]
 
-### 💻 Code Changes
+### 💻 Code Changes {#code-changes}
 | File | Changes | Reason | Status |
 |------|---------|---------|---------|
 | [path] | [what changed] | [why] | ✅/🚧/❌ |
 
-### 🤔 Decisions & Reasoning
+### 🤔 Decisions & Reasoning {#decisions-reasoning}
 [Document WHY choices were made]
 
-### ❓ Open Questions for Team
+### ❓ Open Questions for Team {#open-questions}
 [Questions that need human answers]
 
-### 📊 Session Metrics
+### 📊 Session Metrics {#session-metrics}
 - Files changed: X
 - Lines added/removed: +Y/-Z
 - Test coverage impact: N/A or X%
 - Components affected: [list]
 
-### 🚦 Session End Status
+### 🚦 Session End Status {#session-end-status}
 [What was completed, what remains]
 
-### 📋 Next Session Should:
+### 📋 Next Session Should: {#next-session-should}
 [Specific next steps]
 
-### 🔄 To Resume:
+### 🔄 To Resume: {#to-resume}
 [Exact commands to restore state]
 
-## How to Resume Next Session
+## How to Resume Next Session {#how-to-resume}
 [Add scenario-based options as shown in step 7 above]
 ```
 
@@ -1111,7 +1111,7 @@ mcp__taskmaster-ai__get_task --id [ID]
 [KEEP ALL PREVIOUS SESSIONS BELOW]
 ```
 
-### During Session
+### During Session {#during-session}
 
 1. **Get actual timestamps with dates for logs:**
    ```bash
@@ -1139,7 +1139,7 @@ mcp__taskmaster-ai__get_task --id [ID]
    ⚠️ **Uncertain**: Task might be TM-003 but user didn't specify
    ```
 
-### SESSION.md Update Checklist
+### SESSION.md Update Checklist {#update-checklist}
 
 When updating SESSION.md, ALWAYS update these sections:
 ```markdown
@@ -1152,7 +1152,7 @@ When updating SESSION.md, ALWAYS update these sections:
 CRITICAL: Never leave "Next Actions" or "To Resume" outdated!
 ```
 
-### Mid-Session Updates (Checkpoints)
+### Mid-Session Updates (Checkpoints) {#mid-session-updates}
 
 When updating SESSION.md during an active session:
 1. **Keep the session header unchanged** - Don't create a new session
@@ -1169,7 +1169,7 @@ When updating SESSION.md during an active session:
    ```
    Where [HH:MM] is from `date '+%H:%M'` command
 
-### Tracking Multi-Agent Work
+### Tracking Multi-Agent Work {#tracking-multi-agent}
 
 When using delegation patterns, track in SESSION.md:
 
@@ -1194,7 +1194,7 @@ When using delegation patterns, track in SESSION.md:
 | pages/search.tsx | Integrated all | Main | ✅ |
 ```
 
-### At Session End
+### At Session End {#at-session-end}
 
 **ONLY when explicitly confirmed by user:**
 
@@ -1256,9 +1256,9 @@ When using delegation patterns, track in SESSION.md:
    - **Key Files**: [Important files to check]
    ```
 
-## Memory Management
+## Memory Management {#memory-management}
 
-### Memory Naming Best Practices
+### Memory Naming Best Practices {#memory-naming-best}
 
 To ensure easy session continuity:
 1. **Always create session memory** at end of each work session
@@ -1266,7 +1266,7 @@ To ensure easy session continuity:
 3. **Include "How to Initialize Next Session"** section in each memory
 4. **Reference specific memories** when starting sessions
 
-### Create Session Memory (End of Session)
+### Create Session Memory (End of Session) {#create-session-memory}
 
 Create a memory with both date and descriptive name:
 - **Format**: `session_YYYY-MM-DD_main_work_description`
@@ -1287,7 +1287,7 @@ Memory should include:
 - Important decisions
 - Next steps
 
-### Create Feature Memory
+### Create Feature Memory {#create-feature-memory}
 
 Create a memory about [feature name] including:
 - Architecture decisions
@@ -1295,7 +1295,7 @@ Create a memory about [feature name] including:
 - Testing approach
 - Known limitations
 
-### Serena + SESSION.md Workflow
+### Serena + SESSION.md Workflow {#serena-session-workflow}
 
 1. **Start of Session**:
    Activate project MomsBlog, read SESSION.md and all recent memories.
@@ -1311,9 +1311,9 @@ Create a memory about [feature name] including:
    - Use Desktop Commander for file operations
    - Document progress in SESSION.md
 
-## Context Compaction Workflow
+## Context Compaction Workflow {#context-compaction}
 
-### When to Compact
+### When to Compact {#when-to-compact}
 
 User says:
 - "we need to compact"
@@ -1321,7 +1321,7 @@ User says:
 - "prepare for compaction"
 - "we're at X% context"
 
-### Pre-Compaction Checklist
+### Pre-Compaction Checklist {#pre-compaction-checklist}
 
 1. **Ensure Documentation Complete**
    - [ ] SESSION.md fully updated with all progress
@@ -1346,7 +1346,7 @@ User says:
    Continue with [specific next action based on current work].
    ```
 
-### Compaction Protocol
+### Compaction Protocol {#compaction-protocol}
 
 1. **Final Updates** (5 minutes before compaction)
    - Update SESSION.md with final progress
@@ -1378,7 +1378,7 @@ User says:
    - Verify memory created
    - Check resume message includes all needed context
 
-### Post-Compaction Recovery
+### Post-Compaction Recovery {#post-compaction-recovery}
 
 When user returns with the resume message:
 1. **Restore Context** from memory and SESSION.md
@@ -1386,7 +1386,7 @@ When user returns with the resume message:
 3. **Continue Work** from documented next steps
 4. **Update Progress** in SESSION.md marking continuation
 
-## Quick Reference Commands
+## Quick Reference Commands {#quick-reference-commands}
 
 ```yaml
 GET_DATE: date "+%Y-%m-%d %H:%M %Z"  # Local time with timezone
@@ -1417,9 +1417,9 @@ SERENA_COMMANDS:
   FIND_REFERENCES: "Find all references to [symbol]"
 ```
 
-## Evidence-Based Analysis
+## Evidence-Based Analysis {#evidence-based-analysis}
 
-### When to Use This Flow
+### When to Use This Flow {#when-use-evidence}
 
 Use this flow when:
 - Comparing different versions or approaches
@@ -1427,14 +1427,14 @@ Use this flow when:
 - Analyzing patterns or trends
 - Evaluating effectiveness of solutions
 
-### Quick Reference
+### Quick Reference {#evidence-quick-ref}
 1. State the analysis request clearly
 2. Gather actual data using tools (especially Serena)
 3. Compare specific sections/metrics
 4. State findings with evidence
 5. Acknowledge uncertainty explicitly
 
-### Common Failure Modes
+### Common Failure Modes {#evidence-failure-modes}
 
 **❌ Surface Scanning**
 - Making claims based on visual impressions
@@ -1448,7 +1448,7 @@ Use this flow when:
 - One example becomes "all" or "always"
 - Prevention: State sample size explicitly
 
-### Tool Usage for Analysis
+### Tool Usage for Analysis {#tool-usage-analysis}
 
 ```bash
 # Find all instances to compare
@@ -1462,7 +1462,7 @@ Read file1.md --offset X --limit Y
 Read file2.md --offset X --limit Y
 ```
 
-### Evidence-Based Language
+### Evidence-Based Language {#evidence-language}
 
 **Instead of**: "Previous entries were repetitive"
 **Use**: "In the 3 entries examined, X pattern appeared Y times"
@@ -1473,7 +1473,7 @@ Read file2.md --offset X --limit Y
 **Instead of**: "Always/Never/All/None"
 **Use**: "In N cases examined, typically..."
 
-### Analysis Checklist
+### Analysis Checklist {#analysis-checklist}
 - [ ] Do I have specific line numbers/quotes?
 - [ ] Have I stated my sample size?
 - [ ] Have I looked for counter-examples?
@@ -1481,7 +1481,7 @@ Read file2.md --offset X --limit Y
 
 Remember: It's better to say "I don't have enough data" than to make unfounded claims.
 
-## Testing Workflows
+## Testing Workflows {#testing-workflows}
 
 ### Quick Reference
 1. Define what to test (workflow/system/feature)
@@ -1491,14 +1491,14 @@ Remember: It's better to say "I don't have enough data" than to make unfounded c
 5. Document results systematically
 6. Iterate based on findings
 
-### When to Use This Flow
+### When to Use This Flow {#when-use-testing}
 - Testing new workflows before deployment
 - Validating system changes (like Flight Protocol)
 - Checking if documentation matches reality
 - Training/onboarding validation
 - Regression testing after changes
 
-### Error Prevention First
+### Error Prevention First {#error-prevention}
 
 **❌ Making Real Changes During Tests**
 - Never modify actual files during testing
@@ -1515,9 +1515,9 @@ Remember: It's better to say "I don't have enough data" than to make unfounded c
 - Note patterns across tests
 - Track improvements needed
 
-### Setting Up Tests
+### Setting Up Tests {#setting-up-tests}
 
-#### 1. Create Test Scenarios File
+#### 1. Create Test Scenarios File {#create-test-scenarios}
 ```markdown
 # [System Name] Test Scenarios - SIMULATION MODE
 
@@ -1534,12 +1534,12 @@ Remember: It's better to say "I don't have enough data" than to make unfounded c
 **Pass Criteria**: [checklist]
 ```
 
-#### 2. Design Simulation Triggers
+#### 2. Design Simulation Triggers {#design-triggers}
 - Use "SIMULATE:" prefix for all tests
 - AI should respond with "I would..." descriptions
 - No actual tool calls or file edits
 
-#### 3. Create Results Template
+#### 3. Create Results Template {#create-results-template}
 ```markdown
 # Test Results - [Date]
 
@@ -1550,22 +1550,22 @@ Remember: It's better to say "I don't have enough data" than to make unfounded c
 **Learning**: [insights]
 ```
 
-### Running Tests
+### Running Tests {#running-tests}
 
-#### PRE-FLIGHT for Testing
+#### PRE-FLIGHT for Testing {#testing-pre-flight}
 ```
 PRE-FLIGHT: "I'm about to run test simulations"
 CHECK: "Loading test scenarios from [path]"
 VERIFY: "Simulation mode active - no real changes"
 ```
 
-#### During Testing
+#### During Testing {#during-testing}
 1. Present each test clearly
 2. Observe AI behavior
 3. Check against criteria
 4. Document immediately
 
-#### POST-FLIGHT
+#### POST-FLIGHT {#testing-post-flight}
 ```
 POST-FLIGHT: "Tests complete"
 REVIEW: "X/Y tests passed"
@@ -1573,24 +1573,24 @@ LEARN: "Key violations: [list]"
 UPDATE: "System improvements needed: [list]"
 ```
 
-### Test Types
+### Test Types {#test-types}
 
-#### 1. Compliance Testing
+#### 1. Compliance Testing {#compliance-testing}
 - Does AI follow required protocols?
 - Are all steps executed?
 - Is documentation checked?
 
-#### 2. Error Recovery Testing
+#### 2. Error Recovery Testing {#error-recovery-testing}
 - How does system handle mistakes?
 - Are abort procedures followed?
 - Is learning documented?
 
-#### 3. Edge Case Testing
+#### 3. Edge Case Testing {#edge-case-testing}
 - Missing workflows
 - Ambiguous requests
 - Complex scenarios
 
-### Quality Gates
+### Quality Gates {#quality-gates}
 
 **Before Testing**:
 - [ ] Test scenarios documented
@@ -1604,7 +1604,7 @@ UPDATE: "System improvements needed: [list]"
 - [ ] Improvements listed
 - [ ] Next steps clear
 
-### Iteration Cycle
+### Iteration Cycle {#iteration-cycle}
 
 ```
 Test → Document → Analyze → Improve → Retest
@@ -1616,7 +1616,7 @@ Test → Document → Analyze → Improve → Retest
 4. **Improve**: Update system
 5. **Retest**: Validate fixes
 
-### Example: Testing Flight Protocol
+### Example: Testing Flight Protocol {#testing-flight-example}
 
 ```markdown
 ## Test Command
@@ -1638,24 +1638,24 @@ SIMULATING: Would edit tracker.md with timestamp
 - [✓] Mentioned date command
 ```
 
-### Success Metrics
+### Success Metrics {#success-metrics}
 - 100% tests start with PRE-FLIGHT (or equivalent)
 - No actual changes made during testing
 - Clear documentation of violations
 - Actionable improvements identified
 
-### Anti-Patterns
+### Anti-Patterns {#anti-patterns}
 - 🚫 Testing in production (making real changes)
 - 🚫 Vague test criteria
 - 🚫 No documentation of results
 - 🚫 Not iterating based on findings
 
-## Subagent Simulation Testing
+## Subagent Simulation Testing {#subagent-simulation}
 
-### Purpose
+### Purpose {#simulation-purpose}
 Deploy subagents in simulation mode to test any system, approach, or solution without making actual changes. Get fresh perspectives and validate ideas safely.
 
-### When to Use
+### When to Use {#when-use-simulation}
 - Testing new documentation or navigation
 - Validating architectural approaches
 - Getting second opinions on solutions
@@ -1665,7 +1665,7 @@ Deploy subagents in simulation mode to test any system, approach, or solution wi
 - Checking if instructions are clear
 - Stress-testing error handling
 
-### Setup Template
+### Setup Template {#simulation-setup}
 ```yaml
 1. CONTEXT PREPARATION
    □ Define what to test
@@ -1685,9 +1685,9 @@ Deploy subagents in simulation mode to test any system, approach, or solution wi
    □ Complete workflows ("Start to end session")
 ```
 
-### Example Templates
+### Example Templates {#example-templates}
 
-#### Documentation Testing
+#### Documentation Testing {#doc-testing}
 ```markdown
 "SIMULATION MODE - NO ACTUAL CHANGES. Test this navigation hub:
 [Insert content]
@@ -1695,7 +1695,7 @@ Tasks: Find session start, bug fix workflow, tool router, emergency help.
 Report: accessibility, clarity, missing elements."
 ```
 
-#### Architecture Validation
+#### Architecture Validation {#arch-validation}
 ```markdown
 "SIMULATION MODE - Analyze this architecture approach:
 [Design details]
@@ -1703,7 +1703,7 @@ Evaluate: scalability, maintainability, potential issues, alternatives.
 Provide: pros/cons, risk assessment, recommendations."
 ```
 
-#### Solution Review
+#### Solution Review {#solution-review}
 ```markdown
 "SIMULATION MODE - Review this implementation approach:
 [Code/solution details]
@@ -1711,7 +1711,7 @@ Check: best practices, edge cases, performance, security.
 Suggest: improvements, potential bugs, testing strategies."
 ```
 
-#### Workflow Testing
+#### Workflow Testing {#workflow-testing}
 ```markdown
 "SIMULATION MODE - Test this workflow:
 [Workflow steps]
@@ -1719,14 +1719,14 @@ Simulate: happy path, error cases, user confusion points.
 Report: bottlenecks, missing steps, improvement opportunities."
 ```
 
-### Success Criteria
+### Success Criteria {#simulation-success}
 - [ ] All critical paths findable
 - [ ] No more than 2-3 clicks to any workflow
 - [ ] Emergency procedures accessible
 - [ ] No circular references
 - [ ] Clear navigation for all user types
 
-### Results Documentation
+### Results Documentation {#results-documentation}
 ```markdown
 ## Subagent Test Results - [Date]
 
@@ -1743,11 +1743,11 @@ Report: bottlenecks, missing steps, improvement opportunities."
 2. [Specific fix]
 ```
 
-## 📋 Behavioral Templates
+## 📋 Behavioral Templates {#behavioral-templates}
 
 These templates embed best practices directly into common workflows, removing decision points and pre-selecting optimal tools.
 
-### Feature Implementation Template
+### Feature Implementation Template {#feature-template}
 ```yaml
 1. DISCOVERY (Pre-selected: Serena)
    □ STATE: "I need to understand the existing code structure"
@@ -1773,9 +1773,9 @@ These templates embed best practices directly into common workflows, removing de
    □ Manual testing if UI changes
 ```
 
-### Bug Fix Template
+### Bug Fix Template {#bug-fix-template}
 
-#### 🔒 STEP 1: State the Bug (REQUIRED FIRST)
+#### 🔒 STEP 1: State the Bug (REQUIRED FIRST) {#bug-step-1}
 **This step is LOCKED until you complete:**
 - [ ] State: "The bug is: [specific description]"
 - [ ] State: "It happens when: [reproduction steps]"
@@ -1783,7 +1783,7 @@ These templates embed best practices directly into common workflows, removing de
 
 **Cannot proceed?** → You don't understand the bug yet.
 
-#### 🔒 STEP 2: Reproduction (LOCKED until Step 1 complete)
+#### 🔒 STEP 2: Reproduction (LOCKED until Step 1 complete) {#bug-step-2}
 **First show:** "Bug description: [paste from Step 1]"
 **Then use:**
 ```yaml
@@ -1794,7 +1794,7 @@ REPRODUCTION (Pre-selected: Bash + Read)
 ```
 **Output:** Must paste actual error before proceeding
 
-#### 🔒 STEP 3: Investigation (LOCKED until error shown)
+#### 🔒 STEP 3: Investigation (LOCKED until error shown) {#bug-step-3}
 **First paste:** "Error output: [paste from Step 2]"
 **Then use:**
 ```yaml
@@ -1805,7 +1805,7 @@ INVESTIGATION (Pre-selected: Serena)
 ```
 **Output:** Must state root cause before proceeding
 
-#### 🔒 STEP 4: Fix (LOCKED until root cause stated)
+#### 🔒 STEP 4: Fix (LOCKED until root cause stated) {#bug-step-4}
 **First state:** "Root cause: [explanation from Step 3]"
 **Then choose:**
 ```yaml
@@ -1815,7 +1815,7 @@ FIX (Pre-selected: Edit tools)
    □ Refactor function: mcp__serena__replace_symbol_body
 ```
 
-#### 🔒 STEP 5: Verification (LOCKED until fix applied)
+#### 🔒 STEP 5: Verification (LOCKED until fix applied) {#bug-step-5}
 **First confirm:** "Applied fix to: [list files changed]"
 **Then verify:**
 ```yaml
@@ -1826,7 +1826,7 @@ VERIFICATION (Pre-selected: Bash)
 ```
 **Output:** Must show passing tests
 
-### Code Review Template
+### Code Review Template {#code-review-template}
 ```yaml
 1. OVERVIEW (Pre-selected: Serena)
    □ STATE: "I need to understand the changes"
@@ -1844,7 +1844,7 @@ VERIFICATION (Pre-selected: Bash)
    □ Check: No duplication introduced
 ```
 
-### Refactoring Template
+### Refactoring Template {#refactoring-template}
 ```yaml
 1. SCOPE ANALYSIS (Pre-selected: Serena)
    □ STATE: "I need to understand impact"
@@ -1863,7 +1863,7 @@ VERIFICATION (Pre-selected: Bash)
    □ Update documentation
 ```
 
-### Documentation Update Template
+### Documentation Update Template {#doc-update-template}
 ```yaml
 1. CONTEXT (Pre-selected: Read)
    □ STATE: "I need to understand current docs"
@@ -1881,7 +1881,7 @@ VERIFICATION (Pre-selected: Bash)
    □ Run any doc generation tools
 ```
 
-### Emergency Debug Template
+### Emergency Debug Template {#emergency-debug}
 ```yaml
 1. TRIAGE (Pre-selected: Bash)
    □ STATE: "System is broken, need immediate fix"
@@ -1899,7 +1899,7 @@ VERIFICATION (Pre-selected: Bash)
    □ Permanent fix planning
 ```
 
-### Using Templates Effectively
+### Using Templates Effectively {#using-templates}
 
 1. **Start with the template** - Don't reinvent the workflow
 2. **Follow the tool sequence** - Pre-selected for optimal results  
@@ -1907,7 +1907,7 @@ VERIFICATION (Pre-selected: Bash)
 4. **Adapt if needed** - But document why you deviated
 5. **Improve templates** - Add learned patterns back
 
-### Template Selection Guide
+### Template Selection Guide {#template-selection}
 
 | If you need to... | Use template... |
 |-------------------|-----------------|
@@ -1919,13 +1919,13 @@ VERIFICATION (Pre-selected: Bash)
 | Fix urgent issue | Emergency Debug |
 | Something else | Create new template! |
 
-## Intent Handlers
+## Intent Handlers {#intent-handlers}
 
 This section defines how to handle specific user intents when they're routed from CLAUDE.md's protocol-based navigation.
 
-### Development Handlers
+### Development Handlers {#development-handlers}
 
-#### Handler: start-new-work
+#### Handler: start-new-work {#start-new-work}
 **Triggers**: "I want to work on X", "Let's build Y", "start working on Z"
 **Target Pattern**: Extract feature/component name after "on" or "build"
 **Pre-conditions**: 
@@ -1944,7 +1944,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "work on authentication" → Creates 20250712-authentication-ACTIVE
 - "Let's build a meta flow creator" → Creates 20250712-meta-flow-creator-ACTIVE
 
-#### Handler: continue-work
+#### Handler: continue-work {#continue-work}
 **Triggers**: "continue with X", "back to Y", "resume Z"
 **Target Pattern**: Extract work identifier after key verb
 **Pre-conditions**: 
@@ -1962,7 +1962,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "continue with auth" → Finds *-authentication-ACTIVE folder
 - "back to the flow creator" → Resumes meta-flow-creator work
 
-#### Handler: standard-dev-workflow
+#### Handler: standard-dev-workflow {#standard-dev-workflow}
 **Triggers**: "implement X", "add feature Y", "create functionality Z"
 **Target Pattern**: Feature specification after action verb
 **Pre-conditions**: 
@@ -1981,7 +1981,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "implement user login" → Full auth flow
 - "add dark mode" → Theme system implementation
 
-#### Handler: create-component  
+#### Handler: create-component {#create-component}  
 **Triggers**: "create a new component", "build component X", "new component for Y"
 **Target Pattern**: Component name and type
 **Pre-conditions**: 
@@ -2000,7 +2000,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "create a Button component" → UI component with styles
 - "new auth provider component" → Context/provider pattern
 
-#### Handler: refactor-code
+#### Handler: refactor-code {#refactor-code}
 **Triggers**: "refactor X", "clean up Y", "improve Z code"
 **Target Pattern**: Code location or pattern to refactor
 **Pre-conditions**: 
@@ -2019,9 +2019,9 @@ This section defines how to handle specific user intents when they're routed fro
 - "refactor the auth service" → Service pattern improvements
 - "clean up the API calls" → Extract to service layer
 
-### Task Management Handlers
+### Task Management Handlers {#task-handlers}
 
-#### Handler: create-todos
+#### Handler: create-todos {#create-todos}
 **Triggers**: "plan out X", "break down Y", "create tasks for Z"
 **Target Pattern**: Work item to decompose
 **Pre-conditions**: 
@@ -2040,7 +2040,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "plan out the migration" → Detailed migration steps
 - "break down the feature" → Implementation tasks
 
-#### Handler: update-todos
+#### Handler: update-todos {#update-todos}
 **Triggers**: "mark X as done", "update task Y", "Z is complete"
 **Target Pattern**: Task identifier or description
 **Pre-conditions**: 
@@ -2058,7 +2058,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "mark auth tests as done" → Updates specific task
 - "API integration is complete" → Finds and updates task
 
-#### Handler: check-progress
+#### Handler: check-progress {#check-progress}
 **Triggers**: "where are we?", "what's left?", "show progress"
 **Target Pattern**: Optional scope filter
 **Pre-conditions**: 
@@ -2076,9 +2076,9 @@ This section defines how to handle specific user intents when they're routed fro
 - "where are we?" → Overall progress summary
 - "what's left on auth?" → Filtered progress view
 
-### Session Management Handlers
+### Session Management Handlers {#session-handlers}
 
-#### Handler: show-capabilities
+#### Handler: show-capabilities {#show-capabilities}
 **Triggers**: "what can you do", "help", "show commands", "list features", "show capabilities"
 **Target Pattern**: Optional focus area (e.g., "help with testing")
 **Pre-conditions**: 
@@ -2102,7 +2102,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "what can you do?" → Full capability overview
 - "help with testing" → Testing-specific capabilities
 
-#### Handler: start-session
+#### Handler: start-session {#start-session}
 **Triggers**: "let's start", "begin work", "start today's session"
 **Target Pattern**: Optional continuation context
 **Pre-conditions**: 
@@ -2121,7 +2121,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "let's start" → Full session initialization
 - "start working" → Quick session start
 
-#### Handler: update-session
+#### Handler: update-session {#update-session}
 **Triggers**: "update SESSION.md", "record progress", "checkpoint session"
 **Target Pattern**: Optional specific updates
 **Pre-conditions**: 
@@ -2139,7 +2139,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "update session" → Auto-summarize progress
 - "checkpoint our work" → Detailed state capture
 
-#### Handler: end-session
+#### Handler: end-session {#end-session}
 **Triggers**: "let's wrap up", "end for today", "finish session"
 **Target Pattern**: Optional handoff notes
 **Pre-conditions**: 
@@ -2158,7 +2158,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "let's wrap up" → Full end-session flow
 - "done for today" → Quick wrap with essentials
 
-#### Handler: checkpoint-session
+#### Handler: checkpoint-session {#checkpoint-session}
 **Triggers**: Mid-session progress saves
 **Target Pattern**: Automatic based on time/progress
 **Pre-conditions**: 
@@ -2175,9 +2175,9 @@ This section defines how to handle specific user intents when they're routed fro
 - After major milestone → Auto-checkpoint
 - Every 2 hours → Time-based checkpoint
 
-### Specialist Deployment Handlers
+### Specialist Deployment Handlers {#specialist-handlers}
 
-#### Handler: deploy-ultrathink
+#### Handler: deploy-ultrathink {#deploy-ultrathink}
 **Triggers**: "think deeply about X", "ultrathink on Y", "need deep analysis of Z"
 **Target Pattern**: Topic for analysis
 **Pre-conditions**: 
@@ -2196,7 +2196,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "think deeply about the architecture" → System design analysis
 - "ultrathink on performance issues" → Optimization insights
 
-#### Handler: deploy-specialist
+#### Handler: deploy-specialist {#deploy-specialist}
 **Triggers**: "get expert help on X", "need specialist for Y", "deploy expert"
 **Target Pattern**: Expertise area needed
 **Pre-conditions**: 
@@ -2214,7 +2214,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "need expert on database design" → DB specialist
 - "get security expert" → Security analysis
 
-#### Handler: orchestrate-complex
+#### Handler: orchestrate-complex {#orchestrate-complex}
 **Triggers**: "this needs multiple experts", "orchestrate X", "coordinate specialists for Y"
 **Target Pattern**: Complex multi-domain task
 **Pre-conditions**: 
@@ -2232,9 +2232,9 @@ This section defines how to handle specific user intents when they're routed fro
 - "orchestrate full feature" → Multi-specialist flow
 - "coordinate auth implementation" → Security + DB + API experts
 
-### Testing Handlers
+### Testing Handlers {#testing-handlers}
 
-#### Handler: create-test-checkpoint
+#### Handler: create-test-checkpoint {#create-test-checkpoint}
 **Triggers**: "test X", "create tests for Y", "add test coverage"
 **Target Pattern**: Feature or component to test
 **Pre-conditions**: 
@@ -2253,7 +2253,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "test the auth flow" → Integration tests
 - "add unit tests" → Component testing
 
-#### Handler: simulation-test
+#### Handler: simulation-test {#simulation-test}
 **Triggers**: "simulate X", "test workflow Y", "dry run Z"
 **Target Pattern**: Workflow or process to simulate
 **Pre-conditions**: 
@@ -2272,7 +2272,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "simulate the migration" → Process validation
 - "test the deployment flow" → Deploy simulation
 
-#### Handler: validate-changes
+#### Handler: validate-changes {#validate-changes}
 **Triggers**: "verify X works", "validate the changes", "confirm Y is working"
 **Target Pattern**: Changes to validate
 **Pre-conditions**: 
@@ -2291,9 +2291,9 @@ This section defines how to handle specific user intents when they're routed fro
 - "verify auth works" → Full auth validation
 - "validate the refactoring" → Behavior preservation
 
-### Work Tracking Handlers
+### Work Tracking Handlers {#work-tracking-handlers}
 
-#### Handler: create-work-folder
+#### Handler: create-work-folder {#create-work-folder}
 **Triggers**: Automatic from other handlers
 **Target Pattern**: Work item name
 **Pre-conditions**: 
@@ -2322,7 +2322,7 @@ This section defines how to handle specific user intents when they're routed fro
 - Via start-new-work → Auto-created
 - "create work folder for X" → Direct creation
 
-#### Handler: update-tracker
+#### Handler: update-tracker {#update-tracker}
 **Triggers**: "update progress", "log work done", "record status"
 **Target Pattern**: Progress information
 **Pre-conditions**: 
@@ -2340,7 +2340,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "update progress" → Auto-summary
 - "log that we finished X" → Specific entry
 
-#### Handler: document-findings  
+#### Handler: document-findings {#document-findings}  
 **Triggers**: "I discovered X", "found that Y", "learned Z"
 **Target Pattern**: Discovery or insight
 **Pre-conditions**: 
@@ -2358,7 +2358,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "discovered the bug source" → Root cause doc
 - "found performance issue" → Technical finding
 
-#### Handler: record-decision
+#### Handler: record-decision {#record-decision}
 **Triggers**: "decided to X", "choosing Y approach", "going with Z"
 **Target Pattern**: Decision and rationale  
 **Pre-conditions**: 
@@ -2376,7 +2376,7 @@ This section defines how to handle specific user intents when they're routed fro
 - "decided to use React" → Tech choice
 - "going with microservices" → Architecture decision
 
-## Common Mistakes That Break Sessions
+## Common Mistakes That Break Sessions {#common-mistakes}
 
 ❌ **DON'T**: Skim previous session and miss completed work  
 ✅ **DO**: Read ENTIRE previous session and list what was already done
@@ -2405,7 +2405,7 @@ This section defines how to handle specific user intents when they're routed fro
 ❌ **DON'T**: Check task status without looking at subtasks  
 ✅ **DO**: Always run `get_task` after identifying the current task to see subtask progress
 
-## 📚 See Also
+## 📚 See Also {#see-also}
 
 - **[CONVENTIONS.md](CONVENTIONS.md)** - Git aliases and code standards
 - **[TOOLS.md](TOOLS.md)** - MCP tool configurations

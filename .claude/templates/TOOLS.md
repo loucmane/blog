@@ -770,7 +770,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 
 ### Search Handlers
 
-#### Handler: search-code
+#### Handler: search-code {#search-code}
 **Triggers**: "find X", "search for Y", "look for Z in code"
 **Target Pattern**: Extract search term after action verb
 **Pre-conditions**: 
@@ -803,7 +803,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "find authentication logic" → Serena pattern search
 - "search for TODO comments" → Serena with "TODO" pattern
 
-#### Handler: find-symbol
+#### Handler: find-symbol {#find-symbol}
 **Triggers**: "where is X defined", "find class Y", "locate function Z"
 **Target Pattern**: Symbol name after key phrases
 **Pre-conditions**: 
@@ -823,7 +823,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "where is UserAuth class defined" → Find class definition
 - "find handleLogin function" → Locate function
 
-#### Handler: find-references
+#### Handler: find-references {#find-references}
 **Triggers**: "what uses X", "find references to Y", "who calls Z"
 **Target Pattern**: Symbol to find references for
 **Pre-conditions**: 
@@ -841,7 +841,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "what uses the auth service" → Find all imports/calls
 - "find references to User class" → Show all usages
 
-#### Handler: grep-pattern
+#### Handler: grep-pattern {#grep-pattern}
 **Triggers**: "grep for X", "search pattern Y", "find regex Z"
 **Target Pattern**: Pattern or regex after action
 **Pre-conditions**: 
@@ -862,7 +862,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 
 ### File Operation Handlers
 
-#### Handler: read-file
+#### Handler: read-file {#read-file}
 **Triggers**: "show me X", "what's in Y", "display Z file"
 **Target Pattern**: File path after action phrase
 **Pre-conditions**: 
@@ -880,7 +880,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "show me package.json" → Display package file
 - "what's in the config" → Read configuration
 
-#### Handler: edit-file
+#### Handler: edit-file {#edit-file}
 **Triggers**: "change X to Y", "update Z", "modify file"
 **Target Pattern**: File and changes specified
 **Pre-conditions**: 
@@ -904,7 +904,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "change function body" → Serena symbol replace
 - "update config value" → Edit tool
 
-#### Handler: create-file
+#### Handler: create-file {#create-file}
 **Triggers**: "create new file X", "make file Y", "new Z"
 **Target Pattern**: File path and type
 **Pre-conditions**: 
@@ -925,7 +925,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "create new component Button" → Component file
 - "make config file" → Configuration template
 
-#### Handler: delete-file
+#### Handler: delete-file {#delete-file}
 **Triggers**: "remove X", "delete file Y", "get rid of Z"
 **Target Pattern**: File to remove
 **Pre-conditions**: 
@@ -945,7 +945,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 
 ### Git Handlers
 
-#### Handler: check-status
+#### Handler: check-status {#check-status}
 **Triggers**: "what's changed", "git status", "show changes"
 **Target Pattern**: Optional scope filter
 **Pre-conditions**: 
@@ -964,7 +964,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "what's changed" → Full git status
 - "show staged changes" → Filtered view
 
-#### Handler: commit-changes
+#### Handler: commit-changes {#commit-changes}
 **Triggers**: "commit with message X", "save changes", "commit Y"
 **Target Pattern**: Commit message or description
 **Pre-conditions**: 
@@ -983,7 +983,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "commit auth changes" → Auto-format message
 - "commit with 'fix: login bug'" → Direct message
 
-#### Handler: create-branch
+#### Handler: create-branch {#create-branch}
 **Triggers**: "new branch for X", "create branch Y", "branch off"
 **Target Pattern**: Branch name or feature
 **Pre-conditions**: 
@@ -1002,7 +1002,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "new branch for auth feature" → feat/auth-feature
 - "create bugfix branch" → fix/issue-description
 
-#### Handler: view-history
+#### Handler: view-history {#view-history}
 **Triggers**: "show recent commits", "git log", "history"
 **Target Pattern**: Optional filter or count
 **Pre-conditions**: 
@@ -1022,7 +1022,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 
 ### Analysis Handlers
 
-#### Handler: analyze-code
+#### Handler: analyze-code {#analyze-code}
 **Triggers**: "analyze X for issues", "check Y quality", "review Z"
 **Target Pattern**: Code location to analyze
 **Pre-conditions**: 
@@ -1042,7 +1042,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "analyze auth module" → Full module review
 - "check for memory leaks" → Specific analysis
 
-#### Handler: check-dependencies
+#### Handler: check-dependencies {#check-dependencies}
 **Triggers**: "what does X depend on", "show Y dependencies", "imports"
 **Target Pattern**: Module or file to check
 **Pre-conditions**: 
@@ -1062,7 +1062,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "what does auth depend on" → Import analysis
 - "show package dependencies" → npm/yarn deps
 
-#### Handler: measure-complexity
+#### Handler: measure-complexity {#measure-complexity}
 **Triggers**: "how complex is X", "complexity of Y", "analyze complexity"
 **Target Pattern**: Code section to measure
 **Pre-conditions**: 
@@ -1085,7 +1085,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 
 ### External Tool Handlers
 
-#### Handler: run-tests
+#### Handler: run-tests {#run-tests}
 **Triggers**: "run tests", "test the code", "execute test suite"
 **Target Pattern**: Optional test filter
 **Pre-conditions**: 
@@ -1103,7 +1103,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "run all tests" → npm test
 - "test auth module" → Filtered test run
 
-#### Handler: check-lint
+#### Handler: check-lint {#check-lint}
 **Triggers**: "check code style", "run linter", "lint the code"
 **Target Pattern**: Optional scope
 **Pre-conditions**: 
@@ -1122,7 +1122,7 @@ This section defines how to handle tool selection requests when routed from CLAU
 - "check style" → Run default linter
 - "lint src folder" → Scoped linting
 
-#### Handler: build-project
+#### Handler: build-project {#build-project}
 **Triggers**: "build the project", "compile code", "run build"
 **Target Pattern**: Optional build target
 **Pre-conditions**: 

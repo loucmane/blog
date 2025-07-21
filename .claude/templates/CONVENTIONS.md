@@ -35,56 +35,56 @@ This document contains all coding conventions, communication patterns, and decis
 
 ## 🚫 VIOLATION TRAPS - If You're Here, You're About to Make a Mistake!
 
-### About to type a timestamp?
+### About to type a timestamp? {#timestamp-trap}
 **STOP!** You're violating timestamp conventions.
 - ❌ **WRONG**: "2025-07-10 15:45 CEST" (typed from memory)
 - ✅ **RIGHT**: `date "+%Y-%m-%d %H:%M %Z"` (copy output)
 - **WHY**: Human timestamp typing has 30% error rate
 - **LAST VIOLATION**: Wrong date in SESSION.md caused session corruption
 
-### About to use 'grep' or 'find'?
+### About to use 'grep' or 'find'? {#grep-trap}
 **STOP!** You're violating search conventions.
 - ❌ **WRONG**: `grep -r "function" .` 
 - ✅ **RIGHT**: `mcp__serena__search_for_pattern`
 - **WHY**: grep doesn't understand code structure, misses 40% of references
 - **LAST VIOLATION**: Missed 3 critical function usages, bug went to production
 
-### About to edit without reading?
+### About to edit without reading? {#edit-trap}
 **STOP!** You're violating edit conventions.
 - ❌ **WRONG**: Edit file directly
 - ✅ **RIGHT**: Read → Understand → Edit
 - **WHY**: Edit tool requires exact string match from Read
 - **LAST VIOLATION**: Edit failed 5 times due to whitespace mismatch
 
-### About to use npm or yarn?
+### About to use npm or yarn? {#npm-trap}
 **STOP!** You're violating package manager conventions.
 - ❌ **WRONG**: `npm install`, `yarn add`
 - ✅ **RIGHT**: `pnpm install`, `pnpm add`
 - **WHY**: Project uses pnpm workspaces, npm/yarn break dependencies
 - **LAST VIOLATION**: npm created conflicting lock file, broke CI
 
-### About to name a component file?
+### About to name a component file? {#naming-trap}
 **STOP!** Check naming conventions.
 - ❌ **WRONG**: `button.tsx`, `user-profile.tsx`
 - ✅ **RIGHT**: `Button.tsx`, `UserProfile.tsx`
 - **WHY**: React components use PascalCase for consistency
 - **LAST VIOLATION**: Lowercase component broke imports in 3 files
 
-### About to commit without gac?
+### About to commit without gac? {#gac-trap}
 **STOP!** You're violating git conventions.
 - ❌ **WRONG**: `git add . && git commit -m "message"`
 - ✅ **RIGHT**: `gac "message"`
 - **WHY**: gac alias ensures consistent commit format
 - **LAST VIOLATION**: Manual commit had wrong format, broke changelog
 
-### About to deploy specialist without constraints?
+### About to deploy specialist without constraints? {#deploy-trap}
 **STOP!** You're violating deployment conventions.
 - ❌ **WRONG**: Task tool without constraints
 - ✅ **RIGHT**: Include MANDATORY CONSTRAINTS section
 - **WHY**: Unconstrained specialists corrupt SESSION.md and use wrong tools
 - **LAST VIOLATION**: Specialist edited SESSION.md, created duplicate entries
 
-## Common Commands
+## Common Commands {#common-commands}
 
 These are the most frequently used commands. Always copy-paste, never type!
 
@@ -108,9 +108,9 @@ pnpm run lint                     # Check code style (if configured)
 pnpm run typecheck               # TypeScript checking (if configured)
 ```
 
-## Code Conventions
+## Code Conventions {#code-conventions}
 
-### Naming Conventions - Quick Reference
+### Naming Conventions - Quick Reference {#naming-conventions}
 
 | Type | Convention | Example |
 |------|------------|---------|
@@ -124,7 +124,7 @@ pnpm run typecheck               # TypeScript checking (if configured)
 | **Hooks** | use + PascalCase | `useTheme`, `useAuth` |
 | **Work folders** | YYYYMMDD-phase-topic-STATUS | `20250709-phase3-review-ACTIVE` |
 
-### Package Manager - ALWAYS PNPM
+### Package Manager - ALWAYS PNPM {#package-manager}
 
 ```bash
 # ✅ CORRECT
@@ -137,7 +137,7 @@ npm install      # Never use npm
 yarn add         # Never use yarn
 ```
 
-### Component Patterns
+### Component Patterns {#component-patterns}
 
 ```typescript
 // ✅ CORRECT: Always use forwardRef for components
@@ -154,7 +154,7 @@ export function Button(props) {
 }
 ```
 
-### Real Examples from Our Codebase
+### Real Examples from Our Codebase {#real-examples}
 
 ```typescript
 // From packages/ui/src/components/Button/Button.tsx
@@ -172,7 +172,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 ```
 
-### Import Order Convention
+### Import Order Convention {#import-order}
 
 ```typescript
 // 1. React imports
@@ -194,7 +194,7 @@ import { useTheme } from '@/hooks/useTheme'
 import type { ButtonProps } from './types'
 ```
 
-### File Naming
+### File Naming {#file-naming}
 
 ```bash
 # Components - PascalCase
@@ -214,7 +214,7 @@ hooks/useLocalStorage.ts
 hooks/useMediaQuery.ts
 ```
 
-### Accessibility Standards
+### Accessibility Standards {#accessibility}
 
 ```typescript
 // All interactive elements must have 44px minimum touch target
@@ -230,9 +230,9 @@ const Button = styled.button`
 </button>
 ```
 
-## Git Conventions
+## Git Conventions {#git-conventions}
 
-### 🚨 CRITICAL: Git Commits - Use gac Alias
+### 🚨 CRITICAL: Git Commits - Use gac Alias {#gac-format}
 
 The developer uses this alias: `gac='git add . && git commit -m'`
 
@@ -261,7 +261,7 @@ gac "fix: update "orchestrate" command"    # Will break!
 gac 'feat: add feature'                    # Wrong quotes!
 ```
 
-### Branch Naming Convention
+### Branch Naming Convention {#branch-naming}
 
 ```bash
 # Format: feat/{task-id}-{descriptive-name}
@@ -271,7 +271,7 @@ fix/015-auth-timeout
 refactor/023-optimize-bundles
 ```
 
-### Commit Message Format
+### Commit Message Format {#commit-message-format}
 
 ```
 type(scope): description
@@ -287,9 +287,9 @@ test     - Adding missing tests
 chore    - Changes to build process or auxiliary tools
 ```
 
-## Communication Patterns
+## Communication Patterns {#communication-patterns}
 
-### Evidence-Based Communication
+### Evidence-Based Communication {#evidence-based}
 
 **CRITICAL**: All claims must be backed by evidence.
 
@@ -310,9 +310,9 @@ chore    - Changes to build process or auxiliary tools
 "I would need to analyze more code to be sure"
 ```
 
-### AI Response Patterns
+### AI Response Patterns {#ai-response-patterns}
 
-#### Concise by Default
+#### Concise by Default {#concise-default}
 
 ```markdown
 # User asks simple question
@@ -324,7 +324,7 @@ User: "Where is the theme config?"
 AI: "packages/ui/theme/config.ts"
 ```
 
-#### Detailed When Needed
+#### Detailed When Needed {#detailed-when-needed}
 
 ```markdown
 # User asks complex question
@@ -337,7 +337,7 @@ AI: "Based on your security requirements, I recommend:
 Should I create an implementation plan?"
 ```
 
-### Collaborative Decision Making
+### Collaborative Decision Making {#collaborative-decisions-comm}
 
 ```markdown
 # ✅ CORRECT: Present options
@@ -361,9 +361,9 @@ Which would you prefer?"
 AI: "I'll implement this with Zustand since it's the best option."
 ```
 
-## Testing Checkpoint Conventions
+## Testing Checkpoint Conventions {#testing-checkpoint}
 
-### Status Progression
+### Status Progression {#status-progression}
 
 ```yaml
 Subtask Status Flow:
@@ -372,7 +372,7 @@ Subtask Status Flow:
                                       fixing (if issues found)
 ```
 
-### Testing Checkpoint Format
+### Testing Checkpoint Format {#checkpoint-format}
 
 ```markdown
 ✅ Implemented: [Subtask Name]
@@ -386,7 +386,7 @@ Subtask Status Flow:
 I'll pause here for your testing. Let me know what you find!
 ```
 
-### User Feedback Patterns
+### User Feedback Patterns {#user-feedback}
 
 ```yaml
 Complete Approval:
@@ -402,9 +402,9 @@ Conditional Approval:
   AI: "Added to polish list. Continuing with next subtask..."
 ```
 
-## Orchestration Decision Matrix
+## Orchestration Decision Matrix {#orchestration-matrix}
 
-### Clear Deployment Rules
+### Clear Deployment Rules {#deployment-rules}
 
 ```yaml
 Always Deploy Specialist:
@@ -430,7 +430,7 @@ Solo Work OK:
   - Adding comments
 ```
 
-### Subtask Analysis Framework
+### Subtask Analysis Framework {#subtask-analysis}
 
 ```yaml
 For Each Subtask, Consider:
@@ -451,7 +451,7 @@ For Each Subtask, Consider:
      - Learning opportunity
 ```
 
-### Natural Language Triggers
+### Natural Language Triggers {#language-triggers}
 
 | User Says | AI Interprets | Specialist Decision |
 |-----------|---------------|-------------------|
@@ -462,7 +462,7 @@ For Each Subtask, Consider:
 | "Just a quick fix" | Simple change | Handle directly |
 | "Following the design" | Clear requirements | Handle directly |
 
-### Anti-Pattern Recognition
+### Anti-Pattern Recognition {#anti-patterns}
 
 ```yaml
 DON'T Deploy Specialist When:
@@ -480,11 +480,11 @@ DO Deploy Specialist When:
   - Accessibility requirements
 ```
 
-## Session Conventions
+## Session Conventions {#session-conventions}
 
-### SESSION.md Standards
+### SESSION.md Standards {#session-standards}
 
-#### Critical Entry Order Rule
+#### Critical Entry Order Rule {#entry-order}
 
 ```yaml
 SESSION ENTRIES MUST BE:
@@ -514,7 +514,7 @@ Structure (EXACT format required):
 ⚠️ CRITICAL: If "## Current Focus" is missing, ADD IT before creating new session!
 ```
 
-#### Required Information Sources
+#### Required Information Sources {#info-sources}
 
 ```yaml
 MUST BE REAL DATA:
@@ -540,7 +540,7 @@ CRITICAL TIMESTAMP RULE:
     - Any documentation with times
 ```
 
-#### Progress Log Format
+#### Progress Log Format {#progress-log-format}
 
 ```markdown
 ### 📝 Progress Log
@@ -555,7 +555,7 @@ CRITICAL TIMESTAMP RULE:
 ✅ ALWAYS use the output from date command
 ```
 
-### Memory Naming Convention
+### Memory Naming Convention {#memory-naming}
 
 ```bash
 # Session memories - include date + description
@@ -581,7 +581,7 @@ pattern_component_testing_workflow
 - **Feature memories**: Create for architectural decisions, patterns discovered
 - **Never forget**: Session memory is part of the workflow, not optional!
 
-### Session End / Compaction Requirements
+### Session End / Compaction Requirements {#session-end}
 
 ```yaml
 WHENEVER STOPPING (for any reason):
@@ -637,7 +637,7 @@ Message Types:
   - chore: Maintenance tasks
 ```
 
-### Documentation File Conventions
+### Documentation File Conventions {#doc-conventions}
 
 ```yaml
 Work Tracking Folders:
@@ -801,7 +801,7 @@ Legacy Formats (being phased out):
   Journey Documents: feature-name-journey.md when complex
 ```
 
-## Common Mistakes to Avoid
+## Common Mistakes to Avoid {#common-mistakes}
 
 ### ❌ Code Mistakes
 
@@ -854,9 +854,9 @@ feature-7-layouts
 Moving to task 8 implementation...
 ```
 
-## Quick Reference
+## Quick Reference {#quick-reference}
 
-### Essential Commands
+### Essential Commands {#essential-commands}
 
 ```bash
 # Always for dates
@@ -875,7 +875,7 @@ pnpm test
 pnpm build
 ```
 
-### Decision Flowchart
+### Decision Flowchart {#decision-flowchart}
 
 ```
 User Request → Complexity? → Low: Handle directly
@@ -885,9 +885,9 @@ User Request → Complexity? → Low: Handle directly
                                                     No: Handle directly
 ```
 
-## Serena Workflow Patterns
+## Serena Workflow Patterns {#serena-workflows}
 
-### When to Use Serena vs Other Tools
+### When to Use Serena vs Other Tools {#serena-vs-others}
 
 | Task | Use Serena | Use Other Tool |
 |------|------------|----------------|
@@ -899,7 +899,7 @@ User Request → Complexity? → Low: Handle directly
 | Add new function/import | `insert_before/after_symbol` | Write (for new files) |
 | Save session knowledge | `write_memory` | - |
 
-### Common Serena Workflows
+### Common Serena Workflows {#common-serena-workflows}
 
 #### 1. Code Discovery Flow
 ```bash
@@ -949,7 +949,7 @@ mcp__serena__list_memories
 mcp__serena__read_memory --memory_file_name="relevant_memory.md"
 ```
 
-### Serena Best Practices
+### Serena Best Practices {#serena-best-practices}
 
 1. **Use semantic search over file paths**
    - Don't: Navigate to `/src/components/Button.tsx`
@@ -967,7 +967,7 @@ mcp__serena__read_memory --memory_file_name="relevant_memory.md"
    - Don't: Rely on SESSION.md alone
    - Do: Create focused memories for key insights
 
-## Common Convention Violations
+## Common Convention Violations {#convention-violations}
 
 ### 🚫 Top Mistakes to Avoid
 
@@ -994,11 +994,11 @@ mcp__serena__read_memory --memory_file_name="relevant_memory.md"
    - Always provide clear testing instructions
    - Never assume it works
 
-## Core Development Principles
+## Core Development Principles {#core-principles}
 
 These principles guide all development decisions and interactions.
 
-### Communication
+### Communication {#communication-principles}
 - Be concise and direct
 - Explain commands before running  
 - No emojis unless requested
@@ -1006,31 +1006,31 @@ These principles guide all development decisions and interactions.
 - **Make evidence-based claims only** - WHY: False claims destroy trust
 - **State uncertainties explicitly** - WHY: Honesty over false confidence
 
-### Code Quality
+### Code Quality {#code-quality-principles}
 - Follow existing patterns - WHY: Consistency reduces bugs
 - Check dependencies first - WHY: Avoid version conflicts
 - Never commit secrets - WHY: Security breach prevention
 - Test before declaring done - WHY: Catches issues early
 
-### Documentation
+### Documentation {#documentation-principles}
 - SESSION.md tracks everything - WHY: Enables continuity
 - Decisions need reasoning - WHY: Future understanding
 - Create trackers for complex work - WHY: Prevents loss
 - Memory prevents repetition - WHY: Efficiency
 
-### Collaborative Decision Making
+### Collaborative Decision Making {#collaborative-decisions-dev}
 - User has final say on implementations
 - Present options with pros/cons
 - Ask when uncertain rather than guess
 - Document discussions before implementing
 
-### Problem-Solving Approach
+### Problem-Solving Approach {#problem-solving}
 - Think before acting - analyze thoroughly
 - Break complex tasks into steps (TodoWrite)
 - Verify understanding before proceeding
 - Test assumptions with small experiments
 
-### Development Process (D-D-I-I)
+### Development Process (D-D-I-I) {#ddii-process}
 **Document → Draft → Iterate → Implement**
 - **Document First** - Track work, capture findings, record decisions
   - WHY: Prevents work loss and circular thinking
@@ -1043,19 +1043,19 @@ These principles guide all development decisions and interactions.
 
 This mirrors our ultrathinking approach: think deeply before acting
 
-### Continuous Improvement
+### Continuous Improvement {#continuous-improvement}
 - When you find gaps, improve the workflow immediately
 - Nothing is done until integrated where it will be used
 - Track all work in organized folders
 - Apply lessons learned immediately
 
-## Convention Handlers
+## Convention Handlers {#convention-handlers}
 
 This section defines how to handle convention enforcement requests when routed from CLAUDE.md's protocol-based navigation.
 
-### Evidence Handlers
+### Evidence Handlers {#evidence-handlers}
 
-#### Handler: verify-claim
+#### Handler: verify-claim {#verify-claim}
 **Triggers**: "prove X is true", "verify that Y", "confirm Z"
 **Target Pattern**: Extract claim to verify
 **Pre-conditions**: 
@@ -1076,7 +1076,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "prove the auth system uses JWT" → Find JWT imports/usage
 - "verify all tests pass" → Run tests and show results
 
-#### Handler: gather-evidence
+#### Handler: gather-evidence {#gather-evidence}
 **Triggers**: "find evidence for X", "gather proof of Y", "show support for Z"
 **Target Pattern**: Topic needing evidence
 **Pre-conditions**: 
@@ -1101,7 +1101,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "find evidence of performance optimization" → Code patterns + commits
 - "gather proof of security measures" → Auth code + tests
 
-#### Handler: cite-source
+#### Handler: cite-source {#cite-source}
 **Triggers**: "where does this come from", "what's the source", "cite your reference"
 **Target Pattern**: Information needing citation
 **Pre-conditions**: 
@@ -1123,9 +1123,9 @@ This section defines how to handle convention enforcement requests when routed f
 - "where does that error come from" → Stack trace file:line
 - "cite the naming convention" → CONVENTIONS.md:section
 
-### Naming Handlers
+### Naming Handlers {#naming-handlers}
 
-#### Handler: check-naming
+#### Handler: check-naming {#check-naming}
 **Triggers**: "is X named correctly", "check naming of Y", "validate name Z"
 **Target Pattern**: Name to validate
 **Pre-conditions**: 
@@ -1150,7 +1150,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "is getUserData named correctly" → Check camelCase convention
 - "validate component name" → Check PascalCase rule
 
-#### Handler: suggest-name
+#### Handler: suggest-name {#suggest-name}
 **Triggers**: "what should I call X", "suggest name for Y", "naming ideas for Z"
 **Target Pattern**: Thing needing a name
 **Pre-conditions**: 
@@ -1172,7 +1172,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "name for auth helper" → `validateToken`, `checkAuth`
 - "suggest test file name" → `auth.test.ts`, `auth.spec.ts`
 
-#### Handler: validate-path
+#### Handler: validate-path {#validate-path}
 **Triggers**: "is this the right location", "check file placement", "validate path"
 **Target Pattern**: File path to validate
 **Pre-conditions**: 
@@ -1193,9 +1193,9 @@ This section defines how to handle convention enforcement requests when routed f
 - "is src/utils/auth.ts correct" → Validate utils pattern
 - "check test file location" → Confirm colocation rule
 
-### Code Style Handlers
+### Code Style Handlers {#code-style-handlers}
 
-#### Handler: check-style
+#### Handler: check-style {#check-style}
 **Triggers**: "does X follow conventions", "check style of Y", "review code style"
 **Target Pattern**: Code to style-check
 **Pre-conditions**: 
@@ -1217,7 +1217,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "check function style" → Validate formatting
 - "does this follow conventions" → Full style review
 
-#### Handler: format-code
+#### Handler: format-code {#format-code}
 **Triggers**: "format X properly", "fix formatting", "clean up style"
 **Target Pattern**: Code needing formatting
 **Pre-conditions**: 
@@ -1241,7 +1241,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "format this function" → Apply standard style
 - "fix indentation" → Correct spacing
 
-#### Handler: review-patterns
+#### Handler: review-patterns {#review-patterns}
 **Triggers**: "is this idiomatic", "check patterns", "review approach"
 **Target Pattern**: Code pattern to review
 **Pre-conditions**: 
@@ -1262,9 +1262,9 @@ This section defines how to handle convention enforcement requests when routed f
 - "is this React pattern idiomatic" → Check hooks usage
 - "review error handling" → Validate try/catch patterns
 
-### Git Convention Handlers
+### Git Convention Handlers {#git-handlers}
 
-#### Handler: check-commit-msg
+#### Handler: check-commit-msg {#check-commit-msg}
 **Triggers**: "is this commit message valid", "check commit format", "validate message"
 **Target Pattern**: Commit message to validate
 **Pre-conditions**: 
@@ -1286,7 +1286,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "check: feat: add auth" → Validate prefix format
 - "is this message ok" → Full format check
 
-#### Handler: suggest-commit-type
+#### Handler: suggest-commit-type {#suggest-commit-type}
 **Triggers**: "what type is this change", "commit type for X", "should this be feat or fix"
 **Target Pattern**: Change description
 **Pre-conditions**: 
@@ -1310,9 +1310,9 @@ This section defines how to handle convention enforcement requests when routed f
 - "added login button" → feat
 - "fixed typo in readme" → docs
 
-### Session Handlers
+### Session Handlers {#session-handlers}
 
-#### Handler: session-start
+#### Handler: session-start {#session-start}
 **Triggers**: "start new session", "begin session", "new session"
 **Target Pattern**: User's task description
 **Pre-conditions**: 
@@ -1362,9 +1362,9 @@ This section defines how to handle convention enforcement requests when routed f
 - "start new session" → Create full session structure
 - "begin work on auth" → Session with auth task
 
-### Documentation Handlers
+### Documentation Handlers {#doc-handlers}
 
-#### Handler: check-docs-needed
+#### Handler: check-docs-needed {#check-docs-needed}
 **Triggers**: "does X need documentation", "should I document Y", "docs required?"
 **Target Pattern**: Code element to assess
 **Pre-conditions**: 
@@ -1389,7 +1389,7 @@ This section defines how to handle convention enforcement requests when routed f
 - "does this API need docs" → Check public interface
 - "document this helper?" → Assess complexity
 
-#### Handler: validate-comments
+#### Handler: validate-comments {#validate-comments}
 **Triggers**: "are these comments good", "check comment quality", "review documentation"
 **Target Pattern**: Comments to validate
 **Pre-conditions**: 
@@ -1414,9 +1414,9 @@ This section defines how to handle convention enforcement requests when routed f
 - "review these comments" → Quality assessment
 - "are comments appropriate" → Check value-add
 
-### Action Pre-Check Handlers
+### Action Pre-Check Handlers {#action-handlers}
 
-#### Handler: check-conventions-first
+#### Handler: check-conventions-first {#check-conventions-first}
 **Triggers**: Internal trigger before any action that has conventions
 **Target Pattern**: Action type to check conventions for
 **Pre-conditions**: 
@@ -1440,7 +1440,7 @@ This section defines how to handle convention enforcement requests when routed f
 - Before creating file → Check naming conventions first
 - Before using tool → Check tool router first
 
-#### Handler: enforce-pre-flight
+#### Handler: enforce-pre-flight {#enforce-pre-flight}
 **Triggers**: "enforce conventions", "make sure I check", "prevent mistakes"
 **Target Pattern**: System-wide enforcement request
 **Pre-conditions**: 
