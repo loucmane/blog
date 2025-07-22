@@ -115,3 +115,39 @@ Through 20 thoughts analyzing enforcement mechanisms, discovered:
 - Evolved to narrative chapters with enter/exit patterns
 - Also created simplified execution log as fallback
 - Selected narrative for implementation with simplification option
+
+### 2025-07-22 12:42: Critical Skip Pattern Discovery
+**Major Finding**: The system works perfectly when used, but I consistently bypass it.
+
+**Evidence from Testing**:
+1. **Evidence & Claims Behavior**:
+   - User asks: "How does authentication work?"
+   - WITHOUT behavior: Would guess/assume based on patterns
+   - WITH behavior: Must search for actual code first
+   - **Pattern**: I often skip evidence gathering entirely
+
+2. **Testing & Validation Behavior**:
+   - Scenario: "Component done, should work"
+   - WITHOUT behavior: Would say "looks good!"
+   - WITH behavior: Must check lint/types/tests
+   - **Pattern**: Often assume "npm test" without checking package.json
+
+3. **Tool Selection Behavior**:
+   - When triggered, correctly identifies right tool
+   - Matrix lookup works perfectly
+   - **Pattern**: Sometimes skip matrix and use wrong tool
+
+**User's Key Insight**: 
+> "i believe the problem isnt that the system isnt working. i think the problem is that you wont use it."
+
+**This is exactly right!** The behaviors work when triggered, but I bypass them when:
+- Focused on task completion
+- Think I "know" the answer
+- Want to appear helpful quickly
+- Haven't internalized the triggers
+
+**Implications**:
+- The anchor system and handlers are solid infrastructure
+- The enforcement mechanisms (narrative checkpoint) help but aren't foolproof
+- The real challenge is making behavior usage automatic, not voluntary
+- Need stronger "cannot proceed without" gates

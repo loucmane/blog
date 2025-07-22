@@ -108,7 +108,7 @@ Is this development work? → Continue to step 2
 I search the REGISTRY for the appropriate handler:
 
 First, check Navigation Keywords for common patterns:
-mcp__serena__search_for_pattern --substring_pattern "[action keyword]" --relative_path ".claude/templates/REGISTRY.md#navigation-keywords"
+mcp__serena__search_for_pattern --substring_pattern "[action keyword]" --relative_path ".claude/templates/REGISTRY.md"
 
 If no exact match, extract keywords and search more broadly:
 - Extract key verbs: work, fix, search, edit, etc.
@@ -116,10 +116,15 @@ If no exact match, extract keywords and search more broadly:
 - Search: mcp__serena__search_for_pattern --substring_pattern "[keyword]" --relative_path ".claude/templates/REGISTRY.md"
 ```
 
-### 3. Load Handler from Template
+### 3. Load Handler from Template Using Anchors
 ```
-Once I find the handler in REGISTRY, I load it from its source:
-mcp__serena__search_for_pattern --substring_pattern "Handler: [handler-name]" --relative_path "[template-file]"
+Once I find the handler in REGISTRY (now with anchor links), I load it using:
+mcp__serena__search_for_pattern --substring_pattern "{#handler-name}" --relative_path "[template-file]"
+
+Example: For `start-new-work` handler:
+1. Registry shows: [start-new-work](WORKFLOWS.md#start-new-work)
+2. I search: mcp__serena__search_for_pattern --substring_pattern "{#start-new-work}" --relative_path ".claude/templates/WORKFLOWS.md"
+3. This finds the exact handler location with permanent anchor reference
 ```
 
 ### 4. Execute Handler Completely
@@ -151,8 +156,8 @@ These create "cannot proceed without" gates that ensure proper execution natural
 ### "Work on X" → Development Flow
 ```
 1. Search REGISTRY: "start-new-work"
-2. Find: Handler in WORKFLOWS.md
-3. Load: mcp__serena__search_for_pattern --substring_pattern "Handler: start-new-work" --relative_path ".claude/templates/WORKFLOWS.md"
+2. Find: Handler link [start-new-work](WORKFLOWS.md#start-new-work)
+3. Load: mcp__serena__search_for_pattern --substring_pattern "{#start-new-work}" --relative_path ".claude/templates/WORKFLOWS.md"
 4. Execute: Create work folder, initialize todos, begin implementation
 ```
 

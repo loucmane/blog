@@ -137,3 +137,22 @@
   - Works with existing Serena tools
 - **User insight**: "Why can't you use anchor as search pattern?"
 - **Key advantage**: Best of both worlds - stable references + existing tools
+
+### 2025-07-22: Anchor System Implementation Complete
+- **Decision**: Implement comprehensive anchor-based navigation for all templates
+- **Context**: Line number references break when files are edited
+- **Implementation**:
+  - Added {#anchor-name} to all 9 template files
+  - Updated REGISTRY.md with markdown links
+  - Modified CLAUDE.md navigation protocol
+- **Result**: Permanent references that survive file edits
+
+### 2025-07-22: Behavior Testing Reveals Core Issue
+- **Decision**: Continue testing all behaviors to understand skip patterns
+- **Context**: User insight that system works but isn't used
+- **Evidence**: 
+  - Evidence & Claims: Often skip evidence gathering
+  - Testing & Validation: Assume test commands without checking
+  - Tool Selection: Works perfectly when triggered
+- **Key Finding**: Infrastructure is solid, usage is voluntary
+- **Implication**: Need stronger enforcement, not better documentation
