@@ -156,3 +156,23 @@
   - Tool Selection: Works perfectly when triggered
 - **Key Finding**: Infrastructure is solid, usage is voluntary
 - **Implication**: Need stronger enforcement, not better documentation
+
+### 2025-07-22 17:02: Environmental Design Over Behavioral Change
+- **Decision**: Shift from trying to change my behavior to changing the environment
+- **Context**: 12-step analysis revealed fundamental flaws in enforcement approach
+- **Critical Insights**:
+  - I have temporal myopia when task-focused
+  - Context window is my real constraint driving skips
+  - All enforcement mechanisms are voluntary
+  - Successful tools (TodoWrite, anchors) create value, not enforce compliance
+- **New Approach**:
+  - Predictive pre-fetching eliminates choice to skip
+  - Environmental nudges make good practices easier than shortcuts
+  - Dual-mode architecture acknowledges different working styles
+  - Behaviors integrated into task definitions, not added on
+- **Revolutionary Principle**: "Stop trying to change the actor. Change the stage."
+- **Implementation Priority**:
+  1. Predictive context engine for evidence
+  2. Risk metrics instead of confidence scores
+  3. Context-efficient operations (10x value in 0.1x context)
+- **Why This Matters**: When good practices are woven into how work happens, they stop being practices and become simply "how things work"
