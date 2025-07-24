@@ -259,28 +259,37 @@ To:
 3. If insufficient, proceed with full Natural Workflow Integration
 4. Continue with environmental design implementation
 
-## Session Update 2025-07-24 11:48
-**ULTRATHINK FORMAT REFINED AND READY**
+## Session Update 2025-07-24 12:25
+**ULTRATHINK FORMAT REFINED - CRITICAL GAP FOUND**
 
 Refined the ULTRATHINK format through systematic design:
-1. **Sequential thinking** - 15 steps exploring format options
-2. **VOID format selected** - [S:VOID|W:VOID|H:VOID] creates discomfort
-3. **Implementation discovery** - Templates accessible via Serena MCP tool
-4. **Complete design** - Ready to implement in CLAUDE.md
+1. **10-step thinking** - Clean implementation design
+2. **15-step thinking** - Ultra-minimal 4-line solution
+3. **Critical gap** - Ultra-minimal doesn't specify resolution paths
+4. **Ready for further refinement** after compaction
 
-**Key Design Elements**:
-- Format: `[S:X|W:Y|H:Z]` where VOID indicates action required
-- S = Session ID or VOID (must create session)
-- W = Work context or VOID (must create folder) or state (investigating/reading)
-- H = Handler name or VOID (must find handler) or activity (exploring/continue)
+**Progressive Design Evolution**:
+- Initial: 30+ line additions with sections
+- Refined: 15-20 lines with examples
+- Optimal: 4 lines ultra-minimal
+- Gap: Need hints for VOID resolution
 
-**Critical Insight**: Templates are "my program" - always accessible via Serena, solving the bootstrap problem.
-
-**Ready to Implement**:
+**The 4-Line Solution**:
 ```markdown
-Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]"
-- Check state: SESSION.md, work-tracking/active/, current context
-- Display findings with VOID where action required
-- VOID resolution via Serena MCP tool searches
-- Natural progression: Check → Display → Resolve → Proceed
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]"
+  - S = Session ID from SESSION.md (or VOID)
+  - W = Work folder from active/ (or VOID/investigating/planning)
+  - H = Handler from templates (or VOID/explore/continue)
+  - VOID = Cannot proceed - requires template resolution
 ```
+
+**The Problem**:
+Without guidance on WHERE to search, might bypass templates entirely.
+
+**Options Being Considered**:
+- A: Add hints (VOID→CONVENTIONS, VOID→WORKFLOWS, VOID→REGISTRY)
+- B: Add one example showing pattern
+- C: Trust natural discovery
+- D: Explicit search commands
+
+**Next Session**: Continue refinement to find optimal balance between simplicity and effectiveness.
