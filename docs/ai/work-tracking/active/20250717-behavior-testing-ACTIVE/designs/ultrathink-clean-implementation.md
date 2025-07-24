@@ -362,3 +362,242 @@ How much guidance is needed to ensure template use without being overly prescrip
 - Handlers loaded from templates
 - No more skipping protocol
 - Natural workflow maintained
+
+## Post-Compaction Refinement (2025-07-24)
+
+After 8 steps of sequential thinking, the optimal refinement maintains 4-line elegance while adding actionable hints:
+
+### The Refined 4-Line Solution
+
+```markdown
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+  - S = Session ID from SESSION.md (or VOID→conventions for session-start)
+  - W = Work folder from active/ (or VOID→workflows for start-new-work)
+  - H = Handler from templates (or VOID→registry for handler lookup)
+```
+
+### Why This Works
+
+1. **Maintains Elegance** - Still only 4 lines, preserving ultra-minimal aesthetic
+2. **Provides Direction** - Each VOID has a clear destination (→template)
+3. **Includes Search Terms** - Specific handlers named for S and W
+4. **Flexible for H** - Handler depends on request, so keeps it general
+5. **Natural Flow** - Arrow notation creates "leads to" mental model
+6. **Actionable** - Can't ignore VOIDs when resolution path is clear
+
+### Key Improvements Over Ultra-Minimal
+
+- **Before**: "VOID = Cannot proceed - requires template resolution"
+- **After**: Each line shows WHERE to resolve (→conventions, →workflows, →registry)
+- **Specific**: Names actual handlers (session-start, start-new-work)
+- **Balanced**: Not prescriptive about HOW, just WHERE and WHAT
+
+This refinement addresses the critical gap while maintaining the simplicity that makes the format powerful.
+
+## Accuracy Challenge (2025-07-24)
+
+User identified that even with resolution paths, I still sometimes make wrong decisions:
+
+### Common Failure Modes
+1. **Wrong Search Terms**
+   - User: "fix the login bug"
+   - I search: "fix" in REGISTRY.md
+   - Miss: "debug-problem" or "fix-problem" handler
+
+2. **Wrong Template File**
+   - User: "how should I name this component?"
+   - I search: WORKFLOWS.md for naming
+   - Miss: CONVENTIONS.md has naming-conventions handler
+
+3. **Wrong Handler Selection**
+   - Find multiple matches
+   - Pick first one without reading
+   - Miss the actually relevant handler
+
+### The Core Question
+How can we make handler selection more deterministic and accurate without making the format too complex? We want to ensure I find the CORRECT thing for what's needed, not just ANY template.
+
+### 15-Step Sequential Thinking Exercise
+
+Through 15 steps of analysis, the optimal solution emerged: maintain 4-line elegance with two strategic word changes.
+
+## The Optimal Solution
+
+### Final Format (Still 4 Lines!)
+```markdown
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+  - S = Session ID from SESSION.md (or VOID→conventions for session-start)
+  - W = Work folder from active/ (or VOID→workflows for start-new-work)
+  - H = Handler matching request (or VOID→registry for best match)
+```
+
+### Key Changes for Accuracy
+1. **"Handler from templates" → "Handler matching request"**
+   - Changes passive selection to active matching
+   - Triggers analysis of request intent
+   - Makes me think "what handler MATCHES this request?"
+
+2. **"handler lookup" → "best match"**
+   - Shifts from finding ANY handler to finding BEST handler
+   - Creates quality focus
+   - Implies comparing options
+
+### Why This Works
+- **Behavioral Psychology**: Word choice shapes thinking patterns
+- **Maintains Simplicity**: Still only 4 lines total
+- **Natural Language**: "matching" and "best" are intuitive concepts
+- **No Added Rules**: Improves accuracy through framing, not prescription
+
+### The Insight
+The problem wasn't lack of instructions - it was passive language that didn't trigger careful selection. By using active verbs ("matching") and quality indicators ("best"), we create better decision-making without adding complexity.
+
+### Other Options Considered
+- Adding decision matrices (too complex)
+- Multi-stage verification (breaks flow)
+- Explicit search protocols (too prescriptive)
+- Handler categorization (adds infrastructure)
+
+The winner: Change 2 words, improve behavior.
+
+## SAVED STATE - Before Further Refinement
+
+This is the clean solution before attempting 15 more thoughts:
+
+```markdown
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+  - S = Session ID from SESSION.md (or VOID→conventions for session-start)
+  - W = Work folder from active/ (or VOID→workflows for start-new-work)
+  - H = Handler matching request (or VOID→registry for best match)
+```
+
+If further refinement backfires, revert to this state.
+
+## Further Refinement: 15 More Thoughts
+
+After 15 additional thoughts exploring every angle - compression, visual hierarchy, word choice, structure - the conclusion is clear:
+
+### The Format is Already Optimal
+
+The saved state above IS the state-of-the-art solution. Here's why:
+
+1. **Every word earns its place**
+   - "matching" > "for" (active vs passive)
+   - "best match" > "handler lookup" (quality focus)
+   - "from" > "in" (extraction vs location)
+
+2. **Structure is perfectly balanced**
+   - 4 lines for easy scanning
+   - Consistent pattern for each component
+   - Clear normal case → VOID case flow
+
+3. **Behavioral design at its finest**
+   - Creates three natural behaviors: check → display → resolve
+   - Arrow notation (→) suggests movement and action
+   - "Let me ultrathink about this..." creates ritual and pause
+
+4. **Cannot be compressed further without losing:**
+   - Readability (1-line version too dense)
+   - Clarity (removing "or" breaks either/or structure)
+   - Behavior (shorter words lose psychological impact)
+
+### The Final State-of-the-Art Format
+
+```markdown
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+  - S = Session ID from SESSION.md (or VOID→conventions for session-start)
+  - W = Work folder from active/ (or VOID→workflows for start-new-work)
+  - H = Handler matching request (or VOID→registry for best match)
+```
+
+This achieves maximum behavioral impact with minimum cognitive load. It's not just documentation - it's a behavior-shaping tool disguised as a format specification.
+
+## The Template Value Challenge (2025-07-24)
+
+User identified that the current resolution paths might not extract maximum value from templates:
+
+### Current Limitations
+1. **One-Size-Fits-All**: S:VOID always→conventions, W:VOID always→workflows
+2. **Surface-Level**: Finds handlers but misses deeper patterns and best practices
+3. **No Context Awareness**: Doesn't route based on task type (debug vs implement vs investigate)
+4. **Single Template Focus**: Misses cross-template wisdom (PATTERNS + MATRICES + TOOLS)
+
+### The Core Question
+How do we create resolution paths that:
+- Route to the RIGHT template for the context
+- Find BEST practices, not just basic handlers
+- Extract FULL value from template system
+- Stay SIMPLE enough to remember and use
+
+### ULTRATHINK + 15 Sequential Thoughts Exercise
+
+Through 15 thoughts, explored various approaches to maximize template value extraction:
+
+## Options Explored
+
+### 1. **Multi-Template Routing**
+- VOID→R+P (Registry + Patterns)
+- VOID→scan:templates
+- Too cryptic, adds cognitive load
+
+### 2. **Context-Aware Routing**
+- Different VOIDs route to different templates based on request type
+- Requires complex decision logic
+- Breaks simplicity
+
+### 3. **Goal-Oriented Resolution**
+- VOID→"establish proper session"
+- VOID→"organize work optimally"
+- Too verbose, loses precision
+
+### 4. **Enhanced Registry**
+- Add "Request Router" section to REGISTRY.md
+- One entry point with smart routing
+- Adds infrastructure complexity
+
+### 5. **Outcome-Focused Language** ✓
+Simple word changes that shift psychology:
+- "for session-start" → "for proper session"
+- "for start-new-work" → "for optimal work"  
+- "for best match" → "for best practice"
+
+## The Optimal Solution
+
+```markdown
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+  - S = Session ID from SESSION.md (or VOID→conventions for proper session)
+  - W = Work folder from active/ (or VOID→workflows for optimal work)
+  - H = Handler matching request (or VOID→registry for best practice)
+```
+
+### Why This Maximizes Template Value
+
+1. **"proper session"** - Makes me think "what makes a session proper?" 
+   - Drives exploration of best practices
+   - Not just any session, but done RIGHT
+
+2. **"optimal work"** - Makes me consider "what's the best organization?"
+   - Encourages checking PATTERNS for meta-approaches
+   - Seeks excellence, not just compliance
+
+3. **"best practice"** - Explicitly seeks the highest quality approach
+   - Natural to check multiple templates
+   - Won't settle for first match
+
+### Behavioral Psychology
+
+The shift from handler-focused ("session-start") to outcome-focused ("proper session") changes the mental model:
+- **Before**: Find the handler named X
+- **After**: Find the best way to achieve X
+
+This naturally drives deeper template exploration without adding any complexity to the format.
+
+### Cross-Template Benefits
+
+With outcome-focused language, I'm more likely to:
+1. Start at suggested template (conventions/workflows/registry)
+2. Follow cross-references to other templates
+3. Check MATRICES for decision frameworks
+4. Review PATTERNS for meta-approaches
+5. Synthesize best practices from multiple sources
+
+The format stays simple (4 lines) but the behavior becomes more sophisticated.

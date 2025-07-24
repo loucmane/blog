@@ -293,3 +293,29 @@ Without guidance on WHERE to search, might bypass templates entirely.
 - D: Explicit search commands
 
 **Next Session**: Continue refinement to find optimal balance between simplicity and effectiveness.
+
+## Session Update 2025-07-24 15:30
+**ULTRATHINK FORMAT REFINEMENT COMPLETE**
+
+Refined the format through comprehensive analysis:
+1. **Critical Gap Fixed** - Added resolution hints (→conventions, →workflows, →registry)
+2. **Accuracy Enhanced** - Active language: "matching request", "best match"
+3. **Template Value Maximized** - Outcome focus: "proper session", "optimal work", "best practice"
+4. **45 Sequential Thoughts** - Resulted in changing just 8 strategic words
+
+**Final Optimal Format**:
+```markdown
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+  - S = Session ID from SESSION.md (or VOID→conventions for proper session)
+  - W = Work folder from active/ (or VOID→workflows for optimal work)
+  - H = Handler matching request (or VOID→registry for best practice)
+```
+
+**Key Achievement**: Maximum behavioral impact with minimum cognitive load (4 lines).
+
+## How to Resume
+```
+Activate project blog, read memory session_2025-07-24_ultrathink_format_final.
+Update CLAUDE.md with final ULTRATHINK format.
+Test with various request types.
+```

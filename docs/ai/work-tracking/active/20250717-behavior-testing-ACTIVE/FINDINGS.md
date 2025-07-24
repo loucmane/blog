@@ -246,3 +246,39 @@ Even while analyzing this, I felt the pull to skip updating TodoWrite - demonstr
 5. Format creates beneficial interruption
 
 **The Core Tension**: Balancing simplicity with effectiveness. Too minimal risks bypassing templates, too detailed loses elegance.
+
+### 2025-07-24 - ULTRATHINK Format Final Refinement
+
+**Comprehensive Refinement Process**:
+
+1. **Post-Compaction Continuation**: Added resolution hints to address critical gap
+   - Changed: "VOID = Cannot proceed - requires template resolution" 
+   - To: Each line shows WHERE to resolve (→conventions, →workflows, →registry)
+   - Added specific handler names (session-start, start-new-work)
+
+2. **Accuracy Enhancement** (15 thoughts):
+   - Changed "Handler from templates" → "Handler matching request"
+   - Changed "handler lookup" → "best match"
+   - Result: Active matching behavior vs passive selection
+
+3. **Template Value Maximization** (15 more thoughts):
+   - Changed "for session-start" → "for proper session"
+   - Changed "for start-new-work" → "for optimal work"
+   - Changed "for best match" → "for best practice"
+   - Result: Outcome-focused language drives deeper template exploration
+
+**Final Optimal Format**:
+```markdown
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+  - S = Session ID from SESSION.md (or VOID→conventions for proper session)
+  - W = Work folder from active/ (or VOID→workflows for optimal work)
+  - H = Handler matching request (or VOID→registry for best practice)
+```
+
+**Key Insights**:
+1. **Word Choice Shapes Behavior**: "matching" vs "from", "best practice" vs "handler"
+2. **Outcome Focus > Handler Focus**: Seeking quality naturally drives exploration
+3. **Simplicity Wins**: 4 lines with strategic words beats complex routing
+4. **Psychology Matters**: Format creates mental model that encourages best practices
+
+**Total Refinement**: 45 sequential thoughts across 3 sessions resulted in changing just 8 words to transform behavior.
