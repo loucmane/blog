@@ -258,3 +258,29 @@ To:
 2. Test with various development requests
 3. If insufficient, proceed with full Natural Workflow Integration
 4. Continue with environmental design implementation
+
+## Session Update 2025-07-24 11:48
+**ULTRATHINK FORMAT REFINED AND READY**
+
+Refined the ULTRATHINK format through systematic design:
+1. **Sequential thinking** - 15 steps exploring format options
+2. **VOID format selected** - [S:VOID|W:VOID|H:VOID] creates discomfort
+3. **Implementation discovery** - Templates accessible via Serena MCP tool
+4. **Complete design** - Ready to implement in CLAUDE.md
+
+**Key Design Elements**:
+- Format: `[S:X|W:Y|H:Z]` where VOID indicates action required
+- S = Session ID or VOID (must create session)
+- W = Work context or VOID (must create folder) or state (investigating/reading)
+- H = Handler name or VOID (must find handler) or activity (exploring/continue)
+
+**Critical Insight**: Templates are "my program" - always accessible via Serena, solving the bootstrap problem.
+
+**Ready to Implement**:
+```markdown
+Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]"
+- Check state: SESSION.md, work-tracking/active/, current context
+- Display findings with VOID where action required
+- VOID resolution via Serena MCP tool searches
+- Natural progression: Check → Display → Resolve → Proceed
+```
