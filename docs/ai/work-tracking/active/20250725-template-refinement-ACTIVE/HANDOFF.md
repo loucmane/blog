@@ -243,3 +243,6 @@ Completed template refinement work with:
 
 ### Clean Handoff State
 All work tracked, documented, and ready for next session to migrate documentation into the template system.
+
+### Future Discussion Topic
+Template system portability - making it project-agnostic and idempotent for use across all projects. Initial plan created but needs refinement through discussion.

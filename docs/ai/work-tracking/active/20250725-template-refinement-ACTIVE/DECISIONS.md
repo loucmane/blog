@@ -82,3 +82,14 @@
 **Evidence**: Current work folder location not discoverable
 **Alternative**: Create separate docs/ folder
 **Why chosen**: Integration makes docs part of the system, not adjacent to it
+
+### 2025-07-25: Plan Claude Template System Portability
+**Decision**: Create plan for project-agnostic, idempotent template system
+**Rationale**:
+- Current system has project-specific dependencies
+- Want to use across all projects without modification
+- Need consistent setup and behavior everywhere
+- Community sharing would amplify value
+**Evidence**: Hard-coded paths, language assumptions, project references
+**Alternative**: Keep copying and modifying for each project
+**Why chosen**: One-time effort enables unlimited reuse and community growth

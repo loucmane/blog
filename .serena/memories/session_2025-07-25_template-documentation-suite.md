@@ -24,9 +24,21 @@ Created comprehensive documentation suite (7 guides) to complement the 69 handle
 - Add to BUILDING-BETTER.md and WORKFLOWS.md
 - Implement comprehensive cross-references
 
+## Future Discussion: Template System Portability
+- User wants to make Claude template system project-agnostic and idempotent
+- Goal: Use same system across all projects without modification
+- Created initial portability plan but needs refinement
+- Key questions to address:
+  - What exactly should be portable vs project-specific?
+  - How to handle language/framework differences?
+  - Distribution method (npm, git, script)?
+  - How to maintain/update across projects?
+- Plan document: claude-template-system-portability-plan.md
+
 ## Next Steps
 1. Migrate docs to template system
 2. Implement cross-reference web
-3. Test documentation flow
+3. Discuss and refine portability plan
+4. Design project-agnostic template system
 
 Template refinement work COMPLETE with full documentation.

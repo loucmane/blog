@@ -655,7 +655,7 @@ pnpm lint                         # Run linter
 - **Recommended to Add**: 6 (high + medium priority)
 - **Grand Total (if all added)**: 73 handlers
 - **Practical Total**: 69 handlers (existing + recommended)
-- **Behavioral Templates**: 6 (WORKFLOWS.md)
+h- **Behavioral Templates**: 6 (WORKFLOWS.md)
 - **Meta-Routing Patterns**: 13 (PATTERNS.md)
 - **Behavioral Hooks**: 9 categories (BEHAVIORS.md)
 - **Decision Matrices**: 5 (MATRICES.md)
