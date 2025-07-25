@@ -2376,6 +2376,52 @@ This section defines how to handle specific user intents when they're routed fro
 - "decided to use React" → Tech choice
 - "going with microservices" → Architecture decision
 
+#### Handler: fix-bug {#fix-bug}
+**Triggers**: "fix bug X", "fix the Y bug", "resolve issue with Z", "bug in X"
+**Target Pattern**: Bug description and location
+**Pre-conditions**: 
+- Bug identified or reported
+- Can reproduce or understand issue
+**Process**:
+1. Understand the bug clearly
+2. Route to bug-fix-template:
+   ```yaml
+   STATE: "I need to fix: [bug description]"
+   USE: Load WORKFLOWS.md#bug-fix-template
+   FOLLOW: Locked step progression
+   ```
+3. Cannot skip bug reproduction step
+4. Must gather evidence before theorizing
+**Success**: Bug fixed with evidence
+**Failure**: Skipped template steps
+**Examples**:
+- "fix bug in login" → Load bug-fix-template
+- "resolve issue with nav" → Bug fix workflow
+- "login is broken" → Systematic debugging
+
+#### Handler: debug-issue {#debug-issue}
+**Triggers**: "debug X", "debug this Y", "find the problem in Z", "why is X failing"
+**Target Pattern**: Issue or error to investigate
+**Pre-conditions**: 
+- Problem exists but cause unknown
+- Need deep investigation
+**Process**:
+1. Capture initial symptoms
+2. Route to emergency-debug template:
+   ```yaml
+   STATE: "I need to debug: [issue description]"
+   USE: Load WORKFLOWS.md#emergency-debug
+   FOLLOW: Emergency debug steps
+   ```
+3. Gather ALL evidence first
+4. Form hypothesis only after evidence
+**Success**: Root cause identified
+**Failure**: Jumped to conclusions
+**Examples**:
+- "debug auth error" → Emergency debug mode
+- "find why tests fail" → Deep investigation
+- "why is it slow?" → Performance debugging
+
 ## Common Mistakes That Break Sessions {#common-mistakes}
 
 ❌ **DON'T**: Skim previous session and miss completed work  

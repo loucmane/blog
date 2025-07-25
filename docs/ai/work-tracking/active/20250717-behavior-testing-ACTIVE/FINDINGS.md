@@ -282,3 +282,83 @@ Even while analyzing this, I felt the pull to skip updating TodoWrite - demonstr
 4. **Psychology Matters**: Format creates mental model that encourages best practices
 
 **Total Refinement**: 45 sequential thoughts across 3 sessions resulted in changing just 8 words to transform behavior.
+
+### 2025-07-24 Evening - Session Boundary Challenge
+
+**Critical Discovery**: Even with improved format, I continued from yesterday's session without VOIDs. This proves the current system isn't enforcing session boundaries.
+
+**Rough Draft Solution**:
+1. Changed "Session ID" → "Today's session ID" (forces date check)
+2. Changed "Work folder" → "Current work context" (allows flexibility)
+3. Added context line explaining W can be folder or state
+
+**Open Questions for Tomorrow**:
+- How to handle multiple work folders in one session?
+- When exactly should W become VOID?
+- How to enforce verification without being prescriptive?
+- What happens when switching between tasks?
+
+**Key Insight**: Session boundaries need to be technical, not just conceptual. Without verification, I naturally carry context forward even after "ending" sessions.
+
+### 2025-07-25 Morning - First Successful Test!
+
+**Major Success**: The improved ULTRATHINK format worked on first try!
+
+**What Happened**:
+1. Started with triple VOIDs as expected
+2. "Today's session ID" prevented using yesterday's session
+3. Had to search templates to resolve VOIDs
+4. Successfully created proper session through handler
+
+**Evidence of Success**:
+- Showed [S:VOID|W:VOID|H:VOID] at conversation start
+- Couldn't claim S:20250724 (not today)
+- Used session-start handler from conventions
+- Now have valid context [S:20250725|W:behavior-testing|H:X]
+
+**Key Victory**: Templates were truly unavoidable - the VOIDs created sufficient pressure to follow proper process.
+
+### 2025-07-25 Post-Compaction - Actual Template Testing
+
+**Test Results with Real Template Searches**:
+
+1. **Development Request Test**: "implement user authentication"
+   - ULTRATHINK: [S:20250725|W:VOID→workflows|H:VOID→registry]
+   - Successfully found in REGISTRY: `implement-feature` → `start-new-work`
+   - Located handler at line 1928 of WORKFLOWS.md
+   - Handler includes 6-step process with work folder creation
+   - **Result**: VOIDs force proper template lookup ✓
+
+2. **Investigation Request Test**: "why is the login failing?"
+   - ULTRATHINK: [S:20250725|W:investigating|H:VOID→registry]
+   - Found multiple debug-related entries in REGISTRY
+   - Keywords: debug, failing, error all map to handlers
+   - W naturally becomes "investigating" (not a folder)
+   - **Challenge**: Some anchors not working as expected (need investigation)
+   - **Result**: Format works but reveals template anchor issues
+
+3. **Key Insights**:
+   - The format successfully forces template searches
+   - Resolution hints (→workflows, →registry) provide clear direction
+   - W flexibility works well (folder vs state like "investigating")
+   - Some template anchors may need fixing
+
+### 2025-07-25 - Template Anchor Investigation
+
+**Problem Identified**: Many anchors in REGISTRY.md point to non-existent anchors in template files.
+
+**Examples of Mismatches**:
+1. REGISTRY: [`debug`](WORKFLOWS.md#debug-issue) → Actual: {#emergency-debug}
+2. REGISTRY: [`fix-problem`](WORKFLOWS.md#fix-problem) → Not found
+3. REGISTRY: [`analyze-error`](WORKFLOWS.md#analyze-error) → Not found
+
+**Working Examples**:
+- [`start-new-work`](WORKFLOWS.md#start-new-work) → {#start-new-work} ✓
+- [`create-todos`](WORKFLOWS.md#create-todos) → {#create-todos} ✓
+
+**Solution Options**:
+1. **Option A**: Update REGISTRY.md to point to existing anchors
+2. **Option B**: Add missing anchors to template files
+3. **Option C**: Hybrid - fix critical ones, remove obsolete ones
+
+**Recommendation**: Option C - Some handlers may have been replaced (e.g., debug → emergency-debug) so we should update REGISTRY to reflect current reality while adding any truly missing anchors.

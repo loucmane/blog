@@ -13,9 +13,10 @@
 - Hidden complexity often emerges only through deep thinking
 - Better to overthink than underthink - there's no penalty for being thorough
 - Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
-  - S = Session ID from SESSION.md (or VOID→conventions for proper session)
-  - W = Work folder from active/ (or VOID→workflows for optimal work)
+  - S = Today's session ID from SESSION.md (or VOID→conventions for proper session)
+  - W = Current work context from active/ (or VOID→workflows for optimal work)
   - H = Handler matching request (or VOID→registry for best practice)
+  - Context: W can be folder name, "investigating", "reviewing", "planning" - changes with task focus
 
 ## 🎯 CONTEXT-AWARE ACTIVATION
 

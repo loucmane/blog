@@ -14,11 +14,11 @@ This document contains comprehensive decision matrices for quick, accurate routi
 
 | Request Pattern | Handler | Location | Example |
 |-----------------|---------|----------|---------|
-| "implement X" | implement-feature | WORKFLOWS.md | "implement user auth" |
-| "fix X" | fix-problem | WORKFLOWS.md | "fix login bug" |
-| "test X" | test-implementation | WORKFLOWS.md | "test the auth flow" |
+| "implement X" | standard-dev-workflow | WORKFLOWS.md | "implement user auth" |
+| "fix X" | fix-bug | WORKFLOWS.md | "fix login bug" |
+| "test X" | create-test-checkpoint | WORKFLOWS.md | "test the auth flow" |
 | "find X" | search-code | TOOLS.md | "find user model" |
-| "search for X" | search-pattern | TOOLS.md | "search for login" |
+| "search for X" | search-code | TOOLS.md | "search for login" |
 | "debug X" | debug-issue | WORKFLOWS.md | "debug auth failure" |
 | "commit X" | commit-changes | TOOLS.md | "commit my changes" |
 | "start session" | session-start | CONVENTIONS.md | "start new session" |
