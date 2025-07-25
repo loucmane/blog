@@ -60,3 +60,25 @@
 **Evidence**: MATRICES.md shows these are requested but missing
 **Alternative**: Add all 10 missing handlers
 **Why chosen**: Focus on universal needs, avoid project-specific complexity
+
+### 2025-07-25: Create Comprehensive Documentation Suite
+**Decision**: Create 7 user-facing documentation guides
+**Rationale**:
+- Users need guidance beyond just handler lists
+- Common patterns and workflows should be documented
+- Troubleshooting guide prevents repeated issues
+- "If you want to X, say Y" format very user-friendly
+**Evidence**: User confusion about how to phrase requests
+**Alternative**: Just improve handler keywords
+**Why chosen**: Comprehensive docs enable self-service and better UX
+
+### 2025-07-25: Documentation Organization Strategy
+**Decision**: Move user docs to templates folder with cross-references
+**Rationale**:
+- Documentation should be part of the template system
+- Cross-references enable natural discovery flow
+- USER-GUIDE.md as primary entry point
+- Integrate with existing files rather than separate
+**Evidence**: Current work folder location not discoverable
+**Alternative**: Create separate docs/ folder
+**Why chosen**: Integration makes docs part of the system, not adjacent to it

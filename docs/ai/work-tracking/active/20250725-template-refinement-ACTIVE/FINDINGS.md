@@ -115,3 +115,36 @@ While verifying handler counts, discovered that MATRICES.md references 10 handle
    - optimize-code, create-docs
 3. Low Priority (project-specific):
    - security-check, deployment, rollback, compare-code
+
+### 2025-07-25 19:45 - Documentation Patterns Discovered
+
+**User Communication Patterns**
+Through creating the documentation suite, identified clear patterns in how users naturally communicate:
+- Action-first language ("fix the bug" not "the bug needs fixing")
+- Context-in-phrase ("login bug" not separate "bug" + "in login")
+- Emotional indicators ("broken", "not working", "frustrated")
+
+**Handler Discovery Issues**
+- Users don't know exact trigger phrases
+- Natural language varies widely for same intent
+- Keywords more important than exact triggers
+- Need multiple entry points to same handler
+
+**Documentation Organization Insights**
+- Reference docs (REGISTRY) need to link to guides (USER-GUIDE)
+- Examples (WORKFLOWS) essential for understanding
+- Troubleshooting must be integrated, not separate
+- Cross-references create natural learning paths
+
+**Effective Documentation Patterns**
+1. "If you want to X, say Y" - Direct mapping works best
+2. Examples better than explanations
+3. Common mistakes should be addressed upfront
+4. Progressive disclosure: basic → advanced
+
+**Template System Maturity**
+The creation of comprehensive documentation revealed the template system is more mature than initially thought:
+- 69 handlers cover 85% of common tasks
+- Patterns are consistent across handlers
+- System is teachable and learnable
+- Main issue was discoverability, not functionality

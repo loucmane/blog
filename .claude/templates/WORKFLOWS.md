@@ -2422,6 +2422,124 @@ This section defines how to handle specific user intents when they're routed fro
 - "find why tests fail" → Deep investigation
 - "why is it slow?" → Performance debugging
 
+### Code Analysis Handlers {#code-analysis-handlers}
+
+#### Handler: explain-code {#explain-code}
+**Triggers**: "how does X work?", "explain this function", "what does Y do?", "explain the Z code"
+**Target Pattern**: Code element to explain (file, function, class, module)
+**Pre-conditions**: 
+- Code element exists
+- Can access source code
+**Process**:
+1. Find the code element using Serena
+2. Read full context (imports, dependencies)
+3. Analyze code structure and flow
+4. Provide clear explanation with:
+   - Purpose and responsibility
+   - How it works step-by-step
+   - Key dependencies and interactions
+   - Example usage if helpful
+5. Reference specific lines with file:line format
+**Success**: Clear understanding achieved
+**Failure**: Explanation without code evidence
+**Examples**:
+- "how does auth work?" → Explain auth system
+- "explain useEffect hook" → Component lifecycle explanation
+- "what does this function do?" → Detailed breakdown
+
+#### Handler: code-review {#code-review}
+**Triggers**: "review my changes", "check this code", "review PR", "code review for X"
+**Target Pattern**: Code to review (changes, PR, specific files)
+**Pre-conditions**: 
+- Code changes exist
+- Can access changed files
+**Process**:
+1. Identify scope of review:
+   - Git changes: use git diff
+   - Specific files: read with line numbers
+   - PR: check all changed files
+2. Route to code-review-template:
+   ```yaml
+   STATE: "I need to review: [scope description]"
+   USE: Load WORKFLOWS.md#code-review-template
+   FOLLOW: Systematic review checklist
+   ```
+3. Check for:
+   - Logic errors and edge cases
+   - Performance issues
+   - Security concerns
+   - Code style and patterns
+   - Test coverage
+4. Provide actionable feedback
+**Success**: Comprehensive review with specific suggestions
+**Failure**: Generic feedback without specifics
+**Examples**:
+- "review my auth changes" → Git diff review
+- "check this component" → File-specific review
+- "review PR #123" → Full PR review
+
+### Performance & Documentation Handlers {#performance-doc-handlers}
+
+#### Handler: optimize-code {#optimize-code}
+**Triggers**: "optimize X", "improve performance", "make Y faster", "speed up Z"
+**Target Pattern**: Code or feature to optimize
+**Pre-conditions**: 
+- Performance issue identified
+- Can measure current performance
+**Process**:
+1. Identify performance bottlenecks:
+   - Time complexity analysis
+   - Space complexity review
+   - Database query patterns
+   - Rendering performance
+2. Measure baseline if possible
+3. Suggest optimizations:
+   - Algorithm improvements
+   - Caching strategies
+   - Query optimization
+   - Lazy loading
+   - Memoization
+4. Implement changes incrementally
+5. Verify improvements
+**Success**: Measurable performance gain
+**Failure**: Premature optimization
+**Examples**:
+- "optimize the search" → Search algorithm improvements
+- "make dashboard faster" → Rendering optimizations
+- "improve API performance" → Query and caching strategies
+
+#### Handler: create-docs {#create-docs}
+**Triggers**: "document X", "write docs for Y", "create documentation", "add README"
+**Target Pattern**: Code or feature to document
+**Pre-conditions**: 
+- Code exists and is stable
+- Understand the audience (users, developers, etc.)
+**Process**:
+1. Determine documentation type:
+   - API documentation
+   - User guide
+   - Developer guide
+   - README file
+   - Inline comments
+2. Analyze what needs documenting:
+   - Public APIs
+   - Configuration options
+   - Usage examples
+   - Architecture overview
+3. Follow project documentation patterns
+4. Include:
+   - Clear descriptions
+   - Code examples
+   - Common use cases
+   - Troubleshooting tips
+5. Place in appropriate location
+**Success**: Clear, helpful documentation created
+**Failure**: Documentation without examples
+**Examples**:
+- "document the API" → API reference docs
+- "write README for auth" → Module documentation
+- "create user guide" → End-user documentation
+
 ## Common Mistakes That Break Sessions {#common-mistakes}
 
 ❌ **DON'T**: Skim previous session and miss completed work  
