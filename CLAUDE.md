@@ -49,6 +49,13 @@
 - Technical domain language about the project
 - Error messages or stack traces in the request
 
+**Layer 4: Protocol Echo** (template enforcement)
+- Before EVERY action: State "Doing X (protocol: check Y template/convention)"
+- Examples: "Creating file (protocol: check CONVENTIONS.md naming rules)"
+- Examples: "Editing CHANGELOG.md (protocol: check reverse chronological order)"
+- Forces template consultation before acting
+- Makes compliance visible to user
+
 **Mode Detection**:
 ```
 Layer 1 match → Use specific handler from REGISTRY.md
