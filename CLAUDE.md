@@ -50,11 +50,11 @@
 - Error messages or stack traces in the request
 
 **Layer 4: Protocol Echo** (template enforcement)
-- Before EVERY action: State "Doing X (protocol: check Y template/convention)"
-- Examples: "Creating file (protocol: check CONVENTIONS.md naming rules)"
-- Examples: "Editing CHANGELOG.md (protocol: check reverse chronological order)"
-- Forces template consultation before acting
-- Makes compliance visible to user
+- Before EVERY action: State "Doing X (protocol: BEHAVIORS.md#specific-anchor)"
+- Must reference exact behavior section anchor
+- Examples: "Creating file TRACKER.md (protocol: BEHAVIORS.md#before-creating-new-files)"
+- Examples: "Editing CHANGELOG.md (protocol: BEHAVIORS.md#before-any-file-edit)"
+- Self-enforcing: Must find anchor to state it, which requires reading the behavior
 
 **Mode Detection**:
 ```

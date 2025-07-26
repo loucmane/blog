@@ -4,6 +4,7 @@ This document contains all automatic behavioral hooks that enforce conventions a
 
 ## 🎯 Quick Navigation {#quick-navigation}
 
+- **[ULTRATHINK Enforcement](#ultrathink-enforcement)** - MANDATORY first response
 - **[Work Tracking](#work-tracking)** - Real-time documentation enforcement
 - **[File Operations](#file-operations)** - Before editing any file
 - **[Development Work](#development-work)** - Before implementing features
@@ -13,7 +14,6 @@ This document contains all automatic behavioral hooks that enforce conventions a
 - **[Session Management](#session-management)** - Compaction detection
 - **[Git Operations](#git-operations)** - Before commits and PRs
 - **[Testing & Validation](#testing--validation)** - Before marking complete
-- **[ULTRATHINK Enforcement](#ultrathink-enforcement)** - MANDATORY first response
 
 ## ULTRATHINK Integration {#ultrathink-integration}
 

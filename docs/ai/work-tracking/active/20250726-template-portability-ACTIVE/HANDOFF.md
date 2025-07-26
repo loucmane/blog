@@ -56,6 +56,13 @@
 ### To Resume
 ```
 Activate project /home/loucmane/dev/javascript/MomsBlog/blog, 
-read memory session_2025-07-26_protocol-and-sessions and SESSION.md.
-Continue with: Refining 3-layer protocol enforcement, then session folder template updates.
+read memory session_2025-07-26_minimal-protocol-enforcement and SESSION.md.
+Continue with: Testing protocol enforcement, then implementing session folder support.
 ```
+
+### Second Compaction Update (Post-protocol refinement)
+- Discovered 3-layer approach was over-engineered
+- Reverted to minimal enhanced protocol echo solution  
+- Total change: ~10 words in CLAUDE.md
+- Protocol echo now requires specific BEHAVIORS.md anchors
+- Ready for next session focus on session folders

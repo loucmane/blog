@@ -2006,7 +2006,7 @@ This section defines how to handle specific user intents when they're routed fro
 **Process**:
 1. Extract feature name from input
 2. Create work folder: `YYYYMMDD-{feature-name}-ACTIVE`
-3. Initialize 6-file structure
+3. Initialize 7-file structure (ALL CAPS)
 4. Update SESSION.md with new work
 5. Create initial todos with TodoWrite
 6. Route to Standard Development Workflow
