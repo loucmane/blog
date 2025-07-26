@@ -17,6 +17,7 @@
   - W = Current work context from active/ (or VOID→workflows for optimal work)
   - H = Handler matching request (or VOID→registry for best practice)
   - Context: W can be folder name, "investigating", "reviewing", "planning" - changes with task focus
+  - In work folders (/work-tracking/active/*): Always required
 - This format triggers [execute-ultrathink](.claude/templates/PATTERNS.md#execute-ultrathink) handler
 - VOID states auto-resolve via template handlers
 
@@ -39,6 +40,7 @@
 - Problems: "not working", "broken", "failing", "issue", "error", "bug", "wrong", "stuck"
 - Questions: "how does", "what's in", "where is", "why does", "can you check"
 - Analysis: "explain this code", "what does this do", "analyze", "review"
+- Work activities: "plan", "discuss", "design", "document", "walk through"
 - File mentions: paths with extensions (.js, .tsx, .py, /src/, /docs/), code in backticks
 
 **Layer 3: Behavioral Triggers** (context-based)
