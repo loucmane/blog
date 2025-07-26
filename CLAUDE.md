@@ -97,6 +97,27 @@ ERROR if development signals detected but checkpoint skipped!
 
 ---
 
+## 📖 Documentation Hub
+
+**For Users:**
+- **User Guide**: `.claude/templates/USER-GUIDE.md` - Start here if you're new
+- **Quick Reference**: "If you want to X, say Y" guide in USER-GUIDE
+- **Common Patterns**: How users ask vs what handlers exist
+- **Troubleshooting**: Solutions to common issues
+
+**For Development:**
+- **Handler Registry**: `.claude/templates/REGISTRY.md` - Complete handler list
+- **Workflows**: `.claude/templates/WORKFLOWS.md` - See handlers in action
+- **Common Workflows**: `.claude/templates/WORKFLOWS.md#common-workflows` - Real examples
+- **Conventions**: `.claude/templates/CONVENTIONS.md` - Standards and rules
+
+**For Extending System:**
+- **Creating Handlers**: `.claude/templates/BUILDING-BETTER.md#creating-handlers` - Handler creation guide
+- **Handler Standards**: `.claude/templates/BUILDING-BETTER.md#handler-documentation-standard` - Documentation format
+- **Improving System**: `.claude/templates/BUILDING-BETTER.md` - Extend and enhance
+
+---
+
 ## MY TEMPLATE NAVIGATION PROTOCOL
 
 When I receive ANY request, I MUST:

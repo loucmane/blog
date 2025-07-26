@@ -7,7 +7,8 @@ This document captures the meta-process of creating and evolving the Claude Temp
 - **[The Journey](#the-journey)** - How the system evolved
 - **[Lessons Learned](#lessons-learned)** - Key insights from development
 - **[Evolution Patterns](#evolution-patterns)** - How to improve the system
-- **[Cross-System Integration Handlers](#cross-system-integration-handlers)** - NEW! Handler interconnections
+- **[Cross-System Integration Handlers](#cross-system-integration-handlers)** - Handler interconnections
+- **[Creating and Managing Handlers](#creating-handlers)** - NEW! Handler creation guides
 - **[Meta-Process](#meta-process-for-meta-process)** - Improving this document
 
 ## 🎯 The Journey {#the-journey}
@@ -357,6 +358,184 @@ These handlers manage interactions between different parts of the template syste
 **Examples**:
 - "switch to bug fix" → Save feature, load bug context
 - "work on PR instead" → Full context swap
+
+## Creating and Managing Handlers {#creating-handlers}
+
+This section contains guides for creating new handlers and maintaining handler documentation standards.
+
+### Handler Documentation Format Standard {#handler-documentation-standard}
+
+Every handler MUST include these 8 sections in this exact order:
+
+```markdown
+#### Handler: handler-name {#handler-name}
+**Triggers**: Comma-separated list of exact phrases that activate this handler
+**Target Pattern**: What the handler extracts or acts upon from user input
+**Pre-conditions**: 
+- Bulleted list of conditions that must be true
+- Before this handler can execute successfully
+**Process**:
+1. Numbered steps the handler follows
+2. Each step should be clear and actionable
+3. Include specific tools or templates used
+4. Show routing logic if applicable
+5. End with concrete outcome
+**Success**: What happens when handler completes successfully
+**Failure**: What happens when handler cannot complete
+**Examples**:
+- Input phrase → Expected outcome
+- Another example → Another outcome
+```
+
+#### Documentation Best Practices {#documentation-best-practices}
+
+**DO:**
+- ✅ Keep triggers realistic - what users actually say
+- ✅ Make process steps concrete and actionable
+- ✅ Include tool names when tools are used
+- ✅ Show routing to templates/other handlers
+- ✅ Make examples diverse to show handler range
+- ✅ Use consistent formatting throughout
+
+**DON'T:**
+- ❌ Make triggers too abstract or technical
+- ❌ Write vague process steps like "analyze the code"
+- ❌ Skip pre-conditions - use "None" if none exist
+- ❌ Write multi-line success/failure descriptions
+- ❌ Use different formatting styles
+
+### Handler Creation Guide {#handler-creation-guide}
+
+#### When to Create a New Handler {#when-to-create}
+
+Create a new handler when:
+- Users repeatedly ask for something with no handler
+- A common development task lacks a direct trigger
+- Multiple users phrase the same need differently
+- A workflow requires a specific entry point
+
+#### Step-by-Step Creation Process {#creation-process}
+
+1. **Identify the Need**
+   - Verify no existing handler covers this need
+   - Confirm users actually request this functionality
+   - Ensure it would be used frequently
+   - Check it's distinct from existing handlers
+
+2. **Choose Handler Location**
+   - **WORKFLOWS.md** - Development tasks, features, implementation
+   - **TOOLS.md** - Tool selection and usage patterns
+   - **CONVENTIONS.md** - Standards, validation, formatting
+   - **PATTERNS.md** - Meta-routing, ambiguous requests
+   - **BUILDING-BETTER.md** - Cross-system integration
+
+3. **Write the Handler**
+   - Follow the standard format exactly
+   - Use realistic trigger phrases
+   - Make process steps actionable
+   - Include clear success/failure conditions
+
+4. **Add to REGISTRY.md**
+   ```markdown
+   #### Handler: `handler-name` {#handler-name}
+   - **Triggers**: Main trigger phrases
+   - **Keywords**: [searchable, terms, discovery, words]
+   - **Process**: One-line summary
+   - **Location**: FILENAME.md#handler-name
+   - **Template**: If routes to template, note here
+   ```
+
+5. **Test the Handler**
+   - Test discovery via triggers
+   - Verify anchor navigation works
+   - Follow process steps manually
+   - Confirm success/failure modes
+
+6. **Integration**
+   - Add cross-references from related handlers
+   - Update routing handlers if needed
+   - Add 5-10 discovery keywords
+   - Document in CHANGELOG.md
+
+#### Common Handler Patterns {#common-patterns}
+
+**Feature Implementation:**
+```markdown
+#### Handler: implement-[feature] {#implement-feature}
+**Triggers**: "implement X", "build Y feature", "add Z functionality"
+**Target Pattern**: Feature specification
+**Pre-conditions**: 
+- Requirements clear
+- Work folder exists
+**Process**:
+1. Break down into tasks
+2. Create todos
+3. Route to development workflow
+**Success**: Feature implemented
+**Failure**: Requirements unclear
+```
+
+**Tool Usage:**
+```markdown
+#### Handler: use-[tool] {#use-tool}
+**Triggers**: "use X for Y", "run Z tool"
+**Target Pattern**: Tool and purpose
+**Pre-conditions**: 
+- Tool available
+- Purpose clear
+**Process**:
+1. Validate tool choice
+2. Set parameters
+3. Execute tool
+4. Process results
+**Success**: Tool completes task
+**Failure**: Wrong tool for job
+```
+
+#### Validation Checklist {#validation-checklist}
+
+Before committing your handler:
+- [ ] Triggers are phrases users actually say
+- [ ] Target pattern is clear
+- [ ] Pre-conditions are verifiable
+- [ ] Process steps are concrete
+- [ ] Success/failure are single lines
+- [ ] Examples show real usage
+- [ ] Added to REGISTRY.md
+- [ ] Keywords aid discovery
+- [ ] Anchors work correctly
+- [ ] No overlap with existing handlers
+- [ ] Statistics updated
+- [ ] Tests pass
+
+### Enhanced Keywords Guide {#enhanced-keywords}
+
+Keywords are critical for handler discovery. When adding keywords to REGISTRY.md:
+
+1. **Think Like a User**
+   - What words would they use?
+   - Include common misspellings
+   - Add domain-specific terms
+   - Consider synonyms
+
+2. **Keyword Categories**
+   - **Action words**: create, build, make, implement
+   - **Problem words**: bug, error, issue, broken
+   - **Technical terms**: component, service, API, hook
+   - **Emotional words**: stuck, confused, help, frustrated
+
+3. **Keyword Density**
+   - Aim for 5-10 keywords per handler
+   - Balance specific and general terms
+   - Include both technical and natural language
+
+4. **Testing Keywords**
+   - Search REGISTRY with each keyword
+   - Verify handler appears in results
+   - Check for keyword conflicts
+   - Update if discovery fails
+
+Remember: Handlers are only useful if users can find them!
 
 ## Key Takeaways {#key-takeaways}
 

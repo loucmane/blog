@@ -2,6 +2,36 @@
 
 ## What Changed
 
+### 2025-07-26
+
+#### Documentation Migration to Template System
+- **Created USER-GUIDE.md**: Merged all 4 user guides into single comprehensive guide
+  - How to Use Claude Effectively (main guide)
+  - Common Search Patterns (natural language mapping)
+  - If You Want To... Say This! (quick reference)
+  - Troubleshooting Guide (problem resolution)
+- **Added to BUILDING-BETTER.md**: Handler documentation section
+  - Handler Documentation Format Standard
+  - Handler Creation Guide
+  - Enhanced Keywords Guide
+- **Added to WORKFLOWS.md**: Common Development Workflows section
+  - 6 complete workflow examples showing handler chaining
+  - Key workflow patterns identified
+  - Success tips for smooth workflows
+- **Updated REGISTRY.md**: Added Essential Documentation section
+  - Links to user guide, workflows, handler creation
+  - Added Documentation to Quick Navigation
+- **Updated CLAUDE.md**: Added Documentation Hub section
+  - Organized by user type (Users, Development, Extending)
+  - Clear navigation to all documentation
+
+#### Cross-References Implemented
+- USER-GUIDE → REGISTRY, WORKFLOWS, BUILDING-BETTER, CONVENTIONS
+- BUILDING-BETTER → USER-GUIDE (for help)
+- WORKFLOWS → USER-GUIDE (for basics)
+- REGISTRY → All documentation files
+- Bidirectional links where appropriate
+
 ### 2025-07-25
 
 #### Created

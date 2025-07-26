@@ -12,8 +12,16 @@ Complete index of all handlers, templates, patterns, and conventions across the 
 - **Patterns**: Meta-routing logic for ambiguous requests
 - **Behaviors**: Automatic enforcement hooks
 
+## 📚 Essential Documentation
+
+- **New to Claude?** → Start with [USER-GUIDE.md](USER-GUIDE.md)
+- **Common workflows?** → See [WORKFLOWS.md#common-workflows](WORKFLOWS.md#common-workflows)
+- **Creating handlers?** → See [BUILDING-BETTER.md#creating-handlers](BUILDING-BETTER.md#creating-handlers)
+- **Having issues?** → Check [USER-GUIDE.md#troubleshooting-guide](USER-GUIDE.md#troubleshooting-guide)
+
 ## 🎯 Quick Navigation
 
+- **[Documentation](#essential-documentation)** - User guides and tutorials 📖
 - [Navigation Keywords](#navigation-keywords) - Keyword to handler mapping
 - [Intent Handlers](#intent-handlers) - User request processing (69 handlers ✅)
 - [Behavioral Templates](#behavioral-templates) - Step-by-step guides (6 templates)
