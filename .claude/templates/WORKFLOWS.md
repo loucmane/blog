@@ -4,6 +4,7 @@ This document contains all workflow patterns, session management, and orchestrat
 
 ## 🎯 Quick Navigation {#quick-navigation}
 
+- **[ULTRATHINK System](#ultrathink-system)** - 🧠 MANDATORY foundation for all workflows
 - **[Universal Flight Protocol](#universal-flight-protocol)** - MANDATORY pre/during/post flight checks
 - **[Task Management](#task-management)** - TodoWrite/TodoRead patterns
 - **[Standard Development Workflow](#standard-development-workflow)** - Complete workflow
@@ -17,6 +18,77 @@ This document contains all workflow patterns, session management, and orchestrat
 - **[Behavioral Templates](#behavioral-templates)** - Pre-selected tool sequences for common tasks
 - **[Intent Handlers](#intent-handlers)** - NEW! Protocol navigation handlers for user intents
 - **[Common Mistakes](#common-mistakes-that-break-sessions)** - What to avoid
+
+## 🧠 ULTRATHINK System {#ultrathink-system}
+
+**CRITICAL: This is the foundation of all workflows. Every request must start here.**
+
+The ULTRATHINK system ensures proper context and handler selection before any action. It is mandatory and cannot be bypassed.
+
+### ULTRATHINK Format {#ultrathink-format}
+
+Every development request MUST begin with:
+```
+Let me ultrathink about this... [S:X|W:Y|H:Z]
+```
+
+Where:
+- **S** = Session ID from SESSION.md (format: YYYYMMDD)
+- **W** = Current work context from active/ folders
+- **H** = Handler matching the request
+
+### VOID Resolution Handlers {#void-resolution}
+
+When any value is VOID, these handlers resolve it:
+
+#### Handler: resolve-work-void {#resolve-work-void}
+**Triggers**: "W = VOID", "no work context", "work unclear", "VOID→workflows"
+**Target Pattern**: Missing work context in ULTRATHINK
+**Pre-conditions**: 
+- ULTRATHINK attempted
+- W value is VOID
+- Active work folders accessible
+**Process**:
+1. Analyze user request to determine domain:
+   - Implementation/feature → Development work
+   - Bug/fix/error → Problem solving
+   - Search/find/explore → Investigation
+   - Review/check → Review work
+   - Plan/design → Planning work
+2. Check active work folders:
+   - List all folders in work-tracking/active/
+   - Match request domain to folder names
+   - If direct match → W = folder-name
+3. Handle special states:
+   - Search/analysis requests → W = "investigating"
+   - Code/PR reviews → W = "reviewing"
+   - Architecture/design → W = "planning"
+4. If no match found:
+   - Output: "No active work context for this request"
+   - Route to appropriate handler:
+     - New feature → start-new-work
+     - Bug fix → start-new-work with bug context
+     - General question → W = "investigating"
+5. Return valid W value
+**Success**: Valid work context obtained
+**Failure**: Cannot determine context
+**Examples**:
+- "Fix login bug" with no bug folder → Routes to start-new-work
+- "Find all getUserData calls" → W = "investigating"
+- "Plan caching strategy" → W = "planning"
+- "Continue with tests" + test folder exists → W = "test-implementation"
+
+### ULTRATHINK Integration {#ultrathink-integration}
+
+This file participates in the ULTRATHINK system:
+
+#### VOID Resolution
+- **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+
+#### Handler Requirements
+All handlers in this file expect valid [S:W:H] context before execution. Any handler called with VOID values must resolve them first.
 
 ## Task Management {#task-management}
 

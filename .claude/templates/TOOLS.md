@@ -47,6 +47,20 @@ When you catch yourself thinking/saying:
 
 ---
 
+## ULTRATHINK Integration {#ultrathink-integration}
+
+This file participates in the ULTRATHINK system:
+
+### VOID Resolution
+- **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+
+### Handler Requirements
+All tool selection handlers in this file expect valid [S:W:H] context before execution. The tool router MUST verify context before proceeding.
+
+---
+
 ## 🚦 DECISION FUNNEL - Follow the Questions!
 
 ### Q1: What type of operation?

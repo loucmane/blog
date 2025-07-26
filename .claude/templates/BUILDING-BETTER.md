@@ -11,6 +11,18 @@ This document captures the meta-process of creating and evolving the Claude Temp
 - **[Creating and Managing Handlers](#creating-handlers)** - NEW! Handler creation guides
 - **[Meta-Process](#meta-process-for-meta-process)** - Improving this document
 
+## ULTRATHINK Integration {#ultrathink-integration}
+
+This file participates in the ULTRATHINK system:
+
+### VOID Resolution
+- **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+
+### Integration Handler Requirements
+Cross-system integration handlers in this file manage transitions between different parts of the template system, ensuring valid [S:W:H] context is maintained.
+
 ## 🎯 The Journey {#the-journey}
 
 ### From Chaos to Clarity {#from-chaos-to-clarity}

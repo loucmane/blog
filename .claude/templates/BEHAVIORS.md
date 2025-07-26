@@ -13,6 +13,53 @@ This document contains all automatic behavioral hooks that enforce conventions a
 - **[Session Management](#session-management)** - Compaction detection
 - **[Git Operations](#git-operations)** - Before commits and PRs
 - **[Testing & Validation](#testing--validation)** - Before marking complete
+- **[ULTRATHINK Enforcement](#ultrathink-enforcement)** - MANDATORY first response
+
+## ULTRATHINK Integration {#ultrathink-integration}
+
+This file participates in the ULTRATHINK system:
+
+### VOID Resolution
+- **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+
+### Behavioral Enforcement
+This file contains the MANDATORY enforcement hooks that ensure ULTRATHINK is used before any action.
+
+## ULTRATHINK Enforcement {#ultrathink-enforcement}
+
+### Before ANY Development Request {#before-any-development-request}
+```
+TRIGGER: Any development signal detected
+ACTION: Output ULTRATHINK format
+BLOCKS: Cannot proceed without valid [S:W:H]
+PROCESS:
+1. First line MUST be: "Let me ultrathink about this... [S:X|W:Y|H:Z]"
+2. Determine each value:
+   - S: Check date and SESSION.md
+   - W: Analyze request and active folders
+   - H: Find matching handler
+3. If any value is VOID:
+   - MUST resolve using appropriate handler
+   - Cannot continue until resolved
+4. Only after all valid → Continue to action
+ERROR: Development request without ULTRATHINK
+```
+
+### Common ULTRATHINK Violations {#common-ultrathink-violations}
+1. **Missing ULTRATHINK** → Stop immediately and add
+2. **Old session ID** → S = VOID → resolve-session-void
+3. **No work context** → W = VOID → resolve-work-void  
+4. **Vague handler** → H = VOID → resolve-handler-void
+5. **Skipping to action** → Return to ULTRATHINK first
+
+### Why This Gate Exists {#why-ultrathink-gate-exists}
+- Forces context awareness before action
+- Prevents stale session references
+- Ensures proper work organization
+- Makes handler selection explicit
+- Creates audit trail via [S:W:H]
 
 ## Work Tracking {#work-tracking}
 

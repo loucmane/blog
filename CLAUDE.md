@@ -17,6 +17,8 @@
   - W = Current work context from active/ (or VOID→workflows for optimal work)
   - H = Handler matching request (or VOID→registry for best practice)
   - Context: W can be folder name, "investigating", "reviewing", "planning" - changes with task focus
+- This format triggers [execute-ultrathink](.claude/templates/PATTERNS.md#execute-ultrathink) handler
+- VOID states auto-resolve via template handlers
 
 ## 🎯 CONTEXT-AWARE ACTIVATION
 

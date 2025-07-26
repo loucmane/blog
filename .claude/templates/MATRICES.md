@@ -10,6 +10,18 @@ This document contains comprehensive decision matrices for quick, accurate routi
 - **[Context → Mode Matrix](#context--mode-matrix)** - When to activate which mode
 - **[Error → Recovery Matrix](#error--recovery-matrix)** - What to do when things fail
 
+## ULTRATHINK Integration {#ultrathink-integration}
+
+This file participates in the ULTRATHINK system:
+
+### VOID Resolution
+- **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+
+### Matrix Usage
+These matrices provide quick lookups for handler selection. When H = VOID, use the Request Type → Handler Matrix to find the appropriate handler based on the user's request pattern.
+
 ## Request Type → Handler Matrix {#request-type-handler-matrix}
 
 | Request Pattern | Handler | Location | Example |

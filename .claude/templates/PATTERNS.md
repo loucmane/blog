@@ -8,6 +8,56 @@ Meta-patterns that route to appropriate handlers in template files.
 3. Load pattern's routing rules
 4. Delegate to referenced handlers
 
+## ULTRATHINK Integration {#ultrathink-integration}
+
+This file participates in the ULTRATHINK system:
+
+### VOID Resolution
+- **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+
+### Pattern Requirements
+Meta-patterns in this file help resolve ambiguous requests. When H = VOID due to unclear intent, these patterns help identify the appropriate handler.
+
+## Core Patterns {#core-patterns}
+
+#### Pattern: execute-ultrathink {#execute-ultrathink}
+**Triggers**: Start of ANY development request
+**Pre-conditions**: 
+- Development signal detected in user request
+- No ULTRATHINK output yet
+**Process**:
+1. Output: "Let me ultrathink about this... [S:X|W:Y|H:Z]"
+2. Determine S (Session):
+   - Run `date '+%Y%m%d'` for today's date
+   - Check SESSION.md for matching entry
+   - If no match → S = VOID→conventions
+3. Determine W (Work context):
+   - Analyze request type and domain
+   - Check active work folders
+   - Apply W VOID rules:
+     - Direct folder match → W = folder-name
+     - Search/analysis → W = "investigating"
+     - Review request → W = "reviewing"
+     - Planning → W = "planning"
+     - No match → W = VOID→workflows
+4. Determine H (Handler):
+   - Extract keywords from request
+   - Search REGISTRY for matches
+   - If unclear → H = VOID→registry
+5. For each VOID value:
+   - Route to appropriate resolver
+   - Cannot proceed until resolved
+6. Output final valid [S:W:H]
+7. Continue to matched handler
+**Success**: Valid [S:W:H] obtained and handler executed
+**Failure**: Cannot resolve one or more values
+**Examples**:
+- "Create a login component" → [S:20250726|W:auth-feature|H:create-component]
+- "Fix the bug" → [S:20250726|W:VOID→workflows|H:fix-bug]
+- First request of day → [S:VOID→conventions|W:?|H:?]
+
 ## Work Patterns {#work-patterns}
 
 #### Pattern: work-activity {#work-activity}

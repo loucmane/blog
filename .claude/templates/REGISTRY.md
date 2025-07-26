@@ -22,6 +22,7 @@ Complete index of all handlers, templates, patterns, and conventions across the 
 ## 🎯 Quick Navigation
 
 - **[Documentation](#essential-documentation)** - User guides and tutorials 📖
+- **[ULTRATHINK Resolution](#ultrathink-resolution)** - 🧠 VOID state handlers
 - [Navigation Keywords](#navigation-keywords) - Keyword to handler mapping
 - [Intent Handlers](#intent-handlers) - User request processing (69 handlers ✅)
 - [Behavioral Templates](#behavioral-templates) - Step-by-step guides (6 templates)
@@ -30,6 +31,46 @@ Complete index of all handlers, templates, patterns, and conventions across the 
 - [Decision Matrices](#decision-matrices) - Quick lookup tables (5 matrices)
 - [Special Files](#special-files) - File-specific rules
 - [Common Commands](#common-commands) - Copy-paste commands
+
+## 🧠 ULTRATHINK Resolution {#ultrathink-resolution}
+
+**CRITICAL: These handlers resolve VOID states in the ULTRATHINK system.**
+
+#### Handler: resolve-handler-void {#resolve-handler-void}
+**Triggers**: "H = VOID", "no handler found", "handler unclear", "VOID→registry"
+**Target Pattern**: Missing handler match in ULTRATHINK
+**Pre-conditions**: 
+- ULTRATHINK attempted
+- H value is VOID
+- REGISTRY accessible
+**Process**:
+1. Extract action keywords from user request:
+   - Verbs: create, fix, search, test, etc.
+   - Nouns: component, bug, function, etc.
+   - Context: error messages, file names
+2. Search Navigation Keywords table:
+   - Match keywords to handlers
+   - Score by relevance
+3. If multiple matches:
+   - List top 3 options
+   - Ask: "Did you mean: [handler1], [handler2], or [handler3]?"
+4. If no matches:
+   - Search all handler triggers
+   - Suggest closest matches
+   - Or ask: "What specifically would you like to do?"
+5. Return valid H value
+**Success**: Handler identified
+**Failure**: No handler matches request
+**Examples**:
+- "Make a component" → Finds create-component
+- "Do something with code" → Too vague, asks for clarification
+- "Fix the broken thing" → Suggests fix-bug or debug-issue
+
+### ULTRATHINK Integration
+This file participates in the ULTRATHINK system:
+- **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](#resolve-handler-void)
 
 ## 🔍 Navigation Keywords
 

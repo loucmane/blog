@@ -33,6 +33,18 @@ This document contains all coding conventions, communication patterns, and decis
 - **[Convention Handlers](#convention-handlers)** - NEW! Protocol navigation handlers
 - **[Common Convention Violations](#common-convention-violations)** - Mistakes to avoid
 
+## ULTRATHINK Integration {#ultrathink-integration}
+
+This file participates in the ULTRATHINK system:
+
+### VOID Resolution
+- **S = VOID** → See [resolve-session-void](#resolve-session-void)
+- **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
+- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+
+### Handler Requirements
+All convention handlers expect valid [S:W:H] context. The resolve-session-void handler in this file specifically handles S = VOID cases.
+
 ## 🚫 VIOLATION TRAPS - If You're Here, You're About to Make a Mistake!
 
 ### About to type a timestamp? {#timestamp-trap}
@@ -676,7 +688,7 @@ Work Tracking Folders:
   
   Folder Structure:
     - plans/            # Detailed plans, roadmaps
-    - design/           # DDII documents, analysis, architecture
+    - designs/          # DDII documents, analysis, architecture
     - code/             # Code attempts (what worked/failed)
     - archive/          # Old versions with .old suffix
   
@@ -1361,6 +1373,32 @@ This section defines how to handle convention enforcement requests when routed f
 **Examples**:
 - "start new session" → Create full session structure
 - "begin work on auth" → Session with auth task
+
+#### Handler: resolve-session-void {#resolve-session-void}
+**Triggers**: "S = VOID", "no session found", "session unclear", "VOID→conventions"
+**Target Pattern**: Missing session context in ULTRATHINK
+**Pre-conditions**: 
+- ULTRATHINK attempted
+- S value is VOID
+- SESSION.md accessible
+**Process**:
+1. Run `date '+%Y%m%d'` for today's date
+2. Check SESSION.md for matching entry
+3. If no entry for today:
+   - Output: "No session found for today"
+   - Route to session-start handler
+   - Wait for session creation
+4. If entry exists:
+   - Extract session date in YYYYMMDD format
+   - Verify matches today's date
+   - Return valid S value
+5. Update ULTRATHINK with resolved value
+**Success**: Valid session ID obtained
+**Failure**: Cannot determine session
+**Examples**:
+- ULTRATHINK "[S:VOID|W:testing|H:fix-bug]" → Resolve S first
+- First request of day → Routes to session-start
+- After compaction → Create fresh session
 
 ### Documentation Handlers {#doc-handlers}
 
