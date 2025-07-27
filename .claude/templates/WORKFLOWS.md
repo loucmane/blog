@@ -29,13 +29,19 @@ The ULTRATHINK system ensures proper context and handler selection before any ac
 
 Every development request MUST begin with:
 ```
-Let me ultrathink about this... [S:X|W:Y|H:Z]
+Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]
 ```
 
 Where:
 - **S** = Session ID from SESSION.md (format: YYYYMMDD)
 - **W** = Current work context from active/ folders
 - **H** = Handler matching the request
+- **E** = Evidence of handler execution
+  - Format: steps/"success criteria quote"
+  - Example: E:5/"Feature implemented"
+  - No criteria: E:3/None
+  - Conditional: E:4/"varies"
+  - Must match handler's actual step count and success criteria
 
 ### VOID Resolution Handlers {#void-resolution}
 

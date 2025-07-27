@@ -33,13 +33,14 @@ This file contains the MANDATORY enforcement hooks that ensure ULTRATHINK is use
 ```
 TRIGGER: Any development signal detected
 ACTION: Output ULTRATHINK format
-BLOCKS: Cannot proceed without valid [S:W:H]
+BLOCKS: Cannot proceed without valid [S:W:H:E]
 PROCESS:
-1. First line MUST be: "Let me ultrathink about this... [S:X|W:Y|H:Z]"
+1. First line MUST be: "Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]"
 2. Determine each value:
    - S: Check date and SESSION.md
    - W: Analyze request and active folders
    - H: Find matching handler
+   - E: Count handler steps and find success criteria
 3. If any value is VOID:
    - MUST resolve using appropriate handler
    - Cannot continue until resolved

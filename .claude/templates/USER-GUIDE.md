@@ -24,18 +24,19 @@ This guide helps you get the most out of Claude for software development. Think 
 
 You'll see Claude start responses with something like:
 ```
-Let me ultrathink about this... [S:20250726|W:feature-auth|H:create-component]
+Let me ultrathink about this... [S:20250726|W:feature-auth|H:create-component|E:3/"Component created"]
 ```
 
 This is the ULTRATHINK system ensuring Claude has proper context before acting:
 - **S** = Session ID (today's date)
 - **W** = Work context (what Claude is working on)
 - **H** = Handler (which workflow Claude will use)
+- **E** = Evidence (proves handler was read and executed)
 
 ### When You'll See VOID
 Sometimes you'll see:
 ```
-Let me ultrathink about this... [S:VOID→conventions|W:VOID→workflows|H:VOID→registry]
+Let me ultrathink about this... [S:VOID→conventions|W:VOID→workflows|H:VOID→registry|E:searching]
 ```
 
 This means Claude needs to establish context first. The arrows (→) show where Claude will look to resolve each VOID:

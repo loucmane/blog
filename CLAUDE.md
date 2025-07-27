@@ -12,14 +12,28 @@
 - This ensures thorough analysis even for 'simple' tasks
 - Hidden complexity often emerges only through deep thinking
 - Better to overthink than underthink - there's no penalty for being thorough
-- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z]" before any implementation
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]" before any implementation
   - S = Today's session ID from SESSION.md (or VOID→conventions for proper session)
   - W = Current work context from active/ (or VOID→workflows for optimal work)
-  - H = Handler matching request (or VOID→registry for best practice)
+  - H = Handler matching request (or VOID→registry for best practice) 
+  - E = Evidence (step count/key:"most critical step") proving handler comprehension
+  - **Handler Search Protocol**: When H unknown, MUST: 1) State "Searching for handler...", 2) Show search command + results, 3) Use H:searching|E:pending if unsure
+  - **MANDATORY**: First ULTRATHINK must use H:searching|E:pending, then show search, then final ULTRATHINK with found handler
   - Context: W can be folder name, "investigating", "reviewing", "planning" - changes with task focus
   - In work folders (/work-tracking/active/*): Always required
 - This format triggers [execute-ultrathink](.claude/templates/PATTERNS.md#execute-ultrathink) handler
 - VOID states auto-resolve via template handlers
+
+**PRE-ULTRATHINK PROTOCOL** (Prevents false compliance):
+- **NEVER** output ULTRATHINK as first response to any development request
+- **REQUIRED SEQUENCE**:
+  1. First output: "Searching for appropriate handler for [request type]..."
+  2. Show actual search command and 1-2 results
+  3. **HANDLER COMPREHENSION**: "Reading handler: [name]" then "Key steps: [list 2-3 critical steps from Process]"
+  4. Output: "Let me ultrathink about this... [S:X|W:Y|H:searching|E:pending]"
+  5. After comprehension, final: "Let me ultrathink about this... [S:X|W:Y|H:found-handler|E:n/key:"most critical step"]"
+- **Why**: Comprehension check forces actual handler reading - can't list steps without reading them
+- **Violation**: Wrong step count, missing key steps, or generic descriptions = didn't read handler
 
 ## 🎯 CONTEXT-AWARE ACTIVATION
 
@@ -68,45 +82,46 @@ Show routing → Display [CTS] decisions when requested
 **Uncertainty Resolution**:
 If triggers are ambiguous, ask: "Are you asking about code/development work, or just general information?"
 
-**🛑 DEVELOPMENT MODE CHECKPOINT - NARRATIVE EXECUTION**
+## 🎯 DEVELOPMENT MODE EXECUTION
 
-Initiating development response for "[_____]"...
+When development mode is triggered, I follow the S:W:H:E format:
 
-**Chapter 0: Ultrathink Analysis**
-"Let me ultrathink about this request... [Deep analysis of the request, potential approaches, hidden complexities, and optimal strategy before proceeding]"
+**S:W:H:E Format**
+```
+Let me ultrathink about this... [S:20250127|W:work-tracking|H:update-tracker|E:5/"Progress recorded"]
+```
 
-**Chapter 1: Handler Discovery**
-"I need to find the appropriate handler for this request. Searching REGISTRY.md for '[search_term]'... Found handler '[handler_name]' with anchor {#[exact_anchor]} in [template_file].md. The handler's triggers are: '[exact_triggers_quote]' and its first process step is: '[exact_first_20_words_of_step_1]'."
+**Field Definitions**
+- **S**: Session ID from SESSION.md (or VOID→conventions)
+- **W**: Work context (folder/activity or VOID→workflows)  
+- **H**: Handler name (or searching/VOID→registry)
+- **E**: Evidence (steps/"success criteria")
 
-**Chapter 2: Understanding Requirements**  
-"The handler specifies [___] total steps. Let me quote the exact requirements with their pre-conditions:
-- Pre-conditions: '[exact_preconditions_quote_or_None]'
-- Step 1: '[exact_quote_from_handler_including_punctuation]'
-- Step 2: '[exact_quote_from_handler_including_punctuation]'
-[continue for all steps]
-- Success criteria: '[exact_success_criteria_quote]'"
+**Handler Validation Required**
+Never use a handler name without finding it first:
+- Unsure: Use H:searching|E:pending
+- Not found: Use H:VOID→registry|E:searching
+- Always show: "Found: [handler] ([template]#[anchor])"
+- Execute with real handler in new ULTRATHINK
 
-**Chapter 3: Progressive Execution**
-"Beginning implementation following the handler's instructions...
+**Evidence-Based Execution**
+After ULTRATHINK, execute with inline evidence:
+- File paths for all changes
+- Line numbers for edits
+- Operation summaries for commands
+- Error messages if encountered
 
-Entering Step 1: '[exact_step_quote]'
-→ Executing: [specific_tool_name] with [exact_parameters]
-→ Evidence: [FOR SEARCHES: exact matched lines | FOR EDITS: old→new diff | FOR READS: line numbers | FOR BASH: exact output]
-→ Result: [Success/Failed because of specific_tool_output]
-Exiting Step 1 with: [concrete_outcome_not_generic]
+**Completion Status**
+- ✓ Completed: [handler] ([X] steps)
+- ⚠️ Interrupted: [handler] ([Y] of [X] steps)
+- ❌ Failed: [handler] (error at step [Y])
 
-[Continue for all steps with real evidence]"
-
-**Chapter 4: Validation**
-"Confirming all [___] steps from handler '[_____]' have been completed:
-- Total steps required: [___]
-- Steps successfully completed: [___]
-- Handler success criteria: '[_____quote success criteria_____]'
-- Criteria met: [YES/NO because _____]"
-
-NARRATIVE BROKEN if any chapter incomplete or incoherent!
-
-ERROR if development signals detected but checkpoint skipped!
+**Special E Field Values**
+- E:pending - During handler search only
+- E:steps/None - No success criteria
+- E:steps/"varies" - Conditional success
+- E:steps/redirect - Routing handlers
+- E:steps/"interactive" - User input required
 
 ---
 

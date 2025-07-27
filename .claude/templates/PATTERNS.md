@@ -28,7 +28,7 @@ Meta-patterns in this file help resolve ambiguous requests. When H = VOID due to
 - Development signal detected in user request
 - No ULTRATHINK output yet
 **Process**:
-1. Output: "Let me ultrathink about this... [S:X|W:Y|H:Z]"
+1. Output: "Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]"
 2. Determine S (Session):
    - Run `date '+%Y%m%d'` for today's date
    - Check SESSION.md for matching entry
