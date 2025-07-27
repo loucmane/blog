@@ -76,24 +76,26 @@ Initiating development response for "[_____]"...
 "Let me ultrathink about this request... [Deep analysis of the request, potential approaches, hidden complexities, and optimal strategy before proceeding]"
 
 **Chapter 1: Handler Discovery**
-"I need to find the appropriate handler for this request. Searching... Found handler '[_____]' at line [___] of [_____].md. The handler's Process section begins with: '[_____first 10 words_____]' confirming this is the correct handler."
+"I need to find the appropriate handler for this request. Searching REGISTRY.md for '[search_term]'... Found handler '[handler_name]' with anchor {#[exact_anchor]} in [template_file].md. The handler's triggers are: '[exact_triggers_quote]' and its first process step is: '[exact_first_20_words_of_step_1]'."
 
 **Chapter 2: Understanding Requirements**  
-"The handler specifies [___] total steps. Let me quote the exact requirements:
-- Step 1: '[_____exact quote from handler_____]'
-- Step 2: '[_____exact quote from handler_____]'
-[continue for all steps]"
+"The handler specifies [___] total steps. Let me quote the exact requirements with their pre-conditions:
+- Pre-conditions: '[exact_preconditions_quote_or_None]'
+- Step 1: '[exact_quote_from_handler_including_punctuation]'
+- Step 2: '[exact_quote_from_handler_including_punctuation]'
+[continue for all steps]
+- Success criteria: '[exact_success_criteria_quote]'"
 
 **Chapter 3: Progressive Execution**
 "Beginning implementation following the handler's instructions...
 
-Entering Step 1: '[_____handler quote_____]'
-→ Executing: [_____specific action description_____]
-→ Evidence: [_____specific evidence based on action type_____]
-→ Result: [Success/Failed because _____]
-Exiting Step 1 with: [_____outcome_____]
+Entering Step 1: '[exact_step_quote]'
+→ Executing: [specific_tool_name] with [exact_parameters]
+→ Evidence: [FOR SEARCHES: exact matched lines | FOR EDITS: old→new diff | FOR READS: line numbers | FOR BASH: exact output]
+→ Result: [Success/Failed because of specific_tool_output]
+Exiting Step 1 with: [concrete_outcome_not_generic]
 
-[Continue for all steps]"
+[Continue for all steps with real evidence]"
 
 **Chapter 4: Validation**
 "Confirming all [___] steps from handler '[_____]' have been completed:

@@ -1,6 +1,9 @@
 # Memory References
 
 ## Related Sessions
+- session_2025-07-27_swhe-format-design - S:W:H:E format design complete
+- session_2025-07-27_checkpoint-optimization - Initial checkpoint optimization
+- session_2025-07-26_minimal-protocol-enforcement - Protocol theater discovery
 - session_2025-07-26_ultrathink_improvements - ULTRATHINK work detection improvements
 - session_2025-07-26_documentation-migration-complete - Template documentation migration
 - session_2025-07-25_template-refinement-complete - 69 handlers refined

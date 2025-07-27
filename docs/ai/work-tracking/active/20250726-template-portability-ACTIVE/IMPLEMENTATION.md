@@ -23,8 +23,9 @@
 4. Test existing workflows → Should work unchanged
 
 ## Files Created
-- `/designs/` - 4 design documents exploring approaches
-- `/code/` - 5 implementation examples (not all used)
+- `/designs/` - 8 design documents (including DDIIs)
+- `/code/` - 8 implementation examples  
+- `/plans/` - 2 planning documents
 - Core tracking files for work folder
 
 ## Integration Points
@@ -126,3 +127,59 @@ Make the Claude Template System project-agnostic and idempotent for use across a
 3. Project detection (how to know what type of project)
 4. Default configurations per project type
 5. Distribution mechanism
+
+---
+
+## S:W:H:E Format Implementation Plan (2025-07-27)
+
+### What to Implement
+Replace the verbose Development Mode Checkpoint in CLAUDE.md with streamlined S:W:H:E format.
+
+### Implementation Steps
+
+#### 1. Remove 4-Chapter Narrative Structure
+Find and delete the entire section containing:
+- Chapter 0: Ultrathink Analysis
+- Chapter 1: Handler Discovery
+- Chapter 2: Understanding Requirements
+- Chapter 3: Progressive Execution
+- Chapter 4: Validation
+
+#### 2. Add S:W:H:E Format Documentation
+Add explanation of the new format:
+```markdown
+## 🎯 DEVELOPMENT MODE EXECUTION
+
+When triggered for development work, I use the S:W:H:E format:
+
+Let me ultrathink about this... [S:20250127|W:work-tracking|H:update-tracker|E:5/"Progress recorded"]
+
+Where:
+- S: Session ID from SESSION.md
+- W: Work context (folder/activity)
+- H: Handler name from templates
+- E: Evidence (steps/"success criteria")
+
+Then execute naturally with inline evidence:
+- Include line numbers for edits
+- Show file paths for changes
+- Use natural language flow
+
+End with brief confirmation:
+✓ Task completed per handler guidelines.
+```
+
+#### 3. Update Examples
+Replace any examples showing the old 4-chapter format with new S:W:H:E examples.
+
+#### 4. Test Scenarios
+- Simple file edit
+- Complex multi-file operation
+- Handler with no success criteria
+- Redirect handler
+- Work without clear handler
+
+### Files to Update
+- [x] IMPLEMENTATION.md - Added this plan
+- [ ] CLAUDE.md - Main implementation
+- [ ] Examples in templates (if any reference old format)
