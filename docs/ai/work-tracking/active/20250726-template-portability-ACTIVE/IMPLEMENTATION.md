@@ -179,7 +179,112 @@ Replace any examples showing the old 4-chapter format with new S:W:H:E examples.
 - Redirect handler
 - Work without clear handler
 
-### Files to Update
-- [x] IMPLEMENTATION.md - Added this plan
-- [ ] CLAUDE.md - Main implementation
-- [ ] Examples in templates (if any reference old format)
+### Exact Line-by-Line Changes in CLAUDE.md
+
+**Current Structure Found:**
+- Lines 71-110: The 4-chapter narrative section to REMOVE
+- Line 71: `**🛑 DEVELOPMENT MODE CHECKPOINT - NARRATIVE EXECUTION**`
+- Lines 75-77: Chapter 0
+- Lines 78-79: Chapter 1  
+- Lines 81-87: Chapter 2
+- Lines 89-98: Chapter 3
+- Lines 100-105: Chapter 4
+- Lines 107-109: Error messages
+- Line 111: `---` separator
+
+**What to REMOVE (Lines 71-110):**
+```markdown
+**🛑 DEVELOPMENT MODE CHECKPOINT - NARRATIVE EXECUTION**
+
+Initiating development response for "[_____]"...
+
+[... entire 4-chapter structure ...]
+
+ERROR if development signals detected but checkpoint skipped!
+```
+
+**What to ADD (Insert at line 71, replacing removed content):**
+```markdown
+## 🎯 DEVELOPMENT MODE EXECUTION
+
+When development mode is triggered, I follow a streamlined execution format:
+
+**S:W:H:E Format in ULTRATHINK**
+```
+Let me ultrathink about this... [S:20250127|W:work-tracking|H:update-tracker|E:5/"Progress recorded"]
+```
+
+Where:
+- **S**: Session ID from SESSION.md
+- **W**: Work context (folder name or activity type)
+- **H**: Handler name found in templates
+- **E**: Evidence (step count/"success criteria quote")
+
+**Natural Execution Flow**
+After the ULTRATHINK line, I execute naturally with inline evidence:
+- "Updating TRACKER.md at lines 45-52..."
+- "Created new file at /designs/solution.md"
+- "Fixed error in component.tsx by changing..."
+
+**Completion Confirmation**
+End with a brief summary:
+✓ Work tracking files updated per handler guidelines.
+```
+
+### Template Files That Need S:W:H → S:W:H:E Updates
+
+**Found these files with S:X|W:Y|H:Z format:**
+
+1. **PATTERNS.md** (Line 31)
+   - Current: `"Let me ultrathink about this... [S:X|W:Y|H:Z]"`
+   - Update to: `"Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]"`
+
+2. **BEHAVIORS.md** (Line 38)
+   - Current: `"Let me ultrathink about this... [S:X|W:Y|H:Z]"`
+   - Update to: `"Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]"`
+
+3. **WORKFLOWS.md** (Lines 32, 36-38)
+   - Current: Shows S:W:H format documentation
+   - Add: E field documentation after H field
+
+4. **USER-GUIDE.md** (Lines 27, 38)
+   - Current examples: `[S:20250726|W:feature-auth|H:create-component]`
+   - Update to show E field in examples
+
+### Additional Checks Done
+- ✓ No references to "NARRATIVE EXECUTION"
+- ✓ No references to "Handler Discovery"
+- ✓ No references to "Progressive Execution"
+- ✓ No references to "Development Mode Checkpoint"
+- ✓ No references to "Chapter 0-4" structure
+- ✓ No references to "Entering Step" or "Exiting Step"
+
+### Complete Implementation Plan
+
+**Files to Update (in order):**
+
+1. **CLAUDE.md** (Primary change)
+   - Remove lines 71-110 (4-chapter narrative)
+   - Add S:W:H:E format documentation
+   - Net reduction: ~15 lines
+
+2. **PATTERNS.md** 
+   - Update line 31 to include E field
+
+3. **BEHAVIORS.md**
+   - Update line 38 to include E field
+   - Update line 36 comment about [S:W:H] to [S:W:H:E]
+
+4. **WORKFLOWS.md**
+   - Update lines 32-38 to document E field
+   - Add E field explanation
+
+5. **USER-GUIDE.md**
+   - Update example on line 27
+   - Update example on line 38
+   - Add brief explanation of E field
+
+**Total Changes:**
+- 1 major file update (CLAUDE.md)
+- 4 template files need E field additions
+- All changes maintain backward compatibility

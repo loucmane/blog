@@ -1,6 +1,7 @@
 # Memory References
 
 ## Related Sessions
+- session_2025-07-27_swhe-implementation-refinement - Implementation refinements and edge cases
 - session_2025-07-27_swhe-format-design - S:W:H:E format design complete
 - session_2025-07-27_checkpoint-optimization - Initial checkpoint optimization
 - session_2025-07-26_minimal-protocol-enforcement - Protocol theater discovery
