@@ -2,6 +2,8 @@
 
 ## Created Memories
 - `session_2025-07-29_template-subagents` - Complete session including folder structure design and subagent creation
+- `session_2025-07-29_subagent-improvements` - Agent fixes, testing, and output organization
+- `session_2025-07-29_complete-agent-ecosystem` - All 15 agents created, analyzed, and documented
 
 ## Referenced Memories
 - `session_2025-07-29_handler-folder-structure` - Folder structure design work
