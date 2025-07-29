@@ -97,3 +97,28 @@
 - Complex symbols or multiple fields
 - Hash-based verification (not human-readable)
 - Keeping any part of 4-chapter structure
+
+---
+
+## S:W:H:E Enforcement Chain (2025-07-27 Complete)
+
+### Decision: Multi-Layer Enforcement
+After multiple failures caught by user, implemented complete chain:
+
+1. **Pre-ULTRATHINK Protocol** - No immediate ULTRATHINK allowed
+2. **Handler Search Protocol** - Must show search process  
+3. **Two-Phase ULTRATHINK** - H:searching mandatory initially
+4. **Handler Comprehension** - Must list key steps from handler
+5. **Evidence Field** - E:n/key:"critical step"
+
+### Why This Design
+- Each layer catches different failure modes
+- Visible violations (user can verify)
+- Makes false compliance extremely difficult
+- Minimal complexity increase (~100 words total)
+
+### What We Learned
+- Single-layer enforcement always fails
+- Behavioral reminders don't work
+- Need multiple structural checkpoints
+- User feedback essential for iteration
