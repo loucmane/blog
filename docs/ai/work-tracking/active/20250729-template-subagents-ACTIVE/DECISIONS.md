@@ -28,5 +28,19 @@
 ## Implementation Decisions
 *Specific technical choices for subagent configuration*
 
+## Template Migration Workflow
+
+### Safe Staging Approach
+**Decision**: Create comprehensive migration workflow with staging directory
+**Rationale**: Never modify live files - all work in staging until approved
+
+### Template Scanner First
+**Decision**: Add template-scanner agent as critical first step
+**Rationale**: Other agents need system map to make intelligent decisions
+
+### Pipeline Architecture
+**Decision**: SCAN → MAP → EXTRACT → TRANSFORM → STAGE → VALIDATE → OPTIMIZE → TEST → REVIEW → ACTIVATE
+**Rationale**: Each step preserves safety with full visibility
+
 ## Rationale
 *Why each decision was made*

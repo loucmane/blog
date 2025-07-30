@@ -4,9 +4,10 @@ This document serves as the central registry for all template system agents, the
 
 ## Quick Navigation
 
-- [Core Template Management](#core-template-management) (7 agents)
+- [Core Template Management](#core-template-management) (8 agents)
 - [Analysis & Optimization](#analysis--optimization) (4 agents)
 - [Documentation & Testing](#documentation--testing) (3 agents)
+- [Workflow Coordination](#workflow-coordination) (1 agent)
 - [Agent Color Convention](#agent-color-convention)
 - [Common Workflows](#common-workflows)
 - [How to Use Agents](#how-to-use-agents)
@@ -90,9 +91,22 @@ This document serves as the central registry for all template system agents, the
   - Tracking operation results
 - **Output**: `.claude/agent-outputs/operator-executor/`
 
+### 8. template-scanner
+- **Color**: Teal 🟦
+- **Purpose**: Create comprehensive system map of all templates
+- **Tools**: Read, Grep, Glob, MultiEdit, Write
+- **Triggers**: "scan templates", "map system", "analyze dependencies"
+- **Use Cases**:
+  - Building complete dependency graph
+  - Mapping trigger phrases to handlers
+  - Tracing execution flows
+  - Identifying orphaned handlers
+  - Detecting circular dependencies
+- **Output**: `.claude/agent-outputs/template-scanner/`
+
 ## Analysis & Optimization
 
-### 8. template-optimizer
+### 9. template-optimizer
 - **Color**: Cyan 🟦
 - **Purpose**: Analyze and optimize template system
 - **Tools**: Read, Grep, Glob, MultiEdit
@@ -205,6 +219,17 @@ This document serves as the central registry for all template system agents, the
 2. pattern-extractor: Analyze usage patterns
 3. performance-analyzer: Measure improvements
 ```
+
+### Template Migration Workflow (NEW)
+```
+1. template-scanner: Create complete system map
+2. template-migrator: Extract to staging (no live changes)
+3. handler-validator: Validate staged handlers
+4. template-optimizer: Analyze for improvements
+5. integration-tester: Test all connections
+6. Review reports and approve activation
+```
+Details: See TEMPLATE-MIGRATION-WORKFLOW.md
 
 ### Debug Failed Execution
 ```

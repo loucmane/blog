@@ -51,10 +51,18 @@
 - [ ] Create agent-registry.md
 
 ## Documentation Tasks
-- [ ] Create subagent usage guide
-- [ ] Document each agent's capabilities
-- [ ] Create example workflows
+- [x] Create subagent usage guide (SUBAGENT-GUIDE.md)
+- [x] Document each agent's capabilities (multiple docs)
+- [x] Create example workflows (in guides)
+- [x] Create TEMPLATE-MIGRATION-WORKFLOW.md
 - [ ] Update main CLAUDE.md if needed
+
+## Template Migration Workflow
+- [x] Design safe staging approach
+- [x] Create template-scanner agent for system mapping
+- [x] Document complete migration pipeline
+- [x] Define staging directory structure
+- [ ] Implement migration with real handlers
 
 ## Success Validation
 - [ ] At least one functional subagent created
