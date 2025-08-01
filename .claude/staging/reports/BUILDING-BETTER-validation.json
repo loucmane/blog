@@ -1,0 +1,172 @@
+{
+  "validation_timestamp": "2025-08-01T16:10:00+02:00",
+  "source_file": "BUILDING-BETTER.md",
+  "total_validated": 6,
+  "passed": 0,
+  "failed": 6,
+  "results": [
+    {
+      "handler_id": "workflow-to-tool",
+      "file_path": "handlers/orchestrators/workflow-to-tool.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": false,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field",
+        "tools contains invalid MCP tool name: 'TOOLS.md tool selection'",
+        "location should be handlers/orchestrators/ but is handlers/orchestrators/workflow-to-tool.md"
+      ]
+    },
+    {
+      "handler_id": "tool-to-convention",
+      "file_path": "handlers/orchestrators/tool-to-convention.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": false,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field",
+        "tools contains invalid MCP tool name: 'CONVENTIONS.md checks'",
+        "location should be handlers/orchestrators/ but is handlers/orchestrators/tool-to-convention.md"
+      ]
+    },
+    {
+      "handler_id": "convention-to-workflow",
+      "file_path": "handlers/orchestrators/convention-to-workflow.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": false,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field",
+        "tools contains invalid MCP tool names: 'correction workflow', 'timestamp workflow', 'evidence gathering'",
+        "location should be handlers/orchestrators/ but is handlers/orchestrators/convention-to-workflow.md"
+      ]
+    },
+    {
+      "handler_id": "save-context",
+      "file_path": "handlers/operators/session/save-context.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "tools contains invalid MCP tool names: 'work tracking files', 'memory snapshot'"
+      ]
+    },
+    {
+      "handler_id": "restore-context",
+      "file_path": "handlers/operators/session/restore-context.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "tools contains invalid MCP tool name: 'work folder files'"
+      ]
+    },
+    {
+      "handler_id": "switch-context",
+      "file_path": "handlers/orchestrators/switch-context.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": false,
+        "location_correct": false,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field",
+        "tools contains invalid MCP tool names: 'save-context', 'load target context'",
+        "domain 'session' does not match location 'handlers/orchestrators/'",
+        "location should be handlers/orchestrators/ but is handlers/orchestrators/switch-context.md"
+      ]
+    }
+  ],
+  "summary": {
+    "yaml_issues": 0,
+    "missing_required_fields": 0,
+    "id_mismatch_issues": 0,
+    "role_issues": 0,
+    "domain_issues": 1,
+    "location_issues": 6,
+    "trigger_issues": 6,
+    "tool_issues": 6,
+    "version_issues": 0
+  },
+  "critical_issues": [
+    {
+      "type": "role_constraints_violation",
+      "handlers_affected": ["workflow-to-tool", "tool-to-convention", "convention-to-workflow", "save-context", "restore-context", "switch-context"],
+      "description": "Non-trigger role handlers have triggers field which violates role constraints",
+      "resolution": "Remove triggers field from orchestrator and operator role handlers"
+    },
+    {
+      "type": "invalid_tool_names",
+      "handlers_affected": ["workflow-to-tool", "tool-to-convention", "convention-to-workflow", "save-context", "restore-context", "switch-context"],
+      "description": "Tools field contains non-MCP tool names",
+      "resolution": "Replace with valid MCP tool names (Read, Write, Edit, Grep, Glob, MultiEdit, etc.)"
+    },
+    {
+      "type": "location_pattern_mismatch",
+      "handlers_affected": ["workflow-to-tool", "tool-to-convention", "convention-to-workflow", "switch-context"],
+      "description": "File location does not follow handlers/[role]/[domain]/ pattern",
+      "resolution": "Move orchestrators to correct domain subdirectories or handlers/orchestrators/ for cross-domain orchestrators"
+    }
+  ],
+  "recommendations": [
+    "Standardize all handlers to use only valid MCP tool names",
+    "Remove triggers field from non-trigger role handlers",
+    "Establish clear location pattern for orchestrators (domain-specific vs cross-domain)",
+    "Consider creating a mapping of conceptual tools to actual MCP tools",
+    "Add validation rules to prevent these issues during handler creation"
+  ]
+}

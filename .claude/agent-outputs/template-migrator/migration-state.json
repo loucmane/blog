@@ -1,0 +1,54 @@
+{
+  "files": {
+    "BUILDING-BETTER.md": {
+      "status": "migrated",
+      "handlers_migrated": 6,
+      "errors": []
+    }
+  },
+  "handlers": {
+    "workflow-to-tool": {
+      "source_file": "BUILDING-BETTER.md",
+      "migrated_at": "2025-08-01T00:00:00.000Z",
+      "location": "handlers/orchestrators/workflow-to-tool.md",
+      "line_start": 270,
+      "line_end": 285
+    },
+    "tool-to-convention": {
+      "source_file": "BUILDING-BETTER.md",
+      "migrated_at": "2025-08-01T00:00:00.000Z",
+      "location": "handlers/orchestrators/tool-to-convention.md",
+      "line_start": 287,
+      "line_end": 302
+    },
+    "convention-to-workflow": {
+      "source_file": "BUILDING-BETTER.md",
+      "migrated_at": "2025-08-01T00:00:00.000Z",
+      "location": "handlers/orchestrators/convention-to-workflow.md",
+      "line_start": 304,
+      "line_end": 319
+    },
+    "save-context": {
+      "source_file": "BUILDING-BETTER.md",
+      "migrated_at": "2025-08-01T00:00:00.000Z",
+      "location": "handlers/operators/session/save-context.md",
+      "line_start": 323,
+      "line_end": 338
+    },
+    "restore-context": {
+      "source_file": "BUILDING-BETTER.md",
+      "migrated_at": "2025-08-01T00:00:00.000Z",
+      "location": "handlers/operators/session/restore-context.md",
+      "line_start": 340,
+      "line_end": 355
+    },
+    "switch-context": {
+      "source_file": "BUILDING-BETTER.md",
+      "migrated_at": "2025-08-01T00:00:00.000Z",
+      "location": "handlers/orchestrators/switch-context.md",
+      "line_start": 357,
+      "line_end": 372
+    }
+  },
+  "last_updated": "2025-08-01T00:00:00.000Z"
+}

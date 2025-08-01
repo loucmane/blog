@@ -1,0 +1,217 @@
+{
+  "scan_timestamp": "2025-08-01T15:30:00Z",
+  "source_file": "PATTERNS.md",
+  "total_handlers": 14,
+  "handlers": [
+    {
+      "handler_id": "execute-ultrathink",
+      "name": "Execute Ultrathink",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "line_start": 25,
+      "line_end": 59,
+      "triggers": ["Start of ANY development request"],
+      "tools": ["date"],
+      "dependencies": ["resolve-session-void", "resolve-work-void", "resolve-handler-void"]
+    },
+    {
+      "handler_id": "work-activity",
+      "name": "Work Activity",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "line_start": 63,
+      "line_end": 76,
+      "triggers": ["test", "testing", "implement", "analyze", "fix", "document", "new feature", "work on", "build", "develop"],
+      "tools": [],
+      "dependencies": ["continue-work", "start-new-work"]
+    },
+    {
+      "handler_id": "work-continuation",
+      "name": "Work Continuation",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "line_start": 78,
+      "line_end": 89,
+      "triggers": ["continue", "resume", "back to", "keep working", "where were we"],
+      "tools": ["TodoWrite"],
+      "dependencies": ["continue-work"]
+    },
+    {
+      "handler_id": "file-operation",
+      "name": "File Operation",
+      "role": "orchestrator",
+      "domain": "file",
+      "line_start": 93,
+      "line_end": 109,
+      "triggers": ["edit", "update", "modify", "add to", "append", "change"],
+      "tools": [],
+      "dependencies": []
+    },
+    {
+      "handler_id": "file-creation",
+      "name": "File Creation",
+      "role": "orchestrator",
+      "domain": "file",
+      "line_start": 111,
+      "line_end": 123,
+      "triggers": ["create file", "new file", "write a file", "generate"],
+      "tools": ["Write"],
+      "dependencies": []
+    },
+    {
+      "handler_id": "tool-selection",
+      "name": "Tool Selection",
+      "role": "orchestrator",
+      "domain": "search",
+      "line_start": 127,
+      "line_end": 142,
+      "triggers": ["search", "find", "where", "how does", "look for", "locate"],
+      "tools": ["Grep", "Serena"],
+      "dependencies": ["search-code", "grep-search", "list-files"]
+    },
+    {
+      "handler_id": "code-creation",
+      "name": "Code Creation",
+      "role": "orchestrator",
+      "domain": "development",
+      "line_start": 144,
+      "line_end": 155,
+      "triggers": ["create", "write", "generate", "implement", "build component"],
+      "tools": ["Edit", "Write"],
+      "dependencies": []
+    },
+    {
+      "handler_id": "evidence-check",
+      "name": "Evidence Check",
+      "role": "orchestrator",
+      "domain": "analysis",
+      "line_start": 159,
+      "line_end": 171,
+      "triggers": ["the system", "it uses", "the code", "claims about implementation"],
+      "tools": [],
+      "dependencies": ["gather-evidence"]
+    },
+    {
+      "handler_id": "architecture-claim",
+      "name": "Architecture Claim",
+      "role": "orchestrator",
+      "domain": "analysis",
+      "line_start": 173,
+      "line_end": 184,
+      "triggers": ["architecture", "designed to", "structured as", "system claims"],
+      "tools": [],
+      "dependencies": []
+    },
+    {
+      "handler_id": "time-capture",
+      "name": "Time Capture",
+      "role": "operator",
+      "domain": "external",
+      "line_start": 188,
+      "line_end": 199,
+      "triggers": ["timestamp", "date", "current time", "log entry", "now"],
+      "tools": ["date"],
+      "dependencies": []
+    },
+    {
+      "handler_id": "ambiguous-request",
+      "name": "Ambiguous Request",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "line_start": 203,
+      "line_end": 214,
+      "triggers": ["vague terms like \"it\"", "that", "this", "the thing"],
+      "tools": ["TodoWrite"],
+      "dependencies": []
+    },
+    {
+      "handler_id": "multi-step-request",
+      "name": "Multi-step Request",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "line_start": 216,
+      "line_end": 227,
+      "triggers": ["and then", "after that", "multiple verbs"],
+      "tools": ["TodoWrite"],
+      "dependencies": []
+    },
+    {
+      "handler_id": "lost-context",
+      "name": "Lost Context",
+      "role": "orchestrator",
+      "domain": "session",
+      "line_start": 231,
+      "line_end": 243,
+      "triggers": ["I'm lost", "what was I doing", "confused state"],
+      "tools": ["TodoWrite", "git"],
+      "dependencies": []
+    },
+    {
+      "handler_id": "system-improvement",
+      "name": "System Improvement",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "line_start": 245,
+      "line_end": 256,
+      "triggers": ["improve system", "make better", "enhancement requests"],
+      "tools": [],
+      "dependencies": ["system-improvements"]
+    }
+  ],
+  "analysis": {
+    "role_distribution": {
+      "orchestrator": 13,
+      "operator": 1,
+      "trigger": 0
+    },
+    "domain_distribution": {
+      "workflow": 6,
+      "analysis": 2,
+      "development": 1,
+      "file": 2,
+      "search": 1,
+      "external": 1,
+      "session": 1
+    },
+    "tool_usage": {
+      "TodoWrite": 4,
+      "date": 2,
+      "Write": 1,
+      "Edit": 1,
+      "Grep": 1,
+      "Serena": 1,
+      "git": 1
+    },
+    "most_connected_handlers": [
+      {
+        "handler_id": "execute-ultrathink",
+        "dependency_count": 3
+      },
+      {
+        "handler_id": "work-activity", 
+        "dependency_count": 2
+      }
+    ],
+    "orphaned_handlers": [],
+    "missing_dependencies": [
+      "resolve-session-void",
+      "resolve-work-void", 
+      "resolve-handler-void",
+      "continue-work",
+      "start-new-work",
+      "search-code",
+      "grep-search",
+      "list-files",
+      "gather-evidence",
+      "system-improvements"
+    ]
+  },
+  "validation_notes": [
+    "All handlers follow consistent pattern structure with Triggers, Pre-conditions, Process, Success, Failure, and Examples",
+    "Handler anchors use kebab-case format consistently: {#handler-name}",
+    "All handlers are orchestrator-level meta-patterns that route to specific handlers in other template files",
+    "Dependencies reference handlers in WORKFLOWS.md, TOOLS.md, CONVENTIONS.md, and BUILDING-BETTER.md",
+    "execute-ultrathink is the master orchestrator that manages the S:W:H:E format",
+    "Most handlers include concrete examples demonstrating usage patterns"
+  ]
+}

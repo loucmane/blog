@@ -1,0 +1,383 @@
+{
+  "validation_timestamp": "2025-08-01T15:35:00+02:00",
+  "source_file": "CONVENTIONS.md",
+  "total_validated": 17,
+  "passed": 0,
+  "failed": 17,
+  "results": [
+    {
+      "handler_id": "verify-claim",
+      "file_path": "handlers/operators/analysis/verify-claim.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "gather-evidence",
+      "file_path": "handlers/operators/analysis/gather-evidence.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "cite-source",
+      "file_path": "handlers/operators/analysis/cite-source.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "check-naming",
+      "file_path": "handlers/operators/development/check-naming.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "suggest-name",
+      "file_path": "handlers/operators/development/suggest-name.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "validate-path",
+      "file_path": "handlers/operators/file/validate-path.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "check-style",
+      "file_path": "handlers/operators/development/check-style.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "format-code",
+      "file_path": "handlers/operators/development/format-code.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "review-patterns",
+      "file_path": "handlers/operators/development/review-patterns.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "check-commit-msg",
+      "file_path": "handlers/operators/git/check-commit-msg.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "suggest-commit-type",
+      "file_path": "handlers/operators/git/suggest-commit-type.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "session-start",
+      "file_path": "handlers/orchestrators/session-start.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field"
+      ]
+    },
+    {
+      "handler_id": "resolve-session-void",
+      "file_path": "handlers/orchestrators/resolve-session-void.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "check-docs-needed",
+      "file_path": "handlers/operators/docs/check-docs-needed.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "validate-comments",
+      "file_path": "handlers/operators/docs/validate-comments.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "operator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "check-conventions-first",
+      "file_path": "handlers/orchestrators/check-conventions-first.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    },
+    {
+      "handler_id": "enforce-pre-flight",
+      "file_path": "handlers/orchestrators/enforce-pre-flight.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "orchestrator role handlers should not have triggers field",
+        "Serena is not a valid MCP tool name - should be mcp__serena__*"
+      ]
+    }
+  ],
+  "summary": {
+    "yaml_issues": 0,
+    "missing_required_fields": 0,
+    "id_mismatch_issues": 0,
+    "role_issues": 0,
+    "domain_issues": 0,
+    "location_issues": 0,
+    "trigger_issues": 17,
+    "tool_issues": 15,
+    "version_issues": 0
+  },
+  "critical_issues": [
+    {
+      "type": "incorrect_triggers_field",
+      "handlers_affected": [
+        "verify-claim", "gather-evidence", "cite-source", "check-naming", "suggest-name", "validate-path", "check-style", "format-code", "review-patterns", "check-commit-msg", "suggest-commit-type", "session-start", "resolve-session-void", "check-docs-needed", "validate-comments", "check-conventions-first", "enforce-pre-flight"
+      ],
+      "description": "Non-trigger role handlers have triggers field in frontmatter",
+      "resolution": "Remove triggers field from operator and orchestrator role handlers - only trigger role should have triggers"
+    },
+    {
+      "type": "invalid_tool_names",
+      "handlers_affected": [
+        "verify-claim", "gather-evidence", "cite-source", "check-naming", "suggest-name", "validate-path", "check-style", "format-code", "review-patterns", "check-commit-msg", "suggest-commit-type", "resolve-session-void", "check-docs-needed", "validate-comments", "check-conventions-first", "enforce-pre-flight"
+      ],
+      "description": "Handlers use 'Serena' instead of proper MCP tool names",
+      "resolution": "Replace 'Serena' with correct MCP tool names like 'mcp__serena__search_for_pattern' or other appropriate MCP tools"
+    }
+  ],
+  "recommendations": [
+    "Standardize tool naming convention across all handlers",
+    "Create validation rules to prevent triggers field in non-trigger handlers",
+    "Consider if some operators should be reclassified as triggers if they have user-facing trigger patterns",
+    "Document the distinction between trigger, operator, and orchestrator roles more clearly"
+  ]
+}

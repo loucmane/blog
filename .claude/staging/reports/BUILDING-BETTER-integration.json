@@ -1,0 +1,396 @@
+{
+  "test_timestamp": "2025-08-01T18:31:51+02:00",
+  "source_file": "BUILDING-BETTER.md",
+  "total_tests": 42,
+  "passed": 28,
+  "failed": 14,
+  "results": [
+    {
+      "test_category": "Cross-reference validation",
+      "passed": 4,
+      "failed": 8,
+      "details": [
+        {
+          "test": "resolve-session-void anchor exists",
+          "status": "FAILED",
+          "handler": "ULTRATHINK Integration",
+          "expected": "CONVENTIONS.md#resolve-session-void",
+          "actual": "Anchor not found",
+          "impact": "HIGH - VOID resolution broken"
+        },
+        {
+          "test": "resolve-work-void anchor exists", 
+          "status": "FAILED",
+          "handler": "ULTRATHINK Integration",
+          "expected": "WORKFLOWS.md#resolve-work-void",
+          "actual": "Anchor not found",
+          "impact": "HIGH - VOID resolution broken"
+        },
+        {
+          "test": "resolve-handler-void anchor exists",
+          "status": "FAILED", 
+          "handler": "ULTRATHINK Integration",
+          "expected": "REGISTRY.md#resolve-handler-void",
+          "actual": "Anchor not found",
+          "impact": "HIGH - VOID resolution broken"
+        },
+        {
+          "test": "search-code handler exists",
+          "status": "FAILED",
+          "handler": "workflow-to-tool",
+          "expected": "Handler with anchor {#search-code}",
+          "actual": "Handler not found",
+          "impact": "MEDIUM - Example routing broken"
+        },
+        {
+          "test": "find-references handler exists",
+          "status": "FAILED",
+          "handler": "workflow-to-tool", 
+          "expected": "Handler with anchor {#find-references}",
+          "actual": "Handler not found",
+          "impact": "MEDIUM - Example routing broken"
+        },
+        {
+          "test": "TOOLS.md file exists",
+          "status": "PASSED",
+          "handler": "workflow-to-tool",
+          "expected": "File accessible",
+          "actual": "File found at .claude/templates/TOOLS.md"
+        },
+        {
+          "test": "CONVENTIONS.md file exists",
+          "status": "PASSED",
+          "handler": "tool-to-convention",
+          "expected": "File accessible", 
+          "actual": "File found at .claude/templates/CONVENTIONS.md"
+        },
+        {
+          "test": "WORKFLOWS.md file exists",
+          "status": "PASSED",
+          "handler": "convention-to-workflow",
+          "expected": "File accessible",
+          "actual": "File found at .claude/templates/WORKFLOWS.md"
+        },
+        {
+          "test": "handoff.md convention exists",
+          "status": "PASSED",
+          "handler": "save-context",
+          "expected": "File conventions documented",
+          "actual": "Multiple references found in CONVENTIONS.md"
+        },
+        {
+          "test": "tracker.md convention exists",
+          "status": "FAILED",
+          "handler": "save-context",
+          "expected": "Handler for tracker.md operations",
+          "actual": "References exist but no handler anchor",
+          "impact": "MEDIUM - Context save incomplete"
+        },
+        {
+          "test": "commit message conventions exist",
+          "status": "FAILED",
+          "handler": "tool-to-convention",
+          "expected": "Git commit conventions handler",
+          "actual": "References exist but no handler anchor",
+          "impact": "MEDIUM - Convention validation incomplete"
+        },
+        {
+          "test": "timestamp workflow exists",
+          "status": "FAILED",
+          "handler": "convention-to-workflow", 
+          "expected": "Timestamp correction workflow",
+          "actual": "Behavior exists but no workflow handler",
+          "impact": "MEDIUM - Violation correction incomplete"
+        }
+      ]
+    },
+    {
+      "test_category": "Cross-system integration patterns",
+      "passed": 6,
+      "failed": 2,
+      "details": [
+        {
+          "test": "workflow-to-tool routing pattern",
+          "status": "PASSED",
+          "handler": "workflow-to-tool",
+          "expected": "4-step process defined",
+          "actual": "Complete process with tool selection routing"
+        },
+        {
+          "test": "tool-to-convention validation pattern", 
+          "status": "PASSED",
+          "handler": "tool-to-convention",
+          "expected": "4-step validation process",
+          "actual": "Complete process with convention checking"
+        },
+        {
+          "test": "convention-to-workflow correction pattern",
+          "status": "PASSED", 
+          "handler": "convention-to-workflow",
+          "expected": "4-step correction process",
+          "actual": "Complete process with fix workflow routing"
+        },
+        {
+          "test": "bidirectional routing capability",
+          "status": "PASSED",
+          "handler": "All integration handlers",
+          "expected": "Chain between WORKFLOWS → TOOLS → CONVENTIONS → WORKFLOWS",
+          "actual": "All handlers support bidirectional routing"
+        },
+        {
+          "test": "context preservation during routing",
+          "status": "PASSED",
+          "handler": "All integration handlers", 
+          "expected": "Process maintains workflow context",
+          "actual": "All handlers specify context return mechanisms"
+        },
+        {
+          "test": "error handling in routing",
+          "status": "PASSED",
+          "handler": "All integration handlers",
+          "expected": "Failure modes with alternatives", 
+          "actual": "All handlers specify fallback actions"
+        },
+        {
+          "test": "circular routing prevention",
+          "status": "FAILED",
+          "handler": "All integration handlers",
+          "expected": "Prevents infinite loops",
+          "actual": "No explicit loop detection mechanism",
+          "impact": "LOW - Theoretical risk"
+        },
+        {
+          "test": "integration examples completeness",
+          "status": "FAILED",
+          "handler": "All integration handlers",
+          "expected": "Working examples for all patterns", 
+          "actual": "Examples reference non-existent handlers",
+          "impact": "MEDIUM - Documentation misleading"
+        }
+      ]
+    },
+    {
+      "test_category": "Context management flow",
+      "passed": 9,
+      "failed": 3,
+      "details": [
+        {
+          "test": "save-context process completeness",
+          "status": "PASSED",
+          "handler": "save-context",
+          "expected": "4-step process with PRIMARY/FALLBACK",
+          "actual": "Complete process with work tracking priority"
+        },
+        {
+          "test": "restore-context process completeness",
+          "status": "PASSED", 
+          "handler": "restore-context",
+          "expected": "4-step restore with PRIMARY source",
+          "actual": "Complete process with work folder priority"
+        },
+        {
+          "test": "switch-context dependency chain",
+          "status": "PASSED",
+          "handler": "switch-context", 
+          "expected": "Uses save-context dependency correctly",
+          "actual": "Step 1 explicitly calls save-context"
+        },
+        {
+          "test": "context integrity preservation",
+          "status": "PASSED",
+          "handler": "save-context → restore-context", 
+          "expected": "Round-trip maintains todos, files, decisions",
+          "actual": "Both handlers specify same data elements"
+        },
+        {
+          "test": "state transition validation",
+          "status": "PASSED",
+          "handler": "switch-context",
+          "expected": "Clean transitions with rollback",
+          "actual": "Failure mode specifies rollback to previous context"
+        },
+        {
+          "test": "concurrent context handling",
+          "status": "FAILED",
+          "handler": "All context handlers",
+          "expected": "Prevents conflicts between multiple contexts",
+          "actual": "No concurrency protection specified",
+          "impact": "MEDIUM - Context corruption risk"
+        },
+        {
+          "test": "context validation mechanisms",
+          "status": "PASSED",
+          "handler": "restore-context",
+          "expected": "Validates context before restoration", 
+          "actual": "Pre-conditions check for saved state and no conflicts"
+        },
+        {
+          "test": "memory vs work-tracking preference",
+          "status": "PASSED",
+          "handler": "save-context",
+          "expected": "PRIMARY: work tracking, FALLBACK: memory",
+          "actual": "Explicitly prioritizes work tracking files"
+        },
+        {
+          "test": "partial failure handling",
+          "status": "PASSED",
+          "handler": "All context handlers",
+          "expected": "Graceful degradation on partial failures",
+          "actual": "All handlers specify partial save/restore with warnings"
+        },
+        {
+          "test": "context expiration handling",
+          "status": "FAILED",
+          "handler": "restore-context",
+          "expected": "Handles stale context gracefully",
+          "actual": "No expiration or staleness checks specified",
+          "impact": "LOW - Edge case handling"
+        },
+        {
+          "test": "work folder structure validation",
+          "status": "PASSED",
+          "handler": "save-context",
+          "expected": "Validates work folder exists and writable",
+          "actual": "References work tracking files and folder structure"
+        },
+        {
+          "test": "context size limits",
+          "status": "FAILED", 
+          "handler": "save-context",
+          "expected": "Handles large context gracefully",
+          "actual": "No size limit checks or chunking specified",
+          "impact": "LOW - Performance edge case"
+        }
+      ]
+    },
+    {
+      "test_category": "Tool availability validation",
+      "passed": 6,
+      "failed": 0,
+      "details": [
+        {
+          "test": "Read tool availability",
+          "status": "PASSED",
+          "handler": "restore-context",
+          "expected": "MCP tool available",
+          "actual": "Read tool used in testing and available"
+        },
+        {
+          "test": "Write tool availability",
+          "status": "PASSED", 
+          "handler": "save-context",
+          "expected": "MCP tool available", 
+          "actual": "Write tool used in testing and available"
+        },
+        {
+          "test": "Grep tool availability",
+          "status": "PASSED",
+          "handler": "workflow-to-tool",
+          "expected": "MCP tool available",
+          "actual": "Grep tool used in testing and available"
+        },
+        {
+          "test": "TodoWrite tool availability",
+          "status": "PASSED",
+          "handler": "save-context",
+          "expected": "MCP tool available for task tracking", 
+          "actual": "TodoWrite tool available (reminder triggered)"
+        },
+        {
+          "test": "Bash tool availability",
+          "status": "PASSED",
+          "handler": "All handlers",
+          "expected": "MCP tool available for commands",
+          "actual": "Bash tool used in testing and available"
+        },
+        {
+          "test": "No conceptual tools used",
+          "status": "PASSED",
+          "handler": "All handlers",
+          "expected": "Only MCP tools referenced",
+          "actual": "All handlers use standard MCP tools or file operations"
+        }
+      ]
+    },
+    {
+      "test_category": "Circular dependency check",
+      "passed": 3,
+      "failed": 1,
+      "details": [
+        {
+          "test": "workflow-to-tool self-dependency",
+          "status": "PASSED",
+          "handler": "workflow-to-tool",
+          "expected": "No self-reference",
+          "actual": "Routes to TOOLS.md, not self"
+        },
+        {
+          "test": "Context handler circular chains",
+          "status": "PASSED",
+          "handler": "save-context → restore-context → switch-context", 
+          "expected": "No circular chains",
+          "actual": "switch-context uses save-context but no reverse dependency"
+        },
+        {
+          "test": "Integration handler circular chains",
+          "status": "PASSED",
+          "handler": "workflow-to-tool → tool-to-convention → convention-to-workflow",
+          "expected": "Chain terminates correctly",
+          "actual": "Each step routes to different template, returns to workflow"
+        },
+        {
+          "test": "VOID resolution circular chains", 
+          "status": "FAILED",
+          "handler": "VOID resolution handlers",
+          "expected": "No circular VOID resolution",
+          "actual": "Cannot verify - VOID handlers missing",
+          "impact": "HIGH - Could cause infinite resolution loops"
+        }
+      ]
+    }
+  ],
+  "critical_issues": [
+    {
+      "issue": "Missing VOID Resolution Handlers",
+      "severity": "CRITICAL",
+      "affected_handlers": ["All ULTRATHINK operations"],
+      "description": "The VOID resolution anchors (resolve-session-void, resolve-work-void, resolve-handler-void) referenced in BUILDING-BETTER.md do not exist in their target files.",
+      "impact": "ULTRATHINK system cannot resolve VOID states, breaking the S:W:H:E format",
+      "recommendation": "Create the missing VOID resolution handlers in CONVENTIONS.md, WORKFLOWS.md, and REGISTRY.md"
+    },
+    {
+      "issue": "Broken Example References",
+      "severity": "HIGH", 
+      "affected_handlers": ["workflow-to-tool"],
+      "description": "Handler examples reference search-code and find-references handlers that do not exist with proper anchors.",
+      "impact": "Documentation misleads users about available routing targets",
+      "recommendation": "Either create the referenced handlers or update examples to use existing handlers"
+    },
+    {
+      "issue": "Missing Context Concurrency Protection",
+      "severity": "MEDIUM",
+      "affected_handlers": ["save-context", "restore-context", "switch-context"],
+      "description": "No mechanism prevents multiple context operations from conflicting or corrupting state.",
+      "impact": "Risk of context corruption during concurrent operations",
+      "recommendation": "Add locking mechanism or sequential operation requirements"
+    },
+    {
+      "issue": "Incomplete Convention Integration",
+      "severity": "MEDIUM",
+      "affected_handlers": ["tool-to-convention", "convention-to-workflow"],
+      "description": "Referenced conventions (commit messages, timestamps) exist in templates but lack proper handler anchors for integration.",
+      "impact": "Convention validation and correction workflows are incomplete",
+      "recommendation": "Create handler anchors for convention patterns or update integration logic"
+    }
+  ],
+  "recommendations": [
+    "IMMEDIATE: Create missing VOID resolution handlers to fix ULTRATHINK integration",
+    "HIGH: Verify all handler references and create missing handlers or update examples", 
+    "MEDIUM: Add concurrency protection to context management handlers",
+    "MEDIUM: Complete convention integration with proper handler anchors",
+    "LOW: Add context expiration and size limit handling for robustness",
+    "PROCESS: Implement automated cross-reference validation to prevent future breaks",
+    "DOCUMENTATION: Add integration testing requirements to handler creation guide",
+    "VALIDATION: Create CI checks for anchor reference integrity"
+  ]
+}

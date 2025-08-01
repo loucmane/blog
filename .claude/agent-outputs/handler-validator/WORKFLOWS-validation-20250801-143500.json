@@ -1,0 +1,559 @@
+{
+  "validation_timestamp": "2025-08-01T14:47:00+02:00",
+  "source_file": "WORKFLOWS.md",
+  "total_validated": 29,
+  "passed": 25,
+  "failed": 4,
+  "results": [
+    {
+      "handler_id": "resolve-work-void",
+      "file_path": ".claude/staging/handlers/operators/workflow/resolve-work-void.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "start-new-work",
+      "file_path": ".claude/staging/handlers/triggers/development/start-new-work.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "continue-work",
+      "file_path": ".claude/staging/handlers/triggers/workflow/continue-work.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "standard-dev-workflow",
+      "file_path": ".claude/staging/handlers/orchestrators/standard-dev-workflow.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "create-component",
+      "file_path": ".claude/staging/handlers/triggers/development/create-component.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "refactor-code",
+      "file_path": ".claude/staging/handlers/triggers/development/refactor-code.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "create-todos",
+      "file_path": ".claude/staging/handlers/triggers/workflow/create-todos.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "Invalid tools: [TodoWrite]. Valid tools should be: TodoWrite (without brackets)"
+      ]
+    },
+    {
+      "handler_id": "update-todos",
+      "file_path": ".claude/staging/handlers/triggers/workflow/update-todos.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "check-progress",
+      "file_path": ".claude/staging/handlers/triggers/workflow/check-progress.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "show-capabilities",
+      "file_path": ".claude/staging/handlers/triggers/session/show-capabilities.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "start-session",
+      "file_path": ".claude/staging/handlers/triggers/session/start-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "update-session",
+      "file_path": ".claude/staging/handlers/triggers/session/update-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "end-session",
+      "file_path": ".claude/staging/handlers/triggers/session/end-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "checkpoint-session",
+      "file_path": ".claude/staging/handlers/operators/session/checkpoint-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "deploy-ultrathink",
+      "file_path": ".claude/staging/handlers/triggers/analysis/deploy-ultrathink.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "deploy-specialist",
+      "file_path": ".claude/staging/handlers/triggers/workflow/deploy-specialist.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "orchestrate-complex",
+      "file_path": ".claude/staging/handlers/orchestrators/orchestrate-complex.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "create-test-checkpoint",
+      "file_path": ".claude/staging/handlers/triggers/test/create-test-checkpoint.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "simulation-test",
+      "file_path": ".claude/staging/handlers/triggers/test/simulation-test.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "validate-changes",
+      "file_path": ".claude/staging/handlers/triggers/test/validate-changes.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "create-work-folder",
+      "file_path": ".claude/staging/handlers/operators/workflow/create-work-folder.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "update-tracker",
+      "file_path": ".claude/staging/handlers/triggers/workflow/update-tracker.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "document-findings",
+      "file_path": ".claude/staging/handlers/triggers/docs/document-findings.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "record-decision",
+      "file_path": ".claude/staging/handlers/triggers/docs/record-decision.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "fix-bug",
+      "file_path": ".claude/staging/handlers/triggers/debug/fix-bug.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": [
+        "Invalid dependency reference: 'bug-fix-template' not found in handler registry"
+      ]
+    },
+    {
+      "handler_id": "debug-issue",
+      "file_path": ".claude/staging/handlers/triggers/debug/debug-issue.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": [
+        "Invalid dependency reference: 'debug-template' not found in handler registry"
+      ]
+    },
+    {
+      "handler_id": "explain-code",
+      "file_path": ".claude/staging/handlers/triggers/analysis/explain-code.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "code-review",
+      "file_path": ".claude/staging/handlers/triggers/development/code-review.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": [
+        "Invalid dependency reference: 'review-template' not found in handler registry"
+      ]
+    },
+    {
+      "handler_id": "optimize-code",
+      "file_path": ".claude/staging/handlers/triggers/development/optimize-code.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "create-docs",
+      "file_path": ".claude/staging/handlers/triggers/docs/create-docs.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    }
+  ],
+  "summary": {
+    "yaml_issues": 0,
+    "missing_required_fields": 0,
+    "id_mismatch_issues": 0,
+    "role_issues": 0,
+    "domain_issues": 0,
+    "location_issues": 0,
+    "trigger_issues": 0,
+    "tool_issues": 1,
+    "version_issues": 0,
+    "dependency_issues": 3
+  },
+  "critical_issues": [
+    {
+      "type": "missing_dependency",
+      "handlers_affected": ["fix-bug", "debug-issue", "code-review"],
+      "description": "Handlers reference template dependencies that don't exist as handlers",
+      "resolution": "Either create the referenced template handlers or update dependencies to point to existing handlers"
+    },
+    {
+      "type": "tool_validation",
+      "handlers_affected": ["create-todos"],
+      "description": "Tool names may need verification against actual MCP tool registry",
+      "resolution": "Verify all tool names match exactly with available MCP tools"
+    }
+  ],
+  "recommendations": [
+    "Fix dependency references in debug and development handlers",
+    "Verify all MCP tool names are correct and available",
+    "Consider creating missing template handlers or updating references",
+    "Add validation for cross-handler dependencies"
+  ]
+}

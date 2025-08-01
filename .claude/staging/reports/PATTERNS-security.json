@@ -1,0 +1,93 @@
+{
+  "scan_timestamp": "2025-08-01T15:45:00+02:00",
+  "source_file": "PATTERNS.md",
+  "total_issues": 9,
+  "critical": 2,
+  "high": 2,
+  "medium": 3,
+  "low": 2,
+  "issues": [
+    {
+      "severity": "critical",
+      "handler_id": "time-capture",
+      "line_start": 192,
+      "line_end": 192,
+      "type": "command-injection",
+      "description": "Date command format string could be manipulated if user input influences the format parameter, allowing arbitrary command execution",
+      "recommendation": "Use hardcoded date format strings or validate input parameters against a whitelist"
+    },
+    {
+      "severity": "critical", 
+      "handler_id": "file-operation",
+      "line_start": 97,
+      "line_end": 98,
+      "type": "path-traversal",
+      "description": "Filename extraction from user request without validation could allow path traversal attacks (../../../etc/passwd)",
+      "recommendation": "Implement strict path validation and canonicalization before file operations"
+    },
+    {
+      "severity": "high",
+      "handler_id": "file-creation",
+      "line_start": 115,
+      "line_end": 117,
+      "type": "unsafe-file-operation",
+      "description": "File creation without proper path validation could allow arbitrary file creation outside intended directories",
+      "recommendation": "Implement directory whitelist and validate all file paths against allowed locations"
+    },
+    {
+      "severity": "high",
+      "handler_id": "execute-ultrathink",
+      "line_start": 33,
+      "line_end": 33,
+      "type": "command-injection",
+      "description": "Date command execution without input validation could be exploited if format string is user-controllable",
+      "recommendation": "Use system time APIs instead of shell commands or validate format strings"
+    },
+    {
+      "severity": "medium",
+      "handler_id": "evidence-check",
+      "line_start": 167,
+      "line_end": 168,
+      "type": "information-disclosure",
+      "description": "Evidence gathering patterns may expose sensitive file contents through error messages or search results",
+      "recommendation": "Implement sanitized responses that don't reveal sensitive system information"
+    },
+    {
+      "severity": "medium",
+      "handler_id": "work-activity",
+      "line_start": 67,
+      "line_end": 68,
+      "type": "directory-traversal",
+      "description": "Active work folder checking without validation could allow directory traversal if folder names are user-controllable",
+      "recommendation": "Validate work folder names against allowed patterns and use absolute paths"
+    },
+    {
+      "severity": "medium",
+      "handler_id": "file-operation",
+      "line_start": 98,
+      "line_end": 98,
+      "type": "template-injection",
+      "description": "Filename used directly in template references without sanitization could manipulate convention lookups",
+      "recommendation": "Sanitize and validate filename before using in template string construction"
+    },
+    {
+      "severity": "low",
+      "handler_id": "pattern-matching-rules",
+      "line_start": 6,
+      "line_end": 7,
+      "type": "denial-of-service",
+      "description": "Pattern matching without explicit loop protection could cause infinite loops with circular pattern references",
+      "recommendation": "Implement maximum recursion depth limits and cycle detection"
+    },
+    {
+      "severity": "low",
+      "handler_id": "execute-ultrathink",
+      "line_start": 31,
+      "line_end": 52,
+      "type": "input-validation",
+      "description": "ULTRATHINK parameter format (S:W:H:E) not validated which could cause parsing errors or unexpected behavior",
+      "recommendation": "Validate ULTRATHINK parameter format and handle malformed inputs gracefully"
+    }
+  ],
+  "summary": "The PATTERNS.md file contains several security vulnerabilities, primarily around unsafe file operations and command injection risks. The most critical issues involve path traversal vulnerabilities in file operations and potential command injection in date/time handling. Immediate attention should be focused on implementing input validation and path sanitization throughout the system. The template system shows good structural patterns but lacks security controls for user-provided input."
+}
