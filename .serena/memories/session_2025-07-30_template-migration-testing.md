@@ -67,3 +67,23 @@ Successfully tested complete migration pipeline on TOOLS.md handlers. System pro
 - No production impact during staging
 - Instant rollback available
 - All agents have constraints
+
+## Work Tracking Documentation
+Complete documentation at: `docs/ai/work-tracking/active/20250730-template-migration-ACTIVE/`
+
+### Post-Compaction References (START HERE)
+- **README.md** - Quick start guide with current state
+- **plans/MIGRATION-COMMANDS.md** - Copy-paste agent commands
+- **designs/HANDLER-FORMAT.md** - YAML frontmatter specification
+- **reports/SCANNER-ISSUES.md** - 6 missing handlers to create
+- **plans/CRITICAL-UPDATES.md** - CLAUDE.md/REGISTRY.md changes
+- **code/CUTOVER-SCRIPTS.md** - cutover.sh and rollback.sh
+- **code/SHARED-PATTERNS.md** - 25-30% optimization patterns
+
+### Current Staging Contents
+18 handlers already migrated to `.claude/staging/handlers/triggers/`:
+- analysis/ (3): analyze-code, check-dependencies, measure-complexity
+- external/ (3): build-project, check-lint, run-tests
+- file/ (4): create-file, delete-file, edit-file, read-file
+- git/ (4): check-status, commit-changes, create-branch, view-history
+- search/ (4): find-references, find-symbol, grep-pattern, search-code
