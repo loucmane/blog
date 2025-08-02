@@ -1,15 +1,5 @@
 # Building Better: Meta-Process Documentation
 
-> ⚠️ **HANDLERS MIGRATED**: All handlers from this file have been migrated to the new folder-based structure.
->
-> Integration and extension handlers are now distributed across appropriate domains in:
-> - `.claude/templates/handlers/triggers/`
-> - `.claude/templates/handlers/operators/`
-
-[Original content preserved below for reference]
-
----
-
 This document captures the meta-process of creating and evolving the Claude Template System itself. It's a guide for improving the guide.
 
 ## 🎯 Quick Navigation {#quick-navigation}

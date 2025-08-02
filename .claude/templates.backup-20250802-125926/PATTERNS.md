@@ -1,15 +1,5 @@
 # Execution Patterns
 
-> ⚠️ **HANDLERS MIGRATED**: All handlers from this file have been migrated to the new folder-based structure.
->
-> Pattern handlers are now in:
-> - `.claude/templates/handlers/orchestrators/` - Most pattern handlers (routing, meta-patterns)
-> - `.claude/templates/handlers/operators/external/` - External operation patterns
-
-[Original content preserved below for reference]
-
----
-
 Meta-patterns that route to appropriate handlers in template files.
 
 ## Pattern Matching Rules {#pattern-matching-rules}

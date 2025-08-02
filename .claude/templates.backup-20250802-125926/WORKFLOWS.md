@@ -1,21 +1,5 @@
 # Universal Development Workflows
 
-> ⚠️ **HANDLERS MIGRATED**: All handlers from this file have been migrated to the new folder-based structure.
-> 
-> Handlers are now located in:
-> - `.claude/templates/handlers/triggers/` - User-facing entry points
-> - `.claude/templates/handlers/orchestrators/` - Complex workflows
-> - `.claude/templates/handlers/operators/` - Atomic operations
->
-> To find a specific handler, use:
-> ```
-> mcp__serena__search_for_pattern --substring_pattern "id: handler-name" --relative_path ".claude/templates/handlers/"
-> ```
-
-[Original content preserved below for reference]
-
----
-
 This document contains all workflow patterns, session management, and orchestration guidelines that apply across projects.
 
 ## 🎯 Quick Navigation {#quick-navigation}

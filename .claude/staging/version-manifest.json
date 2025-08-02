@@ -1,0 +1,587 @@
+{
+  "manifest_version": "1.0.0",
+  "created": "2025-08-02T00:00:00Z",
+  "total_handlers": 71,
+  "template_system_version": "2.0",
+  "handlers": {
+    "edit-file": {
+      "version": "1.0.0",
+      "path": ".claude/templates/handlers/operators/development/edit-file.md",
+      "lastModified": "2025-08-02T00:00:00Z",
+      "role": "operator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "start-new-work": {
+      "version": "1.0.0", 
+      "path": ".claude/templates/handlers/triggers/development/start-new-work.md",
+      "lastModified": "2025-08-02T00:00:00Z",
+      "role": "trigger",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "resolve-work-void": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/workflow/resolve-work-void.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "start-new-work-staging": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/development/start-new-work.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "continue-work": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/workflow/continue-work.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "standard-dev-workflow": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/standard-dev-workflow.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "create-component": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/development/create-component.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "refactor-code": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/development/refactor-code.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "create-todos": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/workflow/create-todos.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "update-todos": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/workflow/update-todos.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "check-progress": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/workflow/check-progress.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "show-capabilities": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/session/show-capabilities.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "start-session": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/session/start-session.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "update-session": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/session/update-session.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "end-session": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/session/end-session.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "checkpoint-session": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/session/checkpoint-session.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "deploy-ultrathink": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/analysis/deploy-ultrathink.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "orchestrate-complex": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/orchestrate-complex.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "create-test-checkpoint": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/test/create-test-checkpoint.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "test",
+      "stability": "stable"
+    },
+    "simulation-test": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/test/simulation-test.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "test",
+      "stability": "stable"
+    },
+    "validate-changes": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/test/validate-changes.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "test",
+      "stability": "stable"
+    },
+    "create-work-folder": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/workflow/create-work-folder.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "update-tracker": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/workflow/update-tracker.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "document-findings": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/docs/document-findings.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "docs",
+      "stability": "stable"
+    },
+    "record-decision": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/docs/record-decision.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "docs",
+      "stability": "stable"
+    },
+    "code-review": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/development/code-review.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "deploy-specialist": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/workflow/deploy-specialist.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "verify-claim": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/analysis/verify-claim.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "gather-evidence": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/analysis/gather-evidence.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "cite-source": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/analysis/cite-source.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "check-naming": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/development/check-naming.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "suggest-name": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/development/suggest-name.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "validate-path": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/file/validate-path.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "file",
+      "stability": "stable"
+    },
+    "check-style": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/development/check-style.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "format-code": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/development/format-code.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "review-patterns": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/development/review-patterns.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "check-commit-msg": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/git/check-commit-msg.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "git",
+      "stability": "stable"
+    },
+    "suggest-commit-type": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/git/suggest-commit-type.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "git",
+      "stability": "stable"
+    },
+    "session-start": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/session-start.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "resolve-session-void": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/resolve-session-void.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "check-docs-needed": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/docs/check-docs-needed.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "docs",
+      "stability": "stable"
+    },
+    "validate-comments": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/docs/validate-comments.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "docs",
+      "stability": "stable"
+    },
+    "check-conventions-first": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/check-conventions-first.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "conventions",
+      "stability": "stable"
+    },
+    "enforce-pre-flight": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/enforce-pre-flight.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "conventions",
+      "stability": "stable"
+    },
+    "execute-ultrathink": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/execute-ultrathink.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "work-activity": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/work-activity.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "work-continuation": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/work-continuation.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "stability": "stable"
+    },
+    "file-operation": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/file-operation.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "file",
+      "stability": "stable"
+    },
+    "file-creation": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/file-creation.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "file",
+      "stability": "stable"
+    },
+    "tool-selection": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/tool-selection.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "tools",
+      "stability": "stable"
+    },
+    "code-creation": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/code-creation.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "evidence-check": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/evidence-check.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "architecture-claim": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/architecture-claim.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "time-capture": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/external/time-capture.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "external",
+      "stability": "stable"
+    },
+    "ambiguous-request": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/ambiguous-request.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "routing",
+      "stability": "stable"
+    },
+    "multi-step-request": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/multi-step-request.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "routing",
+      "stability": "stable"
+    },
+    "lost-context": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/lost-context.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "routing",
+      "stability": "stable"
+    },
+    "system-improvement": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/system-improvement.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "meta",
+      "stability": "stable"
+    },
+    "workflow-to-tool": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/workflow-to-tool.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "integration",
+      "stability": "stable"
+    },
+    "tool-to-convention": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/tool-to-convention.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "integration",
+      "stability": "stable"
+    },
+    "convention-to-workflow": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/convention-to-workflow.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "integration",
+      "stability": "stable"
+    },
+    "save-context": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/session/save-context.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "restore-context": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/session/restore-context.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "switch-context": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/orchestrators/switch-context.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "orchestrator",
+      "domain": "session",
+      "stability": "stable"
+    },
+    "fix-bug": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/debug/fix-bug.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "debug",
+      "stability": "stable"
+    },
+    "debug-issue": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/debug/debug-issue.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "debug",
+      "stability": "stable"
+    },
+    "explain-code": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/analysis/explain-code.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "analysis",
+      "stability": "stable"
+    },
+    "optimize-code": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/development/optimize-code.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "development",
+      "stability": "stable"
+    },
+    "create-docs": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/triggers/docs/create-docs.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "trigger",
+      "domain": "docs",
+      "stability": "stable"
+    },
+    "resolve-handler-void": {
+      "version": "1.0.0",
+      "path": ".claude/staging/handlers/operators/workflow/resolve-handler-void.md",
+      "lastModified": "2025-07-30T00:00:00Z",
+      "role": "operator",
+      "domain": "workflow",
+      "stability": "stable"
+    }
+  },
+  "version_inconsistencies": [
+    {
+      "issue": "Duplicate start-new-work handlers",
+      "description": "start-new-work exists in both .claude/templates/handlers and .claude/staging/handlers with potential differences",
+      "affected_handlers": ["start-new-work", "start-new-work-staging"],
+      "recommendation": "Consolidate to staging version and migrate templates version"
+    }
+  ],
+  "breaking_changes": [],
+  "migration_notes": {
+    "phase_status": "Phase 6 completed - 73/75 handlers migrated",
+    "missing_handlers": ["edit-file not yet migrated to staging"],
+    "duplicate_handlers": ["start-new-work exists in both locations"],
+    "next_steps": [
+      "Migrate edit-file to staging area",
+      "Remove duplicate start-new-work from templates",
+      "Version bump strategy for future updates"
+    ]
+  }
+}

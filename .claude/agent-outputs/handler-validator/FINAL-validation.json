@@ -1,0 +1,123 @@
+{
+  "validation_timestamp": "2025-08-02T10:19:00+01:00",
+  "source": "ALL_STAGING_HANDLERS",
+  "total_found": 62,
+  "total_validated": 62,
+  "passed": 3,
+  "failed": 59,
+  "summary": {
+    "critical_issues": 39,
+    "validation_errors": 56,
+    "warnings": 8
+  },
+  "results": [
+    {
+      "handler_id": "start-new-work",
+      "file_path": ".claude/staging/handlers/triggers/development/start-new-work.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "continue-work",
+      "file_path": ".claude/staging/handlers/triggers/workflow/continue-work.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "resolve-work-void",
+      "file_path": ".claude/staging/handlers/operators/workflow/resolve-work-void.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": false,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": []
+    },
+    {
+      "handler_id": "verify-claim",
+      "file_path": ".claude/staging/handlers/operators/analysis/verify-claim.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "CRITICAL: operator role handlers should not have triggers field",
+        "CRITICAL: 'Serena' is not a valid MCP tool name"
+      ]
+    },
+    {
+      "handler_id": "execute-ultrathink",
+      "file_path": ".claude/staging/handlers/orchestrators/execute-ultrathink.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": true,
+        "version_format": true
+      },
+      "errors": [
+        "CRITICAL: orchestrator role handlers should not have triggers field"
+      ]
+    },
+    {
+      "handler_id": "fix-bug",
+      "file_path": ".claude/staging/handlers/triggers/debug/fix-bug.md",
+      "status": "FAIL",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "id_matches_filename": true,
+        "role_valid": true,
+        "domain_valid": true,
+        "location_correct": true,
+        "triggers_present": true,
+        "tools_valid": false,
+        "version_format": true
+      },
+      "errors": [
+        "CRITICAL: 'mcp__serena__search_for_pattern' is not a valid MCP tool name",
+        "CRITICAL: 'mcp__serena__find_symbol' is not a valid MCP tool name"
+      ]
+    }

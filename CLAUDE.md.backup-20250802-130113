@@ -171,14 +171,13 @@ If no exact match, extract keywords and search more broadly:
 
 ### 3. Load Handler from Template Using Anchors
 ```
-Once I find the handler in REGISTRY, I load it using:
-- If exact path known: Read --file_path ".claude/templates/handlers/[role]/[domain]/[handler-name].md"
-- If searching needed: mcp__serena__search_for_pattern --substring_pattern "id: handler-name" --relative_path ".claude/templates/handlers/"
+Once I find the handler in REGISTRY (now with anchor links), I load it using:
+mcp__serena__search_for_pattern --substring_pattern "{#handler-name}" --relative_path "[template-file]"
 
 Example: For `start-new-work` handler:
-1. Registry shows: [start-new-work](handlers/triggers/development/start-new-work.md)
-2. I load directly: Read --file_path ".claude/templates/handlers/triggers/development/start-new-work.md"
-3. Or search if needed: mcp__serena__search_for_pattern --substring_pattern "id: start-new-work" --relative_path ".claude/templates/handlers/"
+1. Registry shows: [start-new-work](WORKFLOWS.md#start-new-work)
+2. I search: mcp__serena__search_for_pattern --substring_pattern "{#start-new-work}" --relative_path ".claude/templates/WORKFLOWS.md"
+3. This finds the exact handler location with permanent anchor reference
 ```
 
 ### 4. Execute Handler Completely
@@ -210,20 +209,16 @@ These create "cannot proceed without" gates that ensure proper execution natural
 ### "Work on X" → Development Flow
 ```
 1. Search REGISTRY: "start-new-work"
-2. Find: Handler link [start-new-work](handlers/triggers/development/start-new-work.md)
-3. Load using one of:
-   - Direct: Read --file_path ".claude/templates/handlers/triggers/development/start-new-work.md"
-   - Search: mcp__serena__search_for_pattern --substring_pattern "id: start-new-work" --relative_path ".claude/templates/handlers/"
+2. Find: Handler link [start-new-work](WORKFLOWS.md#start-new-work)
+3. Load: mcp__serena__search_for_pattern --substring_pattern "{#start-new-work}" --relative_path ".claude/templates/WORKFLOWS.md"
 4. Execute: Create work folder, initialize todos, begin implementation
 ```
 
 ### "Fix bug Y" → Problem Solving Flow
 ```
-1. Search REGISTRY: "fix-bug"
-2. Find: Handler link [fix-bug](handlers/triggers/debug/fix-bug.md)
-3. Load using one of:
-   - Direct: Read --file_path ".claude/templates/handlers/triggers/debug/fix-bug.md"
-   - Search: mcp__serena__search_for_pattern --substring_pattern "id: fix-bug" --relative_path ".claude/templates/handlers/"
+1. Search REGISTRY: "fix-problem"
+2. Find: Handler in WORKFLOWS.md
+3. Load: Full handler definition
 4. Execute: Evidence gathering → root cause → fix → test
 ```
 
@@ -238,10 +233,8 @@ These create "cannot proceed without" gates that ensure proper execution natural
 ### "Commit changes" → Git Flow
 ```
 1. Search REGISTRY: "commit-changes"
-2. Find: Handler link [commit-changes](handlers/operators/git/commit-changes.md)
-3. Load using one of:
-   - Direct: Read --file_path ".claude/templates/handlers/operators/git/commit-changes.md"
-   - Search: mcp__serena__search_for_pattern --substring_pattern "id: commit-changes" --relative_path ".claude/templates/handlers/"
+2. Find: Handler in TOOLS.md + conventions in CONVENTIONS.md
+3. Load: Both handlers
 4. Execute: Check conventions → create message → commit
 ```
 
@@ -253,12 +246,6 @@ My knowledge lives in these templates that I search dynamically:
 - **Purpose**: Fast lookup of all handlers
 - **When I use it**: FIRST, for every request
 - **What I find**: Handler names, locations, triggers
-
-### handlers/ - All System Handlers
-- **Purpose**: Complete handler collection organized by role and domain
-- **Structure**: handlers/triggers/, handlers/orchestrators/, handlers/operators/
-- **When I use it**: Loading handlers after finding them in REGISTRY
-- **Access methods**: Direct Read for speed, Serena search for flexibility
 
 ### WORKFLOWS.md - Development Processes
 - **Purpose**: How to do development work

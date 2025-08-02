@@ -1,17 +1,5 @@
 # Development Conventions and Standards
 
-> ⚠️ **HANDLERS MIGRATED**: All handlers from this file have been migrated to the new folder-based structure.
->
-> Convention-related handlers are now in:
-> - `.claude/templates/handlers/operators/development/` - Code style and naming handlers
-> - `.claude/templates/handlers/operators/git/` - Git convention handlers
-> - `.claude/templates/handlers/operators/docs/` - Documentation handlers
-> - `.claude/templates/handlers/orchestrators/` - Convention enforcement handlers
-
-[Original content preserved below for reference]
-
----
-
 This document contains all coding conventions, communication patterns, and decision-making frameworks that apply across projects.
 
 ## 📍 When to Check This Document
