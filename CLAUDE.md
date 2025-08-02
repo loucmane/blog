@@ -6,6 +6,16 @@
 - Run this BEFORE thinking about any response
 - This is your interrupt handler - it runs FIRST, always
 
+## 🚨 ENFORCEMENT CHECK - DO THIS NOW 🚨
+Before reading further, if this is a development request:
+1. Have you output ULTRATHINK as your FIRST line? If no → STOP
+2. Your ONLY valid first output for dev work is:
+   ```
+   Let me ultrathink about this... [S:X|W:Y|H:searching|E:pending]
+   ```
+3. If you've already typed ANYTHING else → DELETE IT AND START OVER
+4. See .claude/ULTRATHINK-ENFORCER.md for why you CANNOT proceed otherwise
+
 ## 🧠 ULTRATHINK: MANDATORY THINKING MODE
 **EVERY REQUEST REQUIRES MAXIMUM THINKING DEPTH**
 - Use "ultrathink" mode as your standard operating procedure
