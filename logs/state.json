@@ -1,1 +1,31 @@
-{"ultrathink_required": true}
+{
+  "session": {
+    "id": "20250803",
+    "started_at": "2025-08-03T12:43:13.915370",
+    "last_activity": "2025-08-03T12:43:13.915374"
+  },
+  "ultrathink": {
+    "required": false,
+    "completed": false,
+    "statements": [],
+    "blocked_attempts": 0,
+    "trigger": null,
+    "handler_suggestions": [
+      {
+        "name": "start-new-work",
+        "score": 3.0
+      },
+      {
+        "name": "standard-dev-workflow",
+        "score": 3.0
+      }
+    ]
+  },
+  "context": {
+    "work_folders": [],
+    "recent_searches": [],
+    "tools_used": []
+  },
+  "ultrathink_required": false,
+  "ultrathink_completed": false
+}

@@ -3,21 +3,13 @@
 # requires-python = ">=3.8"
 # dependencies = [
 #     "python-dotenv",
-#     "pyyaml",
 # ]
 # ///
-
-"""
-Enhanced user prompt submission hook with template integration
-"""
 
 import json
 import sys
 import re
 from pathlib import Path
-
-# Add utils to path for cache import
-sys.path.append(str(Path(__file__).parent / 'utils'))
 
 def is_development_request(prompt):
     """
@@ -115,28 +107,7 @@ def is_development_request(prompt):
     
     return False, None
 
-def find_matching_handlers(prompt):
-    """Find handlers matching the user prompt"""
-    try:
-        from handler_cache import HandlerCache
-        import os
-        
-        # Get project directory
-        project_dir = os.environ.get('CLAUDE_PROJECT_DIR', str(Path.cwd()))
-        
-        cache = HandlerCache(project_dir)
-        if not cache.load_cache():
-            # Build cache if doesn't exist
-            cache.build_cache()
-        
-        # Find top 5 matching handlers
-        matches = cache.find_handlers(prompt, limit=5)
-        return matches
-    except Exception as e:
-        print(f"Error finding handlers: {e}", file=sys.stderr)
-        return []
-
-def update_state_file(ultrathink_required, trigger_info=None, prompt=None, handler_matches=None):
+def update_state_file(ultrathink_required, trigger_info=None, prompt=None):
     """
     Update the state.json file with enhanced state tracking.
     """
@@ -184,17 +155,6 @@ def update_state_file(ultrathink_required, trigger_info=None, prompt=None, handl
             "detected_at": datetime.now().isoformat(),
             "confidence": trigger_info.get("confidence", 1.0)
         }
-        
-        # Add handler suggestions if found
-        if handler_matches:
-            suggestions = []
-            for name, score in handler_matches[:3]:  # Top 3
-                if score > 2.0:
-                    suggestions.append({
-                        "name": name,
-                        "score": float(score)
-                    })
-            state["ultrathink"]["handler_suggestions"] = suggestions
     
     # Initialize context tracking if not present
     if "context" not in state:
@@ -213,20 +173,6 @@ def update_state_file(ultrathink_required, trigger_info=None, prompt=None, handl
         # If we can't write the state file, continue silently
         pass
 
-def format_handler_suggestions(matches):
-    """Format handler matches for display"""
-    if not matches:
-        return ""
-    
-    suggestions = []
-    for name, score in matches[:3]:  # Top 3
-        if score > 2.0:  # Only show relevant matches
-            suggestions.append(f"   Suggested handler: {name} (confidence: {score:.1f})")
-    
-    if suggestions:
-        return "\n".join(suggestions)
-    return ""
-
 def main():
     try:
         # Read JSON input from stdin
@@ -242,41 +188,16 @@ def main():
         # Check if this is a development request (now returns tuple)
         is_dev_request, trigger_info = is_development_request(prompt)
         
-        handler_matches = []
-        if is_dev_request:
-            # Find matching handlers
-            handler_matches = find_matching_handlers(prompt)
-        
         # Update state file with enhanced tracking
-        update_state_file(is_dev_request, trigger_info, prompt, handler_matches)
-        
-        # Ensure backward compatibility flag is synced
-        if is_dev_request:
-            # Read and update state to ensure flags are synced
-            state_file = Path("logs/state.json")
-            if state_file.exists():
-                try:
-                    with open(state_file, 'r') as f:
-                        state = json.load(f)
-                    state["ultrathink_required"] = True  # Sync backward compatibility flag
-                    with open(state_file, 'w') as f:
-                        json.dump(state, f, indent=2)
-                except (json.JSONDecodeError, IOError):
-                    pass
+        update_state_file(is_dev_request, trigger_info, prompt)
         
         # For development requests, we just set the flag but don't block
         # The ULTRATHINK enforcement happens elsewhere in the system
         if is_dev_request:
-            # Log enhanced info to stderr for debugging
+            # Optional: Log to stderr for debugging (won't show to user)
             trigger_type = trigger_info.get('type', 'unknown')
             trigger_keyword = trigger_info.get('keyword', 'unknown')
             print(f"Development trigger detected: type={trigger_type}, keyword='{trigger_keyword}'", file=sys.stderr)
-            
-            # Show handler suggestions
-            suggestions = format_handler_suggestions(handler_matches)
-            if suggestions:
-                print("Handler suggestions stored in state:", file=sys.stderr)
-                print(suggestions, file=sys.stderr)
         
         # Always continue normally - this hook only sets state
         sys.exit(0)
@@ -284,9 +205,8 @@ def main():
     except json.JSONDecodeError:
         # Invalid JSON input, continue gracefully
         sys.exit(0)
-    except Exception as e:
-        # Any other error, log but continue gracefully
-        print(f"Hook error: {e}", file=sys.stderr)
+    except Exception:
+        # Any other error, continue gracefully
         sys.exit(0)
 
 if __name__ == '__main__':

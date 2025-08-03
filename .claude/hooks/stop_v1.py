@@ -3,22 +3,13 @@
 # requires-python = ">=3.8"
 # dependencies = [
 #     "python-dotenv",
-#     "pyyaml",
 # ]
 # ///
-
-"""
-Enhanced stop hook with analytics and reporting
-"""
 
 import json
 import sys
 import re
 from pathlib import Path
-from datetime import datetime
-
-# Add utils to path for cache import
-sys.path.append(str(Path(__file__).parent / 'utils'))
 
 def has_ultrathink_format(content):
     """
@@ -124,55 +115,37 @@ def clear_state_flags():
         # If we can't process the state file, continue silently
         pass
 
-def generate_analytics_report(state):
-    """Generate analytics about the session"""
-    analytics = {
-        'session_id': state.get('session', {}).get('id', 'unknown'),
-        'timestamp': datetime.now().isoformat(),
-        'ultrathink_compliance': {
-            'required': state.get('ultrathink', {}).get('required', False),
-            'completed': state.get('ultrathink', {}).get('completed', False),
-            'blocked_attempts': state.get('ultrathink', {}).get('blocked_attempts', 0),
-            'statements': len(state.get('ultrathink', {}).get('statements', []))
-        },
-        'handler_suggestions': {
-            'provided': len(state.get('ultrathink', {}).get('handler_suggestions', [])) > 0,
-            'suggestions': state.get('ultrathink', {}).get('handler_suggestions', [])
-        },
-        'tools_used': {
-            'total': len(state.get('context', {}).get('tools_used', [])),
-            'blocked': sum(1 for tool in state.get('context', {}).get('tools_used', []) if tool.get('blocked', False))
-        }
-    }
+def log_success():
+    """
+    Log successful ULTRATHINK format usage for debugging.
+    """
+    log_file = Path("logs/stop_hook.json")
     
-    return analytics
-
-def save_analytics(analytics):
-    """Save analytics to file"""
-    analytics_file = Path("logs/analytics.json")
-    
-    # Load existing analytics
-    existing = []
-    if analytics_file.exists():
-        try:
-            with open(analytics_file, 'r') as f:
-                existing = json.load(f)
-        except (json.JSONDecodeError, IOError):
-            existing = []
-    
-    # Append new analytics
-    existing.append(analytics)
-    
-    # Keep only last 100 entries
-    if len(existing) > 100:
-        existing = existing[-100:]
-    
-    # Save back
     try:
-        analytics_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(analytics_file, 'w') as f:
-            json.dump(existing, f, indent=2)
-    except IOError:
+        # Read existing logs or create new
+        if log_file.exists():
+            with open(log_file, 'r') as f:
+                logs = json.load(f)
+        else:
+            logs = []
+        
+        # Add success entry
+        from datetime import datetime
+        logs.append({
+            "timestamp": datetime.now().isoformat(),
+            "status": "success",
+            "message": "ULTRATHINK format properly used for development work"
+        })
+        
+        # Keep only last 50 entries
+        logs = logs[-50:]
+        
+        # Write back
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(log_file, 'w') as f:
+            json.dump(logs, f, indent=2)
+    except (json.JSONDecodeError, IOError):
+        # If logging fails, continue silently
         pass
 
 def main():
@@ -192,10 +165,6 @@ def main():
         # Read current state
         state = read_state()
         
-        # Generate analytics
-        analytics = generate_analytics_report(state)
-        save_analytics(analytics)
-        
         # Check if ULTRATHINK was required for this conversation
         ultrathink_required = state.get("ultrathink_required", False)
         
@@ -207,36 +176,31 @@ def main():
             # Validate that ULTRATHINK format was properly used
             if has_ultrathink_format(content):
                 # Success: ULTRATHINK format was used
-                success_msg = "✅ ULTRATHINK compliance achieved"
-                statements = state.get('ultrathink', {}).get('statements', [])
-                if statements:
-                    latest = statements[-1]
-                    success_msg += f"\n   Format: {latest.get('format', 'unknown')}"
-                    components = latest.get('components', {})
-                    handler = components.get('handler', '')
-                    if handler and handler not in ['searching', 'VOID']:
-                        success_msg += f"\n   Handler: {handler}"
+                log_success()
+                
+                # Provide success feedback with context
+                success_msg = "✓ ULTRATHINK format properly used for development work"
+                if trigger:
+                    trigger_keyword = trigger.get("keyword", "unknown")
+                    success_msg += f" (trigger: '{trigger_keyword}')"
+                if blocked_attempts > 0:
+                    success_msg += f" after {blocked_attempts} blocked attempt(s)"
                 
                 print(success_msg, file=sys.stderr)
                 clear_state_flags()
                 sys.exit(0)
             else:
                 # Warning: ULTRATHINK format was not used
-                warning_msg = f"⚠️  ULTRATHINK format not properly used for development work - {blocked_attempts} tool(s) were blocked"
+                warning_msg = "⚠️ ULTRATHINK format not properly used for development work"
                 if trigger:
                     trigger_keyword = trigger.get("keyword", "unknown")
-                    warning_msg += f"\n   Trigger detected: \"{trigger_keyword}\""
-                
-                # Show handler suggestions
-                suggestions = state.get('ultrathink', {}).get('handler_suggestions', [])
-                if suggestions:
-                    warning_msg += "\n   Consider using one of these handlers:"
-                    for sug in suggestions[:3]:
-                        warning_msg += f"\n     - {sug['name']}"
+                    warning_msg += f" (trigger: '{trigger_keyword}')"
+                if blocked_attempts > 0:
+                    warning_msg += f" - {blocked_attempts} tool(s) were blocked"
                 
                 print(warning_msg, file=sys.stderr)
                 clear_state_flags()  # Clear state even on failure to reset for next conversation
-                sys.exit(2)  # Changed from 1 to 2 so AI can see the warning
+                sys.exit(1)
         else:
             # No ULTRATHINK was required, clear any existing state
             clear_state_flags()

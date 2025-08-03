@@ -1,0 +1,2247 @@
+{
+  "handlers": {
+    "start-new-work": {
+      "name": "Start New Work",
+      "path": "handlers/triggers/development/start-new-work.md",
+      "triggers": [
+        "I want to work on X",
+        "Let's build Y",
+        "start working on Z",
+        "work on X",
+        "begin work on X"
+      ],
+      "keywords": [
+        "work",
+        "start",
+        "begin",
+        "new",
+        "feature",
+        "build",
+        "implement"
+      ],
+      "id": "start-new-work",
+      "role": "trigger",
+      "domain": "development",
+      "stability": "stable",
+      "dependencies": [
+        "standard-dev-workflow"
+      ],
+      "tools": [
+        "Write",
+        "TodoWrite",
+        "MultiEdit"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/triggers/development/start-new-work.md",
+      "category": "triggers"
+    },
+    "continue-work": {
+      "name": "continue-work",
+      "path": "handlers/triggers/workflow/continue-work.md",
+      "triggers": [
+        "continue with X"
+      ],
+      "keywords": [
+        "continue",
+        "resume",
+        "back",
+        "return",
+        "ongoing",
+        "previous"
+      ]
+    },
+    "standard-dev-workflow": {
+      "name": "Standard Development Workflow",
+      "path": "handlers/orchestrators/standard-dev-workflow.md",
+      "triggers": [
+        "implement X",
+        "add feature Y",
+        "create functionality Z"
+      ],
+      "keywords": [
+        "implement",
+        "feature",
+        "functionality",
+        "develop",
+        "add",
+        "create"
+      ],
+      "id": "standard-dev-workflow",
+      "role": "orchestrator",
+      "domain": "development",
+      "stability": "stable",
+      "dependencies": [
+        "start-new-work"
+      ],
+      "tools": [
+        "TodoWrite"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/orchestrators/standard-dev-workflow.md",
+      "category": "orchestrators"
+    },
+    "create-component": {
+      "name": "create-component",
+      "path": "handlers/triggers/development/create-component.md",
+      "triggers": [
+        "create a new component"
+      ],
+      "keywords": [
+        "component",
+        "module",
+        "service",
+        "utility",
+        "class",
+        "function",
+        "hook",
+        "provider"
+      ]
+    },
+    "refactor-code": {
+      "name": "refactor-code",
+      "path": "handlers/triggers/development/refactor-code.md",
+      "triggers": [
+        "refactor X"
+      ],
+      "keywords": [
+        "refactor",
+        "cleanup",
+        "improve",
+        "restructure",
+        "optimize",
+        "modernize"
+      ]
+    },
+    "create-todos": {
+      "name": "create-todos",
+      "path": "handlers/triggers/workflow/create-todos.md",
+      "triggers": [
+        "plan out X"
+      ],
+      "keywords": [
+        "plan",
+        "todos",
+        "tasks",
+        "breakdown",
+        "organize",
+        "steps"
+      ]
+    },
+    "update-todos": {
+      "name": "update-todos",
+      "path": "handlers/triggers/workflow/update-todos.md",
+      "triggers": [
+        "mark X as done"
+      ],
+      "keywords": [
+        "update",
+        "mark",
+        "done",
+        "complete",
+        "finish",
+        "progress"
+      ]
+    },
+    "check-progress": {
+      "name": "check-progress",
+      "path": "handlers/triggers/workflow/check-progress.md",
+      "triggers": [
+        "where are we?"
+      ],
+      "keywords": [
+        "progress",
+        "status",
+        "where",
+        "left",
+        "remaining",
+        "done"
+      ]
+    },
+    "show-capabilities": {
+      "name": "show-capabilities",
+      "path": "handlers/triggers/session/show-capabilities.md",
+      "triggers": [
+        "what can you do"
+      ],
+      "keywords": [
+        "help",
+        "capabilities",
+        "commands",
+        "features",
+        "abilities",
+        "options"
+      ]
+    },
+    "start-session": {
+      "name": "start-session",
+      "path": "handlers/triggers/session/start-session.md",
+      "triggers": [
+        "let's start"
+      ],
+      "keywords": [
+        "start",
+        "begin",
+        "session",
+        "initialize",
+        "setup"
+      ]
+    },
+    "session-start": {
+      "name": "Session Start",
+      "path": "handlers/orchestrators/session-start.md",
+      "triggers": [
+        "start new session",
+        "begin session",
+        "new session"
+      ],
+      "keywords": [
+        "session",
+        "start",
+        "begin",
+        "new",
+        "initialize"
+      ],
+      "id": "session-start",
+      "role": "orchestrator",
+      "domain": "session",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "date",
+        "git"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/orchestrators/session-start.md",
+      "category": "orchestrators"
+    },
+    "update-session": {
+      "name": "update-session",
+      "path": "handlers/triggers/session/update-session.md",
+      "triggers": [
+        "update SESSION.md"
+      ],
+      "keywords": [
+        "update",
+        "checkpoint",
+        "record",
+        "save",
+        "document"
+      ]
+    },
+    "end-session": {
+      "name": "end-session",
+      "path": "handlers/triggers/session/end-session.md",
+      "triggers": [
+        "let's wrap up"
+      ],
+      "keywords": [
+        "end",
+        "wrap",
+        "finish",
+        "stop",
+        "complete",
+        "done"
+      ]
+    },
+    "checkpoint-session": {
+      "name": "Checkpoint Session",
+      "path": "handlers/operators/session/checkpoint-session.md",
+      "triggers": [],
+      "keywords": [
+        "checkpoint",
+        "autosave",
+        "backup",
+        "snapshot"
+      ],
+      "id": "checkpoint-session",
+      "role": "operator",
+      "domain": "session",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Edit"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/session/checkpoint-session.md",
+      "category": "operators"
+    },
+    "deploy-ultrathink": {
+      "name": "deploy-ultrathink",
+      "path": "handlers/triggers/analysis/deploy-ultrathink.md",
+      "triggers": [
+        "think deeply about X"
+      ],
+      "keywords": [
+        "ultrathink",
+        "deep",
+        "analysis",
+        "think",
+        "analyze",
+        "complex"
+      ]
+    },
+    "deploy-specialist": {
+      "name": "deploy-specialist",
+      "path": "handlers/triggers/workflow/deploy-specialist.md",
+      "triggers": [
+        "get expert help on X"
+      ],
+      "keywords": [
+        "specialist",
+        "expert",
+        "help",
+        "deploy",
+        "assistance"
+      ]
+    },
+    "orchestrate-complex": {
+      "name": "Orchestrate Complex",
+      "path": "handlers/orchestrators/orchestrate-complex.md",
+      "triggers": [
+        "this needs multiple experts",
+        "orchestrate X",
+        "coordinate specialists for Y"
+      ],
+      "keywords": [
+        "orchestrate",
+        "coordinate",
+        "multiple",
+        "experts",
+        "complex"
+      ],
+      "id": "orchestrate-complex",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "stability": "stable",
+      "dependencies": [
+        "deploy-specialist"
+      ],
+      "tools": [
+        "Task"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/orchestrators/orchestrate-complex.md",
+      "category": "orchestrators"
+    },
+    "create-test-checkpoint": {
+      "name": "create-test-checkpoint",
+      "path": "handlers/triggers/test/create-test-checkpoint.md",
+      "triggers": [
+        "test X"
+      ],
+      "keywords": [
+        "test",
+        "testing",
+        "coverage",
+        "validate",
+        "check",
+        "verify"
+      ]
+    },
+    "simulation-test": {
+      "name": "simulation-test",
+      "path": "handlers/triggers/test/simulation-test.md",
+      "triggers": [
+        "simulate X"
+      ],
+      "keywords": [
+        "simulate",
+        "simulation",
+        "dry-run",
+        "mock",
+        "workflow-test"
+      ]
+    },
+    "validate-changes": {
+      "name": "validate-changes",
+      "path": "handlers/triggers/test/validate-changes.md",
+      "triggers": [
+        "verify X works"
+      ],
+      "keywords": [
+        "validate",
+        "verify",
+        "confirm",
+        "check",
+        "ensure",
+        "working"
+      ]
+    },
+    "create-work-folder": {
+      "name": "Create Work Folder",
+      "path": "handlers/operators/workflow/create-work-folder.md",
+      "triggers": [],
+      "keywords": [
+        "folder",
+        "tracking",
+        "organize",
+        "structure"
+      ],
+      "id": "create-work-folder",
+      "role": "operator",
+      "domain": "workflow",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Write",
+        "Edit"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/workflow/create-work-folder.md",
+      "category": "operators"
+    },
+    "update-tracker": {
+      "name": "update-tracker",
+      "path": "handlers/triggers/workflow/update-tracker.md",
+      "triggers": [
+        "update progress"
+      ],
+      "keywords": [
+        "tracker",
+        "progress",
+        "update",
+        "log",
+        "record"
+      ]
+    },
+    "document-findings": {
+      "name": "document-findings",
+      "path": "handlers/triggers/docs/document-findings.md",
+      "triggers": [
+        "I discovered X"
+      ],
+      "keywords": [
+        "findings",
+        "discovery",
+        "learned",
+        "found",
+        "insight"
+      ]
+    },
+    "record-decision": {
+      "name": "record-decision",
+      "path": "handlers/triggers/docs/record-decision.md",
+      "triggers": [
+        "decided to X"
+      ],
+      "keywords": [
+        "decision",
+        "decide",
+        "choice",
+        "rationale",
+        "why"
+      ]
+    },
+    "search-code": {
+      "name": "search-code",
+      "path": "handlers/operators/search/search-code.md",
+      "triggers": [
+        "find X"
+      ],
+      "keywords": [
+        "search",
+        "find",
+        "look",
+        "locate",
+        "where",
+        "code"
+      ]
+    },
+    "find-symbol": {
+      "name": "find-symbol",
+      "path": "handlers/operators/search/find-symbol.md",
+      "triggers": [
+        "where is X defined"
+      ],
+      "keywords": [
+        "symbol",
+        "class",
+        "function",
+        "method",
+        "definition",
+        "where"
+      ]
+    },
+    "find-references": {
+      "name": "find-references",
+      "path": "handlers/operators/search/find-references.md",
+      "triggers": [
+        "what uses X"
+      ],
+      "keywords": [
+        "references",
+        "uses",
+        "calls",
+        "imports",
+        "depends"
+      ]
+    },
+    "grep-pattern": {
+      "name": "grep-pattern",
+      "path": "handlers/operators/search/grep-pattern.md",
+      "triggers": [
+        "grep for X"
+      ],
+      "keywords": [
+        "grep",
+        "pattern",
+        "regex",
+        "text",
+        "search"
+      ]
+    },
+    "read-file": {
+      "name": "read-file",
+      "path": "handlers/operators/file/read-file.md",
+      "triggers": [
+        "show me X"
+      ],
+      "keywords": [
+        "read",
+        "show",
+        "display",
+        "view",
+        "content",
+        "file"
+      ]
+    },
+    "edit-file": {
+      "name": "Edit File",
+      "path": "handlers/operators/development/edit-file.md",
+      "triggers": [
+        "change X to Y",
+        "update Z",
+        "modify file",
+        "edit",
+        "replace",
+        "update file"
+      ],
+      "keywords": [
+        "edit",
+        "change",
+        "update",
+        "modify",
+        "fix"
+      ],
+      "id": "edit-file",
+      "role": "operator",
+      "domain": "development",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Read",
+        "Edit",
+        "MultiEdit",
+        "Write",
+        "mcp__serena__find_symbol",
+        "mcp__serena__get_symbols_overview"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/development/edit-file.md",
+      "category": "operators"
+    },
+    "create-file": {
+      "name": "create-file",
+      "path": "handlers/operators/file/create-file.md",
+      "triggers": [
+        "create new file X"
+      ],
+      "keywords": [
+        "create",
+        "new",
+        "make",
+        "add",
+        "file"
+      ]
+    },
+    "delete-file": {
+      "name": "delete-file",
+      "path": "handlers/operators/file/delete-file.md",
+      "triggers": [
+        "remove X"
+      ],
+      "keywords": [
+        "delete",
+        "remove",
+        "rm",
+        "clean",
+        "rid"
+      ]
+    },
+    "check-status": {
+      "name": "check-status",
+      "path": "handlers/operators/git/check-status.md",
+      "triggers": [
+        "what's changed"
+      ],
+      "keywords": [
+        "status",
+        "changes",
+        "diff",
+        "modified",
+        "staged"
+      ]
+    },
+    "commit-changes": {
+      "name": "commit-changes",
+      "path": "handlers/operators/git/commit-changes.md",
+      "triggers": [
+        "commit with message X"
+      ],
+      "keywords": [
+        "commit",
+        "save",
+        "gac",
+        "checkin"
+      ]
+    },
+    "create-branch": {
+      "name": "create-branch",
+      "path": "handlers/operators/git/create-branch.md",
+      "triggers": [
+        "new branch for X"
+      ],
+      "keywords": [
+        "branch",
+        "new",
+        "create",
+        "checkout"
+      ]
+    },
+    "view-history": {
+      "name": "view-history",
+      "path": "handlers/operators/git/view-history.md",
+      "triggers": [
+        "show recent commits"
+      ],
+      "keywords": [
+        "history",
+        "log",
+        "commits",
+        "recent",
+        "changes"
+      ]
+    },
+    "analyze-code": {
+      "name": "analyze-code",
+      "path": "handlers/operators/development/analyze-code.md",
+      "triggers": [
+        "analyze X for issues"
+      ],
+      "keywords": [
+        "analyze",
+        "analysis",
+        "quality",
+        "issues",
+        "review"
+      ]
+    },
+    "check-dependencies": {
+      "name": "check-dependencies",
+      "path": "handlers/operators/development/check-dependencies.md",
+      "triggers": [
+        "what does X depend on"
+      ],
+      "keywords": [
+        "dependencies",
+        "depends",
+        "imports",
+        "requires",
+        "uses"
+      ]
+    },
+    "measure-complexity": {
+      "name": "measure-complexity",
+      "path": "handlers/operators/development/measure-complexity.md",
+      "triggers": [
+        "how complex is X"
+      ],
+      "keywords": [
+        "complexity",
+        "complex",
+        "metrics",
+        "cyclomatic"
+      ]
+    },
+    "run-tests": {
+      "name": "run-tests",
+      "path": "handlers/operators/test/run-tests.md",
+      "triggers": [
+        "run tests"
+      ],
+      "keywords": [
+        "test",
+        "run",
+        "execute",
+        "suite",
+        "jest",
+        "mocha"
+      ]
+    },
+    "check-lint": {
+      "name": "check-lint",
+      "path": "handlers/operators/test/check-lint.md",
+      "triggers": [
+        "check code style"
+      ],
+      "keywords": [
+        "lint",
+        "style",
+        "eslint",
+        "format",
+        "check"
+      ]
+    },
+    "build-project": {
+      "name": "build-project",
+      "path": "handlers/operators/development/build-project.md",
+      "triggers": [
+        "build the project"
+      ],
+      "keywords": [
+        "build",
+        "compile",
+        "bundle",
+        "webpack",
+        "vite"
+      ]
+    },
+    "verify-claim": {
+      "name": "Verify Claim",
+      "path": "handlers/operators/analysis/verify-claim.md",
+      "triggers": [
+        "prove X is true",
+        "verify that Y",
+        "confirm Z"
+      ],
+      "keywords": [
+        "verify",
+        "prove",
+        "confirm",
+        "evidence",
+        "true"
+      ],
+      "id": "verify-claim",
+      "role": "operator",
+      "domain": "analysis",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Serena"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/analysis/verify-claim.md",
+      "category": "operators"
+    },
+    "gather-evidence": {
+      "name": "Gather Evidence",
+      "path": "handlers/operators/analysis/gather-evidence.md",
+      "triggers": [
+        "find evidence for X",
+        "gather proof of Y",
+        "show support for Z"
+      ],
+      "keywords": [
+        "evidence",
+        "proof",
+        "support",
+        "backup",
+        "facts"
+      ],
+      "id": "gather-evidence",
+      "role": "operator",
+      "domain": "analysis",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Serena"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/analysis/gather-evidence.md",
+      "category": "operators"
+    },
+    "cite-source": {
+      "name": "Cite Source",
+      "path": "handlers/operators/analysis/cite-source.md",
+      "triggers": [
+        "where does this come from",
+        "what's the source",
+        "cite your reference"
+      ],
+      "keywords": [
+        "cite",
+        "source",
+        "reference",
+        "from",
+        "where"
+      ],
+      "id": "cite-source",
+      "role": "operator",
+      "domain": "analysis",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Serena"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/analysis/cite-source.md",
+      "category": "operators"
+    },
+    "check-naming": {
+      "name": "check-naming",
+      "path": "handlers/operators/development/check-naming.md",
+      "triggers": [
+        "is X named correctly"
+      ],
+      "keywords": [
+        "naming",
+        "name",
+        "convention",
+        "correct",
+        "validate"
+      ]
+    },
+    "suggest-name": {
+      "name": "suggest-name",
+      "path": "handlers/operators/development/suggest-name.md",
+      "triggers": [
+        "what should I call X"
+      ],
+      "keywords": [
+        "suggest",
+        "name",
+        "ideas",
+        "call",
+        "naming"
+      ]
+    },
+    "validate-path": {
+      "name": "Validate Path",
+      "path": "handlers/operators/file/validate-path.md",
+      "triggers": [
+        "is this the right location",
+        "check file placement",
+        "validate path"
+      ],
+      "keywords": [
+        "path",
+        "location",
+        "placement",
+        "directory",
+        "folder"
+      ],
+      "id": "validate-path",
+      "role": "operator",
+      "domain": "file",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Serena"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/file/validate-path.md",
+      "category": "operators"
+    },
+    "check-style": {
+      "name": "check-style",
+      "path": "handlers/operators/development/check-style.md",
+      "triggers": [
+        "does X follow conventions"
+      ],
+      "keywords": [
+        "style",
+        "conventions",
+        "format",
+        "standards"
+      ]
+    },
+    "format-code": {
+      "name": "format-code",
+      "path": "handlers/operators/development/format-code.md",
+      "triggers": [
+        "format X properly"
+      ],
+      "keywords": [
+        "format",
+        "formatting",
+        "style",
+        "clean",
+        "prettier"
+      ]
+    },
+    "review-patterns": {
+      "name": "review-patterns",
+      "path": "handlers/operators/development/review-patterns.md",
+      "triggers": [
+        "is this idiomatic"
+      ],
+      "keywords": [
+        "idiomatic",
+        "patterns",
+        "approach",
+        "best-practice"
+      ]
+    },
+    "check-commit-msg": {
+      "name": "Check Commit Message",
+      "path": "handlers/operators/git/check-commit-msg.md",
+      "triggers": [
+        "is this commit message valid",
+        "check commit format",
+        "validate message"
+      ],
+      "keywords": [
+        "commit",
+        "message",
+        "format",
+        "valid",
+        "conventional"
+      ],
+      "id": "check-commit-msg",
+      "role": "operator",
+      "domain": "git",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/git/check-commit-msg.md",
+      "category": "operators"
+    },
+    "suggest-commit-type": {
+      "name": "Suggest Commit Type",
+      "path": "handlers/operators/git/suggest-commit-type.md",
+      "triggers": [
+        "what type is this change",
+        "commit type for X",
+        "should this be feat or fix"
+      ],
+      "keywords": [
+        "type",
+        "commit",
+        "feat",
+        "fix",
+        "chore"
+      ],
+      "id": "suggest-commit-type",
+      "role": "operator",
+      "domain": "git",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/git/suggest-commit-type.md",
+      "category": "operators"
+    },
+    "check-docs-needed": {
+      "name": "Check Documentation Needed",
+      "path": "handlers/operators/docs/check-docs-needed.md",
+      "triggers": [
+        "does X need documentation",
+        "should I document Y",
+        "docs required?"
+      ],
+      "keywords": [
+        "documentation",
+        "docs",
+        "needed",
+        "required"
+      ],
+      "id": "check-docs-needed",
+      "role": "operator",
+      "domain": "docs",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [
+        "Serena"
+      ],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/docs/check-docs-needed.md",
+      "category": "operators"
+    },
+    "validate-comments": {
+      "name": "Validate Comments",
+      "path": "handlers/operators/docs/validate-comments.md",
+      "triggers": [
+        "are these comments good",
+        "check comment quality",
+        "review documentation"
+      ],
+      "keywords": [
+        "comments",
+        "quality",
+        "review",
+        "validate"
+      ],
+      "id": "validate-comments",
+      "role": "operator",
+      "domain": "docs",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/operators/docs/validate-comments.md",
+      "category": "operators"
+    },
+    "check-conventions-first": {
+      "name": "Check Conventions First",
+      "path": "handlers/orchestrators/check-conventions-first.md",
+      "triggers": [
+        "Internal trigger before any action that has conventions"
+      ],
+      "keywords": [
+        "check",
+        "conventions",
+        "first",
+        "before"
+      ],
+      "id": "check-conventions-first",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "stability": "stable",
+      "dependencies": [],
+      "tools": [],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/orchestrators/check-conventions-first.md",
+      "category": "orchestrators"
+    },
+    "enforce-pre-flight": {
+      "name": "Enforce Pre-Flight",
+      "path": "handlers/orchestrators/enforce-pre-flight.md",
+      "triggers": [
+        "enforce conventions",
+        "make sure I check",
+        "prevent mistakes"
+      ],
+      "keywords": [
+        "enforce",
+        "preflight",
+        "check",
+        "ensure"
+      ],
+      "id": "enforce-pre-flight",
+      "role": "orchestrator",
+      "domain": "workflow",
+      "stability": "stable",
+      "dependencies": [
+        "check-conventions-first"
+      ],
+      "tools": [],
+      "version": "1.0.0",
+      "file_path": ".claude/templates/handlers/orchestrators/enforce-pre-flight.md",
+      "category": "orchestrators"
+    },
+    "workflow-to-tool": {
+      "name": "workflow-to-tool",
+      "path": "handlers/operators/workflow/workflow-to-tool.md",
+      "triggers": [],
+      "keywords": [
+        "workflow",
+        "tool",
+        "integration",
+        "connect"
+      ]
+    },
+    "tool-to-convention": {
+      "name": "tool-to-convention",
+      "path": "handlers/operators/workflow/tool-to-convention.md",
+      "triggers": [],
+      "keywords": [
+        "tool",
+        "convention",
+        "check",
+        "validate"
+      ]
+    },
+    "convention-to-workflow": {
+      "name": "convention-to-workflow",
+      "path": "handlers/operators/workflow/convention-to-workflow.md",
+      "triggers": [],
+      "keywords": [
+        "violation",
+        "fix",
+        "workflow",
+        "correct"
+      ]
+    },
+    "save-context": {
+      "name": "save-context",
+      "path": "handlers/operators/workflow/save-context.md",
+      "triggers": [
+        "save state"
+      ],
+      "keywords": [
+        "save",
+        "context",
+        "state",
+        "checkpoint"
+      ]
+    },
+    "restore-context": {
+      "name": "restore-context",
+      "path": "handlers/operators/workflow/restore-context.md",
+      "triggers": [
+        "resume work"
+      ],
+      "keywords": [
+        "restore",
+        "resume",
+        "continue",
+        "context"
+      ]
+    },
+    "switch-context": {
+      "name": "switch-context",
+      "path": "handlers/operators/workflow/switch-context.md",
+      "triggers": [
+        "work on something else"
+      ],
+      "keywords": [
+        "switch",
+        "change",
+        "context",
+        "different"
+      ]
+    },
+    "fix-bug": {
+      "name": "fix-bug",
+      "path": "handlers/triggers/debug/fix-bug.md",
+      "triggers": [
+        "fix bug X"
+      ],
+      "keywords": [
+        "fix",
+        "bug",
+        "issue",
+        "problem",
+        "error",
+        "broken",
+        "resolve"
+      ]
+    },
+    "debug-issue": {
+      "name": "debug-issue",
+      "path": "handlers/triggers/debug/debug-issue.md",
+      "triggers": [
+        "debug X"
+      ],
+      "keywords": [
+        "debug",
+        "trace",
+        "investigate",
+        "diagnose",
+        "troubleshoot"
+      ]
+    },
+    "explain-code": {
+      "name": "explain-code",
+      "path": "handlers/triggers/analysis/explain-code.md",
+      "triggers": [
+        "how does X work?"
+      ],
+      "keywords": [
+        "explain",
+        "how",
+        "works",
+        "what",
+        "does",
+        "understand"
+      ]
+    },
+    "code-review": {
+      "name": "code-review",
+      "path": "handlers/triggers/analysis/code-review.md",
+      "triggers": [
+        "review my changes"
+      ],
+      "keywords": [
+        "review",
+        "check",
+        "examine",
+        "feedback",
+        "critique"
+      ]
+    },
+    "optimize-code": {
+      "name": "optimize-code",
+      "path": "handlers/triggers/development/optimize-code.md",
+      "triggers": [
+        "optimize X"
+      ],
+      "keywords": [
+        "optimize",
+        "performance",
+        "speed",
+        "improve",
+        "faster"
+      ]
+    },
+    "create-docs": {
+      "name": "create-docs",
+      "path": "handlers/triggers/docs/create-docs.md",
+      "triggers": [
+        "document X"
+      ],
+      "keywords": [
+        "document",
+        "docs",
+        "documentation",
+        "write",
+        "readme"
+      ]
+    }
+  },
+  "triggers": {
+    "I want to work on X": [
+      "start-new-work"
+    ],
+    "continue with X": [
+      "continue-work"
+    ],
+    "implement X": [
+      "standard-dev-workflow"
+    ],
+    "create a new component": [
+      "create-component"
+    ],
+    "refactor X": [
+      "refactor-code"
+    ],
+    "plan out X": [
+      "create-todos"
+    ],
+    "mark X as done": [
+      "update-todos"
+    ],
+    "where are we?": [
+      "check-progress"
+    ],
+    "what can you do": [
+      "show-capabilities"
+    ],
+    "let's start": [
+      "start-session"
+    ],
+    "start new session": [
+      "session-start"
+    ],
+    "update SESSION.md": [
+      "update-session"
+    ],
+    "let's wrap up": [
+      "end-session"
+    ],
+    "think deeply about X": [
+      "deploy-ultrathink"
+    ],
+    "get expert help on X": [
+      "deploy-specialist"
+    ],
+    "this needs multiple experts": [
+      "orchestrate-complex"
+    ],
+    "test X": [
+      "create-test-checkpoint"
+    ],
+    "simulate X": [
+      "simulation-test"
+    ],
+    "verify X works": [
+      "validate-changes"
+    ],
+    "update progress": [
+      "update-tracker"
+    ],
+    "I discovered X": [
+      "document-findings"
+    ],
+    "decided to X": [
+      "record-decision"
+    ],
+    "find X": [
+      "search-code"
+    ],
+    "where is X defined": [
+      "find-symbol"
+    ],
+    "what uses X": [
+      "find-references"
+    ],
+    "grep for X": [
+      "grep-pattern"
+    ],
+    "show me X": [
+      "read-file"
+    ],
+    "change X to Y": [
+      "edit-file"
+    ],
+    "create new file X": [
+      "create-file"
+    ],
+    "remove X": [
+      "delete-file"
+    ],
+    "what's changed": [
+      "check-status"
+    ],
+    "commit with message X": [
+      "commit-changes"
+    ],
+    "new branch for X": [
+      "create-branch"
+    ],
+    "show recent commits": [
+      "view-history"
+    ],
+    "analyze X for issues": [
+      "analyze-code"
+    ],
+    "what does X depend on": [
+      "check-dependencies"
+    ],
+    "how complex is X": [
+      "measure-complexity"
+    ],
+    "run tests": [
+      "run-tests"
+    ],
+    "check code style": [
+      "check-lint"
+    ],
+    "build the project": [
+      "build-project"
+    ],
+    "prove X is true": [
+      "verify-claim"
+    ],
+    "find evidence for X": [
+      "gather-evidence"
+    ],
+    "where does this come from": [
+      "cite-source"
+    ],
+    "is X named correctly": [
+      "check-naming"
+    ],
+    "what should I call X": [
+      "suggest-name"
+    ],
+    "is this the right location": [
+      "validate-path"
+    ],
+    "does X follow conventions": [
+      "check-style"
+    ],
+    "format X properly": [
+      "format-code"
+    ],
+    "is this idiomatic": [
+      "review-patterns"
+    ],
+    "is this commit message valid": [
+      "check-commit-msg"
+    ],
+    "what type is this change": [
+      "suggest-commit-type"
+    ],
+    "does X need documentation": [
+      "check-docs-needed"
+    ],
+    "are these comments good": [
+      "validate-comments"
+    ],
+    "enforce conventions": [
+      "enforce-pre-flight"
+    ],
+    "save state": [
+      "save-context"
+    ],
+    "resume work": [
+      "restore-context"
+    ],
+    "work on something else": [
+      "switch-context"
+    ],
+    "fix bug X": [
+      "fix-bug"
+    ],
+    "debug X": [
+      "debug-issue"
+    ],
+    "how does X work?": [
+      "explain-code"
+    ],
+    "review my changes": [
+      "code-review"
+    ],
+    "optimize X": [
+      "optimize-code"
+    ],
+    "document X": [
+      "create-docs"
+    ]
+  },
+  "keywords": {
+    "work": [
+      "start-new-work"
+    ],
+    "start": [
+      "start-new-work",
+      "start-session",
+      "session-start"
+    ],
+    "begin": [
+      "start-new-work",
+      "start-session",
+      "session-start"
+    ],
+    "new": [
+      "start-new-work",
+      "session-start",
+      "create-file",
+      "create-branch"
+    ],
+    "feature": [
+      "start-new-work",
+      "standard-dev-workflow"
+    ],
+    "build": [
+      "start-new-work",
+      "build-project"
+    ],
+    "implement": [
+      "start-new-work",
+      "standard-dev-workflow"
+    ],
+    "continue": [
+      "continue-work",
+      "restore-context"
+    ],
+    "resume": [
+      "continue-work",
+      "restore-context"
+    ],
+    "back": [
+      "continue-work"
+    ],
+    "return": [
+      "continue-work"
+    ],
+    "ongoing": [
+      "continue-work"
+    ],
+    "previous": [
+      "continue-work"
+    ],
+    "functionality": [
+      "standard-dev-workflow"
+    ],
+    "develop": [
+      "standard-dev-workflow"
+    ],
+    "add": [
+      "standard-dev-workflow",
+      "create-file"
+    ],
+    "create": [
+      "standard-dev-workflow",
+      "create-file",
+      "create-branch"
+    ],
+    "component": [
+      "create-component"
+    ],
+    "module": [
+      "create-component"
+    ],
+    "service": [
+      "create-component"
+    ],
+    "utility": [
+      "create-component"
+    ],
+    "class": [
+      "create-component",
+      "find-symbol"
+    ],
+    "function": [
+      "create-component",
+      "find-symbol"
+    ],
+    "hook": [
+      "create-component"
+    ],
+    "provider": [
+      "create-component"
+    ],
+    "refactor": [
+      "refactor-code"
+    ],
+    "cleanup": [
+      "refactor-code"
+    ],
+    "improve": [
+      "refactor-code",
+      "optimize-code"
+    ],
+    "restructure": [
+      "refactor-code"
+    ],
+    "optimize": [
+      "refactor-code",
+      "optimize-code"
+    ],
+    "modernize": [
+      "refactor-code"
+    ],
+    "plan": [
+      "create-todos"
+    ],
+    "todos": [
+      "create-todos"
+    ],
+    "tasks": [
+      "create-todos"
+    ],
+    "breakdown": [
+      "create-todos"
+    ],
+    "organize": [
+      "create-todos",
+      "create-work-folder"
+    ],
+    "steps": [
+      "create-todos"
+    ],
+    "update": [
+      "update-todos",
+      "update-session",
+      "update-tracker",
+      "edit-file"
+    ],
+    "mark": [
+      "update-todos"
+    ],
+    "done": [
+      "update-todos",
+      "check-progress",
+      "end-session"
+    ],
+    "complete": [
+      "update-todos",
+      "end-session"
+    ],
+    "finish": [
+      "update-todos",
+      "end-session"
+    ],
+    "progress": [
+      "update-todos",
+      "check-progress",
+      "update-tracker"
+    ],
+    "status": [
+      "check-progress",
+      "check-status"
+    ],
+    "where": [
+      "check-progress",
+      "search-code",
+      "find-symbol",
+      "cite-source"
+    ],
+    "left": [
+      "check-progress"
+    ],
+    "remaining": [
+      "check-progress"
+    ],
+    "help": [
+      "show-capabilities",
+      "deploy-specialist"
+    ],
+    "capabilities": [
+      "show-capabilities"
+    ],
+    "commands": [
+      "show-capabilities"
+    ],
+    "features": [
+      "show-capabilities"
+    ],
+    "abilities": [
+      "show-capabilities"
+    ],
+    "options": [
+      "show-capabilities"
+    ],
+    "session": [
+      "start-session",
+      "session-start"
+    ],
+    "initialize": [
+      "start-session",
+      "session-start"
+    ],
+    "setup": [
+      "start-session"
+    ],
+    "checkpoint": [
+      "update-session",
+      "checkpoint-session",
+      "save-context"
+    ],
+    "record": [
+      "update-session",
+      "update-tracker"
+    ],
+    "save": [
+      "update-session",
+      "commit-changes",
+      "save-context"
+    ],
+    "document": [
+      "update-session",
+      "create-docs"
+    ],
+    "end": [
+      "end-session"
+    ],
+    "wrap": [
+      "end-session"
+    ],
+    "stop": [
+      "end-session"
+    ],
+    "autosave": [
+      "checkpoint-session"
+    ],
+    "backup": [
+      "checkpoint-session",
+      "gather-evidence"
+    ],
+    "snapshot": [
+      "checkpoint-session"
+    ],
+    "ultrathink": [
+      "deploy-ultrathink"
+    ],
+    "deep": [
+      "deploy-ultrathink"
+    ],
+    "analysis": [
+      "deploy-ultrathink",
+      "analyze-code"
+    ],
+    "think": [
+      "deploy-ultrathink"
+    ],
+    "analyze": [
+      "deploy-ultrathink",
+      "analyze-code"
+    ],
+    "complex": [
+      "deploy-ultrathink",
+      "orchestrate-complex",
+      "measure-complexity"
+    ],
+    "specialist": [
+      "deploy-specialist"
+    ],
+    "expert": [
+      "deploy-specialist"
+    ],
+    "deploy": [
+      "deploy-specialist"
+    ],
+    "assistance": [
+      "deploy-specialist"
+    ],
+    "orchestrate": [
+      "orchestrate-complex"
+    ],
+    "coordinate": [
+      "orchestrate-complex"
+    ],
+    "multiple": [
+      "orchestrate-complex"
+    ],
+    "experts": [
+      "orchestrate-complex"
+    ],
+    "test": [
+      "create-test-checkpoint",
+      "run-tests"
+    ],
+    "testing": [
+      "create-test-checkpoint"
+    ],
+    "coverage": [
+      "create-test-checkpoint"
+    ],
+    "validate": [
+      "create-test-checkpoint",
+      "validate-changes",
+      "check-naming",
+      "validate-comments",
+      "tool-to-convention"
+    ],
+    "check": [
+      "create-test-checkpoint",
+      "validate-changes",
+      "check-lint",
+      "check-conventions-first",
+      "enforce-pre-flight",
+      "tool-to-convention",
+      "code-review"
+    ],
+    "verify": [
+      "create-test-checkpoint",
+      "validate-changes",
+      "verify-claim"
+    ],
+    "simulate": [
+      "simulation-test"
+    ],
+    "simulation": [
+      "simulation-test"
+    ],
+    "dry-run": [
+      "simulation-test"
+    ],
+    "mock": [
+      "simulation-test"
+    ],
+    "workflow-test": [
+      "simulation-test"
+    ],
+    "confirm": [
+      "validate-changes",
+      "verify-claim"
+    ],
+    "ensure": [
+      "validate-changes",
+      "enforce-pre-flight"
+    ],
+    "working": [
+      "validate-changes"
+    ],
+    "folder": [
+      "create-work-folder",
+      "validate-path"
+    ],
+    "tracking": [
+      "create-work-folder"
+    ],
+    "structure": [
+      "create-work-folder"
+    ],
+    "tracker": [
+      "update-tracker"
+    ],
+    "log": [
+      "update-tracker",
+      "view-history"
+    ],
+    "findings": [
+      "document-findings"
+    ],
+    "discovery": [
+      "document-findings"
+    ],
+    "learned": [
+      "document-findings"
+    ],
+    "found": [
+      "document-findings"
+    ],
+    "insight": [
+      "document-findings"
+    ],
+    "decision": [
+      "record-decision"
+    ],
+    "decide": [
+      "record-decision"
+    ],
+    "choice": [
+      "record-decision"
+    ],
+    "rationale": [
+      "record-decision"
+    ],
+    "why": [
+      "record-decision"
+    ],
+    "search": [
+      "search-code",
+      "grep-pattern"
+    ],
+    "find": [
+      "search-code"
+    ],
+    "look": [
+      "search-code"
+    ],
+    "locate": [
+      "search-code"
+    ],
+    "code": [
+      "search-code"
+    ],
+    "symbol": [
+      "find-symbol"
+    ],
+    "method": [
+      "find-symbol"
+    ],
+    "definition": [
+      "find-symbol"
+    ],
+    "references": [
+      "find-references"
+    ],
+    "uses": [
+      "find-references",
+      "check-dependencies"
+    ],
+    "calls": [
+      "find-references"
+    ],
+    "imports": [
+      "find-references",
+      "check-dependencies"
+    ],
+    "depends": [
+      "find-references",
+      "check-dependencies"
+    ],
+    "grep": [
+      "grep-pattern"
+    ],
+    "pattern": [
+      "grep-pattern"
+    ],
+    "regex": [
+      "grep-pattern"
+    ],
+    "text": [
+      "grep-pattern"
+    ],
+    "read": [
+      "read-file"
+    ],
+    "show": [
+      "read-file"
+    ],
+    "display": [
+      "read-file"
+    ],
+    "view": [
+      "read-file"
+    ],
+    "content": [
+      "read-file"
+    ],
+    "file": [
+      "read-file",
+      "create-file"
+    ],
+    "edit": [
+      "edit-file"
+    ],
+    "change": [
+      "edit-file",
+      "switch-context"
+    ],
+    "modify": [
+      "edit-file"
+    ],
+    "fix": [
+      "edit-file",
+      "suggest-commit-type",
+      "convention-to-workflow",
+      "fix-bug"
+    ],
+    "make": [
+      "create-file"
+    ],
+    "delete": [
+      "delete-file"
+    ],
+    "remove": [
+      "delete-file"
+    ],
+    "rm": [
+      "delete-file"
+    ],
+    "clean": [
+      "delete-file",
+      "format-code"
+    ],
+    "rid": [
+      "delete-file"
+    ],
+    "changes": [
+      "check-status",
+      "view-history"
+    ],
+    "diff": [
+      "check-status"
+    ],
+    "modified": [
+      "check-status"
+    ],
+    "staged": [
+      "check-status"
+    ],
+    "commit": [
+      "commit-changes",
+      "check-commit-msg",
+      "suggest-commit-type"
+    ],
+    "gac": [
+      "commit-changes"
+    ],
+    "checkin": [
+      "commit-changes"
+    ],
+    "branch": [
+      "create-branch"
+    ],
+    "checkout": [
+      "create-branch"
+    ],
+    "history": [
+      "view-history"
+    ],
+    "commits": [
+      "view-history"
+    ],
+    "recent": [
+      "view-history"
+    ],
+    "quality": [
+      "analyze-code",
+      "validate-comments"
+    ],
+    "issues": [
+      "analyze-code"
+    ],
+    "review": [
+      "analyze-code",
+      "validate-comments",
+      "code-review"
+    ],
+    "dependencies": [
+      "check-dependencies"
+    ],
+    "requires": [
+      "check-dependencies"
+    ],
+    "complexity": [
+      "measure-complexity"
+    ],
+    "metrics": [
+      "measure-complexity"
+    ],
+    "cyclomatic": [
+      "measure-complexity"
+    ],
+    "run": [
+      "run-tests"
+    ],
+    "execute": [
+      "run-tests"
+    ],
+    "suite": [
+      "run-tests"
+    ],
+    "jest": [
+      "run-tests"
+    ],
+    "mocha": [
+      "run-tests"
+    ],
+    "lint": [
+      "check-lint"
+    ],
+    "style": [
+      "check-lint",
+      "check-style",
+      "format-code"
+    ],
+    "eslint": [
+      "check-lint"
+    ],
+    "format": [
+      "check-lint",
+      "check-style",
+      "format-code",
+      "check-commit-msg"
+    ],
+    "compile": [
+      "build-project"
+    ],
+    "bundle": [
+      "build-project"
+    ],
+    "webpack": [
+      "build-project"
+    ],
+    "vite": [
+      "build-project"
+    ],
+    "prove": [
+      "verify-claim"
+    ],
+    "evidence": [
+      "verify-claim",
+      "gather-evidence"
+    ],
+    "true": [
+      "verify-claim"
+    ],
+    "proof": [
+      "gather-evidence"
+    ],
+    "support": [
+      "gather-evidence"
+    ],
+    "facts": [
+      "gather-evidence"
+    ],
+    "cite": [
+      "cite-source"
+    ],
+    "source": [
+      "cite-source"
+    ],
+    "reference": [
+      "cite-source"
+    ],
+    "from": [
+      "cite-source"
+    ],
+    "naming": [
+      "check-naming",
+      "suggest-name"
+    ],
+    "name": [
+      "check-naming",
+      "suggest-name"
+    ],
+    "convention": [
+      "check-naming",
+      "tool-to-convention"
+    ],
+    "correct": [
+      "check-naming",
+      "convention-to-workflow"
+    ],
+    "suggest": [
+      "suggest-name"
+    ],
+    "ideas": [
+      "suggest-name"
+    ],
+    "call": [
+      "suggest-name"
+    ],
+    "path": [
+      "validate-path"
+    ],
+    "location": [
+      "validate-path"
+    ],
+    "placement": [
+      "validate-path"
+    ],
+    "directory": [
+      "validate-path"
+    ],
+    "conventions": [
+      "check-style",
+      "check-conventions-first"
+    ],
+    "standards": [
+      "check-style"
+    ],
+    "formatting": [
+      "format-code"
+    ],
+    "prettier": [
+      "format-code"
+    ],
+    "idiomatic": [
+      "review-patterns"
+    ],
+    "patterns": [
+      "review-patterns"
+    ],
+    "approach": [
+      "review-patterns"
+    ],
+    "best-practice": [
+      "review-patterns"
+    ],
+    "message": [
+      "check-commit-msg"
+    ],
+    "valid": [
+      "check-commit-msg"
+    ],
+    "conventional": [
+      "check-commit-msg"
+    ],
+    "type": [
+      "suggest-commit-type"
+    ],
+    "feat": [
+      "suggest-commit-type"
+    ],
+    "chore": [
+      "suggest-commit-type"
+    ],
+    "documentation": [
+      "check-docs-needed",
+      "create-docs"
+    ],
+    "docs": [
+      "check-docs-needed",
+      "create-docs"
+    ],
+    "needed": [
+      "check-docs-needed"
+    ],
+    "required": [
+      "check-docs-needed"
+    ],
+    "comments": [
+      "validate-comments"
+    ],
+    "first": [
+      "check-conventions-first"
+    ],
+    "before": [
+      "check-conventions-first"
+    ],
+    "enforce": [
+      "enforce-pre-flight"
+    ],
+    "preflight": [
+      "enforce-pre-flight"
+    ],
+    "workflow": [
+      "workflow-to-tool",
+      "convention-to-workflow"
+    ],
+    "tool": [
+      "workflow-to-tool",
+      "tool-to-convention"
+    ],
+    "integration": [
+      "workflow-to-tool"
+    ],
+    "connect": [
+      "workflow-to-tool"
+    ],
+    "violation": [
+      "convention-to-workflow"
+    ],
+    "context": [
+      "save-context",
+      "restore-context",
+      "switch-context"
+    ],
+    "state": [
+      "save-context"
+    ],
+    "restore": [
+      "restore-context"
+    ],
+    "switch": [
+      "switch-context"
+    ],
+    "different": [
+      "switch-context"
+    ],
+    "bug": [
+      "fix-bug"
+    ],
+    "issue": [
+      "fix-bug"
+    ],
+    "problem": [
+      "fix-bug"
+    ],
+    "error": [
+      "fix-bug"
+    ],
+    "broken": [
+      "fix-bug"
+    ],
+    "resolve": [
+      "fix-bug"
+    ],
+    "debug": [
+      "debug-issue"
+    ],
+    "trace": [
+      "debug-issue"
+    ],
+    "investigate": [
+      "debug-issue"
+    ],
+    "diagnose": [
+      "debug-issue"
+    ],
+    "troubleshoot": [
+      "debug-issue"
+    ],
+    "explain": [
+      "explain-code"
+    ],
+    "how": [
+      "explain-code"
+    ],
+    "works": [
+      "explain-code"
+    ],
+    "what": [
+      "explain-code"
+    ],
+    "does": [
+      "explain-code"
+    ],
+    "understand": [
+      "explain-code"
+    ],
+    "examine": [
+      "code-review"
+    ],
+    "feedback": [
+      "code-review"
+    ],
+    "critique": [
+      "code-review"
+    ],
+    "performance": [
+      "optimize-code"
+    ],
+    "speed": [
+      "optimize-code"
+    ],
+    "faster": [
+      "optimize-code"
+    ],
+    "write": [
+      "create-docs"
+    ],
+    "readme": [
+      "create-docs"
+    ]
+  },
+  "categories": {},
+  "last_updated": "2025-08-02T20:37:45.977658"
+}

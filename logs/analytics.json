@@ -1,0 +1,173 @@
+[
+  {
+    "session_id": "unknown",
+    "timestamp": "2025-08-02T21:26:32.873544",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "unknown",
+    "timestamp": "2025-08-02T21:27:14.480417",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250803",
+    "timestamp": "2025-08-03T12:20:49.230046",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 1,
+      "statements": 1
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 3.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250803",
+    "timestamp": "2025-08-03T12:28:44.015100",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 2,
+      "statements": 2
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 3.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250803",
+    "timestamp": "2025-08-03T13:22:47.206527",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": false,
+      "blocked_attempts": 11,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 3.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250803",
+    "timestamp": "2025-08-03T13:24:54.407706",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 3.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250803",
+    "timestamp": "2025-08-03T13:29:32.908343",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 3.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  }
+]

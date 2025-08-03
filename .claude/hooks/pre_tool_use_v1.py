@@ -3,21 +3,13 @@
 # requires-python = ">=3.8"
 # dependencies = [
 #     "python-dotenv",
-#     "pyyaml",
 # ]
 # ///
-
-"""
-Enhanced pre-tool-use hook with intelligent handler suggestions
-"""
 
 import json
 import sys
 import re
 from pathlib import Path
-
-# Add utils to path for cache import
-sys.path.append(str(Path(__file__).parent / 'utils'))
 
 def is_development_tool(tool_name):
     """
@@ -33,44 +25,12 @@ def is_development_tool(tool_name):
 def has_ultrathink_format(message):
     """
     Check if a message contains the S:W:H:E ULTRATHINK format.
-    Returns tuple: (has_format, components) where components is dict or None.
+    Returns True if format is detected, False otherwise.
     """
     # Pattern for S:W:H:E format: [S:X|W:Y|H:Z|E:something]
-    ultrathink_pattern = r'\[S:([^|\]]+)\|W:([^|\]]+)\|H:([^|\]]+)\|E:([^\]]+)\]'
+    ultrathink_pattern = r'\[S:[^|\]]+\|W:[^|\]]+\|H:[^|\]]+\|E:[^\]]+\]'
     
-    match = re.search(ultrathink_pattern, message)
-    if match:
-        return True, {
-            'session': match.group(1),
-            'work': match.group(2),
-            'handler': match.group(3),
-            'evidence': match.group(4)
-        }
-    return False, None
-
-def validate_handler(handler_name):
-    """Validate if handler exists in REGISTRY"""
-    try:
-        from handler_cache import HandlerCache
-        import os
-        
-        project_dir = os.environ.get('CLAUDE_PROJECT_DIR', str(Path.cwd()))
-        cache = HandlerCache(project_dir)
-        
-        if not cache.load_cache():
-            return False, []
-        
-        # Check if exact handler exists
-        handler_info = cache.get_handler_info(handler_name)
-        if handler_info:
-            return True, []
-        
-        # Find similar handlers
-        similar = cache.find_handlers(handler_name, limit=3)
-        return False, similar
-        
-    except Exception:
-        return False, []
+    return bool(re.search(ultrathink_pattern, message))
 
 def read_state():
     """
@@ -163,13 +123,6 @@ def generate_intelligent_error(state):
 
 Detected trigger: "{trigger_keyword}" (type: {trigger_type})"""
     
-    # Add handler suggestions from state
-    suggestions = state.get('ultrathink', {}).get('handler_suggestions', [])
-    if suggestions:
-        error_msg += "\n\nSuggested handlers from your request:"
-        for sug in suggestions[:3]:
-            error_msg += f"\n  - {sug['name']} (confidence: {sug['score']:.1f})"
-    
     # Add full request context if available
     if full_text:
         # Truncate if too long
@@ -217,31 +170,9 @@ def main():
         state = read_state()
         
         # Check if ULTRATHINK format is present in this message
-        has_format, components = has_ultrathink_format(message)
-        if has_format:
+        if has_ultrathink_format(message):
             state["ultrathink_completed"] = True
             state["ultrathink"]["completed"] = True
-            
-            # Validate handler if not "searching"
-            handler = components.get('handler', '')
-            if handler and handler not in ['searching', 'VOID']:
-                is_valid, similar = validate_handler(handler)
-                if not is_valid and similar:
-                    # Warn about invalid handler but don't block
-                    print(f"⚠️  Handler '{handler}' not found in REGISTRY", file=sys.stderr)
-                    if similar:
-                        print("   Similar handlers:", file=sys.stderr)
-                        for name, score in similar[:3]:
-                            print(f"     - {name}", file=sys.stderr)
-            
-            # Store ULTRATHINK statement
-            if 'statements' not in state["ultrathink"]:
-                state["ultrathink"]["statements"] = []
-            state["ultrathink"]["statements"].append({
-                'format': f"[S:{components['session']}|W:{components['work']}|H:{components['handler']}|E:{components['evidence']}]",
-                'components': components
-            })
-            
             update_state(state)
         
         # Check if we need to block this tool
