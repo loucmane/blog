@@ -31,3 +31,34 @@ From pre_tool_use.py:
 3. Block tools in PreToolUse if no ULTRATHINK
 4. Validate in Stop hook
 5. Clear state on success
+
+## CRITICAL DISCOVERY - Hook Execution Fix (2025-08-05)
+**Problem**: Hooks were not executing despite correct configuration
+**Root Cause**: Command format in settings.json was incompatible with Claude Code
+
+### What Didn't Work
+```json
+"command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/user_prompt_submit.py"
+```
+- `$CLAUDE_PROJECT_DIR` was not being set by Claude Code
+- `uv run` might not be in PATH during hook execution
+
+### What Fixed It
+```json
+"command": "python3 .claude/hooks/user_prompt_submit.py"
+```
+- Direct Python execution works reliably
+- Relative paths work because Claude Code runs hooks from project root
+- No dependency on environment variables
+
+### Evidence of Success
+- PreToolUse hook immediately started blocking operations
+- State updates properly in logs/state.json
+- Helpful error messages display when ULTRATHINK is missing
+- Multiple blocked attempts tracked correctly
+
+### Key Lessons
+1. Keep hook commands simple - avoid complex shell constructs
+2. Use direct executables (python3) not wrapper scripts (uv)
+3. Relative paths are more reliable than environment variables
+4. Test hooks both manually AND in Claude Code context

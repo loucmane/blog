@@ -25,28 +25,28 @@ def is_development_tool(tool_name):
     Returns True for development tools, False for allowed tools.
     """
     development_tools = {
-        'Bash', 'Edit', 'Write', 'MultiEdit', 'Read', 'Grep', 'Glob'
+        'Edit', 'Write', 'MultiEdit'
     }
     
     return tool_name in development_tools
 
-def has_ultrathink_format(message):
+def find_all_ultrathink_formats(message):
     """
-    Check if a message contains the S:W:H:E ULTRATHINK format.
-    Returns tuple: (has_format, components) where components is dict or None.
+    Find all ULTRATHINK formats in a message.
+    Returns list of component dictionaries.
     """
     # Pattern for S:W:H:E format: [S:X|W:Y|H:Z|E:something]
     ultrathink_pattern = r'\[S:([^|\]]+)\|W:([^|\]]+)\|H:([^|\]]+)\|E:([^\]]+)\]'
     
-    match = re.search(ultrathink_pattern, message)
-    if match:
-        return True, {
+    matches = []
+    for match in re.finditer(ultrathink_pattern, message):
+        matches.append({
             'session': match.group(1),
             'work': match.group(2),
             'handler': match.group(3),
             'evidence': match.group(4)
-        }
-    return False, None
+        })
+    return matches
 
 def validate_handler(handler_name):
     """Validate if handler exists in REGISTRY"""
@@ -217,30 +217,32 @@ def main():
         state = read_state()
         
         # Check if ULTRATHINK format is present in this message
-        has_format, components = has_ultrathink_format(message)
-        if has_format:
+        all_matches = find_all_ultrathink_formats(message)
+        if all_matches:
             state["ultrathink_completed"] = True
             state["ultrathink"]["completed"] = True
             
-            # Validate handler if not "searching"
-            handler = components.get('handler', '')
-            if handler and handler not in ['searching', 'VOID']:
-                is_valid, similar = validate_handler(handler)
-                if not is_valid and similar:
-                    # Warn about invalid handler but don't block
-                    print(f"⚠️  Handler '{handler}' not found in REGISTRY", file=sys.stderr)
-                    if similar:
-                        print("   Similar handlers:", file=sys.stderr)
-                        for name, score in similar[:3]:
-                            print(f"     - {name}", file=sys.stderr)
-            
-            # Store ULTRATHINK statement
-            if 'statements' not in state["ultrathink"]:
-                state["ultrathink"]["statements"] = []
-            state["ultrathink"]["statements"].append({
-                'format': f"[S:{components['session']}|W:{components['work']}|H:{components['handler']}|E:{components['evidence']}]",
-                'components': components
-            })
+            # Process each ULTRATHINK statement
+            for components in all_matches:
+                # Validate handler if not "searching"
+                handler = components.get('handler', '')
+                if handler and handler not in ['searching', 'VOID']:
+                    is_valid, similar = validate_handler(handler)
+                    if not is_valid and similar:
+                        # Warn about invalid handler but don't block
+                        print(f"⚠️  Handler '{handler}' not found in REGISTRY", file=sys.stderr)
+                        if similar:
+                            print("   Similar handlers:", file=sys.stderr)
+                            for name, score in similar[:3]:
+                                print(f"     - {name}", file=sys.stderr)
+                
+                # Store ULTRATHINK statement
+                if 'statements' not in state["ultrathink"]:
+                    state["ultrathink"]["statements"] = []
+                state["ultrathink"]["statements"].append({
+                    'format': f"[S:{components['session']}|W:{components['work']}|H:{components['handler']}|E:{components['evidence']}]",
+                    'components': components
+                })
             
             update_state(state)
         

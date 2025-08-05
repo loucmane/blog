@@ -94,3 +94,9 @@
   - Found hooks are over-blocking (11 tools instead of 3)
   - PreToolUse matcher needs fixing: should only block Edit|Write|MultiEdit
   - State persistence issue: old triggers not clearing after ULTRATHINK
+- **14:15** - Session 2025-08-05: CRITICAL DISCOVERY - Fixed hook execution!
+  - Hooks were not executing with `uv run $CLAUDE_PROJECT_DIR` format
+  - Changed to `python3 .claude/hooks/script.py` with relative paths
+  - Hooks immediately started working and blocking operations
+  - PreToolUse hook successfully enforcing ULTRATHINK requirement
+  - Solution: Use python3 with relative paths, NOT uv run with env vars

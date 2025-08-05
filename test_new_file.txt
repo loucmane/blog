@@ -1,0 +1,4 @@
+Testing hooks - Edit trigger test
+
+This edit should trigger the pre_tool_use hook
+Time: 13:58

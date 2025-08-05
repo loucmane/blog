@@ -1,7 +1,115 @@
 [
   {
-    "session_id": "unknown",
-    "timestamp": "2025-08-02T21:26:32.873544",
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T12:18:55.970460",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T12:19:40.279081",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T12:54:55.269576",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T12:56:43.881993",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T13:14:09.275348",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T13:52:50.687233",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T13:53:26.648270",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -19,7 +127,7 @@
   },
   {
     "session_id": "unknown",
-    "timestamp": "2025-08-02T21:27:14.480417",
+    "timestamp": "2025-08-05T14:03:35.523801",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -36,89 +144,8 @@
     }
   },
   {
-    "session_id": "20250803",
-    "timestamp": "2025-08-03T12:20:49.230046",
-    "ultrathink_compliance": {
-      "required": true,
-      "completed": true,
-      "blocked_attempts": 1,
-      "statements": 1
-    },
-    "handler_suggestions": {
-      "provided": true,
-      "suggestions": [
-        {
-          "name": "start-new-work",
-          "score": 3.0
-        },
-        {
-          "name": "standard-dev-workflow",
-          "score": 3.0
-        }
-      ]
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250803",
-    "timestamp": "2025-08-03T12:28:44.015100",
-    "ultrathink_compliance": {
-      "required": true,
-      "completed": true,
-      "blocked_attempts": 2,
-      "statements": 2
-    },
-    "handler_suggestions": {
-      "provided": true,
-      "suggestions": [
-        {
-          "name": "start-new-work",
-          "score": 3.0
-        },
-        {
-          "name": "standard-dev-workflow",
-          "score": 3.0
-        }
-      ]
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250803",
-    "timestamp": "2025-08-03T13:22:47.206527",
-    "ultrathink_compliance": {
-      "required": true,
-      "completed": false,
-      "blocked_attempts": 11,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": true,
-      "suggestions": [
-        {
-          "name": "start-new-work",
-          "score": 3.0
-        },
-        {
-          "name": "standard-dev-workflow",
-          "score": 3.0
-        }
-      ]
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250803",
-    "timestamp": "2025-08-03T13:24:54.407706",
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T14:10:51.635055",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -126,17 +153,8 @@
       "statements": 0
     },
     "handler_suggestions": {
-      "provided": true,
-      "suggestions": [
-        {
-          "name": "start-new-work",
-          "score": 3.0
-        },
-        {
-          "name": "standard-dev-workflow",
-          "score": 3.0
-        }
-      ]
+      "provided": false,
+      "suggestions": []
     },
     "tools_used": {
       "total": 0,
@@ -144,8 +162,8 @@
     }
   },
   {
-    "session_id": "20250803",
-    "timestamp": "2025-08-03T13:29:32.908343",
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T14:29:04.862260",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -153,17 +171,44 @@
       "statements": 0
     },
     "handler_suggestions": {
-      "provided": true,
-      "suggestions": [
-        {
-          "name": "start-new-work",
-          "score": 3.0
-        },
-        {
-          "name": "standard-dev-workflow",
-          "score": 3.0
-        }
-      ]
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:07:06.454459",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:08:47.790723",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
     },
     "tools_used": {
       "total": 0,

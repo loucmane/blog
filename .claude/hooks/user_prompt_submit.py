@@ -154,13 +154,24 @@ def update_state_file(ultrathink_required, trigger_info=None, prompt=None, handl
     else:
         state = {}
     
-    # Initialize session if not present
+    # Initialize session if not present or if session is from previous day
     today = datetime.now().strftime("%Y%m%d")
-    if "session" not in state:
-        state["session"] = {
-            "id": today,
-            "started_at": datetime.now().isoformat()
-        }
+    if "session" not in state or state["session"].get("id") != today:
+        # New session needed - either no session or date changed
+        if "session" in state and state["session"].get("id") != today:
+            # Session date changed - clear all state for fresh start
+            state = {
+                "session": {
+                    "id": today,
+                    "started_at": datetime.now().isoformat()
+                }
+            }
+        else:
+            # No session - create new one
+            state["session"] = {
+                "id": today,
+                "started_at": datetime.now().isoformat()
+            }
     state["session"]["last_activity"] = datetime.now().isoformat()
     
     # Initialize ultrathink structure if not present

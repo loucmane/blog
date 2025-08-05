@@ -93,6 +93,7 @@ def clear_state_flags():
     """
     Clear all state flags (ultrathink_required and ultrathink_completed) from logs/state.json.
     This happens on successful completion to reset for next conversation.
+    Also updates session ID to current date if needed.
     """
     state_file = Path("logs/state.json")
     
@@ -104,13 +105,23 @@ def clear_state_flags():
         else:
             state = {}
         
+        # Update session ID to current date
+        today = datetime.now().strftime("%Y%m%d")
+        if "session" not in state:
+            state["session"] = {}
+        
+        # Always update session to today's date when clearing state
+        state["session"]["id"] = today
+        state["session"]["last_activity"] = datetime.now().isoformat()
+        
         # Clear conversation-specific flags
         if "ultrathink" in state:
             state["ultrathink"]["required"] = False
             state["ultrathink"]["completed"] = False
             state["ultrathink"]["trigger"] = None
             state["ultrathink"]["blocked_attempts"] = 0
-            # Preserve statements for history
+            # Clear statements since we're resetting for new session
+            state["ultrathink"]["statements"] = []
         
         # Clear backward compatibility flags
         state["ultrathink_required"] = False

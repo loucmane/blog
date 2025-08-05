@@ -1,7 +1,62 @@
 # AI Development Session Log
 
 ## Current Focus
-Hook-Template Integration ready for improvements - User indicated system needs enhancements.
+Investigating hook path resolution issue - Claude Code not using correct paths from settings.json.
+
+## Session: 2025-08-04 11:02 CEST
+
+**AI Assistant**: Claude (Opus 4) ✓
+**Developer**: loucmane
+**Task**: Resolve hook path resolution issue
+**Task Source**: Continuing from yesterday's unresolved issue
+**TaskMaster ID**: Not applicable
+
+### Session Validation ✓
+- [x] Date from `date` command: 2025-08-04 11:02 CEST
+- [x] Task verified by: continuation from SESSION.md
+- [x] Git status checked: Yes - test/claude-execution-engine-handlers
+- [x] TodoWrite tasks reviewed: 4/4 complete
+- [x] Previous SESSION.md read: Yes - ended 2025-08-03 properly
+
+### 🎯 Session Goals
+- [ ] Primary: Identify why Claude Code uses wrong hook paths
+- [ ] Secondary: Find working portable path solution
+- [ ] Tertiary: Document final hook configuration
+
+### 📍 Starting Context
+Yesterday fixed all hook functionality issues except path resolution. Hooks work with absolute paths but Claude Code shows error "hooks/stop.py: not found" even when settings.json has correct paths. Need to investigate why Claude Code isn't using the configured paths.
+
+### 📝 Progress Log
+- **11:02** - Session started, closed yesterday's session properly
+- **11:03** - Current state: settings.json has absolute paths but error shows relative path
+- **11:04** - Deployed two specialists to investigate:
+  - hook-specialist: Local analysis of error
+  - general-purpose: Web search for similar issues
+- **11:05** - CRITICAL FINDINGS:
+  - **Confirmed Claude Code Bug**: GitHub issue #3583 documents this exact problem
+  - **Root Cause**: Claude Code transforms absolute paths to relative during execution
+  - **Impact**: Hooks fail with "command not found" when working directory changes
+  - **Official Workaround**: Use absolute paths (which we already have!)
+  - **Community Reports**: $CLAUDE_PROJECT_DIR also unreliable
+- **11:10** - SOLUTION FOUND:
+  - User found working example: https://github.com/disler/claude-code-hooks-mastery
+  - **Key Difference**: They use `uv run .claude/hooks/stop.py` not direct script execution
+  - **Why It Works**: Shell can execute `uv run` command, which then runs Python script
+  - **Updated settings.json**: Changed all hooks to use `uv run` with relative paths
+  - **Final Format**: `"command": "uv run .claude/hooks/hook_name.py"`
+- **20:30** - Tested hook system comprehensively:
+  - Created test_hook_system.js with 25 test cases
+  - Discovered CLAUDE_PROJECT_DIR not set in CLI session
+  - All hooks work when environment is properly configured
+  - Hook trigger patterns need expansion for better coverage
+
+### 🚦 Session End Status
+- ✅ Hook path issue resolved with `uv run` solution
+- ✅ Comprehensive test suite created and validated
+- ❌ CLAUDE_PROJECT_DIR missing in CLI environment
+- ✅ All architectural components functioning correctly
+
+---
 
 ## Session: 2025-08-03 11:34 CEST
 
@@ -66,6 +121,34 @@ Awaiting specific improvement requirements from user.
   - ❌ BAD: Had to provide ULTRATHINK just to read files
   - Stop hook reported: 11 tools blocked (way too many)
   - Need to fix matcher to only block Edit/Write/MultiEdit
+- **14:00** - Fixed critical issues via hook-specialist:
+  - Fixed PreToolUse matcher to only block Edit|Write|MultiEdit
+  - Fixed state persistence (session ID now updates)
+  - Fixed state clearing after ULTRATHINK
+  - Created test suite - all tests pass
+- **14:30** - Path resolution saga:
+  - Hooks worked with absolute paths
+  - Tried $CLAUDE_PROJECT_DIR - didn't work
+  - Tried relative paths from .claude/ - got "not found"
+  - Tried .claude/hooks/x.py - still "not found"
+  - Back to absolute paths - worked
+  - Error shows Claude Code using wrong path internally
+- **15:00** - Session ended with unresolved path issue
+  - Claude Code shows: "hooks/stop.py: not found"
+  - But settings.json has correct paths
+  - Appears to be Claude Code bug or caching issue
+
+### 🎯 Session Summary
+- **COMPLETED**: Fixed hook execution (invalid hook type)
+- **COMPLETED**: Fixed over-blocking (now only Edit/Write/MultiEdit)
+- **COMPLETED**: Fixed state persistence and clearing
+- **UNRESOLVED**: Path resolution - only absolute paths work
+- **DISCOVERED**: Claude Code may have internal path bug
+
+### 📋 Next Session Should:
+1. Investigate Claude Code's hook path resolution
+2. Find portable path solution that works
+3. Document final hook configuration
 
 ---
 
