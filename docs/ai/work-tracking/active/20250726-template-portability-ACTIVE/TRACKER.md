@@ -126,18 +126,73 @@ SESSION.md (becomes index/current pointer)
 - Work folder rule catches 100% of active work
 - Expanded triggers catch planning/documentation
 
-## 🔄 Current State (2025-07-28)
+## 🔄 Current State (2025-08-06)
 - S:W:H:E format fully implemented and tested across all template files
 - Complete 5-layer enforcement chain prevents false handler compliance
 - All critical template files updated (CLAUDE.md, PATTERNS.md, BEHAVIORS.md, WORKFLOWS.md, USER-GUIDE.md)
-- Session folders design complete but not yet implemented
+- Session folders design complete with comprehensive migration plan
 - Template portability planning started but implementation pending
 
+## 📊 Session Migration Checklist (2025-08-06)
+
+### Phase 0: Design & Planning ✅
+- [x] Create session-folder-architecture.md design
+- [x] Create session-folders-decision.md rationale
+- [x] Create session-migration-comprehensive.md full plan
+- [x] Use sequential thinking for edge case analysis
+- [x] Document in IMPLEMENTATION.md
+
+### Phase 1: Pre-Migration Preparation
+- [ ] Backup SESSION.md to SESSION.md.backup
+- [ ] Verify backup integrity (checksum match)
+- [ ] Run dry-run analysis (no file writes)
+- [ ] Generate migration manifest
+- [ ] Check for naming conflicts
+- [ ] Get user confirmation to proceed
+
+### Phase 2: Migration Execution
+- [ ] Create sessions/ folder structure
+- [ ] Create archive/ subfolders
+- [ ] Initialize .migration-status.json
+- [ ] Parse SESSION.md by "## Session:" headers
+- [ ] Extract each session with metadata
+- [ ] Generate collision-free filenames (YYYY-MM-DD-NNN-description)
+- [ ] Write individual session files
+- [ ] Create .session-metadata.json
+- [ ] Generate new SESSION.md index (<1KB)
+- [ ] Create current symlink
+
+### Phase 3: Validation
+- [ ] Verify line count matches (original vs migrated)
+- [ ] Verify character count matches
+- [ ] Validate all markdown files
+- [ ] Test Serena search across sessions
+- [ ] Check all internal links work
+- [ ] Verify index loads quickly (<15ms)
+- [ ] Run automated test suite
+
+### Phase 4: System Integration
+- [ ] Update session-start handler
+- [ ] Create session-continue handler
+- [ ] Update CLAUDE.md references
+- [ ] Update search patterns
+- [ ] Test handler integration
+- [ ] Create session-archive handler
+- [ ] Update documentation
+
+### Phase 5: Post-Migration
+- [ ] Monitor for 24-48 hours
+- [ ] Document any issues found
+- [ ] Consider removing backup after 1 week
+- [ ] Implement auto-archiving rules
+- [ ] Generate performance metrics report
+
 ## 📋 Next Steps
-1. Test S:W:H:E implementation with real development scenarios
-2. Implement session folder migration (design already complete)
-3. Continue template portability work after session folders
-4. Monitor for any compliance failures and iterate if needed
+1. Execute session migration using comprehensive design
+2. Test Serena search across distributed sessions
+3. Update handlers for new session structure
+4. Continue template portability work after session folders
+5. Monitor migration success and performance improvements
 
 ## 📊 Progress
 - Planning: 🟡 Started

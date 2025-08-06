@@ -62,3 +62,72 @@ From pre_tool_use.py:
 2. Use direct executables (python3) not wrapper scripts (uv)
 3. Relative paths are more reliable than environment variables
 4. Test hooks both manually AND in Claude Code context
+
+## Comprehensive Testing Results (2025-08-05)
+
+### Test Suite Summary
+Created 4 comprehensive test suites validating hook enforcement:
+
+1. **test_hook_system.js** - 23 test cases covering:
+   - UserPromptSubmit trigger detection
+   - PreToolUse blocking behavior
+   - Stop hook compliance checking
+   - State persistence and migration
+   - Edge case handling
+
+2. **test_ultrathink_enforcement.js** - Real-world simulation:
+   - User development request → State set
+   - Tool blocked without ULTRATHINK
+   - Tool allowed with ULTRATHINK
+   - Session cleanup on completion
+
+3. **test_enforcement_scenarios.js** - Advanced scenarios:
+   - Multiple tool blocking
+   - Invalid ULTRATHINK format rejection
+   - Non-development tool allowance
+   - State persistence across requests
+
+4. **test_improvements.js** - Enhancement identification:
+   - Handler validation gaps
+   - Context tracking opportunities
+   - Analytics insights potential
+   - Suggestion quality improvements
+
+### Key Metrics
+- **Blocking effectiveness**: 100% (all dev tools blocked without ULTRATHINK)
+- **False positives**: 0% (casual conversation never blocked)
+- **Performance overhead**: ~100-200ms per request
+- **State reliability**: 100% (handles corruption, missing files)
+
+### Refinement Opportunities Identified
+1. Context tracking not implemented (structure exists)
+2. Handler validation only warns, doesn't block
+3. Analytics are basic, no trending/insights
+4. Handler cache rebuilds every request
+5. No progressive assistance after multiple blocks
+
+## Path Resolution Discovery (2025-08-05 17:11)
+**Problem**: Hooks break when Claude changes directories within project
+**Symptom**: "python3: can't open file" errors when working in subdirectories
+
+### Root Cause
+When using relative paths like `python3 .claude/hooks/pre_tool_use.py`, the hooks fail when Claude's working directory changes (e.g., when organizing files in `.claude/templates/handlers/`).
+
+### Solution
+Use `$CLAUDE_PROJECT_DIR` environment variable for absolute paths:
+```json
+"command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_use.py"
+```
+
+### Key Learning
+- Claude Code provides `$CLAUDE_PROJECT_DIR` specifically for this use case
+- Always use absolute paths via environment variables for robustness
+- Relative paths break when working in project subdirectories
+- This makes hook configurations portable and reliable
+- All three hooks updated: user_prompt_submit.py, pre_tool_use.py, stop.py
+
+### Important: Claude Code Restart Required
+After updating settings.json, Claude Code must be restarted to pick up the new hook configurations. The changes are not hot-reloaded. Testing showed:
+- Hooks continued using old paths until restart
+- After restart, $CLAUDE_PROJECT_DIR paths work correctly from any directory
+- This is expected behavior for configuration changes

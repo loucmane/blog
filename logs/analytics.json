@@ -1,7 +1,243 @@
 [
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T12:18:55.970460",
+    "timestamp": "2025-08-05T15:39:13.710187",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 0,
+      "statements": 3
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 9.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 6.0
+        },
+        {
+          "name": "session-start",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:42:16.331951",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 1,
+      "statements": 1
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 9.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 6.0
+        },
+        {
+          "name": "session-start",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:43:09.129718",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": true,
+      "blocked_attempts": 0,
+      "statements": 1
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 6.0
+        },
+        {
+          "name": "session-start",
+          "score": 3.0
+        },
+        {
+          "name": "create-file",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:44:13.072405",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 0,
+      "statements": 1
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 16.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:44:13.117138",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "start-new-work",
+          "score": 6.0
+        },
+        {
+          "name": "standard-dev-workflow",
+          "score": 6.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:44:13.190044",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 0,
+      "statements": 1
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "refactor-code",
+          "score": 3.0
+        },
+        {
+          "name": "search-code",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:44:13.261992",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 0,
+      "statements": 1
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "standard-dev-workflow",
+          "score": 3.0
+        },
+        {
+          "name": "create-component",
+          "score": 3.0
+        },
+        {
+          "name": "create-file",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:44:13.307692",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 3.0
+        },
+        {
+          "name": "debug-issue",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T15:58:58.370492",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -19,7 +255,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T12:19:40.279081",
+    "timestamp": "2025-08-05T16:00:35.809985",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -37,7 +273,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T12:54:55.269576",
+    "timestamp": "2025-08-05T16:21:25.692262",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -55,7 +291,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T12:56:43.881993",
+    "timestamp": "2025-08-05T16:22:06.461972",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -73,7 +309,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T13:14:09.275348",
+    "timestamp": "2025-08-05T16:23:09.488629",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -91,7 +327,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T13:52:50.687233",
+    "timestamp": "2025-08-05T16:23:52.224536",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -109,25 +345,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T13:53:26.648270",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "unknown",
-    "timestamp": "2025-08-05T14:03:35.523801",
+    "timestamp": "2025-08-05T16:32:44.839855",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -145,7 +363,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T14:10:51.635055",
+    "timestamp": "2025-08-05T16:42:19.770595",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -163,7 +381,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T14:29:04.862260",
+    "timestamp": "2025-08-05T16:44:35.845967",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -181,7 +399,7 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T15:07:06.454459",
+    "timestamp": "2025-08-05T16:50:49.329983",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
@@ -199,7 +417,331 @@
   },
   {
     "session_id": "20250805",
-    "timestamp": "2025-08-05T15:08:47.790723",
+    "timestamp": "2025-08-05T16:52:11.635941",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T16:53:16.807772",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T16:55:21.602292",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T16:58:49.397841",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T17:03:03.219294",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T17:03:28.539988",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T17:10:54.189803",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T17:12:53.491072",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-05T17:19:29.363989",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250805",
+    "timestamp": "2025-08-06T10:48:56.243341",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T11:15:27.772114",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T11:19:49.856912",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T11:25:07.890431",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T12:35:23.614442",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T12:38:05.052598",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T12:44:24.145636",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T12:48:30.585903",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T12:49:23.810431",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250806",
+    "timestamp": "2025-08-06T13:12:02.044777",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,

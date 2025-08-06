@@ -51,7 +51,7 @@ def find_all_ultrathink_formats(message):
 def validate_handler(handler_name):
     """Validate if handler exists in REGISTRY"""
     try:
-        from handler_cache import HandlerCache
+        from utils.handler_cache import HandlerCache
         import os
         
         project_dir = os.environ.get('CLAUDE_PROJECT_DIR', str(Path.cwd()))

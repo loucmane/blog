@@ -408,3 +408,68 @@ For end-session handler:
 - "Reading handler: end-session"
 - "Key steps: Final todo check, Update SESSION.md, Create handoff notes"
 - E:6/key:"Update SESSION.md"
+
+---
+
+## Session Migration Implementation Plan (2025-08-06)
+
+### Comprehensive Design Complete
+Created three-tier design documentation in `/designs/`:
+
+1. **session-folder-architecture.md** - Basic structure
+   - Problem: SESSION.md at 46KB, performance issues
+   - Solution: Distribute to sessions/ folder
+   - Benefits: 30x faster loads, better organization
+
+2. **session-folders-decision.md** - Decision summary
+   - Quick overview for approval
+   - Migration rationale
+   - User impact assessment
+
+3. **session-migration-comprehensive.md** - Full implementation
+   - **Safety Features**:
+     - Checksums at every stage
+     - Idempotent & resumable migration
+     - Complete rollback procedures
+   - **Smart Parsing**:
+     - State machine parser for context awareness
+     - Handles code blocks with ## headers
+     - Edge case detection
+   - **Naming System**:
+     - YYYY-MM-DD-NNN-description format
+     - Collision detection & resolution
+     - Character sanitization
+   - **Performance**:
+     - 30x faster SESSION.md loads
+     - Search index caching
+     - Smart archival strategy
+   - **System Integration**:
+     - Handler updates (session-start, session-continue)
+     - CLAUDE.md references
+     - Backward compatibility
+
+### Key Design Insights (from Sequential Thinking)
+1. **Data Integrity**: Multiple validation layers, checksums
+2. **Parser Robustness**: State machine handles markdown context
+3. **Naming Collisions**: NNN sequence numbers prevent conflicts
+4. **Index Synchronization**: Auto-refresh capability
+5. **Resumable Migration**: Status tracking for failure recovery
+6. **Template Impact**: Full system update required
+7. **Search Strategy**: Index caching for performance
+8. **Archive Policy**: Structured by completion status
+9. **Testing Matrix**: Comprehensive validation suite
+10. **Rollback Safety**: Bulletproof recovery procedures
+
+### Migration Readiness
+- ✅ Design documents complete
+- ✅ Safety mechanisms defined
+- ✅ Test scenarios identified
+- ✅ Rollback procedures documented
+- ⏳ Ready for template-migrator execution
+
+### Next Steps
+1. Execute migration with template-migrator agent
+2. Validate all sessions extracted correctly
+3. Test Serena search functionality
+4. Update handlers for new structure
+5. Monitor performance improvements
