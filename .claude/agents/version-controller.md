@@ -2,6 +2,7 @@
 name: version-controller
 description: Version control specialist for handler versions, change tracking, and backward compatibility during migrations. Use proactively when modifying handlers, detecting breaking changes, managing deprecations, or coordinating version updates. Essential for safe template evolution.
 tools: Read, Write, MultiEdit, Grep, Glob, Task, TodoWrite
+model: opus
 color: Purple
 ---
 

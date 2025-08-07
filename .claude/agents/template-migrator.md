@@ -2,6 +2,7 @@
 name: template-migrator
 description: Use proactively for migrating handlers from monolithic template files to the new folder-based structure. Specialist for extracting, parsing, and reorganizing handlers with proper YAML frontmatter.
 tools: Read, Grep, Glob, Write, MultiEdit
+model: opus
 color: Green
 ---
 

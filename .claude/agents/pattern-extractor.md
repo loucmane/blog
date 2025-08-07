@@ -2,6 +2,7 @@
 name: pattern-extractor
 description: Pattern analysis specialist that learns from system usage to improve it. Use proactively to identify common handler sequences, extract reusable workflow patterns, suggest new handlers based on usage gaps, find optimization opportunities, detect anti-patterns, and generate pattern libraries.
 tools: Read, Grep, Glob, Write
+model: opus
 color: Purple
 ---
 

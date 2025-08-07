@@ -1,7 +1,8 @@
 # Template Migration Implementation Playbook
 
-## 🎯 Migration Goal
-Migrate 69 existing handlers + create 6 missing handlers = 75 total handlers from monolithic template files to folder-based structure.
+## 🎯 Migration Goals
+1. **Handlers**: Migrate 69 existing handlers + create 6 missing handlers = 75 total handlers from monolithic template files to folder-based structure. ✅ COMPLETE
+2. **Templates**: Migrate 12 monolithic template files to modular folder structure (NEW PHASE - August 2025)
 
 ## 📌 Key Clarifications
 - **Batch Processing**: Extract ALL handlers from a file at once, then validate ALL at once
@@ -667,11 +668,123 @@ If ANY agent encounters an error:
 
 ## ✅ Success Criteria
 
-Migration is complete when:
-- [ ] All 75 handlers present in staging (69 migrated + 6 created)
-- [ ] Zero validation errors in final report
-- [ ] All integration tests show PASS status
-- [ ] Performance metrics within 5% of baseline
-- [ ] Complete documentation generated
-- [ ] State file shows all operations complete
-- [ ] Ready for production cutover
+Handler Migration is complete when:
+- [x] All 75 handlers present in staging (69 migrated + 6 created) - COMPLETE
+- [x] Zero validation errors in final report - COMPLETE
+- [x] All integration tests show PASS status - COMPLETE
+- [x] Performance metrics within 5% of baseline - COMPLETE
+- [x] Complete documentation generated - COMPLETE
+- [x] State file shows all operations complete - COMPLETE
+- [x] Ready for production cutover - COMPLETE ✅
+
+---
+
+## 📋 Phase 7: Template System Modularization (August 2025)
+
+### 7.1 Template File Migration Plan
+
+#### Core Files to Migrate
+1. **CLAUDE.md** (Root) → `.claude/templates/engine/`
+   - Core execution engine components
+   - ULTRATHINK protocol
+   - Context activation layers
+   - S:W:H:E format definitions
+   - Template navigation protocol
+
+2. **REGISTRY.md** → `.claude/templates/registry/`
+   - Index structure
+   - Handler mappings by role
+   - Navigation keywords
+   - Quick lookup tables
+
+3. **BEHAVIORS.md** → `.claude/templates/behaviors/`
+   - File operation behaviors
+   - Timestamp behaviors
+   - Git behaviors
+   - Work tracking behaviors
+   - Validation behaviors
+
+4. **MATRICES.md** → `.claude/templates/matrices/`
+   - Routing matrices
+   - Selection matrices
+   - Recovery matrices
+   - Mapping matrices
+
+5. **TOOLS.md** → `.claude/tools/`
+   - Search tool guidance
+   - File tool guidance
+   - Git tool guidance
+   - Task delegation guidance
+
+6. **USER-GUIDE.md** → `.claude/guides/`
+   - Quickstart guides
+   - Workflow guides
+   - Reference guides
+   - Troubleshooting guides
+
+7. **Remaining Template Files**
+   - WORKFLOWS.md → Extract remaining non-handler content
+   - CONVENTIONS.md → Extract remaining conventions
+   - PATTERNS.md → Extract remaining patterns
+   - BUILDING-BETTER.md → Integration guidance
+   - PROJECT-BLOG.md → Project configuration
+
+### 7.2 Expected Outcomes
+- **40% size reduction** (8,500 → ~5,100 lines)
+- **Zero duplication** (from 43% redundancy)
+- **100+ focused modules** (from 12 monolithic files)
+- **Shared patterns library** (eliminate 315 duplicate references)
+- **Faster discovery** (80% improvement)
+- **Easier maintenance** (65% improvement)
+
+### 7.3 Implementation Strategy
+
+#### Quick Wins (1 hour)
+1. Delete obsolete files (HANDLERS.md, REGISTRY-REFINED.md)
+2. Create shared/ directory structure
+3. Extract ULTRATHINK pattern to shared library
+
+#### Phase 1: Core Engine (4 hours)
+1. Modularize CLAUDE.md → `.claude/engine/`
+2. Create slim CLAUDE.md router
+3. Test engine functionality
+4. Validate imports
+
+#### Phase 2: Registry Transform (2 hours)
+1. Break REGISTRY.md → `.claude/registry/`
+2. Create index.md entry point
+3. Update handler references
+4. Test lookups
+
+#### Phase 3: Bulk Migration (6 hours)
+1. BEHAVIORS.md → behaviors/
+2. MATRICES.md → matrices/
+3. TOOLS.md → tools/
+4. USER-GUIDE.md → guides/
+5. Process remaining files
+
+#### Phase 4: Consolidation (3 hours)
+1. Extract shared patterns
+2. Remove duplications
+3. Update cross-references
+4. Create import maps
+
+#### Phase 5: Validation (2 hours)
+1. Test handler discovery
+2. Verify functionality
+3. Update documentation
+4. Create final report
+
+### 7.4 Risk Mitigation
+- **CLAUDE.md is critical** - Handle with extreme care
+- **Atomic operations** - Each step reversible
+- **Backward compatibility** - Old references work via redirects
+- **Continuous validation** - Test after each change
+- **Comprehensive backups** - Before each phase
+
+### 7.5 Success Metrics
+- 100% of monolithic files migrated
+- 0% functionality loss
+- 50%+ reduction in duplicate content
+- 100% of cross-references working
+- Complete modular structure achieved

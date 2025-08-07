@@ -2,6 +2,7 @@
 name: operator-executor
 description: Atomic template operation executor. Use proactively for executing single, focused template operations from the operators/ folder. Specialist for loading and executing individual operator templates with precise operation tracking and error handling. MUST BE USED when executing atomic operations like file edits, searches, or other single-purpose tasks.
 tools: Read, MultiEdit, Grep, Glob, Bash, WebFetch
+model: opus
 color: Orange
 ---
 

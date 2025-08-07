@@ -2,6 +2,7 @@
 name: integration-tester
 description: Automated testing specialist for handler interactions and S:W:H:E compliance. Use proactively to verify template connections, test handler combinations, and ensure system reliability through comprehensive automated testing.
 tools: Read, Grep, Glob, Bash, Write
+model: opus
 color: Green
 ---
 

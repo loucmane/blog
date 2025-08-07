@@ -1,0 +1,52 @@
+{
+  "backup": {
+    "path": "/home/loucmane/dev/javascript/MomsBlog/blog/SESSION.md.backup",
+    "checksum": "857dfb204f45e75b82fed0a910884871d5559e34c7ebcb56183461b0ad6d4346",
+    "size": 209104,
+    "created_at": "2025-08-06T16:13:26.011490"
+  },
+  "migration": {
+    "completed_at": "2025-08-06T16:13:26.031134",
+    "sessions_migrated": 37,
+    "errors": [],
+    "files_created": [
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/08/2025-08-04-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/08/2025-08-03-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/08/2025-08-02-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/08/2025-08-01-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-31-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-30-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-29-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-28-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-27-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-26-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-25-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-24-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-23-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-22-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-21-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-20-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-18-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-17-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-16-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-14-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-13-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-12-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-10-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-09-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-08-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-06-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-05-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-03-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-02-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/07/2025-07-01-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/06/2025-06-30-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/06/2025-06-29-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/06/2025-06-28-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/06/2025-06-27-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/06/2025-06-26-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/06/2025-06-25-001-untitled.md",
+      "/home/loucmane/dev/javascript/MomsBlog/blog/sessions/2025/06/2025-06-24-001-untitled.md"
+    ]
+  }
+}

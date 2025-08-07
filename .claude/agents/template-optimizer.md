@@ -2,6 +2,7 @@
 name: template-optimizer
 description: Use proactively to analyze and optimize the entire template system for efficiency. Specialist for identifying redundancy, inconsistent patterns, and consolidation opportunities across templates.
 tools: Read, Grep, Glob, MultiEdit
+model: opus
 color: Cyan
 ---
 

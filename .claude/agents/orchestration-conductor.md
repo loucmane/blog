@@ -2,6 +2,7 @@
 name: orchestration-conductor
 description: Complex workflow orchestration specialist. Use proactively for multi-step operations requiring coordination between multiple handlers. Specialist for managing handler dependencies, sequencing, and data flow in template-driven workflows.
 tools: Read, Grep, Glob, Task, TodoWrite, MultiEdit
+model: opus
 color: Purple
 ---
 

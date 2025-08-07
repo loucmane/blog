@@ -2,6 +2,7 @@
 name: meta-agent
 description: Generates a new, complete Claude Code sub-agent configuration file from a user's description. Use this to create new agents. Use this PROACTIVELY when the user asks you to create a new sub agent.
 tools: Write, WebFetch, mcp__firecrawl-mcp__firecrawl_scrape, mcp__firecrawl-mcp__firecrawl_search, MultiEdit
+model: opus
 color: Cyan
 ---
 

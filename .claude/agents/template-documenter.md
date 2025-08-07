@@ -2,6 +2,7 @@
 name: template-documenter
 description: Use proactively for generating, updating, and maintaining comprehensive documentation for templates, handlers, APIs, and usage guides
 tools: Read, Write, MultiEdit, Grep, Glob
+model: opus
 color: Blue
 ---
 

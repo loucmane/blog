@@ -2,6 +2,7 @@
 name: trigger-router
 description: Use proactively for routing user requests to appropriate template handlers by parsing natural language intent and finding matching trigger phrases
 tools: Read, Grep, mcp__firecrawl-mcp__firecrawl_search, mcp__serena__search_for_pattern
+model: opus
 color: Blue
 ---
 

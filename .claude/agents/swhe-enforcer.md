@@ -2,6 +2,7 @@
 name: swhe-enforcer
 description: Use proactively to validate and enforce S:W:H:E format compliance in ULTRATHINK statements. MUST BE USED whenever S:W:H:E format appears to check format integrity, handler validity, and comprehension evidence.
 tools: Read, Grep, Glob
+model: opus
 color: Red
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: claude-md-specialist
 description: Read-only analysis specialist for CLAUDE.md execution engine. Use proactively to analyze enforcement mechanisms, identify gaps in S:W:H:E implementation, find unused protocol sections, detect conflicts between rules, and suggest improvements without editing. MUST BE USED for any deep analysis of the execution engine structure or compliance verification.
+model: opus
 tools: Read, Grep
 color: Magenta
 ---

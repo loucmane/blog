@@ -2,6 +2,7 @@
 name: hook-specialist
 description: Use proactively to create, optimize, and manage Claude Code hooks for ANY enforcement or automation need. Specialist for creating technical enforcement mechanisms, workflow automation, convention checking, security validation, and custom business rules through hooks.
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch
+model: opus
 color: Red
 ---
 

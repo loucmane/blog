@@ -2,6 +2,7 @@
 name: security-validator
 description: Security analysis specialist for template handlers. Use proactively to analyze handlers for security vulnerabilities including exposed secrets, unsafe operations, command injection risks, path traversal, and template-specific security concerns.
 tools: Read, Grep, Glob
+model: opus
 color: Red
 ---
 

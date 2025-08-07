@@ -2,6 +2,7 @@
 name: handler-creator
 description: Use proactively to create new handlers from user requirements. Specialist for generating handlers based on user descriptions, creating proper YAML frontmatter with all metadata, and following established handler patterns and conventions.
 tools: Read, Write, MultiEdit, Glob, Grep
+model: opus
 color: Pink
 ---
 

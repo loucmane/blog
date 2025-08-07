@@ -1,6 +1,7 @@
 ---
 name: agent-coordinator
 description: Documents and defines multi-agent workflows for the template system. Use proactively to design orchestration sequences, create workflow configurations, and define agent execution chains.
+model: opus
 tools: Read, Write, Grep, Glob
 color: Indigo
 ---

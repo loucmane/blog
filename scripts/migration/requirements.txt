@@ -1,0 +1,11 @@
+# SESSION.md Migration Script Dependencies
+# Install with: pip install -r requirements.txt
+
+# Rich for beautiful terminal output
+# - Progress bars with live updates
+# - Colored tables and formatting
+# - Interactive prompts
+rich>=13.0.0
+
+# Optional but recommended for better validation
+# pydantic>=2.0.0  # Uncomment if you want stronger config validation

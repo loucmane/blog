@@ -2,6 +2,7 @@
 name: template-debugger
 description: Deep debugging specialist for handler execution failures. Use proactively when S:W:H:E validation fails, handlers can't be found, or template execution produces unexpected results.
 tools: Read, Grep, Glob, Bash
+model: opus
 color: Red
 ---
 

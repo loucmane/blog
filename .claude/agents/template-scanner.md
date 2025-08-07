@@ -2,6 +2,7 @@
 name: template-scanner
 description: System-wide analysis and mapping specialist for the template system. Use proactively to analyze handler dependencies, build knowledge graphs, trace execution flows, and identify orphaned handlers or circular dependencies before making system changes.
 tools: Read, Grep, Glob, MultiEdit, Write
+model: opus
 color: Cyan
 ---
 

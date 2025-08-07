@@ -2,6 +2,7 @@
 name: performance-analyzer
 description: Use proactively to monitor and optimize system performance, identify bottlenecks, and track resource usage. Specialist for measuring handler execution times and generating performance reports.
 tools: Read, Grep, Glob, Bash
+model: opus
 color: Yellow
 ---
 

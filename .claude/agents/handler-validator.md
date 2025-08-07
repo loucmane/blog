@@ -2,6 +2,7 @@
 name: handler-validator
 description: Template handler validation specialist. Use proactively to validate handler syntax, frontmatter completeness, and template connections in both monolithic and folder structures. Specialist for checking YAML frontmatter, handler structure, cross-references, and dependencies.
 tools: Read, Grep, Glob, MultiEdit
+model: opus
 color: Yellow
 ---
 
