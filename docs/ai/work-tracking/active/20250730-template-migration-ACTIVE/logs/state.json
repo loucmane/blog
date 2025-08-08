@@ -1,0 +1,15 @@
+{
+  "session": {
+    "id": "20250808",
+    "last_activity": "2025-08-08T16:22:58.243980"
+  },
+  "ultrathink_required": false,
+  "ultrathink_completed": false,
+  "ultrathink": {
+    "required": false,
+    "completed": false,
+    "statements": [],
+    "blocked_attempts": 0,
+    "trigger": null
+  }
+}

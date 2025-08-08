@@ -1,25 +1,107 @@
-# Building Better: Meta-Process Documentation
+# Building Better: System Extension Guide
 
-> ⚠️ **HANDLERS MIGRATED**: All handlers from this file have been migrated to the new folder-based structure.
->
-> Integration and extension handlers are now distributed across appropriate domains in:
-> - `.claude/templates/handlers/triggers/`
-> - `.claude/templates/handlers/operators/`
+This file has been modularized. All integration guides are now in `.claude/templates/integration/`
 
-[Original content preserved below for reference]
+## 📁 Module Organization
+
+### Development Guides
+- [Creating Handlers](integration/guides/creating-handlers.md) - Complete handler creation guide
+- [Extending Templates](integration/guides/extending-templates.md) - Template system extension
+- [Adding Agents](integration/guides/adding-agents.md) - New agent integration
+- [System Integration](integration/guides/system-integration.md) - Overall integration guide
+
+### Cross-System Integration  
+- [MCP Integration](integration/cross-system/mcp-integration.md) - MCP tool integration
+- [Tool Integration](integration/cross-system/tool-integration.md) - Adding and using tools
+- [Agent Coordination](integration/cross-system/agent-coordination.md) - Multi-agent patterns
+
+### Composition Patterns
+- [Workflow Composition](integration/composition/workflow-composition.md) - Complex workflows
+- [Handler Chaining](integration/composition/handler-chaining.md) - Chain handlers effectively
+- [Pattern Composition](integration/composition/pattern-composition.md) - Combine patterns
+
+### Best Practices
+- [Handler Design](integration/best-practices/handler-design.md) - Design principles
+- [Template Design](integration/best-practices/template-design.md) - Template best practices
+- [Integration Patterns](integration/best-practices/integration-patterns.md) - Integration tips
+
+### Architecture Documentation
+- [System Architecture](integration/architecture/system-architecture.md) - Overall system design
+- [Handler Architecture](integration/architecture/handler-architecture.md) - Handler system design
+- [Template Architecture](integration/architecture/template-architecture.md) - Template system design
+
+## 🚀 Quick Start
+
+1. **New to handler creation?** Start with [Creating Handlers](integration/guides/creating-handlers.md)
+2. **Designing handlers?** Review [Handler Design](integration/best-practices/handler-design.md)
+3. **Need examples?** Check existing handlers in `.claude/templates/handlers/`
+4. **System overview?** Read [System Architecture](integration/architecture/system-architecture.md)
+
+## 📚 Learning Path
+
+### For Handler Developers
+1. [Creating Handlers](integration/guides/creating-handlers.md)
+2. [Handler Design](integration/best-practices/handler-design.md)
+3. [Handler Chaining](integration/composition/handler-chaining.md)
+4. [Handler Architecture](integration/architecture/handler-architecture.md)
+
+### For System Architects
+1. [System Architecture](integration/architecture/system-architecture.md)
+2. [Template Architecture](integration/architecture/template-architecture.md)
+3. [Integration Patterns](integration/best-practices/integration-patterns.md)
+4. [Pattern Composition](integration/composition/pattern-composition.md)
+
+### For Template Extenders
+1. [Extending Templates](integration/guides/extending-templates.md)
+2. [Template Design](integration/best-practices/template-design.md)
+3. [System Integration](integration/guides/system-integration.md)
+4. [Workflow Composition](integration/composition/workflow-composition.md)
+
+## 🔄 Migration Notice
+
+### What Changed
+- All detailed content moved to modular files in `integration/`
+- This file now serves as an index and navigation hub
+- Content organized by category for better discovery
+- Each module has complete YAML frontmatter
+
+### Handler Migration
+All handlers previously in this file have been migrated to:
+- `.claude/templates/handlers/triggers/` - User-activated handlers
+- `.claude/templates/handlers/orchestrators/` - Coordination handlers  
+- `.claude/templates/handlers/operators/` - Technical operation handlers
+
+See the [migration mapping](../../agent-outputs/template-migrator/migration-mapping.md) for details.
+
+## 📖 Key Concepts
+
+### Handler Roles
+- **Triggers**: Respond to user commands
+- **Orchestrators**: Coordinate complex workflows
+- **Operators**: Perform specific technical tasks
+
+### Domains
+- **development**: Code implementation
+- **git**: Version control
+- **search**: Finding code/patterns
+- **debug**: Problem investigation
+- **test**: Testing and validation
+- **docs**: Documentation
+- **workflow**: Process management
+
+## 🎯 Meta-Process
+
+This modular structure itself demonstrates the evolution of the template system:
+1. Started as monolithic CLAUDE.md (1400+ lines)
+2. Split into template files
+3. Handlers extracted to folders
+4. Guides modularized into integration/
+
+Each phase improved maintainability, discoverability, and extensibility.
 
 ---
 
-This document captures the meta-process of creating and evolving the Claude Template System itself. It's a guide for improving the guide.
-
-## 🎯 Quick Navigation {#quick-navigation}
-
-- **[The Journey](#the-journey)** - How the system evolved
-- **[Lessons Learned](#lessons-learned)** - Key insights from development
-- **[Evolution Patterns](#evolution-patterns)** - How to improve the system
-- **[Cross-System Integration Handlers](#cross-system-integration-handlers)** - Handler interconnections
-- **[Creating and Managing Handlers](#creating-handlers)** - NEW! Handler creation guides
-- **[Meta-Process](#meta-process-for-meta-process)** - Improving this document
+*For the original monolithic content, see version history. The journey from monolithic to modular is documented in [System Architecture](integration/architecture/system-architecture.md).*
 
 ## ULTRATHINK Integration {#ultrathink-integration}
 

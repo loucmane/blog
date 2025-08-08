@@ -1,0 +1,276 @@
+{
+  "scan_timestamp": "2025-08-08T00:00:00Z",
+  "scan_type": "migration_validation",
+  "summary": {
+    "total_handlers": 69,
+    "handlers_by_role": {
+      "triggers": 25,
+      "orchestrators": 23,
+      "operators": 21
+    },
+    "modules_created": 51,
+    "modules_by_category": {
+      "engine": 15,
+      "registry": 11,
+      "behaviors": 9,
+      "matrices": 8,
+      "tools": 7,
+      "guides": 6
+    },
+    "duplicate_definitions": 42,
+    "functional_overlaps": 8,
+    "missing_handlers": 3
+  },
+  "critical_issues": {
+    "dual_definition_crisis": {
+      "severity": "CRITICAL",
+      "description": "42 handlers exist in both old and new locations simultaneously",
+      "affected_files": [
+        "CONVENTIONS.md (22 handlers)",
+        "PATTERNS.md (14 patterns)",  
+        "BUILDING-BETTER.md (6 handlers)"
+      ],
+      "impact": "System randomly chooses between versions, no single source of truth"
+    },
+    "handler_duplication": {
+      "severity": "HIGH",
+      "description": "Multiple handlers with overlapping functionality",
+      "examples": [
+        "start-session vs session-start",
+        "fix-bug vs debug-issue",
+        "update-session vs update-tracker vs update-todos"
+      ],
+      "impact": "Unpredictable routing, user confusion"
+    },
+    "missing_handlers": {
+      "severity": "MEDIUM",
+      "description": "Referenced handlers that don't exist",
+      "handlers": ["analyze-code", "run-tests", "test-implementation"],
+      "impact": "Workflow failures, broken dependencies"
+    }
+  },
+  "duplicated_handlers": [
+    {
+      "name": "verify-claim",
+      "locations": ["CONVENTIONS.md:1082", "handlers/operators/analysis/verify-claim.md"]
+    },
+    {
+      "name": "gather-evidence",
+      "locations": ["CONVENTIONS.md:1103", "handlers/operators/analysis/gather-evidence.md"]
+    },
+    {
+      "name": "cite-source",
+      "locations": ["CONVENTIONS.md:1128", "handlers/operators/analysis/cite-source.md"]
+    },
+    {
+      "name": "check-naming",
+      "locations": ["CONVENTIONS.md:1152", "handlers/operators/development/check-naming.md"]
+    },
+    {
+      "name": "suggest-name",
+      "locations": ["CONVENTIONS.md:1177", "handlers/operators/development/suggest-name.md"]
+    },
+    {
+      "name": "validate-path",
+      "locations": ["CONVENTIONS.md:1199", "handlers/operators/file/validate-path.md"]
+    },
+    {
+      "name": "check-style",
+      "locations": ["CONVENTIONS.md:1222", "handlers/operators/development/check-style.md"]
+    },
+    {
+      "name": "format-code",
+      "locations": ["CONVENTIONS.md:1244", "handlers/operators/development/format-code.md"]
+    },
+    {
+      "name": "review-patterns",
+      "locations": ["CONVENTIONS.md:1268", "handlers/operators/development/review-patterns.md"]
+    },
+    {
+      "name": "check-commit-msg",
+      "locations": ["CONVENTIONS.md:1291", "handlers/operators/git/check-commit-msg.md"]
+    },
+    {
+      "name": "suggest-commit-type",
+      "locations": ["CONVENTIONS.md:1313", "handlers/operators/git/suggest-commit-type.md"]
+    },
+    {
+      "name": "session-start",
+      "locations": ["CONVENTIONS.md:1339", "handlers/orchestrators/session-start.md"]
+    },
+    {
+      "name": "resolve-session-void",
+      "locations": ["CONVENTIONS.md:1389", "handlers/orchestrators/resolve-session-void.md"]
+    },
+    {
+      "name": "check-docs-needed",
+      "locations": ["CONVENTIONS.md:1417", "handlers/operators/docs/check-docs-needed.md"]
+    },
+    {
+      "name": "validate-comments",
+      "locations": ["CONVENTIONS.md:1442", "handlers/operators/docs/validate-comments.md"]
+    },
+    {
+      "name": "check-conventions-first",
+      "locations": ["CONVENTIONS.md:1469", "handlers/orchestrators/check-conventions-first.md"]
+    },
+    {
+      "name": "enforce-pre-flight",
+      "locations": ["CONVENTIONS.md:1493", "handlers/orchestrators/enforce-pre-flight.md"]
+    },
+    {
+      "name": "execute-ultrathink",
+      "locations": ["PATTERNS.md:35", "handlers/orchestrators/execute-ultrathink.md"]
+    },
+    {
+      "name": "work-activity",
+      "locations": ["PATTERNS.md:73", "handlers/orchestrators/work-activity.md"]
+    },
+    {
+      "name": "work-continuation",
+      "locations": ["PATTERNS.md:88", "handlers/orchestrators/work-continuation.md"]
+    },
+    {
+      "name": "file-operation",
+      "locations": ["PATTERNS.md:103", "handlers/orchestrators/file-operation.md"]
+    },
+    {
+      "name": "file-creation",
+      "locations": ["PATTERNS.md:121", "handlers/orchestrators/file-creation.md"]
+    },
+    {
+      "name": "tool-selection",
+      "locations": ["PATTERNS.md:137", "handlers/orchestrators/tool-selection.md"]
+    },
+    {
+      "name": "code-creation",
+      "locations": ["PATTERNS.md:154", "handlers/orchestrators/code-creation.md"]
+    },
+    {
+      "name": "evidence-check",
+      "locations": ["PATTERNS.md:169", "handlers/orchestrators/evidence-check.md"]
+    },
+    {
+      "name": "architecture-claim",
+      "locations": ["PATTERNS.md:183", "handlers/orchestrators/architecture-claim.md"]
+    },
+    {
+      "name": "time-capture",
+      "locations": ["PATTERNS.md:198", "handlers/operators/external/time-capture.md"]
+    },
+    {
+      "name": "ambiguous-request",
+      "locations": ["PATTERNS.md:213", "handlers/orchestrators/ambiguous-request.md"]
+    },
+    {
+      "name": "multi-step-request",
+      "locations": ["PATTERNS.md:226", "handlers/orchestrators/multi-step-request.md"]
+    },
+    {
+      "name": "lost-context",
+      "locations": ["PATTERNS.md:241", "handlers/orchestrators/lost-context.md"]
+    },
+    {
+      "name": "system-improvement",
+      "locations": ["PATTERNS.md:255", "handlers/orchestrators/system-improvement.md"]
+    },
+    {
+      "name": "workflow-to-tool",
+      "locations": ["BUILDING-BETTER.md:280", "handlers/orchestrators/workflow-to-tool.md"]
+    },
+    {
+      "name": "tool-to-convention",
+      "locations": ["BUILDING-BETTER.md:297", "handlers/orchestrators/tool-to-convention.md"]
+    },
+    {
+      "name": "convention-to-workflow",
+      "locations": ["BUILDING-BETTER.md:314", "handlers/orchestrators/convention-to-workflow.md"]
+    },
+    {
+      "name": "save-context",
+      "locations": ["BUILDING-BETTER.md:333", "handlers/operators/session/save-context.md"]
+    },
+    {
+      "name": "restore-context",
+      "locations": ["BUILDING-BETTER.md:350", "handlers/operators/session/restore-context.md"]
+    },
+    {
+      "name": "switch-context",
+      "locations": ["BUILDING-BETTER.md:367", "handlers/orchestrators/switch-context.md"]
+    }
+  ],
+  "functional_overlaps": [
+    {
+      "group": "session_management",
+      "handlers": ["start-session", "session-start"],
+      "overlap_type": "duplicate_functionality"
+    },
+    {
+      "group": "debugging",
+      "handlers": ["fix-bug", "debug-issue"],
+      "overlap_type": "overlapping_processes"
+    },
+    {
+      "group": "update_operations",
+      "handlers": ["update-session", "update-tracker", "update-todos"],
+      "overlap_type": "ambiguous_triggers"
+    },
+    {
+      "group": "file_operations", 
+      "handlers": ["edit-file", "file-operation"],
+      "overlap_type": "hierarchical_confusion"
+    },
+    {
+      "group": "code_analysis",
+      "handlers": ["explain-code", "code-review"],
+      "overlap_type": "similar_functionality"
+    },
+    {
+      "group": "evidence_operations",
+      "handlers": ["gather-evidence", "verify-claim", "cite-source"],
+      "overlap_type": "overlapping_processes"
+    }
+  ],
+  "migration_status": {
+    "handlers_migrated": true,
+    "cleanup_completed": false,
+    "references_updated": false,
+    "routing_rules_defined": false,
+    "overall_status": "INCOMPLETE - Cleanup Required"
+  },
+  "recommendations": {
+    "immediate": [
+      "Delete all 42 duplicate handler definitions from monolithic files",
+      "Create 3 missing handlers (analyze-code, run-tests, test-implementation)",
+      "Resolve 8 functional duplications"
+    ],
+    "short_term": [
+      "Implement routing precedence rules",
+      "Add disambiguation mechanisms",
+      "Update all references to new locations"
+    ],
+    "long_term": [
+      "Establish handler taxonomy",
+      "Create automated validation",
+      "Implement integration testing"
+    ]
+  },
+  "files_analyzed": [
+    ".claude/templates/WORKFLOWS.md",
+    ".claude/templates/CONVENTIONS.md",
+    ".claude/templates/PATTERNS.md",
+    ".claude/templates/BUILDING-BETTER.md",
+    ".claude/templates/REGISTRY.md",
+    ".claude/templates/handlers/**/*.md",
+    ".claude/templates/engine/**/*.md",
+    ".claude/templates/registry/**/*.md",
+    ".claude/templates/behaviors/**/*.md",
+    ".claude/templates/matrices/**/*.md",
+    ".claude/templates/tools/**/*.md",
+    ".claude/templates/guides/**/*.md",
+    ".claude/templates/shared/**/*.md"
+  ],
+  "scan_duration": "comprehensive",
+  "analysis_type": "read_only",
+  "modifications_made": 0
+}
