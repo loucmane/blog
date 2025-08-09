@@ -1476,5 +1476,338 @@
       "total": 0,
       "blocked": 0
     }
+  },
+  {
+    "session_id": "20250808",
+    "timestamp": "2025-08-08T18:32:00.428354",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250808",
+    "timestamp": "2025-08-08T19:46:57.268370",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250808",
+    "timestamp": "2025-08-08T20:11:08.732013",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": false,
+      "suggestions": []
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250808",
+    "timestamp": "2025-08-08T21:19:51.817282",
+    "ultrathink_compliance": {
+      "required": true,
+      "completed": true,
+      "blocked_attempts": 0,
+      "statements": 33
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250808",
+    "timestamp": "2025-08-08T21:19:50.492816",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250808",
+    "timestamp": "2025-08-09T11:32:28.477568",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-09T11:32:54.983755",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-09T12:05:21.825852",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": true,
+      "blocked_attempts": 0,
+      "statements": 2
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-09T12:35:44.522976",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-09T12:42:55.159063",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-09T12:52:47.781926",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-09T12:53:33.415013",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
   }
 ]

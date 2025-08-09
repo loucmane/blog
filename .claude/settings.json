@@ -31,7 +31,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/user_prompt_submit.py"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/ultrathink_detector.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/development_context_injector.py"
           }
         ]
       }
@@ -42,7 +46,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_use.py"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/file_operation_validator.py"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/ultrathink_enforcer.py"
           }
         ]
       }
@@ -52,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/stop.py"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/session_analyzer.py"
           }
         ]
       }

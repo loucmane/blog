@@ -1,7 +1,7 @@
 {
   "session": {
-    "id": "20250808",
-    "last_activity": "2025-08-08T17:59:02.748053"
+    "id": "20250809",
+    "last_activity": "2025-08-09T12:53:33.416427"
   },
   "ultrathink_required": false,
   "ultrathink_completed": false,
@@ -10,6 +10,28 @@
     "completed": false,
     "statements": [],
     "blocked_attempts": 0,
-    "trigger": null
+    "trigger": null,
+    "handler_suggestions": [
+      {
+        "name": "fix-bug",
+        "score": 6.0
+      },
+      {
+        "name": "edit-file",
+        "score": 3.0
+      },
+      {
+        "name": "suggest-commit-type",
+        "score": 3.0
+      }
+    ],
+    "phase": "not_started",
+    "started_at": null,
+    "evidence": []
+  },
+  "context": {
+    "work_folders": [],
+    "recent_searches": [],
+    "tools_used": []
   }
 }
