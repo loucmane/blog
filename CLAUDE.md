@@ -7,55 +7,55 @@
 - This is your interrupt handler - it runs FIRST, always
 
 ## 🚨 ENFORCEMENT CHECK - DO THIS NOW 🚨
-**[CRITICAL: `.claude/templates/engine/core/enforcement-check.md`]**
+**[CRITICAL: `templates/engine/core/enforcement-check.md`]**
 - Have you output ULTRATHINK first? If NO → **STOP**
 - See module for MANDATORY enforcement protocol
 - Violation = System Failure
 
 ## 🧠 ULTRATHINK PROTOCOL
-**[CRITICAL: `.claude/templates/engine/core/ultrathink-protocol.md`]**  
-**[CRITICAL: `.claude/templates/engine/core/pre-ultrathink.md`]**
+**[CRITICAL: `templates/engine/core/ultrathink-protocol.md`]**  
+**[CRITICAL: `templates/engine/core/pre-ultrathink.md`]**
 - NEVER output ULTRATHINK as first response
 - See modules for complete protocol
 
 ## 📦 SYSTEM MODULES
 
 ### Core Engine
-- **Activation**: `.claude/templates/engine/activation/context-aware.md`
-- **Execution**: `.claude/templates/engine/execution/swhe-format.md`
-- **Navigation**: `.claude/templates/engine/navigation/template-protocol.md`
-- **Common Flows**: `.claude/templates/engine/navigation/common-flows.md`
+- **Activation**: `templates/engine/activation/context-aware.md`
+- **Execution**: `templates/engine/execution/swhe-format.md`
+- **Navigation**: `templates/engine/navigation/template-protocol.md`
+- **Common Flows**: `templates/engine/navigation/common-flows.md`
 
 ### Enforcement
-- **Behavioral Hooks**: `.claude/templates/engine/enforcement/behavioral-hooks.md`
-- **Cannot Proceed**: `.claude/templates/engine/enforcement/cannot-proceed.md`
+- **Behavioral Hooks**: `templates/engine/enforcement/behavioral-hooks.md`
+- **Cannot Proceed**: `templates/engine/enforcement/cannot-proceed.md`
 
 ### Support Systems
-- **Template Structure**: `.claude/templates/engine/structure/template-system.md`
-- **Error Handling**: `.claude/templates/engine/fallbacks/error-handling.md`
-- **Debugging**: `.claude/templates/engine/debugging/system-debug.md`
-- **Examples**: `.claude/templates/engine/examples/practical.md`
+- **Template Structure**: `templates/engine/structure/template-system.md`
+- **Error Handling**: `templates/engine/fallbacks/error-handling.md`
+- **Debugging**: `templates/engine/debugging/system-debug.md`
+- **Examples**: `templates/engine/examples/practical.md`
 
 ---
 
 ## 📖 Documentation Hub
 
 **For Users:**
-- **User Guide**: `.claude/templates/USER-GUIDE.md` - Start here if you're new
+- **User Guide**: `templates/USER-GUIDE.md` - Start here if you're new
 - **Quick Reference**: "If you want to X, say Y" guide in USER-GUIDE
 - **Common Patterns**: How users ask vs what handlers exist
 - **Troubleshooting**: Solutions to common issues
 
 **For Development:**
-- **Handler Registry**: `.claude/templates/REGISTRY.md` - Complete handler list
-- **Workflows**: `.claude/templates/WORKFLOWS.md` - See handlers in action
-- **Common Workflows**: `.claude/templates/WORKFLOWS.md#common-workflows` - Real examples
-- **Conventions**: `.claude/templates/CONVENTIONS.md` - Standards and rules
+- **Handler Registry**: `templates/REGISTRY.md` - Complete handler list
+- **Workflows**: `templates/WORKFLOWS.md` - See handlers in action
+- **Common Workflows**: `templates/WORKFLOWS.md#common-workflows` - Real examples
+- **Conventions**: `templates/CONVENTIONS.md` - Standards and rules
 
 **For Extending System:**
-- **Creating Handlers**: `.claude/templates/BUILDING-BETTER.md#creating-handlers` - Handler creation guide
-- **Handler Standards**: `.claude/templates/BUILDING-BETTER.md#handler-documentation-standard` - Documentation format
-- **Improving System**: `.claude/templates/BUILDING-BETTER.md` - Extend and enhance
+- **Creating Handlers**: `templates/BUILDING-BETTER.md#creating-handlers` - Handler creation guide
+- **Handler Standards**: `templates/BUILDING-BETTER.md#handler-documentation-standard` - Documentation format
+- **Improving System**: `templates/BUILDING-BETTER.md` - Extend and enhance
 
 ---
 

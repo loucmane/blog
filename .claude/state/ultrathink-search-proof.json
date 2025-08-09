@@ -1,7 +1,7 @@
 {
-  "timestamp": 1754749661.1961575,
+  "timestamp": 1754753289.4918919,
   "session_id": "20250809",
   "action": "registry_search",
-  "pattern": "^## Statistics",
+  "pattern": "orchestrat|work.*tracking|project.*setup",
   "tool": "Grep"
 }
