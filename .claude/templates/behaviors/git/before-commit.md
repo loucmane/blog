@@ -145,7 +145,7 @@ BREAKING CHANGE: removes legacy auth endpoints
 ## Cross-References
 - [CONVENTIONS.md#git-conventions](../../templates/CONVENTIONS.md)
 - [TOOLS.md#git-operations](../../templates/TOOLS.md)
-- [session/compaction-detection.md](../session/compaction-detection.md) - Session end commits
+- [session/session-end.md](../session/session-end.md) - Session end commits
 
 ## Error Cases
 - **User wants quotes**: Use single quotes and explain

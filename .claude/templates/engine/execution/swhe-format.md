@@ -13,9 +13,14 @@ Let me ultrathink about this... [S:20250127|W:work-tracking|H:update-tracker|E:5
 ### Field Definitions
 
 #### S - Session ID
-- Primary: Session ID from SESSION.md
+- Primary: Session ID via session-resolver (`.claude/templates/engine/core/session-resolver.md`)
+- Sources: sessions/current, sessions/YYYY/MM/, or SESSION.md (legacy)
 - Fallback: VOID→conventions (triggers auto-resolution)
-- Format: YYYYMMDD or "VOID"
+- Formats supported:
+  - `current` - Active session from sessions/current symlink
+  - `YYYY-MM-DD-NNN` - Specific session ID
+  - `YYYYMMDD` - Date format (finds latest for that date)
+  - `VOID` - Needs resolution
 
 #### W - Work Context  
 - Primary: Active work folder or activity
@@ -38,6 +43,15 @@ Let me ultrathink about this... [S:20250127|W:work-tracking|H:update-tracker|E:5
   - E:steps/"varies" - Conditional success
   - E:steps/redirect - For routing handlers
   - E:steps/"interactive" - User input required
+
+## Session Resolution Protocol
+
+### Automatic Session Detection
+The S field now auto-detects format and resolves to the correct session:
+1. **Import resolver**: Uses session-resolver for all S field processing
+2. **Format detection**: Automatically identifies format type
+3. **Priority search**: Checks sessions/ first, then SESSION.md
+4. **Structured return**: Provides full session metadata
 
 ## Handler Validation Protocol
 

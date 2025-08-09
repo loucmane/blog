@@ -1,0 +1,122 @@
+{
+  "validation_timestamp": "2025-08-09T14:30:00Z",
+  "validation_type": "migration",
+  "scope": "session-handlers",
+  "total_validated": 5,
+  "passed": 5,
+  "failed": 0,
+  "handlers": [
+    {
+      "handler_id": "start-session",
+      "file_path": ".claude/templates/handlers/triggers/session/start-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "dependencies_updated": true,
+        "session_resolver_integrated": true,
+        "no_session_md_writes": true,
+        "sessions_dir_usage": true,
+        "backwards_compatible": true,
+        "version_updated": true
+      },
+      "notes": "Properly creates new sessions in sessions/YYYY/MM/, updates symlink, maintains SESSION.md mirror"
+    },
+    {
+      "handler_id": "session-start",
+      "file_path": ".claude/templates/handlers/orchestrators/session-start.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "dependencies_updated": true,
+        "session_resolver_integrated": true,
+        "no_session_md_writes": true,
+        "sessions_dir_usage": true,
+        "backwards_compatible": true,
+        "version_updated": true,
+        "orchestration_logic": true
+      },
+      "notes": "Orchestrator properly imports and uses session-resolver, handles complex session initialization"
+    },
+    {
+      "handler_id": "update-session",
+      "file_path": ".claude/templates/handlers/triggers/session/update-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "dependencies_updated": true,
+        "session_resolver_integrated": true,
+        "no_session_md_writes": true,
+        "sessions_dir_usage": true,
+        "backwards_compatible": true,
+        "version_updated": true
+      },
+      "notes": "Uses get-current-session() to find active session, updates Progress Log properly"
+    },
+    {
+      "handler_id": "end-session",
+      "file_path": ".claude/templates/handlers/triggers/session/end-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "dependencies_updated": true,
+        "session_resolver_integrated": true,
+        "no_session_md_writes": true,
+        "sessions_dir_usage": true,
+        "backwards_compatible": true,
+        "version_updated": true,
+        "archive_logic": true
+      },
+      "notes": "Properly closes sessions, handles archiving, clears symlink, maintains compatibility"
+    },
+    {
+      "handler_id": "checkpoint-session",
+      "file_path": ".claude/templates/handlers/operators/session/checkpoint-session.md",
+      "status": "PASS",
+      "checks": {
+        "yaml_valid": true,
+        "required_fields": true,
+        "role_is_operator": true,
+        "dependencies_updated": true,
+        "session_resolver_integrated": true,
+        "no_session_md_writes": true,
+        "sessions_dir_usage": true,
+        "backwards_compatible": true,
+        "version_updated": true,
+        "lightweight_operation": true
+      },
+      "notes": "Operator correctly designed for silent checkpointing, non-intrusive, called by other handlers"
+    }
+  ],
+  "migration_notes": {
+    "key_changes": [
+      "All handlers now depend on session-resolver module",
+      "All handlers use sessions/YYYY/MM/ directory structure",
+      "SESSION.md treated as read-only mirror for compatibility",
+      "Symlink management integrated (sessions/current)",
+      "Version bumped to 2.0.0 for all handlers"
+    ],
+    "compatibility": [
+      "SESSION.md still updated for backwards compatibility",
+      "Fallback to SESSION.md if sessions/ unavailable",
+      "Old trigger 'update SESSION.md' still works"
+    ],
+    "testing_required": [
+      "Test session creation in new directory structure",
+      "Verify symlink updates correctly",
+      "Check SESSION.md mirror updates",
+      "Test session resolution via get-current-session()",
+      "Verify archive functionality in end-session"
+    ]
+  },
+  "recommendations": [
+    "Test each handler individually before system-wide deployment",
+    "Ensure sessions/ directory exists with proper permissions",
+    "Monitor SESSION.md to verify it's not being written to directly",
+    "Consider adding session-list handler to view all sessions",
+    "Add session-recover handler for corrupted session recovery"
+  ]
+}

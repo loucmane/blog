@@ -122,7 +122,7 @@ When referencing past events:
 ## Cross-References
 - [SESSION.md conventions](../../templates/CONVENTIONS.md#session-md-structure)
 - [work-tracking/update-tracker.md](../work-tracking/update-tracker.md)
-- [session/compaction-detection.md](../session/compaction-detection.md)
+- [session/session-end.md](../session/session-end.md)
 
 ## Error Cases
 - **System time unavailable**: Note as "timestamp unavailable"

@@ -46,7 +46,9 @@ Task and todo behaviors:
 
 ### [session/](session/)
 Session lifecycle management:
-- [compaction-detection.md](session/compaction-detection.md) - Session end handling
+- [session-end.md](session/session-end.md) - Proper session closure with status
+- [compaction-preparation.md](session/compaction-preparation.md) - Context limit handling
+- ~~[compaction-detection.md](session/compaction-detection.md)~~ - DEPRECATED (split into above)
 
 ## 🔗 Integration Points
 
@@ -74,7 +76,8 @@ This pattern is referenced by all behaviors that require development context.
 | [Work Updates](work-tracking/update-tracker.md) | Progress milestones | Keep tracking current |
 | [Evidence Required](validation/evidence-claims.md) | Making code claims | Proof before assertions |
 | [Todo Enforcement](task-management/todo-write.md) | Starting work | Task list required |
-| [Session End](session/compaction-detection.md) | End signals | Proper session closure |
+| [Session End](session/session-end.md) | End signals | Proper session closure |
+| [Compaction Prep](session/compaction-preparation.md) | Memory limits | Context checkpoint |
 
 ## ⚡ Enforcement Strength
 

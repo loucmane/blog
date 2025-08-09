@@ -1,5 +1,12 @@
 # AI Development Session Log
 
+> **⚠️ DEPRECATED**: This file has been migrated to the `sessions/` directory structure.
+> - **New sessions**: Created in `sessions/YYYY/MM/YYYY-MM-DD-NNN-title.md`
+> - **Current session**: Accessible via `sessions/current` symlink
+> - **Migration date**: 2025-08-06
+> - **Compatibility**: The session-resolver module provides transparent access to both formats
+> - **This file**: Preserved for historical reference only
+
 ## Current Focus
 Investigating hook path resolution issue - Claude Code not using correct paths from settings.json.
 

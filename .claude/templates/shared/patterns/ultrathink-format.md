@@ -19,7 +19,10 @@ Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]
 ```
 
 ### Field Definitions
-- **S**: Session ID from SESSION.md (or VOID→conventions for proper session)
+- **S**: Session ID via session-resolver (supports sessions/ and SESSION.md)
+  - Auto-detects format: `current`, `YYYY-MM-DD-NNN`, `YYYYMMDD`, or `VOID`
+  - Resolves from sessions/current symlink or legacy SESSION.md
+  - See: `.claude/templates/engine/core/session-resolver.md`
 - **W**: Work context from active/ (or VOID→workflows for optimal work)
   - Can be: folder name, "investigating", "reviewing", "planning", "implementation", "debugging", "refactoring"
   - Changes with task focus
@@ -94,7 +97,7 @@ BLOCKS: Cannot proceed without valid [S:W:H:E]
 PROCESS:
 1. First line MUST be: "Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]"
 2. Determine each value:
-   - S: Check date and SESSION.md
+   - S: Auto-resolved from sessions/ or SESSION.md via session-resolver
    - W: Analyze request and active folders
    - H: Find matching handler
    - E: Count handler steps and find success criteria

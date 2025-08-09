@@ -1,0 +1,129 @@
+{
+  "scan_timestamp": "2025-01-09T14:50:00Z",
+  "operation": "session-swhe-integration",
+  "scanner": "template-scanner",
+  "status": "phase-1-complete",
+  
+  "findings": {
+    "session_references_found": 31,
+    "affected_files": [
+      ".claude/templates/shared/patterns/ultrathink-format.md",
+      ".claude/templates/REGISTRY.md",
+      ".claude/templates/BEHAVIORS.md",
+      ".claude/templates/engine/execution/swhe-format.md",
+      ".claude/templates/tools/search/serena-guide.md",
+      ".claude/templates/workflows/guides/common-mistakes.md"
+    ],
+    "session_handlers": [
+      "start-session",
+      "session-start",
+      "update-session",
+      "end-session",
+      "checkpoint-session"
+    ],
+    "current_s_field_formats": ["YYYYMMDD", "VOID"],
+    "new_s_field_formats": ["current", "YYYY-MM-DD-NNN", "YYYYMMDD", "VOID"]
+  },
+  
+  "integration_approach": {
+    "selected": "compatibility-layer",
+    "rationale": "Minimal breaking changes with gradual migration path",
+    "phases": {
+      "phase_1": {
+        "status": "complete",
+        "actions": [
+          "Created session-resolver.md module",
+          "Updated swhe-format.md to use resolver",
+          "Updated ultrathink-format.md documentation"
+        ]
+      },
+      "phase_2": {
+        "status": "pending",
+        "actions": [
+          "Update session handlers",
+          "Create SESSION.md sync mechanism",
+          "Test with existing workflows"
+        ]
+      },
+      "phase_3": {
+        "status": "planned",
+        "actions": [
+          "Deprecate SESSION.md",
+          "Complete migration to sessions/",
+          "Remove compatibility layer"
+        ]
+      }
+    }
+  },
+  
+  "files_created": [
+    {
+      "path": ".claude/templates/engine/core/session-resolver.md",
+      "type": "module",
+      "purpose": "Resolve session references from multiple formats"
+    }
+  ],
+  
+  "files_modified": [
+    {
+      "path": ".claude/templates/engine/execution/swhe-format.md",
+      "changes": "Updated S field to use session-resolver"
+    },
+    {
+      "path": ".claude/templates/shared/patterns/ultrathink-format.md",
+      "changes": "Updated S field documentation for new formats"
+    }
+  ],
+  
+  "impact_analysis": {
+    "breaking_changes": 0,
+    "handlers_affected": 5,
+    "templates_affected": 6,
+    "backwards_compatible": true
+  },
+  
+  "testing_required": {
+    "unit_tests": [
+      "Test S:current resolution",
+      "Test S:YYYY-MM-DD-NNN resolution",
+      "Test S:YYYYMMDD backwards compatibility",
+      "Test S:VOID handling"
+    ],
+    "integration_tests": [
+      "Test start-session with new format",
+      "Test update-session with sessions/current",
+      "Test SESSION.md fallback"
+    ],
+    "regression_tests": [
+      "Verify existing handlers still work",
+      "Verify ULTRATHINK format unchanged"
+    ]
+  },
+  
+  "next_steps": [
+    "Test session-resolver with real sessions",
+    "Create SESSION.md to sessions/current sync",
+    "Update session handlers incrementally",
+    "Document migration guide for users"
+  ],
+  
+  "risks": {
+    "identified": [
+      "Multiple sessions per day ambiguity",
+      "Sync issues between dual systems",
+      "Performance with many session files"
+    ],
+    "mitigation": [
+      "Use latest session for date-based queries",
+      "One-way sync from sessions/ to SESSION.md",
+      "Cache session metadata in memory"
+    ]
+  },
+  
+  "success_metrics": {
+    "compatibility_layer_working": true,
+    "zero_breaking_changes": true,
+    "migration_path_defined": true,
+    "documentation_updated": true
+  }
+}

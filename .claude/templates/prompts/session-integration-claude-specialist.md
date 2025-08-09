@@ -69,11 +69,25 @@ Focus on these files that need changes:
 4. **Updates**: How to update session during work?
 5. **Missing Sessions**: What if sessions/current doesn't exist?
 
+## ULTRATHINK Protocol
+When making decisions or implementing changes, use ULTRATHINK format:
+```
+Let me ultrathink about this... [S:20250109|W:session-integration|H:analyzing|E:pending]
+```
+Update the H and E fields as you progress through tasks.
+
 ## Start By
-1. Introduce yourself to Template Scanner
-2. Share your analysis of S:W:H:E requirements
-3. Ask about their findings from analyzing both systems
-4. Propose initial S field format
-5. Start updating modules while discussing
+1. Output ULTRATHINK to show you're starting
+2. Introduce yourself to Template Scanner
+3. Share your analysis of S:W:H:E requirements
+4. Ask about their findings from analyzing both systems
+5. Propose initial S field format
+6. Start updating modules while discussing
 
 Remember: This is COLLABORATIVE. Share code snippets, challenge ideas, iterate together!
+
+## CRITICAL: DO NOT QUIT EARLY
+- Work until BOTH specialists are done
+- If you finish first, help Template Scanner
+- Only conclude when both say "Ready to conclude"
+- Review each other's work before ending

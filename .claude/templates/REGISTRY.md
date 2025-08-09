@@ -186,6 +186,12 @@ Handlers that respond to user triggers and route to appropriate workflows.
 - **Process**: Final updates, creates memory, provides handoff
 - **Location**: handlers/triggers/session/end-session.md
 
+#### Handler: `prepare-compaction` {#prepare-compaction}
+- **Triggers**: "compaction", "% left", "context getting long", "need new chat"
+- **Keywords**: [compact, compaction, memory, limit, context]
+- **Process**: Creates checkpoint, preserves state, generates resume command
+- **Location**: handlers/triggers/session/prepare-compaction.md
+
 #### Handler: `checkpoint-session` {#checkpoint-session}
 - **Triggers**: Mid-session automatic saves
 - **Keywords**: [checkpoint, autosave, backup, snapshot]
@@ -375,6 +381,26 @@ Handlers that respond to user triggers and route to appropriate workflows.
 - **Keywords**: [build, compile, bundle, webpack, vite]
 - **Process**: Executes build process
 - **Location**: handlers/operators/development/build-project.md
+
+### AI Integration Tools - 3 resources
+
+#### Handler: `consult-gpt5` {#consult-gpt5}
+- **Triggers**: "ask gpt5", "consult gpt5", "get second opinion", "need fresh perspective"
+- **Keywords**: [gpt5, o1, cursor, second opinion, perspective, debugging]
+- **Process**: Consults GPT-5 (O1 Pro) via cursor-agent for deep analysis
+- **Location**: handlers/tools/external/consult-gpt5.md
+
+#### Agent: `gpt5-analyst` {#gpt5-analyst}
+- **Type**: Comprehensive analysis agent
+- **Purpose**: Deep codebase analysis and architectural review
+- **Tools**: Bash (cursor-agent integration)
+- **Location**: agents/gpt5-analyst.md
+
+#### Agent: `gpt5` {#gpt5}
+- **Type**: Quick consultation agent
+- **Purpose**: Fast second opinions and focused analysis
+- **Tools**: Bash (cursor-agent integration)
+- **Location**: agents/gpt5-quick.md
 
 ### Evidence & Claims (CONVENTIONS.md) - 3 handlers
 
@@ -612,7 +638,7 @@ Automatic enforcement gates located in BEHAVIORS.md:
 4. **Tool Selection** - Right tool verification
 5. **Evidence & Claims** - Proof before assertions
 6. **Task Management** - TodoWrite enforcement
-7. **Session Management** - Compaction detection
+7. **Session Management** - Session end and compaction preparation
 8. **Timestamp Accuracy** - Check actual time before adding timestamps
 9. **Git Operations** - gac format enforcement
 
@@ -691,13 +717,15 @@ pnpm lint                         # Run linter
 - **TOOLS.md**: 18 tool selection handlers  
 - **CONVENTIONS.md**: 16 convention handlers
 - **BUILDING-BETTER.md**: 6 integration handlers
+- **AI Integration**: 1 handler + 2 agents (new)
 - **PATTERNS.md**: 0 (contains patterns, not handlers)
 - **BEHAVIORS.md**: 0 (contains hooks, not handlers)
 - **MATRICES.md**: 0 (contains matrices, not handlers)
 
 ### Totals
-- **Total Existing Handlers**: 69 (was 63, added 6)
-- **Handlers Added This Session**: 6
+- **Total Existing Handlers**: 70 (was 63, added 7)
+- **Total Agents**: 2 (gpt5-analyst, gpt5)
+- **Handlers Added This Session**: 7
   - fix-bug ✅
   - debug-issue ✅
   - explain-code ✅

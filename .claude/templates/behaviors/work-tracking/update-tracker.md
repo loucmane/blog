@@ -234,7 +234,7 @@ Document in FINDINGS.md:
 ## Cross-References
 - [WORKFLOWS.md#create-work-tracking](../../templates/WORKFLOWS.md)
 - [timestamps/before-adding.md](../timestamps/before-adding.md)
-- [session/compaction-detection.md](../session/compaction-detection.md)
+- [session/session-end.md](../session/session-end.md)
 - [CONVENTIONS.md#work-tracking](../../templates/CONVENTIONS.md)
 
 ## Error Cases

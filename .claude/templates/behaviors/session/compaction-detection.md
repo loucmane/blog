@@ -1,15 +1,21 @@
 ---
-trigger: Session end signals like "X% left", "let's end", "thanks", "compaction"
-action: Complete session end checklist and provide required messages
-blocks: Cannot end session without proper closure
+trigger: DEPRECATED - See session-end.md and compaction-preparation.md
+action: DEPRECATED - Separated into two distinct behaviors
+blocks: DEPRECATED - Use new separated behaviors
 category: session
-enforcement: mandatory
-version: 1.0.0
+enforcement: deprecated
+version: 2.0.0
 ---
 
-# Session Compaction Detection
+# Session Compaction Detection [DEPRECATED]
 
-## Trigger Conditions
+> ⚠️ **DEPRECATED**: This behavior has been split into two separate behaviors:
+> - **[compaction-preparation.md](./compaction-preparation.md)** - For context limit handling
+> - **[session-end.md](./session-end.md)** - For actual session ending
+> 
+> This file is preserved for reference only. Use the new separated behaviors.
+
+## Original Trigger Conditions
 This behavior fires when detecting:
 - "X% left" (memory warnings)
 - "let's end here"

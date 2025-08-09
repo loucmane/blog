@@ -86,12 +86,20 @@ Work on actual changes to:
    - Metadata loading performance
    - Backwards compatibility
 
+## ULTRATHINK Protocol
+When analyzing or making changes, use ULTRATHINK format:
+```
+Let me ultrathink about this... [S:20250109|W:session-integration|H:scanning|E:pending]
+```
+Update the H and E fields as you progress (H:finding-references, H:updating-handlers, etc.)
+
 ## Start By
-1. Introduce yourself to Claude-MD Specialist
-2. Share initial scan results of SESSION.md references
-3. Discuss session ID format options
-4. Propose integration approach
-5. Start finding and updating references while discussing
+1. Output ULTRATHINK to show you're starting
+2. Introduce yourself to Claude-MD Specialist
+3. Share initial scan results of SESSION.md references
+4. Discuss session ID format options
+5. Propose integration approach
+6. Start finding and updating references while discussing
 
 ## Share Findings Like
 ```
@@ -107,3 +115,9 @@ S field patterns found:
 ```
 
 Remember: Work WITH your partner. Share discoveries immediately, don't wait to compile everything!
+
+## CRITICAL: DO NOT QUIT EARLY
+- Work until BOTH specialists are done
+- If you finish first, help Claude-MD Specialist
+- Only conclude when both say "Ready to conclude"
+- Review each other's work before ending
