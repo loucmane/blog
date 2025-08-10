@@ -1,185 +1,5 @@
 [
   {
-    "session_id": "20250805",
-    "timestamp": "2025-08-05T17:10:54.189803",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250805",
-    "timestamp": "2025-08-05T17:12:53.491072",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250805",
-    "timestamp": "2025-08-05T17:19:29.363989",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250805",
-    "timestamp": "2025-08-06T10:48:56.243341",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250806",
-    "timestamp": "2025-08-06T11:15:27.772114",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250806",
-    "timestamp": "2025-08-06T11:19:49.856912",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250806",
-    "timestamp": "2025-08-06T11:25:07.890431",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250806",
-    "timestamp": "2025-08-06T12:35:23.614442",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250806",
-    "timestamp": "2025-08-06T12:38:05.052598",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
-    "session_id": "20250806",
-    "timestamp": "2025-08-06T12:44:24.145636",
-    "ultrathink_compliance": {
-      "required": false,
-      "completed": false,
-      "blocked_attempts": 0,
-      "statements": 0
-    },
-    "handler_suggestions": {
-      "provided": false,
-      "suggestions": []
-    },
-    "tools_used": {
-      "total": 0,
-      "blocked": 0
-    }
-  },
-  {
     "session_id": "20250806",
     "timestamp": "2025-08-06T12:48:30.585903",
     "ultrathink_compliance": {
@@ -2343,6 +2163,316 @@
   {
     "session_id": "20250809",
     "timestamp": "2025-08-09T21:25:51.961915",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-09T21:33:50.347303",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250809",
+    "timestamp": "2025-08-10T11:27:42.932423",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T11:42:12.073099",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T11:42:52.316670",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T12:24:59.735159",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T12:28:53.936560",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T12:34:47.357359",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T12:35:51.406326",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T12:52:25.247363",
+    "ultrathink_compliance": {
+      "required": false,
+      "completed": false,
+      "blocked_attempts": 0,
+      "statements": 0
+    },
+    "handler_suggestions": {
+      "provided": true,
+      "suggestions": [
+        {
+          "name": "fix-bug",
+          "score": 6.0
+        },
+        {
+          "name": "edit-file",
+          "score": 3.0
+        },
+        {
+          "name": "suggest-commit-type",
+          "score": 3.0
+        }
+      ]
+    },
+    "tools_used": {
+      "total": 0,
+      "blocked": 0
+    }
+  },
+  {
+    "session_id": "20250810",
+    "timestamp": "2025-08-10T12:57:01.972309",
     "ultrathink_compliance": {
       "required": false,
       "completed": false,
