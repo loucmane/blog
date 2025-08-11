@@ -19,16 +19,16 @@ Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]
 ```
 
 ### Field Definitions
-- **S**: Session ID via session-resolver (supports sessions/ and SESSION.md)
+- **S**: Session ID via session-resolver (sessions/ only)
   - Auto-detects format: `current`, `YYYY-MM-DD-NNN`, `YYYYMMDD`, or `VOID`
-  - Resolves from sessions/current symlink or legacy SESSION.md
+  - Resolves from `sessions/current` symlink and `sessions/YYYY/MM/`
   - See: `templates/engine/core/session-resolver.md`
 - **W**: Work context from active/ (or VOID→workflows for optimal work)
   - Can be: folder name, "investigating", "reviewing", "planning", "implementation", "debugging", "refactoring"
   - Changes with task focus
   - Always required in work folders (/work-tracking/active/*)
 - **H**: Handler matching request (or VOID→registry for best practice)
-  - Must be actual handler name from REGISTRY.md
+  - Must be actual handler name from templates/registry
   - Use "searching" during initial search phase
   - Use VOID→registry when no handler found
 - **E**: Evidence proving handler comprehension
