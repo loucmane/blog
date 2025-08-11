@@ -14,8 +14,8 @@ Let me ultrathink about this... [S:20250127|W:work-tracking|H:update-tracker|E:5
 
 #### S - Session ID
 - Primary: Session ID via session-resolver (`templates/engine/core/session-resolver.md`)
-- Sources: sessions/current, sessions/YYYY/MM/, or SESSION.md (legacy)
-- Fallback: VOID→conventions (triggers auto-resolution)
+- Sources: sessions/current, sessions/YYYY/MM/
+- Fallback: VOID→session-start (triggers proper creation)
 - Formats supported:
   - `current` - Active session from sessions/current symlink
   - `YYYY-MM-DD-NNN` - Specific session ID
@@ -50,7 +50,7 @@ Let me ultrathink about this... [S:20250127|W:work-tracking|H:update-tracker|E:5
 The S field now auto-detects format and resolves to the correct session:
 1. **Import resolver**: Uses session-resolver for all S field processing
 2. **Format detection**: Automatically identifies format type
-3. **Priority search**: Checks sessions/ first, then SESSION.md
+3. **Priority search**: Checks sessions/ only (no SESSION.md fallback)
 4. **Structured return**: Provides full session metadata
 
 ## Handler Validation Protocol
@@ -63,7 +63,7 @@ The S field now auto-detects format and resolves to the correct session:
 
 ### Validation Steps
 ```
-1. Search REGISTRY.md for handler
+1. Use Serena to search templates/registry/ for handler
 2. Verify handler exists at specified path
 3. Load handler and confirm structure
 4. Display found confirmation

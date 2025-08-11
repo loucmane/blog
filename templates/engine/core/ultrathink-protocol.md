@@ -3,8 +3,7 @@ id: ultrathink-protocol
 type: engine-component
 priority: critical
 dependencies:
-  - SESSION.md
-  - templates/REGISTRY.md
+  - templates/registry/index.md
   - templates/PATTERNS.md#execute-ultrathink
   - .claude/ULTRATHINK-ENFORCER.md
 exports:
@@ -21,8 +20,8 @@ exports:
 - This ensures thorough analysis even for 'simple' tasks
 - Hidden complexity often emerges only through deep thinking
 - Better to overthink than underthink - there's no penalty for being thorough
-- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/"criteria"]" before any implementation
-  - S = Today's session ID from SESSION.md (or VOID→conventions for proper session)
+- Format: "Let me ultrathink about this... [S:X|W:Y|H:Z|E:steps/\"criteria\"]" before any implementation
+  - S = Today's session ID resolved from `sessions/` (use sessions/current or create via session-start)
   - W = Current work context from active/ (or VOID→workflows for optimal work)
   - H = Handler matching request (or VOID→registry for best practice) 
   - E = Evidence (step count/key:"most critical step") proving handler comprehension
@@ -47,7 +46,7 @@ exports:
 
 ## Field Definitions
 
-- **S**: Session ID from SESSION.md (or VOID→conventions)
+- **S**: Session ID from `sessions/` (or VOID→session-start)
 - **W**: Work context (folder/activity or VOID→workflows)  
 - **H**: Handler name (or searching/VOID→registry)
 - **E**: Evidence (steps/"success criteria")

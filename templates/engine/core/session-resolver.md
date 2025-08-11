@@ -4,7 +4,6 @@ type: engine-component
 priority: critical
 dependencies:
   - sessions/ directory structure
-  - SESSION.md (legacy compatibility)
 exports:
   - resolve-session
   - get-current-session
@@ -15,7 +14,7 @@ exports:
 # Session Resolution Engine
 
 ## Purpose
-Resolves session references from S field to actual session files, supporting both legacy SESSION.md and new sessions/ directory structure.
+Resolves session references from S field to actual session files using the `sessions/` directory structure only. Legacy `SESSION.md` is fully deprecated and not consulted.
 
 ## Auto-Detection Logic
 
@@ -54,8 +53,7 @@ Priority Order:
   1. Check sessions/current (for 'current')
   2. Search sessions/YYYY/MM/ for exact match
   3. Find latest session for date-based formats
-  4. Fall back to SESSION.md if exists
-  5. Return VOID with creation instructions
+  4. Return VOID with creation instructions (no SESSION.md fallback)
 ```
 
 ### 3. Load Session Data
@@ -90,10 +88,8 @@ Extract from session file:
 
 ## Compatibility Features
 
-### SESSION.md Synchronization
-- **On Write**: Update SESSION.md when sessions/current changes
-- **On Read**: Check sessions/ before SESSION.md
-- **Migration**: Gradual transition without breaking changes
+### SESSION.md Synchronization (Removed)
+Legacy `SESSION.md` synchronization has been removed. All session resolution and updates must use `sessions/` exclusively.
 
 ### Validation Rules
 1. **Session ID Format**: Must match YYYY-MM-DD-NNN pattern
@@ -116,9 +112,8 @@ If no session found:
 ```markdown
 If format unrecognized:
   1. Log the invalid format
-  2. Attempt legacy SESSION.md
-  3. Guide to proper format
-  4. Return error with suggestions
+  2. Guide to proper format
+  3. Return error with suggestions
 ```
 
 ### Multiple Matches
@@ -157,20 +152,10 @@ S: Session ID via session-resolver
 
 ## Migration Path
 
-### Phase 1: Parallel Operation
-- Both SESSION.md and sessions/ work
-- Resolver handles both transparently
-- No handler changes required
-
-### Phase 2: Gradual Updates
-- Update handlers to use sessions/
-- SESSION.md becomes read-only mirror
-- Deprecation warnings added
-
-### Phase 3: Full Migration
-- SESSION.md removed
-- All handlers use sessions/
-- Resolver simplified to sessions-only
+### Current Phase: Full Migration
+- `SESSION.md` removed
+- All handlers use `sessions/`
+- Resolver uses sessions-only
 
 ## Testing Protocol
 
@@ -179,7 +164,7 @@ S: Session ID via session-resolver
 2. **Specific Session**: S:2025-08-04-001 → exact file
 3. **Date Legacy**: S:20250804 → latest for date
 4. **Void State**: S:VOID → creation flow
-5. **Fallback**: No sessions/ → SESSION.md
+5. **Deprecated**: No fallback to `SESSION.md`
 6. **Multiple Daily**: Multiple -NNN → latest
 
 ### Validation Tests
