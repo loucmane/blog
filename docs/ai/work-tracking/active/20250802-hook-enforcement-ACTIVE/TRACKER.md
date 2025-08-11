@@ -134,19 +134,36 @@
   - [x] Identified critical improvements from CLAUDE_MD_IMPROVEMENT_ANALYSIS.md
   - [x] Prioritized S:W:H:E validation as top priority
   - [x] Created implementation roadmap with 4 phases
-- [ ] Phase 1: Hook Integration (S:W:H:E Validation)
-  - [ ] Modify pre_tool_use.py to validate S:W:H:E format
-  - [ ] Add handler existence checking against REGISTRY.md
-  - [ ] Implement format validation regex
-- [ ] Phase 2: Protocol Enforcement
-  - [ ] Create automated PRE-ULTRATHINK validation
-  - [ ] Implement tool selection enforcement
-  - [ ] Add evidence quality metrics
-- [ ] Phase 3: VOID Resolution
-  - [ ] Map all VOID states to resolution handlers
-  - [ ] Add circular dependency detection
-  - [ ] Create fallback mechanisms
-- [ ] Phase 4: Full Integration
-  - [ ] Unite hook system with CLAUDE.md protocols
-  - [ ] Create bi-directional communication
-  - [ ] Implement comprehensive blocking mechanisms
+- [x] Phase 1: Hook Integration (S:W:H:E Validation)
+  - [x] Modify enforcement.py to read enforcement level (soft|stable|strict)
+  - [x] Update ultrathink_enforcer.py to detect searches in templates/registry/**
+  - [x] Update ultrathink_enforcer.py to accept handlers from templates/handlers/** and templates/engine/**
+  - [x] Implement format validation regex (existing validator acceptable)
+- [x] Phase 2: Protocol Enforcement
+  - [x] Add escape hatch (>=3 searches or >5 min in searching phase)
+  - [x] Allow read-only Bash during search (rg|ls|tree|sed -n|head|jq)
+  - [x] Improve hints to reference templates/registry/index.md
+- [x] Phase 3: VOID Resolution
+  - [x] Map VOID→registry to templates/registry/ and resolve-handler-void (hints)
+  - [x] Add circular dependency detection (resolve-handler-void repeat)
+  - [x] Create fallback mechanisms (default handler suggestion list from templates/registry and core handlers)
+- [x] Phase 4: Full Integration
+  - [x] Plan-first completion: Stop hook marks ULTRATHINK complete when S:W:H:E present
+  - [x] Adaptive softening: downgrade to soft for 1h after near-miss blocks
+  - [x] Docs refresh: update ENFORCEMENT-SUMMARY.md/integration-guide with new behavior
+
+## Phase 5: Metrics & Namespacing 🚀 NEW
+- [x] Add per-session namespaced state structure (sessions[sessionId])
+- [x] Log events to logs/enforcement_metrics.json (block/escape/soft)
+- [x] Add enforcement-report script for last-24h summary
+
+## Phase 11: Small-Team Optimizations ⏳ PLANNED
+- [ ] Level toggles scripts: `enforce-set`, `enforce-status`
+- [x] Minimal registry index (seeded index.json)
+- [ ] One-click ULTRATHINK helper (skeleton generator)
+- [ ] Legacy sweep (live guides only)
+- [x] Read-only Bash preview (dry-run)
+- [x] Per-tool cooldown to reduce banner repetition
+- [x] Enhanced block status line (mode, soft remaining)
+- [x] Weekly auto-summary (on Mondays)
+- [x] Near-miss capture surfaced in reports

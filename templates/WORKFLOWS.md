@@ -70,7 +70,7 @@
 - **[CONVENTIONS.md](CONVENTIONS.md)** - Git aliases and code standards
 - **[TOOLS.md](TOOLS.md)** - MCP tool configurations
 - **[CLAUDE-NEW.md](CLAUDE-NEW.md)** - Quick navigation hub
-- **[REGISTRY.md](REGISTRY.md)** - Complete handler registry
+- **[Registry](registry/index.md)** - Modular handler registry
 - **[BUILDING-BETTER.md](BUILDING-BETTER.md)** - How to evolve this system
 
 ---

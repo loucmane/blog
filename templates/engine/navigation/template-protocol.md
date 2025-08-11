@@ -22,7 +22,7 @@ Is this development work? → Continue to step 2
 Search the REGISTRY for the appropriate handler:
 
 First, check Navigation Keywords for common patterns:
-mcp__serena__search_for_pattern --substring_pattern "[action keyword]" --relative_path "templates/REGISTRY.md"
+mcp__serena__search_for_pattern --substring_pattern "[action keyword]" --relative_path "templates/registry"
 ```
 
 #### Fallback Search
@@ -31,7 +31,7 @@ If no exact match, extract keywords and search more broadly:
 - **Extract key nouns**: bug, feature, component, etc.
 - **Search command**: 
   ```
-  mcp__serena__search_for_pattern --substring_pattern "[keyword]" --relative_path "templates/REGISTRY.md"
+  mcp__serena__search_for_pattern --substring_pattern "[keyword]" --relative_path "templates/registry"
   ```
 
 ### 3. Load Handler from Template Using Anchors
@@ -88,7 +88,7 @@ templates/handlers/[role]/[domain]/[handler-name].md
 - Cache frequently used handler paths
 - Use direct paths when known
 - Batch related searches
-- Prefer REGISTRY.md over file searches
+- Prefer templates/registry with Serena over raw file searches
 
 ## Error Recovery
 

@@ -18,9 +18,9 @@ exports:
 
 My knowledge lives in these templates that I search dynamically:
 
-## REGISTRY.md - Master Index
-- **Purpose**: Fast lookup of all handlers
-- **When I use it**: FIRST, for every request
+## templates/registry - Modular Index
+- **Purpose**: Fast lookup of all handlers (modular)
+- **When I use it**: FIRST, for every request (prefer Serena MCP)
 - **What I find**: Handler names, locations, triggers
 
 ## handlers/ - All System Handlers

@@ -30,7 +30,7 @@ Handler, template location, convention, and testing status
 | Timestamp Accuracy | date-check | BEHAVIORS.md | actual time only | ✅ | Just implemented |
 | Git Operations (gac) | gac-format | BEHAVIORS.md | no double quotes | ❌ | Commit messages |
 | Testing & Validation | test-checkpoint | WORKFLOWS.md | user testing | ❌ | Before complete |
-| Navigation | find-handler | REGISTRY.md | keyword lookup | ✅ | 72.5% improvement |
+| Navigation | find-handler | templates/registry | keyword lookup | ✅ | 72.5% improvement |
 | Context Detection | mode-detection | CLAUDE.md | dev vs chat | ❌ | Mode switching |
 | Error Recovery | error-matrix | MATRICES.md | recovery paths | ❌ | Fallback behavior |
 | Memory Usage | save-context | PATTERNS.md | memory format | ❌ | Session handoff |

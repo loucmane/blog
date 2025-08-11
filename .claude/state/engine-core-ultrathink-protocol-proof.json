@@ -1,0 +1,8 @@
+{
+  "timestamp": 1754848744.6194737,
+  "session_id": "20250810",
+  "action": "handler_loaded",
+  "handler": "engine-core-ultrathink-protocol",
+  "path": ".claude/templates/engine/core/ultrathink-protocol.md",
+  "tool": "Read"
+}

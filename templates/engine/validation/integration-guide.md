@@ -38,8 +38,7 @@ This guide explains how the enhanced ULTRATHINK enforcement system integrates ho
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
 │              LAYER 3: TOOL BLOCKING                          │
-│  • pre_tool_use.py                                          │
-│  • enhanced_enforcement.py                                   │
+│  • enforcement.py                                            │
 │  • Blocks tools without ULTRATHINK                          │
 │  • Validates S:W:H:E format                                 │
 └────────────────────┬────────────────────────────────────────┘
@@ -85,7 +84,7 @@ This guide explains how the enhanced ULTRATHINK enforcement system integrates ho
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/enhanced_enforcement.py"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/enforcement.py"
           }
         ]
       }
@@ -229,7 +228,7 @@ state["ultrathink"]["trigger"] = {
 # 3. AI attempts to use Edit tool without ULTRATHINK
 tool_call = {"tool_name": "Edit", "file_path": "auth.py"}
 
-# 4. enhanced_enforcement.py blocks the tool
+# 4. enforcement.py blocks the tool
 if state["ultrathink"]["required"] and not state["ultrathink"]["completed"]:
     print("BLOCKED: Edit requires ULTRATHINK protocol first")
     sys.exit(2)  # Hard block
@@ -342,7 +341,7 @@ ENFORCEMENT_LEVELS = {
 ### Custom Validators
 
 ```python
-# Add custom validator to enhanced_enforcement.py
+# Add custom validator to enforcement.py
 class CustomValidator:
     def validate(self, context):
         # Custom validation logic

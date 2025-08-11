@@ -28,9 +28,16 @@ From pre_tool_use.py:
 ## ULTRATHINK Enforcement Strategy
 1. Detect development triggers in UserPromptSubmit
 2. Set state flag requiring ULTRATHINK
-3. Block tools in PreToolUse if no ULTRATHINK
+3. Block tools in PreToolUse if no ULTRATHINK (with soft|stable|strict levels)
 4. Validate in Stop hook
 5. Clear state on success
+
+### 2025-08-10 Refinements
+- Registry shift: evidence targets moved from legacy REGISTRY.md to `templates/registry/**`
+- Handler load evidence broadened to `templates/handlers/**` and `templates/engine/**`
+- Escape hatch: allow dev tools after ≥3 searches or >5 minutes in searching phase (stable mode)
+- Read-only Bash allowed during search (rg|ls|tree|sed -n|head|jq); writes still blocked
+- Improved hints reference `templates/registry/index.md`
 
 ## CRITICAL DISCOVERY - Hook Execution Fix (2025-08-05)
 **Problem**: Hooks were not executing despite correct configuration

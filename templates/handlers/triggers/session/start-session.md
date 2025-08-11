@@ -32,6 +32,42 @@ Creates new session files with meaningful titles derived from the task descripti
 4. **Default to task type** (e.g., "debugging", "feature-development")
 5. **Fallback to "general-work"** (never "untitled")
 
+### Integration with Hooks (Title Hints)
+- The UserPromptSubmit hook stores optional title hints in `logs/state.json` under:
+  - `session.exact_title` (preferred when provided by the user, e.g., "called 'My Feature'")
+  - `session.suggested_title` (kebab-case hint derived from the request)
+- Use this precedence when generating the title:
+  1. `session.exact_title` if present
+  2. `session.suggested_title` if present
+  3. Extracted description from user input (per strategy above)
+  4. Previous session context
+  5. Task type (e.g., "debugging", "feature-development")
+  6. Fallback: `general-development` (never "untitled")
+
+#### Example (reading state)
+```python
+import json
+from pathlib import Path
+
+state = {}
+try:
+    p = Path('logs/state.json')
+    if p.exists():
+        state = json.loads(p.read_text())
+except Exception:
+    state = {}
+
+title = None
+exact = state.get('session', {}).get('exact_title')
+hint = state.get('session', {}).get('suggested_title')
+if exact:
+    title = exact
+elif hint:
+    title = hint
+else:
+    title = 'general-development'
+```
+
 ### Title Format Rules:
 - Maximum 60 characters for filename
 - Convert to kebab-case (lowercase-with-dashes)

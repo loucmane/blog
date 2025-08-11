@@ -7,7 +7,7 @@ Based on the coordination session in `templates/coordination/enforcement-enhance
 ## Key Components Created
 
 ### 1. Enhanced Enforcement Hook
-**File:** `.claude/hooks/enhanced_enforcement.py`
+**File:** `.claude/hooks/enforcement.py`
 - Multi-layer validation system
 - Hard technical blocks (exit code 2)
 - Comprehensive S:W:H:E validation
@@ -106,11 +106,11 @@ User Input → Development Trigger Detection → Flag Set → Tool Block → ULT
     ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "Edit|Write|MultiEdit|Bash|Task|Read|Grep|Glob",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_use.py"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/enforcement.py"
           }
         ]
       },
@@ -119,7 +119,7 @@ User Input → Development Trigger Detection → Flag Set → Tool Block → ULT
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/enhanced_enforcement.py"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/enforcement.py"
           }
         ]
       }
@@ -182,7 +182,7 @@ AI: "Let me help you with that bug..."
 
 Required sequence:
 1. Output: Let me ultrathink about this... [S:20250808|W:bugfix|H:searching|E:pending]
-2. Search REGISTRY.md for appropriate handler
+2. Search templates/registry for appropriate handler
 3. Load and follow the handler
 4. Update S:W:H:E with actual handler and evidence
 5. Then proceed with Edit
@@ -193,7 +193,7 @@ Required sequence:
 User: "Fix the bug in auth.py"
 AI: Let me ultrathink about this... [S:20250808|W:bugfix|H:searching|E:pending]
 
-[Searches REGISTRY.md]
+ [Searches templates/registry]
 [Finds debugger handler]
 
 Let me continue... [S:20250808|W:bugfix|H:debugger|E:auth.py:L45-50]
@@ -226,7 +226,7 @@ Let me continue... [S:20250808|W:bugfix|H:debugger|E:auth.py:L45-50]
    - Analyze common violations
 
 2. **Adjust as Needed**
-   - Enforcement level can be adjusted in `enhanced_enforcement.py`
+   - Enforcement level can be adjusted in `.claude/settings.json` (soft|stable|strict)
    - Add custom validators for specific needs
    - Extend to more tool types if required
 

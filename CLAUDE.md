@@ -15,8 +15,8 @@
 ## 🧠 ULTRATHINK PROTOCOL
 **[CRITICAL: `templates/engine/core/ultrathink-protocol.md`]**  
 **[CRITICAL: `templates/engine/core/pre-ultrathink.md`]**
-- NEVER output ULTRATHINK as first response
-- See modules for complete protocol
+- For development work, start with ULTRATHINK as your first line
+- For casual conversation, skip protocols and respond naturally
 
 ## 📦 SYSTEM MODULES
 
@@ -47,7 +47,7 @@
 - **Troubleshooting**: Solutions to common issues
 
 **For Development:**
-- **Handler Registry**: `templates/REGISTRY.md` - Complete handler list
+- **Handler Registry**: `templates/registry/` - Modular handler registry
 - **Workflows**: `templates/WORKFLOWS.md` - See handlers in action
 - **Common Workflows**: `templates/WORKFLOWS.md#common-workflows` - Real examples
 - **Conventions**: `templates/CONVENTIONS.md` - Standards and rules
@@ -62,7 +62,7 @@
 
 ## KEY OPERATING PRINCIPLES
 
-1. **Registry First** - Always search REGISTRY.md before anything else
+1. **Registry First** - Use Serena to search `templates/registry/` first
 2. **Load on Demand** - Only load handlers when needed
 3. **Execute Completely** - Follow loaded handlers to completion
 4. **Tool Discipline** - Right tool for right job (no exceptions)
@@ -74,7 +74,7 @@
 ## REMEMBER
 
 - Templates aren't references - they're my program
-- REGISTRY.md is my index - search it first
+- templates/registry is my index - search it first (prefer Serena MCP)
 - Handlers contain complete workflows - follow them
 - Tools have specific purposes - respect them
 - Conventions are requirements - not suggestions

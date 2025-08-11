@@ -28,7 +28,7 @@ def validate_swhe_format(ultrathink_statement):
     Validate S:W:H:E format:
     - S: Session ID (YYYYMMDD or VOID)
     - W: Work context (folder name or activity)
-    - H: Handler name (must exist in REGISTRY.md)
+    - H: Handler name (must exist under templates/handlers or engine)
     - E: Evidence (steps/"criteria")
     """
     pattern = r'\[S:([^|]+)\|W:([^|]+)\|H:([^|]+)\|E:([^\]]+)\]'
@@ -42,7 +42,7 @@ def validate_swhe_format(ultrathink_statement):
     # Validate H against handler cache
     if h != 'searching' and h != 'VOID':
         if not handler_exists(h):
-            return False, f"Handler '{h}' not found in REGISTRY.md"
+            return False, f"Handler '{h}' not found in templates/registry/"
     
     # Validate E format
     if not validate_evidence(e):
@@ -102,7 +102,7 @@ void_resolution_map = {
     },
     'H:VOID': {
         'handler': 'resolve-handler-void',
-        'location': 'REGISTRY.md#resolve-handler-void',
+        'location': 'templates/handlers/operators/workflow/resolve-handler-void.md',
         'action': 'Search for matching handler'
     }
 }
@@ -224,9 +224,36 @@ def validate_tool_selection(tool_name, context):
 2. **This Week**: Complete Phase 8 (all refinements)
 3. **Next Week**: Begin Phase 9 (protocol enforcement)
 4. **Week 3**: Full integration (Phase 10)
+5. **Week 4**: Small-team optimizations (Phase 11)
 
 ## Notes
 
 - Each phase builds on previous work
 - Rollback plan: Disable individual validations via config
 - Success = Technical enforcement replaces manual reminders
+
+## Phase 11: Small-Team Optimizations (Lightweight & Practical)
+
+### Goals
+- Keep enforcement strong but easy to operate for a small team
+
+### Items
+1. Level Toggle Scripts
+   - `enforce-set <soft|stable|strict>`: Update `.claude/settings.json` and print effective mode
+   - `enforce-status`: Show current mode, `soft_until` (if any), last block/escape counts
+
+2. Minimal Registry Index
+   - Generate `templates/registry/index.json` (handler id, path, tags)
+   - Use to improve hint suggestions and search speed
+
+3. One-Click ULTRATHINK Helper
+   - Output a ready S:W:H:E skeleton with today’s S and inferred W; editable H
+
+4. Legacy Sweep (Manual/Pre-Release)
+   - Report-only script to grep live guides for deprecated references (`REGISTRY.md`, `enhanced_enforcement.py`)
+
+### Acceptance Criteria
+- Scripts exist and are documented
+- `enforce-status` shows correct mode and session softening
+- Hints use registry index when present
+- Sweep report is clean on live guides

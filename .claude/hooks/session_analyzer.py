@@ -17,6 +17,14 @@ import re
 from pathlib import Path
 from datetime import datetime
 
+# Local reporting utilities
+try:
+    from enforcement_report import load_recent_events, compute_metrics, format_text
+except Exception:
+    load_recent_events = None
+    compute_metrics = None
+    format_text = None
+
 # Add utils to path for cache import
 sys.path.append(str(Path(__file__).parent / 'utils'))
 
@@ -206,6 +214,56 @@ def main():
         # Generate analytics
         analytics = generate_analytics_report(state)
         save_analytics(analytics)
+
+        # Generate and save a daily enforcement report (best-effort)
+        try:
+            if load_recent_events and compute_metrics and format_text:
+                recent = load_recent_events(24)
+                metrics = compute_metrics(recent)
+                report_text = format_text(metrics)
+                report_dir = Path('logs/reports')
+                report_dir.mkdir(parents=True, exist_ok=True)
+                stamp = datetime.now().strftime('%Y%m%d')
+                (report_dir / f'{stamp}.txt').write_text(report_text)
+                (report_dir / f'{stamp}.json').write_text(json.dumps(metrics, indent=2))
+                # Weekly rollup on Mondays
+                if datetime.now().weekday() == 0:  # Monday
+                    from datetime import timedelta
+                    import glob
+                    # aggregate last 7 daily jsons
+                    weekly_metrics = []
+                    for i in range(7):
+                        day = (datetime.now() - timedelta(days=i)).strftime('%Y%m%d')
+                        p = report_dir / f'{day}.json'
+                        if p.exists():
+                            try:
+                                weekly_metrics.append(json.loads(p.read_text()))
+                            except Exception:
+                                pass
+                    summary = {
+                        'days': len(weekly_metrics),
+                        'total_blocks': sum(m.get('blocks',0) for m in weekly_metrics),
+                        'total_escapes': sum(m.get('escapes',0) for m in weekly_metrics),
+                        'total_soft': sum(m.get('soft_continues',0) for m in weekly_metrics),
+                        'avg_ttc_s': round(sum((m.get('avg_time_to_compliance_seconds') or 0) for m in weekly_metrics) / max(1,len([m for m in weekly_metrics if m.get('avg_time_to_compliance_seconds') is not None])), 1) if weekly_metrics else None,
+                        'near_miss_total': sum(m.get('near_miss_count',0) for m in weekly_metrics)
+                    }
+                    wk = datetime.now().strftime('%G%V')
+                    (report_dir / f'weekly-{wk}.json').write_text(json.dumps(summary, indent=2))
+                    lines = [
+                        f"Weekly Enforcement Summary ({wk})",
+                        "--------------------------------",
+                        f"Days: {summary['days']}",
+                        f"Blocks: {summary['total_blocks']}",
+                        f"Escapes: {summary['total_escapes']}",
+                        f"Soft continues: {summary['total_soft']}",
+                        f"Near-miss total: {summary['near_miss_total']}",
+                    ]
+                    if summary.get('avg_ttc_s') is not None:
+                        lines.append(f"Avg time to compliance (s): {summary['avg_ttc_s']}")
+                    (report_dir / f'weekly-{wk}.txt').write_text("\n".join(lines)+"\n")
+        except Exception:
+            pass
         
         # Check if ULTRATHINK was required for this conversation
         ultrathink_required = state.get("ultrathink_required", False)
@@ -229,6 +287,57 @@ def main():
                         success_msg += f"\n   Handler: {handler}"
                 
                 print(success_msg, file=sys.stderr)
+                # Adaptive softening: if recent block then quick compliance, soften for 1h
+                try:
+                    ut = state.get('ultrathink', {})
+                    last_block = float(ut.get('last_block_time', 0))
+                    if last_block:
+                        import time
+                        elapsed = time.time() - last_block
+                        if elapsed < 90:  # completed within 90s after block
+                            # Soften for 1h
+                            soft_until = time.time() + 3600
+                            state['soft_until'] = soft_until
+                            state_file = Path("logs/state.json")
+                            state_file.write_text(json.dumps(state, indent=2))
+                except Exception:
+                    pass
+
+                # Clear flags and persist softening if applicable (per session)
+                # Optional: commit helper suggestion
+                try:
+                    from pathlib import Path as _P
+                    metrics_path = _P('logs/enforcement_metrics.json')
+                    blocks = escapes = 0
+                    avg_ttc = None
+                    if metrics_path.exists():
+                        import json as _j, datetime as _dt
+                        ev = _j.loads(metrics_path.read_text())
+                        today = _dt.datetime.now().strftime('%Y-%m-%d')
+                        recent = [e for e in ev if e.get('timestamp','').startswith(today)]
+                        blocks = sum(1 for e in recent if e.get('event')=='block')
+                        escapes = sum(1 for e in recent if e.get('event')=='escape')
+                    print(f"Commit helper: [enforcement: {blocks} blocks, {escapes} escapes]", file=sys.stderr)
+                except Exception:
+                    pass
+
+                # Git commit helper (gac-convention) - print a complete commit message suggestion
+                try:
+                    blocks = analytics['ultrathink_compliance'].get('blocked_attempts', 0)
+                    # read today's report for better numbers if available
+                    day_json = Path('logs/reports') / f"{datetime.now().strftime('%Y%m%d')}.json"
+                    avg_ttc = None
+                    escapes = 0
+                    if day_json.exists():
+                        day = json.loads(day_json.read_text())
+                        avg_ttc = day.get('avg_time_to_compliance_seconds')
+                        escapes = day.get('escapes', 0)
+                    suffix = f"[enforcement: {blocks} blocks, {escapes} escapes" + (f", avg compliance {avg_ttc:.1f}s]" if avg_ttc else "]")
+                    commit_msg = f"chore(enforcement): update daily reports {suffix}"
+                    print(f"Commit helper (gac): {commit_msg}", file=sys.stderr)
+                except Exception:
+                    pass
+
                 clear_state_flags()
                 sys.exit(0)
             else:

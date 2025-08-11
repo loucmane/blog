@@ -25,7 +25,9 @@ class EnforcementIntegrator:
     def __init__(self):
         self.hooks_dir = Path(".claude/hooks")
         self.settings_file = Path(".claude/settings.json")
-        self.metadata_file = Path(".claude/templates/metadata/handler-rules.json")
+        # Store enforcement metadata in templates directory so external agents (e.g., Serena)
+        # can index and search it. Avoid placing it under .claude.
+        self.metadata_file = Path("templates/metadata/handler-rules.json")
         self.backup_dir = Path(".claude/backups")
         
     def check_prerequisites(self):
@@ -33,7 +35,7 @@ class EnforcementIntegrator:
         print(f"\n{Colors.BLUE}Checking prerequisites...{Colors.RESET}")
         
         required_files = [
-            ("enforcement_v2.py", self.hooks_dir / "enforcement_v2.py"),
+            ("enforcement.py", self.hooks_dir / "enforcement.py"),
             ("user_prompt_submit_aggressive.py", self.hooks_dir / "user_prompt_submit_aggressive.py"),
             ("handler-rules.json", self.metadata_file)
         ]
@@ -98,7 +100,7 @@ class EnforcementIntegrator:
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/enforcement_v2.py",
+                        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/enforcement.py",
                         "description": "Behavior-based ULTRATHINK enforcement with tool blocking"
                     }
                 ]
@@ -107,12 +109,12 @@ class EnforcementIntegrator:
         
         # Add metadata about enforcement
         settings["enforcement_metadata"] = {
-            "version": "2.0",
+            "version": "stable",
             "enabled": True,
             "integrated_at": datetime.now().isoformat(),
             "components": [
                 "user_prompt_submit_aggressive.py",
-                "enforcement_v2.py",
+                "enforcement.py",
                 "handler-rules.json"
             ]
         }
@@ -130,7 +132,7 @@ class EnforcementIntegrator:
         print(f"\n{Colors.BLUE}Setting hook permissions...{Colors.RESET}")
         
         hooks = [
-            self.hooks_dir / "enforcement_v2.py",
+            self.hooks_dir / "enforcement.py",
             self.hooks_dir / "user_prompt_submit_aggressive.py"
         ]
         
@@ -144,7 +146,7 @@ class EnforcementIntegrator:
         print(f"\n{Colors.BLUE}Testing integration...{Colors.RESET}")
         
         # Test if hooks can be executed
-        test_hook = self.hooks_dir / "enforcement_v2.py"
+        test_hook = self.hooks_dir / "enforcement.py"
         test_input = json.dumps({
             "tool_name": "Read",
             "tool_input": {"file_path": "test.md"}

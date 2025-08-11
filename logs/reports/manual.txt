@@ -1,0 +1,7 @@
+Enforcement Report (last 24h)
+------------------------------
+Total events: 1
+Blocks: 1
+Escapes: 0
+Soft continues: 0
+Serena usage (in block events): 0

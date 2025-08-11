@@ -22,7 +22,7 @@ This file participates in the ULTRATHINK system:
 ### VOID Resolution
 - **S = VOID** → See [resolve-session-void](CONVENTIONS.md#resolve-session-void)
 - **W = VOID** → See [resolve-work-void](WORKFLOWS.md#resolve-work-void)
-- **H = VOID** → See [resolve-handler-void](REGISTRY.md#resolve-handler-void)
+- **H = VOID** → See [resolve-handler-void](registry/index.md#resolve-handler-void)
 
 ### Behavioral Enforcement
 This file contains the MANDATORY enforcement hooks that ensure ULTRATHINK is used before any action.
@@ -183,7 +183,7 @@ EXCEPTION: Temporary files, cache files
 ### Before Implementation {#before-implementation}
 ```
 TRIGGER: About to write new code/features  
-ACTION: mcp__serena__search_for_pattern --substring_pattern "start-new-work" --relative_path "templates/REGISTRY.md"
+ACTION: mcp__serena__search_for_pattern --substring_pattern "start-new-work" --relative_path "templates/registry"
 THEN: Load handler from WORKFLOWS.md
 BLOCKS: Cannot code without workflow
 CROSS-REF: See WORKFLOWS.md "Standard Development Workflow"
@@ -215,7 +215,7 @@ PROCESS: Run tests → Refactor → Run tests again
 ### Before Tool Use {#before-tool-use}
 ```
 TRIGGER: About to search/find anything
-ACTION: mcp__serena__search_for_pattern --substring_pattern "tool-selection" --relative_path "templates/REGISTRY.md"
+ACTION: mcp__serena__search_for_pattern --substring_pattern "tool-selection" --relative_path "templates/registry"
 THEN: Check tool matrix for correct tool
 BLOCKS: Cannot use wrong tool
 CROSS-REF: See TOOLS.md "Tool Selection Matrix"
@@ -243,7 +243,7 @@ BENEFIT: Task tool handles complexity better
 ### Before Making Claims {#before-making-claims}
 ```
 TRIGGER: About to state facts about code
-ACTION: mcp__serena__search_for_pattern --substring_pattern "evidence-check" --relative_path "templates/REGISTRY.md"
+ACTION: mcp__serena__search_for_pattern --substring_pattern "evidence-check" --relative_path "templates/registry"
 THEN: Gather evidence first
 BLOCKS: No claims without proof
 CROSS-REF: See PATTERNS.md "Evidence-Based Claims"
@@ -488,7 +488,7 @@ CROSS-REF: See MATRICES.md "Error → Recovery Matrix"
 - CLAUDE.md → "See BEHAVIORS.md for all behavioral hooks"
 - WORKFLOWS.md → "For enforcement, see BEHAVIORS.md"
 - CONVENTIONS.md → "Automated via BEHAVIORS.md"
-- REGISTRY.md → Lists all behaviors with locations
+- Registry → Lists all behaviors with locations
 
 ## Integration with CLAUDE.md {#integration-claude}
 
@@ -508,7 +508,7 @@ When adding a new behavior:
 2. Specify the blocking action
 3. Define what satisfies the gate
 4. Add to appropriate section
-5. Update REGISTRY.md if needed
+5. Update templates/registry if needed
 6. Add cross-references to related templates
 7. Ensure corresponding workflow exists
 

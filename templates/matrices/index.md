@@ -27,7 +27,7 @@ This file participates in the ULTRATHINK system:
 ### VOID Resolution
 - **S = VOID** → See [resolve-session-void](../templates/CONVENTIONS.md#resolve-session-void)
 - **W = VOID** → See [resolve-work-void](../templates/WORKFLOWS.md#resolve-work-void)
-- **H = VOID** → See [resolve-handler-void](../templates/REGISTRY.md#resolve-handler-void)
+- **H = VOID** → See [resolve-handler-void](../templates/registry/index.md#resolve-handler-void)
 
 ### Matrix Usage
 These matrices provide quick lookups for handler selection. When H = VOID, use the Request → Handler Matrix to find the appropriate handler based on the user's request pattern.
@@ -63,7 +63,7 @@ These matrices provide quick lookups for handler selection. When H = VOID, use t
 - Enable quick decisions
 - Reduce lookup time
 
-### With REGISTRY.md
+### With templates/registry
 - Registry points to handlers
 - Matrices show when to use
 - Complementary systems

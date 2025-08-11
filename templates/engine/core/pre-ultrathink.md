@@ -5,7 +5,7 @@ critical: true
 priority: highest
 enforcement-level: mandatory
 dependencies:
-  - templates/REGISTRY.md
+  - templates/registry/index.md
   - handler-comprehension
 exports:
   - pre-ultrathink-sequence

@@ -24,18 +24,18 @@
 - Result: More helpful guidance while maintaining zero reminders
 
 **Phase 7: Template-Hook Integration** - COMPLETED 
-- Created handler_cache.py to parse REGISTRY.md (~69 handlers)
+- Created handler_cache.py to parse templates/registry (~69 handlers)
 - Enhanced all hooks to suggest matching handlers from template system
 - Added handler validation in ULTRATHINK statements
 - Created assistant_response.py hook for format validation
 - Implemented analytics tracking (logs/analytics.json)
 - Updated hook-specialist.md with documentation scraping
-- Result: Hooks intelligently suggest exact handlers from REGISTRY.md
+- Result: Hooks intelligently suggest exact handlers from templates/registry
 
 ## What Changed Since Last Handoff
 
 1. **Template Integration (Phase 7)**:
-   - `.claude/hooks/utils/handler_cache.py` - Parses REGISTRY.md for all handlers
+   - `.claude/hooks/utils/handler_cache.py` - Parses templates/registry for all handlers
    - `.claude/hooks/build_cache.py` - Utility to rebuild cache
    - **All hooks replaced** with enhanced versions (not separate files)
    - `.claude/hooks/assistant_response.py` - NEW hook for ULTRATHINK validation
@@ -43,7 +43,7 @@
    - `.claude/settings.json` - ~~Added AssistantResponse hook config~~ REMOVED - invalid type!
 
 2. **Hooks Enhanced (Phase 6)**:
-   - `.claude/hooks/user_prompt_submit.py` - Now suggests handlers from REGISTRY.md
+   - `.claude/hooks/user_prompt_submit.py` - Now suggests handlers from templates/registry
    - `.claude/hooks/pre_tool_use.py` - Validates handler names, shows suggestions
    - `.claude/hooks/stop.py` - Generates analytics reports
 
@@ -100,11 +100,15 @@ Check `logs/analytics.json` for:
 - ULTRATHINK compliance rates
 - Common trigger patterns
 
-### 3. Verify Handler Suggestions
+### 3. Verify Handler Suggestions & Enforcement
 When you say "implement X", hooks should:
-- Suggest relevant handlers from REGISTRY.md
+- Suggest relevant handlers from templates/registry
 - Show confidence scores
 - Validate handler names in ULTRATHINK
+- Allow read-only discovery (rg/ls/tree/sed -n/head/jq) during search
+- Block editing tools until ULTRATHINK completed or escape hatch triggers
+ - After multiple searches with no handler, suggest reading `templates/handlers/operators/workflow/resolve-handler-void.md`
+ - If `resolve-handler-void` is loaded repeatedly, show circular resolution warning
 
 ## Next Session Options
 

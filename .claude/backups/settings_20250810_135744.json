@@ -1,0 +1,73 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "mcp__serena__find_symbol",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__find_file",
+      "mcp__serena__think_about_collected_information",
+      "mcp__serena__read_memory",
+      "mcp__serena__list_dir",
+      "Bash(git worktree:*)",
+      "Bash(git worktree add:*)",
+      "Bash(git worktree:*)",
+      "Bash(git config:*)",
+      "Bash(for:*)",
+      "Bash(do lsof:*)",
+      "Bash(/dev/null)",
+      "Bash(echo:*)",
+      "Bash(echo \"Port $port is available\")",
+      "Bash(done)",
+      "mcp__sequential-thinking__sequentialthinking"
+    ],
+    "deny": []
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/user_prompt_submit_aggressive.py",
+            "description": "Aggressive ULTRATHINK enforcement context injection"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash|Task|Read|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/enforcement_v2.py",
+            "description": "Behavior-based ULTRATHINK enforcement with tool blocking"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/session_analyzer.py"
+          }
+        ]
+      }
+    ]
+  },
+  "enforcement_metadata": {
+    "version": "2.0",
+    "enabled": true,
+    "integrated_at": "2025-08-10T13:17:26.715930",
+    "components": [
+      "user_prompt_submit_aggressive.py",
+      "enforcement_v2.py",
+      "handler-rules.json"
+    ]
+  }
+}

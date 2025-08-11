@@ -18,7 +18,7 @@ version: 1.0.0
 **Pre-conditions**: 
 - ULTRATHINK attempted with H = VOID
 - User request contains actionable intent
-- REGISTRY.md accessible for handler lookup
+- templates/registry accessible for handler lookup
 
 **Process**:
 1. **Analyze User Request Intent**:
@@ -27,8 +27,8 @@ version: 1.0.0
    - Identify context clues: error messages, file paths, technology mentions
    - Note request complexity: single action vs multi-step workflow
 
-2. **Search REGISTRY.md for Handler Matches**:
-   - Use mcp__serena__search_for_pattern to search Navigation Keywords section
+2. **Search templates/registry for Handler Matches**:
+   - Use mcp__serena__search_for_pattern to search Navigation Keywords section within templates/registry
    - Search pattern: extracted action verbs and nouns
    - Score matches by keyword relevance and context alignment
    - Prioritize exact phrase matches over partial matches

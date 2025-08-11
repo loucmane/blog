@@ -1,13 +1,18 @@
 {
   "session": {
-    "id": "20250809",
-    "last_activity": "2025-08-09T17:24:00.260680"
+    "id": "20250811",
+    "last_activity": "2025-08-11T13:15:56.710704"
   },
   "ultrathink_required": false,
   "ultrathink_completed": false,
   "ultrathink": {
     "phase": "not_started",
     "started_at": null,
-    "evidence": []
+    "evidence": [],
+    "required": false,
+    "completed": false,
+    "trigger": null,
+    "blocked_attempts": 0,
+    "statements": []
   }
 }
