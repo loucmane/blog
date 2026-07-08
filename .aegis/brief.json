@@ -1,0 +1,11 @@
+{
+  "archive_keep": 20,
+  "gates": {},
+  "inject": true,
+  "redact_extra": [],
+  "source_roots": [],
+  "thresholds": {
+    "branch_count": 30,
+    "unignored_file_mb": 5
+  }
+}

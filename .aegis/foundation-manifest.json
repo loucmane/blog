@@ -1,0 +1,407 @@
+{
+  "access_policy": {
+    "direct_aegis_writes": false,
+    "read_interface": "direct_read_or_aegis_cli",
+    "write_interface": "aegis_cli_or_mcp"
+  },
+  "agents": {
+    "claude": {
+      "available": true,
+      "enabled": true,
+      "entrypoint": "CLAUDE.md",
+      "gate_ids": [
+        "claude.readiness",
+        "claude.pretooluse",
+        "claude.posttooluse_tracking",
+        "claude.stop_tracking",
+        "claude.bash_command",
+        "claude.protected_path"
+      ],
+      "managed_files": [
+        "CLAUDE.md",
+        ".claude/settings.json",
+        ".claude/scripts/readiness.sh",
+        ".claude/scripts/pretooluse-gate.sh",
+        ".claude/scripts/posttooluse-tracking.sh",
+        ".claude/scripts/tracking-stop-gate.sh",
+        ".claude/scripts/bash-command-guard.sh",
+        ".claude/scripts/codex-path-guard.sh",
+        ".claude/scripts/ledger-record.sh",
+        ".claude/scripts/session-brief.sh",
+        ".claude/scripts/gate_lib.py",
+        ".claude/scripts/ledger_lib.py",
+        ".claude/scripts/brief_lib.py",
+        ".claude/scripts/witness_lib.py"
+      ]
+    },
+    "codex": {
+      "available": true,
+      "enabled": true,
+      "entrypoint": "CODEX.md",
+      "gate_ids": [
+        "codex.guard",
+        "codex.work_tracking_audit"
+      ],
+      "managed_files": [
+        "CODEX.md",
+        "scripts/_aegis_installer.py",
+        "scripts/codex-task",
+        "scripts/codex-guard",
+        "scripts/_repo_structure.py",
+        "scripts/template_registry.py",
+        "scripts/template_governance.py",
+        "scripts/template_versioning.py"
+      ]
+    },
+    "gemini": {
+      "available": false,
+      "enabled": false,
+      "entrypoint": null,
+      "gate_ids": [],
+      "managed_files": []
+    }
+  },
+  "capabilities": {
+    "ci": false,
+    "mcp_contract": true,
+    "taskmaster": true,
+    "work_tracking": false
+  },
+  "customized_files": [],
+  "entrypoints": {
+    "claude": "CLAUDE.md",
+    "codex": "CODEX.md",
+    "contract": ".aegis/contract.md",
+    "gemini": null,
+    "shared": "AGENTS.md"
+  },
+  "foundation_name": "Aegis Foundation",
+  "foundation_version": "0.1.0",
+  "gates": [
+    {
+      "adapter": "claude",
+      "enforcement": "mechanical",
+      "id": "claude.readiness",
+      "path": ".claude/scripts/readiness.sh",
+      "required": true,
+      "scope": "adapter",
+      "verification": {
+        "expected": true,
+        "failure_mode": "fail",
+        "method": "executable"
+      }
+    },
+    {
+      "adapter": "claude",
+      "enforcement": "mechanical",
+      "hook_event": "PreToolUse",
+      "hook_matcher": "^(Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__.*)$",
+      "id": "claude.pretooluse",
+      "path": ".claude/scripts/pretooluse-gate.sh",
+      "required": true,
+      "scope": "adapter",
+      "settings_path": ".claude/settings.json",
+      "verification": {
+        "expected": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/pretooluse-gate.sh",
+        "failure_mode": "fail",
+        "method": "settings_hook"
+      }
+    },
+    {
+      "adapter": "claude",
+      "enforcement": "mechanical",
+      "hook_event": "PostToolUse",
+      "hook_matcher": "^(Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__.*)$",
+      "id": "claude.posttooluse_tracking",
+      "path": ".claude/scripts/posttooluse-tracking.sh",
+      "required": true,
+      "scope": "adapter",
+      "settings_path": ".claude/settings.json",
+      "verification": {
+        "expected": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/posttooluse-tracking.sh",
+        "failure_mode": "fail",
+        "method": "settings_hook"
+      }
+    },
+    {
+      "adapter": "claude",
+      "enforcement": "mechanical",
+      "hook_event": "Stop",
+      "id": "claude.stop_tracking",
+      "path": ".claude/scripts/tracking-stop-gate.sh",
+      "required": true,
+      "scope": "adapter",
+      "settings_path": ".claude/settings.json",
+      "verification": {
+        "expected": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/tracking-stop-gate.sh",
+        "failure_mode": "fail",
+        "method": "settings_hook"
+      }
+    },
+    {
+      "adapter": "claude",
+      "enforcement": "mechanical",
+      "id": "claude.bash_command",
+      "path": ".claude/scripts/bash-command-guard.sh",
+      "required": true,
+      "scope": "adapter",
+      "verification": {
+        "expected": true,
+        "failure_mode": "fail",
+        "method": "executable"
+      }
+    },
+    {
+      "adapter": "claude",
+      "enforcement": "mechanical",
+      "id": "claude.protected_path",
+      "path": ".claude/scripts/codex-path-guard.sh",
+      "required": true,
+      "scope": "adapter",
+      "verification": {
+        "expected": true,
+        "failure_mode": "fail",
+        "method": "executable"
+      }
+    },
+    {
+      "adapter": "codex",
+      "enforcement": "verification",
+      "id": "codex.guard",
+      "path": "scripts/codex-guard",
+      "required": true,
+      "scope": "adapter",
+      "verification": {
+        "expected": true,
+        "failure_mode": "fail",
+        "method": "executable"
+      }
+    },
+    {
+      "adapter": "codex",
+      "enforcement": "verification",
+      "id": "codex.work_tracking_audit",
+      "path": "scripts/codex-task",
+      "required": true,
+      "scope": "adapter",
+      "verification": {
+        "expected": true,
+        "failure_mode": "fail",
+        "method": "executable"
+      }
+    },
+    {
+      "enforcement": "policy",
+      "id": "mcp.memory_write",
+      "required": false,
+      "scope": "shared",
+      "unsupported_reason": "MCP memory writes are not mechanically hookable in every client.",
+      "verification": {
+        "expected": null,
+        "failure_mode": "unsupported",
+        "method": "manual"
+      }
+    }
+  ],
+  "installed_at": "2026-07-08T10:54:16Z",
+  "installer_version": "0.1.0",
+  "interfaces": {
+    "cli": {
+      "command": "aegis"
+    },
+    "mcp": {
+      "available": false,
+      "endpoint": null,
+      "namespace": "aegis"
+    }
+  },
+  "managed_files": [
+    {
+      "kind": "managed",
+      "path": ".aegis/foundation-manifest.json"
+    },
+    {
+      "kind": "managed",
+      "path": "AGENTS.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/contract.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/bin/aegis"
+    },
+    {
+      "kind": "runtime",
+      "path": ".aegis/runtime.env"
+    },
+    {
+      "kind": "config",
+      "path": ".aegis/brief.json"
+    },
+    {
+      "kind": "managed",
+      "path": "schemas/aegis/foundation-manifest.schema.json"
+    },
+    {
+      "kind": "managed",
+      "path": "schemas/aegis/profile.schema.json"
+    },
+    {
+      "kind": "managed",
+      "path": "schemas/aegis/install-plan.schema.json"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/session.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/plan.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/tracker.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/findings.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/decisions.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/handoff.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/implementation.md"
+    },
+    {
+      "kind": "managed",
+      "path": ".aegis/templates/workflow/changelog.md"
+    },
+    {
+      "kind": "adapter",
+      "path": "CLAUDE.md"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/settings.json"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/readiness.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/pretooluse-gate.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/posttooluse-tracking.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/tracking-stop-gate.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/bash-command-guard.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/codex-path-guard.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/ledger-record.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/session-brief.sh"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/gate_lib.py"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/ledger_lib.py"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/brief_lib.py"
+    },
+    {
+      "kind": "adapter",
+      "path": ".claude/scripts/witness_lib.py"
+    },
+    {
+      "kind": "adapter",
+      "path": "CODEX.md"
+    },
+    {
+      "kind": "adapter",
+      "path": "scripts/_aegis_installer.py"
+    },
+    {
+      "kind": "adapter",
+      "path": "scripts/codex-task"
+    },
+    {
+      "kind": "adapter",
+      "path": "scripts/codex-guard"
+    },
+    {
+      "kind": "adapter",
+      "path": "scripts/_repo_structure.py"
+    },
+    {
+      "kind": "adapter",
+      "path": "scripts/template_registry.py"
+    },
+    {
+      "kind": "adapter",
+      "path": "scripts/template_governance.py"
+    },
+    {
+      "kind": "adapter",
+      "path": "scripts/template_versioning.py"
+    }
+  ],
+  "primary_agent": "multi",
+  "profile": "generic",
+  "runtime": {
+    "mode": "source-root",
+    "pointer": ".aegis/runtime.env",
+    "reinstall_required_for": [
+      ".aegis/bin/aegis shim changes",
+      ".claude/settings.json hook registration changes",
+      ".claude/scripts/* dispatcher bootstrap changes"
+    ],
+    "source_commit": "43e9a660c0b58f95c2f97031e16830443b40aa2e",
+    "source_dirty": true,
+    "source_dirty_paths": [
+      " M .codex/deep-work.config.toml",
+      "?? .aegis/capsule/",
+      "?? .aegis/coldstart-scenarios/",
+      "?? .aegis/state/",
+      "?? .agents/",
+      "?? .codex/agents/",
+      "?? .codex/hooks.json"
+    ],
+    "source_root": "/home/loucmane/codex",
+    "update_command": "aegis runtime update",
+    "updated_at": "2026-07-08T10:54:16Z"
+  },
+  "schema_version": "1.0.0",
+  "verification": {
+    "last_verified_at": null,
+    "reports": [],
+    "status": "never"
+  }
+}

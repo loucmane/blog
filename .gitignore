@@ -27,7 +27,11 @@ Thumbs.db
 # Cursor MCP Config (contains API keys)
 .cursor/mcp.json
 .claude.json
-CLAUDE.md
+
+# Aegis generated output
+.aegis/reports/
+.aegis/state/
+.aegis/capsule/
 
 # Turbo/monorepo tools
 .turbo/
