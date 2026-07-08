@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/posttooluse-tracking.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": "^(Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__.*)$"
+      },
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/ledger-record.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": "^(Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__.*)$"
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/ledger-record.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": "^(Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__.*)$"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/pretooluse-gate.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": "^(Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__.*)$"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/session-brief.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": "startup|resume|clear|compact"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/tracking-stop-gate.sh",
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/scripts/readiness.sh:*)",
+      "Bash(bash .claude/scripts/pretooluse-gate.sh:*)",
+      "Bash(bash .claude/scripts/posttooluse-tracking.sh:*)",
+      "Bash(bash .claude/scripts/tracking-stop-gate.sh:*)",
+      "Bash(bash .claude/scripts/codex-path-guard.sh:*)",
+      "Bash(bash .claude/scripts/bash-command-guard.sh:*)",
+      "Bash(aegis inspect:*)",
+      "Bash(aegis init:*)",
+      "Bash(aegis status:*)",
+      "Bash(aegis next:*)",
+      "Bash(aegis start:*)",
+      "Bash(aegis mcp register:*)",
+      "Bash(aegis kickoff:*)",
+      "Bash(aegis log:*)",
+      "Bash(aegis verify:*)",
+      "Bash(aegis closeout:*)",
+      "Bash(task-master *)",
+      "Bash(./.aegis/bin/aegis inspect:*)",
+      "Bash(./.aegis/bin/aegis init:*)",
+      "Bash(./.aegis/bin/aegis status:*)",
+      "Bash(./.aegis/bin/aegis next:*)",
+      "Bash(./.aegis/bin/aegis start:*)",
+      "Bash(./.aegis/bin/aegis mcp register:*)",
+      "Bash(./.aegis/bin/aegis kickoff:*)",
+      "Bash(./.aegis/bin/aegis log:*)",
+      "Bash(./.aegis/bin/aegis verify:*)",
+      "Bash(./.aegis/bin/aegis closeout:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(date:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(rg:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)"
+    ]
+  }
+}

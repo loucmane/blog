@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SELF="$0"
+SELF_RESOLVED="$(cd "$(dirname "$SELF")" && pwd -P)/$(basename "$SELF")"
+AEGIS_DIR="$(cd "$(dirname "$SELF_RESOLVED")/.." && pwd -P)"
+AEGIS_RUNTIME_ENV="$AEGIS_DIR/runtime.env"
+
+AEGIS_SOURCE_FALLBACK="/home/loucmane/codex"
+if [ -z "${AEGIS_SOURCE_ROOT:-}" ] && [ -f "$AEGIS_RUNTIME_ENV" ]; then
+  while IFS="=" read -r key value; do
+    case "$key" in
+      AEGIS_SOURCE_ROOT|source_root)
+        AEGIS_SOURCE_ROOT="$value"
+        ;;
+    esac
+  done < "$AEGIS_RUNTIME_ENV"
+fi
+if [ -n "${AEGIS_SOURCE_ROOT:-}" ]; then
+  AEGIS_SOURCE_FALLBACK="$AEGIS_SOURCE_ROOT"
+fi
+
+if [ -d "$AEGIS_SOURCE_FALLBACK" ]; then
+  for AEGIS_PYTHONPATH_CANDIDATE in "$AEGIS_SOURCE_FALLBACK" "$AEGIS_SOURCE_FALLBACK/.." "$AEGIS_SOURCE_FALLBACK/../.."; do
+    if PYTHONPATH="$AEGIS_PYTHONPATH_CANDIDATE${PYTHONPATH:+:$PYTHONPATH}" python3 -c 'import aegis_foundation.cli' >/dev/null 2>&1; then
+      export PYTHONPATH="$AEGIS_PYTHONPATH_CANDIDATE${PYTHONPATH:+:$PYTHONPATH}"
+      exec python3 -m aegis_foundation.cli --source-root "$AEGIS_SOURCE_FALLBACK" "$@"
+    fi
+  done
+fi
+
+if command -v aegis >/dev/null 2>&1; then
+  RESOLVED="$(command -v aegis)"
+  RESOLVED_ABS="$(cd "$(dirname "$RESOLVED")" && pwd -P)/$(basename "$RESOLVED")"
+  if [ "$RESOLVED_ABS" != "$SELF_RESOLVED" ]; then
+    exec "$RESOLVED" "$@"
+  fi
+fi
+
+if python3 -c 'import aegis_foundation.cli' >/dev/null 2>&1; then
+  exec python3 -m aegis_foundation.cli "$@"
+fi
+
+echo "Aegis CLI is unavailable. Install aegis-foundation, add aegis to PATH, or set AEGIS_SOURCE_ROOT." >&2
+exit 127
