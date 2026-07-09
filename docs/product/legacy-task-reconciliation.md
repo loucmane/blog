@@ -63,4 +63,4 @@ The new canonical graph uses outcome phases: truth and architecture, Taskmaster 
 
 ## Generated Task Files
 
-Supported CLI generation now places legacy projections under `.taskmaster/tasks/legacy-2025/` and canonical Task 33/34-47 projections under `.taskmaster/tasks/`. The former root-level `task_*.txt` projections are replaced by current `.md` projections; `tasks.json` tag arrays remain authoritative. Both dependency graphs validate. Do not manually edit `tasks.json` or treat generated files as independent authority.
+Supported CLI generation was run for both tags. The exact legacy root-level `task_001.txt` through `task_032.txt` projections remain preserved to avoid format-only churn, while canonical Task 33/34-47 projections use the current `.md` generator format under `.taskmaster/tasks/`. The `tasks.json` tag arrays remain authoritative and both dependency graphs validate. Do not manually edit `tasks.json` or treat generated files as independent authority.
