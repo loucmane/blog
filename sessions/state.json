@@ -1,12 +1,13 @@
 {
-  "current": "2026-07-09-001-task36-frozen-pre-upgrade-baseline.md",
-  "current_path": "sessions/2026/07/2026-07-09-001-task36-frozen-pre-upgrade-baseline.md",
+  "current": "2026-07-10-001-task48-protected-ci-controlled-auto-merge.md",
+  "current_path": "sessions/2026/07/2026-07-10-001-task48-protected-ci-controlled-auto-merge.md",
+  "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "36",
-    "slug": "frozen-pre-upgrade-baseline",
+    "id": "48",
+    "slug": "protected-ci-controlled-auto-merge",
     "status": "in-progress",
-    "title": "Record Frozen Pre-Upgrade Baseline"
+    "title": "Bootstrap Protected CI and Controlled Auto-Merge"
   },
-  "updated_at": "2026-07-09T21:58:11Z"
+  "updated_at": "2026-07-09T22:50:03Z"
 }
