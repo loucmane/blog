@@ -2,7 +2,7 @@
 
 **Title:** Record Frozen Pre-Upgrade Baseline
 
-**Status:** pending
+**Status:** done
 
 **Dependencies:** 34, 35
 
