@@ -31,6 +31,7 @@
 - **2026-07-10 00:17 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:final-closeout|E:docs/ai/AEGIS_AUTONOMY_GRANT.md] Exercised standing authority for automatic Task 36 final closeout only after zero required failures, zero closeout warnings, no manual-review action, and task-scoped diff verification
 - **2026-07-10 00:21 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:post-closeout-verification|E:docs/research/2026-07-10-pre-upgrade-baseline.md] Recorded post-closeout Taskmaster, Aegis, witness, diff, and legacy-guard outcomes without weakening failures; witness remains pending until the Task 36 done flip has a containing commit
 - **2026-07-10 00:21 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:taskmaster-status|E:docs/research/2026-07-10-pre-upgrade-baseline.md] Marked Task 36 done through supported Taskmaster status handling and generated only task_036.md through an isolated one-task Taskmaster projection; documented CLI schema normalization and retained valid dependencies
+- **2026-07-10 00:25 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:publish-pr|E:https://github.com/loucmane/blog/pull/8] Published Task 36 branch and opened draft PR 8 after scoped commit, secret, diff, Taskmaster, Aegis, and CI-witness gates passed
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -53,7 +54,7 @@ Task 36 has been kicked off through Aegis. The project is ready for task-scoped 
 - Direct workflow state writes should go through Aegis CLI or MCP tools.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 12, "last_event_id": "60478e8aa896453e8766957ec4e77fb0", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 13, "last_event_id": "e0a34f8f470d4676853aaa23f0b4d40d", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
@@ -71,5 +72,6 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-09-001-task36-frozen-pre-upgrade-baseline W:task-36-frozen-pre-upgrade-baseline H:witness E:ledger:62985519d1d...] Delivery witness PASS recorded at 9f804a1; report: .aegis/reports/witness-report.json.
 - [S:2026-07-09-001-task36-frozen-pre-upgrade-baseline W:task-36-frozen-pre-upgrade-baseline H:scope E:ledger:bb8126e4309...] Scope recorded for 36. Paths: .aegis/foundation-manifest.json, .taskmaster/tasks/**, docs/ai/AEGIS_AUTONOMY_GRANT.md.
 - [S:2026-07-09-001-task36-frozen-pre-upgrade-baseline W:task-36-frozen-pre-upgrade-baseline H:witness E:ledger:60478e8aa89...] Delivery witness FAIL recorded at 9f804a1; report: .aegis/reports/witness-report.json.
+- [S:2026-07-09-001-task36-frozen-pre-upgrade-baseline W:task-36-frozen-pre-upgrade-baseline H:delivery E:ledger:e0a34f8f470...] Delivery state recorded: pr_draft for PR #8 at 77fb50d68b67345....
 
 <!-- AEGIS:END generated-sweh-projection -->
