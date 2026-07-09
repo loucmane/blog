@@ -4,7 +4,7 @@
 This project is managed by Aegis Foundation.
 
 - Primary agent: `multi`
-- Enabled adapters: `codex, claude`
+- Enabled adapters: `claude, codex`
 - Shared contract: `.aegis/contract.md`
 - Agents may read `.aegis/` directly.
 - Agents must not write `.aegis/` directly; use Aegis MCP tools or the project-local Aegis CLI.

@@ -65,7 +65,7 @@
     "ci": false,
     "mcp_contract": true,
     "taskmaster": true,
-    "work_tracking": false
+    "work_tracking": true
   },
   "customized_files": [],
   "entrypoints": {
@@ -383,7 +383,7 @@
       ".claude/settings.json hook registration changes",
       ".claude/scripts/* dispatcher bootstrap changes"
     ],
-    "source_commit": "43e9a660c0b58f95c2f97031e16830443b40aa2e",
+    "source_commit": "561def0fafef96865e2538e4e07212a0b1d039ce",
     "source_dirty": true,
     "source_dirty_paths": [
       " M .codex/deep-work.config.toml",
@@ -396,12 +396,14 @@
     ],
     "source_root": "/home/loucmane/codex",
     "update_command": "aegis runtime update",
-    "updated_at": "2026-07-08T10:54:16Z"
+    "updated_at": "2026-07-09T19:16:19Z"
   },
   "schema_version": "1.0.0",
   "verification": {
-    "last_verified_at": null,
-    "reports": [],
-    "status": "never"
+    "last_verified_at": "2026-07-09T19:16:19Z",
+    "reports": [
+      ".aegis/reports/verification-report.json"
+    ],
+    "status": "passed"
   }
 }

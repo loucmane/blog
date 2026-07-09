@@ -5,7 +5,7 @@ Aegis Foundation is the shared portable runtime for this repository.
 ## Agent Setup
 
 - Primary agent: `multi`
-- Enabled adapters: `codex, claude`
+- Enabled adapters: `claude, codex`
 
 ## Access Policy
 

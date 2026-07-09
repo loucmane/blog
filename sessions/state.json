@@ -1,0 +1,14 @@
+{
+  "current": "2026-07-09-001-obs-20260709-201621-sota-magazine-revival-dogfood.md",
+  "current_path": "sessions/2026/07/2026-07-09-001-obs-20260709-201621-sota-magazine-revival-dogfood.md",
+  "mode": "observation",
+  "schema_version": "1.0.0",
+  "task": {
+    "id": "obs-20260709-201621-sota-magazine-revival-dogfood",
+    "slug": "sota-magazine-revival-dogfood",
+    "source": "aegis-observation",
+    "status": "in-progress",
+    "title": "SOTA magazine revival Aegis projection dogfood"
+  },
+  "updated_at": "2026-07-09T18:16:21Z"
+}
