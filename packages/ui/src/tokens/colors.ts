@@ -99,7 +99,11 @@ export const colors = {
 
 // Helper function to convert RGB string to hex
 export const rgbToHex = (rgb: string): string => {
-  const [r, g, b] = rgb.split(' ').map(Number);
+  const channels = rgb.trim().split(/\s+/).map(Number);
+  if (channels.length !== 3 || channels.some(channel => !Number.isFinite(channel))) {
+    throw new TypeError(`Invalid RGB color: ${rgb}`);
+  }
+  const [r, g, b] = channels as [number, number, number];
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 

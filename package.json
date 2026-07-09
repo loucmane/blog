@@ -11,7 +11,12 @@
     "dev": "pnpm --parallel dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm --filter @minniewinnie/ui run build:types && pnpm --filter web exec tsc --noEmit",
+    "test:capability": "node scripts/ci/check-test-capability.mjs",
+    "ci:taskmaster": "node scripts/ci/check-taskmaster.mjs",
+    "ci:aegis": "python3 scripts/ci/check-aegis.py",
+    "ci:guard": "python3 scripts/ci/check-legacy-guard.py"
   },
   "devDependencies": {
     "eslint": "^8.54.0",
