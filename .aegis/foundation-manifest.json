@@ -65,7 +65,7 @@
     "ci": false,
     "mcp_contract": true,
     "taskmaster": true,
-    "work_tracking": false
+    "work_tracking": true
   },
   "customized_files": [],
   "entrypoints": {
@@ -400,8 +400,10 @@
   },
   "schema_version": "1.0.0",
   "verification": {
-    "last_verified_at": null,
-    "reports": [],
-    "status": "never"
+    "last_verified_at": "2026-07-09T21:13:20Z",
+    "reports": [
+      ".aegis/reports/verification-report.json"
+    ],
+    "status": "passed"
   }
 }
