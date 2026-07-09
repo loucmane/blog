@@ -1,52 +1,47 @@
-# Animal Protection Foundation Blog
+# Owner-Operated Editorial Magazine
 
-A high-performance, mission-driven platform for sharing rescue stories, field updates, and impact reports from global animal welfare work.
+This repository is being revived as a premium magazine and blog with an app-owned publishing workflow for a nontechnical owner. The owner will create, preview, schedule, publish, revise, and export content from the application—without Git, Markdown files, terminals, hosting consoles, or a traditional external CMS.
 
-## 🚀 Quick Start
+## Current Status
 
-```bash
-# Install dependencies
-pnpm install
+The checked-in application is a stale prototype and is not the target product. Task 33 is establishing canonical product truth, validating architecture, reconciling the delivery roadmap, recording the old baseline, and modernizing the foundation in reversible pull requests.
 
-# Run development server
-pnpm dev
+No legacy animal-foundation, "Mom's Blog," generic demo, or Git/MDX publishing requirement is authoritative.
 
-# Build for production
-pnpm build
-```
+## Canonical Documents
 
-## 📚 Documentation
+- [Product requirements](./.taskmaster/docs/prd.txt)
+- [Product vision](./docs/product/vision.md)
+- [Owner workflow](./docs/product/owner-workflow.md)
+- [Content model](./docs/product/content-model.md)
+- [Nonfunctional requirements](./docs/product/nonfunctional-requirements.md)
+- [Target architecture](./docs/architecture/cmsless-magazine-foundation.md)
+- [Stack decision matrix](./docs/research/2026-07-stack-decision-matrix.md)
+- [Foundation roadmap](./docs/migration/2026-foundation-roadmap.md)
 
-All project documentation is located in the [`/docs`](./docs) directory:
+## Repository Shape
 
-- [Architecture Overview](./docs/architecture/overview.md) - Monorepo structure and technology decisions
-- [Design System](./docs/architecture/design-system.md) - UI package and theming architecture
+The current pnpm workspace contains:
 
-## 📦 Packages
+- `packages/web` — stale Next.js reader prototype; intended to become the public magazine and owner workspace.
+- `packages/ui` — small shared theme/component package under review for consolidation into an app-local design system.
+- `packages/backend` — placeholder Express API scaffold; not accepted as the target backend.
+- `packages/shared` — incomplete shared source without an independent package manifest.
 
-This monorepo contains:
+The target architecture and package boundaries are provisional until the documented spikes and pre-upgrade baseline are complete.
 
-- **`packages/web`** - Next.js 15 application with the blog
-- **`packages/ui`** - Shared design system and components
-- **`packages/backend`** - API services (Express.js)
-- **`packages/shared`** - Cross-package utilities and types
+## Delivery Rules
 
-## 🎯 Key Features
+- Work uses task-scoped branches and reviewed pull requests.
+- Dependency migrations are independently reversible.
+- Product checks are not weakened to hide baseline or migration failures.
+- Human approval is required before every merge.
+- Aegis remains advisory and records machine-readable plus human-readable evidence.
 
-- **Content Management** - MDX-based content with React components
-- **Performance First** - 98+ Lighthouse scores with SSG
-- **Accessibility** - WCAG 2.1 AA compliant
-- **Theme System** - 4 themes including trauma-sensitive options
-- **Mobile First** - Optimized for global accessibility
+## Documentation
 
-## 🛠 Tech Stack
+Use [the documentation index](./docs/README.md) to distinguish canonical, provisional, and historical material.
 
-- Next.js 15 with App Router
-- React 19
-- TypeScript 5.8
-- Tailwind CSS
-- pnpm workspaces
+## License
 
-## 📄 License
-
-Private repository - All rights reserved
+Private repository. All rights reserved.
