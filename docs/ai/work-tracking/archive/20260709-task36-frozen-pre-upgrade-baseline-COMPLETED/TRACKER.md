@@ -4,6 +4,7 @@
 **Status**: ACTIVE
 **Last Updated**: 2026-07-10
 **Authority**: `.aegis/state/current-work.json`
+**Operator Authority**: `docs/ai/AEGIS_AUTONOMY_GRANT.md`; `authority=standing-grant:sota-magazine-2026-autonomy-v1`
 **Session**: `sessions/2026/07/2026-07-09-001-task36-frozen-pre-upgrade-baseline.md`
 **Plan**: `plans/2026-07-09-task36-frozen-pre-upgrade-baseline.md`
 **Reports**: `docs/ai/work-tracking/active/20260709-task36-frozen-pre-upgrade-baseline-ACTIVE/reports/frozen-pre-upgrade-baseline/`
@@ -32,6 +33,7 @@
 - **2026-07-10 00:21 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:post-closeout-verification|E:docs/research/2026-07-10-pre-upgrade-baseline.md] Recorded post-closeout Taskmaster, Aegis, witness, diff, and legacy-guard outcomes without weakening failures; witness remains pending until the Task 36 done flip has a containing commit
 - **2026-07-10 00:21 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:taskmaster-status|E:docs/research/2026-07-10-pre-upgrade-baseline.md] Marked Task 36 done through supported Taskmaster status handling and generated only task_036.md through an isolated one-task Taskmaster projection; documented CLI schema normalization and retained valid dependencies
 - **2026-07-10 00:25 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:publish-pr|E:https://github.com/loucmane/blog/pull/8] Published Task 36 branch and opened draft PR 8 after scoped commit, secret, diff, Taskmaster, Aegis, and CI-witness gates passed
+- **2026-07-10 00:31 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:sota-magazine-2026-autonomy-v1|E:docs/ai/AEGIS_AUTONOMY_GRANT.md] Recorded `authority=standing-grant:sota-magazine-2026-autonomy-v1` and the digest-backed grant reload requirement for future sessions
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files

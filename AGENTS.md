@@ -17,6 +17,22 @@ Continuation contract: a short intent (continue / go / proceed / next / resume) 
 
 ---
 
+## Active Operator Authority
+
+Before requesting approval for workflow, Git, Taskmaster, Aegis, PR, or merge
+actions, read `docs/ai/AEGIS_AUTONOMY_GRANT.md`.
+
+When grant `sota-magazine-2026-autonomy-v1` is active, in scope, unexpired, and
+all stated preconditions pass, its allowed actions are already explicitly
+authorized by the project owner. Proceed without asking again and record the
+grant ID as authority.
+
+The grant does not authorize actions listed under its mandatory confirmation
+boundaries. The agent must not edit, broaden, renew, or remove the grant without
+a new explicit owner instruction.
+
+---
+
 ## Existing Agent Instructions
 
 # Agents

@@ -25,6 +25,7 @@ emergency_bypass: false
 - **Plan Version**: v1
 - **Emergency Bypass**: false
 - **Authority**: Aegis-native workflow state (`.aegis/state/current-work.json`)
+- **Operator Authority**: `docs/ai/AEGIS_AUTONOMY_GRANT.md`; `authority=standing-grant:sota-magazine-2026-autonomy-v1`
 - **Optional Integrations**: Taskmaster and Serena may be used when present, but are not required for READY unless this task marks them required.
 
 ## Plan Table
@@ -63,10 +64,11 @@ emergency_bypass: false
 ## Continuation & Handoff
 - Next owner: project owner
 - Context reload steps:
-  1. Read `sessions/current` and this plan.
-  2. Read `.aegis/state/current-work.json`.
-  3. Read `docs/ai/work-tracking/active/20260709-task36-frozen-pre-upgrade-baseline-ACTIVE/TRACKER.md` and `docs/ai/work-tracking/active/20260709-task36-frozen-pre-upgrade-baseline-ACTIVE/HANDOFF.md`.
-  4. Run Aegis readiness/verify commands before mutation.
+  1. Read root `AGENTS.md`, `docs/ai/AEGIS_AUTONOMY_GRANT.md`, and verify the recorded grant digest before interpreting confirmation guidance.
+  2. Read `sessions/current` and this plan.
+  3. Read `.aegis/state/current-work.json`.
+  4. Read `docs/ai/work-tracking/archive/20260709-task36-frozen-pre-upgrade-baseline-COMPLETED/TRACKER.md` and `docs/ai/work-tracking/archive/20260709-task36-frozen-pre-upgrade-baseline-COMPLETED/HANDOFF.md`.
+  5. Run Aegis readiness/verify commands before mutation.
 - Outstanding risks/todos: keep Taskmaster and Serena optional unless explicitly enabled for this task.
 
 ## Conflict & Scope Declaration

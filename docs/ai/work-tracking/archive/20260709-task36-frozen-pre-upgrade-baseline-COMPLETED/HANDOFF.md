@@ -20,6 +20,7 @@
 2. Commit and open a pull request with normal git/GitHub commands when delegated.
 3. Archive or continue the active work-tracking folder according to the project lifecycle.
 ## Important Context
+- Operator authority: `docs/ai/AEGIS_AUTONOMY_GRANT.md`; `authority=standing-grant:sota-magazine-2026-autonomy-v1`. Recompute and verify its ledger-recorded digest after compaction or resume and before requesting approval.
 - Taskmaster is optional unless this task marks it required in `.aegis/state/current-work.json`.
 - Serena is optional continuity only and is not readiness evidence by itself.
 - If context is compacted, resume by reading `.aegis/state/current-work.json`, `sessions/current`, `plans/current`, and this file.
@@ -34,6 +35,7 @@
 - `.aegis/reports/verification-report.json`
 ## Progress Log
 - **2026-07-09 23:58 CEST** - [S:20260709|W:task36-frozen-pre-upgrade-baseline|H:aegis:kickoff|E:.aegis/state/current-work.json] Handoff initialized by Aegis kickoff.
+- **2026-07-10 00:31 CEST** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:sota-magazine-2026-autonomy-v1|E:docs/ai/AEGIS_AUTONOMY_GRANT.md] Recorded `authority=standing-grant:sota-magazine-2026-autonomy-v1` and the compaction-safe grant reload reference.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 13, "last_event_id": "e0a34f8f470d4676853aaa23f0b4d40d", "schema": "legacy-shadow-sweh-projection-v1"} -->

@@ -11,6 +11,7 @@ aegis_current_work: .aegis/state/current-work.json
 **Developer**: project owner
 **Task**: Start Task 36 with Aegis kickoff and establish compliant session, plan, and work-tracking state for Record Frozen Pre-Upgrade Baseline.
 **Task Source**: Aegis-native current work
+**Operator Authority**: `docs/ai/AEGIS_AUTONOMY_GRANT.md`; `authority=standing-grant:sota-magazine-2026-autonomy-v1`
 
 ### Session Validation
 - [x] Runtime timestamp captured by Aegis kickoff (`2026-07-09 23:58:11 CEST +0200`)
@@ -35,6 +36,7 @@ Task 36 was kicked off through Aegis. The project is now expected to use `.aegis
 - **[23:58]** - [S:20260709|W:task36-frozen-pre-upgrade-baseline|H:sessions/current|E:sessions/2026/07/2026-07-09-001-task36-frozen-pre-upgrade-baseline.md] Created current session and repointed `sessions/current`.
 - **[23:58]** - [S:20260709|W:task36-frozen-pre-upgrade-baseline|H:plans/current|E:plans/2026-07-09-task36-frozen-pre-upgrade-baseline.md] Created current plan and repointed `plans/current`.
 - **[23:58]** - [S:20260709|W:task36-frozen-pre-upgrade-baseline|H:work-tracking|E:docs/ai/work-tracking/active/20260709-task36-frozen-pre-upgrade-baseline-ACTIVE/TRACKER.md] Created active work-tracking scaffold.
+- **[00:31]** - [S:20260710|W:task36-frozen-pre-upgrade-baseline|H:standing-grant:sota-magazine-2026-autonomy-v1|E:docs/ai/AEGIS_AUTONOMY_GRANT.md] Recorded `authority=standing-grant:sota-magazine-2026-autonomy-v1` for compaction-safe workflow continuity.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 13, "last_event_id": "e0a34f8f470d4676853aaa23f0b4d40d", "schema": "legacy-shadow-sweh-projection-v1"} -->

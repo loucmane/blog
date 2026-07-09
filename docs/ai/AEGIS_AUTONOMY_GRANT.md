@@ -1,14 +1,36 @@
 # Aegis Standing Autonomy Grant
 
-## Authority Record
+## Grant Metadata
 
-- **Repository:** `/home/loucmane/dev/blog`
-- **Goal:** SOTA magazine foundation
-- **Task range:** Tasks 33–47 plus Task 48, the protected-CI and controlled-auto-merge task
-- **Status:** Active
-- **Expiry:** Completion or revocation of this goal
-- **Source:** Explicit user authority in this session
-- **Non-expansion rule:** The agent may not broaden, rewrite, infer additional privileges from, or silently weaken this grant. The verbatim authority below controls over this operational index.
+- **grant_id:** `sota-magazine-2026-autonomy-v1`
+- **repository:** `/home/loucmane/dev/blog`
+- **repository remote:** `git@github.com:loucmane/blog.git`
+- **issued_by:** project owner
+- **authority source:** explicit user instruction in this session
+- **goal:** SOTA magazine foundation
+- **task scope:** Tasks 33–48 and any direct replacement task created solely to finish that goal
+- **branch scope:** `main` plus `feat/task-*` branches in this repository
+- **issued_at:** `2026-07-09T22:31:25Z`
+- **status:** active until an expiration condition fires
+
+## Expiration
+
+The grant expires immediately when any one of these conditions becomes true:
+
+1. Task 47, or a renamed direct replacement final-foundation task, is completed.
+2. The SOTA magazine foundation goal is marked complete.
+3. The project owner explicitly revokes the grant.
+4. The repository identity or configured `origin` remote changes from the values above.
+
+Expiration restores normal confirmation requirements. The agent may not renew the grant.
+
+## Integrity and Interpretation
+
+- The agent may not broaden, renew, reinterpret, rewrite, or remove this grant without a new explicit project-owner instruction.
+- Uncertainty defaults to the safer action class. An ambiguous action is not authorized.
+- The SHA-256 digest of this exact document is recorded in the append-only Aegis ledger. Any file-content or digest mismatch invalidates the grant and restores confirmation requirements.
+- This tracked Markdown document is an immediate compatibility bridge. It is not independently tamper-proof and must not be represented as equivalent to a native Aegis authorization mechanism.
+- The verbatim authority below controls over summaries. No operational index in this document adds authority.
 
 ## Verbatim User Authority
 
@@ -75,9 +97,9 @@ scope expansion, and any merge not permitted by the active merge policy.
 
 This index does not add authority. It identifies actions already granted by the verbatim authority and the active SOTA magazine goal:
 
-1. Run deterministic Aegis handoff repair for an in-range task when its closeout preview identifies only Aegis-owned handoff/evidence normalization and no generic repair or manual-review action.
+1. Run deterministic Aegis handoff repair for an in-scope task when its closeout preview identifies only Aegis-owned handoff/evidence normalization and no generic repair or manual-review action.
 2. Run closeout previews and automatically run final closeout when every deterministic closeout precondition below passes.
-3. Use supported Taskmaster commands for in-range task creation, status changes, affected-task projection generation, health checks where supported, and dependency validation.
+3. Use supported Taskmaster commands for in-scope task creation, status changes, affected-task projection generation, health checks where supported, and dependency validation.
 4. Run task-scoped install, typecheck, lint, test, build, Aegis verification/witness, repository guard, diff, secret-safety, and Git/GitHub verification commands required by the approved roadmap.
 5. Make task-scoped documentation, configuration, package, and source changes already authorized by the approved roadmap and current task scope.
 6. Create or switch to task branches, make intentional commits, push those branches, and open or update task pull requests after the deterministic delivery preconditions pass.
@@ -89,7 +111,9 @@ This index does not add authority. It identifies actions already granted by the 
 
 ### Scope and Mutation
 
-- The current task is within Tasks 33–47 or Task 48 and is part of the SOTA magazine foundation goal.
+- The current task is within Tasks 33–48, or is a direct replacement created solely to finish that goal, and is part of the SOTA magazine foundation goal.
+- The repository path is `/home/loucmane/dev/blog`, `origin` is `git@github.com:loucmane/blog.git`, and the grant digest matches the append-only ledger record.
+- The current branch is `main` or a `feat/task-*` branch in this repository, and any mutation occurs only on the intended task branch rather than directly on `main`.
 - Git and Aegis identify the intended task branch and task ID consistently.
 - The working diff is fully understood, task-scoped, free of unknown or unrelated work, and contains no unapproved protected-path or scope expansion.
 - Aegis enforcement remains advisory unless the user separately changes it.
@@ -124,7 +148,7 @@ This index does not add authority. It identifies actions already granted by the 
 - The active merge policy explicitly authorizes the exact PR category and risk level.
 - No prohibited merge category below is present.
 
-## Prohibited Actions
+## Prohibited Actions and Mandatory Confirmation Boundaries
 
 The grant does not authorize:
 
@@ -138,24 +162,59 @@ The grant does not authorize:
 - Building the complete magazine during this foundation goal.
 - Auto-labeling or auto-merging changes involving secrets, workflow permissions, production deployment, irreversible migrations, destructive operations, branch-protection changes, or Aegis strict/PR-4 retirement.
 - Any merge not explicitly permitted by the active merge policy.
-- Broadening or rewriting this grant.
+- Editing, broadening, renewing, reinterpreting, or removing this grant without a new explicit project-owner instruction.
 
 ## Active Merge Policy
 
 1. The first CI workflow pull request and any workflow-permission or branch-protection change require attended human approval and must not merge unattended.
-2. Until Task 48's protected CI, controlled auto-merge workflow, and documentation-only canary are merged and proven, autonomous merge is not enabled; a PR without separate explicit merge authority stops at merge-ready.
+2. Until Task 48's protected CI, controlled auto-merge workflow, and documentation-only canary are merged and proven, autonomous merge is not enabled. Overnight activity, including documentation-only work, may prepare, verify, push, and advance a PR to merge-ready but may not merge it without separate explicit owner approval.
 3. After that canary succeeds, only low/medium-risk task PRs may use the explicit `auto-merge` label, and only when scope is complete, the exact head is current, every required GitHub check is green, conversations are resolved, and no prohibited category applies.
 4. High-risk changes and every prohibited category require explicit human merge approval.
 5. If no repository-local overnight policy explicitly authorizes the exact PR, the agent stops at merge-ready rather than inferring permission.
 6. Authorized automation uses the repository's reviewed merge path. The controlled auto-merge design uses squash merge and branch deletion only after Task 48's canary; before then, use the repository's normal reviewed method when separately approved.
 
-## Use After Context Compaction
+## Grant Reload and Approval Procedure
 
-Before asking for approval:
+Before every approval request, and after context compaction, session resume, or subagent return:
 
-1. Read this document and the current task's plan and handoff.
-2. Match the proposed action to an allowed action and every deterministic precondition.
-3. If covered, proceed and log `standing-grant:<action>` as the authority.
-4. If not covered, ambiguous, destructive, secret-bearing, production-affecting, scope-expanding, or merge-policy-ineligible, stop and request explicit user authority.
+1. Re-read root `AGENTS.md`.
+2. Re-read this grant document.
+3. Verify the repository path and `origin` remote against the grant metadata.
+4. Verify the current task and branch are in scope.
+5. Verify no expiration condition has fired.
+6. Recompute this document's SHA-256 digest and compare it with the append-only ledger record.
+7. Classify the proposed action against the allowed actions and mandatory confirmation boundaries.
+8. Proceed automatically when the action is covered and every deterministic precondition passes, recording `authority=standing-grant:sota-magazine-2026-autonomy-v1` in the relevant session, tracker, handoff, and ledger evidence.
+9. Ask only when the action is prohibited, out of scope, expired, ambiguous, or a deterministic precondition fails.
 
-`aegis next` confirmation prose does not expand, revoke, or override this user-issued grant.
+Perform this reload before interpreting `aegis next` confirmation guidance. Aegis confirmation prose does not create a new approval requirement for an action already covered by the valid grant, and it does not expand, revoke, or override this user-issued authority.
+
+## Continuity References
+
+- The current Task 36 plan and handoff must reference this document and `authority=standing-grant:sota-magazine-2026-autonomy-v1` without duplicating the policy.
+- Each subsequently created or updated plan and handoff for Tasks 33–48, or a direct replacement task, must carry the same concise reference.
+- The morning continuation report must carry the same concise reference and require the grant reload procedure before workflow decisions.
+
+## Security Limitation and Future CI Guard
+
+The tracked grant persists authority context but cannot protect itself independently. Its safeguards are the explicit no-edit rule, the append-only ledger digest, future protected CI, and invalidation on mismatch.
+
+A future CI guard must require all of the following when `docs/ai/AEGIS_AUTONOMY_GRANT.md` changes:
+
+- an `authority-change` label;
+- an explicit human approval event;
+- a newly recorded grant digest;
+- no automatic merge.
+
+## Proper Upstream Aegis Solution
+
+The durable implementation must replace this Markdown source of authority with native commands such as:
+
+```text
+aegis authorize create
+aegis authorize status
+aegis authorize revoke
+aegis authorize audit
+```
+
+The native grant should live outside the worktree, keyed by repository identity, and be injected into `aegis next`, PreToolUse decisions, repair classification, closeout, delivery synchronization, capsule compilation, session start/resume, and subagent identity/delegation. Until that exists on stable upstream Aegis, this tracked grant plus the root `AGENTS.md` discovery reference is only a compatibility bridge.
