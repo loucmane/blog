@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": 33,
+        "id": "33",
         "title": "Establish SOTA 2026 Magazine Foundation",
         "description": "Transform the stale prototype into an implementation-ready, owner-operated premium magazine foundation with canonical product truth, validated architecture, an executable roadmap, a recorded baseline, and a modern production stack delivered through reversible reviewed PR batches.",
         "details": "Archive and supersede obsolete product requirements; author the canonical PRD and ADRs; research stable supported July 2026 stack options from primary sources; validate editor, content, persistence, media, deployment, backup, and export assumptions through focused spikes; reconcile Taskmaster; record the frozen pre-upgrade baseline; modernize runtime, tooling, framework, design system, workspace, and approved content platform in independent branches and PRs. Preserve Aegis advisory coexistence and both capsule/ledger and legacy S:W:H:E evidence. Do not build the complete magazine, retire Aegis legacy scaffolding, or merge without explicit human approval.",
@@ -14,7 +14,7 @@
         "updatedAt": "2026-07-09T20:39:54.057Z"
       },
       {
-        "id": 34,
+        "id": "34",
         "title": "Publish Canonical Product Truth and Architecture",
         "description": "Archive obsolete requirements and establish the authoritative 2026 magazine PRD, product workflows, content model, nonfunctional requirements, cited stack research, ADRs, deployment, recovery, and migration roadmap.",
         "details": "Planning/architecture-only delivery under Program Task 33. No package upgrades or product implementation. Acceptance: legacy PRD preserved with superseded notice; canonical links resolve; decisions show alternatives, risks, rollback, and spike gates; draft PR awaits human merge approval.",
@@ -25,177 +25,192 @@
         "subtasks": []
       },
       {
-        "id": 35,
+        "id": "35",
         "title": "Reconcile Taskmaster and Delivery Evidence",
         "description": "Preserve the 2025 graph as legacy history and create a truthful canonical task graph for the magazine foundation while maintaining Aegis capsule/ledger and readable S:W:H:E evidence.",
         "details": "Use supported Taskmaster commands only. Classify all legacy tasks, generate both legacy and canonical projections, validate dependencies, record Taskmaster migration behavior and Aegis stale-observation dogfood without destructive repair.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          34
+          "34"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 36,
+        "id": "36",
         "title": "Record Frozen Pre-Upgrade Baseline",
         "description": "Establish the reproducible behavior of the stale prototype before changing packages or architecture.",
         "details": "Record runtime/tool versions; run frozen install, explicit typecheck where available, lint, tests, package builds, and production build. Classify existing failures separately from migration regressions. Revert incidental lockfile, cache, or generated drift and publish a baseline report.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          34,
-          35
+          "34",
+          "35"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-09T22:18:12.370Z"
       },
       {
-        "id": 37,
+        "id": "37",
         "title": "Validate High-Risk Architecture Spikes",
         "description": "Run pre-criterioned spikes for editor round-trip and rendering, document migration, autosave/recovery, scheduling, PostgreSQL/media persistence, deployment portability, and backup/restore.",
         "details": "Use committed synthetic fixtures and the criteria in docs/research/spike-plan.md. Keep production code only through a later reviewed implementation task. Update provisional ADRs with pass/fail evidence, versions, cost, lock-in, and rollback.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          36
+          "36"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 38,
+        "id": "38",
         "title": "Modernize Node pnpm and CI Runtime",
         "description": "Migrate the reproducible runtime foundation to the approved Node LTS, pinned pnpm, developer version files, engines, Corepack, and least-privilege CI.",
         "details": "Re-query stable versions and advisories at execution. Use a dedicated reversible PR. Require clean frozen install, CI/local parity, full-SHA action pins, package/app builds, and no unexplained lockfile drift.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          36
+          "36",
+          "48"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 39,
+        "id": "39",
         "title": "Modernize TypeScript Lint Formatting and Tests",
         "description": "Unify TypeScript and quality tooling, replace broken test scripts with meaningful unit/integration/browser foundations, and make all checks explicit.",
         "details": "Target the approved TypeScript transition, ESLint flat config, Prettier check, Vitest, Testing Library, Playwright, and axe. Do not weaken diagnostics or keep duplicate Jest/tooling versions after parity. Deliver as a separate reversible PR.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          38
+          "38"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 40,
+        "id": "40",
         "title": "Migrate React Framework and Build System",
         "description": "Upgrade React and the selected full-stack framework, remove obsolete prototype configuration, and prove reader/server/preview/cache/deployment behavior.",
         "details": "Requires accepted framework evidence and modern quality tooling. Verify SSR/streaming, metadata, protected draft preview, cache invalidation, images, CSP, managed preview, Node fallback, browser smoke, accessibility, and no reader editor bundle.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          37,
-          39
+          "37",
+          "39"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 41,
+        "id": "41",
         "title": "Modernize Tailwind shadcn and Workspace Boundaries",
         "description": "Migrate styling and owned components, preserve intentional design mechanics, and resolve obsolete package boundaries without a big-bang visual rewrite.",
         "details": "Upgrade Tailwind and app-local shadcn/Base UI progressively. Audit every UI export/customization, visually and accessibly verify changes, remove duplicate toolchains, and remove backend/shared/UI scaffolds only after consumers and replacement behavior are proven.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          40
+          "40"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 42,
+        "id": "42",
         "title": "Implement Content and Persistence Foundation",
         "description": "Implement the accepted app-owned content, revision, migration, PostgreSQL, media-original, search, audit, export, and import foundations.",
         "details": "Only begin after relevant spikes and modern application foundation pass. Deliver schema and service slices in scoped PRs with migration/restore/export tests, provider adapters, security checks, and explicit rollback.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          37,
-          41
+          "37",
+          "41"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 43,
+        "id": "43",
         "title": "Implement Owner Publishing Foundation",
         "description": "Build the protected owner shell and foundational draft, autosave, recovery, revision, preview, media, schedule, publish, update, unpublish, and authentication workflows.",
         "details": "This task establishes owner-operable foundations, not the complete dashboard. Require understandable failure states, accessibility, idempotency, audit, browser smoke coverage, and no normal dependency on developer or hosting tools.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          42
+          "42"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 44,
+        "id": "44",
         "title": "Implement Public Magazine Foundation",
         "description": "Build representative premium reader templates and rendering foundations for home, section, article, author, taxonomy, related content, and responsive media.",
         "details": "Use server-safe structured rendering, premium typography, art-directed responsive templates, canonical URLs, accessible interaction, performance budgets, visual evidence, and no editor code on reader routes. Do not complete the whole magazine in Task 33.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          41,
-          42
+          "41",
+          "42"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 45,
+        "id": "45",
         "title": "Add Distribution Search SEO and Newsletter Foundations",
         "description": "Establish reader discovery and distribution through search, redirects, RSS, sitemap, structured data, social cards, newsletter consent/delivery, analytics, and Web Vitals.",
         "details": "Keep subscriber and consent data app-owned, provider calls asynchronous and replaceable, analytics privacy-conscious, and derived indexes/cards/feeds rebuildable. Verify metadata, draft exclusion, outages, export, and accessibility.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          42,
-          44
+          "42",
+          "44"
         ],
         "priority": "medium",
         "subtasks": []
       },
       {
-        "id": 46,
+        "id": "46",
         "title": "Harden Production Deployment Security and Recovery",
         "description": "Prove production readiness through managed and portable deployment, security, observability, cost, accessibility, performance, backup, restore, and rollback evidence.",
         "details": "Require preview/production isolation, least privilege, restore drill, provider exit, RPO/RTO measurement, p75 Core Web Vitals targets, WCAG 2.2 AA evidence, clean CI, runbooks, budget alerts, and explicit human approval for every merge.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          43,
-          44,
-          45
+          "43",
+          "44",
+          "45"
         ],
         "priority": "high",
         "subtasks": []
       },
       {
-        "id": 47,
+        "id": "47",
         "title": "Conclude Foundation and Define Owner-Publishing Goal",
         "description": "Close the SOTA foundation program only after canonical truth, accepted spike decisions, modern verified stack batches, synchronized merges, and useful Aegis/legacy evidence exist.",
         "details": "Confirm Task 33 definition of done, final exact main state, delivery evidence, unresolved risks, and a concrete next goal for full owner publishing. Do not retire Aegis legacy scaffolding or claim the complete magazine is built.",
         "testStrategy": "",
         "status": "pending",
         "dependencies": [
-          46
+          "46"
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": "48",
+        "title": "Bootstrap Protected CI and Controlled Auto-Merge",
+        "description": "Establish GitHub Actions CI, protected public main, and a separately reviewed controlled auto-merge path before any package or code modernization.",
+        "details": "Depend on Task 36 frozen baseline. Adapt the proven HP-Fetcher CI and auto-merge workflow designs without carrying app-specific paths, secrets, D1 migrations, environment files, lockfile paths, or Vite variables. Bootstrap CI first at committed Node 22 and pnpm 9 using actual baseline-supported root workspace scripts: frozen install, valid typecheck, lint, tests, package/application builds, Taskmaster health/dependency validation, Aegis witness/guard validation, secret scanning, dependency review, and only honestly supported Playwright/accessibility checks. Keep CI permissions contents:read, protect fork PR secrets, publish failure artifacts, and use concurrency cancellation. Deliver workflow CI as its own human-reviewed PR; after merge inspect exact check names and configure main to require PRs, current required checks, conversation resolution, compatible linear history, and block force-push/deletion. Adapt auto-merge separately with contents:write and pull-requests:write only, explicit auto-merge label, workflow_run plus labeled race handling, direct check-run inspection excluding its merge job, squash merge, branch deletion, and a documentation-only canary. Never auto-label or auto-merge workflow/security/secret/deployment/migration/destructive/branch-protection/Aegis-retirement changes.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "36"
         ],
         "priority": "high",
         "subtasks": []
@@ -203,15 +218,12 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-09T20:39:54.058Z",
-      "taskCount": 33,
-      "completedCount": 3,
+      "lastModified": "2026-07-09T22:18:12.371Z",
+      "taskCount": 16,
+      "completedCount": 1,
       "tags": [
         "master"
-      ],
-      "created": "2026-07-09T21:03:51.030Z",
-      "description": "Tasks for master context",
-      "updated": "2026-07-09T21:05:37.971Z"
+      ]
     }
   },
   "legacy-2025": {
