@@ -2,7 +2,7 @@
 
 **Title:** Prove project-wide evidence-authorized delivery canary
 
-**Status:** in-progress
+**Status:** done
 
 **Dependencies:** 61 ✓
 

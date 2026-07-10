@@ -6,8 +6,8 @@
   "task": {
     "id": "62",
     "slug": "evidence-delivery-canary",
-    "status": "in-progress",
+    "status": "completed",
     "title": "Prove project-wide evidence-authorized delivery canary"
   },
-  "updated_at": "2026-07-10T23:06:12Z"
+  "updated_at": "2026-07-10T23:17:51Z"
 }
