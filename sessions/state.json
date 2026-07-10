@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task61-domain-skill-auto-merge.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task61-domain-skill-auto-merge.md",
+  "current": "2026-07-11-001-task62-evidence-delivery-canary.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task62-evidence-delivery-canary.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "61",
-    "slug": "domain-skill-auto-merge",
-    "status": "completed",
-    "title": "Implement project-wide evidence-authorized autonomous delivery"
+    "id": "62",
+    "slug": "evidence-delivery-canary",
+    "status": "in-progress",
+    "title": "Prove project-wide evidence-authorized delivery canary"
   },
-  "updated_at": "2026-07-10T22:36:12Z"
+  "updated_at": "2026-07-10T23:06:12Z"
 }
