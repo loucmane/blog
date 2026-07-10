@@ -25,6 +25,8 @@ function copyFixture() {
     "schemas/agent-skills/review-result.schema.json",
     ".claude/skills/cross-agent-skill-platform/SKILL.md",
     ".claude/skills/cross-agent-skill-platform/agents/openai.yaml",
+    ".claude/skills/magazine-product-discovery/SKILL.md",
+    ".claude/skills/magazine-product-discovery/agents/openai.yaml",
   ]) {
     const source = path.join(repositoryRoot, relativePath);
     const destination = path.join(root, relativePath);
@@ -34,6 +36,10 @@ function copyFixture() {
   const link = path.join(root, ".agents/skills/cross-agent-skill-platform");
   fs.mkdirSync(path.dirname(link), { recursive: true });
   fs.symlinkSync("../../.claude/skills/cross-agent-skill-platform", link);
+  fs.symlinkSync(
+    "../../.claude/skills/magazine-product-discovery",
+    path.join(root, ".agents/skills/magazine-product-discovery"),
+  );
   return root;
 }
 
@@ -49,8 +55,8 @@ test("validates the repository cross-agent platform", () => {
   assert.deepEqual(report.errors, []);
   assert.equal(report.passed, true);
   assert.deepEqual(report.summary, {
-    skills: 1,
-    routes: 1,
+    skills: 2,
+    routes: 2,
     upstreamEntries: 0,
   });
 });

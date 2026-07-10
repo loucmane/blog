@@ -1,0 +1,4 @@
+interface:
+  display_name: "Magazine Product Discovery"
+  short_description: "Frame evidence-backed magazine product decisions"
+  default_prompt: "Use $magazine-product-discovery to turn owner and reader needs into an evidence-backed product brief."

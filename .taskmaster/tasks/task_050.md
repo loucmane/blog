@@ -2,7 +2,7 @@
 
 **Title:** Implement Magazine Product Discovery Skill
 
-**Status:** pending
+**Status:** in-progress
 
 **Dependencies:** 49 ✓, 56 ✓, 57 ✓
 

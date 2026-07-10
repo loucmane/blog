@@ -31,6 +31,24 @@
         "aegis-evidence-ingestion"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "magazine-product-discovery",
+      "status": "active",
+      "entrypoint": ".claude/skills/magazine-product-discovery/SKILL.md",
+      "codexLink": ".agents/skills/magazine-product-discovery",
+      "provenance": {
+        "type": "project-authored",
+        "task": "50"
+      },
+      "capabilities": [
+        "owner-discovery",
+        "reader-discovery",
+        "product-requirements",
+        "assumption-tracking",
+        "advisory-product-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }
