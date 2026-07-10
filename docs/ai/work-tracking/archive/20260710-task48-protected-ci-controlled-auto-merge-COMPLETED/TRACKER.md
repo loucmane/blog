@@ -40,6 +40,7 @@
 - **2026-07-10 13:28 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-closeout|E:.aegis/reports/closeout-report.json] Completed Task 48 Aegis closeout with zero required failures and zero warnings after the canary merge
 - **2026-07-10 13:33 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-completed-guard|E:scripts/codex-guard] Fixed the legacy guard to validate Aegis completed archive trackers and added four fail-closed completed-state regression tests
 - **2026-07-10 13:34 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-post-closeout-verification|E:.aegis/reports/verification-report.json] Passed post-closeout strict Aegis verification and completed-archive guard regression checks with zero required failures
+- **2026-07-10 13:58 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-final-delivery|E:.aegis/reports/verification-report.json] Recorded PR #12 squash merge 7cb290fdbea184379a1f87575d8cff80271b2f83 and delivery event 0488508e88474d03abd21b4cf297c1ef, verified terminal Task 48 state, and covered the absent active-root completed-state guard regression
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -64,7 +65,7 @@ Task 48 is `done` in Taskmaster and `completed` in Aegis. PRs #9, #10, and #11 a
 - Direct workflow state writes should go through Aegis CLI or MCP tools.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 22, "last_event_id": "0321a47226a84874a27ec634aaa02efd", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 23, "last_event_id": "0488508e88474d03abd21b4cf297c1ef", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
@@ -92,5 +93,6 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:070a32fa48a...] Scope recorded for 48. Paths: docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., .taskmaster/tasks/**, .plan_state/**.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0488508e884...] Delivery state recorded: pr_merged for PR #12 at 3565b2998e2250a....
 
 <!-- AEGIS:END generated-sweh-projection -->
