@@ -40,6 +40,24 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "stack-research-adr",
+      "match": [
+        "docs/architecture/**",
+        "docs/research/stack/**",
+        "docs/decisions/architecture/**"
+      ],
+      "skills": [
+        "stack-research-adr"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }

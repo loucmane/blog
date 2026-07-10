@@ -252,14 +252,15 @@
         "description": "Create a reusable cross-agent workflow for primary-source stack research and decision-ready architecture records.",
         "details": "Implement .claude/skills/stack-research-adr with current-version verification from primary sources, stable/support/security/compatibility/cost/lock-in/rollback criteria, explicit rejected alternatives, citation requirements, structured ADR output, and focused validator tests. Register it in the catalog and review map, expose it through the Codex symlink tree, and keep qualitative review findings advisory.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "49",
           "56",
           "57"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-10T22:17:23.214Z"
       },
       {
         "id": "52",
@@ -442,9 +443,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-10T20:06:04.848Z",
+      "lastModified": "2026-07-10T22:17:23.214Z",
       "taskCount": 28,
-      "completedCount": 6,
+      "completedCount": 7,
       "tags": [
         "master"
       ]
