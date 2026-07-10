@@ -22,12 +22,30 @@
   auto-merge-policy, Aegis CI, completed-state guard, and diff checks.
 
 ## Current Issues/Blockers
-- No implementation, review, or closeout blocker remains. Committed-head witness, GitHub
-  secret scan, and required checks remain delivery gates.
+- No implementation, review, closeout, or required-check blocker remains.
+- PR #19 is open as a draft. Its exact current head must be derived from GitHub at the
+  attended merge boundary rather than hard-coded into another commit.
+- A committed delivery projection necessarily names its parent head: committing that
+  projection creates a new SHA. After the final push, Aegis records the exact final head in
+  the external ledger and report; its generated worktree projection is restored to the
+  committed version so the branch remains clean and avoids an infinite evidence-only loop.
 
 ## Next Steps
-1. Commit and push the closed Task 51 branch.
-2. Open a draft PR, wait for protected checks, and stop at the attended merge boundary.
+1. Revalidate PR #19's exact head, required checks, review threads, labels, and changed paths.
+2. Stop at the attended squash-merge boundary; do not merge without explicit owner approval.
+
+## Complete PR Scope
+- Canonical skill source, metadata, and ADR output contract under
+  `.claude/skills/stack-research-adr/`.
+- Relative Codex symlink at `.agents/skills/stack-research-adr`.
+- Catalog and review-map registration.
+- Platform, focused skill, and routing-fixture tests.
+- Taskmaster Task 51 terminal status and its scoped projection.
+- Plan, session, sync log, completed work-tracking archive, and generated Aegis evidence.
+- Timestamp-only `verification.last_verified_at` change in the Aegis foundation manifest.
+- The ledger-backed local witness accounted for all 25 PR paths with zero unaccounted files;
+  the compact generated projection abbreviates the scope event and is not the authoritative
+  path inventory.
 
 ## Important Context
 - Authority is the project owner's explicit current instruction after PR #18:
@@ -39,6 +57,10 @@
 
 ## Implementation Evidence
 - `.claude/skills/stack-research-adr/SKILL.md`
+- `.claude/skills/stack-research-adr/references/stack-research-adr-output-contract.md`
+- `config/agent-skills/catalog.yaml`
+- `config/agent-skills/review-map.yaml`
+- `tests/agent-skills/stack-research-adr.test.mjs`
 - `.taskmaster/tasks/tasks.json`
 ## Verification Evidence
 - `docs/ai/work-tracking/archive/20260711-task51-stack-research-adr-skill-COMPLETED/reports/stack-research-adr-skill/task-verification.md`
@@ -55,6 +77,7 @@
 - **2026-07-11 00:12 CEST** - [S:20260711|W:task51-stack-research-adr-skill|H:agent:verification|E:docs/ai/work-tracking/active/20260711-task51-stack-research-adr-skill-ACTIVE/reports/stack-research-adr-skill/task-verification.md] Recorded Task 51 focused skill, workspace, Taskmaster, governance, guard, and review-remediation verification evidence; direct pnpm test remains the documented Task 39 baseline
 - **2026-07-11 00:13 CEST** - [S:20260711|W:task51-stack-research-adr-skill|H:agent:verification|E:.aegis/reports/verification-report.json] Strict Aegis verification passed 31 checks with zero required failures while configured enforcement remained advisory
 - **2026-07-11 00:16 CEST** - [S:20260711|W:task51-stack-research-adr-skill|H:agent:review|E:docs/ai/work-tracking/active/20260711-task51-stack-research-adr-skill-ACTIVE/reports/stack-research-adr-skill/task-verification.md] Independent implementation/completeness and adversarial security/authority/scope re-reviews passed with no actionable Task 51 findings
+- **2026-07-11 00:50 CEST** - [S:20260711|W:task51-stack-research-adr-skill|H:agent:review-remediation|E:https://github.com/loucmane/blog/pull/19] Reconciled final adversarial delivery review by documenting the complete 25-path scope, replacing stale pre-PR instructions, and defining the external-ledger exact-head strategy that avoids a self-referential projection-commit loop.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "68fc6a604e0143babc7469c7cfaa07ea", "schema": "legacy-shadow-sweh-projection-v1"} -->
