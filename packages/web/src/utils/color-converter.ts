@@ -1,7 +1,11 @@
 // Convert RGB string to HSL values for CSS
 export function rgbToHsl(rgb: string): string {
   // Parse RGB values from string like "240 253 250"
-  const [r, g, b] = rgb.split(' ').map(Number);
+  const channels = rgb.trim().split(/\s+/).map(Number);
+  if (channels.length !== 3 || channels.some(channel => !Number.isFinite(channel))) {
+    throw new TypeError(`Invalid RGB color: ${rgb}`);
+  }
+  const [r, g, b] = channels as [number, number, number];
   
   // Normalize RGB values
   const rNorm = r / 255;

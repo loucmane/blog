@@ -192,7 +192,7 @@ export function ThemeSwitcher({
         {allThemes.map((themeOption, index) => {
           const isActive = theme === 'system' 
             ? themeOption.value === 'system'
-            : themeOption.value === resolvedTheme && themeOption.value !== 'system'
+            : themeOption.value === resolvedTheme
           
           return (
             <button
