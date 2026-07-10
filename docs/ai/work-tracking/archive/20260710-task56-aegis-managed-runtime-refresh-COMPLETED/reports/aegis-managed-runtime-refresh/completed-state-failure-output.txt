@@ -1,0 +1,20 @@
+$ python3 -m unittest tests/ci/test_codex_guard_completed_state.py
+EEEEE
+
+ERROR: test_prefers_the_single_active_tracker
+KeyError: 'CURRENT_WORK_STATE_PATH'
+
+ERROR: test_rejects_completed_path_outside_the_archive
+KeyError: 'CURRENT_WORK_STATE_PATH'
+
+ERROR: test_requires_active_or_completed_work_tracking
+KeyError: 'CURRENT_WORK_STATE_PATH'
+
+ERROR: test_uses_completed_aegis_archive_when_active_root_is_absent
+KeyError: 'CURRENT_WORK_STATE_PATH'
+
+ERROR: test_uses_completed_aegis_archive_when_no_active_folder_exists
+KeyError: 'CURRENT_WORK_STATE_PATH'
+
+Ran 5 tests in 0.004s
+FAILED (errors=5)

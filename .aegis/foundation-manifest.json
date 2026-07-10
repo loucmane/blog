@@ -62,7 +62,7 @@
     }
   },
   "capabilities": {
-    "ci": false,
+    "ci": true,
     "mcp_contract": true,
     "taskmaster": true,
     "work_tracking": true
@@ -221,154 +221,192 @@
       "path": ".aegis/foundation-manifest.json"
     },
     {
+      "checksum": "sha256:22d0177c2394de53c73e148296c9cbb50d1bf816b5f5b44c4e569451883c1e2e",
       "kind": "managed",
       "path": "AGENTS.md"
     },
     {
+      "checksum": "sha256:8a73a2adfe2877d2cdd60b029c3098b412dbb00e47f8548e48fc0551aca6c604",
       "kind": "managed",
       "path": ".aegis/contract.md"
     },
     {
+      "checksum": "sha256:4511e937fc6254643e1f9295e6af879638bcb7ea1459aa227a1c68426787d7d9",
       "kind": "managed",
       "path": ".aegis/bin/aegis"
     },
     {
+      "checksum": "sha256:60218b687d3ecc3b62fec830c412b5f57cebcacccefbc863133d1d62c162690b",
       "kind": "runtime",
       "path": ".aegis/runtime.env"
     },
     {
+      "checksum": "sha256:c73272699e6ad820ee90aa7e86d48efc8a9dad25e657c0b6cf6060856fbab7b9",
       "kind": "config",
       "path": ".aegis/brief.json"
     },
     {
+      "checksum": "sha256:1872b4590ac56d0ae9b858f291aadbee9e39daa61905ff6b7e3885de0fda88a3",
       "kind": "managed",
       "path": "schemas/aegis/foundation-manifest.schema.json"
     },
     {
+      "checksum": "sha256:1aabaae85a83463134bae446a971726a768c55fbe79fa99d3f5528ceb184effd",
       "kind": "managed",
       "path": "schemas/aegis/profile.schema.json"
     },
     {
+      "checksum": "sha256:f61c65faec0d2bd4152c7b6b6271e35eb36cf799f8ee1584153c7e2ee3e45e3d",
       "kind": "managed",
       "path": "schemas/aegis/install-plan.schema.json"
     },
     {
+      "checksum": "sha256:66424ac5e7cf54560b39b33e8d12200926c0be307250a34bdc17ddcd113b6067",
       "kind": "managed",
       "path": ".aegis/templates/workflow/session.md"
     },
     {
+      "checksum": "sha256:2472086763faadaa77cafe3fbe763e2daddbf2d8d88d8d99e19119d4ef76ca2d",
       "kind": "managed",
       "path": ".aegis/templates/workflow/plan.md"
     },
     {
+      "checksum": "sha256:d32862429628e70a76feca5efed77ac0ae0a68ff5d44a7083a22dab58dc2fbf9",
       "kind": "managed",
       "path": ".aegis/templates/workflow/tracker.md"
     },
     {
+      "checksum": "sha256:ca14756b012748bacc335100ae8350978b3b5246c29aee97abc6a1a624bda045",
       "kind": "managed",
       "path": ".aegis/templates/workflow/findings.md"
     },
     {
+      "checksum": "sha256:bba16f7dfbfde80c870b9f25160b2fc83c267d6b7da63f0b9e3ca9f1cef3d980",
       "kind": "managed",
       "path": ".aegis/templates/workflow/decisions.md"
     },
     {
+      "checksum": "sha256:eb1d5df14a6ac82bbaaaf594c9d9b8b50dc71f57d52c96a5c22c8b6677bb8c11",
       "kind": "managed",
       "path": ".aegis/templates/workflow/handoff.md"
     },
     {
+      "checksum": "sha256:9799913ed658712c02293cb324931476b803146fbcec45ad2d263d3766a2f08c",
       "kind": "managed",
       "path": ".aegis/templates/workflow/implementation.md"
     },
     {
+      "checksum": "sha256:2f5cd89da02bb69285c4c9f63cb243317e95a35c31190bde3a9653cf05ffc476",
       "kind": "managed",
       "path": ".aegis/templates/workflow/changelog.md"
     },
     {
+      "checksum": "sha256:0ada5091180bb7b0abad206448b71e188ae8c496def34b37646831fab4748837",
       "kind": "adapter",
       "path": "CLAUDE.md"
     },
     {
+      "checksum": "sha256:590959a08af70be4ec7fc1f5692cf40a3fa0cee3d3979e7ecd6708dd09ea7490",
       "kind": "adapter",
       "path": ".claude/settings.json"
     },
     {
+      "checksum": "sha256:0b45f69b6a58a35da5108359fe1f88243a8ae820628eefba69cf2a64c2d098e8",
       "kind": "adapter",
       "path": ".claude/scripts/readiness.sh"
     },
     {
+      "checksum": "sha256:ad03e787466317a22b62ff256903dbb96ad856e84e5e43428c3492e4ab40dadb",
       "kind": "adapter",
       "path": ".claude/scripts/pretooluse-gate.sh"
     },
     {
+      "checksum": "sha256:62695162201634ae8582b72648a59a44dc4418d55998f5f97fc5cf71c7c2bc2f",
       "kind": "adapter",
       "path": ".claude/scripts/posttooluse-tracking.sh"
     },
     {
+      "checksum": "sha256:eef60f0efd4c7458f5cf6e700082af17f27a0cccf2031050f085ba28078890f5",
       "kind": "adapter",
       "path": ".claude/scripts/tracking-stop-gate.sh"
     },
     {
+      "checksum": "sha256:0cffc9b098a39a826352fd90a72d9a774bfe056c9dfbcc26c802fa2757e32cef",
       "kind": "adapter",
       "path": ".claude/scripts/bash-command-guard.sh"
     },
     {
+      "checksum": "sha256:e6f343962155b25aaf7ef20629dc10f56c74e8b9774b15f3216354549d3b1982",
       "kind": "adapter",
       "path": ".claude/scripts/codex-path-guard.sh"
     },
     {
+      "checksum": "sha256:2cb7542aed8e9030c17b42512cf2464f04cfc73bf06785b4affaf4d4b090c1a2",
       "kind": "adapter",
       "path": ".claude/scripts/ledger-record.sh"
     },
     {
+      "checksum": "sha256:10fd425912c93cc7399498e23c2677b2948503c2cd920162cc4e1aa0e77544fc",
       "kind": "adapter",
       "path": ".claude/scripts/session-brief.sh"
     },
     {
+      "checksum": "sha256:b4e6ce48d7a7e4b3a8467fec93ac3a694f28f1f52905bb4ca189ba1f6d93be10",
       "kind": "adapter",
       "path": ".claude/scripts/gate_lib.py"
     },
     {
+      "checksum": "sha256:7945eb42a39615250b6c2ac65b2f8da6bb19af195c7fc5a90344dbe263f742f4",
       "kind": "adapter",
       "path": ".claude/scripts/ledger_lib.py"
     },
     {
+      "checksum": "sha256:b5f8a7babda165c4c90fb71079aaad8e3e3ab038be9b71116602f4b9a962f246",
       "kind": "adapter",
       "path": ".claude/scripts/brief_lib.py"
     },
     {
+      "checksum": "sha256:599ebe262c6aeb0178ce307aa51a8b597917813cba249174754bc1090b60b8d9",
       "kind": "adapter",
       "path": ".claude/scripts/witness_lib.py"
     },
     {
+      "checksum": "sha256:0b73a8e8f3d0d785679a2ac133dcb462343f7b8c87986f0e1eeabed4d86b5016",
       "kind": "adapter",
       "path": "CODEX.md"
     },
     {
+      "checksum": "sha256:e9dc3c4b21c112547d650500971f458d025de498dcd816e6ced45aad7210fa03",
       "kind": "adapter",
       "path": "scripts/_aegis_installer.py"
     },
     {
+      "checksum": "sha256:fec049b26a8349edeceb4478b92ba74e75e5fea6ca9a1b523de430a2cdc3eaf2",
       "kind": "adapter",
       "path": "scripts/codex-task"
     },
     {
+      "checksum": "sha256:f0357f210cbd9db4f2dcdabe688465d176e8f9e84e9c8b447659aba460c362d4",
       "kind": "adapter",
       "path": "scripts/codex-guard"
     },
     {
+      "checksum": "sha256:2bf492c4ab1f179c93308b21d978934e4c74d1c80a9ddd986664fe09d45093e7",
       "kind": "adapter",
       "path": "scripts/_repo_structure.py"
     },
     {
+      "checksum": "sha256:30ad62ecbbb05239b18860bf81a878debe65de61cdb52bf5b22c066106b4a4d4",
       "kind": "adapter",
       "path": "scripts/template_registry.py"
     },
     {
+      "checksum": "sha256:33ce8d39e0862fbf81944271b432f94376ccfdd5bb5c3578c4c72b233847579e",
       "kind": "adapter",
       "path": "scripts/template_governance.py"
     },
     {
+      "checksum": "sha256:ba299e6780cdf3310f1eaeff6570107a038f31a563c7f1f9b595b04795afc09e",
       "kind": "adapter",
       "path": "scripts/template_versioning.py"
     }
@@ -383,7 +421,7 @@
       ".claude/settings.json hook registration changes",
       ".claude/scripts/* dispatcher bootstrap changes"
     ],
-    "source_commit": "43e9a660c0b58f95c2f97031e16830443b40aa2e",
+    "source_commit": "432ffc7d0bed112426920eb9858b296a440b11b3",
     "source_dirty": true,
     "source_dirty_paths": [
       " M .codex/deep-work.config.toml",
@@ -396,11 +434,11 @@
     ],
     "source_root": "/home/loucmane/codex",
     "update_command": "aegis runtime update",
-    "updated_at": "2026-07-08T10:54:16Z"
+    "updated_at": "2026-07-10T15:13:57Z"
   },
   "schema_version": "1.0.0",
   "verification": {
-    "last_verified_at": "2026-07-10T11:59:33Z",
+    "last_verified_at": "2026-07-10T15:25:36Z",
     "reports": [
       ".aegis/reports/verification-report.json"
     ],
