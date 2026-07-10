@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-10-001-task56-aegis-managed-runtime-refresh.md",
-  "current_path": "sessions/2026/07/2026-07-10-001-task56-aegis-managed-runtime-refresh.md",
+  "current": "2026-07-10-001-task57-v1-cross-agent-skill-system-roadmap.md",
+  "current_path": "sessions/2026/07/2026-07-10-001-task57-v1-cross-agent-skill-system-roadmap.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "56",
-    "slug": "aegis-managed-runtime-refresh",
+    "id": "57",
+    "slug": "v1-cross-agent-skill-system-roadmap",
     "status": "in-progress",
-    "title": "Refresh Aegis Managed Runtime to Active Upstream"
+    "title": "Complete the v1 cross-agent skill-system roadmap"
   },
-  "updated_at": "2026-07-10T13:04:38Z"
+  "updated_at": "2026-07-10T17:39:48Z"
 }
