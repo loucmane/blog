@@ -43,6 +43,13 @@
 - Serena is optional continuity only and is not readiness evidence by itself.
 - If context is compacted, resume by reading `.aegis/state/current-work.json`, `sessions/current`, `plans/current`, and this file.
 
+## Implementation Evidence
+- `.taskmaster/tasks/tasks.json`
+## Verification Evidence
+- `docs/ai/work-tracking/active/20260710-task50-magazine-product-discovery-skill-ACTIVE/reports/magazine-product-discovery-skill/task-verification.md`
+- `.aegis/reports/verification-report.json`
+## Strict Verification Evidence
+- `.aegis/reports/verification-report.json`
 ## Progress Log
 - **2026-07-10 21:23 CEST** - [S:20260710|W:task50-magazine-product-discovery-skill|H:aegis:kickoff|E:.aegis/state/current-work.json] Handoff initialized by Aegis kickoff.
 - **2026-07-10 21:26 CEST** - [S:20260710|W:task50-magazine-product-discovery-skill|H:agent:scope|E:docs/ai/work-tracking/active/20260710-task50-magazine-product-discovery-skill-ACTIVE/FINDINGS.md] authority=explicit-user:task50; confirmed canonical skill, relative Codex link, catalog/review-map, focused tests, scoped Taskmaster projection, and evidence only; no product/package/framework/workflow changes
