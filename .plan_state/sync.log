@@ -304,5 +304,11 @@
     "plan_hash": "86c67cb7b977f29bea95d9e10039c3320c8b961679a71235286ab6a101991939",
     "tracker_hash": "a214348cc39574f9f710aec6a3cba2aa7803ec0449ab0c0c3661ae46841480ce",
     "synced_at": "2026-07-11T00:25:10.348447+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
+    "plan_hash": "a5b1681f8556f820c90838e5b1e93a1fa756a74911f26028f67584e892754199",
+    "tracker_hash": "f44f73f1a7181dc2a89fca474e60ab4f89d57aa220adab12bf15c15c1a9eaf77",
+    "synced_at": "2026-07-11T00:47:36.505247+02:00"
   }
 ]
