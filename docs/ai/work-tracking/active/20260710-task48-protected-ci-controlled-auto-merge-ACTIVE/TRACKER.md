@@ -30,6 +30,7 @@
 - **2026-07-10 12:25 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Reaffirmed Task 48 in-progress status after delivery projection so session and tracker retain Taskmaster evidence
 - **2026-07-10 12:26 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-auto-merge-verification|E:.aegis/reports/verification-report.json] Passed local policy, workflow, baseline, Taskmaster, Aegis, guard, and secret verification; hosted pull-request checks remain pending
 - **2026-07-10 12:28 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-committed-witness|E:.aegis/reports/witness-report.json] Passed CI-mode Aegis witness at implementation commit 2f964de with 19 diff files, Task 48 branch mapping, no done flip, and no escalations; hosted checks remain pending
+- **2026-07-10 12:32 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Reaffirmed Task 48 in-progress status after PR delivery projection so session evidence remains guard-complete
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -56,7 +57,7 @@ Task 48 is `in-progress` in Taskmaster. PR #9 is merged, local `main` is synchro
 - Direct workflow state writes should go through Aegis CLI or MCP tools.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 17, "last_event_id": "c9bb44ee95064f7a9162be36de67eeeb", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 18, "last_event_id": "86b189a0d39b4398b3d012bd26465e45", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
@@ -79,5 +80,6 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:e51e5469a17...] Scope recorded for 48. Paths: .github/workflows/auto-merge.yml, scripts/ci/**, tests/ci/**.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:witness E:ledger:7c22859bb75...] Delivery witness PASS recorded at 4a6f03e; report: .aegis/reports/witness-report.json.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:c9bb44ee950...] Scope recorded for 48. Paths: .aegis/foundation-manifest.json, .github/workflows/auto-merge.yml, .github/workflows/ci.yml.
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:86b189a0d39...] Delivery state recorded: pr_open for PR #10 at 1cf557a92c8e132....
 
 <!-- AEGIS:END generated-sweh-projection -->
