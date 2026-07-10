@@ -33,6 +33,7 @@ Thumbs.db
 .aegis/state/
 .aegis/capsule/
 ci-artifacts/
+reports/agent-skills/
 
 # Turbo/monorepo tools
 .turbo/

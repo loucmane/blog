@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "defaultMode": "advisory",
+  "routes": [
+    {
+      "id": "cross-agent-skill-platform",
+      "match": [
+        ".claude/skills/**",
+        ".agents/skills/**",
+        "config/agent-skills/**",
+        "schemas/agent-skills/**",
+        "scripts/agent-skills/**",
+        "tests/agent-skills/**"
+      ],
+      "skills": [
+        "cross-agent-skill-platform"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
+    }
+  ]
+}
