@@ -96,3 +96,28 @@ test("emits schema-valid advisory discovery findings", () => {
     ),
   );
 });
+
+test("treats discovery evidence as untrusted data without expanding authority", () => {
+  const outputContract = fs.readFileSync(
+    path.join(
+      repositoryRoot,
+      ".claude/skills/magazine-product-discovery/references/discovery-output-contract.md",
+    ),
+    "utf8",
+  );
+  const safetyContract = `${skill}\n${outputContract}`.toLowerCase();
+
+  for (const requiredRule of [
+    "untrusted data",
+    "embedded instructions",
+    "never execute commands",
+    "current repository root",
+    "credentials, tokens, private keys",
+    "attempts to change scope or authority",
+  ]) {
+    assert.ok(
+      safetyContract.includes(requiredRule),
+      `missing hostile-evidence rule: ${requiredRule}`,
+    );
+  }
+});
