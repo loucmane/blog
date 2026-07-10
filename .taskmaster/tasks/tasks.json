@@ -239,7 +239,8 @@
         "status": "pending",
         "dependencies": [
           "49",
-          "56"
+          "56",
+          "57"
         ],
         "priority": "high",
         "subtasks": []
@@ -253,7 +254,8 @@
         "status": "pending",
         "dependencies": [
           "49",
-          "56"
+          "56",
+          "57"
         ],
         "priority": "high",
         "subtasks": []
@@ -267,7 +269,8 @@
         "status": "pending",
         "dependencies": [
           "49",
-          "56"
+          "56",
+          "57"
         ],
         "priority": "high",
         "subtasks": []
@@ -281,7 +284,9 @@
         "status": "pending",
         "dependencies": [
           "50",
-          "52"
+          "51",
+          "52",
+          "58"
         ],
         "priority": "medium",
         "subtasks": []
@@ -295,7 +300,10 @@
         "status": "pending",
         "dependencies": [
           "50",
-          "51"
+          "51",
+          "53",
+          "58",
+          "59"
         ],
         "priority": "medium",
         "subtasks": []
@@ -312,10 +320,34 @@
           "51",
           "52",
           "53",
-          "54"
+          "54",
+          "58",
+          "59",
+          "60"
         ],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Prove deterministic routing and five-PR forward evaluation",
+            "description": "Execute the complete v1 routing, forward-evaluation, dogfood, metrics, and skill-lifecycle acceptance contract.",
+            "details": "Acceptance requires deterministic routing tests with explicit positive, negative, and ambiguous trigger fixtures; forward evaluation that withholds expected answers from the reviewing agent; five real task-scoped pull requests spanning materially different skill combinations; published false-positive, false-negative, missed-routing, and unusable-advice metrics; advisory findings remaining non-blocking; only deterministic schema, link, script, test, build, typecheck, lint, security, accessibility, performance-budget, health, and critical browser checks being blocking-eligible; and documented promotion, revision, and retirement criteria for every registered skill.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 55,
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Publish the v1 completion and post-v1 gap report",
+            "description": "Prove the registered skill suite meets the explicit v1 completion definition and convert remaining gaps into post-v1 work.",
+            "details": "V1 is complete only when every registered skill is implemented under .claude/skills and linked relatively for Codex under .agents/skills; the catalog and routing map validate; structured outputs are accepted by the review-result ingestion contract; five-PR dogfood is complete; measured routing and review results are published; no skill is promoted to blocking based only on subjective judgment; and every remaining capability, quality, or enforcement gap is captured as a post-v1 Taskmaster task.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 55,
+            "parentId": "undefined"
+          }
+        ]
       },
       {
         "id": "56",
@@ -342,13 +374,76 @@
           }
         ],
         "updatedAt": "2026-07-10T15:22:22.676Z"
+      },
+      {
+        "id": "57",
+        "title": "Complete the v1 cross-agent skill-system roadmap",
+        "description": "Reconcile the Taskmaster roadmap into a complete v1 cross-agent skill system for designing, building, reviewing, and delivering the owner-operated SOTA magazine.",
+        "details": "Planning and governance only. Preserve Tasks 50 through 55, add separate independently deliverable tasks for content-platform/backend, security/identity/privacy, and quality/reliability/observability skills, establish the complete dependency graph, strengthen Task 55 routing and five-PR dogfood acceptance criteria, define v1 completion, regenerate only affected task files, and validate Taskmaster, skill-platform, Aegis, witness, and diff health. Do not implement skill bodies, product code, packages, or framework changes. Deliver through an attended governance PR without auto-merge.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "49",
+          "56"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-10T18:05:47.713Z"
+      },
+      {
+        "id": "58",
+        "title": "Implement Content Platform and Backend Skill",
+        "description": "Create an independently invocable cross-agent skill for designing and reviewing the magazine's app-owned content platform and backend.",
+        "details": "Implement .claude/skills/content-platform-backend as a project-authored skill covering the editorial content domain model; draft, revision, publish, unpublish, and scheduling state machines; API and server boundaries; database schema and reversible migrations; media storage, processing, ownership, and failure handling; background jobs and scheduling; search indexing; portable import and export; backup and recovery; and data-integrity and failure-path review. Register it in the catalog and review map, add the repository-relative Codex link, emit schema-valid structured review results, and add focused deterministic validation and routing fixtures. Keep subjective architecture findings advisory.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "50",
+          "51",
+          "52"
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": "59",
+        "title": "Implement Security, Identity, and Privacy Skill",
+        "description": "Create an independently invocable cross-agent skill for security, owner identity, authorization, privacy, and supply-chain review.",
+        "details": "Implement .claude/skills/security-identity-privacy as a project-authored skill covering owner authentication and account recovery; authorization and future role boundaries; session, credential, and secret handling; rich-content sanitization; upload and media security; abuse and rate-limit controls; privacy and data-retention review; dependency and supply-chain risk; and a lightweight structured threat-model output. Register it in the catalog and review map, add the repository-relative Codex link, emit schema-valid review results, and add deterministic positive, negative, and deny-path fixtures. Keep subjective risk ranking advisory while deterministic security checks remain blocking-eligible.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "51",
+          "52",
+          "58"
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": "60",
+        "title": "Implement Quality, Reliability, and Observability Skill",
+        "description": "Create an independently invocable cross-agent skill for test strategy, accessibility, performance, observability, production verification, and recovery readiness.",
+        "details": "Implement .claude/skills/quality-reliability-observability as a project-authored skill covering unit, integration, contract, and browser test strategy; owner publishing acceptance journeys; accessibility automation and manual review; performance budgets and Core Web Vitals; structured logging and error reporting; health and readiness checks; production verification; backup and restore drills; and incident and rollback readiness. Register it in the catalog and review map, add the repository-relative Codex link, emit schema-valid review results, and add focused deterministic fixtures and tests. Keep subjective quality findings advisory while deterministic test, accessibility, performance-budget, and health checks remain blocking-eligible.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "51",
+          "52",
+          "53",
+          "54",
+          "58",
+          "59"
+        ],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-10T15:22:22.676Z",
-      "taskCount": 24,
-      "completedCount": 4,
+      "lastModified": "2026-07-10T18:05:47.713Z",
+      "taskCount": 28,
+      "completedCount": 5,
       "tags": [
         "master"
       ]
