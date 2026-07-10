@@ -25,9 +25,9 @@ emergency_bypass: false
 - **Plan Version**: v1
 - **Emergency Bypass**: false
 - **Authority**: Aegis-native workflow state (`.aegis/state/current-work.json`)
-- **Operator Authority**: explicit project-owner instruction after PR #18; tracked grant
-  `sota-magazine-2026-autonomy-v1` is unchanged and out of scope for Task 51. No grant
-  expansion is claimed.
+- **Operator Authority**: `authority=standing-grant:sota-magazine-2026-autonomy-v2` from
+  `docs/ai/AEGIS_AUTONOMY_GRANT.md`; the earlier direct Task 51 instruction remains
+  historical kickoff authority.
 - **Optional Integrations**: Taskmaster and Serena may be used when present, but are not required for READY unless this task marks them required.
 
 ## Plan Table
@@ -66,7 +66,8 @@ emergency_bypass: false
 - 2026-07-11 - `aegis log` updated `plan-step-verify` to `completed` with evidence `.aegis/reports/verification-report.json`.
 
 ## Continuation & Handoff
-- Next owner: project owner
+- Next owner: trusted evidence-authorized delivery policy; project owner only if the policy
+  identifies an exceptional or denied category.
 - Context reload steps:
   1. Read `sessions/current` and this plan.
   2. Read `.aegis/state/current-work.json`.

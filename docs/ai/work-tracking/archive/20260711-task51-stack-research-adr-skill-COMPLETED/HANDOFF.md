@@ -24,7 +24,7 @@
 ## Current Issues/Blockers
 - No implementation, review, closeout, or required-check blocker remains.
 - PR #19 is open as a draft. Its exact current head must be derived from GitHub at the
-  attended merge boundary rather than hard-coded into another commit.
+  evidence-policy boundary rather than hard-coded into another commit.
 - A committed delivery projection necessarily names its parent head: committing that
   projection creates a new SHA. After the final push, Aegis records the exact final head in
   the external ledger and report; its generated worktree projection is restored to the
@@ -32,7 +32,8 @@
 
 ## Next Steps
 1. Revalidate PR #19's exact head, required checks, review threads, labels, and changed paths.
-2. Stop at the attended squash-merge boundary; do not merge without explicit owner approval.
+2. Allow the protected workflow to squash-merge when the trusted main-branch policy
+   classifies the exact head as eligible; stop only for an exceptional or denied category.
 
 ## Complete PR Scope
 - Canonical skill source, metadata, and ADR output contract under
@@ -48,9 +49,10 @@
   path inventory.
 
 ## Important Context
-- Authority is the project owner's explicit current instruction after PR #18:
-  `authority=explicit-user:2026-07-10-task51-after-pr18`. Tracked grant v1 is unchanged and
-  out of scope; no grant expansion is claimed.
+- Current delivery authority is
+  `authority=standing-grant:sota-magazine-2026-autonomy-v2` from
+  `docs/ai/AEGIS_AUTONOMY_GRANT.md`. The earlier direct instruction after PR #18 remains
+  historical Task 51 kickoff authority.
 - Taskmaster is optional unless this task marks it required in `.aegis/state/current-work.json`.
 - Serena is optional continuity only and is not readiness evidence by itself.
 - If context is compacted, resume by reading `.aegis/state/current-work.json`, `sessions/current`, `plans/current`, and this file.
@@ -81,6 +83,7 @@
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "68fc6a604e0143babc7469c7cfaa07ea", "schema": "legacy-shadow-sweh-projection-v1"} -->
+- **2026-07-11 01:17 CEST** - [S:20260711|W:task51-stack-research-adr-skill|H:operator-authority|E:docs/ai/AEGIS_AUTONOMY_GRANT.md] Reconciled PR #19 with origin/main under authority=standing-grant:sota-magazine-2026-autonomy-v2; grant digest 89ac60905034896537c3a4d794bf22a5d1fc0ccdab926ae93977c6ffc550e095 matched Task 61 authority evidence, Task 51 remained the current feature-branch context, and Tasks 61-62 were preserved.
 
 ## Generated S:W:H:E Projection
 

@@ -2,25 +2,24 @@
 
 ## Grant Metadata
 
-- **grant_id:** `sota-magazine-2026-autonomy-v1`
+- **grant_id:** `sota-magazine-2026-autonomy-v2`
 - **repository:** `/home/loucmane/dev/blog`
 - **repository remote:** `git@github.com:loucmane/blog.git`
 - **issued_by:** project owner
 - **authority source:** explicit user instruction in this session
-- **goal:** SOTA magazine foundation
-- **task scope:** Tasks 33–48 and any direct replacement task created solely to finish that goal
+- **goal:** SOTA magazine product and supporting engineering platform
+- **task scope:** every Taskmaster-backed task in this repository that satisfies the deterministic scope and risk policy below
 - **branch scope:** `main` plus `feat/task-*` branches in this repository
-- **issued_at:** `2026-07-09T22:31:25Z`
+- **issued_at:** `2026-07-09T22:31:25Z`; project-wide merge amendment issued `2026-07-11`
 - **status:** active until an expiration condition fires
 
 ## Expiration
 
 The grant expires immediately when any one of these conditions becomes true:
 
-1. Task 47, or a renamed direct replacement final-foundation task, is completed.
-2. The SOTA magazine foundation goal is marked complete.
-3. The project owner explicitly revokes the grant.
-4. The repository identity or configured `origin` remote changes from the values above.
+1. The SOTA magazine product goal is explicitly marked complete.
+2. The project owner explicitly revokes the grant.
+3. The repository identity or configured `origin` remote changes from the values above.
 
 Expiration restores normal confirmation requirements. The agent may not renew the grant.
 
@@ -93,9 +92,27 @@ secrets, production deployment, force-push/history rewrite, PR-4 retirement,
 scope expansion, and any merge not permitted by the active merge policy.
 ```
 
+## 2026-07-11 Project-Wide Merge Amendment
+
+The project owner explicitly replaced attended-by-default task merges with an
+evidence-authorized project workflow:
+
+> "just change that rule. I dont want that to be a rule."
+>
+> "we should make sure that everything is tested before its merged. the
+> approval should be in that its proven to work correctly and SOTA"
+
+This amendment authorizes automatic squash merge for every ordinary,
+Taskmaster-backed, same-repository pull request when the trusted default-branch
+policy classifies the exact head as eligible and every required deterministic
+check passes. It authorizes continuing to the next dependency-ready task after
+the merge. It does not authorize any prohibited action or exceptional risk
+category listed below.
+
 ## Allowed Actions
 
-This index does not add authority. It identifies actions already granted by the verbatim authority and the active SOTA magazine goal:
+This index identifies actions granted by the original authority and the
+2026-07-11 project-wide merge amendment:
 
 1. Run deterministic Aegis handoff repair for an in-scope task when its closeout preview identifies only Aegis-owned handoff/evidence normalization and no generic repair or manual-review action.
 2. Run closeout previews and automatically run final closeout when every deterministic closeout precondition below passes.
@@ -103,7 +120,7 @@ This index does not add authority. It identifies actions already granted by the 
 4. Run task-scoped install, typecheck, lint, test, build, Aegis verification/witness, repository guard, diff, secret-safety, and Git/GitHub verification commands required by the approved roadmap.
 5. Make task-scoped documentation, configuration, package, and source changes already authorized by the approved roadmap and current task scope.
 6. Create or switch to task branches, make intentional commits, push those branches, and open or update task pull requests after the deterministic delivery preconditions pass.
-7. Merge only when the active merge policy explicitly authorizes that exact pull request at its revalidated head commit.
+7. Automatically squash-merge an ordinary task pull request when the trusted active merge policy explicitly authorizes its revalidated exact head; no separate merge prompt or positive opt-in label is required.
 8. After an authorized merge, fetch and fast-forward local `main`, verify synchronization, and start the next dependency-ready task.
 9. Record `standing-grant:<action>` evidence in the Aegis ledger and legacy S:W:H:E surfaces for actions exercised under this grant.
 
@@ -111,7 +128,7 @@ This index does not add authority. It identifies actions already granted by the 
 
 ### Scope and Mutation
 
-- The current task is within Tasks 33–48, or is a direct replacement created solely to finish that goal, and is part of the SOTA magazine foundation goal.
+- The current task exists in Taskmaster, is dependency-ready or an explicitly approved recovery task, and its implementation remains within that task's recorded scope.
 - The repository path is `/home/loucmane/dev/blog`, `origin` is `git@github.com:loucmane/blog.git`, and the grant digest matches the append-only ledger record.
 - The current branch is `main` or a `feat/task-*` branch in this repository, and any mutation occurs only on the intended task branch rather than directly on `main`.
 - Git and Aegis identify the intended task branch and task ID consistently.
@@ -160,18 +177,20 @@ The grant does not authorize:
 - Aegis strict-mode activation, hot-editing managed Aegis assets, consuming unmerged upstream Aegis work, Task 80 cleanup, PR-4 retirement, or legacy-scaffolding retirement.
 - Unapproved scope expansion or switching to an unrelated task.
 - Building the complete magazine during this foundation goal.
-- Auto-labeling or auto-merging changes involving secrets, workflow permissions, production deployment, irreversible migrations, destructive operations, branch-protection changes, or Aegis strict/PR-4 retirement.
+- Auto-merging changes involving secrets, workflow or merge-policy permissions, production deployment or data, irreversible migrations, destructive operations, branch-protection changes, operator authority, Aegis enforcement/retirement, agent hooks/settings/entry points, or history rewriting.
 - Any merge not explicitly permitted by the active merge policy.
 - Editing, broadening, renewing, reinterpreting, or removing this grant without a new explicit project-owner instruction.
 
 ## Active Merge Policy
 
-1. The first CI workflow pull request and any workflow-permission or branch-protection change require attended human approval and must not merge unattended.
-2. Until Task 48's protected CI, controlled auto-merge workflow, and documentation-only canary are merged and proven, autonomous merge is not enabled. Overnight activity, including documentation-only work, may prepare, verify, push, and advance a PR to merge-ready but may not merge it without separate explicit owner approval.
-3. After that canary succeeds, only low/medium-risk task PRs may use the explicit `auto-merge` label, and only when scope is complete, the exact head is current, every required GitHub check is green, conversations are resolved, and no prohibited category applies.
-4. High-risk changes and every prohibited category require explicit human merge approval.
-5. If no repository-local overnight policy explicitly authorizes the exact PR, the agent stops at merge-ready rather than inferring permission.
-6. Authorized automation uses the repository's reviewed merge path. The controlled auto-merge design uses squash merge and branch deletion only after Task 48's canary; before then, use the repository's normal reviewed method when separately approved.
+1. Every same-repository, non-draft task pull request is evaluated automatically after CI completes; an `auto-merge` label is not required.
+2. Automatic merge requires a complete file inventory, unchanged exact head, current base, CLEAN GitHub mergeability, no deny label, no prohibited path/risk category, all exact required checks from the trusted GitHub Actions app, final policy/check revalidation, and any applicable real test capability declared `supported` by trusted main.
+3. Documentation, planning/evidence, tested domain-skill, and other non-behavioral task changes may merge when their applicable deterministic suites pass.
+4. Behavior-changing product and dependency changes may merge only when the trusted capability contract proves the applicable unit/integration/browser suites are real and supported. An unsupported test bridge is evidence of a gap, never evidence of correctness.
+5. Changed package manifests are eligible only when the privileged trusted policy confirms their scripts are byte-for-byte semantically unchanged from protected `main`; verification-script changes remain attended.
+6. `manual-merge`, `high-risk`, and the prohibited labels/categories are explicit opt-outs and require attended approval.
+7. Changes to this merge policy/workflow are bootstrap-governance changes and require the project owner's explicit instruction. The 2026-07-11 amendment is that instruction for Task 61.
+8. Authorized automation uses squash merge through the normal protected path, exact-head matching, and deletion only of the merged task branch. After merge, synchronize `main` and continue to the next dependency-ready task without another prompt.
 
 ## Grant Reload and Approval Procedure
 
@@ -184,15 +203,15 @@ Before every approval request, and after context compaction, session resume, or 
 5. Verify no expiration condition has fired.
 6. Recompute this document's SHA-256 digest and compare it with the append-only ledger record.
 7. Classify the proposed action against the allowed actions and mandatory confirmation boundaries.
-8. Proceed automatically when the action is covered and every deterministic precondition passes, recording `authority=standing-grant:sota-magazine-2026-autonomy-v1` in the relevant session, tracker, handoff, and ledger evidence.
+8. Proceed automatically when the action is covered and every deterministic precondition passes, recording `authority=standing-grant:sota-magazine-2026-autonomy-v2` in the relevant session, tracker, handoff, and ledger evidence.
 9. Ask only when the action is prohibited, out of scope, expired, ambiguous, or a deterministic precondition fails.
 
 Perform this reload before interpreting `aegis next` confirmation guidance. Aegis confirmation prose does not create a new approval requirement for an action already covered by the valid grant, and it does not expand, revoke, or override this user-issued authority.
 
 ## Continuity References
 
-- The current Task 36 plan and handoff must reference this document and `authority=standing-grant:sota-magazine-2026-autonomy-v1` without duplicating the policy.
-- Each subsequently created or updated plan and handoff for Tasks 33–48, or a direct replacement task, must carry the same concise reference.
+- The active task plan and handoff must reference this document and `authority=standing-grant:sota-magazine-2026-autonomy-v2` without duplicating the policy.
+- Each subsequently created or updated Taskmaster-backed plan and handoff must carry the same concise reference.
 - The morning continuation report must carry the same concise reference and require the grant reload procedure before workflow decisions.
 
 ## Security Limitation and Future CI Guard

@@ -1,5 +1,10 @@
 # Controlled Auto-Merge Design
 
+> **Superseded policy:** The label-gated eligibility details below document the
+> Task 48 bootstrap design. Task 61 replaces them with project-wide,
+> label-free evidence authorization in
+> `docs/research/2026-07-11-evidence-authorized-delivery.md`.
+
 **Task:** 48 — Bootstrap Protected CI and Controlled Auto-Merge
 **Continuation branch:** `feat/task-48-controlled-auto-merge`
 **Authority:** `standing-grant:sota-magazine-2026-autonomy-v1`

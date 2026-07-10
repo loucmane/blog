@@ -282,33 +282,51 @@
     "synced_at": "2026-07-10T22:12:05.043694+02:00"
   },
   {
-    "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
-    "plan_hash": "0f6b333252f58a51a8237c18efe8eb22d05654202211e61db10ca5ebb600e41c",
-    "tracker_hash": "999bdfc68da4398faa6a42ac2360e2389654996254e4752827ab0f1c505f92c1",
-    "synced_at": "2026-07-11T00:10:52.505764+02:00"
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "ead2ff79be1ce26bba7b76b057aeee3a66ac826403f34f45f72089a7e573aa2d",
+    "tracker_hash": "923b04a0f6150b406d287e5f5098e308c8f399d2481ece2e9c5cec7d3a15feb7",
+    "synced_at": "2026-07-11T00:26:34.882999+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "74eb357a92ddb5e2f3ebf4dd1f68edf6848762cbb4223d9b432cb108bb7336a7",
+    "tracker_hash": "3ab2da476e331e2ec7dd16d99747873e21d5e5b96c1e1213dca508fce6158d81",
+    "synced_at": "2026-07-11T00:31:22.472223+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "8de210e8ec2e1087dd167f3374e9fba8d275c16e7f720b87a7910c348295645c",
+    "tracker_hash": "a9a7c59969562af88b9d5fa9406ff2ad90bfed5c49666e086a493132a79bb896",
+    "synced_at": "2026-07-11T00:34:31.962250+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "57528619923b739cfc9a9457bde5dc0e803fbb1ec976801e9a561b4f91917536",
+    "tracker_hash": "a9a7c59969562af88b9d5fa9406ff2ad90bfed5c49666e086a493132a79bb896",
+    "synced_at": "2026-07-11T00:39:24.668073+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "57528619923b739cfc9a9457bde5dc0e803fbb1ec976801e9a561b4f91917536",
+    "tracker_hash": "88f7a48b9c7379495130cbadb685de82ee265fd25d509a803022bd0772ace2f2",
+    "synced_at": "2026-07-11T00:47:12.995209+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "57528619923b739cfc9a9457bde5dc0e803fbb1ec976801e9a561b4f91917536",
+    "tracker_hash": "6e2ac4d237d54aab45854667a6d07bacc9ccbf9d4a8f2d342298bdd060347610",
+    "synced_at": "2026-07-11T00:56:14.079315+02:00"
   },
   {
     "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
-    "plan_hash": "635917e03c4cf239c439c22663594d1c3281a6daebaae54d074c1386dda9fc33",
-    "tracker_hash": "cb285ee484aade72c08bbc0948b489dc1ebe0c8bd4d73501850d0970022d1329",
-    "synced_at": "2026-07-11T00:15:31.903550+02:00"
+    "plan_hash": "7a520c0f9279f6ab9db6582facb0fc3afb0ae41ae952518d2ba03788384525f0",
+    "tracker_hash": "e2ccd0562d7a8dca63a46b82bab089e715268a616ebde6fe8af2313e742e0164",
+    "synced_at": "2026-07-11T01:16:50.472174+02:00"
   },
   {
     "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
-    "plan_hash": "2f6a9b6e05ccd17e2c696529026509b16a10f8ef25abf98da57154f6752d1b83",
-    "tracker_hash": "bf495782e05d13fe187b5fa40a63df36b4936ae133c5c7f359ac163d534e1577",
-    "synced_at": "2026-07-11T00:18:56.789203+02:00"
-  },
-  {
-    "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
-    "plan_hash": "86c67cb7b977f29bea95d9e10039c3320c8b961679a71235286ab6a101991939",
-    "tracker_hash": "a214348cc39574f9f710aec6a3cba2aa7803ec0449ab0c0c3661ae46841480ce",
-    "synced_at": "2026-07-11T00:25:10.348447+02:00"
-  },
-  {
-    "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
-    "plan_hash": "a5b1681f8556f820c90838e5b1e93a1fa756a74911f26028f67584e892754199",
-    "tracker_hash": "f44f73f1a7181dc2a89fca474e60ab4f89d57aa220adab12bf15c15c1a9eaf77",
-    "synced_at": "2026-07-11T00:47:36.505247+02:00"
+    "plan_hash": "7a520c0f9279f6ab9db6582facb0fc3afb0ae41ae952518d2ba03788384525f0",
+    "tracker_hash": "e19e3149a67771f4cac0f536a57da6cf659b35ca8b0f2a55db7ae5e7123ad329",
+    "synced_at": "2026-07-11T01:17:35.535832+02:00"
   }
 ]

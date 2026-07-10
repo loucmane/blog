@@ -2,8 +2,6 @@
 
 import fs from 'node:fs'
 
-export const AUTO_MERGE_LABEL = 'auto-merge'
-
 export const REQUIRED_CHECKS = Object.freeze([
   'workspace · install · typecheck · lint · tests · build',
   'governance · Taskmaster · Aegis · guards',
@@ -39,15 +37,12 @@ const AEGIS_PROTECTED_PATHS = new Set([
 const CI_CONTROL_FILES = new Set([
   '.gitleaksignore',
   '.gitleaks.toml',
-  '.node-version',
   '.npmrc',
-  '.nvmrc',
-  '.tool-versions',
-  'package-lock.json',
-  'pnpm-lock.yaml',
-  'pnpm-workspace.yaml',
-  'turbo.json',
-  'yarn.lock',
+])
+
+const PROTECTED_AGENT_SKILL_PREFIXES = Object.freeze([
+  '.agents/skills/cross-agent-skill-platform',
+  '.claude/skills/cross-agent-skill-platform',
 ])
 
 const DEPLOYMENT_FILES = new Set([
@@ -106,7 +101,9 @@ function normalizePath(path) {
     return null
   }
   const segments = normalized.split('/')
-  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
+  if (
+    segments.some((segment) => !segment || segment === '.' || segment === '..')
+  ) {
     return null
   }
   return normalized
@@ -116,6 +113,58 @@ function pathExtension(path) {
   const filename = path.split('/').at(-1) ?? ''
   const dot = filename.lastIndexOf('.')
   return dot >= 0 ? filename.slice(dot).toLowerCase() : ''
+}
+
+function isTestPath(path) {
+  return (
+    /(?:^|\/)(?:__tests__|tests?|specs?)(?:\/|$)/i.test(path) ||
+    /(?:^|\/)[^/]+\.(?:test|spec)\.[^/]+$/i.test(path) ||
+    /(?:^|\/)(?:test_[^/]+|[^/]+_test)\.[^/]+$/i.test(path)
+  )
+}
+
+function isDomainSkillPath(path) {
+  const lower = path.toLowerCase()
+  const underSkillRoot =
+    lower.startsWith('.agents/skills/') || lower.startsWith('.claude/skills/')
+  if (!underSkillRoot) return false
+  return !PROTECTED_AGENT_SKILL_PREFIXES.some(
+    (prefix) => lower === prefix || lower.startsWith(`${prefix}/`),
+  )
+}
+
+function requiredTestCapabilities(path) {
+  const lower = path.toLowerCase()
+  if (lower === 'pnpm-lock.yaml' || lower === 'package.json') {
+    return ['unit', 'browser']
+  }
+  if (/\.(?:md|mdx|txt)$/i.test(lower)) return []
+  if (lower.startsWith('packages/web/') || lower.startsWith('packages/ui/')) {
+    return ['unit', 'browser']
+  }
+  if (
+    lower.startsWith('packages/backend/') ||
+    lower.startsWith('packages/shared/')
+  ) {
+    return ['unit']
+  }
+  if (lower.startsWith('apps/')) return ['unit', 'browser']
+  return []
+}
+
+function normalizeFile(rawFile) {
+  const filename = typeof rawFile === 'string' ? rawFile : rawFile?.filename
+  const path = normalizePath(filename)
+  if (!path) return null
+  const status =
+    typeof rawFile === 'object' ? String(rawFile?.status ?? '') : ''
+  const previousPath =
+    status === 'renamed' ? normalizePath(rawFile?.previous_filename) : null
+  return {
+    path,
+    previousPath,
+    status,
+  }
 }
 
 function classifyPath(path) {
@@ -137,9 +186,11 @@ function classifyPath(path) {
   if (
     lower.startsWith('scripts/ci/') ||
     lower.startsWith('tests/ci/') ||
+    lower.startsWith('config/ci/') ||
     CI_CONTROL_FILES.has(lower) ||
-    filename === 'package.json' ||
-    /^(eslint|jest|next|playwright|prettier|tsup|turbo|vite|vitest)\.config\./i.test(filename) ||
+    /^(eslint|jest|next|playwright|prettier|tsup|turbo|vite|vitest)\.config\./i.test(
+      filename,
+    ) ||
     /^tsconfig(?:\..+)?\.json$/i.test(filename)
   ) {
     categories.add('ci-governance')
@@ -153,7 +204,9 @@ function classifyPath(path) {
         segment === 'credentials' ||
         segment === 'secrets',
     ) ||
-    /(^|[-_.])(credential|private[-_]?key|secret|token)([-_.]|$)/i.test(filename) ||
+    /(^|[-_.])(credential|private[-_]?key|secret|token)([-_.]|$)/i.test(
+      filename,
+    ) ||
     SECRET_EXTENSIONS.has(pathExtension(path))
   ) {
     categories.add('secret-material')
@@ -175,8 +228,12 @@ function classifyPath(path) {
   }
 
   if (
-    ['db', 'database', 'ops', 'scripts'].some((segment) => segments.includes(segment)) &&
-    /(^|[-_.])(delete|destroy|drop|purge|reset|truncate|wipe)([-_.]|$)/i.test(filename)
+    ['db', 'database', 'ops', 'scripts'].some((segment) =>
+      segments.includes(segment),
+    ) &&
+    /(^|[-_.])(delete|destroy|drop|purge|reset|truncate|wipe)([-_.]|$)/i.test(
+      filename,
+    )
   ) {
     categories.add('destructive-operation')
   }
@@ -191,8 +248,8 @@ function classifyPath(path) {
 
   if (
     lower.startsWith('.aegis/') ||
-    lower.startsWith('.agents/') ||
-    lower.startsWith('.claude/') ||
+    (lower.startsWith('.agents/') && !isDomainSkillPath(lower)) ||
+    (lower.startsWith('.claude/') && !isDomainSkillPath(lower)) ||
     AEGIS_PROTECTED_PATHS.has(path) ||
     /^scripts\/(aegis|codex)([-_/]|$)/i.test(path)
   ) {
@@ -209,10 +266,6 @@ export function classifyPullRequest(input = {}) {
     : []
   const reasons = []
 
-  if (!labels.includes(AUTO_MERGE_LABEL)) {
-    reasons.push({ category: 'missing-auto-merge-label', label: AUTO_MERGE_LABEL })
-  }
-
   for (const label of labels) {
     const category = DENY_LABELS.get(label)
     if (category) {
@@ -225,15 +278,40 @@ export function classifyPullRequest(input = {}) {
   }
 
   const normalizedFiles = []
-  for (const rawPath of files) {
-    const path = normalizePath(rawPath)
-    if (!path) {
-      reasons.push({ category: 'invalid-path', path: String(rawPath) })
+  for (const rawFile of files) {
+    const file = normalizeFile(rawFile)
+    if (!file) {
+      reasons.push({
+        category: 'invalid-path',
+        path: String(typeof rawFile === 'object' ? rawFile?.filename : rawFile),
+      })
       continue
     }
+    const { path, previousPath, status } = file
     normalizedFiles.push(path)
-    for (const category of classifyPath(path)) {
-      reasons.push({ category, path })
+    if (status === 'renamed' && !previousPath) {
+      reasons.push({ category: 'invalid-previous-path', path })
+    }
+    const classifiedPaths = previousPath ? [path, previousPath] : [path]
+    for (const classifiedPath of classifiedPaths) {
+      for (const category of classifyPath(classifiedPath)) {
+        reasons.push({ category, path: classifiedPath })
+      }
+      for (const capability of requiredTestCapabilities(classifiedPath)) {
+        if (input.test_capabilities?.[capability] !== 'supported') {
+          reasons.push({
+            category: 'insufficient-test-capability',
+            capability,
+            path: classifiedPath,
+          })
+        }
+      }
+    }
+    if (
+      ['removed', 'renamed'].includes(status) &&
+      isTestPath(previousPath ?? path)
+    ) {
+      reasons.push({ category: 'test-removal', path: previousPath ?? path })
     }
   }
 
@@ -245,6 +323,32 @@ export function classifyPullRequest(input = {}) {
   }
 }
 
+export function evaluatePackageScripts(input = {}) {
+  const entries = Array.isArray(input.entries) ? input.entries : []
+  const results = []
+  for (const entry of entries) {
+    const path = normalizePath(entry?.path)
+    let state = 'unchanged'
+    if (!path || !/(?:^|\/)package\.json$/i.test(path)) {
+      state = 'invalid-path'
+    } else if (!entry?.base || !entry?.head) {
+      state = 'missing-manifest'
+    } else if (
+      JSON.stringify(entry.base.scripts ?? {}) !==
+      JSON.stringify(entry.head.scripts ?? {})
+    ) {
+      state = 'scripts-changed'
+    }
+    results.push({ path, state })
+  }
+  return {
+    decision: results.every((result) => result.state === 'unchanged')
+      ? 'allow'
+      : 'deny',
+    results,
+  }
+}
+
 function flattenCheckRuns(input) {
   if (Array.isArray(input.check_runs)) {
     return input.check_runs
@@ -252,7 +356,9 @@ function flattenCheckRuns(input) {
   if (!Array.isArray(input.pages)) {
     return []
   }
-  return input.pages.flatMap((page) => (Array.isArray(page?.check_runs) ? page.check_runs : []))
+  return input.pages.flatMap((page) =>
+    Array.isArray(page?.check_runs) ? page.check_runs : [],
+  )
 }
 
 function checkRunOrder(check) {
@@ -270,14 +376,17 @@ function checkRunOrder(check) {
 function isNewerCheck(candidate, current) {
   const [candidateTimestamp, candidateId] = checkRunOrder(candidate)
   const [currentTimestamp, currentId] = checkRunOrder(current)
-  return candidateTimestamp > currentTimestamp ||
+  return (
+    candidateTimestamp > currentTimestamp ||
     (candidateTimestamp === currentTimestamp && candidateId > currentId)
+  )
 }
 
 export function evaluateRequiredChecks(input = {}) {
-  const required = Array.isArray(input.required) && input.required.length > 0
-    ? [...new Set(input.required.map(String))]
-    : [...REQUIRED_CHECKS]
+  const required =
+    Array.isArray(input.required) && input.required.length > 0
+      ? [...new Set(input.required.map(String))]
+      : [...REQUIRED_CHECKS]
   const excludedNames = new Set(
     Array.isArray(input.excluded_names)
       ? input.excluded_names.map(String)
@@ -285,7 +394,10 @@ export function evaluateRequiredChecks(input = {}) {
   )
   const requiredAppSlug = String(input.required_app_slug ?? 'github-actions')
   const runs = flattenCheckRuns(input).filter(
-    (check) => check && typeof check === 'object' && !excludedNames.has(String(check.name ?? '')),
+    (check) =>
+      check &&
+      typeof check === 'object' &&
+      !excludedNames.has(String(check.name ?? '')),
   )
 
   const latestByName = new Map()
@@ -328,9 +440,14 @@ export function evaluateRequiredChecks(input = {}) {
     })
   }
 
-  const denied = checks.filter((check) => ['failed', 'wrong-app'].includes(check.state))
-  const deferred = checks.filter((check) => ['missing', 'pending'].includes(check.state))
-  const decision = denied.length > 0 ? 'deny' : deferred.length > 0 ? 'defer' : 'allow'
+  const denied = checks.filter((check) =>
+    ['failed', 'wrong-app'].includes(check.state),
+  )
+  const deferred = checks.filter((check) =>
+    ['missing', 'pending'].includes(check.state),
+  )
+  const decision =
+    denied.length > 0 ? 'deny' : deferred.length > 0 ? 'defer' : 'allow'
 
   return {
     decision,
@@ -344,21 +461,28 @@ export function evaluateRequiredChecks(input = {}) {
 function parseCliInput(argv) {
   const inputIndex = argv.indexOf('--input')
   if (inputIndex < 0 || !argv[inputIndex + 1]) {
-    throw new Error('usage: auto-merge-policy.mjs <classify|checks> --input <json-file>')
+    throw new Error(
+      'usage: auto-merge-policy.mjs <classify|checks> --input <json-file>',
+    )
   }
   return JSON.parse(fs.readFileSync(argv[inputIndex + 1], 'utf8'))
 }
 
-const invokedPath = process.argv[1] ? new URL(`file://${process.argv[1]}`).href : ''
+const invokedPath = process.argv[1]
+  ? new URL(`file://${process.argv[1]}`).href
+  : ''
 if (import.meta.url === invokedPath) {
   try {
     const command = process.argv[2]
     const input = parseCliInput(process.argv.slice(3))
-    const result = command === 'classify'
-      ? classifyPullRequest(input)
-      : command === 'checks'
-        ? evaluateRequiredChecks(input)
-        : null
+    const result =
+      command === 'classify'
+        ? classifyPullRequest(input)
+        : command === 'checks'
+          ? evaluateRequiredChecks(input)
+          : command === 'manifests'
+            ? evaluatePackageScripts(input)
+            : null
     if (!result) {
       throw new Error(`unsupported command: ${command ?? '<missing>'}`)
     }
