@@ -346,5 +346,17 @@
     "plan_hash": "5445a591eb118481ad54fa13e74813b9e63c77fe9e2b94c209512e4b7213d9ad",
     "tracker_hash": "55d350e7fe9b85c8ef2565ddd6a2edff66067d23cef7ddd0a69fc5ed2bb1e907",
     "synced_at": "2026-07-11T01:10:40.351922+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task62-evidence-delivery-canary.md",
+    "plan_hash": "5445a591eb118481ad54fa13e74813b9e63c77fe9e2b94c209512e4b7213d9ad",
+    "tracker_hash": "a11ccf335c0d956184569db8c4380beaf053892961d6175c786cb6895c7f44c0",
+    "synced_at": "2026-07-11T01:16:49.844152+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task62-evidence-delivery-canary.md",
+    "plan_hash": "7da690f8656bd44b085481efcdbab462e10667481681e3be9088f79ffbabdecb",
+    "tracker_hash": "f8fcece37084c8168ee006c7e5a0562fa68be806283d0b4d7b473b45f4364d5a",
+    "synced_at": "2026-07-11T01:20:33.920791+02:00"
   }
 ]
