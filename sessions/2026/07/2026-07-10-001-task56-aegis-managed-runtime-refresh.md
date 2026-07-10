@@ -46,13 +46,7 @@ Task 56 was kicked off through Aegis. The project is now expected to use `.aegis
 - **[15:19]** - [S:20260710|W:task56-aegis-managed-runtime-refresh|H:agent:handoff|E:docs/ai/work-tracking/active/20260710-task56-aegis-managed-runtime-refresh-ACTIVE/reports/aegis-managed-runtime-refresh/upstream-handoff.md] Recorded the upstream root cause, managed paths, five failing tests, missing completed-archive behavior, unsafe semantic-classification gap, acceptance tests, and exact stable-fix retry procedure.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 24, "last_event_id": "02c9e7baeccf41b4bb44d155d0922a95", "schema": "legacy-shadow-sweh-projection-v1"} -->
-- **[17:12]** - [S:20260710|W:task56-aegis-managed-runtime-refresh|H:task-master:update-task|E:.taskmaster/tasks/tasks.json] Resumed existing Task 56 through Taskmaster with retry subtask 56.1 targeting stable upstream 432ffc7, moved the parent from blocked to in-progress, regenerated only task_056.md, and left Tasks 50 through 55 blocked behind Task 56.
-- **[17:12]** - [S:20260710|W:task56-aegis-managed-runtime-refresh|H:aegis:scope|E:.aegis/state/current-work.json] Reconciled Git to Aegis-recorded branch chore/task-56-aegis-managed-runtime-refresh and recorded Task 56 branch scope in the out-of-worktree ledger without editing Aegis state directly.
-- **[17:13]** - [S:20260710|W:task56-aegis-managed-runtime-refresh|H:agent:decision|E:docs/ai/work-tracking/active/20260710-task56-aegis-managed-runtime-refresh-ACTIVE/reports/aegis-managed-runtime-refresh/update-preview-432ffc7.md] Accepted the stable 432ffc7 retry preview: zero conflicts, unsafe, non-managed, or manual-review paths; five managed modifications only; no product/package/lockfile drift; completed-archive guard divergence safely resolved as an exact upstream-parity skip.
-- **[17:20]** - [S:20260710|W:task56-aegis-managed-runtime-refresh|H:agent:implementation|E:docs/ai/work-tracking/active/20260710-task56-aegis-managed-runtime-refresh-ACTIVE/reports/aegis-managed-runtime-refresh/update-apply-432ffc7.md] authority=explicit-user:task56-managed-runtime-refresh; applied stable 432ffc7 managed update with reviewed guard preserved and prior rollback evidence retained
-- **[17:20]** - [S:20260710|W:task56-aegis-managed-runtime-refresh|H:agent:verification|E:docs/ai/work-tracking/active/20260710-task56-aegis-managed-runtime-refresh-ACTIVE/reports/aegis-managed-runtime-refresh/task-verification-432ffc7.md] authority=explicit-user:task56-managed-runtime-refresh; all stable-retry acceptance gates passed before closeout
-- **[17:20]** - [S:20260710|W:task56-aegis-managed-runtime-refresh|H:agent:verification|E:.aegis/reports/verification-report.json] authority=explicit-user:task56-managed-runtime-refresh; recorded post-evidence strict verification at stable 432ffc7
+<!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "1223862e374e438fbd843a153e4b0520", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
@@ -82,5 +76,6 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0488508e884...] Delivery state recorded: pr_merged for PR #12 at 3565b2998e2250a....
 - [S:2026-07-10-001-task56-aegis-managed-runtime-refresh W:task-56-aegis-managed-runtime-refresh H:scope E:ledger:02c9e7baecc...] Scope recorded for 56.
+- [S:2026-07-10-001-task56-aegis-managed-runtime-refresh W:task-56-aegis-managed-runtime-refresh H:delivery E:ledger:1223862e374...] Delivery state recorded: pr_draft for PR #16 at 02e5d8de3d7434c....
 
 <!-- AEGIS:END generated-sweh-projection -->

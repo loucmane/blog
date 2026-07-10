@@ -214,5 +214,11 @@
     "plan_hash": "8f650e2506e4e2cda82f90c2fd489ac276e74d01efe32628beb85284e54da78a",
     "tracker_hash": "676f8380980b22b231bad20458fe273bb9015d572a7e7876c6fa5387868a5351",
     "synced_at": "2026-07-10T17:24:53.063456+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task56-aegis-managed-runtime-refresh.md",
+    "plan_hash": "8d4c7bdb34c48b5a211f1e019b19fb4b474d665251e769d87225f2581ac4a6f9",
+    "tracker_hash": "920fddf777ef830bb62dffdd8b74439119fab111298f18ff384796feb3649218",
+    "synced_at": "2026-07-10T17:31:25.067169+02:00"
   }
 ]
