@@ -37,7 +37,7 @@ emergency_bypass: false
 | plan-step-protect-main | Apply the attended exact-check branch-protection policy and verify every field | GitHub branch protection API; Aegis operator-authority ledger event `6970437b0c914d10aa6051046c27b25c` | completed |
 | plan-step-auto-merge | Implement the separately reviewed controlled auto-merge workflow and deterministic policy tests | .github/workflows/auto-merge.yml; scripts/ci/auto-merge-policy.mjs; tests/ci/ | completed |
 | plan-step-auto-merge-verify | Run local and hosted workflow, policy, governance, security, and Aegis verification | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md; .aegis/reports/verification-report.json; .aegis/reports/witness-report.json | in-progress |
-| plan-step-canary | After attended merge approval, prove the workflow on a documentation-only labeled canary | GitHub canary pull request and delivery evidence | pending |
+| plan-step-canary | After attended merge approval, prove the workflow on a documentation-only labeled canary | GitHub canary pull request and delivery evidence; docs/research/2026-07-10-controlled-auto-merge-canary.md | in-progress |
 | plan-step-emergency | Optional - only if a bypass is explicitly authorized | Waiver plus post-mortem note in docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/DECISIONS.md and docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/FINDINGS.md | n/a |
 
 ## Scope
@@ -74,6 +74,7 @@ emergency_bypass: false
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `.aegis/reports/verification-report.json`.
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `.aegis/reports/witness-report.json`.
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md`.
+- 2026-07-10 - `aegis log` updated `plan-step-canary` to `in-progress` with evidence `docs/research/2026-07-10-controlled-auto-merge-canary.md`.
 
 ## Continuation & Handoff
 - Next owner: project owner
@@ -104,7 +105,7 @@ emergency_bypass: false
 - Any bypass must be explicitly authorized by the user, recorded in DECISIONS.md, and followed by verification evidence.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 18, "last_event_id": "86b189a0d39b4398b3d012bd26465e45", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 20, "last_event_id": "24d1841aa7b54d1db3dac5fbd4b79e42", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
@@ -128,5 +129,7 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:witness E:ledger:7c22859bb75...] Delivery witness PASS recorded at 4a6f03e; report: .aegis/reports/witness-report.json.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:c9bb44ee950...] Scope recorded for 48. Paths: .aegis/foundation-manifest.json, .github/workflows/auto-merge.yml, .github/workflows/ci.yml.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:86b189a0d39...] Delivery state recorded: pr_open for PR #10 at 1cf557a92c8e132....
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:bb214df3ac5...] Scope recorded for 48. Paths: docs/research/2026-07-10-controlled-auto-merge-canary.md, docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., plans/2026-07-10-task48-protected-ci-controlled-auto-merge.....
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
 
 <!-- AEGIS:END generated-sweh-projection -->
