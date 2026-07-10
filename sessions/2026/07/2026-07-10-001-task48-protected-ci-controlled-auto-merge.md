@@ -46,6 +46,8 @@ Task 48 was kicked off through Aegis. The project is now expected to use `.aegis
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 18, "last_event_id": "86b189a0d39b4398b3d012bd26465e45", "schema": "legacy-shadow-sweh-projection-v1"} -->
 - **[12:32]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Reaffirmed Task 48 in-progress status after PR delivery projection so session evidence remains guard-complete
+- **[12:48]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-security-correction|E:.github/workflows/auto-merge.yml] Corrected the privileged label path to protected-base pull_request_target and added fail-closed trust-boundary contracts without executing pull-request-controlled content
+- **[12:52]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-security-verification|E:docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md] Passed the corrected trust-boundary contracts, actionlint, frozen baseline, Taskmaster graph, strict Aegis verification, repository guards, and exact-diff and history secret scans; hosted checks remain pending
 
 ## Generated S:W:H:E Projection
 

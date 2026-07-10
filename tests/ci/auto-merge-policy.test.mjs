@@ -67,6 +67,29 @@ for (const [path, category] of deniedPaths) {
 }
 
 
+test('denies changes to workflow and CI enforcement surfaces', () => {
+  const protectedPaths = [
+    '.github/workflows/auto-merge.yml',
+    '.github/workflows/ci.yml',
+    'scripts/ci/auto-merge-policy.mjs',
+    'tests/ci/auto-merge-workflow.test.mjs',
+  ]
+
+  for (const path of protectedPaths) {
+    const result = classifyPullRequest({ files: [path], labels: ['auto-merge'] })
+
+    assert.equal(result.decision, 'deny')
+    assert.ok(
+      result.reasons.some(
+        (reason) =>
+          ['workflow-permissions', 'ci-governance'].includes(reason.category) &&
+          reason.path === path,
+      ),
+    )
+  }
+})
+
+
 test('deny labels override otherwise safe paths', () => {
   const result = classifyPullRequest({
     files: ['docs/release-notes.md'],

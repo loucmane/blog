@@ -19,6 +19,7 @@ Record decisions before implementation, including options considered, rationale,
 - 2026-07-10 - Execute policy code checked out explicitly from protected `main`, never from the pull-request head, and reject fork heads before any write operation.
 - 2026-07-10 - Require the explicit `auto-merge` label, exact required checks from `github-actions`, a complete file inventory, a current branch, and an unchanged head SHA. Deny workflow, authority, Aegis, secret, deployment, migration, destructive, and branch-protection paths.
 - 2026-07-10 - Use squash plus `--delete-branch` and `--match-head-commit`; do not use administrator bypass, native auto-labeling, merge commits, rebase, or force/history operations.
+- 2026-07-10 - Use `pull_request_target:labeled` only for the privileged label-ordering path so GitHub loads the workflow from protected `main`. This is acceptable only because the job checks out the explicit default branch into `trusted`, executes only the trusted policy script, treats pull-request metadata as data, references no secrets, and never fetches or executes pull-request code or artifacts.
 
 ## Progress Log
 - **2026-07-10 00:50 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:aegis:kickoff|E:.aegis/state/current-work.json] Decisions log initialized by Aegis kickoff.

@@ -4,6 +4,7 @@
 - 2026-07-10 01:04 CEST - Added the attended read-only CI bootstrap, deterministic governance contracts, current full-SHA action pins, and minimal baseline type/lint/build fixes.
 - 2026-07-10 12:13 CEST - Reconciled merged PR #9, protected `main`, and Taskmaster Task 48; continued on fresh branch `feat/task-48-controlled-auto-merge`.
 - 2026-07-10 12:13 CEST - Added the controlled auto-merge workflow, deterministic eligibility classifier, deny-path/check-run tests, governance gate integration, and design/rollback record.
+- 2026-07-10 - Replaced the unsafe privileged `pull_request:labeled` path with protected-base `pull_request_target:labeled` and added trust-boundary regression coverage.
 
 ## Progress Log
 - **2026-07-10 00:50 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:aegis:kickoff|E:.aegis/state/current-work.json] Changelog initialized by Aegis kickoff.

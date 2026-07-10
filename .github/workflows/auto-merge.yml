@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-  pull_request:
+  pull_request_target:
     types: [labeled]
 
 permissions: {}
@@ -19,7 +19,7 @@ jobs:
     if: >-
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.event == 'pull_request') ||
-      (github.event_name == 'pull_request' &&
+      (github.event_name == 'pull_request_target' &&
        github.event.action == 'labeled' &&
        github.event.label.name == 'auto-merge')
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
         shell: bash
         env:
           AUTO_MERGE_LABEL: auto-merge
-          DEFAULT_BRANCH: main
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           GH_TOKEN: ${{ github.token }}
           LABELED_PR: ${{ github.event.pull_request.number }}
           OWN_CHECK_NAME: controlled auto-merge
@@ -78,9 +78,17 @@ jobs:
             fi
             PR="${ASSOCIATED_PRS[0]}"
             EXPECTED_HEAD_SHA="$WORKFLOW_RUN_HEAD_SHA"
-          else
+          elif [ "$TRIGGER" = "pull_request_target" ]; then
             PR="$LABELED_PR"
             EXPECTED_HEAD_SHA=""
+          else
+            echo "Unsupported privileged trigger $TRIGGER; refusing to merge."
+            exit 1
+          fi
+
+          if ! [[ "$PR" =~ ^[1-9][0-9]*$ ]]; then
+            echo "The pull-request identifier is invalid; refusing to merge."
+            exit 1
           fi
 
           PR_JSON="$RUNNER_TEMP/auto-merge-pr.json"
@@ -92,6 +100,11 @@ jobs:
           HEAD_BRANCH=$(jq -r '.head.ref' "$PR_JSON")
           HEAD_REPOSITORY=$(jq -r '.head.repo.full_name // ""' "$PR_JSON")
           HEAD_SHA=$(jq -r '.head.sha' "$PR_JSON")
+
+          if ! [[ "$HEAD_SHA" =~ ^[0-9a-f]{40,64}$ ]]; then
+            echo "PR #$PR returned an invalid head SHA; refusing to merge."
+            exit 1
+          fi
 
           if [ "$STATE" != "open" ]; then
             echo "PR #$PR is no longer open; nothing to merge."

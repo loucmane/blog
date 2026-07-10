@@ -21,10 +21,12 @@
 - Applied and verified the attended protected-main policy with all four exact required checks, strict current-branch enforcement, zero approvals, resolved conversations, linear history, administrator enforcement, and no force-push/deletion.
 - Reconciled PR #9 through supported Aegis delivery sync, set Task 48 in-progress through Taskmaster, restored only the incidental migration-notice state toggle, and recorded the continuation scope in the external Aegis ledger.
 - Implemented the separately reviewed controlled auto-merge workflow, trusted policy classifier, focused allow/deny and check-run tests, governance integration, and rollback documentation.
-- Passed frozen install with lockfile immutability, typecheck, lint, all package/application builds, 26 focused policy/workflow assertions, actionlint, live PR #9 API-shape evaluation, Taskmaster health/dependencies, strict Aegis verification, Aegis capsule, repository guards, exact-diff/full-history secret scans, and diff/syntax checks. Unit/browser suites remain explicitly unsupported and owned by Task 39.
+- Replaced the privileged label trigger with protected-base `pull_request_target:labeled`; the job checks out only the default branch into `trusted` and never fetches or executes pull-request-controlled code or artifacts.
+- Passed frozen install with lockfile immutability, typecheck, lint, all package/application builds, all original 26 plus 5 new focused policy/workflow tests, actionlint, live PR #9 API-shape evaluation, Taskmaster health/dependencies, strict Aegis verification, Aegis capsule, repository guards, exact-diff/full-history secret scans, and diff/syntax checks. Unit/browser suites remain explicitly unsupported and owned by Task 39.
 
 ## Current Issues/Blockers
 - This workflow-permission pull request must stop at merge-ready for attended owner approval and cannot auto-merge itself.
+- PR #10's corrected exact head and hosted checks must be revalidated after the security correction is pushed.
 - The auto-merge workflow does not exist on protected `main` until this continuation PR merges, so actual trigger behavior must be proven afterward on a separate documentation-only canary.
 - Task 48 cannot close until the canary proves squash merge, exact-head enforcement, branch deletion, and synchronized `main`.
 
@@ -52,6 +54,8 @@
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 18, "last_event_id": "86b189a0d39b4398b3d012bd26465e45", "schema": "legacy-shadow-sweh-projection-v1"} -->
 - **2026-07-10 12:32 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Reaffirmed Task 48 in-progress status after PR delivery projection so session evidence remains guard-complete
+- **2026-07-10 12:48 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-security-correction|E:.github/workflows/auto-merge.yml] Corrected the privileged label path to protected-base pull_request_target and added fail-closed trust-boundary contracts without executing pull-request-controlled content
+- **2026-07-10 12:52 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-security-verification|E:docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md] Passed the corrected trust-boundary contracts, actionlint, frozen baseline, Taskmaster graph, strict Aegis verification, repository guards, and exact-diff and history secret scans; hosted checks remain pending
 
 ## Generated S:W:H:E Projection
 

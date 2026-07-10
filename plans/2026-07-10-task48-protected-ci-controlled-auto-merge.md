@@ -73,6 +73,7 @@ emergency_bypass: false
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge` to `completed` with evidence `.github/workflows/auto-merge.yml`.
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `.aegis/reports/verification-report.json`.
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `.aegis/reports/witness-report.json`.
+- 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md`.
 
 ## Continuation & Handoff
 - Next owner: project owner

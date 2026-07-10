@@ -14,6 +14,7 @@
 - 2026-07-10 - Preserved unit/integration, Playwright, and accessibility as explicitly unsupported tracked capabilities owned by Task 39; CI does not claim those tests ran.
 - 2026-07-10 - Applied and verified the owner-approved protected-main policy after PR #9's exact checks passed; recorded operator-authority event `6970437b0c914d10aa6051046c27b25c` without writing `.aegis/` directly.
 - 2026-07-10 - Added `.github/workflows/auto-merge.yml` with both label/check orderings, trusted-default-branch execution, same-repository and current-head checks, direct required-check inspection, squash merge, and merged-branch deletion.
+- 2026-07-10 - Corrected the privileged label trigger to `pull_request_target:labeled`, added explicit trigger/identifier validation, and expanded workflow contracts to forbid pull-request checkout, fetch, artifact download, or package/script execution while preserving trusted-only policy evaluation.
 - 2026-07-10 - Added `scripts/ci/auto-merge-policy.mjs` and focused built-in Node tests for documentation-only allow behavior, mandatory deny classes, wrong/missing/pending/failed checks, pagination, reruns, and own-check exclusion.
 - 2026-07-10 - Added the policy/workflow contracts to the existing required governance job without changing dependencies, the lockfile, runtime versions, product code, secrets, deployment, or production settings.
 

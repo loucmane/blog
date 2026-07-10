@@ -26,7 +26,7 @@ The blog adaptation adds repository-specific fail-closed policy classification, 
 Two triggers close both label/check orderings:
 
 1. `workflow_run` after the `CI` workflow completes for a pull request. If the explicit label already exists, the workflow evaluates the completed head.
-2. `pull_request:labeled` when `auto-merge` is added after checks may already have completed. If checks are still pending, it exits without merging and lets the later `workflow_run` retry.
+2. `pull_request_target:labeled` when `auto-merge` is added after checks may already have completed. If checks are still pending, it exits without merging and lets the later `workflow_run` retry.
 
 Concurrency is keyed by repository and pull-request head SHA without cancellation. Duplicate trigger races are safe because the pull request and exact head are re-read immediately before merge.
 
@@ -37,7 +37,9 @@ The workflow has no top-level permissions. Its single merge job requests only:
 - `contents: write`
 - `pull-requests: write`
 
-The job checks out the protected default branch with credentials persistence disabled. It never checks out or executes pull-request code. It uses only the event-scoped `github.token`; no repository or environment secret is referenced. Fork pull requests are explicitly rejected before any write operation.
+The labeled privileged path deliberately uses `pull_request_target` because GitHub loads that workflow definition from the base repository's default branch rather than the pull-request merge commit. The original `pull_request:labeled` design was rejected because a same-repository pull request could change its own write-capable workflow definition before labeling. GitHub's security guidance permits this design only while the privileged job avoids checking out, downloading, or executing pull-request-controlled code or artifacts ([GitHub: securely using `pull_request_target`](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target)).
+
+The job checks out only `${{ github.event.repository.default_branch }}` into `trusted`, with credentials persistence disabled, and executes only `trusted/scripts/ci/auto-merge-policy.mjs`. It never checks out a pull-request head or merge ref, fetches pull-request code, downloads pull-request artifacts, installs packages, or runs builds/tests from pull-request content. Pull-request metadata and API payloads are treated only as untrusted data. The workflow uses the event-scoped `github.token`; no repository or environment secret is referenced. Fork pull requests are explicitly rejected before any write operation.
 
 ## Eligibility Contract
 
@@ -65,7 +67,7 @@ The path classifier is intentionally conservative. A denied pull request remains
 
 `tests/ci/auto-merge-policy.test.mjs` covers documentation-only allow behavior, every mandatory deny class, malformed or empty inventories, exact-check success, missing/pending deferral, failed or wrong-app denial, pagination, duplicate check reruns, and own-check exclusion.
 
-`tests/ci/auto-merge-workflow.test.mjs` proves both triggers, absence of `pull_request_target`, exact permissions, trusted-default-branch checkout, no secret reference, direct check-run inspection, fork refusal, SHA matching, squash-only merge, pull-request branch deletion, and no auto-label command.
+`tests/ci/auto-merge-workflow.test.mjs` proves both triggers, the label path's exclusive `pull_request_target:labeled` contract, exact permissions, explicit trusted-default-branch checkout, absence of pull-request checkout/fetch/artifact/package execution, trusted-only policy execution, no secret reference, direct check-run inspection, fork refusal, SHA matching, squash-only merge, pull-request branch deletion, and no auto-label command.
 
 The existing governance check runs both test files, so the required `governance · Taskmaster · Aegis · guards` context fails when the policy or workflow contract regresses.
 
