@@ -66,6 +66,15 @@ class CompletedWorkTrackingTests(unittest.TestCase):
 
         self.assertEqual(GUARD["get_active_tracker_path"](), tracker)
 
+    def test_uses_completed_aegis_archive_when_active_root_is_absent(self) -> None:
+        self.active.rmdir()
+        tracker = self.archive / "20260710-task-48-COMPLETED/TRACKER.md"
+        tracker.parent.mkdir()
+        tracker.write_text("completed", encoding="utf-8")
+        self.write_state("completed", tracker.parent.relative_to(self.root).as_posix())
+
+        self.assertEqual(GUARD["get_active_tracker_path"](), tracker)
+
     def test_rejects_completed_path_outside_the_archive(self) -> None:
         outside = self.root / "docs/elsewhere/task-48-COMPLETED"
         outside.mkdir(parents=True)

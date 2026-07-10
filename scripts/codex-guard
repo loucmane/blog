@@ -1411,7 +1411,11 @@ def get_current_branch() -> Optional[str]:
 
 
 def get_active_tracker_path() -> Path:
-    candidates = [p for p in WORK_TRACKING_PREFIX.iterdir() if p.is_dir() and p.name.endswith('-ACTIVE')]
+    candidates = (
+        [p for p in WORK_TRACKING_PREFIX.iterdir() if p.is_dir() and p.name.endswith('-ACTIVE')]
+        if WORK_TRACKING_PREFIX.is_dir()
+        else []
+    )
     if len(candidates) > 1:
         names = ", ".join(p.name for p in candidates)
         raise SystemExit(f"Multiple ACTIVE work-tracking folders found ({names}); specify via override or clean up")

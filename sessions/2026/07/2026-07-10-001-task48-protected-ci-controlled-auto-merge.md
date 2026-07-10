@@ -44,13 +44,8 @@ Task 48 was kicked off through Aegis and is now completed. `.aegis/state/current
 - **[01:17]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:strict-verification|E:.aegis/reports/verification-report.json] Recorded strict Aegis verification with zero required failures while enforcement remained advisory
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 22, "last_event_id": "0321a47226a84874a27ec634aaa02efd", "schema": "legacy-shadow-sweh-projection-v1"} -->
-- **[13:23]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-canary-verification|E:docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/canary-verification.md] Verified the protected-main pull_request_target canary, four exact checks, policy allow decision, exact-head squash merge, and canary-only branch deletion
-- **[13:24]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-final-strict-verification|E:.aegis/reports/verification-report.json] Passed final strict Aegis verification after the controlled auto-merge canary with zero required failures
-- **[13:27]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Marked Task 48 done through Taskmaster after successful Aegis closeout and generated only task_048.md
-- **[13:28]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-closeout|E:.aegis/reports/closeout-report.json] Completed Task 48 Aegis closeout with zero required failures and zero warnings after the canary merge
-- **[13:33]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-completed-guard|E:scripts/codex-guard] Fixed the legacy guard to validate Aegis completed archive trackers and added four fail-closed completed-state regression tests
-- **[13:34]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-post-closeout-verification|E:.aegis/reports/verification-report.json] Passed post-closeout strict Aegis verification and completed-archive guard regression checks with zero required failures
+<!-- AEGIS:projection-state {"event_count": 23, "last_event_id": "0488508e88474d03abd21b4cf297c1ef", "schema": "legacy-shadow-sweh-projection-v1"} -->
+- **[13:58]** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-final-delivery|E:.aegis/reports/verification-report.json] Recorded PR #12 squash merge 7cb290fdbea184379a1f87575d8cff80271b2f83 and delivery event 0488508e88474d03abd21b4cf297c1ef, verified terminal Task 48 state, and covered the absent active-root completed-state guard regression
 
 ## Generated S:W:H:E Projection
 
@@ -78,5 +73,6 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:070a32fa48a...] Scope recorded for 48. Paths: docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., .taskmaster/tasks/**, .plan_state/**.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0488508e884...] Delivery state recorded: pr_merged for PR #12 at 3565b2998e2250a....
 
 <!-- AEGIS:END generated-sweh-projection -->

@@ -106,5 +106,17 @@
     "plan_hash": "29a64e9e6d5b59dc820aed11b77960f66d3154a678a5a0db17d12bada386a6e7",
     "tracker_hash": "3bcc832ed74021c5544c118108f5bb775c7ee2db6da9ff8f02eb93b9330b1437",
     "synced_at": "2026-07-10T13:34:47.479242+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "1e5bf7faa3f8cfed521c2928c03ab4c14aafab93502c2f1586f995a8bbfc397a",
+    "tracker_hash": "4fcd1d87877aaf5445f1633faa6802e4db43dc999313d68ab06576846c07f2d5",
+    "synced_at": "2026-07-10T13:57:34.351322+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "1e5bf7faa3f8cfed521c2928c03ab4c14aafab93502c2f1586f995a8bbfc397a",
+    "tracker_hash": "a1bc31cda7f79f6ffb26f1a06c4c82ac683f4d9bd848fc102290f484b8b0211e",
+    "synced_at": "2026-07-10T13:58:31.544054+02:00"
   }
 ]
