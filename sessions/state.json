@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-10-001-task49-cross-agent-skill-platform.md",
-  "current_path": "sessions/2026/07/2026-07-10-001-task49-cross-agent-skill-platform.md",
+  "current": "2026-07-10-001-task56-aegis-managed-runtime-refresh.md",
+  "current_path": "sessions/2026/07/2026-07-10-001-task56-aegis-managed-runtime-refresh.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "49",
-    "slug": "cross-agent-skill-platform",
+    "id": "56",
+    "slug": "aegis-managed-runtime-refresh",
     "status": "in-progress",
-    "title": "Build Cross-Agent Skill Platform Skeleton"
+    "title": "Refresh Aegis Managed Runtime to Active Upstream"
   },
-  "updated_at": "2026-07-10T12:06:50Z"
+  "updated_at": "2026-07-10T13:04:38Z"
 }
