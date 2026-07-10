@@ -5,7 +5,7 @@ on:
     workflows: [CI]
     types: [completed]
   pull_request_target:
-    types: [labeled]
+    types: [labeled, unlabeled, ready_for_review, reopened]
 
 permissions: {}
 
@@ -19,9 +19,7 @@ jobs:
     if: >-
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.event == 'pull_request') ||
-      (github.event_name == 'pull_request_target' &&
-       github.event.action == 'labeled' &&
-       github.event.label.name == 'auto-merge')
+      github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -35,13 +33,13 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
           path: trusted
 
-      - name: Merge eligible labeled pull request
+      - name: Merge eligible evidence-authorized pull request
         shell: bash
         env:
-          AUTO_MERGE_LABEL: auto-merge
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_PR: ${{ github.event.pull_request.number }}
           GH_TOKEN: ${{ github.token }}
-          LABELED_PR: ${{ github.event.pull_request.number }}
           OWN_CHECK_NAME: controlled auto-merge
           REPOSITORY: ${{ github.repository }}
           TRIGGER: ${{ github.event_name }}
@@ -79,8 +77,8 @@ jobs:
             PR="${ASSOCIATED_PRS[0]}"
             EXPECTED_HEAD_SHA="$WORKFLOW_RUN_HEAD_SHA"
           elif [ "$TRIGGER" = "pull_request_target" ]; then
-            PR="$LABELED_PR"
-            EXPECTED_HEAD_SHA=""
+            PR="$EVENT_PR"
+            EXPECTED_HEAD_SHA="$EVENT_HEAD_SHA"
           else
             echo "Unsupported privileged trigger $TRIGGER; refusing to merge."
             exit 1
@@ -133,7 +131,7 @@ jobs:
 
           FILES_JSON="$RUNNER_TEMP/auto-merge-files.json"
           gh api --paginate "repos/$REPOSITORY/pulls/$PR/files?per_page=100" \
-            --jq '.[]' | jq -s '[.[].filename]' > "$FILES_JSON"
+            --jq '.[] | {filename, previous_filename, status, additions, deletions, changes}' | jq -s '.' > "$FILES_JSON"
 
           DECLARED_FILE_COUNT=$(jq -r '.changed_files' "$PR_JSON")
           FETCHED_FILE_COUNT=$(jq -r 'length' "$FILES_JSON")
@@ -146,11 +144,45 @@ jobs:
           jq -n \
             --slurpfile files "$FILES_JSON" \
             --slurpfile pr "$PR_JSON" \
-            '{files: $files[0], labels: [$pr[0].labels[].name]}' > "$POLICY_INPUT"
+            --slurpfile capabilities trusted/config/ci/verification-capabilities.json \
+            '{files: $files[0], labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0]}' \
+            > "$POLICY_INPUT"
           POLICY_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs classify --input "$POLICY_INPUT")
           echo "$POLICY_RESULT" | jq .
           if [ "$(echo "$POLICY_RESULT" | jq -r '.decision')" != "allow" ]; then
             echo "PR #$PR violates the controlled auto-merge allow/deny policy."
+            exit 1
+          fi
+
+          PACKAGE_INPUT="$RUNNER_TEMP/auto-merge-package-input.json"
+          printf '%s\n' '{"entries":[]}' > "$PACKAGE_INPUT"
+          while IFS= read -r PACKAGE_PATH; do
+            if ! [[ "$PACKAGE_PATH" =~ ^(package\.json|[A-Za-z0-9._@+-]+(/[A-Za-z0-9._@+-]+)*/package\.json)$ ]]; then
+              echo "Package manifest path $PACKAGE_PATH is not safe for trusted inspection."
+              exit 1
+            fi
+            if [ ! -f "trusted/$PACKAGE_PATH" ]; then
+              echo "Package manifest $PACKAGE_PATH is new or absent from trusted main; attended review is required."
+              exit 1
+            fi
+            HEAD_MANIFEST="$RUNNER_TEMP/head-$(printf '%s' "$PACKAGE_PATH" | sha256sum | cut -d' ' -f1).json"
+            gh api "repos/$REPOSITORY/contents/$PACKAGE_PATH?ref=$HEAD_SHA" \
+              --jq '.content' | tr -d '\n' | base64 --decode > "$HEAD_MANIFEST"
+            jq -e 'type == "object"' "$HEAD_MANIFEST" >/dev/null
+            NEXT_PACKAGE_INPUT="$RUNNER_TEMP/auto-merge-package-input-next.json"
+            jq \
+              --arg path "$PACKAGE_PATH" \
+              --slurpfile base "trusted/$PACKAGE_PATH" \
+              --slurpfile head "$HEAD_MANIFEST" \
+              '.entries += [{path: $path, base: $base[0], head: $head[0]}]' \
+              "$PACKAGE_INPUT" > "$NEXT_PACKAGE_INPUT"
+            mv "$NEXT_PACKAGE_INPUT" "$PACKAGE_INPUT"
+          done < <(jq -r '.[].filename | select(test("(^|/)package\\.json$"))' "$FILES_JSON")
+
+          PACKAGE_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs manifests --input "$PACKAGE_INPUT")
+          echo "$PACKAGE_RESULT" | jq .
+          if [ "$(echo "$PACKAGE_RESULT" | jq -r '.decision')" != "allow" ]; then
+            echo "Package scripts changed or could not be verified against trusted main; attended review is required."
             exit 1
           fi
 
@@ -194,10 +226,81 @@ jobs:
             echo "PR #$PR moved during evaluation; waiting for CI on the new head."
             exit 0
           fi
-          if ! jq -e --arg label "$AUTO_MERGE_LABEL" \
-            '.labels | map(.name) | index($label) != null' "$CURRENT_PR_JSON" >/dev/null; then
-            echo "The $AUTO_MERGE_LABEL label was removed during evaluation; refusing to merge."
+          if [ "$(jq -r '.draft' "$CURRENT_PR_JSON")" = "true" ]; then
+            echo "PR #$PR became a draft during evaluation; refusing to merge."
             exit 0
+          fi
+          if [ "$(jq -r '.mergeable' "$CURRENT_PR_JSON")" = "null" ] || \
+             [ "$(jq -r '.mergeable_state' "$CURRENT_PR_JSON")" = "unknown" ]; then
+            echo "GitHub has not finished computing mergeability for PR #$PR; waiting for a later trigger."
+            exit 0
+          fi
+          if [ "$(jq -r '.mergeable' "$CURRENT_PR_JSON")" != "true" ] || \
+             [ "$(jq -r '.mergeable_state' "$CURRENT_PR_JSON")" != "clean" ]; then
+            echo "PR #$PR is not CLEAN and mergeable; refusing autonomous merge."
+            exit 1
+          fi
+
+          REPOSITORY_OWNER=${REPOSITORY%%/*}
+          REPOSITORY_NAME=${REPOSITORY#*/}
+          REVIEW_STATE_JSON="$RUNNER_TEMP/auto-merge-review-state.json"
+          gh api graphql \
+            -f query='query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){reviewDecision reviewThreads(first:100){nodes{isResolved} pageInfo{hasNextPage}}}}}' \
+            -f owner="$REPOSITORY_OWNER" \
+            -f name="$REPOSITORY_NAME" \
+            -F number="$PR" > "$REVIEW_STATE_JSON"
+          if [ "$(jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage' "$REVIEW_STATE_JSON")" != "false" ]; then
+            echo "PR #$PR has more review threads than the trusted evaluation fetched; refusing autonomous merge."
+            exit 1
+          fi
+          if [ "$(jq '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved != true)] | length' "$REVIEW_STATE_JSON")" -ne 0 ]; then
+            echo "PR #$PR has unresolved review threads; refusing autonomous merge."
+            exit 1
+          fi
+          if [ "$(jq -r '.data.repository.pullRequest.reviewDecision // ""' "$REVIEW_STATE_JSON")" = "CHANGES_REQUESTED" ]; then
+            echo "PR #$PR has an active changes-requested review; refusing autonomous merge."
+            exit 1
+          fi
+
+          CURRENT_FILES_JSON="$RUNNER_TEMP/auto-merge-current-files.json"
+          gh api --paginate "repos/$REPOSITORY/pulls/$PR/files?per_page=100" \
+            --jq '.[] | {filename, previous_filename, status, additions, deletions, changes}' | jq -s '.' \
+            > "$CURRENT_FILES_JSON"
+          CURRENT_DECLARED_FILE_COUNT=$(jq -r '.changed_files' "$CURRENT_PR_JSON")
+          CURRENT_FETCHED_FILE_COUNT=$(jq -r 'length' "$CURRENT_FILES_JSON")
+          if [ "$CURRENT_FETCHED_FILE_COUNT" -ne "$CURRENT_DECLARED_FILE_COUNT" ]; then
+            echo "Final changed-file inventory is incomplete ($CURRENT_FETCHED_FILE_COUNT/$CURRENT_DECLARED_FILE_COUNT); refusing to merge."
+            exit 1
+          fi
+
+          CURRENT_POLICY_INPUT="$RUNNER_TEMP/auto-merge-current-policy-input.json"
+          jq -n \
+            --slurpfile files "$CURRENT_FILES_JSON" \
+            --slurpfile pr "$CURRENT_PR_JSON" \
+            --slurpfile capabilities trusted/config/ci/verification-capabilities.json \
+            '{files: $files[0], labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0]}' \
+            > "$CURRENT_POLICY_INPUT"
+          CURRENT_POLICY_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs classify --input "$CURRENT_POLICY_INPUT")
+          echo "$CURRENT_POLICY_RESULT" | jq .
+          if [ "$(echo "$CURRENT_POLICY_RESULT" | jq -r '.decision')" != "allow" ]; then
+            echo "PR #$PR became ineligible during final policy revalidation."
+            exit 1
+          fi
+
+          gh api --paginate \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/$REPOSITORY/commits/$HEAD_SHA/check-runs?per_page=100" \
+            --jq '.check_runs[]' | jq -s '{check_runs: .}' > "$CHECK_RUNS"
+          jq -n \
+            --slurpfile runs "$CHECK_RUNS" \
+            --arg own "$OWN_CHECK_NAME" \
+            '{check_runs: $runs[0].check_runs, excluded_names: [$own], required_app_slug: "github-actions"}' \
+            > "$CHECK_INPUT"
+          CURRENT_CHECK_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs checks --input "$CHECK_INPUT")
+          echo "$CURRENT_CHECK_RESULT" | jq .
+          if [ "$(echo "$CURRENT_CHECK_RESULT" | jq -r '.decision')" != "allow" ]; then
+            echo "Required checks changed during final evaluation; refusing autonomous merge."
+            exit 1
           fi
 
           echo "Policy and required checks passed; squash-merging PR #$PR at $HEAD_SHA."

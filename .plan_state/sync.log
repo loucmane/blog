@@ -280,5 +280,41 @@
     "plan_hash": "11737902c7c1f47fa1a1785c199662b903f2fc8c78094b9b9f64c0690acabc5d",
     "tracker_hash": "7c411bb2fa7cd6c5833349bc1d1673db4c57fa1cccc8db19f6c6e3186a00e012",
     "synced_at": "2026-07-10T22:12:05.043694+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "ead2ff79be1ce26bba7b76b057aeee3a66ac826403f34f45f72089a7e573aa2d",
+    "tracker_hash": "923b04a0f6150b406d287e5f5098e308c8f399d2481ece2e9c5cec7d3a15feb7",
+    "synced_at": "2026-07-11T00:26:34.882999+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "74eb357a92ddb5e2f3ebf4dd1f68edf6848762cbb4223d9b432cb108bb7336a7",
+    "tracker_hash": "3ab2da476e331e2ec7dd16d99747873e21d5e5b96c1e1213dca508fce6158d81",
+    "synced_at": "2026-07-11T00:31:22.472223+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "8de210e8ec2e1087dd167f3374e9fba8d275c16e7f720b87a7910c348295645c",
+    "tracker_hash": "a9a7c59969562af88b9d5fa9406ff2ad90bfed5c49666e086a493132a79bb896",
+    "synced_at": "2026-07-11T00:34:31.962250+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "57528619923b739cfc9a9457bde5dc0e803fbb1ec976801e9a561b4f91917536",
+    "tracker_hash": "a9a7c59969562af88b9d5fa9406ff2ad90bfed5c49666e086a493132a79bb896",
+    "synced_at": "2026-07-11T00:39:24.668073+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "57528619923b739cfc9a9457bde5dc0e803fbb1ec976801e9a561b4f91917536",
+    "tracker_hash": "88f7a48b9c7379495130cbadb685de82ee265fd25d509a803022bd0772ace2f2",
+    "synced_at": "2026-07-11T00:47:12.995209+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task61-domain-skill-auto-merge.md",
+    "plan_hash": "57528619923b739cfc9a9457bde5dc0e803fbb1ec976801e9a561b4f91917536",
+    "tracker_hash": "6e2ac4d237d54aab45854667a6d07bacc9ccbf9d4a8f2d342298bdd060347610",
+    "synced_at": "2026-07-11T00:56:14.079315+02:00"
   }
 ]

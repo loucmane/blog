@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-10-001-task50-magazine-product-discovery-skill.md",
-  "current_path": "sessions/2026/07/2026-07-10-001-task50-magazine-product-discovery-skill.md",
+  "current": "2026-07-11-001-task61-domain-skill-auto-merge.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task61-domain-skill-auto-merge.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "50",
-    "slug": "magazine-product-discovery-skill",
+    "id": "61",
+    "slug": "domain-skill-auto-merge",
     "status": "completed",
-    "title": "Implement Magazine Product Discovery Skill"
+    "title": "Implement project-wide evidence-authorized autonomous delivery"
   },
-  "updated_at": "2026-07-10T20:03:35Z"
+  "updated_at": "2026-07-10T22:36:12Z"
 }

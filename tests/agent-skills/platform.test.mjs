@@ -93,6 +93,31 @@ test("rejects unknown review-map skills", (t) => {
   );
 });
 
+test("rejects unregistered canonical skills and Codex links", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const canonical = path.join(root, ".claude/skills/unregistered-skill");
+  fs.mkdirSync(canonical, { recursive: true });
+  fs.writeFileSync(
+    path.join(canonical, "SKILL.md"),
+    "---\nname: unregistered-skill\ndescription: This skill is intentionally absent from the catalog fixture.\n---\n",
+  );
+  fs.symlinkSync(
+    "../../.claude/skills/unregistered-skill",
+    path.join(root, ".agents/skills/unregistered-skill"),
+  );
+
+  const report = validatePlatform({ root });
+  assert.ok(
+    report.errors.includes(
+      "unregistered canonical skill directory: unregistered-skill",
+    ),
+  );
+  assert.ok(
+    report.errors.includes("unregistered Codex skill link: unregistered-skill"),
+  );
+});
+
 test("rejects enforced subjective review mode", (t) => {
   const root = copyFixture();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

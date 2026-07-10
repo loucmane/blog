@@ -72,6 +72,17 @@ function parseFrontmatter(filePath, errors) {
   return metadata;
 }
 
+function directoryEntryNames(directory, label, errors) {
+  try {
+    return fs
+      .readdirSync(directory, { withFileTypes: true })
+      .map((entry) => entry.name);
+  } catch (error) {
+    errors.push(`${label} cannot be enumerated (${error.message})`);
+    return [];
+  }
+}
+
 export function validateReviewResult(result) {
   const errors = [];
   if (!isRecord(result)) return ["review result must be an object"];
@@ -340,6 +351,25 @@ export function validatePlatform({ root = process.cwd() } = {}) {
     }
     if (!["project-authored", "upstream"].includes(skill.provenance?.type)) {
       errors.push(`${skill.id}: provenance type is invalid`);
+    }
+  }
+
+  for (const skillId of directoryEntryNames(
+    path.join(root, catalog.canonicalRoot),
+    "canonical skill root",
+    errors,
+  )) {
+    if (!skillIds.has(skillId)) {
+      errors.push(`unregistered canonical skill directory: ${skillId}`);
+    }
+  }
+  for (const skillId of directoryEntryNames(
+    path.join(root, catalog.codexRoot),
+    "Codex skill root",
+    errors,
+  )) {
+    if (!skillIds.has(skillId)) {
+      errors.push(`unregistered Codex skill link: ${skillId}`);
     }
   }
 
