@@ -460,17 +460,18 @@
         "description": "Run a same-repository non-behavioral canary after Task 61 lands and prove that the trusted workflow evaluates it without an auto-merge label, waits for all required exact-head evidence, squash-merges it automatically, deletes only its task branch, synchronizes main, and advances to the next dependency-ready task without a chat approval.",
         "details": "The canary must be a real Taskmaster/Aegis-scoped PR with a harmless documentation-only change. Capture the CI run, controlled-auto-merge decision, exact head, merge commit, branch deletion, local-main synchronization, Aegis delivery state, and next-task continuation. Include negative confirmation that manual-merge/high-risk labels and prohibited paths remain denied. If any automatic step fails, leave Task 62 blocked with the exact workflow evidence and do not bypass the protected path.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           "61"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-10T23:06:02.262Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-10T22:36:33.146Z",
+      "lastModified": "2026-07-10T23:06:02.263Z",
       "taskCount": 30,
       "completedCount": 7,
       "tags": [
