@@ -36,7 +36,7 @@ emergency_bypass: false
 | plan-step-verify | Run verification, capture reports, and update handoff state | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/; docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/HANDOFF.md; docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/TRACKER.md; docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/task-verification.md; .aegis/reports/verification-report.json | completed |
 | plan-step-protect-main | Apply the attended exact-check branch-protection policy and verify every field | GitHub branch protection API; Aegis operator-authority ledger event `6970437b0c914d10aa6051046c27b25c` | completed |
 | plan-step-auto-merge | Implement the separately reviewed controlled auto-merge workflow and deterministic policy tests | .github/workflows/auto-merge.yml; scripts/ci/auto-merge-policy.mjs; tests/ci/ | completed |
-| plan-step-auto-merge-verify | Run local and hosted workflow, policy, governance, security, and Aegis verification | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md; .aegis/reports/verification-report.json | in-progress |
+| plan-step-auto-merge-verify | Run local and hosted workflow, policy, governance, security, and Aegis verification | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md; .aegis/reports/verification-report.json; .aegis/reports/witness-report.json | in-progress |
 | plan-step-canary | After attended merge approval, prove the workflow on a documentation-only labeled canary | GitHub canary pull request and delivery evidence | pending |
 | plan-step-emergency | Optional - only if a bypass is explicitly authorized | Waiver plus post-mortem note in docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/DECISIONS.md and docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/FINDINGS.md | n/a |
 
@@ -72,6 +72,7 @@ emergency_bypass: false
 - 2026-07-10 - PR #9 merged, protected `main` was applied and verified, Task 48 was set in-progress through Taskmaster, and work continued on fresh branch `feat/task-48-controlled-auto-merge` under `authority=standing-grant:sota-magazine-2026-autonomy-v1`.
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge` to `completed` with evidence `.github/workflows/auto-merge.yml`.
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `.aegis/reports/verification-report.json`.
+- 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `.aegis/reports/witness-report.json`.
 
 ## Continuation & Handoff
 - Next owner: project owner

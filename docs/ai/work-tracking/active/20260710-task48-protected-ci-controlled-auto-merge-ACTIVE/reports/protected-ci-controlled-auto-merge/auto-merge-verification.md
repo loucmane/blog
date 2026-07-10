@@ -22,7 +22,7 @@
 | Taskmaster dependency validation | Passed | `task-master validate-dependencies --tag master`; only the known incidental notice toggle was restored. |
 | Aegis capsule | Passed | `pnpm ci:aegis`. |
 | Strict Aegis verification | Passed | 31 checks, zero required failures; advisory enforcement remains unchanged. |
-| Aegis witness | Preliminary pass | Scope and branch alignment passed before commit; rerun at the committed head is required so diff accounting observes the delivered files. |
+| Aegis witness | Passed | CI-mode witness at implementation commit `2f964de` accounted for 19 diff files, mapped branch convention to Task 48, found no done flip, and reported no escalations. |
 | Repository guards | Passed | `pnpm ci:guard` accepted the exact 16-path Task-47 legacy contract; raw `codex-guard validate --include-untracked` passed after deterministic evidence sync and generated-bytecode cleanup. |
 | Secret scan | Passed | Gitleaks `v8.30.1` found no leak in the exact Git changed/untracked task files and no leak across 139 commits. A whole-directory scan found only ignored Next build output created by `pnpm build`; those files are outside the Git diff. |
 | Hosted required checks | Pending | Available only after the continuation branch is pushed and the pull request opens. |

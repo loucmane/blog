@@ -40,5 +40,11 @@
     "plan_hash": "fd803287af26a2dce262c5652c8e1200ffba9479f3357e9e0adc8685ede249a0",
     "tracker_hash": "515b1713f43f37b9d15e76b8279a490289297092c4a0b33e94d396095da88f24",
     "synced_at": "2026-07-10T12:26:39.471026+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "4f4bdbd857d89720e8c61fcd1b642a8e2fadf9fb3bc299da9becad539127efec",
+    "tracker_hash": "3fd3430fd4caab81386064166e4c9f9288895e6cf93a6d15e1eb96d7bbc18071",
+    "synced_at": "2026-07-10T12:29:08.757995+02:00"
   }
 ]
