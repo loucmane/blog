@@ -5,7 +5,7 @@ handler_target: .aegis/state/current-work.json
 task_ids: [48]
 branch_policy: feature-required
 evidence_summary:
-  - docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/
+  - docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/
   - .aegis/state/current-work.json
   - sessions/2026/07/2026-07-10-001-task48-protected-ci-controlled-auto-merge.md
   - plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md
@@ -21,7 +21,7 @@ emergency_bypass: false
 - **Handler Target (H)**: .aegis/state/current-work.json
 - **Task IDs**: 48
 - **Branch Policy**: feature-required
-- **Evidence Summary (E)**: docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/, .aegis/state/current-work.json, sessions/2026/07/2026-07-10-001-task48-protected-ci-controlled-auto-merge.md, plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md
+- **Evidence Summary (E)**: docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/, .aegis/state/current-work.json, sessions/2026/07/2026-07-10-001-task48-protected-ci-controlled-auto-merge.md, plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md
 - **Plan Version**: v1
 - **Emergency Bypass**: false
 - **Authority**: Aegis-native workflow state (`.aegis/state/current-work.json`)
@@ -31,14 +31,14 @@ emergency_bypass: false
 ## Plan Table
 | Step ID | Description | Evidence | Status |
 | --- | --- | --- | --- |
-| plan-step-scope | Confirm task scope, constraints, expected outputs, and affected files before implementation | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/FINDINGS.md; docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/DECISIONS.md | completed |
-| plan-step-implement | Make only task-scoped changes and record implementation notes | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/IMPLEMENTATION.md; changed files; .github/workflows/ci.yml | completed |
-| plan-step-verify | Run verification, capture reports, and update handoff state | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/; docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/HANDOFF.md; docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/TRACKER.md; docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/task-verification.md; .aegis/reports/verification-report.json | completed |
+| plan-step-scope | Confirm task scope, constraints, expected outputs, and affected files before implementation | docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/FINDINGS.md; docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/DECISIONS.md | completed |
+| plan-step-implement | Make only task-scoped changes and record implementation notes | docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/IMPLEMENTATION.md; changed files; .github/workflows/ci.yml | completed |
+| plan-step-verify | Run verification, capture reports, and update handoff state | docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/; docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/HANDOFF.md; docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/TRACKER.md; docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/task-verification.md; .aegis/reports/verification-report.json | completed |
 | plan-step-protect-main | Apply the attended exact-check branch-protection policy and verify every field | GitHub branch protection API; Aegis operator-authority ledger event `6970437b0c914d10aa6051046c27b25c` | completed |
 | plan-step-auto-merge | Implement the separately reviewed controlled auto-merge workflow and deterministic policy tests | .github/workflows/auto-merge.yml; scripts/ci/auto-merge-policy.mjs; tests/ci/ | completed |
-| plan-step-auto-merge-verify | Run local and hosted workflow, policy, governance, security, and Aegis verification | docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md; .aegis/reports/verification-report.json; .aegis/reports/witness-report.json | in-progress |
-| plan-step-canary | After attended merge approval, prove the workflow on a documentation-only labeled canary | GitHub canary pull request and delivery evidence; docs/research/2026-07-10-controlled-auto-merge-canary.md | in-progress |
-| plan-step-emergency | Optional - only if a bypass is explicitly authorized | Waiver plus post-mortem note in docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/DECISIONS.md and docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/FINDINGS.md | n/a |
+| plan-step-auto-merge-verify | Run local and hosted workflow, policy, governance, security, and Aegis verification | docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md; .aegis/reports/verification-report.json; .aegis/reports/witness-report.json | completed |
+| plan-step-canary | After attended merge approval, prove the workflow on a documentation-only labeled canary | GitHub canary pull request and delivery evidence; docs/research/2026-07-10-controlled-auto-merge-canary.md; docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/canary-verification.md; .taskmaster/tasks/tasks.json; .aegis/reports/closeout-report.json; scripts/codex-guard; .aegis/reports/verification-report.json | completed |
+| plan-step-emergency | Optional - only if a bypass is explicitly authorized | Waiver plus post-mortem note in docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/DECISIONS.md and docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/FINDINGS.md | n/a |
 
 ## Scope
 - `.aegis/state/current-work.json`
@@ -50,17 +50,17 @@ emergency_bypass: false
 - `.taskmaster/tasks/tasks.json`
 - `sessions/2026/07/2026-07-10-001-task48-protected-ci-controlled-auto-merge.md`
 - `plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md`
-- `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/`
-- `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/`
+- `docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/`
+- `docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/`
 - Task 48 only
 
 ## Goals
 - [x] Bootstrap read-only CI on the committed Node 22 and pnpm 9 baseline.
 - [x] Protect public main using exact successful GitHub check names after attended workflow review.
-- [ ] Add controlled auto-merge separately and prove it with a documentation-only canary.
+- [x] Add controlled auto-merge separately and prove it with a documentation-only canary.
 
 ## Branch Policy
-- Working branch: `feat/task-48-controlled-auto-merge`
+- Closeout branch: `feat/task-48-closeout`
 - Persistent work should happen on a branch containing `task-48`.
 
 ## Amendments & Versioning
@@ -75,6 +75,12 @@ emergency_bypass: false
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `.aegis/reports/witness-report.json`.
 - 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `in-progress` with evidence `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/auto-merge-verification.md`.
 - 2026-07-10 - `aegis log` updated `plan-step-canary` to `in-progress` with evidence `docs/research/2026-07-10-controlled-auto-merge-canary.md`.
+- 2026-07-10 - `aegis log` updated `plan-step-canary` to `completed` with evidence `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/canary-verification.md`.
+- 2026-07-10 - `aegis log` updated `plan-step-auto-merge-verify` to `completed` with evidence `.aegis/reports/verification-report.json`.
+- 2026-07-10 - `aegis log` updated `plan-step-canary` to `completed` with evidence `.taskmaster/tasks/tasks.json`.
+- 2026-07-10 - `aegis log` updated `plan-step-canary` to `completed` with evidence `.aegis/reports/closeout-report.json`.
+- 2026-07-10 - `aegis log` updated `plan-step-canary` to `completed` with evidence `scripts/codex-guard`.
+- 2026-07-10 - `aegis log` updated `plan-step-canary` to `completed` with evidence `.aegis/reports/verification-report.json`.
 
 ## Continuation & Handoff
 - Next owner: project owner
@@ -105,7 +111,7 @@ emergency_bypass: false
 - Any bypass must be explicitly authorized by the user, recorded in DECISIONS.md, and followed by verification evidence.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 20, "last_event_id": "24d1841aa7b54d1db3dac5fbd4b79e42", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 22, "last_event_id": "0321a47226a84874a27ec634aaa02efd", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
@@ -131,5 +137,7 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:86b189a0d39...] Delivery state recorded: pr_open for PR #10 at 1cf557a92c8e132....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:bb214df3ac5...] Scope recorded for 48. Paths: docs/research/2026-07-10-controlled-auto-merge-canary.md, docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., plans/2026-07-10-task48-protected-ci-controlled-auto-merge.....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:070a32fa48a...] Scope recorded for 48. Paths: docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., .taskmaster/tasks/**, .plan_state/**.
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
 
 <!-- AEGIS:END generated-sweh-projection -->

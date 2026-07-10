@@ -2,9 +2,9 @@
 
 **Title:** Bootstrap Protected CI and Controlled Auto-Merge
 
-**Status:** pending
+**Status:** done
 
-**Dependencies:** 36
+**Dependencies:** 36 ✓
 
 **Priority:** high
 

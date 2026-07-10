@@ -1,13 +1,13 @@
 # Task 48 Bootstrap Protected CI and Controlled Auto-Merge - Handoff Summary
 
 ## Current State
-- Task 48 is in-progress in Taskmaster and Aegis.
-- Branch: `feat/task-48-controlled-auto-merge`.
+- Task 48 is `done` in Taskmaster and `completed` in Aegis.
+- Closeout branch: `feat/task-48-closeout`.
 - Session: `sessions/2026/07/2026-07-10-001-task48-protected-ci-controlled-auto-merge.md`.
 - Plan: `plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md`.
-- Active work-tracking: `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/`.
+- Archived work-tracking: `docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/`.
 - Current work authority: `.aegis/state/current-work.json`.
-- Reports: `docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/`.
+- Reports: `docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/`.
 
 ## What Was Done
 - Created Aegis-native current work state.
@@ -23,18 +23,19 @@
 - Implemented the separately reviewed controlled auto-merge workflow, trusted policy classifier, focused allow/deny and check-run tests, governance integration, and rollback documentation.
 - Replaced the privileged label trigger with protected-base `pull_request_target:labeled`; the job checks out only the default branch into `trusted` and never fetches or executes pull-request-controlled code or artifacts.
 - Passed frozen install with lockfile immutability, typecheck, lint, all package/application builds, all original 26 plus 5 new focused policy/workflow tests, actionlint, live PR #9 API-shape evaluation, Taskmaster health/dependencies, strict Aegis verification, Aegis capsule, repository guards, exact-diff/full-history secret scans, and diff/syntax checks. Unit/browser suites remain explicitly unsupported and owned by Task 39.
+- Squash-merged attended workflow PR #10 at reviewed head `5a345df073862bbd6adc1b57dda161c9dc19f4cb` as `fa2f38a14c3fac397a241346e772ec7d93e7193c` through protected `main` without bypass.
+- Proved controlled auto-merge on documentation-only PR #11: owner-applied label, protected-main checkout, complete ten-path inventory, four green checks, policy `allow`, exact-head squash merge `a9057d61cd75c306322ae34b52e1efc01c5007c7`, and canary-only branch deletion.
+- Completed Aegis closeout with zero required failures and zero warnings, marked Taskmaster Task 48 done, and regenerated only `.taskmaster/tasks/task_048.md`.
 
 ## Current Issues/Blockers
-- This workflow-permission pull request must stop at merge-ready for attended owner approval and cannot auto-merge itself.
-- PR #10's corrected exact head and hosted checks must be revalidated after the security correction is pushed.
-- The auto-merge workflow does not exist on protected `main` until this continuation PR merges, so actual trigger behavior must be proven afterward on a separate documentation-only canary.
-- Task 48 cannot close until the canary proves squash merge, exact-head enforcement, branch deletion, and synchronized `main`.
+- No Task 48 implementation or verification blocker remains.
+- The closeout evidence branch must pass protected checks and reach `main` before the terminal state is considered published.
+- Unit/integration and browser/accessibility suites remain the pre-existing Task 39-owned unsupported baseline contracts.
 
 ## Next Steps
-1. Complete local frozen-install, baseline, workflow syntax, policy, Taskmaster, Aegis, guard, secret, and diff verification.
-2. Commit, push, and open the Task-48 continuation pull request.
-3. Inspect exact hosted checks and review threads, then stop at merge-ready with the full mandatory report.
-4. After separate owner approval, squash-merge, synchronize `main`, and run the manually labeled documentation-only canary before Task-48 closeout.
+1. Publish this task-scoped closeout evidence through protected CI and synchronize `main`.
+2. Confirm Task 48 remains terminal from synchronized `main`.
+3. Create the independently testable cross-agent skill-platform roadmap authorized by the project owner.
 
 ## Important Context
 - Operator authority: `docs/ai/AEGIS_AUTONOMY_GRANT.md`; `authority=standing-grant:sota-magazine-2026-autonomy-v1`. Revalidate its digest after compaction, resume, or subagent return.
@@ -42,6 +43,14 @@
 - Serena is optional continuity only and is not readiness evidence by itself.
 - If context is compacted, resume by reading `.aegis/state/current-work.json`, `sessions/current`, `plans/current`, and this file.
 
+## Implementation Evidence
+- `.github/workflows/ci.yml`
+## Verification Evidence
+- `docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/task-verification.md`
+- `docs/ai/work-tracking/archive/20260710-task48-protected-ci-controlled-auto-merge-COMPLETED/reports/protected-ci-controlled-auto-merge/canary-verification.md`
+- `.aegis/reports/verification-report.json`
+## Strict Verification Evidence
+- `.aegis/reports/verification-report.json`
 ## Progress Log
 - **2026-07-10 00:50 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:aegis:kickoff|E:.aegis/state/current-work.json] Handoff initialized by Aegis kickoff.
 - **2026-07-10 00:51 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-scope|E:docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/FINDINGS.md] Confirmed the attended CI-bootstrap boundary, baseline constraints, separate auto-merge delivery, and operator authority before implementation
@@ -52,8 +61,13 @@
 - **2026-07-10 01:17 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:strict-verification|E:.aegis/reports/verification-report.json] Recorded strict Aegis verification with zero required failures while enforcement remained advisory
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 20, "last_event_id": "24d1841aa7b54d1db3dac5fbd4b79e42", "schema": "legacy-shadow-sweh-projection-v1"} -->
-- **2026-07-10 13:12 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-canary|E:docs/research/2026-07-10-controlled-auto-merge-canary.md] Prepared the documentation-only controlled auto-merge canary after PR 10 merged through protected main
+<!-- AEGIS:projection-state {"event_count": 22, "last_event_id": "0321a47226a84874a27ec634aaa02efd", "schema": "legacy-shadow-sweh-projection-v1"} -->
+- **2026-07-10 13:23 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-canary-verification|E:docs/ai/work-tracking/active/20260710-task48-protected-ci-controlled-auto-merge-ACTIVE/reports/protected-ci-controlled-auto-merge/canary-verification.md] Verified the protected-main pull_request_target canary, four exact checks, policy allow decision, exact-head squash merge, and canary-only branch deletion
+- **2026-07-10 13:24 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-final-strict-verification|E:.aegis/reports/verification-report.json] Passed final strict Aegis verification after the controlled auto-merge canary with zero required failures
+- **2026-07-10 13:27 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Marked Task 48 done through Taskmaster after successful Aegis closeout and generated only task_048.md
+- **2026-07-10 13:28 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-closeout|E:.aegis/reports/closeout-report.json] Completed Task 48 Aegis closeout with zero required failures and zero warnings after the canary merge
+- **2026-07-10 13:33 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-completed-guard|E:scripts/codex-guard] Fixed the legacy guard to validate Aegis completed archive trackers and added four fail-closed completed-state regression tests
+- **2026-07-10 13:34 CEST** - [S:20260710|W:task48-protected-ci-controlled-auto-merge|H:standing-grant:sota-magazine-2026-autonomy-v1:task48-post-closeout-verification|E:.aegis/reports/verification-report.json] Passed post-closeout strict Aegis verification and completed-archive guard regression checks with zero required failures
 
 ## Generated S:W:H:E Projection
 
@@ -79,5 +93,7 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:86b189a0d39...] Delivery state recorded: pr_open for PR #10 at 1cf557a92c8e132....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:bb214df3ac5...] Scope recorded for 48. Paths: docs/research/2026-07-10-controlled-auto-merge-canary.md, docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., plans/2026-07-10-task48-protected-ci-controlled-auto-merge.....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:070a32fa48a...] Scope recorded for 48. Paths: docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., .taskmaster/tasks/**, .plan_state/**.
+- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
 
 <!-- AEGIS:END generated-sweh-projection -->
