@@ -274,5 +274,11 @@
     "plan_hash": "d55a0adc33d80f05418214c0a6026336818af6a241f1dfdf43335f1ddb8be075",
     "tracker_hash": "445519d1aa622a7af53e2d1cc549829594798212d8766f596a6e01147b033304",
     "synced_at": "2026-07-10T21:57:14.552370+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task50-magazine-product-discovery-skill.md",
+    "plan_hash": "11737902c7c1f47fa1a1785c199662b903f2fc8c78094b9b9f64c0690acabc5d",
+    "tracker_hash": "7c411bb2fa7cd6c5833349bc1d1673db4c57fa1cccc8db19f6c6e3186a00e012",
+    "synced_at": "2026-07-10T22:12:05.043694+02:00"
   }
 ]
