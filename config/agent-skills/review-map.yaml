@@ -22,6 +22,24 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "magazine-product-discovery",
+      "match": [
+        ".taskmaster/docs/prd.txt",
+        "docs/product/**",
+        "docs/research/product-discovery/**"
+      ],
+      "skills": [
+        "magazine-product-discovery"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }

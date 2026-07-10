@@ -1,0 +1,99 @@
+{
+  "routingContract": {
+    "includeAny": [
+      "product discovery",
+      "owner needs",
+      "reader needs",
+      "audience",
+      "value proposition",
+      "editorial workflow",
+      "requirements framing"
+    ],
+    "excludeAny": [
+      "implement",
+      "upgrade",
+      "package",
+      "security audit",
+      "deploy",
+      "migration",
+      "release verification"
+    ]
+  },
+  "positive": [
+    {
+      "id": "owner-discovery",
+      "prompt": "Run product discovery to turn the nontechnical owner needs into clear magazine outcomes."
+    },
+    {
+      "id": "reader-value",
+      "prompt": "Clarify the priority audience, reader needs, and value proposition for the magazine."
+    },
+    {
+      "id": "editorial-requirements",
+      "prompt": "Reconcile editorial workflow evidence into requirements framing and open questions."
+    }
+  ],
+  "deny": [
+    {
+      "id": "implementation",
+      "prompt": "Implement the article editor and publishing screens."
+    },
+    {
+      "id": "package-upgrade",
+      "prompt": "Upgrade the React package and framework dependencies."
+    },
+    {
+      "id": "security",
+      "prompt": "Perform a security audit of the media upload endpoint."
+    },
+    {
+      "id": "release",
+      "prompt": "Run release verification and deploy the production build."
+    }
+  ],
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "task50-fixture",
+    "skill": "magazine-product-discovery",
+    "mode": "advisory",
+    "verdict": "warn",
+    "summary": "Discovery produced a product decision, assumption, and open question.",
+    "generatedAt": "2026-07-10T12:00:00Z",
+    "headSha": "1111111111111111111111111111111111111111",
+    "findings": [
+      {
+        "id": "decision-owner-first",
+        "severity": "info",
+        "category": "product-decision",
+        "message": "Optimize the first workflow for one nontechnical owner.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["docs/product/vision.md"]
+      },
+      {
+        "id": "assumption-publishing-cadence",
+        "severity": "info",
+        "category": "assumption",
+        "message": "The owner is expected to publish weekly.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["Publishing cadence remains unvalidated."]
+      },
+      {
+        "id": "question-reader-segment",
+        "severity": "warning",
+        "category": "open-question",
+        "message": "The priority reader segment needs owner confirmation.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["No reader research is currently recorded."]
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "file",
+        "path": "docs/product/vision.md"
+      }
+    ]
+  }
+}

@@ -236,14 +236,15 @@
         "description": "Create a reusable cross-agent workflow for turning owner and reader needs into evidence-backed magazine product decisions.",
         "details": "Implement .claude/skills/magazine-product-discovery with concise trigger metadata, an owner-safe discovery workflow, structured assumptions and open questions, portable output conforming to the project review-result contract, and focused positive and deny-path tests. Link it through the Codex skill view, register it in the catalog and review map, and keep subjective recommendations advisory.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "49",
           "56",
           "57"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-10T20:06:04.847Z"
       },
       {
         "id": "51",
@@ -441,9 +442,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-10T18:05:47.713Z",
+      "lastModified": "2026-07-10T20:06:04.848Z",
       "taskCount": 28,
-      "completedCount": 5,
+      "completedCount": 6,
       "tags": [
         "master"
       ]

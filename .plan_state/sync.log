@@ -262,5 +262,23 @@
     "plan_hash": "ea09eb348bacf6dc1d5cd60249f336d19d770b4db2016830a1aa3d9a783083d9",
     "tracker_hash": "3ff7bb4ba70df7d7136c2a241e18efca4fba15f5b10e2d971ca5b02f4c21fcf6",
     "synced_at": "2026-07-10T20:36:04.094083+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task50-magazine-product-discovery-skill.md",
+    "plan_hash": "2c0c95e37ddb84a82fad1a2287b52e1ad7d581b34781f2c3932fb49c79158b34",
+    "tracker_hash": "31bc9fda22b90ee62ef292b6336733e90ece374ad593cf602d27c590aaf321dd",
+    "synced_at": "2026-07-10T21:42:38.861886+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task50-magazine-product-discovery-skill.md",
+    "plan_hash": "d55a0adc33d80f05418214c0a6026336818af6a241f1dfdf43335f1ddb8be075",
+    "tracker_hash": "445519d1aa622a7af53e2d1cc549829594798212d8766f596a6e01147b033304",
+    "synced_at": "2026-07-10T21:57:14.552370+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task50-magazine-product-discovery-skill.md",
+    "plan_hash": "11737902c7c1f47fa1a1785c199662b903f2fc8c78094b9b9f64c0690acabc5d",
+    "tracker_hash": "7c411bb2fa7cd6c5833349bc1d1673db4c57fa1cccc8db19f6c6e3186a00e012",
+    "synced_at": "2026-07-10T22:12:05.043694+02:00"
   }
 ]
