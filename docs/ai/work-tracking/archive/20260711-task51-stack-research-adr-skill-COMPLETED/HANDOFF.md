@@ -84,6 +84,7 @@
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "68fc6a604e0143babc7469c7cfaa07ea", "schema": "legacy-shadow-sweh-projection-v1"} -->
 - **2026-07-11 01:17 CEST** - [S:20260711|W:task51-stack-research-adr-skill|H:operator-authority|E:docs/ai/AEGIS_AUTONOMY_GRANT.md] Reconciled PR #19 with origin/main under authority=standing-grant:sota-magazine-2026-autonomy-v2; grant digest 89ac60905034896537c3a4d794bf22a5d1fc0ccdab926ae93977c6ffc550e095 matched Task 61 authority evidence, Task 51 remained the current feature-branch context, and Tasks 61-62 were preserved.
+- **2026-07-11 01:28 CEST** - [S:20260711|W:task51-stack-research-adr-skill|H:agent:verification|E:.taskmaster/tasks/tasks.json] Verified PR #19 against terminal Task 62 main under authority=standing-grant:sota-magazine-2026-autonomy-v2; the legacy guard mismatch existed only while main intentionally carried Task 62's active tracker, cleared after Task 62 archived at f71e591, and all Task 62 files remained inherited unchanged.
 
 ## Generated S:W:H:E Projection
 
