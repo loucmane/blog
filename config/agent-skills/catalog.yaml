@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "canonicalRoot": ".claude/skills",
+  "codexRoot": ".agents/skills",
+  "reviewResultSchema": "schemas/agent-skills/review-result.schema.json",
+  "reportsRoot": "reports/agent-skills",
+  "policy": {
+    "subjectiveFindings": "advisory",
+    "deterministicFindings": "blocking-eligible",
+    "deterministicChecks": [
+      "agent-skills-schema",
+      "agent-skills-links",
+      "agent-skills-scripts",
+      "agent-skills-tests"
+    ]
+  },
+  "skills": [
+    {
+      "id": "cross-agent-skill-platform",
+      "status": "active",
+      "entrypoint": ".claude/skills/cross-agent-skill-platform/SKILL.md",
+      "codexLink": ".agents/skills/cross-agent-skill-platform",
+      "provenance": {
+        "type": "project-authored",
+        "task": "49"
+      },
+      "capabilities": [
+        "skill-authoring",
+        "skill-link-validation",
+        "review-result-validation",
+        "aegis-evidence-ingestion"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
+    }
+  ]
+}

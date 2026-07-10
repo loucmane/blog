@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cross-Agent Skill Platform"
+  short_description: "Maintain project-owned cross-agent skills"
+  default_prompt: "Use $cross-agent-skill-platform to add or validate a project-owned cross-agent skill."

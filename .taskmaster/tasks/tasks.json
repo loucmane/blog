@@ -215,13 +215,111 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2026-07-10T11:26:02.009Z"
+      },
+      {
+        "id": "49",
+        "title": "Build Cross-Agent Skill Platform Skeleton",
+        "description": "Establish the project-owned cross-agent skill infrastructure shared by Claude and Codex.",
+        "details": "Create .claude/skills as the canonical project skill root and repository-relative .agents/skills symlinks for Codex. Add config/agent-skills/catalog.yaml, review-map.yaml, upstream.lock.json, schemas/agent-skills/review-result.schema.json, deterministic validators under scripts/agent-skills, focused tests under tests/agent-skills, generated evidence under reports/agent-skills, and CI validation. Treat subjective skill findings as advisory, ingest evidence through supported Aegis operations, fail closed on malformed configuration or links, and do not broaden workflow permissions.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "48"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-10T12:27:04.101Z"
+      },
+      {
+        "id": "50",
+        "title": "Implement Magazine Product Discovery Skill",
+        "description": "Create a reusable cross-agent workflow for turning owner and reader needs into evidence-backed magazine product decisions.",
+        "details": "Implement .claude/skills/magazine-product-discovery with concise trigger metadata, an owner-safe discovery workflow, structured assumptions and open questions, portable output conforming to the project review-result contract, and focused positive and deny-path tests. Link it through the Codex skill view, register it in the catalog and review map, and keep subjective recommendations advisory.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "49"
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": "51",
+        "title": "Implement Stack Research ADR Skill",
+        "description": "Create a reusable cross-agent workflow for primary-source stack research and decision-ready architecture records.",
+        "details": "Implement .claude/skills/stack-research-adr with current-version verification from primary sources, stable/support/security/compatibility/cost/lock-in/rollback criteria, explicit rejected alternatives, citation requirements, structured ADR output, and focused validator tests. Register it in the catalog and review map, expose it through the Codex symlink tree, and keep qualitative review findings advisory.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "49"
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": "52",
+        "title": "Implement Owner Publishing UX Skill",
+        "description": "Create a reusable cross-agent workflow for designing and reviewing nontechnical owner publishing journeys.",
+        "details": "Implement .claude/skills/owner-publishing-ux around drafts, autosave, recovery, preview, revisions, scheduling, publish/unpublish, taxonomy, SEO/social fields, media accessibility, portable export/import, and future multi-author readiness. Require concrete owner journeys and failure recovery, produce schema-valid advisory review results, register the skill, link it for Codex, and add focused tests.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "49"
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": "53",
+        "title": "Implement Frontend and Editorial Agent Skills",
+        "description": "Add focused cross-agent skills for premium reader UI, editorial systems, accessibility, and performance review.",
+        "details": "Create independently invocable frontend and editorial skills that cover premium typography, art-directed responsive layouts, reusable editorial blocks, visual integrity, WCAG 2.2 AA, Core Web Vitals, and media semantics. Register and link every skill, provide deterministic schema/link tests, and keep visual or stylistic judgments advisory until dogfood evidence supports enforcement.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "50",
+          "52"
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": "54",
+        "title": "Implement SEO and Release Witness Skills",
+        "description": "Add focused cross-agent skills for discoverability, distribution, release evidence, and rollback readiness.",
+        "details": "Create independently invocable SEO and release-witness skills covering canonical URLs, structured data, social cards, RSS, sitemap, search/newsletter integration, verification evidence, security and accessibility signals, rollback, and truthful test reporting. Register and link the skills, validate outputs deterministically, and keep subjective findings advisory.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "50",
+          "51"
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": "55",
+        "title": "Add Skill Routing Forward Evaluation and Five-PR Dogfood",
+        "description": "Validate cross-agent skill selection and usefulness through deterministic routing tests, forward evaluation, and five pull requests of advisory dogfood.",
+        "details": "Implement routing rules and result ingestion, forward-test skills without leaking expected answers, record false-positive and false-negative evidence across five task-scoped pull requests, and publish generated reports under reports/agent-skills without committing ephemeral output. Only deterministic schema, link, script, build, typecheck, lint, security, and critical browser checks may block CI; subjective LLM findings remain advisory until evidence supports a separate enforcement decision.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "50",
+          "51",
+          "52",
+          "53",
+          "54"
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-10T11:26:02.009Z",
-      "taskCount": 16,
-      "completedCount": 2,
+      "lastModified": "2026-07-10T12:27:04.102Z",
+      "taskCount": 23,
+      "completedCount": 3,
       "tags": [
         "master"
       ]

@@ -400,7 +400,7 @@
   },
   "schema_version": "1.0.0",
   "verification": {
-    "last_verified_at": "2026-07-10T11:34:20Z",
+    "last_verified_at": "2026-07-10T12:28:17Z",
     "reports": [
       ".aegis/reports/verification-report.json"
     ],

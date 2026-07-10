@@ -135,6 +135,11 @@ jobs:
         continue-on-error: true
         run: node tests/ci/auto-merge-policy.test.mjs && node tests/ci/auto-merge-workflow.test.mjs
 
+      - name: Cross-agent skill platform contracts
+        id: agent_skills
+        continue-on-error: true
+        run: node scripts/agent-skills/validate-platform.mjs && node --test tests/agent-skills/*.test.mjs
+
       - name: Taskmaster health and dependency validation
         id: taskmaster
         continue-on-error: true
@@ -167,6 +172,7 @@ jobs:
         if: always()
         shell: bash
         env:
+          AGENT_SKILLS: ${{ steps.agent_skills.outcome }}
           AUTO_MERGE_POLICY: ${{ steps.auto_merge_policy.outcome }}
           EVENT_NAME: ${{ github.event_name }}
           TASKMASTER: ${{ steps.taskmaster.outcome }}
@@ -175,7 +181,7 @@ jobs:
           GUARD: ${{ steps.guard.outcome }}
         run: |
           failed=0
-          for stage in AUTO_MERGE_POLICY TASKMASTER AEGIS_CAPSULE GUARD; do
+          for stage in AGENT_SKILLS AUTO_MERGE_POLICY TASKMASTER AEGIS_CAPSULE GUARD; do
             value="${!stage}"
             printf '%s=%s\n' "$stage" "$value"
             if [ "$value" != "success" ]; then
