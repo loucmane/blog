@@ -116,8 +116,8 @@ Each batch reruns frozen install, typecheck, lint, tests, package/app builds, re
 
 ## Stop Boundaries
 
-- Ask before applying Aegis repair or closeout actions.
-- Ask before push/PR if required by the Aegis contract.
-- Always stop for explicit human merge approval.
+- Run deterministic handoff repair and final closeout automatically when the standing grant's exact preconditions pass; stop for generic repair, manual review, or any out-of-scope mutation.
+- Commit, push, and open/update the task PR automatically when the standing grant's delivery preconditions pass.
+- Follow `docs/ai/AEGIS_AUTONOMY_GRANT.md`: ordinary exact-head PRs merge automatically after the trusted evidence policy passes; stop only for its exceptional deny categories.
 - Stop on unknown dirty work, divergent main, unreviewed secret/generated files, or a failed rollback/restore gate.
 - Do not retire Aegis legacy scaffolding during Task 33.

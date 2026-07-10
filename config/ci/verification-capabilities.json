@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "unit": "unsupported",
+  "browser": "unsupported",
+  "ownerTask": "39",
+  "explanation": "Behavior-changing product and dependency pull requests remain ineligible for unattended merge until Task 39 replaces the tracked unsupported-test bridges with real unit, integration, browser, and accessibility execution."
+}
