@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-10",
+  "policy": {
+    "projectAuthored": "not-listed",
+    "upstream": "immutable-revision-and-sha256-required"
+  },
+  "entries": []
+}
