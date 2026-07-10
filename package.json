@@ -16,7 +16,8 @@
     "test:capability": "node scripts/ci/check-test-capability.mjs",
     "ci:taskmaster": "node scripts/ci/check-taskmaster.mjs",
     "ci:aegis": "python3 scripts/ci/check-aegis.py",
-    "ci:guard": "python3 scripts/ci/check-legacy-guard.py"
+    "ci:guard": "python3 scripts/ci/check-legacy-guard.py",
+    "ci:auto-merge-policy": "node tests/ci/auto-merge-policy.test.mjs && node tests/ci/auto-merge-workflow.test.mjs"
   },
   "devDependencies": {
     "eslint": "^8.54.0",

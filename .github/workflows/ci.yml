@@ -130,6 +130,11 @@ jobs:
         with:
           node-version: 22.16.0
 
+      - name: Controlled auto-merge policy and workflow contracts
+        id: auto_merge_policy
+        continue-on-error: true
+        run: node tests/ci/auto-merge-policy.test.mjs && node tests/ci/auto-merge-workflow.test.mjs
+
       - name: Taskmaster health and dependency validation
         id: taskmaster
         continue-on-error: true
@@ -162,6 +167,7 @@ jobs:
         if: always()
         shell: bash
         env:
+          AUTO_MERGE_POLICY: ${{ steps.auto_merge_policy.outcome }}
           EVENT_NAME: ${{ github.event_name }}
           TASKMASTER: ${{ steps.taskmaster.outcome }}
           AEGIS_CAPSULE: ${{ steps.aegis_capsule.outcome }}
@@ -169,7 +175,7 @@ jobs:
           GUARD: ${{ steps.guard.outcome }}
         run: |
           failed=0
-          for stage in TASKMASTER AEGIS_CAPSULE GUARD; do
+          for stage in AUTO_MERGE_POLICY TASKMASTER AEGIS_CAPSULE GUARD; do
             value="${!stage}"
             printf '%s=%s\n' "$stage" "$value"
             if [ "$value" != "success" ]; then

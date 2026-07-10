@@ -1,0 +1,208 @@
+name: Controlled auto-merge
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+concurrency:
+  group: auto-merge-${{ github.repository }}-${{ github.event.workflow_run.head_sha || github.event.pull_request.head.sha || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: controlled auto-merge
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'pull_request') ||
+      (github.event_name == 'pull_request_target' &&
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'auto-merge')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out trusted policy from the protected default branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+          path: trusted
+
+      - name: Merge eligible labeled pull request
+        shell: bash
+        env:
+          AUTO_MERGE_LABEL: auto-merge
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ github.token }}
+          LABELED_PR: ${{ github.event.pull_request.number }}
+          OWN_CHECK_NAME: controlled auto-merge
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER: ${{ github.event_name }}
+          WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          if [ "$TRIGGER" = "workflow_run" ]; then
+            mapfile -t ASSOCIATED_PRS < <(
+              jq -r '.workflow_run.pull_requests[]?.number' "$GITHUB_EVENT_PATH" | sort -u
+            )
+            if [ "${#ASSOCIATED_PRS[@]}" -eq 0 ]; then
+              WORKFLOW_HEAD_REPOSITORY=$(jq -r '.workflow_run.head_repository.full_name // ""' "$GITHUB_EVENT_PATH")
+              WORKFLOW_HEAD_BRANCH=$(jq -r '.workflow_run.head_branch // ""' "$GITHUB_EVENT_PATH")
+              if [ "$WORKFLOW_HEAD_REPOSITORY" != "$REPOSITORY" ]; then
+                echo "The completed CI run came from $WORKFLOW_HEAD_REPOSITORY; fork pull requests are never auto-merged."
+                exit 1
+              fi
+              REPOSITORY_OWNER=${REPOSITORY%%/*}
+              mapfile -t ASSOCIATED_PRS < <(
+                gh api --method GET "repos/$REPOSITORY/pulls" \
+                  -f state=open \
+                  -f head="$REPOSITORY_OWNER:$WORKFLOW_HEAD_BRANCH" \
+                  --jq '.[].number' | sort -u
+              )
+            fi
+            if [ "${#ASSOCIATED_PRS[@]}" -eq 0 ]; then
+              echo "The completed CI run has no open associated pull request; nothing to merge."
+              exit 0
+            fi
+            if [ "${#ASSOCIATED_PRS[@]}" -ne 1 ]; then
+              echo "The completed CI run is associated with multiple pull requests; refusing to merge."
+              exit 1
+            fi
+            PR="${ASSOCIATED_PRS[0]}"
+            EXPECTED_HEAD_SHA="$WORKFLOW_RUN_HEAD_SHA"
+          elif [ "$TRIGGER" = "pull_request_target" ]; then
+            PR="$LABELED_PR"
+            EXPECTED_HEAD_SHA=""
+          else
+            echo "Unsupported privileged trigger $TRIGGER; refusing to merge."
+            exit 1
+          fi
+
+          if ! [[ "$PR" =~ ^[1-9][0-9]*$ ]]; then
+            echo "The pull-request identifier is invalid; refusing to merge."
+            exit 1
+          fi
+
+          PR_JSON="$RUNNER_TEMP/auto-merge-pr.json"
+          gh api "repos/$REPOSITORY/pulls/$PR" > "$PR_JSON"
+
+          STATE=$(jq -r '.state' "$PR_JSON")
+          DRAFT=$(jq -r '.draft' "$PR_JSON")
+          BASE_BRANCH=$(jq -r '.base.ref' "$PR_JSON")
+          HEAD_BRANCH=$(jq -r '.head.ref' "$PR_JSON")
+          HEAD_REPOSITORY=$(jq -r '.head.repo.full_name // ""' "$PR_JSON")
+          HEAD_SHA=$(jq -r '.head.sha' "$PR_JSON")
+
+          if ! [[ "$HEAD_SHA" =~ ^[0-9a-f]{40,64}$ ]]; then
+            echo "PR #$PR returned an invalid head SHA; refusing to merge."
+            exit 1
+          fi
+
+          if [ "$STATE" != "open" ]; then
+            echo "PR #$PR is no longer open; nothing to merge."
+            exit 0
+          fi
+          if [ "$DRAFT" = "true" ]; then
+            echo "PR #$PR is a draft; refusing to merge."
+            exit 0
+          fi
+          if [ "$BASE_BRANCH" != "$DEFAULT_BRANCH" ]; then
+            echo "PR #$PR targets $BASE_BRANCH instead of $DEFAULT_BRANCH; refusing to merge."
+            exit 1
+          fi
+          if [ "$HEAD_REPOSITORY" != "$REPOSITORY" ]; then
+            echo "PR #$PR comes from $HEAD_REPOSITORY; fork pull requests are never auto-merged."
+            exit 1
+          fi
+          if [ "$HEAD_BRANCH" = "$DEFAULT_BRANCH" ]; then
+            echo "PR #$PR uses the protected default branch as its head; refusing to merge."
+            exit 1
+          fi
+          if [ -n "$EXPECTED_HEAD_SHA" ] && [ "$HEAD_SHA" != "$EXPECTED_HEAD_SHA" ]; then
+            echo "PR #$PR moved after the completed CI run; waiting for CI on the current head."
+            exit 0
+          fi
+
+          FILES_JSON="$RUNNER_TEMP/auto-merge-files.json"
+          gh api --paginate "repos/$REPOSITORY/pulls/$PR/files?per_page=100" \
+            --jq '.[]' | jq -s '[.[].filename]' > "$FILES_JSON"
+
+          DECLARED_FILE_COUNT=$(jq -r '.changed_files' "$PR_JSON")
+          FETCHED_FILE_COUNT=$(jq -r 'length' "$FILES_JSON")
+          if [ "$FETCHED_FILE_COUNT" -ne "$DECLARED_FILE_COUNT" ]; then
+            echo "Changed-file inventory is incomplete ($FETCHED_FILE_COUNT/$DECLARED_FILE_COUNT); refusing to merge."
+            exit 1
+          fi
+
+          POLICY_INPUT="$RUNNER_TEMP/auto-merge-policy-input.json"
+          jq -n \
+            --slurpfile files "$FILES_JSON" \
+            --slurpfile pr "$PR_JSON" \
+            '{files: $files[0], labels: [$pr[0].labels[].name]}' > "$POLICY_INPUT"
+          POLICY_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs classify --input "$POLICY_INPUT")
+          echo "$POLICY_RESULT" | jq .
+          if [ "$(echo "$POLICY_RESULT" | jq -r '.decision')" != "allow" ]; then
+            echo "PR #$PR violates the controlled auto-merge allow/deny policy."
+            exit 1
+          fi
+
+          CHECK_RUNS="$RUNNER_TEMP/auto-merge-check-runs.json"
+          CHECK_INPUT="$RUNNER_TEMP/auto-merge-check-input.json"
+          gh api --paginate \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/$REPOSITORY/commits/$HEAD_SHA/check-runs?per_page=100" \
+            --jq '.check_runs[]' | jq -s '{check_runs: .}' > "$CHECK_RUNS"
+          jq -n \
+            --slurpfile runs "$CHECK_RUNS" \
+            --arg own "$OWN_CHECK_NAME" \
+            '{check_runs: $runs[0].check_runs, excluded_names: [$own], required_app_slug: "github-actions"}' \
+            > "$CHECK_INPUT"
+          CHECK_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs checks --input "$CHECK_INPUT")
+          echo "$CHECK_RESULT" | jq .
+          CHECK_DECISION=$(echo "$CHECK_RESULT" | jq -r '.decision')
+          if [ "$CHECK_DECISION" = "defer" ]; then
+            echo "Required checks on PR #$PR are not all complete; the CI-completion trigger will retry."
+            exit 0
+          fi
+          if [ "$CHECK_DECISION" != "allow" ]; then
+            echo "A required check on PR #$PR failed or came from an unexpected app; refusing to merge."
+            exit 1
+          fi
+
+          BASE_SHA=$(gh api "repos/$REPOSITORY/git/ref/heads/$DEFAULT_BRANCH" --jq '.object.sha')
+          BEHIND_BY=$(gh api "repos/$REPOSITORY/compare/$BASE_SHA...$HEAD_SHA" --jq '.behind_by')
+          if [ "$BEHIND_BY" -ne 0 ]; then
+            echo "PR #$PR is behind $DEFAULT_BRANCH; waiting for the branch to be updated."
+            exit 0
+          fi
+
+          CURRENT_PR_JSON="$RUNNER_TEMP/auto-merge-current-pr.json"
+          gh api "repos/$REPOSITORY/pulls/$PR" > "$CURRENT_PR_JSON"
+          if [ "$(jq -r '.state' "$CURRENT_PR_JSON")" != "open" ]; then
+            echo "PR #$PR closed during evaluation; nothing to merge."
+            exit 0
+          fi
+          if [ "$(jq -r '.head.sha' "$CURRENT_PR_JSON")" != "$HEAD_SHA" ]; then
+            echo "PR #$PR moved during evaluation; waiting for CI on the new head."
+            exit 0
+          fi
+          if ! jq -e --arg label "$AUTO_MERGE_LABEL" \
+            '.labels | map(.name) | index($label) != null' "$CURRENT_PR_JSON" >/dev/null; then
+            echo "The $AUTO_MERGE_LABEL label was removed during evaluation; refusing to merge."
+            exit 0
+          fi
+
+          echo "Policy and required checks passed; squash-merging PR #$PR at $HEAD_SHA."
+          gh pr merge "$PR" \
+            --repo "$REPOSITORY" \
+            --squash \
+            --delete-branch \
+            --match-head-commit "$HEAD_SHA"

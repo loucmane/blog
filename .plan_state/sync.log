@@ -16,5 +16,59 @@
     "plan_hash": "aac9b75976d26f90a14ad6bad7fe0450cf0bd3a830863ae093ae3d88be43e677",
     "tracker_hash": "ac6a2d3416f845bf61d932b92679f0e67b4b73eae51ffacec3387ef9f086a465",
     "synced_at": "2026-07-10T01:17:33.815147+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "44bd7c592ee1b55a90d47976ababf4b2bf7a6475d42b8154d34d8f78c8132c4d",
+    "tracker_hash": "975aa089961b313ad38028d32c3bee4c43539723820f48a1ca2d6d7f46dd7795",
+    "synced_at": "2026-07-10T12:18:15.798587+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "f697ccdc1bc046f6a42f09f8da4a7a16345751ab48a7672dc51afea6a9b05bcc",
+    "tracker_hash": "94ef1bda52d9488fc2e65285655ed042c6b917a9032e21d3ad1167c7ba74754d",
+    "synced_at": "2026-07-10T12:21:25.354763+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "f697ccdc1bc046f6a42f09f8da4a7a16345751ab48a7672dc51afea6a9b05bcc",
+    "tracker_hash": "e151c47d2fd3350522d4730da29995b008f3e51f5e15362c1df0cf0ca854c31d",
+    "synced_at": "2026-07-10T12:25:57.714061+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "fd803287af26a2dce262c5652c8e1200ffba9479f3357e9e0adc8685ede249a0",
+    "tracker_hash": "515b1713f43f37b9d15e76b8279a490289297092c4a0b33e94d396095da88f24",
+    "synced_at": "2026-07-10T12:26:39.471026+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "4f4bdbd857d89720e8c61fcd1b642a8e2fadf9fb3bc299da9becad539127efec",
+    "tracker_hash": "3fd3430fd4caab81386064166e4c9f9288895e6cf93a6d15e1eb96d7bbc18071",
+    "synced_at": "2026-07-10T12:29:08.757995+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "15f6a7331db3d5557019dad067bcd9a8f2d5a745bdf497f26858d5e3424ad9e4",
+    "tracker_hash": "e41d927cf485d371607fb039b2ec4a956bf04812a51787d3b5237e2618712b4d",
+    "synced_at": "2026-07-10T12:32:21.449641+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "15f6a7331db3d5557019dad067bcd9a8f2d5a745bdf497f26858d5e3424ad9e4",
+    "tracker_hash": "03290014644df31c4404a5823b544692407772efce34882e0946cea733f76a19",
+    "synced_at": "2026-07-10T12:49:42.246925+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "15f6a7331db3d5557019dad067bcd9a8f2d5a745bdf497f26858d5e3424ad9e4",
+    "tracker_hash": "5c96995d4901ebc59a38d856e4a6f87ac12e416a27aa80f71ca0e8f0d5bd6ada",
+    "synced_at": "2026-07-10T12:50:24.440013+02:00"
+  },
+  {
+    "plan": "plans/2026-07-10-task48-protected-ci-controlled-auto-merge.md",
+    "plan_hash": "f2c872230e6a601a1906a9c27aecd819f91ecbb02e3304a8c34fe2cce05ceda2",
+    "tracker_hash": "767bf766277ca8314f8be4ee3c985cd648dfc4c9a801435c45a67bfcb4f01407",
+    "synced_at": "2026-07-10T12:52:51.336803+02:00"
   }
 ]
