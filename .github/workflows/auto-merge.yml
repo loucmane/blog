@@ -510,3 +510,71 @@ jobs:
             --squash \
             --delete-branch \
             --match-head-commit "$HEAD_SHA"
+
+          POST_MERGE_PR_JSON="$RUNNER_TEMP/post-merge-pull-request.json"
+          gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/$REPOSITORY/pulls/$PR" > "$POST_MERGE_PR_JSON"
+
+          MERGE_SHA=$(jq -r '.merge_commit_sha // ""' "$POST_MERGE_PR_JSON")
+          MERGED_HEAD_SHA=$(jq -r '.head.sha // ""' "$POST_MERGE_PR_JSON")
+          MERGED_HEAD_REPOSITORY=$(jq -r '.head.repo.full_name // ""' "$POST_MERGE_PR_JSON")
+          MERGED_BASE_BRANCH=$(jq -r '.base.ref // ""' "$POST_MERGE_PR_JSON")
+          if [ "$(jq -r '.merged // false' "$POST_MERGE_PR_JSON")" != "true" ]; then
+            echo "PR #$PR did not report a completed merge; refusing post-merge dispatch."
+            exit 1
+          fi
+          if ! [[ "$MERGE_SHA" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+            echo "PR #$PR returned an invalid merge commit SHA; refusing post-merge dispatch."
+            exit 1
+          fi
+          if [ "$MERGED_HEAD_SHA" != "$HEAD_SHA" ]; then
+            echo "PR #$PR merged a different reviewed head; refusing post-merge dispatch."
+            exit 1
+          fi
+          if [ "$MERGED_HEAD_REPOSITORY" != "$REPOSITORY" ]; then
+            echo "PR #$PR no longer belongs to the same repository; refusing post-merge dispatch."
+            exit 1
+          fi
+          if [ "$MERGED_BASE_BRANCH" != "$DEFAULT_BRANCH" ]; then
+            echo "PR #$PR merged into an unexpected base branch; refusing post-merge dispatch."
+            exit 1
+          fi
+
+          DEFAULT_BRANCH_SHA=$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/$REPOSITORY/git/ref/heads/$DEFAULT_BRANCH" \
+            --jq '.object.sha // ""')
+          if ! [[ "$DEFAULT_BRANCH_SHA" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+            echo "The protected default branch returned an invalid SHA; refusing post-merge dispatch."
+            exit 1
+          fi
+          COMPARE_STATUS=$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/$REPOSITORY/compare/$MERGE_SHA...$DEFAULT_BRANCH_SHA" \
+            --jq '.status // ""')
+          if [ "$COMPARE_STATUS" != "identical" ] && [ "$COMPARE_STATUS" != "ahead" ]; then
+            echo "Merge commit $MERGE_SHA is not reachable from protected $DEFAULT_BRANCH; refusing post-merge dispatch."
+            exit 1
+          fi
+
+          POST_MERGE_DISPATCH_JSON="$RUNNER_TEMP/post-merge-dispatch.json"
+          jq -n \
+            --arg event_type 'post-controlled-auto-merge-ci' \
+            --arg merge_sha "$MERGE_SHA" \
+            --argjson pr_number "$PR" \
+            --arg reviewed_head_sha "$HEAD_SHA" \
+            '{
+              event_type: $event_type,
+              client_payload: {
+                merge_sha: $merge_sha,
+                pr_number: $pr_number,
+                reviewed_head_sha: $reviewed_head_sha
+              }
+            }' > "$POST_MERGE_DISPATCH_JSON"
+          gh api \
+            --method POST \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/$REPOSITORY/dispatches" \
+            --input "$POST_MERGE_DISPATCH_JSON"
+          echo "Dispatched trusted post-merge CI for PR #$PR at $MERGE_SHA."

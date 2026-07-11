@@ -499,13 +499,28 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2026-07-11T10:29:19.287Z"
+      },
+      {
+        "id": "65",
+        "title": "Guarantee post-merge CI after controlled auto-merge",
+        "description": "Ensure controlled auto-merge explicitly launches trusted CI for the exact squash merge commit because pushes created with github.token do not produce a push-triggered workflow run.",
+        "details": "Add a protected-default-branch post-merge verification dispatch with least privilege, exact merge-SHA binding, fail-closed validation, adversarial workflow contract tests, and evidence that the merged commit receives deterministic CI without executing PR-controlled code. Preserve all existing auto-merge trust-boundary, branch-protection, and deny-path controls. Do not change product code, packages, lockfiles, Aegis runtime, authority, deployment, or secrets.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "52",
+          "64"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-11T16:07:43.918Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-11T14:30:28.966Z",
-      "taskCount": 32,
-      "completedCount": 12,
+      "lastModified": "2026-07-11T16:07:43.918Z",
+      "taskCount": 33,
+      "completedCount": 13,
       "tags": [
         "master"
       ]

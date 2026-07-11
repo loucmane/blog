@@ -2,11 +2,20 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 
+import {
+  POST_MERGE_EVENT_TYPE,
+  evaluatePostMergeContext,
+} from '../../scripts/ci/post-merge-context.mjs'
+
 const workflowPath = new URL(
   '../../.github/workflows/auto-merge.yml',
   import.meta.url,
 )
 const workflow = fs.readFileSync(workflowPath, 'utf8')
+const ciWorkflow = fs.readFileSync(
+  new URL('../../.github/workflows/ci.yml', import.meta.url),
+  'utf8',
+)
 const policy = fs.readFileSync(
   new URL('../../scripts/ci/auto-merge-policy.mjs', import.meta.url),
   'utf8',
@@ -277,4 +286,245 @@ test('does not require or add an auto-merge label', () => {
   assert.doesNotMatch(workflow, /github\.event\.label\.name == 'auto-merge'/)
   assert.doesNotMatch(workflow, /AUTO_MERGE_LABEL/)
   assert.doesNotMatch(workflow, /add-label|labels\/[^'" ]+$/m)
+})
+
+test('dispatches exact-commit CI only after a verified squash merge', () => {
+  const mergeIndex = workflow.indexOf('gh pr merge "$PR"')
+  const dispatchIndex = workflow.indexOf('"repos/$REPOSITORY/dispatches"')
+
+  assert.ok(mergeIndex >= 0)
+  assert.ok(dispatchIndex > mergeIndex)
+  assert.match(workflow, /POST_MERGE_PR_JSON=/)
+  assert.match(workflow, /\.merged \/\/ false/)
+  assert.match(workflow, /\.merge_commit_sha \/\/ ""/)
+  assert.match(workflow, /MERGED_HEAD_SHA" != "\$HEAD_SHA"/)
+  assert.match(workflow, /MERGED_HEAD_REPOSITORY" != "\$REPOSITORY"/)
+  assert.match(workflow, /MERGED_BASE_BRANCH" != "\$DEFAULT_BRANCH"/)
+  assert.match(workflow, /compare\/\$MERGE_SHA\.\.\.\$DEFAULT_BRANCH_SHA/)
+  assert.match(workflow, /COMPARE_STATUS" != "identical"/)
+  assert.match(workflow, /COMPARE_STATUS" != "ahead"/)
+  assert.match(workflow, /event_type: \$event_type/)
+  assert.match(workflow, /merge_sha: \$merge_sha/)
+  assert.match(workflow, /pr_number: \$pr_number/)
+  assert.match(workflow, /reviewed_head_sha: \$reviewed_head_sha/)
+  assert.match(workflow, /post-controlled-auto-merge-ci/)
+  assert.doesNotMatch(workflow, /workflow_dispatch/)
+  assert.doesNotMatch(workflow, /actions: write/)
+})
+
+test('runs repository-dispatched CI from trusted main before exact commit checkout', () => {
+  assert.match(
+    ciWorkflow,
+    /^  repository_dispatch:\n    types: \[post-controlled-auto-merge-ci\]$/m,
+  )
+  assert.match(
+    ciWorkflow,
+    /^  context:\n    name: context · resolve trusted verification commit$/m,
+  )
+  assert.match(
+    ciWorkflow,
+    /group: ci-\$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'repository_dispatch' && github\.run_id \|\| github\.ref \}\}/,
+  )
+  assert.match(ciWorkflow, /permissions:\n      contents: read/)
+  assert.match(ciWorkflow, /ref: \$\{\{ github\.sha \}\}/)
+  assert.match(ciWorkflow, /repos\/\$REPOSITORY\/pulls\/\$CLIENT_PR_NUMBER/)
+  assert.match(
+    ciWorkflow,
+    /git cat-file -e "\$\{CLIENT_MERGE_SHA\}\^\{commit\}"/,
+  )
+  assert.match(
+    ciWorkflow,
+    /git merge-base --is-ancestor "\$CLIENT_MERGE_SHA" "\$EVENT_SHA"/,
+  )
+  assert.match(
+    ciWorkflow,
+    /node scripts\/ci\/post-merge-context\.mjs evaluate --input "\$CONTEXT_INPUT"/,
+  )
+  assert.equal(ciWorkflow.match(/^    needs: context$/gm)?.length, 4)
+  assert.equal(
+    ciWorkflow.match(/ref: \$\{\{ needs\.context\.outputs\.checkout_ref \}\}/g)
+      ?.length,
+    4,
+  )
+  assert.doesNotMatch(ciWorkflow, /secrets\./)
+
+  const trustedCheckout = ciWorkflow.indexOf('ref: ${{ github.sha }}')
+  const payloadEvaluation = ciWorkflow.indexOf(
+    'node scripts/ci/post-merge-context.mjs evaluate',
+  )
+  const exactCommitCheckout = ciWorkflow.indexOf(
+    'ref: ${{ needs.context.outputs.checkout_ref }}',
+  )
+  assert.ok(trustedCheckout >= 0)
+  assert.ok(payloadEvaluation > trustedCheckout)
+  assert.ok(exactCommitCheckout > payloadEvaluation)
+})
+
+function validPostMergeInput() {
+  const mergeSha = 'a'.repeat(40)
+  const reviewedHeadSha = 'b'.repeat(40)
+
+  return {
+    action: POST_MERGE_EVENT_TYPE,
+    client_payload: {
+      merge_sha: mergeSha,
+      pr_number: 25,
+      reviewed_head_sha: reviewedHeadSha,
+    },
+    default_branch: 'main',
+    event_name: 'repository_dispatch',
+    github_sha: 'c'.repeat(40),
+    merge_is_ancestor_of_event_sha: true,
+    pull_request: {
+      base: {
+        ref: 'main',
+        repo: { full_name: 'loucmane/blog' },
+      },
+      head: {
+        repo: { full_name: 'loucmane/blog' },
+        sha: reviewedHeadSha,
+      },
+      merge_commit_sha: mergeSha,
+      merged: true,
+      merged_at: '2026-07-11T14:39:00Z',
+      number: 25,
+      state: 'closed',
+    },
+    repository: 'loucmane/blog',
+  }
+}
+
+test('allows standard CI events and the verified post-merge dispatch', () => {
+  for (const eventName of ['push', 'pull_request']) {
+    const result = evaluatePostMergeContext({
+      event_name: eventName,
+      github_sha: 'd'.repeat(40),
+    })
+    assert.equal(result.decision, 'allow')
+    assert.equal(result.mode, 'standard-event')
+  }
+
+  const result = evaluatePostMergeContext(validPostMergeInput())
+  assert.equal(result.decision, 'allow')
+  assert.equal(result.mode, 'post-merge-dispatch')
+  assert.equal(result.checkout_ref, 'a'.repeat(40))
+  assert.deepEqual(result.reasons, [])
+})
+
+test('fails closed for malformed and unsupported CI context', () => {
+  assert.equal(evaluatePostMergeContext(null).decision, 'deny')
+  assert.equal(
+    evaluatePostMergeContext({
+      event_name: 'workflow_dispatch',
+      github_sha: 'd'.repeat(40),
+    }).decision,
+    'deny',
+  )
+  assert.equal(
+    evaluatePostMergeContext({ event_name: 'push', github_sha: 'invalid' })
+      .decision,
+    'deny',
+  )
+})
+
+test('denies adversarial post-merge dispatch evidence', async (t) => {
+  const cases = [
+    [
+      'wrong dispatch action',
+      (input) => {
+        input.action = 'untrusted-event'
+      },
+      'invalid-dispatch-action',
+    ],
+    [
+      'missing payload',
+      (input) => {
+        delete input.client_payload
+      },
+      'invalid-client-payload',
+    ],
+    [
+      'malformed merge sha',
+      (input) => {
+        input.client_payload.merge_sha = 'not-a-sha'
+      },
+      'invalid-merge-sha',
+    ],
+    [
+      'extra payload field',
+      (input) => {
+        input.client_payload.untrusted = true
+      },
+      'unexpected-client-payload-shape',
+    ],
+    [
+      'invalid pull request number',
+      (input) => {
+        input.client_payload.pr_number = 0
+      },
+      'invalid-pr-number',
+    ],
+    [
+      'unmerged pull request',
+      (input) => {
+        input.pull_request.merged = false
+      },
+      'pull-request-not-merged',
+    ],
+    [
+      'different merge commit',
+      (input) => {
+        input.pull_request.merge_commit_sha = 'e'.repeat(40)
+      },
+      'merge-sha-mismatch',
+    ],
+    [
+      'moved reviewed head',
+      (input) => {
+        input.pull_request.head.sha = 'f'.repeat(40)
+      },
+      'reviewed-head-mismatch',
+    ],
+    [
+      'fork repository',
+      (input) => {
+        input.pull_request.head.repo.full_name = 'attacker/fork'
+      },
+      'fork-or-repository-mismatch',
+    ],
+    [
+      'wrong base branch',
+      (input) => {
+        input.pull_request.base.ref = 'release'
+      },
+      'base-branch-mismatch',
+    ],
+    [
+      'wrong base repository',
+      (input) => {
+        input.pull_request.base.repo.full_name = 'attacker/fork'
+      },
+      'base-repository-mismatch',
+    ],
+    [
+      'merge absent from event main',
+      (input) => {
+        input.merge_is_ancestor_of_event_sha = false
+      },
+      'merge-not-on-event-main',
+    ],
+  ]
+
+  for (const [name, mutate, expectedCategory] of cases) {
+    await t.test(name, () => {
+      const input = validPostMergeInput()
+      mutate(input)
+      const result = evaluatePostMergeContext(input)
+      assert.equal(result.decision, 'deny')
+      assert.equal(result.checkout_ref, null)
+      assert.ok(
+        result.reasons.some((reason) => reason.category === expectedCategory),
+      )
+    })
+  }
 })
