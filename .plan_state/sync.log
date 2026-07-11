@@ -508,5 +508,23 @@
     "plan_hash": "e246ec7ba8901c902ebe3946802eb0cb225f4f40025ae36445a9095d539f11e1",
     "tracker_hash": "eb360214ab403e377a84f662aae2475bfb222c216179b5f0eea0dd02a575b1d6",
     "synced_at": "2026-07-11T21:13:24.655999+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task67-gitleaks-repository-dispatch.md",
+    "plan_hash": "8cda64778221eb264e9617f071036c5c5396577270ede69f5bafff08fddea098",
+    "tracker_hash": "9a1bf38fb5d66311a9f9cd237430efe950aada50434a2468812b9e3c2f7743cd",
+    "synced_at": "2026-07-11T22:08:23.076162+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task67-gitleaks-repository-dispatch.md",
+    "plan_hash": "ade1c7bf2dd43555391c994a4d5fa8ca13823a62bb18c486d101df1e7c5dbff6",
+    "tracker_hash": "8ed21daa62be934d9372099f1ecd81fdcc79e2db057c5b66dae153a5a9558a93",
+    "synced_at": "2026-07-11T22:16:53.765664+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task67-gitleaks-repository-dispatch.md",
+    "plan_hash": "ade1c7bf2dd43555391c994a4d5fa8ca13823a62bb18c486d101df1e7c5dbff6",
+    "tracker_hash": "d7a3960d5ffa4707854ade38a443f3d38fa72a1760de0cfe8d917db20cfcefc6",
+    "synced_at": "2026-07-11T22:19:00.877515+02:00"
   }
 ]

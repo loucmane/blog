@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import test from 'node:test'
 
@@ -19,6 +20,35 @@ const ciWorkflow = fs.readFileSync(
 const policy = fs.readFileSync(
   new URL('../../scripts/ci/auto-merge-policy.mjs', import.meta.url),
   'utf8',
+)
+const secretScanJob = ciWorkflow.match(
+  /^  secret-scan:\n[\s\S]*?(?=^  dependency-review:)/m,
+)?.[0]
+
+assert.ok(secretScanJob)
+
+function extractRunBlock(job, stepName) {
+  const stepMarker = `      - name: ${stepName}\n`
+  const stepStart = job.indexOf(stepMarker)
+  assert.ok(stepStart >= 0, `missing workflow step: ${stepName}`)
+
+  const runMarker = '        run: |\n'
+  const runStart = job.indexOf(runMarker, stepStart)
+  assert.ok(runStart >= 0, `missing run block: ${stepName}`)
+
+  const rawBlock = job.slice(runStart + runMarker.length)
+  const nextStep = rawBlock.search(/^      - name: /m)
+  const block = nextStep >= 0 ? rawBlock.slice(0, nextStep) : rawBlock
+
+  return block
+    .split('\n')
+    .map((line) => (line.startsWith('          ') ? line.slice(10) : line))
+    .join('\n')
+}
+
+const gitleaksEnforcementScript = extractRunBlock(
+  secretScanJob,
+  'Enforce event-specific Gitleaks execution',
 )
 
 test('handles CI completion and pull-request eligibility state changes', () => {
@@ -358,6 +388,123 @@ test('runs repository-dispatched CI from trusted main before exact commit checko
   assert.ok(trustedCheckout >= 0)
   assert.ok(payloadEvaluation > trustedCheckout)
   assert.ok(exactCommitCheckout > payloadEvaluation)
+})
+
+test('keeps the pinned Gitleaks action for push and pull-request events', () => {
+  assert.equal(
+    secretScanJob.match(/uses: gitleaks\/gitleaks-action@/g)?.length,
+    1,
+  )
+  assert.match(
+    secretScanJob,
+    /if: github\.event_name == 'push' \|\| github\.event_name == 'pull_request'\n        uses: gitleaks\/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e/,
+  )
+  assert.match(secretScanJob, /GITLEAKS_ENABLE_COMMENTS: "false"/)
+  assert.match(secretScanJob, /GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"/)
+})
+
+test('uses a checksum-pinned official Gitleaks CLI for repository dispatch', () => {
+  assert.match(
+    secretScanJob,
+    /GITLEAKS_VERSION: 8\.30\.1/,
+  )
+  assert.match(
+    secretScanJob,
+    /GITLEAKS_ARCHIVE_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb/,
+  )
+  assert.match(
+    secretScanJob,
+    /https:\/\/github\.com\/gitleaks\/gitleaks\/releases\/download\/v\$\{GITLEAKS_VERSION\}\/gitleaks_\$\{GITLEAKS_VERSION\}_linux_x64\.tar\.gz/,
+  )
+  assert.match(secretScanJob, /sha256sum --check --status/)
+  assert.match(secretScanJob, /tar -xzf "\$archive" -C "\$extract_dir" gitleaks/)
+  assert.doesNotMatch(secretScanJob, /releases\/latest/)
+  assert.doesNotMatch(secretScanJob, /curl[^\n]*\|\s*(?:bash|sh)/)
+  assert.doesNotMatch(secretScanJob, /actions\/download-artifact@/)
+})
+
+test('binds the dispatch CLI scan to the trusted exact commit and full history', () => {
+  assert.match(secretScanJob, /^    needs: context$/m)
+  assert.match(
+    secretScanJob,
+    /ref: \$\{\{ needs\.context\.outputs\.checkout_ref \}\}/,
+  )
+  assert.match(
+    secretScanJob,
+    /TRUSTED_CHECKOUT_REF: \$\{\{ needs\.context\.outputs\.checkout_ref \}\}/,
+  )
+  assert.match(secretScanJob, /actual_ref=\$\(git rev-parse HEAD\)/)
+  assert.match(secretScanJob, /"\$actual_ref" != "\$TRUSTED_CHECKOUT_REF"/)
+  assert.match(secretScanJob, /gitleaks git \\/)
+  assert.match(
+    secretScanJob,
+    /--gitleaks-ignore-path "\$GITHUB_WORKSPACE\/\.gitleaksignore" \\/,
+  )
+  assert.match(secretScanJob, /--log-opts="--all" \\/)
+  assert.match(secretScanJob, /"\$GITHUB_WORKSPACE"/)
+  assert.doesNotMatch(secretScanJob, /--config/)
+})
+
+test('fails closed unless the event-specific Gitleaks path completes', () => {
+  assert.match(
+    secretScanJob,
+    /id: action_scan\n        if: github\.event_name == 'push' \|\| github\.event_name == 'pull_request'/,
+  )
+  assert.match(
+    secretScanJob,
+    /id: dispatch_cli\n        if: github\.event_name == 'repository_dispatch'/,
+  )
+  assert.match(
+    secretScanJob,
+    /id: dispatch_scan\n        if: github\.event_name == 'repository_dispatch'/,
+  )
+  assert.match(secretScanJob, /ACTION_SCAN: \$\{\{ steps\.action_scan\.outcome \}\}/)
+  assert.match(secretScanJob, /DISPATCH_CLI: \$\{\{ steps\.dispatch_cli\.outcome \}\}/)
+  assert.match(secretScanJob, /DISPATCH_SCAN: \$\{\{ steps\.dispatch_scan\.outcome \}\}/)
+  assert.match(secretScanJob, /push\|pull_request\)/)
+  assert.match(secretScanJob, /repository_dispatch\)/)
+  assert.match(secretScanJob, /No Gitleaks execution contract exists for event/)
+  assert.doesNotMatch(secretScanJob, /continue-on-error:/)
+  assert.doesNotMatch(secretScanJob, /^    if: always\(\)$/m)
+})
+
+test('executes the event-path outcome contract and denies skipped scanners', async (t) => {
+  const runContract = (eventName, outcomes) =>
+    spawnSync('bash', ['-c', gitleaksEnforcementScript], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        ACTION_SCAN: outcomes.action,
+        DISPATCH_CLI: outcomes.cli,
+        DISPATCH_SCAN: outcomes.scan,
+        EVENT_NAME: eventName,
+      },
+    })
+
+  const allowed = [
+    ['push', { action: 'success', cli: 'skipped', scan: 'skipped' }],
+    ['pull_request', { action: 'success', cli: 'skipped', scan: 'skipped' }],
+    ['repository_dispatch', { action: 'skipped', cli: 'success', scan: 'success' }],
+  ]
+  for (const [eventName, outcomes] of allowed) {
+    await t.test(`allows ${eventName} expected outcomes`, () => {
+      assert.equal(runContract(eventName, outcomes).status, 0)
+    })
+  }
+
+  const denied = [
+    ['push scanner skipped', 'push', { action: 'skipped', cli: 'skipped', scan: 'skipped' }],
+    ['pull-request scanner failed', 'pull_request', { action: 'failure', cli: 'skipped', scan: 'skipped' }],
+    ['dispatch installer skipped', 'repository_dispatch', { action: 'skipped', cli: 'skipped', scan: 'skipped' }],
+    ['dispatch scanner skipped', 'repository_dispatch', { action: 'skipped', cli: 'success', scan: 'skipped' }],
+    ['dispatch action unexpectedly ran', 'repository_dispatch', { action: 'success', cli: 'success', scan: 'success' }],
+    ['unknown event', 'workflow_dispatch', { action: 'skipped', cli: 'skipped', scan: 'skipped' }],
+  ]
+  for (const [name, eventName, outcomes] of denied) {
+    await t.test(`denies ${name}`, () => {
+      assert.notEqual(runContract(eventName, outcomes).status, 0)
+    })
+  }
 })
 
 function validPostMergeInput() {

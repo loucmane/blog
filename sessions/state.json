@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task66-post-merge-ci-dispatch-canary.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task66-post-merge-ci-dispatch-canary.md",
+  "current": "2026-07-11-001-task67-gitleaks-repository-dispatch.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task67-gitleaks-repository-dispatch.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "66",
-    "slug": "post-merge-ci-dispatch-canary",
-    "status": "completed",
-    "title": "Prove controlled post-merge CI dispatch canary"
+    "id": "67",
+    "slug": "gitleaks-repository-dispatch",
+    "status": "in-progress",
+    "title": "Support Gitleaks on trusted post-merge dispatch"
   },
-  "updated_at": "2026-07-11T19:10:53Z"
+  "updated_at": "2026-07-11T19:58:14Z"
 }
