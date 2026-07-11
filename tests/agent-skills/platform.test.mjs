@@ -27,6 +27,9 @@ function copyFixture() {
     ".claude/skills/cross-agent-skill-platform/agents/openai.yaml",
     ".claude/skills/magazine-product-discovery/SKILL.md",
     ".claude/skills/magazine-product-discovery/agents/openai.yaml",
+    ".claude/skills/owner-publishing-ux/SKILL.md",
+    ".claude/skills/owner-publishing-ux/agents/openai.yaml",
+    ".claude/skills/owner-publishing-ux/references/owner-publishing-ux-output-contract.md",
     ".claude/skills/stack-research-adr/SKILL.md",
     ".claude/skills/stack-research-adr/agents/openai.yaml",
     ".claude/skills/stack-research-adr/references/stack-research-adr-output-contract.md",
@@ -47,6 +50,10 @@ function copyFixture() {
     "../../.claude/skills/stack-research-adr",
     path.join(root, ".agents/skills/stack-research-adr"),
   );
+  fs.symlinkSync(
+    "../../.claude/skills/owner-publishing-ux",
+    path.join(root, ".agents/skills/owner-publishing-ux"),
+  );
   return root;
 }
 
@@ -62,8 +69,8 @@ test("validates the repository cross-agent platform", () => {
   assert.deepEqual(report.errors, []);
   assert.equal(report.passed, true);
   assert.deepEqual(report.summary, {
-    skills: 3,
-    routes: 3,
+    skills: 4,
+    routes: 4,
     upstreamEntries: 0,
   });
 });

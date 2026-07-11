@@ -1,0 +1,4 @@
+interface:
+  display_name: "Owner Publishing UX"
+  short_description: "Design safe publishing journeys for nontechnical owners"
+  default_prompt: "Use $owner-publishing-ux to design or review a nontechnical magazine owner publishing journey."

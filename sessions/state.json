@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task64-manifest-verification-diff-policy.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task64-manifest-verification-diff-policy.md",
+  "current": "2026-07-11-001-task52-owner-publishing-ux-skill.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task52-owner-publishing-ux-skill.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "64",
-    "slug": "manifest-verification-diff-policy",
+    "id": "52",
+    "slug": "owner-publishing-ux-skill",
     "status": "in-progress",
-    "title": "Permit Verification-Only Aegis Manifest Diffs in Autonomous Delivery"
+    "title": "Implement Owner Publishing UX Skill"
   },
-  "updated_at": "2026-07-11T10:14:33Z"
+  "updated_at": "2026-07-11T12:16:46Z"
 }

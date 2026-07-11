@@ -58,6 +58,25 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "owner-publishing-ux",
+      "match": [
+        "docs/product/content-workflow.md",
+        "docs/product/owner-publishing/**",
+        "docs/design/owner-publishing/**",
+        "docs/research/owner-publishing/**"
+      ],
+      "skills": [
+        "owner-publishing-ux"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }
