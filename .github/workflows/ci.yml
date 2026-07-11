@@ -51,6 +51,18 @@ jobs:
           set -o pipefail
           pnpm typecheck 2>&1 | tee ci-artifacts/typecheck.log
 
+      - name: Dependency security policy
+        id: dependency_security
+        if: always() && steps.install.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+            pnpm test:security-hotfix
+            pnpm security:audit
+          } 2>&1 | tee ci-artifacts/dependency-security.log
+
       - name: Lint
         id: lint
         if: always() && steps.install.outcome == 'success'
@@ -87,19 +99,30 @@ jobs:
           set -o pipefail
           pnpm build 2>&1 | tee ci-artifacts/build.log
 
+      - name: Production web smoke
+        id: production_smoke
+        if: always() && steps.build.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test:smoke:web 2>&1 | tee ci-artifacts/web-production-smoke.log
+
       - name: Enforce workspace results
         if: always()
         shell: bash
         env:
           INSTALL: ${{ steps.install.outcome }}
+          DEPENDENCY_SECURITY: ${{ steps.dependency_security.outcome }}
           TYPECHECK: ${{ steps.typecheck.outcome }}
           LINT: ${{ steps.lint.outcome }}
           UNIT_TESTS: ${{ steps.unit_tests.outcome }}
           BROWSER_TESTS: ${{ steps.browser_tests.outcome }}
           BUILD: ${{ steps.build.outcome }}
+          PRODUCTION_SMOKE: ${{ steps.production_smoke.outcome }}
         run: |
           failed=0
-          for stage in INSTALL TYPECHECK LINT UNIT_TESTS BROWSER_TESTS BUILD; do
+          for stage in INSTALL DEPENDENCY_SECURITY TYPECHECK LINT UNIT_TESTS BROWSER_TESTS BUILD PRODUCTION_SMOKE; do
             value="${!stage}"
             printf '%s=%s\n' "$stage" "$value"
             if [ "$value" != "success" ]; then

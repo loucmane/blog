@@ -438,7 +438,7 @@
   },
   "schema_version": "1.0.0",
   "verification": {
-    "last_verified_at": "2026-07-10T23:28:37Z",
+    "last_verified_at": "2026-07-11T09:27:02Z",
     "reports": [
       ".aegis/reports/verification-report.json"
     ],

@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task51-stack-research-adr-skill.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task51-stack-research-adr-skill.md",
+  "current": "2026-07-11-001-task63-dependency-security-hotfix.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task63-dependency-security-hotfix.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "51",
-    "slug": "stack-research-adr-skill",
-    "status": "completed",
-    "title": "Implement Stack Research ADR Skill"
+    "id": "63",
+    "slug": "dependency-security-hotfix",
+    "status": "in-progress",
+    "title": "Eliminate Critical and High Dependency Vulnerabilities"
   },
-  "updated_at": "2026-07-10T22:17:08Z"
+  "updated_at": "2026-07-11T08:51:28Z"
 }
