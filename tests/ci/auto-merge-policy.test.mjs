@@ -5,10 +5,12 @@ import test from 'node:test'
 
 import {
   AEGIS_FOUNDATION_MANIFEST_PATH,
+  AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS,
   AUTO_MERGE_CHECK_NAME,
   REQUIRED_CHECKS,
   classifyPullRequest as classifyPullRequestPolicy,
-  evaluateAegisManifestVerification,
+  evaluateAegisManifestObjectEvidence,
+  evaluateAegisManifestVerification as evaluateAegisManifestVerificationPolicy,
   evaluatePackageScripts,
   evaluateRequiredChecks,
 } from '../../scripts/ci/auto-merge-policy.mjs'
@@ -27,11 +29,27 @@ const pr19BaseManifestText = fs.readFileSync(
   'utf8',
 )
 const pr19BaseManifest = JSON.parse(pr19BaseManifestText)
+const manifestObjectFixture = JSON.parse(
+  fs.readFileSync(
+    new URL('./fixtures/aegis-manifest-object-policy.json', import.meta.url),
+    'utf8',
+  ),
+)
+const DEFAULT_TRUSTED_EVALUATION_TIME = '2026-07-11T09:00:00Z'
 
 function classifyPullRequest(input = {}) {
   return classifyPullRequestPolicy({
     file_inventory_complete: true,
     ...input,
+  })
+}
+
+function evaluateAegisManifestVerification(
+  input = {},
+  trustedEvaluationTime = DEFAULT_TRUSTED_EVALUATION_TIME,
+) {
+  return evaluateAegisManifestVerificationPolicy(input, {
+    trustedEvaluationTime,
   })
 }
 
@@ -117,6 +135,41 @@ function adversarialManifestEntry(fixtureCase) {
   }
 }
 
+function manifestObjectEntriesForCase(fixtureCase) {
+  const entries = structuredClone(manifestObjectFixture.entries)
+  const head = entries.find((entry) => entry.revision === 'head')
+  switch (fixtureCase.operation) {
+    case 'set-head':
+      setAtPath(head, fixtureCase.path, fixtureCase.value)
+      break
+    case 'replace-head-manifest-tree':
+      head.manifest_tree = structuredClone(fixtureCase.value)
+      break
+    case 'omit-head':
+      return entries.filter((entry) => entry.revision !== 'head')
+    case 'duplicate-head':
+      entries.push(structuredClone(head))
+      break
+    case 'replace-head':
+      return entries.map((entry) =>
+        entry.revision === 'head'
+          ? structuredClone(fixtureCase.value)
+          : entry,
+      )
+    default:
+      throw new Error(
+        `Unsupported object fixture operation: ${fixtureCase.operation}`,
+      )
+  }
+  return entries
+}
+
+function regularManifestObjectEvidence() {
+  return evaluateAegisManifestObjectEvidence({
+    entries: structuredClone(manifestObjectFixture.entries),
+  })
+}
+
 test('allows a documentation-only pull request without an opt-in label', () => {
   const result = classifyPullRequest({
     files: ['docs/product/vision.md', 'README.md'],
@@ -153,10 +206,15 @@ test('allows cataloged domain-skill paths while protecting the control skill', (
 
 test('allows PR #19 exact verification-only manifest timestamp delta', () => {
   const { base, head } = pr19ManifestPair()
-  const verification = evaluateAegisManifestVerification({
-    entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
-  })
+  const objectEvidence = regularManifestObjectEvidence()
+  const verification = evaluateAegisManifestVerification(
+    {
+      entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
+    },
+    pr19Fixture.source.trusted_evaluation_time,
+  )
   const result = classifyPullRequest({
+    aegis_manifest_object: objectEvidence,
     aegis_manifest_verification: verification,
     files: [
       {
@@ -167,6 +225,15 @@ test('allows PR #19 exact verification-only manifest timestamp delta', () => {
   })
 
   assert.equal(verification.decision, 'allow')
+  assert.equal(objectEvidence.decision, 'allow')
+  assert.equal(
+    verification.maximum_future_skew_seconds,
+    AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS,
+  )
+  assert.equal(
+    verification.trusted_evaluation_time,
+    pr19Fixture.source.trusted_evaluation_time,
+  )
   assert.equal(pr19Fixture.source.pull_request, 19)
   assert.equal(
     pr19Fixture.source.base_commit,
@@ -194,12 +261,68 @@ test('allows PR #19 exact verification-only manifest timestamp delta', () => {
   assert.deepEqual(result.reasons, [])
 })
 
+test('allows only unique regular 100644 blobs for base and head', () => {
+  const evidence = regularManifestObjectEvidence()
+
+  assert.equal(evidence.decision, 'allow')
+  assert.deepEqual(
+    evidence.results.map(({ revision, state }) => ({ revision, state })),
+    [
+      { revision: 'base', state: 'regular-blob' },
+      { revision: 'head', state: 'regular-blob' },
+    ],
+  )
+  assert.ok(evidence.results.every((result) => result.blob_sha))
+})
+
+for (const fixtureCase of manifestObjectFixture.adversarial_cases) {
+  test(`denies manifest object fixture: ${fixtureCase.name}`, () => {
+    const objectEvidence = evaluateAegisManifestObjectEvidence({
+      entries: manifestObjectEntriesForCase(fixtureCase),
+    })
+    const { base, head } = pr19ManifestPair()
+    const verification = evaluateAegisManifestVerification(
+      {
+        entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
+      },
+      pr19Fixture.source.trusted_evaluation_time,
+    )
+    const result = classifyPullRequest({
+      aegis_manifest_object: objectEvidence,
+      aegis_manifest_verification: verification,
+      files: [
+        {
+          filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+          status: 'modified',
+        },
+      ],
+    })
+
+    assert.equal(objectEvidence.decision, 'deny')
+    assert.equal(
+      objectEvidence.results.find((entry) => entry.revision === 'head')
+        ?.state,
+      fixtureCase.expected_state,
+    )
+    assert.equal(result.decision, 'deny')
+    assert.ok(
+      result.reasons.some(
+        (reason) => reason.category === 'aegis-manifest-object',
+      ),
+    )
+  })
+}
+
 for (const fixtureCase of pr19Fixture.adversarial_cases) {
   test(`denies PR #19 manifest fixture: ${fixtureCase.name}`, () => {
-    const verification = evaluateAegisManifestVerification({
-      entries: [adversarialManifestEntry(fixtureCase)],
-    })
+    const verification = evaluateAegisManifestVerification(
+      {
+        entries: [adversarialManifestEntry(fixtureCase)],
+      },
+      pr19Fixture.source.trusted_evaluation_time,
+    )
     const result = classifyPullRequest({
+      aegis_manifest_object: regularManifestObjectEvidence(),
       aegis_manifest_verification: verification,
       files: [
         {
@@ -220,8 +343,105 @@ for (const fixtureCase of pr19Fixture.adversarial_cases) {
   })
 }
 
+test('allows current time and the exact five-minute skew boundary', () => {
+  const trustedEvaluationTime = '2026-07-11T12:00:00Z'
+  const current = evaluateAegisManifestVerification(
+    {
+      entries: [
+        {
+          path: AEGIS_FOUNDATION_MANIFEST_PATH,
+          base: foundationManifest('2026-07-11T11:59:00Z'),
+          head: foundationManifest('2026-07-11T12:00:00Z'),
+        },
+      ],
+    },
+    trustedEvaluationTime,
+  )
+  const boundary = evaluateAegisManifestVerification(
+    {
+      entries: [
+        {
+          path: AEGIS_FOUNDATION_MANIFEST_PATH,
+          base: foundationManifest('2026-07-11T12:00:00Z'),
+          head: foundationManifest('2026-07-11T12:05:00Z'),
+        },
+      ],
+    },
+    trustedEvaluationTime,
+  )
+
+  assert.equal(current.decision, 'allow')
+  assert.equal(boundary.decision, 'allow')
+})
+
+for (const [name, baseTimestamp, headTimestamp, expectedState] of [
+  [
+    'timestamp beyond the five-minute boundary',
+    '2026-07-11T12:00:00Z',
+    '2026-07-11T12:05:00.001Z',
+    'head-verification-timestamp-in-future',
+  ],
+  [
+    'year-9999 timestamp',
+    '2026-07-11T12:00:00Z',
+    '9999-12-31T23:59:59Z',
+    'head-verification-timestamp-in-future',
+  ],
+  [
+    'already-future base timestamp',
+    '2026-07-11T12:05:01Z',
+    '2026-07-11T12:05:02Z',
+    'base-verification-timestamp-in-future',
+  ],
+  [
+    'equal timestamp',
+    '2026-07-11T12:00:00Z',
+    '2026-07-11T12:00:00Z',
+    'unchanged-verification-timestamp',
+  ],
+]) {
+  test(`denies ${name}`, () => {
+    const verification = evaluateAegisManifestVerification(
+      {
+        entries: [
+          {
+            path: AEGIS_FOUNDATION_MANIFEST_PATH,
+            base: foundationManifest(baseTimestamp),
+            head: foundationManifest(headTimestamp),
+          },
+        ],
+      },
+      '2026-07-11T12:00:00Z',
+    )
+
+    assert.equal(verification.decision, 'deny')
+    assert.equal(verification.results[0]?.state, expectedState)
+  })
+}
+
+test('fails closed without a valid trusted evaluation time', () => {
+  const { base, head } = pr19ManifestPair()
+  const missing = evaluateAegisManifestVerificationPolicy(
+    { entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }] },
+    {},
+  )
+  const invalid = evaluateAegisManifestVerificationPolicy(
+    { entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }] },
+    { trustedEvaluationTime: 'not-a-timestamp' },
+  )
+
+  for (const verification of [missing, invalid]) {
+    assert.equal(verification.decision, 'deny')
+    assert.equal(
+      verification.results[0]?.state,
+      'invalid-trusted-evaluation-time',
+    )
+  }
+})
+
 test('denies foundation-manifest changes without trusted semantic evidence', () => {
   const result = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
     files: [
       {
         filename: AEGIS_FOUNDATION_MANIFEST_PATH,
@@ -255,6 +475,7 @@ test('denies any additional foundation-manifest semantic change', () => {
     entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
   })
   const result = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
     aegis_manifest_verification: verification,
     files: [
       {
@@ -281,6 +502,7 @@ test('denies stale timestamps and non-modified foundation-manifest paths', () =>
     ],
   })
   const removed = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
     aegis_manifest_verification: {
       decision: 'allow',
       results: [
@@ -313,6 +535,7 @@ test('keeps every other Aegis path denied beside a verified timestamp change', (
     entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
   })
   const result = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
     aegis_manifest_verification: verification,
     files: [
       {

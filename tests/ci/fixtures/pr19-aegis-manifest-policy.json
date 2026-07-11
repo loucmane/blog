@@ -7,7 +7,8 @@
     "base_manifest_fixture": "pr19-foundation-manifest-base.json",
     "base_manifest_sha256": "15930aed3aca4b020c0eabb7654a8ecf752153a0f109bf2c53864334317fad7f",
     "base_timestamp": "2026-07-10T22:47:33Z",
-    "head_timestamp": "2026-07-10T23:28:37Z"
+    "head_timestamp": "2026-07-10T23:28:37Z",
+    "trusted_evaluation_time": "2026-07-10T23:28:37Z"
   },
   "adversarial_cases": [
     {

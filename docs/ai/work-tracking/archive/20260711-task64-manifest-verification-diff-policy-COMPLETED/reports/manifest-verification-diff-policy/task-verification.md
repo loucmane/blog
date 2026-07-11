@@ -25,8 +25,8 @@ deployment, migrations, or data.
 | Browser capability | Pass, unsupported tracked | `pnpm test:capability browser`; Task 39 remains owner |
 | Package/application build | Pass | `pnpm build` |
 | Production web smoke | Pass | `pnpm test:smoke:web`; HTTP 200 |
-| Auto-merge policy | Pass | 45 policy assertions, including the exact PR #19 timestamp-only regression fixture and 14 adversarial manifest cases |
-| Privileged workflow contract | Pass | 13 workflow trust-boundary assertions |
+| Auto-merge policy | Pass | 65 policy assertions, including the exact PR #19 timestamp-only regression, unique regular-blob proof, timestamp bounds, and fail-closed adversarial cases |
+| Privileged workflow contract | Pass | 15 workflow trust-boundary assertions, including tree-object proof before semantic allowance and trusted runner time |
 | Workflow syntax | Pass | checksum-verified official `actionlint` 1.7.12 against `.github/workflows/auto-merge.yml` |
 | Skill platform | Pass | 3 skills, 3 routes, 4 test files |
 | Taskmaster CI | Pass | 32 tasks, 71 dependencies, zero errors |
@@ -35,15 +35,13 @@ deployment, migrations, or data.
 | Aegis capsule | Pass | `pnpm ci:aegis` |
 | Aegis strict verification | Pass | 31 checks, zero required failures, one expected advisory-mode warning |
 | Aegis brief | Pass | `aegis brief --check` |
-| Aegis CI witness | Pass before closeout; final-head rerun required after commit | scope, diff accounting, done-flip containment, delegated CI |
+| Aegis CI witness | Pass before delivery; final-head rerun required after commit | scope, diff accounting, done-flip containment, delegated CI |
 | Legacy guard | Pass | five completed-state regressions, S:W:H:E validation, expected 16-item drift baseline |
 | Secret scan | Pass | checksum-verified official `gitleaks` 8.30.1 staged scan; no leaks |
 | Diff integrity | Pass | `git diff --check` |
 
 ## Environment-Limited Checks
 
-- The dependency audit's nested `pnpm audit` process was denied by the sandbox;
-  the exact command passed with approved network access and zero advisories.
 - The web smoke could not bind loopback inside the sandbox; the exact command
   passed with approved loopback access and returned HTTP 200.
 - `actionlint` and `gitleaks` were not preinstalled. Their official release
@@ -55,9 +53,16 @@ deployment, migrations, or data.
 
 - Eligibility requires an in-place modification of exactly
   `.aegis/foundation-manifest.json`.
-- Protected `main` supplies the evaluator and base manifest.
-- GitHub supplies the exact pull-request-head manifest as inert JSON.
-- The head timestamp must be valid RFC 3339 and strictly advance.
+- Protected `main` supplies the evaluator and trusted base commit.
+- Non-recursive Git Database tree inspection must find exactly one `.aegis`
+  tree and exactly one `foundation-manifest.json` regular blob with mode
+  `100644` in both base and exact head; truncated, missing, duplicate, symlink,
+  executable, tree, submodule, or malformed evidence fails closed.
+- Manifest bytes are fetched by the tree-reported blob SHA and decoded only
+  after object proof succeeds.
+- The head timestamp must be valid RFC 3339, strictly advance, and be no later
+  than trusted runner time plus five minutes. A protected-base timestamp beyond
+  that bound also fails closed for attended recovery.
 - Canonical JSON after removing only `verification.last_verified_at` must be
   identical.
 - Both initial and final policy evaluations require an explicitly complete

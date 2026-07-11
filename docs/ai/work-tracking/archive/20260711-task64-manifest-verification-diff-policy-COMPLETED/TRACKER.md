@@ -25,6 +25,8 @@
 - **2026-07-11 12:27 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:agent:verification|E:docs/ai/work-tracking/active/20260711-task64-manifest-verification-diff-policy-ACTIVE/reports/manifest-verification-diff-policy/task-verification.md] Recorded protected-CI-equivalent workspace and governance verification, 43 focused policy/workflow assertions, Taskmaster health, Aegis witness, guard regressions, environment-limited hosted checks, and attended delivery boundary
 - **2026-07-11 12:28 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded strict Aegis verification: 31 checks, zero required failures, one expected advisory-mode warning, enforcement unchanged
 - **2026-07-11 13:04 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:serena:availability|E:serena/memory:absent] Confirmed Serena is not configured and no Serena memory was written; the completed Aegis archive, session, plan, and handoff remain the continuity sources.
+- **2026-07-11 13:40 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:independent-review:remediation|E:.github/workflows/auto-merge.yml] Continued closed Task 64 to remediate protected-path object-mode and future-timestamp findings on the existing branch and PR; authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-11 13:48 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:agent:verification|E:docs/ai/work-tracking/archive/20260711-task64-manifest-verification-diff-policy-COMPLETED/reports/manifest-verification-diff-policy/task-verification.md] Passed 65 policy assertions, 15 workflow contracts, actionlint, protected-CI-equivalent workspace/governance checks, strict Aegis verification, witness, guards, Taskmaster health, dependency validation, and diff integrity; enforcement remains advisory; authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -33,12 +35,12 @@
 - [ ] plan-step-emergency (if applicable)
 
 ## Current State
-Task 64 is closed, archived, and recorded done in Taskmaster. Task-scoped delivery verification and the attended governance pull-request boundary remain.
+Task 64 remains closed, archived, and recorded done in Taskmaster. Independent review remediation and the complete local verification matrix pass on the existing PR branch; final staged scanning, protected checks, and the attended governance boundary remain.
 
 ## Next Steps
-1. Run the final task-scoped verification matrix from the closed branch.
-2. Commit and push the coherent Task 64 governance change.
-3. Deliver the attended governance pull request without autonomous merge.
+1. Run the final staged secret scan and inspect the complete diff.
+2. Add and push a normal follow-up commit to PR #24 without rewriting history.
+3. Revalidate protected checks and the exact head, then stop without merging.
 
 ## Dependencies & Notes
 - Taskmaster: optional unless `.aegis/state/current-work.json` marks it required.

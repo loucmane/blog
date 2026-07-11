@@ -79,14 +79,31 @@ supported; script changes remain attended.
 
 Task 64 narrows one false-stop case without weakening the default Aegis deny
 boundary. The privileged workflow loads its evaluator and the base manifest
-only from protected `main`, retrieves the exact pull-request-head manifest as
-inert JSON through the GitHub contents API, and never checks out or executes
-pull-request content.
+only from protected `main` and never checks out or executes pull-request
+content. An independent review identified that GitHub's
+[Contents API can return a symlink target's content](https://docs.github.com/en/rest/repos/contents#get-repository-content),
+so content equality alone is insufficient proof of the protected path's Git
+object type.
+
+The remediated workflow resolves the trusted-base and exact-head commits
+through GitHub's Git Database APIs, traverses the root and `.aegis` trees one
+level at a time, and rejects every response unless it is explicitly
+non-truncated. GitHub documents the distinct file, executable, tree, submodule,
+and symlink modes and recommends non-recursive subtree traversal when a tree is
+truncated in its [Git Trees API](https://docs.github.com/en/rest/git/trees#get-a-tree).
+Both revisions must contain exactly one `.aegis` tree entry and exactly one
+`foundation-manifest.json` entry with `type=blob` and `mode=100644`. Only then
+does the workflow retrieve each manifest by the verified blob SHA through the
+[Git Blobs API](https://docs.github.com/en/rest/git/blobs#get-a-blob), validate
+the response SHA, encoding, decoded size, and JSON object shape, and pass the
+inert values to trusted policy code.
 
 The exception applies only to an in-place modification of
 `.aegis/foundation-manifest.json`. Both documents must be valid JSON objects,
 both timestamps must be valid RFC 3339 values, the head timestamp must advance,
-and canonical comparison after removing only
+and neither timestamp may be later than trusted runner evaluation time plus a
+documented five-minute clock skew. A protected-main timestamp already beyond
+that bound fails closed for attended recovery. Canonical comparison after removing only
 `verification.last_verified_at` must be equal. Missing evidence, a stale or
 unchanged timestamp, added/removed/renamed manifests, or any other key or value
 change remains attended. Every other `.aegis/` path remains denied.

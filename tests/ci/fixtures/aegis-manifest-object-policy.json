@@ -1,0 +1,150 @@
+{
+  "entries": [
+    {
+      "revision": "base",
+      "path": ".aegis/foundation-manifest.json",
+      "commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "root_tree": {
+        "truncated": false,
+        "entry_count": 1,
+        "path": ".aegis",
+        "type": "tree",
+        "mode": "040000",
+        "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "manifest_tree": {
+        "truncated": false,
+        "entry_count": 1,
+        "path": "foundation-manifest.json",
+        "type": "blob",
+        "mode": "100644",
+        "sha": "cccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    {
+      "revision": "head",
+      "path": ".aegis/foundation-manifest.json",
+      "commit_sha": "dddddddddddddddddddddddddddddddddddddddd",
+      "root_tree": {
+        "truncated": false,
+        "entry_count": 1,
+        "path": ".aegis",
+        "type": "tree",
+        "mode": "040000",
+        "sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "manifest_tree": {
+        "truncated": false,
+        "entry_count": 1,
+        "path": "foundation-manifest.json",
+        "type": "blob",
+        "mode": "100644",
+        "sha": "ffffffffffffffffffffffffffffffffffffffff"
+      }
+    }
+  ],
+  "adversarial_cases": [
+    {
+      "name": "regular file becomes symlink",
+      "operation": "set-head",
+      "path": ["manifest_tree", "mode"],
+      "value": "120000",
+      "expected_state": "manifest-entry-not-regular-blob"
+    },
+    {
+      "name": "executable bit is added",
+      "operation": "set-head",
+      "path": ["manifest_tree", "mode"],
+      "value": "100755",
+      "expected_state": "manifest-entry-not-regular-blob"
+    },
+    {
+      "name": "manifest blob is missing",
+      "operation": "replace-head-manifest-tree",
+      "value": {
+        "truncated": false,
+        "entry_count": 0,
+        "path": "",
+        "type": "",
+        "mode": "",
+        "sha": ""
+      },
+      "expected_state": "missing-manifest-entry"
+    },
+    {
+      "name": "manifest object has wrong type",
+      "operation": "set-head",
+      "path": ["manifest_tree", "type"],
+      "value": "tree",
+      "expected_state": "manifest-entry-not-regular-blob"
+    },
+    {
+      "name": "manifest entry is ambiguous",
+      "operation": "set-head",
+      "path": ["manifest_tree", "entry_count"],
+      "value": 2,
+      "expected_state": "ambiguous-manifest-entry"
+    },
+    {
+      "name": "aegis tree entry is missing",
+      "operation": "set-head",
+      "path": ["root_tree", "entry_count"],
+      "value": 0,
+      "expected_state": "missing-aegis-tree-entry"
+    },
+    {
+      "name": "root tree response is truncated",
+      "operation": "set-head",
+      "path": ["root_tree", "truncated"],
+      "value": true,
+      "expected_state": "truncated-or-unknown-root-tree"
+    },
+    {
+      "name": "manifest tree response is truncated",
+      "operation": "set-head",
+      "path": ["manifest_tree", "truncated"],
+      "value": true,
+      "expected_state": "truncated-or-unknown-manifest-tree"
+    },
+    {
+      "name": "manifest entry is a submodule",
+      "operation": "replace-head-manifest-tree",
+      "value": {
+        "truncated": false,
+        "entry_count": 1,
+        "path": "foundation-manifest.json",
+        "type": "commit",
+        "mode": "160000",
+        "sha": "ffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected_state": "manifest-entry-not-regular-blob"
+    },
+    {
+      "name": "head revision evidence is missing",
+      "operation": "omit-head",
+      "expected_state": "missing-revision-evidence"
+    },
+    {
+      "name": "head revision evidence is duplicated",
+      "operation": "duplicate-head",
+      "expected_state": "ambiguous-revision-evidence"
+    },
+    {
+      "name": "manifest path is unexpected",
+      "operation": "set-head",
+      "path": ["path"],
+      "value": ".aegis/other.json",
+      "expected_state": "unexpected-path"
+    },
+    {
+      "name": "head object evidence has malformed shape",
+      "operation": "replace-head",
+      "value": {
+        "revision": "head",
+        "path": ".aegis/foundation-manifest.json",
+        "commit_sha": "dddddddddddddddddddddddddddddddddddddddd"
+      },
+      "expected_state": "missing-or-invalid-root-tree"
+    }
+  ]
+}

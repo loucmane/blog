@@ -142,6 +142,7 @@ jobs:
 
           AEGIS_MANIFEST_PATH='.aegis/foundation-manifest.json'
           AEGIS_MANIFEST_INPUT="$RUNNER_TEMP/auto-merge-aegis-manifest-input.json"
+          AEGIS_MANIFEST_OBJECT_RESULT='{"decision":"not-applicable","results":[]}'
           printf '%s\n' '{"entries":[]}' > "$AEGIS_MANIFEST_INPUT"
           if jq -e --arg path "$AEGIS_MANIFEST_PATH" 'any(.[]; .filename == $path)' "$FILES_JSON" >/dev/null; then
             AEGIS_MANIFEST_STATUS=$(jq -r --arg path "$AEGIS_MANIFEST_PATH" '.[] | select(.filename == $path) | .status' "$FILES_JSON")
@@ -149,18 +150,182 @@ jobs:
               echo "$AEGIS_MANIFEST_PATH must be an in-place modification; attended review is required."
               exit 1
             fi
-            if [ ! -f "trusted/$AEGIS_MANIFEST_PATH" ]; then
-              echo "$AEGIS_MANIFEST_PATH is absent from trusted main; attended review is required."
+
+            TRUSTED_BASE_SHA=$(git -C trusted rev-parse HEAD)
+            if ! [[ "$TRUSTED_BASE_SHA" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+              echo "The trusted default-branch checkout returned an invalid commit SHA."
               exit 1
             fi
-            jq -e 'type == "object"' "trusted/$AEGIS_MANIFEST_PATH" >/dev/null
+            DEFAULT_REF_JSON="$RUNNER_TEMP/auto-merge-default-ref.json"
+            gh api \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "repos/$REPOSITORY/git/ref/heads/$DEFAULT_BRANCH" > "$DEFAULT_REF_JSON"
+            jq -e \
+              'type == "object" and .object.type == "commit" and (.object.sha | type == "string" and test("^[0-9a-f]{40}([0-9a-f]{24})?$"))' \
+              "$DEFAULT_REF_JSON" >/dev/null
+            CURRENT_DEFAULT_SHA=$(jq -r '.object.sha' "$DEFAULT_REF_JSON")
+            if [ "$TRUSTED_BASE_SHA" != "$CURRENT_DEFAULT_SHA" ]; then
+              echo "Protected $DEFAULT_BRANCH advanced after trusted checkout; waiting for a later evaluation."
+              exit 0
+            fi
+
+            collect_manifest_tree_evidence() {
+              local revision="$1"
+              local commit_sha="$2"
+              local output_path="$3"
+              local commit_json="$RUNNER_TEMP/aegis-$revision-commit.json"
+              local root_tree_json="$RUNNER_TEMP/aegis-$revision-root-tree.json"
+              local manifest_tree_json="$RUNNER_TEMP/aegis-$revision-manifest-tree.json"
+
+              gh api \
+                -H 'Accept: application/vnd.github+json' \
+                -H 'X-GitHub-Api-Version: 2026-03-10' \
+                "repos/$REPOSITORY/git/commits/$commit_sha" > "$commit_json"
+              jq -e --arg sha "$commit_sha" \
+                'type == "object" and .sha == $sha and (.tree | type == "object") and (.tree.sha | type == "string" and test("^[0-9a-f]{40}([0-9a-f]{24})?$"))' \
+                "$commit_json" >/dev/null
+              local root_tree_sha
+              root_tree_sha=$(jq -r '.tree.sha' "$commit_json")
+
+              gh api \
+                -H 'Accept: application/vnd.github+json' \
+                -H 'X-GitHub-Api-Version: 2026-03-10' \
+                "repos/$REPOSITORY/git/trees/$root_tree_sha" > "$root_tree_json"
+              jq -e --arg sha "$root_tree_sha" \
+                'type == "object" and .sha == $sha and (.tree | type == "array") and (.truncated | type == "boolean")' \
+                "$root_tree_json" >/dev/null
+
+              local root_truncated
+              local root_entry_count
+              local root_entry_json
+              local root_entry_path
+              local root_entry_type
+              local root_entry_mode
+              local root_entry_sha
+              root_truncated=$(jq -r '.truncated' "$root_tree_json")
+              root_entry_count=$(jq '[.tree[] | select(.path == ".aegis")] | length' "$root_tree_json")
+              root_entry_json=$(jq -c '[.tree[] | select(.path == ".aegis")] | if length == 1 then .[0] else {} end' "$root_tree_json")
+              root_entry_path=$(jq -r '.path // ""' <<< "$root_entry_json")
+              root_entry_type=$(jq -r '.type // ""' <<< "$root_entry_json")
+              root_entry_mode=$(jq -r '.mode // ""' <<< "$root_entry_json")
+              root_entry_sha=$(jq -r '.sha // ""' <<< "$root_entry_json")
+
+              local manifest_truncated=null
+              local manifest_entry_count=0
+              local manifest_entry_path=''
+              local manifest_entry_type=''
+              local manifest_entry_mode=''
+              local manifest_entry_sha=''
+              if [ "$root_truncated" = "false" ] && \
+                 [ "$root_entry_count" -eq 1 ] && \
+                 [ "$root_entry_path" = ".aegis" ] && \
+                 [ "$root_entry_type" = "tree" ] && \
+                 [ "$root_entry_mode" = "040000" ] && \
+                 [[ "$root_entry_sha" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+                gh api \
+                  -H 'Accept: application/vnd.github+json' \
+                  -H 'X-GitHub-Api-Version: 2026-03-10' \
+                  "repos/$REPOSITORY/git/trees/$root_entry_sha" > "$manifest_tree_json"
+                jq -e --arg sha "$root_entry_sha" \
+                  'type == "object" and .sha == $sha and (.tree | type == "array") and (.truncated | type == "boolean")' \
+                  "$manifest_tree_json" >/dev/null
+                manifest_truncated=$(jq -r '.truncated' "$manifest_tree_json")
+                manifest_entry_count=$(jq '[.tree[] | select(.path == "foundation-manifest.json")] | length' "$manifest_tree_json")
+                local manifest_entry_json
+                manifest_entry_json=$(jq -c '[.tree[] | select(.path == "foundation-manifest.json")] | if length == 1 then .[0] else {} end' "$manifest_tree_json")
+                manifest_entry_path=$(jq -r '.path // ""' <<< "$manifest_entry_json")
+                manifest_entry_type=$(jq -r '.type // ""' <<< "$manifest_entry_json")
+                manifest_entry_mode=$(jq -r '.mode // ""' <<< "$manifest_entry_json")
+                manifest_entry_sha=$(jq -r '.sha // ""' <<< "$manifest_entry_json")
+              fi
+
+              jq -n \
+                --arg revision "$revision" \
+                --arg path "$AEGIS_MANIFEST_PATH" \
+                --arg commit_sha "$commit_sha" \
+                --argjson root_truncated "$root_truncated" \
+                --arg root_entry_count "$root_entry_count" \
+                --arg root_entry_path "$root_entry_path" \
+                --arg root_entry_type "$root_entry_type" \
+                --arg root_entry_mode "$root_entry_mode" \
+                --arg root_entry_sha "$root_entry_sha" \
+                --argjson manifest_truncated "$manifest_truncated" \
+                --arg manifest_entry_count "$manifest_entry_count" \
+                --arg manifest_entry_path "$manifest_entry_path" \
+                --arg manifest_entry_type "$manifest_entry_type" \
+                --arg manifest_entry_mode "$manifest_entry_mode" \
+                --arg manifest_entry_sha "$manifest_entry_sha" \
+                '{
+                  revision: $revision,
+                  path: $path,
+                  commit_sha: $commit_sha,
+                  root_tree: {
+                    truncated: $root_truncated,
+                    entry_count: ($root_entry_count | tonumber),
+                    path: $root_entry_path,
+                    type: $root_entry_type,
+                    mode: $root_entry_mode,
+                    sha: $root_entry_sha
+                  },
+                  manifest_tree: {
+                    truncated: $manifest_truncated,
+                    entry_count: ($manifest_entry_count | tonumber),
+                    path: $manifest_entry_path,
+                    type: $manifest_entry_type,
+                    mode: $manifest_entry_mode,
+                    sha: $manifest_entry_sha
+                  }
+                }' > "$output_path"
+            }
+
+            BASE_AEGIS_OBJECT="$RUNNER_TEMP/aegis-base-object.json"
+            HEAD_AEGIS_OBJECT="$RUNNER_TEMP/aegis-head-object.json"
+            AEGIS_OBJECT_INPUT="$RUNNER_TEMP/auto-merge-aegis-object-input.json"
+            collect_manifest_tree_evidence base "$TRUSTED_BASE_SHA" "$BASE_AEGIS_OBJECT"
+            collect_manifest_tree_evidence head "$HEAD_SHA" "$HEAD_AEGIS_OBJECT"
+            jq -s '{entries: .}' "$BASE_AEGIS_OBJECT" "$HEAD_AEGIS_OBJECT" > "$AEGIS_OBJECT_INPUT"
+            AEGIS_MANIFEST_OBJECT_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs aegis-manifest-object --input "$AEGIS_OBJECT_INPUT")
+            echo "$AEGIS_MANIFEST_OBJECT_RESULT" | jq .
+            if [ "$(echo "$AEGIS_MANIFEST_OBJECT_RESULT" | jq -r '.decision')" != "allow" ]; then
+              echo "$AEGIS_MANIFEST_PATH is not a unique regular 100644 Git blob in both protected main and the exact PR head."
+              exit 1
+            fi
+
+            BASE_AEGIS_BLOB_SHA=$(echo "$AEGIS_MANIFEST_OBJECT_RESULT" | jq -er '.results[] | select(.revision == "base" and .state == "regular-blob") | .blob_sha')
+            HEAD_AEGIS_BLOB_SHA=$(echo "$AEGIS_MANIFEST_OBJECT_RESULT" | jq -er '.results[] | select(.revision == "head" and .state == "regular-blob") | .blob_sha')
+
+            fetch_verified_manifest_blob() {
+              local revision="$1"
+              local blob_sha="$2"
+              local output_path="$3"
+              local blob_json="$RUNNER_TEMP/aegis-$revision-blob.json"
+              gh api \
+                -H 'Accept: application/vnd.github+json' \
+                -H 'X-GitHub-Api-Version: 2026-03-10' \
+                "repos/$REPOSITORY/git/blobs/$blob_sha" > "$blob_json"
+              jq -e --arg sha "$blob_sha" \
+                'type == "object" and .sha == $sha and .encoding == "base64" and (.content | type == "string") and (.size | type == "number") and .size >= 0 and .size == (.size | floor)' \
+                "$blob_json" >/dev/null
+              jq -r '.content' "$blob_json" | tr -d '\n' | base64 --decode > "$output_path"
+              local expected_size
+              local actual_size
+              expected_size=$(jq -r '.size' "$blob_json")
+              actual_size=$(wc -c < "$output_path" | tr -d ' ')
+              if [ "$actual_size" -ne "$expected_size" ]; then
+                echo "Decoded $revision manifest blob size mismatch ($actual_size/$expected_size)."
+                exit 1
+              fi
+              jq -e 'type == "object"' "$output_path" >/dev/null
+            }
+
+            BASE_AEGIS_MANIFEST="$RUNNER_TEMP/base-aegis-foundation-manifest.json"
             HEAD_AEGIS_MANIFEST="$RUNNER_TEMP/head-aegis-foundation-manifest.json"
-            gh api "repos/$REPOSITORY/contents/$AEGIS_MANIFEST_PATH?ref=$HEAD_SHA" \
-              --jq '.content' | tr -d '\n' | base64 --decode > "$HEAD_AEGIS_MANIFEST"
-            jq -e 'type == "object"' "$HEAD_AEGIS_MANIFEST" >/dev/null
+            fetch_verified_manifest_blob base "$BASE_AEGIS_BLOB_SHA" "$BASE_AEGIS_MANIFEST"
+            fetch_verified_manifest_blob head "$HEAD_AEGIS_BLOB_SHA" "$HEAD_AEGIS_MANIFEST"
             jq -n \
               --arg path "$AEGIS_MANIFEST_PATH" \
-              --slurpfile base "trusted/$AEGIS_MANIFEST_PATH" \
+              --slurpfile base "$BASE_AEGIS_MANIFEST" \
               --slurpfile head "$HEAD_AEGIS_MANIFEST" \
               '{entries: [{path: $path, base: $base[0], head: $head[0]}]}' \
               > "$AEGIS_MANIFEST_INPUT"
@@ -177,8 +342,9 @@ jobs:
             --slurpfile files "$FILES_JSON" \
             --slurpfile pr "$PR_JSON" \
             --slurpfile capabilities trusted/config/ci/verification-capabilities.json \
+            --argjson aegis_manifest_object "$AEGIS_MANIFEST_OBJECT_RESULT" \
             --argjson aegis_manifest_verification "$AEGIS_MANIFEST_RESULT" \
-            '{files: $files[0], file_inventory_complete: true, labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0], aegis_manifest_verification: $aegis_manifest_verification}' \
+            '{files: $files[0], file_inventory_complete: true, labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0], aegis_manifest_object: $aegis_manifest_object, aegis_manifest_verification: $aegis_manifest_verification}' \
             > "$POLICY_INPUT"
           POLICY_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs classify --input "$POLICY_INPUT")
           echo "$POLICY_RESULT" | jq .
@@ -311,8 +477,9 @@ jobs:
             --slurpfile files "$CURRENT_FILES_JSON" \
             --slurpfile pr "$CURRENT_PR_JSON" \
             --slurpfile capabilities trusted/config/ci/verification-capabilities.json \
+            --argjson aegis_manifest_object "$AEGIS_MANIFEST_OBJECT_RESULT" \
             --argjson aegis_manifest_verification "$AEGIS_MANIFEST_RESULT" \
-            '{files: $files[0], file_inventory_complete: true, labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0], aegis_manifest_verification: $aegis_manifest_verification}' \
+            '{files: $files[0], file_inventory_complete: true, labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0], aegis_manifest_object: $aegis_manifest_object, aegis_manifest_verification: $aegis_manifest_verification}' \
             > "$CURRENT_POLICY_INPUT"
           CURRENT_POLICY_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs classify --input "$CURRENT_POLICY_INPUT")
           echo "$CURRENT_POLICY_RESULT" | jq .

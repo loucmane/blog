@@ -12,17 +12,19 @@
 - Created and linked current session and plan.
 - Created active work-tracking folder with tracker, findings, decisions, implementation, changelog, handoff, designs, and reports surfaces.
 - Implemented trusted semantic comparison for the sole permitted `.aegis/foundation-manifest.json` timestamp field.
+- Added trusted Git-tree traversal and verified blob-SHA retrieval so base and head must preserve the path as a unique regular `100644` blob before semantic comparison.
+- Added trusted runner-time evaluation with a five-minute maximum future skew and attended recovery for an already-future protected-main timestamp.
 - Preserved fail-closed denial for every other manifest mutation and every other Aegis path.
 - Added deterministic policy and workflow trust-boundary tests and documented rollback.
 
 ## Current Issues/Blockers
-- No local implementation blocker remains. Checksum-verified temporary `actionlint` and `gitleaks` binaries passed; protected GitHub checks remain authoritative.
-- Local closeout and task-scoped verification are complete. Final-head witness, protected checks, and attended pull-request delivery remain.
+- Independent review's two blocking findings are remediated locally. All 65 policy assertions, 15 privileged-workflow contracts, actionlint, the protected-CI-equivalent workspace/governance suites, strict Aegis verification, witness, guards, and Taskmaster validation pass; final staged secret scanning and protected GitHub checks remain delivery gates.
+- Task 64 remains closed and archived. The follow-up changes preserve its identity and evidence rather than creating or kicking off another task.
 
 ## Next Steps
-1. Run the final Task 64 verification matrix and review the complete diff.
-2. Commit and open a pull request with normal git/GitHub commands under the standing grant.
-3. Stop at the attended merge boundary because the pull request changes trusted delivery policy.
+1. Run the final staged secret scan and inspect the complete delivery diff.
+2. Commit and push a normal follow-up commit to PR #24 without rewriting history.
+3. Rerun final-head witness evidence, wait for all protected checks, and stop again at the attended merge boundary.
 ## Important Context
 - Taskmaster is optional unless this task marks it required in `.aegis/state/current-work.json`.
 - Serena is optional continuity only and is not readiness evidence by itself.
@@ -47,3 +49,5 @@
 - **2026-07-11 12:27 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:agent:verification|E:docs/ai/work-tracking/active/20260711-task64-manifest-verification-diff-policy-ACTIVE/reports/manifest-verification-diff-policy/task-verification.md] Recorded protected-CI-equivalent workspace and governance verification, 43 focused policy/workflow assertions, Taskmaster health, Aegis witness, guard regressions, environment-limited hosted checks, and attended delivery boundary
 - **2026-07-11 12:28 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded strict Aegis verification: 31 checks, zero required failures, one expected advisory-mode warning, enforcement unchanged
 - **2026-07-11 13:04 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:serena:availability|E:serena/memory:absent] Confirmed Serena is not configured and no Serena memory was written; the completed Aegis archive, session, plan, and handoff remain the continuity sources.
+- **2026-07-11 13:40 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:independent-review:handoff|E:docs/ai/work-tracking/archive/20260711-task64-manifest-verification-diff-policy-COMPLETED/HANDOFF.md] Continued the existing Task 64 archive for object-mode and future-time remediations; no new task, kickoff, or Serena evidence was created.
+- **2026-07-11 13:48 CEST** - [S:20260711|W:task64-manifest-verification-diff-policy|H:agent:verification|E:docs/ai/work-tracking/archive/20260711-task64-manifest-verification-diff-policy-COMPLETED/reports/manifest-verification-diff-policy/task-verification.md] Verified 65 policy assertions, 15 privileged-workflow contracts, non-recursive Git object proof, trusted-time bounds, actionlint, protected-CI-equivalent workspace/governance suites, strict Aegis verification, witness, guards, Taskmaster health, and diff integrity; enforcement remains advisory; authority=standing-grant:sota-magazine-2026-autonomy-v2
