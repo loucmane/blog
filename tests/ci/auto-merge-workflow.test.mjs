@@ -7,6 +7,10 @@ const workflowPath = new URL(
   import.meta.url,
 )
 const workflow = fs.readFileSync(workflowPath, 'utf8')
+const policy = fs.readFileSync(
+  new URL('../../scripts/ci/auto-merge-policy.mjs', import.meta.url),
+  'utf8',
+)
 
 test('handles CI completion and pull-request eligibility state changes', () => {
   assert.match(
@@ -56,6 +60,14 @@ test('executes trusted default-branch policy instead of pull-request code', () =
     workflow,
     /node trusted\/scripts\/ci\/auto-merge-policy\.mjs manifests/,
   )
+  assert.match(
+    workflow,
+    /node trusted\/scripts\/ci\/auto-merge-policy\.mjs aegis-manifest/,
+  )
+  assert.match(
+    workflow,
+    /node trusted\/scripts\/ci\/auto-merge-policy\.mjs aegis-manifest-object/,
+  )
 })
 
 test('never checks out or fetches a pull-request head or merge ref', () => {
@@ -92,13 +104,56 @@ test('executes no pull-request-controlled package or script surface', () => {
   assert.doesNotMatch(workflow, /^\s+(?:eval|source|\.)\s+/m)
   assert.doesNotMatch(
     workflow,
-    /repos\/\$REPOSITORY\/(?:git\/blobs|tarball|zipball)/,
+    /repos\/\$REPOSITORY\/(?:tarball|zipball)/,
   )
   assert.match(
     workflow,
     /repos\/\$REPOSITORY\/contents\/\$PACKAGE_PATH\?ref=\$HEAD_SHA/,
   )
   assert.match(workflow, /jq -e 'type == "object"' "\$HEAD_MANIFEST"/)
+  assert.match(
+    workflow,
+    /repos\/\$REPOSITORY\/git\/commits\/\$commit_sha/,
+  )
+  assert.match(
+    workflow,
+    /repos\/\$REPOSITORY\/git\/trees\/\$root_tree_sha/,
+  )
+  assert.match(
+    workflow,
+    /repos\/\$REPOSITORY\/git\/trees\/\$root_entry_sha/,
+  )
+  assert.match(
+    workflow,
+    /repos\/\$REPOSITORY\/git\/blobs\/\$blob_sha/,
+  )
+  assert.match(
+    workflow,
+    /--slurpfile base "\$BASE_AEGIS_MANIFEST"/,
+  )
+  assert.match(
+    workflow,
+    /--slurpfile head "\$HEAD_AEGIS_MANIFEST"/,
+  )
+  assert.doesNotMatch(
+    workflow,
+    /repos\/\$REPOSITORY\/contents\/\$AEGIS_MANIFEST_PATH/,
+  )
+  assert.equal(
+    workflow.match(/--argjson aegis_manifest_object "\$AEGIS_MANIFEST_OBJECT_RESULT"/g)
+      ?.length,
+    2,
+  )
+  assert.equal(
+    workflow.match(
+      /--argjson aegis_manifest_verification "\$AEGIS_MANIFEST_RESULT"/g,
+    )?.length,
+    2,
+  )
+  assert.equal(
+    workflow.match(/file_inventory_complete: true/g)?.length,
+    2,
+  )
 
   const nodeScripts = [...workflow.matchAll(/\bnode ([^\s)]+)/g)].map(
     (match) => match[1],
@@ -109,7 +164,58 @@ test('executes no pull-request-controlled package or script surface', () => {
     'trusted/scripts/ci/auto-merge-policy.mjs',
     'trusted/scripts/ci/auto-merge-policy.mjs',
     'trusted/scripts/ci/auto-merge-policy.mjs',
+    'trusted/scripts/ci/auto-merge-policy.mjs',
+    'trusted/scripts/ci/auto-merge-policy.mjs',
   ])
+})
+
+test('allows only trusted semantic verification of the Aegis manifest timestamp', () => {
+  assert.match(
+    workflow,
+    /AEGIS_MANIFEST_PATH='\.aegis\/foundation-manifest\.json'/,
+  )
+  assert.match(workflow, /AEGIS_MANIFEST_STATUS.*\.status/)
+  assert.match(workflow, /AEGIS_MANIFEST_STATUS" != "modified"/)
+  assert.match(
+    workflow,
+    /changed beyond verification\.last_verified_at; attended review is required/,
+  )
+  assert.doesNotMatch(workflow, /trusted\/\.aegis\/(?:state|reports|capsule)/)
+})
+
+test('proves a unique regular manifest blob before semantic allowance', () => {
+  assert.match(workflow, /collect_manifest_tree_evidence base/)
+  assert.match(workflow, /collect_manifest_tree_evidence head/)
+  assert.match(workflow, /root_entry_count.*\.aegis/)
+  assert.match(workflow, /manifest_entry_count.*foundation-manifest\.json/)
+  assert.match(workflow, /root_truncated/)
+  assert.match(workflow, /manifest_truncated/)
+  assert.match(workflow, /root_entry_type" = "tree"/)
+  assert.match(workflow, /root_entry_mode" = "040000"/)
+  assert.match(workflow, /state == "regular-blob"/)
+  assert.match(workflow, /not a unique regular 100644 Git blob/)
+  assert.match(workflow, /\.sha == \$sha and \.encoding == "base64"/)
+  assert.match(workflow, /Decoded \$revision manifest blob size mismatch/)
+  assert.doesNotMatch(workflow, /git\/trees\/[^\s"']+\?recursive/)
+
+  const objectCheck = workflow.indexOf('aegis-manifest-object --input')
+  const blobFetch = workflow.indexOf('fetch_verified_manifest_blob base')
+  const semanticCheck = workflow.indexOf('aegis-manifest --input')
+  assert.ok(objectCheck >= 0)
+  assert.ok(blobFetch > objectCheck)
+  assert.ok(semanticCheck > blobFetch)
+})
+
+test('binds timestamp evaluation to trusted CLI runner time with five-minute skew', () => {
+  assert.match(
+    policy,
+    /AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS = 5 \* 60/,
+  )
+  assert.match(
+    policy,
+    /trustedEvaluationTime: new Date\(\)\.toISOString\(\)/,
+  )
+  assert.doesNotMatch(workflow, /trusted_evaluation_time.*\$PR/)
 })
 
 test('fails closed unless the privileged trigger and API identifiers are valid', () => {
@@ -133,6 +239,14 @@ test('fails closed for forks, incomplete file inventories, and stale heads', () 
   assert.match(workflow, /--match-head-commit "\$HEAD_SHA"/)
   assert.match(workflow, /moved during evaluation/)
   assert.match(workflow, /Final changed-file inventory is incomplete/)
+  assert.match(
+    workflow,
+    /FETCHED_FILE_COUNT" -ne "\$DECLARED_FILE_COUNT/,
+  )
+  assert.match(
+    workflow,
+    /CURRENT_FETCHED_FILE_COUNT" -ne "\$CURRENT_DECLARED_FILE_COUNT/,
+  )
   assert.match(workflow, /not CLEAN and mergeable/)
   assert.match(workflow, /became ineligible during final policy revalidation/)
   assert.match(workflow, /Required checks changed during final evaluation/)

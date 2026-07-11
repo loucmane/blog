@@ -1,13 +1,57 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
+import fs from 'node:fs'
 import test from 'node:test'
 
 import {
+  AEGIS_FOUNDATION_MANIFEST_PATH,
+  AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS,
   AUTO_MERGE_CHECK_NAME,
   REQUIRED_CHECKS,
-  classifyPullRequest,
+  classifyPullRequest as classifyPullRequestPolicy,
+  evaluateAegisManifestObjectEvidence,
+  evaluateAegisManifestVerification as evaluateAegisManifestVerificationPolicy,
   evaluatePackageScripts,
   evaluateRequiredChecks,
 } from '../../scripts/ci/auto-merge-policy.mjs'
+
+const pr19Fixture = JSON.parse(
+  fs.readFileSync(
+    new URL('./fixtures/pr19-aegis-manifest-policy.json', import.meta.url),
+    'utf8',
+  ),
+)
+const pr19BaseManifestText = fs.readFileSync(
+  new URL(
+    `./fixtures/${pr19Fixture.source.base_manifest_fixture}`,
+    import.meta.url,
+  ),
+  'utf8',
+)
+const pr19BaseManifest = JSON.parse(pr19BaseManifestText)
+const manifestObjectFixture = JSON.parse(
+  fs.readFileSync(
+    new URL('./fixtures/aegis-manifest-object-policy.json', import.meta.url),
+    'utf8',
+  ),
+)
+const DEFAULT_TRUSTED_EVALUATION_TIME = '2026-07-11T09:00:00Z'
+
+function classifyPullRequest(input = {}) {
+  return classifyPullRequestPolicy({
+    file_inventory_complete: true,
+    ...input,
+  })
+}
+
+function evaluateAegisManifestVerification(
+  input = {},
+  trustedEvaluationTime = DEFAULT_TRUSTED_EVALUATION_TIME,
+) {
+  return evaluateAegisManifestVerificationPolicy(input, {
+    trustedEvaluationTime,
+  })
+}
 
 function successfulCheck(name, overrides = {}) {
   return {
@@ -20,6 +64,110 @@ function successfulCheck(name, overrides = {}) {
     status: 'completed',
     ...overrides,
   }
+}
+
+function foundationManifest(lastVerifiedAt) {
+  const manifest = structuredClone(pr19BaseManifest)
+  manifest.verification.last_verified_at = lastVerifiedAt
+  return manifest
+}
+
+function pr19ManifestPair() {
+  return {
+    base: foundationManifest(pr19Fixture.source.base_timestamp),
+    head: foundationManifest(pr19Fixture.source.head_timestamp),
+  }
+}
+
+function setAtPath(root, path, value) {
+  let current = root
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const segment = path[index]
+    const nextSegment = path[index + 1]
+    if (
+      current[segment] === null ||
+      typeof current[segment] !== 'object'
+    ) {
+      current[segment] = typeof nextSegment === 'number' ? [] : {}
+    }
+    current = current[segment]
+  }
+  current[path.at(-1)] = structuredClone(value)
+}
+
+function deleteAtPath(root, path) {
+  let current = root
+  for (const segment of path.slice(0, -1)) {
+    current = current?.[segment]
+  }
+  if (current && typeof current === 'object') {
+    delete current[path.at(-1)]
+  }
+}
+
+function adversarialManifestEntry(fixtureCase) {
+  const pair = pr19ManifestPair()
+  switch (fixtureCase.operation) {
+    case 'replace-base':
+      pair.base = fixtureCase.value
+      break
+    case 'replace-head':
+      pair.head = fixtureCase.value
+      break
+    case 'omit-base':
+      pair.base = undefined
+      break
+    case 'omit-head':
+      pair.head = undefined
+      break
+    case 'set-head':
+      setAtPath(pair.head, fixtureCase.path, fixtureCase.value)
+      break
+    case 'delete-head':
+      deleteAtPath(pair.head, fixtureCase.path)
+      break
+    default:
+      throw new Error(`Unsupported fixture operation: ${fixtureCase.operation}`)
+  }
+  return {
+    path: AEGIS_FOUNDATION_MANIFEST_PATH,
+    ...pair,
+  }
+}
+
+function manifestObjectEntriesForCase(fixtureCase) {
+  const entries = structuredClone(manifestObjectFixture.entries)
+  const head = entries.find((entry) => entry.revision === 'head')
+  switch (fixtureCase.operation) {
+    case 'set-head':
+      setAtPath(head, fixtureCase.path, fixtureCase.value)
+      break
+    case 'replace-head-manifest-tree':
+      head.manifest_tree = structuredClone(fixtureCase.value)
+      break
+    case 'omit-head':
+      return entries.filter((entry) => entry.revision !== 'head')
+    case 'duplicate-head':
+      entries.push(structuredClone(head))
+      break
+    case 'replace-head':
+      return entries.map((entry) =>
+        entry.revision === 'head'
+          ? structuredClone(fixtureCase.value)
+          : entry,
+      )
+    default:
+      throw new Error(
+        `Unsupported object fixture operation: ${fixtureCase.operation}`,
+      )
+  }
+  return entries
+}
+
+function regularManifestObjectEvidence() {
+  return evaluateAegisManifestObjectEvidence({
+    entries: structuredClone(manifestObjectFixture.entries),
+  })
 }
 
 test('allows a documentation-only pull request without an opt-in label', () => {
@@ -52,6 +200,358 @@ test('allows cataloged domain-skill paths while protecting the control skill', (
   assert.ok(
     protectedControl.reasons.some(
       (reason) => reason.category === 'aegis-retirement',
+    ),
+  )
+})
+
+test('allows PR #19 exact verification-only manifest timestamp delta', () => {
+  const { base, head } = pr19ManifestPair()
+  const objectEvidence = regularManifestObjectEvidence()
+  const verification = evaluateAegisManifestVerification(
+    {
+      entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
+    },
+    pr19Fixture.source.trusted_evaluation_time,
+  )
+  const result = classifyPullRequest({
+    aegis_manifest_object: objectEvidence,
+    aegis_manifest_verification: verification,
+    files: [
+      {
+        filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+        status: 'modified',
+      },
+    ],
+  })
+
+  assert.equal(verification.decision, 'allow')
+  assert.equal(objectEvidence.decision, 'allow')
+  assert.equal(
+    verification.maximum_future_skew_seconds,
+    AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS,
+  )
+  assert.equal(
+    verification.trusted_evaluation_time,
+    pr19Fixture.source.trusted_evaluation_time,
+  )
+  assert.equal(pr19Fixture.source.pull_request, 19)
+  assert.equal(
+    pr19Fixture.source.base_commit,
+    'f71e5917cfa470a16c3539a9eb5315e11fe9c7bc',
+  )
+  assert.equal(
+    pr19Fixture.source.head_commit,
+    '51ba5eeb0ad86a762a781db0eba57534ebe08e4f',
+  )
+  assert.equal(
+    createHash('sha256').update(pr19BaseManifestText).digest('hex'),
+    pr19Fixture.source.base_manifest_sha256,
+  )
+  assert.equal(
+    base.runtime.source_commit,
+    '432ffc7d0bed112426920eb9858b296a440b11b3',
+  )
+  assert.deepEqual(base.verification.reports, head.verification.reports)
+  assert.equal(base.verification.status, head.verification.status)
+  assert.equal(
+    verification.results[0]?.state,
+    'verification-timestamp-only',
+  )
+  assert.equal(result.decision, 'allow')
+  assert.deepEqual(result.reasons, [])
+})
+
+test('allows only unique regular 100644 blobs for base and head', () => {
+  const evidence = regularManifestObjectEvidence()
+
+  assert.equal(evidence.decision, 'allow')
+  assert.deepEqual(
+    evidence.results.map(({ revision, state }) => ({ revision, state })),
+    [
+      { revision: 'base', state: 'regular-blob' },
+      { revision: 'head', state: 'regular-blob' },
+    ],
+  )
+  assert.ok(evidence.results.every((result) => result.blob_sha))
+})
+
+for (const fixtureCase of manifestObjectFixture.adversarial_cases) {
+  test(`denies manifest object fixture: ${fixtureCase.name}`, () => {
+    const objectEvidence = evaluateAegisManifestObjectEvidence({
+      entries: manifestObjectEntriesForCase(fixtureCase),
+    })
+    const { base, head } = pr19ManifestPair()
+    const verification = evaluateAegisManifestVerification(
+      {
+        entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
+      },
+      pr19Fixture.source.trusted_evaluation_time,
+    )
+    const result = classifyPullRequest({
+      aegis_manifest_object: objectEvidence,
+      aegis_manifest_verification: verification,
+      files: [
+        {
+          filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+          status: 'modified',
+        },
+      ],
+    })
+
+    assert.equal(objectEvidence.decision, 'deny')
+    assert.equal(
+      objectEvidence.results.find((entry) => entry.revision === 'head')
+        ?.state,
+      fixtureCase.expected_state,
+    )
+    assert.equal(result.decision, 'deny')
+    assert.ok(
+      result.reasons.some(
+        (reason) => reason.category === 'aegis-manifest-object',
+      ),
+    )
+  })
+}
+
+for (const fixtureCase of pr19Fixture.adversarial_cases) {
+  test(`denies PR #19 manifest fixture: ${fixtureCase.name}`, () => {
+    const verification = evaluateAegisManifestVerification(
+      {
+        entries: [adversarialManifestEntry(fixtureCase)],
+      },
+      pr19Fixture.source.trusted_evaluation_time,
+    )
+    const result = classifyPullRequest({
+      aegis_manifest_object: regularManifestObjectEvidence(),
+      aegis_manifest_verification: verification,
+      files: [
+        {
+          filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+          status: 'modified',
+        },
+      ],
+    })
+
+    assert.equal(verification.decision, 'deny')
+    assert.equal(verification.results[0]?.state, fixtureCase.expected_state)
+    assert.equal(result.decision, 'deny')
+    assert.ok(
+      result.reasons.some(
+        (reason) => reason.category === 'aegis-manifest-verification',
+      ),
+    )
+  })
+}
+
+test('allows current time and the exact five-minute skew boundary', () => {
+  const trustedEvaluationTime = '2026-07-11T12:00:00Z'
+  const current = evaluateAegisManifestVerification(
+    {
+      entries: [
+        {
+          path: AEGIS_FOUNDATION_MANIFEST_PATH,
+          base: foundationManifest('2026-07-11T11:59:00Z'),
+          head: foundationManifest('2026-07-11T12:00:00Z'),
+        },
+      ],
+    },
+    trustedEvaluationTime,
+  )
+  const boundary = evaluateAegisManifestVerification(
+    {
+      entries: [
+        {
+          path: AEGIS_FOUNDATION_MANIFEST_PATH,
+          base: foundationManifest('2026-07-11T12:00:00Z'),
+          head: foundationManifest('2026-07-11T12:05:00Z'),
+        },
+      ],
+    },
+    trustedEvaluationTime,
+  )
+
+  assert.equal(current.decision, 'allow')
+  assert.equal(boundary.decision, 'allow')
+})
+
+for (const [name, baseTimestamp, headTimestamp, expectedState] of [
+  [
+    'timestamp beyond the five-minute boundary',
+    '2026-07-11T12:00:00Z',
+    '2026-07-11T12:05:00.001Z',
+    'head-verification-timestamp-in-future',
+  ],
+  [
+    'year-9999 timestamp',
+    '2026-07-11T12:00:00Z',
+    '9999-12-31T23:59:59Z',
+    'head-verification-timestamp-in-future',
+  ],
+  [
+    'already-future base timestamp',
+    '2026-07-11T12:05:01Z',
+    '2026-07-11T12:05:02Z',
+    'base-verification-timestamp-in-future',
+  ],
+  [
+    'equal timestamp',
+    '2026-07-11T12:00:00Z',
+    '2026-07-11T12:00:00Z',
+    'unchanged-verification-timestamp',
+  ],
+]) {
+  test(`denies ${name}`, () => {
+    const verification = evaluateAegisManifestVerification(
+      {
+        entries: [
+          {
+            path: AEGIS_FOUNDATION_MANIFEST_PATH,
+            base: foundationManifest(baseTimestamp),
+            head: foundationManifest(headTimestamp),
+          },
+        ],
+      },
+      '2026-07-11T12:00:00Z',
+    )
+
+    assert.equal(verification.decision, 'deny')
+    assert.equal(verification.results[0]?.state, expectedState)
+  })
+}
+
+test('fails closed without a valid trusted evaluation time', () => {
+  const { base, head } = pr19ManifestPair()
+  const missing = evaluateAegisManifestVerificationPolicy(
+    { entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }] },
+    {},
+  )
+  const invalid = evaluateAegisManifestVerificationPolicy(
+    { entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }] },
+    { trustedEvaluationTime: 'not-a-timestamp' },
+  )
+
+  for (const verification of [missing, invalid]) {
+    assert.equal(verification.decision, 'deny')
+    assert.equal(
+      verification.results[0]?.state,
+      'invalid-trusted-evaluation-time',
+    )
+  }
+})
+
+test('denies foundation-manifest changes without trusted semantic evidence', () => {
+  const result = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
+    files: [
+      {
+        filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+        status: 'modified',
+      },
+    ],
+  })
+
+  assert.equal(result.decision, 'deny')
+  assert.ok(
+    result.reasons.some(
+      (reason) =>
+        reason.category === 'aegis-retirement' &&
+        reason.path === AEGIS_FOUNDATION_MANIFEST_PATH,
+    ),
+  )
+  assert.ok(
+    result.reasons.some(
+      (reason) =>
+        reason.category === 'aegis-manifest-verification' &&
+        reason.state === 'missing-or-untrusted-evidence',
+    ),
+  )
+})
+
+test('denies any additional foundation-manifest semantic change', () => {
+  const base = foundationManifest('2026-07-11T08:00:00Z')
+  const head = foundationManifest('2026-07-11T09:00:00Z')
+  setAtPath(head, ['enforcement', 'mode'], 'strict')
+  const verification = evaluateAegisManifestVerification({
+    entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
+  })
+  const result = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
+    aegis_manifest_verification: verification,
+    files: [
+      {
+        filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+        status: 'modified',
+      },
+    ],
+  })
+
+  assert.equal(verification.decision, 'deny')
+  assert.equal(
+    verification.results[0]?.state,
+    'protected-manifest-values-changed',
+  )
+  assert.equal(result.decision, 'deny')
+})
+
+test('denies stale timestamps and non-modified foundation-manifest paths', () => {
+  const base = foundationManifest('2026-07-11T09:00:00Z')
+  const staleHead = foundationManifest('2026-07-11T08:00:00Z')
+  const verification = evaluateAegisManifestVerification({
+    entries: [
+      { path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head: staleHead },
+    ],
+  })
+  const removed = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
+    aegis_manifest_verification: {
+      decision: 'allow',
+      results: [
+        {
+          path: AEGIS_FOUNDATION_MANIFEST_PATH,
+          state: 'verification-timestamp-only',
+        },
+      ],
+    },
+    files: [
+      {
+        filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+        status: 'removed',
+      },
+    ],
+  })
+
+  assert.equal(verification.decision, 'deny')
+  assert.equal(
+    verification.results[0]?.state,
+    'non-monotonic-verification-timestamp',
+  )
+  assert.equal(removed.decision, 'deny')
+})
+
+test('keeps every other Aegis path denied beside a verified timestamp change', () => {
+  const base = foundationManifest('2026-07-11T08:00:00Z')
+  const head = foundationManifest('2026-07-11T09:00:00Z')
+  const verification = evaluateAegisManifestVerification({
+    entries: [{ path: AEGIS_FOUNDATION_MANIFEST_PATH, base, head }],
+  })
+  const result = classifyPullRequest({
+    aegis_manifest_object: regularManifestObjectEvidence(),
+    aegis_manifest_verification: verification,
+    files: [
+      {
+        filename: AEGIS_FOUNDATION_MANIFEST_PATH,
+        status: 'modified',
+      },
+      { filename: '.aegis/contract.md', status: 'modified' },
+    ],
+  })
+
+  assert.equal(result.decision, 'deny')
+  assert.ok(
+    result.reasons.some(
+      (reason) =>
+        reason.category === 'aegis-retirement' &&
+        reason.path === '.aegis/contract.md',
     ),
   )
 })
@@ -129,6 +629,25 @@ test('fails closed when the file list is empty or malformed', () => {
   assert.ok(
     malformed.reasons.some((reason) => reason.category === 'invalid-path'),
   )
+})
+
+test('fails closed unless the caller proves the file inventory is complete', () => {
+  const missingAssertion = classifyPullRequestPolicy({
+    files: ['docs/product/vision.md'],
+  })
+  const explicitIncomplete = classifyPullRequest({
+    file_inventory_complete: false,
+    files: ['docs/product/vision.md'],
+  })
+
+  for (const result of [missingAssertion, explicitIncomplete]) {
+    assert.equal(result.decision, 'deny')
+    assert.ok(
+      result.reasons.some(
+        (reason) => reason.category === 'empty-or-incomplete-file-list',
+      ),
+    )
+  }
 })
 
 test('requires real applicable test capabilities for behavior-changing paths', () => {

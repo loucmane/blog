@@ -10,6 +10,12 @@ export const REQUIRED_CHECKS = Object.freeze([
 ])
 
 export const AUTO_MERGE_CHECK_NAME = 'controlled auto-merge'
+export const AEGIS_FOUNDATION_MANIFEST_PATH =
+  '.aegis/foundation-manifest.json'
+export const AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS = 5 * 60
+
+const GIT_OBJECT_SHA_PATTERN = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/
+const AEGIS_MANIFEST_REVISIONS = Object.freeze(['base', 'head'])
 
 const DENY_LABELS = new Map([
   ['authority-change', 'operator-authority'],
@@ -157,7 +163,9 @@ function normalizeFile(rawFile) {
   const path = normalizePath(filename)
   if (!path) return null
   const status =
-    typeof rawFile === 'object' ? String(rawFile?.status ?? '') : ''
+    typeof rawFile === 'object'
+      ? String(rawFile?.status ?? '').toLowerCase()
+      : ''
   const previousPath =
     status === 'renamed' ? normalizePath(rawFile?.previous_filename) : null
   return {
@@ -167,7 +175,7 @@ function normalizeFile(rawFile) {
   }
 }
 
-function classifyPath(path) {
+function classifyPath(path, options = {}) {
   const lower = path.toLowerCase()
   const segments = lower.split('/')
   const filename = segments.at(-1) ?? ''
@@ -246,8 +254,12 @@ function classifyPath(path) {
     categories.add('branch-protection')
   }
 
+  const verifiedFoundationManifest =
+    path === AEGIS_FOUNDATION_MANIFEST_PATH &&
+    options.allowFoundationManifest === true
+
   if (
-    lower.startsWith('.aegis/') ||
+    (lower.startsWith('.aegis/') && !verifiedFoundationManifest) ||
     (lower.startsWith('.agents/') && !isDomainSkillPath(lower)) ||
     (lower.startsWith('.claude/') && !isDomainSkillPath(lower)) ||
     AEGIS_PROTECTED_PATHS.has(path) ||
@@ -259,18 +271,308 @@ function classifyPath(path) {
   return [...categories].sort()
 }
 
+function isJsonValue(value) {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'boolean' ||
+    (typeof value === 'number' && Number.isFinite(value))
+  ) {
+    return true
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue)
+  }
+  if (typeof value !== 'object') {
+    return false
+  }
+  return Object.values(value).every(isJsonValue)
+}
+
+function isJsonObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalJson).join(',')}]`
+  }
+  if (isJsonObject(value)) {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
+function isRfc3339Timestamp(value) {
+  if (typeof value !== 'string') return false
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/,
+  )
+  if (!match) return false
+
+  const [, year, month, day, hour, minute, second] = match.map(Number)
+  const localDate = new Date(0)
+  localDate.setUTCFullYear(year, month - 1, day)
+  localDate.setUTCHours(hour, minute, second, 0)
+
+  return (
+    localDate.getUTCFullYear() === year &&
+    localDate.getUTCMonth() === month - 1 &&
+    localDate.getUTCDate() === day &&
+    Number.isFinite(Date.parse(value))
+  )
+}
+
+function withoutVerificationTimestamp(manifest) {
+  const copy = structuredClone(manifest)
+  delete copy.verification.last_verified_at
+  return copy
+}
+
+function isGitObjectSha(value) {
+  return typeof value === 'string' && GIT_OBJECT_SHA_PATTERN.test(value)
+}
+
+function evaluateAegisManifestObjectEntry(entry, revision) {
+  const path = normalizePath(entry?.path)
+  const rootTree = entry?.root_tree
+  const manifestTree = entry?.manifest_tree
+  let state = 'regular-blob'
+
+  if (!isJsonObject(entry)) {
+    state = 'missing-or-invalid-object-evidence'
+  } else if (entry.revision !== revision) {
+    state = 'unexpected-revision'
+  } else if (path !== AEGIS_FOUNDATION_MANIFEST_PATH) {
+    state = path ? 'unexpected-path' : 'invalid-path'
+  } else if (!isGitObjectSha(entry.commit_sha)) {
+    state = 'invalid-commit-sha'
+  } else if (!isJsonObject(rootTree)) {
+    state = 'missing-or-invalid-root-tree'
+  } else if (rootTree.truncated !== false) {
+    state = 'truncated-or-unknown-root-tree'
+  } else if (!Number.isInteger(rootTree.entry_count)) {
+    state = 'invalid-aegis-tree-entry-count'
+  } else if (rootTree.entry_count === 0) {
+    state = 'missing-aegis-tree-entry'
+  } else if (rootTree.entry_count !== 1) {
+    state = 'ambiguous-aegis-tree-entry'
+  } else if (
+    rootTree.path !== '.aegis' ||
+    rootTree.type !== 'tree' ||
+    rootTree.mode !== '040000' ||
+    !isGitObjectSha(rootTree.sha)
+  ) {
+    state = 'invalid-aegis-tree-entry'
+  } else if (!isJsonObject(manifestTree)) {
+    state = 'missing-or-invalid-manifest-tree'
+  } else if (manifestTree.truncated !== false) {
+    state = 'truncated-or-unknown-manifest-tree'
+  } else if (!Number.isInteger(manifestTree.entry_count)) {
+    state = 'invalid-manifest-entry-count'
+  } else if (manifestTree.entry_count === 0) {
+    state = 'missing-manifest-entry'
+  } else if (manifestTree.entry_count !== 1) {
+    state = 'ambiguous-manifest-entry'
+  } else if (
+    manifestTree.path !== 'foundation-manifest.json' ||
+    manifestTree.type !== 'blob' ||
+    manifestTree.mode !== '100644' ||
+    !isGitObjectSha(manifestTree.sha)
+  ) {
+    state = 'manifest-entry-not-regular-blob'
+  }
+
+  return {
+    blob_sha: state === 'regular-blob' ? manifestTree.sha : null,
+    path,
+    revision,
+    state,
+  }
+}
+
+export function evaluateAegisManifestObjectEvidence(input = {}) {
+  const entries = Array.isArray(input.entries) ? input.entries : []
+  const results = []
+
+  for (const revision of AEGIS_MANIFEST_REVISIONS) {
+    const matchingEntries = entries.filter(
+      (entry) => entry?.revision === revision,
+    )
+    if (matchingEntries.length === 0) {
+      results.push({
+        blob_sha: null,
+        path: AEGIS_FOUNDATION_MANIFEST_PATH,
+        revision,
+        state: 'missing-revision-evidence',
+      })
+    } else if (matchingEntries.length !== 1) {
+      results.push({
+        blob_sha: null,
+        path: AEGIS_FOUNDATION_MANIFEST_PATH,
+        revision,
+        state: 'ambiguous-revision-evidence',
+      })
+    } else {
+      results.push(
+        evaluateAegisManifestObjectEntry(matchingEntries[0], revision),
+      )
+    }
+  }
+
+  for (const entry of entries) {
+    if (!AEGIS_MANIFEST_REVISIONS.includes(entry?.revision)) {
+      results.push({
+        blob_sha: null,
+        path: normalizePath(entry?.path),
+        revision:
+          typeof entry?.revision === 'string' ? entry.revision : null,
+        state: 'unexpected-revision-evidence',
+      })
+    }
+  }
+
+  return {
+    decision:
+      results.length === AEGIS_MANIFEST_REVISIONS.length &&
+      results.every((result) => result.state === 'regular-blob')
+        ? 'allow'
+        : 'deny',
+    results,
+  }
+}
+
+export function evaluateAegisManifestVerification(
+  input = {},
+  options = {},
+) {
+  const entries = Array.isArray(input.entries) ? input.entries : []
+  const trustedEvaluationTime = options.trustedEvaluationTime
+  const trustedEvaluationTimeValid = isRfc3339Timestamp(
+    trustedEvaluationTime,
+  )
+  const trustedEvaluationTimeMs = trustedEvaluationTimeValid
+    ? Date.parse(trustedEvaluationTime)
+    : Number.NaN
+  const maximumFutureTimestampMs =
+    trustedEvaluationTimeMs + AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS * 1000
+  const results = []
+
+  for (const entry of entries) {
+    const path = normalizePath(entry?.path)
+    const base = entry?.base
+    const head = entry?.head
+    let state = 'verification-timestamp-only'
+
+    if (!trustedEvaluationTimeValid) {
+      state = 'invalid-trusted-evaluation-time'
+    } else if (path !== AEGIS_FOUNDATION_MANIFEST_PATH) {
+      state = path ? 'unexpected-path' : 'invalid-path'
+    } else if (!isJsonObject(base) || !isJsonObject(head)) {
+      state = 'missing-or-invalid-manifest'
+    } else if (!isJsonValue(base) || !isJsonValue(head)) {
+      state = 'non-json-manifest-value'
+    } else if (
+      !isJsonObject(base.verification) ||
+      !isJsonObject(head.verification) ||
+      !Object.hasOwn(base.verification, 'last_verified_at') ||
+      !Object.hasOwn(head.verification, 'last_verified_at')
+    ) {
+      state = 'missing-verification-timestamp'
+    } else {
+      const baseTimestamp = base.verification.last_verified_at
+      const headTimestamp = head.verification.last_verified_at
+      if (
+        !isRfc3339Timestamp(baseTimestamp) ||
+        !isRfc3339Timestamp(headTimestamp)
+      ) {
+        state = 'invalid-verification-timestamp'
+      } else if (Date.parse(baseTimestamp) > maximumFutureTimestampMs) {
+        state = 'base-verification-timestamp-in-future'
+      } else if (Date.parse(headTimestamp) > maximumFutureTimestampMs) {
+        state = 'head-verification-timestamp-in-future'
+      } else if (headTimestamp === baseTimestamp) {
+        state = 'unchanged-verification-timestamp'
+      } else if (Date.parse(headTimestamp) <= Date.parse(baseTimestamp)) {
+        state = 'non-monotonic-verification-timestamp'
+      } else if (
+        canonicalJson(withoutVerificationTimestamp(base)) !==
+        canonicalJson(withoutVerificationTimestamp(head))
+      ) {
+        state = 'protected-manifest-values-changed'
+      }
+    }
+
+    results.push({ path, state })
+  }
+
+  return {
+    decision:
+      trustedEvaluationTimeValid &&
+      results.every(
+        (result) => result.state === 'verification-timestamp-only',
+      )
+        ? 'allow'
+        : 'deny',
+    maximum_future_skew_seconds: AEGIS_MANIFEST_MAX_FUTURE_SKEW_SECONDS,
+    results,
+    trusted_evaluation_time: trustedEvaluationTimeValid
+      ? trustedEvaluationTime
+      : null,
+  }
+}
+
+function acceptedAegisManifestPaths(verificationEvidence, objectEvidence) {
+  if (
+    verificationEvidence?.decision !== 'allow' ||
+    !Array.isArray(verificationEvidence.results) ||
+    objectEvidence?.decision !== 'allow' ||
+    !Array.isArray(objectEvidence.results) ||
+    objectEvidence.results.length !== AEGIS_MANIFEST_REVISIONS.length ||
+    !objectEvidence.results.every(
+      (result) =>
+        AEGIS_MANIFEST_REVISIONS.includes(result?.revision) &&
+        result?.path === AEGIS_FOUNDATION_MANIFEST_PATH &&
+        result?.state === 'regular-blob' &&
+        isGitObjectSha(result?.blob_sha),
+    )
+  ) {
+    return new Set()
+  }
+  return new Set(
+    verificationEvidence.results
+      .filter(
+        (result) =>
+          result?.path === AEGIS_FOUNDATION_MANIFEST_PATH &&
+          result?.state === 'verification-timestamp-only',
+      )
+      .map((result) => result.path),
+  )
+}
+
 export function classifyPullRequest(input = {}) {
   const files = Array.isArray(input.files) ? input.files : []
   const labels = Array.isArray(input.labels)
     ? [...new Set(input.labels.map(normalizeLabel).filter(Boolean))].sort()
     : []
   const reasons = []
+  const acceptedManifestPaths = acceptedAegisManifestPaths(
+    input.aegis_manifest_verification,
+    input.aegis_manifest_object,
+  )
 
   for (const label of labels) {
     const category = DENY_LABELS.get(label)
     if (category) {
       reasons.push({ category, label })
     }
+  }
+
+  if (input.file_inventory_complete !== true) {
+    reasons.push({ category: 'empty-or-incomplete-file-list' })
   }
 
   if (files.length === 0) {
@@ -294,7 +596,14 @@ export function classifyPullRequest(input = {}) {
     }
     const classifiedPaths = previousPath ? [path, previousPath] : [path]
     for (const classifiedPath of classifiedPaths) {
-      for (const category of classifyPath(classifiedPath)) {
+      const allowFoundationManifest =
+        classifiedPath === path &&
+        status === 'modified' &&
+        !previousPath &&
+        acceptedManifestPaths.has(path)
+      for (const category of classifyPath(classifiedPath, {
+        allowFoundationManifest,
+      })) {
         reasons.push({ category, path: classifiedPath })
       }
       for (const capability of requiredTestCapabilities(classifiedPath)) {
@@ -306,6 +615,40 @@ export function classifyPullRequest(input = {}) {
           })
         }
       }
+    }
+    if (
+      path === AEGIS_FOUNDATION_MANIFEST_PATH &&
+      !(
+        status === 'modified' &&
+        !previousPath &&
+        acceptedManifestPaths.has(path)
+      )
+    ) {
+      const verificationState = Array.isArray(
+        input.aegis_manifest_verification?.results,
+      )
+        ? input.aegis_manifest_verification.results.find(
+            (result) => result?.path === path,
+          )?.state
+        : null
+      reasons.push({
+        category: 'aegis-manifest-verification',
+        path,
+        state: verificationState ?? 'missing-or-untrusted-evidence',
+      })
+      const objectStates = Array.isArray(input.aegis_manifest_object?.results)
+        ? input.aegis_manifest_object.results
+            .map((result) => result?.state)
+            .filter(Boolean)
+        : []
+      reasons.push({
+        category: 'aegis-manifest-object',
+        path,
+        states:
+          objectStates.length > 0
+            ? [...new Set(objectStates)].sort()
+            : ['missing-or-untrusted-evidence'],
+      })
     }
     if (
       ['removed', 'renamed'].includes(status) &&
@@ -462,7 +805,7 @@ function parseCliInput(argv) {
   const inputIndex = argv.indexOf('--input')
   if (inputIndex < 0 || !argv[inputIndex + 1]) {
     throw new Error(
-      'usage: auto-merge-policy.mjs <classify|checks> --input <json-file>',
+      'usage: auto-merge-policy.mjs <classify|checks|manifests|aegis-manifest-object|aegis-manifest> --input <json-file>',
     )
   }
   return JSON.parse(fs.readFileSync(argv[inputIndex + 1], 'utf8'))
@@ -482,6 +825,12 @@ if (import.meta.url === invokedPath) {
           ? evaluateRequiredChecks(input)
           : command === 'manifests'
             ? evaluatePackageScripts(input)
+            : command === 'aegis-manifest-object'
+              ? evaluateAegisManifestObjectEvidence(input)
+            : command === 'aegis-manifest'
+              ? evaluateAegisManifestVerification(input, {
+                  trustedEvaluationTime: new Date().toISOString(),
+                })
             : null
     if (!result) {
       throw new Error(`unsupported command: ${command ?? '<missing>'}`)
