@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task65-post-merge-ci-verification.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task65-post-merge-ci-verification.md",
+  "current": "2026-07-11-001-task66-post-merge-ci-dispatch-canary.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task66-post-merge-ci-dispatch-canary.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "65",
-    "slug": "post-merge-ci-verification",
+    "id": "66",
+    "slug": "post-merge-ci-dispatch-canary",
     "status": "completed",
-    "title": "Guarantee post-merge CI after controlled auto-merge"
+    "title": "Prove controlled post-merge CI dispatch canary"
   },
-  "updated_at": "2026-07-11T16:07:40Z"
+  "updated_at": "2026-07-11T19:10:53Z"
 }
