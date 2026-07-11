@@ -2,7 +2,7 @@
 
 **Title:** Implement Owner Publishing UX Skill
 
-**Status:** pending
+**Status:** done
 
 **Dependencies:** 49 ✓, 56 ✓, 57 ✓
 

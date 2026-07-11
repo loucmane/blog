@@ -268,14 +268,15 @@
         "description": "Create a reusable cross-agent workflow for designing and reviewing nontechnical owner publishing journeys.",
         "details": "Implement .claude/skills/owner-publishing-ux around drafts, autosave, recovery, preview, revisions, scheduling, publish/unpublish, taxonomy, SEO/social fields, media accessibility, portable export/import, and future multi-author readiness. Require concrete owner journeys and failure recovery, produce schema-valid advisory review results, register the skill, link it for Codex, and add focused tests.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "49",
           "56",
           "57"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-11T14:30:28.965Z"
       },
       {
         "id": "53",
@@ -502,9 +503,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-11T10:29:19.287Z",
+      "lastModified": "2026-07-11T14:30:28.966Z",
       "taskCount": 32,
-      "completedCount": 11,
+      "completedCount": 12,
       "tags": [
         "master"
       ]

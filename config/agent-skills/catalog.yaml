@@ -67,6 +67,25 @@
         "advisory-stack-review"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "owner-publishing-ux",
+      "status": "active",
+      "entrypoint": ".claude/skills/owner-publishing-ux/SKILL.md",
+      "codexLink": ".agents/skills/owner-publishing-ux",
+      "provenance": {
+        "type": "project-authored",
+        "task": "52"
+      },
+      "capabilities": [
+        "owner-publishing-journeys",
+        "authoring-recovery",
+        "publishing-lifecycle",
+        "media-accessibility",
+        "mobile-owner-ux",
+        "advisory-owner-ux-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }
