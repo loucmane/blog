@@ -382,5 +382,17 @@
     "plan_hash": "c964944f8fc4ac9fad4831935953d77b5e6826782b8dbb49cd5667cc1c9b05a5",
     "tracker_hash": "8700b01fd84ad4cdf7844cabbd6b4e4e867f89059f75572fcaede8a673f19c60",
     "synced_at": "2026-07-11T11:03:56.656907+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task63-dependency-security-hotfix.md",
+    "plan_hash": "2267de73ef6fe5452020c376a5a78b9ee924b5c8af7a55f6b21a5d6e9eafca2d",
+    "tracker_hash": "92be35b5d96e3ed470a0e1540d927fc22a524c3c5dbccab51526fb7e763a0eb0",
+    "synced_at": "2026-07-11T11:18:11.757364+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task63-dependency-security-hotfix.md",
+    "plan_hash": "cbc8a046a9c9f10925b9b62666db6a4d792118b9a07594f4ac4c1df6194e5388",
+    "tracker_hash": "151ab8f51895e1ad70c697f9fe8db39eed33d3eae8f4b8f02b956d83bbd272ef",
+    "synced_at": "2026-07-11T11:25:17.050202+02:00"
   }
 ]

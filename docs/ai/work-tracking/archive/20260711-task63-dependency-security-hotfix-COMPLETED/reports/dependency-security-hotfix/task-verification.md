@@ -43,7 +43,7 @@ The GitHub inventory concentrated 23 alerts in `next@15.3.3`. Its newest applica
 | `pnpm build` | PASS for backend, UI, and web |
 | `pnpm test:smoke:web` | PASS, HTTP 200, `text/html`, 21,083-byte document |
 | `pnpm ci:auto-merge-policy` | PASS, 25 policy + 12 workflow assertions |
-| `pnpm ci:agent-skills` | PASS, 17/17 |
+| `pnpm ci:agent-skills` | PASS, 23/23 after merging completed Task 51 from main |
 | `pnpm ci:taskmaster` | PASS, 31 tasks and 69 dependency references |
 | `pnpm ci:aegis` | PASS |
 | `pnpm ci:guard` | PASS; 16 known canonical-doc findings remain owned by Task 47 |
@@ -57,6 +57,10 @@ The GitHub inventory concentrated 23 alerts in `next@15.3.3`. Its newest applica
 - `@testing-library/react@14.3.1` still declares React 18 peers while the project already uses React 19. Task 39 owns that testing-stack migration.
 - ESLint 8 and `next lint` are deprecated. Task 39 owns the flat-config and CLI migration.
 - The 60 GitHub alerts remain visible until this branch merges and GitHub refreshes the dependency graph. Post-merge alert recount is a delivery acceptance condition.
+
+## Main Synchronization
+
+PR #19 merged to main as `4b5194c843351577762104248339b0959a564715`. Task 63 then merged that main commit without rebasing. The structured resolution preserved Task 51 as `done`, Task 63 as `in-progress`, both append-only plan-sync histories, and Task 63 as the active plan/session pointer. All verification in the Results table was repeated on the merged tree.
 
 ## Decision
 

@@ -2,7 +2,7 @@
 
 **Title:** Eliminate Critical and High Dependency Vulnerabilities
 
-**Status:** in-progress
+**Status:** done
 
 **Dependencies:** 36 ✓, 48 ✓
 
