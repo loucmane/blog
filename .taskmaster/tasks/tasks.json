@@ -467,12 +467,27 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2026-07-10T23:18:07.440Z"
+      },
+      {
+        "id": "63",
+        "title": "Eliminate Critical and High Dependency Vulnerabilities",
+        "description": "Remove the current critical and high dependency vulnerability baseline before broad SOTA framework modernization, without suppressing advisories or weakening verification.",
+        "details": "Inventory GitHub Dependabot and pnpm audit findings. Upgrade Next.js within major 15 to a patched release with matching Next lint packages. Refresh or narrowly override vulnerable transitive packages only to documented fixed releases. Add deterministic audit-policy and production-web smoke verification. Preserve Tasks 38, 39, and 40 as the owners of Node/pnpm, full test-tooling, and major framework modernization. Require frozen install, typecheck, lint, package/application builds, targeted security and smoke tests, Taskmaster/Aegis/guard validation, and before/after alert evidence. Do not bulk-update unrelated majors, dismiss advisories, or weaken checks.",
+        "testStrategy": "",
+        "status": "in-progress",
+        "dependencies": [
+          "36",
+          "48"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-11T08:51:38.390Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-10T23:18:07.440Z",
-      "taskCount": 30,
+      "lastModified": "2026-07-11T08:51:38.390Z",
+      "taskCount": 31,
       "completedCount": 8,
       "tags": [
         "master"
