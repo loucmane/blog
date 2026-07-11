@@ -2,7 +2,7 @@
 
 **Title:** Implement Stack Research ADR Skill
 
-**Status:** pending
+**Status:** done
 
 **Dependencies:** 49 ✓, 56 ✓, 57 ✓
 
