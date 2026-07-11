@@ -140,12 +140,45 @@ jobs:
             exit 1
           fi
 
+          AEGIS_MANIFEST_PATH='.aegis/foundation-manifest.json'
+          AEGIS_MANIFEST_INPUT="$RUNNER_TEMP/auto-merge-aegis-manifest-input.json"
+          printf '%s\n' '{"entries":[]}' > "$AEGIS_MANIFEST_INPUT"
+          if jq -e --arg path "$AEGIS_MANIFEST_PATH" 'any(.[]; .filename == $path)' "$FILES_JSON" >/dev/null; then
+            AEGIS_MANIFEST_STATUS=$(jq -r --arg path "$AEGIS_MANIFEST_PATH" '.[] | select(.filename == $path) | .status' "$FILES_JSON")
+            if [ "$AEGIS_MANIFEST_STATUS" != "modified" ]; then
+              echo "$AEGIS_MANIFEST_PATH must be an in-place modification; attended review is required."
+              exit 1
+            fi
+            if [ ! -f "trusted/$AEGIS_MANIFEST_PATH" ]; then
+              echo "$AEGIS_MANIFEST_PATH is absent from trusted main; attended review is required."
+              exit 1
+            fi
+            jq -e 'type == "object"' "trusted/$AEGIS_MANIFEST_PATH" >/dev/null
+            HEAD_AEGIS_MANIFEST="$RUNNER_TEMP/head-aegis-foundation-manifest.json"
+            gh api "repos/$REPOSITORY/contents/$AEGIS_MANIFEST_PATH?ref=$HEAD_SHA" \
+              --jq '.content' | tr -d '\n' | base64 --decode > "$HEAD_AEGIS_MANIFEST"
+            jq -e 'type == "object"' "$HEAD_AEGIS_MANIFEST" >/dev/null
+            jq -n \
+              --arg path "$AEGIS_MANIFEST_PATH" \
+              --slurpfile base "trusted/$AEGIS_MANIFEST_PATH" \
+              --slurpfile head "$HEAD_AEGIS_MANIFEST" \
+              '{entries: [{path: $path, base: $base[0], head: $head[0]}]}' \
+              > "$AEGIS_MANIFEST_INPUT"
+          fi
+          AEGIS_MANIFEST_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs aegis-manifest --input "$AEGIS_MANIFEST_INPUT")
+          echo "$AEGIS_MANIFEST_RESULT" | jq .
+          if [ "$(echo "$AEGIS_MANIFEST_RESULT" | jq -r '.decision')" != "allow" ]; then
+            echo "$AEGIS_MANIFEST_PATH changed beyond verification.last_verified_at; attended review is required."
+            exit 1
+          fi
+
           POLICY_INPUT="$RUNNER_TEMP/auto-merge-policy-input.json"
           jq -n \
             --slurpfile files "$FILES_JSON" \
             --slurpfile pr "$PR_JSON" \
             --slurpfile capabilities trusted/config/ci/verification-capabilities.json \
-            '{files: $files[0], labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0]}' \
+            --argjson aegis_manifest_verification "$AEGIS_MANIFEST_RESULT" \
+            '{files: $files[0], file_inventory_complete: true, labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0], aegis_manifest_verification: $aegis_manifest_verification}' \
             > "$POLICY_INPUT"
           POLICY_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs classify --input "$POLICY_INPUT")
           echo "$POLICY_RESULT" | jq .
@@ -278,7 +311,8 @@ jobs:
             --slurpfile files "$CURRENT_FILES_JSON" \
             --slurpfile pr "$CURRENT_PR_JSON" \
             --slurpfile capabilities trusted/config/ci/verification-capabilities.json \
-            '{files: $files[0], labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0]}' \
+            --argjson aegis_manifest_verification "$AEGIS_MANIFEST_RESULT" \
+            '{files: $files[0], file_inventory_complete: true, labels: [$pr[0].labels[].name], test_capabilities: $capabilities[0], aegis_manifest_verification: $aegis_manifest_verification}' \
             > "$CURRENT_POLICY_INPUT"
           CURRENT_POLICY_RESULT=$(node trusted/scripts/ci/auto-merge-policy.mjs classify --input "$CURRENT_POLICY_INPUT")
           echo "$CURRENT_POLICY_RESULT" | jq .

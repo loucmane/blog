@@ -56,6 +56,10 @@ test('executes trusted default-branch policy instead of pull-request code', () =
     workflow,
     /node trusted\/scripts\/ci\/auto-merge-policy\.mjs manifests/,
   )
+  assert.match(
+    workflow,
+    /node trusted\/scripts\/ci\/auto-merge-policy\.mjs aegis-manifest/,
+  )
 })
 
 test('never checks out or fetches a pull-request head or merge ref', () => {
@@ -99,6 +103,36 @@ test('executes no pull-request-controlled package or script surface', () => {
     /repos\/\$REPOSITORY\/contents\/\$PACKAGE_PATH\?ref=\$HEAD_SHA/,
   )
   assert.match(workflow, /jq -e 'type == "object"' "\$HEAD_MANIFEST"/)
+  assert.match(
+    workflow,
+    /repos\/\$REPOSITORY\/contents\/\$AEGIS_MANIFEST_PATH\?ref=\$HEAD_SHA/,
+  )
+  assert.match(
+    workflow,
+    /jq -e 'type == "object"' "trusted\/\$AEGIS_MANIFEST_PATH"/,
+  )
+  assert.match(
+    workflow,
+    /jq -e 'type == "object"' "\$HEAD_AEGIS_MANIFEST"/,
+  )
+  assert.match(
+    workflow,
+    /--slurpfile base "trusted\/\$AEGIS_MANIFEST_PATH"/,
+  )
+  assert.match(
+    workflow,
+    /--slurpfile head "\$HEAD_AEGIS_MANIFEST"/,
+  )
+  assert.equal(
+    workflow.match(
+      /--argjson aegis_manifest_verification "\$AEGIS_MANIFEST_RESULT"/g,
+    )?.length,
+    2,
+  )
+  assert.equal(
+    workflow.match(/file_inventory_complete: true/g)?.length,
+    2,
+  )
 
   const nodeScripts = [...workflow.matchAll(/\bnode ([^\s)]+)/g)].map(
     (match) => match[1],
@@ -109,7 +143,22 @@ test('executes no pull-request-controlled package or script surface', () => {
     'trusted/scripts/ci/auto-merge-policy.mjs',
     'trusted/scripts/ci/auto-merge-policy.mjs',
     'trusted/scripts/ci/auto-merge-policy.mjs',
+    'trusted/scripts/ci/auto-merge-policy.mjs',
   ])
+})
+
+test('allows only trusted semantic verification of the Aegis manifest timestamp', () => {
+  assert.match(
+    workflow,
+    /AEGIS_MANIFEST_PATH='\.aegis\/foundation-manifest\.json'/,
+  )
+  assert.match(workflow, /AEGIS_MANIFEST_STATUS.*\.status/)
+  assert.match(workflow, /AEGIS_MANIFEST_STATUS" != "modified"/)
+  assert.match(
+    workflow,
+    /changed beyond verification\.last_verified_at; attended review is required/,
+  )
+  assert.doesNotMatch(workflow, /trusted\/\.aegis\/(?:state|reports|capsule)/)
 })
 
 test('fails closed unless the privileged trigger and API identifiers are valid', () => {
@@ -133,6 +182,14 @@ test('fails closed for forks, incomplete file inventories, and stale heads', () 
   assert.match(workflow, /--match-head-commit "\$HEAD_SHA"/)
   assert.match(workflow, /moved during evaluation/)
   assert.match(workflow, /Final changed-file inventory is incomplete/)
+  assert.match(
+    workflow,
+    /FETCHED_FILE_COUNT" -ne "\$DECLARED_FILE_COUNT/,
+  )
+  assert.match(
+    workflow,
+    /CURRENT_FETCHED_FILE_COUNT" -ne "\$CURRENT_DECLARED_FILE_COUNT/,
+  )
   assert.match(workflow, /not CLEAN and mergeable/)
   assert.match(workflow, /became ineligible during final policy revalidation/)
   assert.match(workflow, /Required checks changed during final evaluation/)

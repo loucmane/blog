@@ -1,0 +1,107 @@
+{
+  "source": {
+    "pull_request": 19,
+    "base_commit": "f71e5917cfa470a16c3539a9eb5315e11fe9c7bc",
+    "head_commit": "51ba5eeb0ad86a762a781db0eba57534ebe08e4f",
+    "path": ".aegis/foundation-manifest.json",
+    "base_manifest_fixture": "pr19-foundation-manifest-base.json",
+    "base_manifest_sha256": "15930aed3aca4b020c0eabb7654a8ecf752153a0f109bf2c53864334317fad7f",
+    "base_timestamp": "2026-07-10T22:47:33Z",
+    "head_timestamp": "2026-07-10T23:28:37Z"
+  },
+  "adversarial_cases": [
+    {
+      "name": "malformed base JSON",
+      "operation": "replace-base",
+      "value": "{not-json",
+      "expected_state": "missing-or-invalid-manifest"
+    },
+    {
+      "name": "malformed head JSON",
+      "operation": "replace-head",
+      "value": "{not-json",
+      "expected_state": "missing-or-invalid-manifest"
+    },
+    {
+      "name": "missing base content",
+      "operation": "omit-base",
+      "expected_state": "missing-or-invalid-manifest"
+    },
+    {
+      "name": "missing head content",
+      "operation": "omit-head",
+      "expected_state": "missing-or-invalid-manifest"
+    },
+    {
+      "name": "invalid calendar timestamp",
+      "operation": "set-head",
+      "path": ["verification", "last_verified_at"],
+      "value": "2026-02-31T23:28:37Z",
+      "expected_state": "invalid-verification-timestamp"
+    },
+    {
+      "name": "timestamp plus runtime source change",
+      "operation": "set-head",
+      "path": ["runtime", "source_commit"],
+      "value": "0000000000000000000000000000000000000000",
+      "expected_state": "protected-manifest-values-changed"
+    },
+    {
+      "name": "managed asset checksum change",
+      "operation": "set-head",
+      "path": ["managed_files", 2, "checksum"],
+      "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "expected_state": "protected-manifest-values-changed"
+    },
+    {
+      "name": "enforcement field addition",
+      "operation": "set-head",
+      "path": ["enforcement", "mode"],
+      "value": "strict",
+      "expected_state": "protected-manifest-values-changed"
+    },
+    {
+      "name": "authority field addition",
+      "operation": "set-head",
+      "path": ["authority", "grant_id"],
+      "value": "untrusted-grant",
+      "expected_state": "protected-manifest-values-changed"
+    },
+    {
+      "name": "verification report-list change",
+      "operation": "set-head",
+      "path": ["verification", "reports"],
+      "value": [
+        ".aegis/reports/verification-report.json",
+        ".aegis/reports/untrusted-report.json"
+      ],
+      "expected_state": "protected-manifest-values-changed"
+    },
+    {
+      "name": "verification status change",
+      "operation": "set-head",
+      "path": ["verification", "status"],
+      "value": "failed",
+      "expected_state": "protected-manifest-values-changed"
+    },
+    {
+      "name": "field deletion",
+      "operation": "delete-head",
+      "path": ["agents", "codex", "enabled"],
+      "expected_state": "protected-manifest-values-changed"
+    },
+    {
+      "name": "timestamp deletion",
+      "operation": "delete-head",
+      "path": ["verification", "last_verified_at"],
+      "expected_state": "missing-verification-timestamp"
+    },
+    {
+      "name": "extra nested field",
+      "operation": "set-head",
+      "path": ["runtime", "untrusted", "nested"],
+      "value": true,
+      "expected_state": "protected-manifest-values-changed"
+    }
+  ]
+}

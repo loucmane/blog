@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task63-dependency-security-hotfix.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task63-dependency-security-hotfix.md",
+  "current": "2026-07-11-001-task64-manifest-verification-diff-policy.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task64-manifest-verification-diff-policy.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "63",
-    "slug": "dependency-security-hotfix",
+    "id": "64",
+    "slug": "manifest-verification-diff-policy",
     "status": "in-progress",
-    "title": "Eliminate Critical and High Dependency Vulnerabilities"
+    "title": "Permit Verification-Only Aegis Manifest Diffs in Autonomous Delivery"
   },
-  "updated_at": "2026-07-11T08:51:28Z"
+  "updated_at": "2026-07-11T10:14:33Z"
 }

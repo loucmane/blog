@@ -38,6 +38,9 @@ Automatically eligible after applicable checks:
   applicable test capabilities are supported;
 - dependency and lockfile changes once applicable tests are supported and
   package scripts remain identical to trusted `main`.
+- `.aegis/foundation-manifest.json` only when trusted semantic comparison
+  proves the sole change is a valid, monotonic
+  `verification.last_verified_at` update.
 
 Attended by exception:
 
@@ -71,6 +74,29 @@ the same pull request. The privileged workflow may retrieve a changed
 compares its `scripts` object to the protected-main manifest. Dependency,
 engine, and package-manager fields may change after applicable capabilities are
 supported; script changes remain attended.
+
+## Verification-Only Aegis Manifest Exception
+
+Task 64 narrows one false-stop case without weakening the default Aegis deny
+boundary. The privileged workflow loads its evaluator and the base manifest
+only from protected `main`, retrieves the exact pull-request-head manifest as
+inert JSON through the GitHub contents API, and never checks out or executes
+pull-request content.
+
+The exception applies only to an in-place modification of
+`.aegis/foundation-manifest.json`. Both documents must be valid JSON objects,
+both timestamps must be valid RFC 3339 values, the head timestamp must advance,
+and canonical comparison after removing only
+`verification.last_verified_at` must be equal. Missing evidence, a stale or
+unchanged timestamp, added/removed/renamed manifests, or any other key or value
+change remains attended. Every other `.aegis/` path remains denied.
+
+The policy result is included in both initial and final file-policy evaluation.
+The Task 64 pull request itself remains attended because it changes the trusted
+workflow and policy. Rollback is a reviewed revert of Task 64, which restores
+the prior deny-all behavior for `.aegis/foundation-manifest.json` without
+changing Aegis runtime state, authority, enforcement, product code, packages,
+or data.
 
 ## Bootstrap And Canary
 

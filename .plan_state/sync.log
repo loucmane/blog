@@ -394,5 +394,41 @@
     "plan_hash": "cbc8a046a9c9f10925b9b62666db6a4d792118b9a07594f4ac4c1df6194e5388",
     "tracker_hash": "151ab8f51895e1ad70c697f9fe8db39eed33d3eae8f4b8f02b956d83bbd272ef",
     "synced_at": "2026-07-11T11:25:17.050202+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task64-manifest-verification-diff-policy.md",
+    "plan_hash": "5d794a41eaf16805335f753ba3c2a54246b6bb9ccefaede232bb1b465e67fc30",
+    "tracker_hash": "def07313cedd17572a538aaa0e32287fe7b9794b82073406116f87b23f799d87",
+    "synced_at": "2026-07-11T12:26:39.942547+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task64-manifest-verification-diff-policy.md",
+    "plan_hash": "da5a359500a3a92bb7619fd9496d25c383571ceb8a2288f2e186e91c323096e6",
+    "tracker_hash": "def07313cedd17572a538aaa0e32287fe7b9794b82073406116f87b23f799d87",
+    "synced_at": "2026-07-11T12:27:14.889909+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task64-manifest-verification-diff-policy.md",
+    "plan_hash": "f12b798cc880f6ca6e61a71b86d220ac090bba6002b0a27df92a80ae401e8fe1",
+    "tracker_hash": "3293ed630060bf672b0bfe01f2dfdfe8d67785009ffe4a4f41c80a9aed5d3430",
+    "synced_at": "2026-07-11T12:31:21.776006+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task64-manifest-verification-diff-policy.md",
+    "plan_hash": "faa115f0631b5555ee65a32a00f6646bf1a3b8a9035cb3f9f3cd9b3475f86350",
+    "tracker_hash": "42c0f8d0ff955f99815f1fdd12bfc483b80d42f9ab16a85e87073793e8f24119",
+    "synced_at": "2026-07-11T12:54:23.557028+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task64-manifest-verification-diff-policy.md",
+    "plan_hash": "bc2161237035c4c1ff3f224b5d010b064b6a08312630f647641d3b0339087394",
+    "tracker_hash": "42c0f8d0ff955f99815f1fdd12bfc483b80d42f9ab16a85e87073793e8f24119",
+    "synced_at": "2026-07-11T13:01:00.076033+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task64-manifest-verification-diff-policy.md",
+    "plan_hash": "bc2161237035c4c1ff3f224b5d010b064b6a08312630f647641d3b0339087394",
+    "tracker_hash": "d1b7f1811afcb62768e721153ad1f442ada1f370d572b6cb02df90b2536785b1",
+    "synced_at": "2026-07-11T13:04:28.642130+02:00"
   }
 ]
