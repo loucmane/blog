@@ -49,6 +49,24 @@
         "advisory-product-review"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "stack-research-adr",
+      "status": "active",
+      "entrypoint": ".claude/skills/stack-research-adr/SKILL.md",
+      "codexLink": ".agents/skills/stack-research-adr",
+      "provenance": {
+        "type": "project-authored",
+        "task": "51"
+      },
+      "capabilities": [
+        "primary-source-research",
+        "version-verification",
+        "architecture-decision-records",
+        "compatibility-risk",
+        "advisory-stack-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }

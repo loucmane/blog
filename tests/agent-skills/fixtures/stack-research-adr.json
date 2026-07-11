@@ -1,0 +1,101 @@
+{
+  "routingContract": {
+    "includeAny": [
+      "stack research",
+      "architecture decision",
+      "adr",
+      "latest stable",
+      "support policy",
+      "compatibility matrix",
+      "framework comparison"
+    ],
+    "excludeAny": [
+      "implement",
+      "upgrade dependencies",
+      "install package",
+      "edit package.json",
+      "product discovery",
+      "user journey",
+      "security audit",
+      "deploy the application",
+      "run migration"
+    ]
+  },
+  "positive": [
+    {
+      "id": "framework-decision",
+      "prompt": "Run stack research and a framework comparison using current primary sources."
+    },
+    {
+      "id": "version-support",
+      "prompt": "Write an architecture decision for the latest stable runtime and its support policy."
+    },
+    {
+      "id": "compatibility",
+      "prompt": "Produce an ADR with a compatibility matrix for the editor, framework, and deployment stack."
+    }
+  ],
+  "deny": [
+    {
+      "id": "implementation",
+      "prompt": "Implement the selected framework and install package dependencies."
+    },
+    {
+      "id": "package-edit",
+      "prompt": "Edit package.json and upgrade dependencies to the newest versions."
+    },
+    {
+      "id": "product-discovery",
+      "prompt": "Run product discovery and map the owner user journey."
+    },
+    {
+      "id": "operations",
+      "prompt": "Deploy the application and run migration scripts."
+    }
+  ],
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "task51-fixture",
+    "skill": "stack-research-adr",
+    "mode": "advisory",
+    "verdict": "warn",
+    "summary": "Research produced a stable target decision and two explicit evidence gaps.",
+    "generatedAt": "2026-07-11T00:00:00Z",
+    "headSha": "2222222222222222222222222222222222222222",
+    "findings": [
+      {
+        "id": "decision-supported-stable",
+        "severity": "info",
+        "category": "stack-decision",
+        "message": "Prefer the supported stable release line over preview channels.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["https://nodejs.org/en/about/previous-releases"]
+      },
+      {
+        "id": "risk-framework-runtime",
+        "severity": "warning",
+        "category": "compatibility-risk",
+        "message": "Confirm the framework and runtime pairing against official support documentation.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["Official compatibility evidence is still required."]
+      },
+      {
+        "id": "gap-rollback-drill",
+        "severity": "warning",
+        "category": "rollback-gap",
+        "message": "The migration plan needs a tested rollback checkpoint.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["No rollback drill is recorded."]
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "url",
+        "path": "https://nodejs.org/en/about/previous-releases"
+      }
+    ]
+  }
+}

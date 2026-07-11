@@ -358,5 +358,17 @@
     "plan_hash": "7da690f8656bd44b085481efcdbab462e10667481681e3be9088f79ffbabdecb",
     "tracker_hash": "f8fcece37084c8168ee006c7e5a0562fa68be806283d0b4d7b473b45f4364d5a",
     "synced_at": "2026-07-11T01:20:33.920791+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
+    "plan_hash": "7a520c0f9279f6ab9db6582facb0fc3afb0ae41ae952518d2ba03788384525f0",
+    "tracker_hash": "e19e3149a67771f4cac0f536a57da6cf659b35ca8b0f2a55db7ae5e7123ad329",
+    "synced_at": "2026-07-11T01:27:16.857920+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task51-stack-research-adr-skill.md",
+    "plan_hash": "7a520c0f9279f6ab9db6582facb0fc3afb0ae41ae952518d2ba03788384525f0",
+    "tracker_hash": "b276222c75c052fde96afc138787a95060dfdad6889fe502e0719a71ee576316",
+    "synced_at": "2026-07-11T01:28:36.916726+02:00"
   }
 ]

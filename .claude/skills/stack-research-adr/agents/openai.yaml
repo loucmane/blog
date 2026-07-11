@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stack Research & ADR"
+  short_description: "Research current stacks and produce decision-ready ADRs"
+  default_prompt: "Research current stable stack options from primary sources and produce a cited, reversible architecture decision record."
