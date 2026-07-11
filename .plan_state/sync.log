@@ -496,5 +496,17 @@
     "plan_hash": "5d887391870bcc2bc0808ffd7a1ff0426be25e26983d982b710273e4ea773a50",
     "tracker_hash": "17eb5690c9621f3ba7dfa8e203de93faf43d4b4aabac0dc2eba87ac4b05921df",
     "synced_at": "2026-07-11T18:10:30.447910+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task66-post-merge-ci-dispatch-canary.md",
+    "plan_hash": "52c57ec3b5a178c18f8081c886b15f701318ca8807c2cc9600e7139ac68c2635",
+    "tracker_hash": "51ff58d8da6ac310681fd9f1dc1826db11c1f4746e93d2bbc0c2dac8a69ce3e8",
+    "synced_at": "2026-07-11T21:05:18.444718+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task66-post-merge-ci-dispatch-canary.md",
+    "plan_hash": "e246ec7ba8901c902ebe3946802eb0cb225f4f40025ae36445a9095d539f11e1",
+    "tracker_hash": "eb360214ab403e377a84f662aae2475bfb222c216179b5f0eea0dd02a575b1d6",
+    "synced_at": "2026-07-11T21:13:24.655999+02:00"
   }
 ]
