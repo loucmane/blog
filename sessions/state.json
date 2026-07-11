@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task52-owner-publishing-ux-skill.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task52-owner-publishing-ux-skill.md",
+  "current": "2026-07-11-001-task65-post-merge-ci-verification.md",
+  "current_path": "sessions/2026/07/2026-07-11-001-task65-post-merge-ci-verification.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "52",
-    "slug": "owner-publishing-ux-skill",
-    "status": "in-progress",
-    "title": "Implement Owner Publishing UX Skill"
+    "id": "65",
+    "slug": "post-merge-ci-verification",
+    "status": "completed",
+    "title": "Guarantee post-merge CI after controlled auto-merge"
   },
-  "updated_at": "2026-07-11T12:16:46Z"
+  "updated_at": "2026-07-11T16:07:40Z"
 }

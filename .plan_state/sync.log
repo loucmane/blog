@@ -472,5 +472,29 @@
     "plan_hash": "6da77d6f3cafefd1296c2b4a30a6a6dc32841aec5249ae381310c6068ea7fb12",
     "tracker_hash": "033690b45051fbced5ddb7154d0555798cf6c36ec5c044166e5d1735ad70e091",
     "synced_at": "2026-07-11T16:33:49.147823+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task65-post-merge-ci-verification.md",
+    "plan_hash": "d8f9481ff997d8dd0466b42b7ac9e11af2eae29d8a67b8c526a06079f96cdfdd",
+    "tracker_hash": "199ceae3caa24026caa7e16765d9be4b705104d07334c73dad37d985d1f8298c",
+    "synced_at": "2026-07-11T18:00:46.254115+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task65-post-merge-ci-verification.md",
+    "plan_hash": "a5b20a03dc4c8ea4ceb61ff8fd0c6c9e23d9a840b3be6eb0a73a9e9f744c1903",
+    "tracker_hash": "b13510e5a24d42eeb0bc6635f09063fdc3bb99a344e5c838aa501dd9e8303037",
+    "synced_at": "2026-07-11T18:05:24.335081+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task65-post-merge-ci-verification.md",
+    "plan_hash": "659d6d465d7e9156e43a439f1c049c09d3c6491aa3da7e77a2f1a150e2a8b203",
+    "tracker_hash": "b13510e5a24d42eeb0bc6635f09063fdc3bb99a344e5c838aa501dd9e8303037",
+    "synced_at": "2026-07-11T18:07:13.067589+02:00"
+  },
+  {
+    "plan": "plans/2026-07-11-task65-post-merge-ci-verification.md",
+    "plan_hash": "5d887391870bcc2bc0808ffd7a1ff0426be25e26983d982b710273e4ea773a50",
+    "tracker_hash": "17eb5690c9621f3ba7dfa8e203de93faf43d4b4aabac0dc2eba87ac4b05921df",
+    "synced_at": "2026-07-11T18:10:30.447910+02:00"
   }
 ]

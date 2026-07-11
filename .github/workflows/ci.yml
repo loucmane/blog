@@ -4,23 +4,130 @@ on:
   push:
     branches: [main]
   pull_request:
+  repository_dispatch:
+    types: [post-controlled-auto-merge-ci]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'repository_dispatch' && github.run_id || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  context:
+    name: context · resolve trusted verification commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      checkout_ref: ${{ steps.resolve.outputs.checkout_ref }}
+    steps:
+      - name: Check out the event-defined trusted commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Resolve the exact verification commit
+        id: resolve
+        shell: bash
+        env:
+          CLIENT_MERGE_SHA: ${{ github.event.client_payload.merge_sha }}
+          CLIENT_PR_NUMBER: ${{ github.event.client_payload.pr_number }}
+          CLIENT_REVIEWED_HEAD_SHA: ${{ github.event.client_payload.reviewed_head_sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          DISPATCH_ACTION: ${{ github.event.action }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          CONTEXT_INPUT="$RUNNER_TEMP/post-merge-context-input.json"
+          if [ "$EVENT_NAME" = "repository_dispatch" ]; then
+            if ! [[ "$CLIENT_PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+              echo "The post-merge pull-request identifier is invalid."
+              exit 1
+            fi
+            if ! [[ "$CLIENT_MERGE_SHA" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+              echo "The post-merge commit SHA is invalid."
+              exit 1
+            fi
+            if ! [[ "$CLIENT_REVIEWED_HEAD_SHA" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+              echo "The reviewed pull-request head SHA is invalid."
+              exit 1
+            fi
+
+            PULL_REQUEST_JSON="$RUNNER_TEMP/post-merge-pull-request.json"
+            gh api \
+              -H 'Accept: application/vnd.github+json' \
+              "repos/$REPOSITORY/pulls/$CLIENT_PR_NUMBER" > "$PULL_REQUEST_JSON"
+
+            MERGE_IS_ANCESTOR=false
+            if git cat-file -e "${CLIENT_MERGE_SHA}^{commit}" && \
+              git merge-base --is-ancestor "$CLIENT_MERGE_SHA" "$EVENT_SHA"; then
+              MERGE_IS_ANCESTOR=true
+            fi
+
+            jq -n \
+              --arg action "$DISPATCH_ACTION" \
+              --arg default_branch "$DEFAULT_BRANCH" \
+              --arg event_name "$EVENT_NAME" \
+              --arg github_sha "$EVENT_SHA" \
+              --arg merge_sha "$CLIENT_MERGE_SHA" \
+              --argjson merge_is_ancestor_of_event_sha "$MERGE_IS_ANCESTOR" \
+              --argjson pr_number "$CLIENT_PR_NUMBER" \
+              --slurpfile pull_request "$PULL_REQUEST_JSON" \
+              --arg repository "$REPOSITORY" \
+              --arg reviewed_head_sha "$CLIENT_REVIEWED_HEAD_SHA" \
+              '{
+                action: $action,
+                client_payload: {
+                  merge_sha: $merge_sha,
+                  pr_number: $pr_number,
+                  reviewed_head_sha: $reviewed_head_sha
+                },
+                default_branch: $default_branch,
+                event_name: $event_name,
+                github_sha: $github_sha,
+                merge_is_ancestor_of_event_sha: $merge_is_ancestor_of_event_sha,
+                pull_request: $pull_request[0],
+                repository: $repository
+              }' > "$CONTEXT_INPUT"
+          else
+            jq -n \
+              --arg event_name "$EVENT_NAME" \
+              --arg github_sha "$EVENT_SHA" \
+              '{event_name: $event_name, github_sha: $github_sha}' \
+              > "$CONTEXT_INPUT"
+          fi
+
+          CONTEXT_RESULT=$(node scripts/ci/post-merge-context.mjs evaluate --input "$CONTEXT_INPUT")
+          echo "$CONTEXT_RESULT" | jq .
+          if [ "$(echo "$CONTEXT_RESULT" | jq -r '.decision')" != "allow" ]; then
+            echo "The CI event did not resolve to a trusted verification commit."
+            exit 1
+          fi
+          CHECKOUT_REF=$(echo "$CONTEXT_RESULT" | jq -r '.checkout_ref // ""')
+          if ! [[ "$CHECKOUT_REF" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+            echo "The trusted verification commit is invalid."
+            exit 1
+          fi
+          echo "checkout_ref=$CHECKOUT_REF" >> "$GITHUB_OUTPUT"
+
   workspace:
     name: workspace · install · typecheck · lint · tests · build
+    needs: context
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: ${{ needs.context.outputs.checkout_ref }}
 
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
         with:
@@ -142,12 +249,14 @@ jobs:
 
   governance:
     name: governance · Taskmaster · Aegis · guards
+    needs: context
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: ${{ needs.context.outputs.checkout_ref }}
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
@@ -228,12 +337,14 @@ jobs:
 
   secret-scan:
     name: security · gitleaks
+    needs: context
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: ${{ needs.context.outputs.checkout_ref }}
 
       - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         env:
@@ -244,11 +355,13 @@ jobs:
   dependency-review:
     name: security · dependency review
     if: github.event_name == 'pull_request'
+    needs: context
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
+          ref: ${{ needs.context.outputs.checkout_ref }}
 
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294
         with:

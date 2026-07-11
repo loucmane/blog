@@ -129,3 +129,12 @@ non-behavioral canary without an `auto-merge` label. The canary passes only if:
 - local `main` can synchronize cleanly; and
 - the agent advances to the next dependency-ready task without stopping at a
   merge prompt.
+
+## Post-Merge Verification
+
+Task 52 exposed that a squash merge performed with `${{ github.token }}` does
+not trigger the existing `push:main` CI workflow. Task 65 closes that evidence
+gap with a least-privilege, exact-commit `repository_dispatch` path. The full
+decision, trust boundary, failure behavior, canary, and rollback contract are
+recorded in
+[`2026-07-11-post-merge-ci-dispatch.md`](./2026-07-11-post-merge-ci-dispatch.md).
