@@ -5,7 +5,7 @@
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "allowJs": true,
     "skipLibCheck": true,
-    
+
     // Strict type checking (enhanced with TS 5.0+ features)
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -16,12 +16,12 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "forceConsistentCasingInFileNames": true,
-    
+
     // Additional strict checks for better code quality
     "noImplicitOverride": true,
     "useUnknownInCatchVariables": true,
     "noPropertyAccessFromIndexSignature": false, // Keep flexible for dynamic access
-    
+
     // Module resolution and bundling (optimized for Next.js 15+)
     "noEmit": true,
     "esModuleInterop": true,
@@ -32,25 +32,25 @@
     "verbatimModuleSyntax": false,
     "allowImportingTsExtensions": false,
     "moduleDetection": "force",
-    
+
     // JSX configuration for React 18/19
     "jsx": "preserve",
     "jsxImportSource": "react",
-    
+
     // Performance and development (enhanced)
     "incremental": true,
     "tsBuildInfoFile": ".next/cache/tsconfig.tsbuildinfo",
     "assumeChangesOnlyAffectDirectDependencies": true,
-    
+    "types": ["node"],
+
     // Next.js specific
     "plugins": [
       {
         "name": "next"
       }
     ],
-    
+
     // Path mapping for organized codebase (streamlined)
-    "baseUrl": ".",
     "paths": {
       // Core application paths
       "@/*": ["./src/*"],
@@ -64,13 +64,13 @@
       "@/utils/*": ["./src/utils/*"],
       "@/config/*": ["./src/config/*"],
       "@/content/*": ["./content/*"],
-      
+
       // Domain-specific modules (business logic organization)
       "@/trauma-informed/*": ["./src/trauma-informed/*"],
       "@/donor/*": ["./src/donor/*"],
       "@/emergency/*": ["./src/emergency/*"],
       "@/analytics/*": ["./src/analytics/*"],
-      
+
       // Workspace packages
       "@minniewinnie/ui": ["../ui/src"],
       "@minniewinnie/ui/*": ["../ui/src/*"],
@@ -104,4 +104,4 @@
     "esm": true,
     "experimentalSpecifierResolution": "node"
   }
-} 
+}

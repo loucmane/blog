@@ -35,76 +35,79 @@ shared/
 ## Shared Types
 
 ### Content Models
+
 ```typescript
 // Content sensitivity levels
 export enum ContentSensitivity {
-  HOPE_PROGRESS = 1,    // 70% - Positive outcomes
-  MEDICAL_RESCUE = 2,   // 25% - Active operations
-  CRISIS_EMERGENCY = 3  // 5% - Urgent situations
+  HOPE_PROGRESS = 1, // 70% - Positive outcomes
+  MEDICAL_RESCUE = 2, // 25% - Active operations
+  CRISIS_EMERGENCY = 3, // 5% - Urgent situations
 }
 
 // Base content interface
 export interface Content {
-  id: string;
-  title: string;
-  excerpt: string;
-  sensitivity: ContentSensitivity;
-  publishedAt: Date;
-  author: Author;
-  tags: string[];
+  id: string
+  title: string
+  excerpt: string
+  sensitivity: ContentSensitivity
+  publishedAt: Date
+  author: Author
+  tags: string[]
 }
 
 // Rescue story type
 export interface RescueStory extends Content {
-  animalName: string;
-  species: AnimalSpecies;
-  location: Location;
-  beforeImages: Image[];
-  afterImages: Image[];
-  medicalRecords?: MedicalRecord[];
-  outcomeStatus: OutcomeStatus;
+  animalName: string
+  species: AnimalSpecies
+  location: Location
+  beforeImages: Image[]
+  afterImages: Image[]
+  medicalRecords?: MedicalRecord[]
+  outcomeStatus: OutcomeStatus
 }
 ```
 
 ### API Contracts
+
 ```typescript
 // Standard API response
 export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: ApiError;
-  meta?: ResponseMeta;
+  success: boolean
+  data?: T
+  error?: ApiError
+  meta?: ResponseMeta
 }
 
 // Pagination
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    hasMore: boolean;
-  };
+    page: number
+    limit: number
+    total: number
+    hasMore: boolean
+  }
 }
 ```
 
 ### Donation Types
+
 ```typescript
 export interface Donation {
-  id: string;
-  amount: number;
-  currency: Currency;
-  donorId: string;
-  campaignId?: string;
-  type: DonationType;
-  status: DonationStatus;
-  metadata: DonationMetadata;
+  id: string
+  amount: number
+  currency: Currency
+  donorId: string
+  campaignId?: string
+  type: DonationType
+  status: DonationStatus
+  metadata: DonationMetadata
 }
 
 export enum DonationType {
   ONE_TIME = 'one_time',
   MONTHLY = 'monthly',
   EMERGENCY = 'emergency',
-  TRIBUTE = 'tribute'
+  TRIBUTE = 'tribute',
 }
 ```
 
@@ -113,66 +116,64 @@ export enum DonationType {
 Using Zod for runtime validation:
 
 ```typescript
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const ContentSchema = z.object({
   title: z.string().min(1).max(200),
   excerpt: z.string().max(500),
   sensitivity: z.nativeEnum(ContentSensitivity),
   tags: z.array(z.string()).max(10),
-});
+})
 
 export const DonationSchema = z.object({
   amount: z.number().positive(),
   currency: z.enum(['USD', 'EUR', 'GBP']),
   type: z.nativeEnum(DonationType),
-});
+})
 ```
 
 ## Utility Functions
 
 ### Date Utilities
+
 ```typescript
 // Format date for display
-export function formatDate(date: Date, format: 'short' | 'long'): string;
+export function formatDate(date: Date, format: 'short' | 'long'): string
 
 // Calculate days since rescue
-export function daysSinceRescue(rescueDate: Date): number;
+export function daysSinceRescue(rescueDate: Date): number
 
 // Get fiscal year for donations
-export function getFiscalYear(date: Date): string;
+export function getFiscalYear(date: Date): string
 ```
 
 ### Content Utilities
+
 ```typescript
 // Generate excerpt from content
-export function generateExcerpt(content: string, maxLength: number): string;
+export function generateExcerpt(content: string, maxLength: number): string
 
 // Sanitize user-generated content
-export function sanitizeContent(content: string): string;
+export function sanitizeContent(content: string): string
 
 // Calculate reading time
-export function calculateReadingTime(content: string): number;
+export function calculateReadingTime(content: string): number
 ```
 
 ### Validation Helpers
+
 ```typescript
 // Validate content sensitivity rules
-export function validateSensitivityLevel(
-  content: Content,
-  userAge?: number
-): ValidationResult;
+export function validateSensitivityLevel(content: Content, userAge?: number): ValidationResult
 
 // Check donation limits
-export function validateDonationAmount(
-  amount: number,
-  currency: Currency
-): boolean;
+export function validateDonationAmount(amount: number, currency: Currency): boolean
 ```
 
 ## Constants
 
 ### Content Classification
+
 ```typescript
 export const CONTENT_RULES = {
   LEVEL_1: {
@@ -193,33 +194,34 @@ export const CONTENT_RULES = {
     requiresWarning: true,
     ageRestriction: 18,
   },
-};
+}
 ```
 
 ### Configuration
+
 ```typescript
 export const CONFIG = {
   MAX_UPLOAD_SIZE: 10 * 1024 * 1024, // 10MB
   SUPPORTED_IMAGE_TYPES: ['jpg', 'jpeg', 'png', 'webp'],
   DONATION_CURRENCIES: ['USD', 'EUR', 'GBP'],
   EMERGENCY_REVIEW_SLA: 60, // minutes
-};
+}
 ```
 
 ## Usage
 
 ```typescript
 // Import from any package
-import { 
+import {
   ContentSensitivity,
   validateSensitivityLevel,
   formatDate,
-  CONTENT_RULES 
-} from '@monorepo/shared';
+  CONTENT_RULES,
+} from '@monorepo/shared'
 
 // Use in your code
-const isValid = validateSensitivityLevel(content, userAge);
-const formattedDate = formatDate(new Date(), 'long');
+const isValid = validateSensitivityLevel(content, userAge)
+const formattedDate = formatDate(new Date(), 'long')
 ```
 
 ## Development
@@ -235,14 +237,15 @@ pnpm build
 pnpm test
 
 # Type checking
-pnpm type-check
+pnpm typecheck
 ```
 
 ## Testing
 
 All utilities include comprehensive tests:
+
 ```bash
-pnpm test         # Run all tests
-pnpm test:watch   # Watch mode
-pnpm test:coverage # Coverage report
+pnpm test          # Run unit and integration tests
+pnpm test:coverage # Run tests with coverage thresholds
+pnpm test:browser  # Run browser and accessibility journeys
 ```

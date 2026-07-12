@@ -40,24 +40,28 @@ web/
 ## Key Features
 
 ### Content Management
+
 - MDX-based content with React components
 - Git-based workflow for version control
 - Content sensitivity classification (Level 1-3)
 - Automatic metadata generation
 
 ### Performance Optimizations
+
 - Static Site Generation (SSG)
 - Automatic image optimization
 - Code splitting and tree shaking
 - Edge caching via Vercel
 
 ### User Experience
+
 - Mobile-first responsive design
 - Progressive disclosure for sensitive content
 - Accessibility (WCAG 2.1 AA)
 - Dark mode support
 
 ### Integrations
+
 - Donation platforms (Stripe, PayPal)
 - Newsletter subscriptions
 - Analytics tracking
@@ -66,16 +70,19 @@ web/
 ## Content Sensitivity System
 
 ### Level 1 - Hope/Progress (70%)
+
 - Positive outcomes and success stories
 - No content warnings needed
 - Full social sharing enabled
 
 ### Level 2 - Medical/Rescue (25%)
+
 - Active rescue operations
 - Content warnings displayed
 - Educational context required
 
 ### Level 3 - Crisis/Emergency (5%)
+
 - Urgent situations
 - Age-gating (18+)
 - Limited sharing options
@@ -96,7 +103,7 @@ pnpm build
 pnpm start
 
 # Type checking
-pnpm type-check
+pnpm typecheck
 
 # Linting
 pnpm lint
@@ -108,15 +115,16 @@ pnpm lint
 
 1. Create new MDX file in `content/blog/`
 2. Add frontmatter:
+
 ```mdx
 ---
-title: "Rescue Story Title"
-date: "2024-01-15"
-excerpt: "Brief description"
-category: "rescue"
-tags: ["dogs", "medical", "success"]
-author: "field-team"
-sensitivity: 1  # 1, 2, or 3
+title: 'Rescue Story Title'
+date: '2024-01-15'
+excerpt: 'Brief description'
+category: 'rescue'
+tags: ['dogs', 'medical', 'success']
+author: 'field-team'
+sensitivity: 1 # 1, 2, or 3
 featured: true
 ---
 ```
@@ -147,6 +155,7 @@ CRM_API_KEY=
 ## Deployment
 
 Automatic deployment via Vercel:
+
 - Production: Merges to `main` branch
 - Preview: All other branches
 - Instant rollback capabilities

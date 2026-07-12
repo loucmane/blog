@@ -1,0 +1,4 @@
+captured_at=2026-07-12T17:34:57Z
+node=v24.18.0
+pnpm=11.11.0
+corepack=0.35.0

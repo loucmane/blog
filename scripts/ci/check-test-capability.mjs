@@ -1,112 +1,284 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import ts from 'typescript'
 
-const mode = process.argv.at(-1)
-if (!['unit', 'browser'].includes(mode)) {
-  console.error('Usage: node scripts/ci/check-test-capability.mjs <unit|browser>')
-  process.exit(2)
-}
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
-const root = process.cwd()
-const readJson = relativePath => JSON.parse(
-  fs.readFileSync(path.join(root, relativePath), 'utf8'),
-)
-const manifests = {
-  root: readJson('package.json'),
-  backend: readJson('packages/backend/package.json'),
-  ui: readJson('packages/ui/package.json'),
-  web: readJson('packages/web/package.json'),
+function readJson(relativePath) {
+  return JSON.parse(fs.readFileSync(path.join(root, relativePath), 'utf8'))
 }
-const tasks = readJson('.taskmaster/tasks/tasks.json').master.tasks
-const task39 = tasks.find(task => String(task.id) === '39')
 
 function directDependency(manifest, name) {
   return Boolean(manifest.dependencies?.[name] || manifest.devDependencies?.[name])
 }
 
 function collectFiles(directory, files = []) {
-  if (!fs.existsSync(directory)) {
-    return files
-  }
+  if (!fs.existsSync(directory)) return files
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    if (['node_modules', 'dist', '.next', 'coverage'].includes(entry.name)) {
-      continue
-    }
+    if (['node_modules', 'dist', '.next', 'coverage'].includes(entry.name)) continue
     const entryPath = path.join(directory, entry.name)
     if (entry.isDirectory()) {
       collectFiles(entryPath, files)
     } else {
-      files.push(path.relative(root, entryPath))
+      files.push(path.relative(root, entryPath).split(path.sep).join('/'))
     }
   }
   return files
 }
 
-const packageFiles = collectFiles(path.join(root, 'packages'))
-const testFiles = packageFiles.filter(file =>
-  /(?:^|\/)(__tests__\/|[^/]+\.(?:test|spec)\.[cm]?[jt]sx?$)/.test(file),
-)
-const playwrightConfigs = packageFiles.filter(file =>
-  /(?:^|\/)playwright\.config\.[cm]?[jt]s$/.test(file),
-)
-const packageScripts = Object.values(manifests).flatMap(manifest =>
-  Object.entries(manifest.scripts ?? {}).map(([name, command]) => ({ name, command })),
-)
-const browserScripts = packageScripts.filter(({ name, command }) =>
-  /(e2e|playwright|accessibility|\ba11y\b|\baxe\b)/i.test(`${name} ${command}`),
-)
-const directBrowserDependencies = Object.values(manifests).flatMap(manifest =>
-  ['@playwright/test', 'playwright', 'axe-core', '@axe-core/playwright'].filter(name =>
-    directDependency(manifest, name),
-  ),
-)
-
-const trackedFollowUp = task39?.status === 'pending'
-  && /unit\/integration\/browser foundations/i.test(task39.description ?? '')
-const errors = []
-let blockers
-
-if (mode === 'unit') {
-  blockers = {
-    backendHasNoTests: testFiles.filter(file => file.startsWith('packages/backend/')).length === 0,
-    uiHasNoDirectJest: !directDependency(manifests.ui, 'jest'),
-    webHasNoDirectJest: !directDependency(manifests.web, 'jest'),
-  }
-  if (!Object.values(blockers).every(Boolean)) {
-    errors.push('Unit/integration capability changed; replace this bridge with real test execution')
-  }
-} else {
-  blockers = {
-    noPlaywrightConfig: playwrightConfigs.length === 0,
-    noBrowserScripts: browserScripts.length === 0,
-    noDirectBrowserDependencies: directBrowserDependencies.length === 0,
-  }
-  if (!Object.values(blockers).every(Boolean)) {
-    errors.push('Browser/accessibility capability changed; replace this bridge with real test execution')
+export function loadCapabilitySources() {
+  const tasks = readJson('.taskmaster/tasks/tasks.json').master.tasks
+  const files = [
+    ...collectFiles(path.join(root, 'packages')),
+    ...collectFiles(path.join(root, 'tests')),
+    ...['playwright.config.ts', 'vitest.config.ts', 'tsconfig.test.json'].filter((file) =>
+      fs.existsSync(path.join(root, file)),
+    ),
+  ]
+  const testFiles = matchingFiles(files, /(?:^|\/)[^/]+\.(?:test|spec)\.[cm]?[jt]sx?$/)
+  return {
+    capabilities: readJson('config/ci/verification-capabilities.json'),
+    configs: Object.fromEntries(
+      ['playwright.config.ts', 'vitest.config.ts'].map((file) => [
+        file,
+        fs.readFileSync(path.join(root, file), 'utf8'),
+      ]),
+    ),
+    files,
+    manifests: {
+      root: readJson('package.json'),
+      backend: readJson('packages/backend/package.json'),
+      ui: readJson('packages/ui/package.json'),
+      web: readJson('packages/web/package.json'),
+    },
+    task39: tasks.find((task) => String(task.id) === '39'),
+    testSources: Object.fromEntries(
+      testFiles.map((file) => [file, fs.readFileSync(path.join(root, file), 'utf8')]),
+    ),
   }
 }
 
-if (!trackedFollowUp) {
-  errors.push('Task 39 must remain the explicit owner for replacing unsupported test bridges')
+function matchingFiles(files, pattern) {
+  return files.filter((file) => pattern.test(file))
 }
 
-const report = {
-  blockers,
-  bridgeDeadline: 'Task 39 quality-tooling PR',
-  bridgeOwner: 'Task 39',
-  errors,
-  mode,
-  status: errors.length === 0 ? 'unsupported-tracked' : 'failed',
-  task39: task39 ? { id: String(task39.id), status: task39.status } : null,
+const deniedTestModifiers = new Set([
+  'fail',
+  'fails',
+  'fixme',
+  'only',
+  'runIf',
+  'skip',
+  'skipIf',
+  'todo',
+])
+
+export const criticalBrowserJourneys = Object.freeze([
+  'serves the reader shell and enforces the accessibility baseline',
+  'keeps the theme chooser operable from the keyboard',
+])
+export const expectedBrowserProjects = Object.freeze(['desktop-chromium', 'mobile-chromium'])
+export const criticalUnitContracts = Object.freeze([
+  {
+    file: 'packages/backend/tests/featureController.test.js',
+    title: 'runs under the server Node environment',
+  },
+  {
+    file: 'packages/ui/src/components/Button/Button.test.tsx',
+    title: 'exposes an accessible name and handles owner interaction',
+  },
+  {
+    file: 'packages/ui/src/components/ThemeSwitcher/ThemeSwitcher.test.tsx',
+    title: 'uses the first custom theme when the resolved theme is not available',
+  },
+  {
+    file: 'packages/ui/src/tokens/tokens.test.ts',
+    title: 'converts RGB channels to a hexadecimal color',
+  },
+  {
+    file: 'packages/web/src/utils/color-converter.test.ts',
+    title: 'rejects missing or nonnumeric channels',
+  },
+  {
+    file: 'packages/web/tests/integration/ui-package-imports.test.ts',
+    title: 'makes design tokens importable',
+  },
+])
+
+function calleeSegments(expression) {
+  if (ts.isIdentifier(expression)) return [expression.text]
+  if (ts.isPropertyAccessExpression(expression)) {
+    return [...calleeSegments(expression.expression), expression.name.text]
+  }
+  if (
+    ts.isElementAccessExpression(expression) &&
+    expression.argumentExpression &&
+    ts.isStringLiteralLike(expression.argumentExpression)
+  ) {
+    return [...calleeSegments(expression.expression), expression.argumentExpression.text]
+  }
+  if (ts.isCallExpression(expression)) return calleeSegments(expression.expression)
+  return []
 }
 
-fs.mkdirSync(path.join(root, 'ci-artifacts'), { recursive: true })
-fs.writeFileSync(
-  path.join(root, `ci-artifacts/${mode}-test-capability.json`),
-  `${JSON.stringify(report, null, 2)}\n`,
-)
-console.log(JSON.stringify(report, null, 2))
+export function analyzeTestSource(source, file = 'test.ts') {
+  const scriptKind = /\.[cm]?[jt]sx$/.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind)
+  const activeTitles = new Set()
+  const disabledCalls = new Set()
 
-if (errors.length > 0) {
-  process.exit(1)
+  const visit = (node) => {
+    if (ts.isCallExpression(node)) {
+      const segments = calleeSegments(node.expression)
+      const denied = segments.filter((segment) => deniedTestModifiers.has(segment))
+      if (denied.length > 0) {
+        disabledCalls.add(segments.join('.'))
+      }
+
+      const rootName = segments[0]
+      const title = node.arguments[0]
+      if (
+        ['it', 'test'].includes(rootName) &&
+        !segments.includes('describe') &&
+        denied.length === 0 &&
+        title &&
+        ts.isStringLiteralLike(title)
+      ) {
+        activeTitles.add(title.text)
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(sourceFile)
+
+  return {
+    activeTitles: [...activeTitles].sort(),
+    disabledCalls: [...disabledCalls].sort(),
+  }
+}
+
+export function evaluateCapability(mode, sources) {
+  if (!['unit', 'browser'].includes(mode)) {
+    return {
+      errors: ['mode must be unit or browser'],
+      mode,
+      requirements: {},
+      status: 'failed',
+    }
+  }
+
+  const { capabilities, configs, files, manifests, task39, testSources } = sources
+  const testAnalyses = Object.fromEntries(
+    Object.entries(testSources).map(([file, source]) => [file, analyzeTestSource(source, file)]),
+  )
+  const activeSuite = (prefix) =>
+    Object.entries(testAnalyses)
+      .filter(([file]) => file.startsWith(prefix))
+      .some(([, analysis]) => analysis.activeTitles.length > 0)
+  const hasNoDisabledTests = (prefix) =>
+    Object.entries(testAnalyses)
+      .filter(([file]) => file.startsWith(prefix))
+      .every(([, analysis]) => analysis.disabledCalls.length === 0)
+  const requirements = {
+    task39Lifecycle: ['in-progress', 'done'].includes(task39?.status),
+  }
+
+  if (mode === 'unit') {
+    Object.assign(requirements, {
+      capabilityDeclaredSupported: capabilities.unit === 'supported',
+      rootTestRunsVitest:
+        manifests.root.scripts?.test ===
+        'vitest run --reporter=default --reporter=json --outputFile.json=ci-artifacts/vitest-results.json && node scripts/ci/check-test-results.mjs unit ci-artifacts/vitest-results.json',
+      coverageRunsVitest:
+        manifests.root.scripts?.['test:coverage'] ===
+        'vitest run --coverage --reporter=default --reporter=json --outputFile.json=ci-artifacts/vitest-results.json && node scripts/ci/check-test-results.mjs unit ci-artifacts/vitest-results.json',
+      qualityContractRuns:
+        manifests.root.scripts?.['test:quality-contract'] ===
+        'node --test tests/ci/accessibility-baseline.test.mjs tests/ci/eslint-contract.test.mjs tests/ci/test-capability.test.mjs tests/ci/test-results.test.mjs',
+      vitestDirect: directDependency(manifests.root, 'vitest'),
+      coverageDirect: directDependency(manifests.root, '@vitest/coverage-v8'),
+      testingLibraryDirect: directDependency(manifests.root, '@testing-library/react'),
+      jsdomDirect: directDependency(manifests.root, 'jsdom'),
+      vitestConfigPresent: files.includes('vitest.config.ts'),
+      vitestDefaultsToNode: /environment:\s*['"]node['"]/.test(configs['vitest.config.ts']),
+      testTypecheckPresent: files.includes('tsconfig.test.json'),
+      backendTestsActive: activeSuite('packages/backend/'),
+      backendEnvironmentAsserted: /typeof document\)\.toBe\(['"]undefined['"]\)/.test(
+        testSources['packages/backend/tests/featureController.test.js'] ?? '',
+      ),
+      uiTestsActive: activeSuite('packages/ui/'),
+      webTestsActive: activeSuite('packages/web/'),
+      criticalUnitContractsActive: criticalUnitContracts.every(({ file, title }) =>
+        testAnalyses[file]?.activeTitles.includes(title),
+      ),
+      domTestsDeclareJsdom: Object.entries(testSources)
+        .filter(([file]) => /\.(?:jsx|tsx)$/.test(file))
+        .every(([, source]) => /^\/\/ @vitest-environment jsdom\s/m.test(source)),
+      noDisabledUnitTests: hasNoDisabledTests('packages/'),
+    })
+  } else {
+    const browserTitles = new Set(
+      Object.entries(testAnalyses)
+        .filter(([file]) => file.startsWith('tests/e2e/'))
+        .flatMap(([, analysis]) => analysis.activeTitles),
+    )
+    Object.assign(requirements, {
+      capabilityDeclaredSupported: capabilities.browser === 'supported',
+      browserScriptRunsPlaywright:
+        manifests.root.scripts?.['test:browser'] ===
+        'playwright test && node scripts/ci/check-test-results.mjs browser ci-artifacts/playwright-results.json',
+      browserInstallIsExplicit:
+        manifests.root.scripts?.['test:browser:install'] ===
+        'playwright install --with-deps chromium',
+      playwrightDirect: directDependency(manifests.root, '@playwright/test'),
+      axeDirect: directDependency(manifests.root, '@axe-core/playwright'),
+      playwrightConfigPresent: files.includes('playwright.config.ts'),
+      playwrightTargetsE2e: /testDir:\s*['"]\.\/tests\/e2e['"]/.test(
+        configs['playwright.config.ts'],
+      ),
+      playwrightForbidsOnly: /forbidOnly:\s*Boolean\(process\.env\.CI\)/.test(
+        configs['playwright.config.ts'],
+      ),
+      browserTestsActive: activeSuite('tests/e2e/'),
+      criticalBrowserJourneysActive: criticalBrowserJourneys.every((title) =>
+        browserTitles.has(title),
+      ),
+      noDisabledBrowserTests: hasNoDisabledTests('tests/e2e/'),
+    })
+  }
+
+  const errors = Object.entries(requirements)
+    .filter(([, passed]) => !passed)
+    .map(([requirement]) => `missing supported ${mode} capability: ${requirement}`)
+
+  return {
+    errors,
+    mode,
+    ownerTask: capabilities.ownerTask,
+    requirements,
+    status: errors.length === 0 ? 'supported' : 'failed',
+    task39: task39 ? { id: String(task39.id), status: task39.status } : null,
+  }
+}
+
+function main() {
+  const mode = process.argv.at(-1)
+  if (!['unit', 'browser'].includes(mode)) {
+    console.error('Usage: node scripts/ci/check-test-capability.mjs <unit|browser>')
+    process.exit(2)
+  }
+
+  const report = evaluateCapability(mode, loadCapabilitySources())
+  fs.mkdirSync(path.join(root, 'ci-artifacts'), { recursive: true })
+  fs.writeFileSync(
+    path.join(root, 'ci-artifacts', `${mode}-test-capability.json`),
+    `${JSON.stringify(report, null, 2)}\n`,
+  )
+  console.log(JSON.stringify(report, null, 2))
+  if (report.errors.length > 0) process.exitCode = 1
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main()
 }

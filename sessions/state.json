@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md",
-  "current_path": "sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md",
+  "current": "2026-07-13-001-task39-modernize-typescript-lint-formatting-tests-delivery.md",
+  "current_path": "sessions/2026/07/2026-07-13-001-task39-modernize-typescript-lint-formatting-tests-delivery.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "38",
-    "slug": "modernize-node-pnpm-ci-runtime",
-    "status": "in-progress",
-    "title": "Modernize Node pnpm and CI Runtime"
+    "id": "39",
+    "slug": "modernize-typescript-lint-formatting-tests",
+    "status": "done",
+    "title": "Modernize TypeScript Lint Formatting and Tests"
   },
-  "updated_at": "2026-07-12T00:02:52Z"
+  "updated_at": "2026-07-12T22:07:57Z"
 }

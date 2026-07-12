@@ -12,7 +12,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": []
   },
   "exclude": ["node_modules", "**/node_modules", "dist", "**/dist"]
 }

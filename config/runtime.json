@@ -26,8 +26,7 @@
     "mode": "bundled-local-only"
   },
   "allowedBuilds": {
-    "sharp": "0.34.5",
-    "unrs-resolver": "1.7.9"
+    "sharp": "0.34.5"
   },
   "securityOverrides": {
     "ajv@>=6.0.0 <6.14.0": "6.14.0",
@@ -48,31 +47,35 @@
     "svgo@>=2.0.0 <2.8.1": "2.8.1",
     "svgo@>=3.0.0 <3.3.3": "3.3.3",
     "yaml@>=1.0.0 <1.10.3": "1.10.3",
-    "yaml@>=2.0.0 <2.8.3": "2.8.3"
+    "yaml@>=2.0.0 <2.8.3": "2.9.0"
   },
   "ci": {
     "workflowSemanticsSha256": {
       ".github/workflows/auto-merge.yml": "22d891fb034f3f9449a4071db169ee8f55b3f6d1601747c43ba44f45f07db13d",
-      ".github/workflows/ci.yml": "011ab1c6ae5c89322e2f196253fffb57a6a084d389065cdaa7f9b36dd936b8f3"
+      ".github/workflows/ci.yml": "62b1d616fcd5d494616980389207485cb6fce4cdb237bb1edeefbf54e184b01a"
     },
     "trustedFileSha256": {
+      "scripts/ci/check-accessibility-baseline.mjs": "6dcde3094d520407572e4a404dab5d2746fdc3dc903fa48d2e13d308d88e9cda",
+      "scripts/ci/check-runtime-contract.mjs": "25f72fa4b6770d5b0797e97c232fd6be8a3b83df1a547c521406a1486f765aee",
+      "scripts/ci/check-test-capability.mjs": "2a43844539ac658faa81b22c5105f130d25909ca7441e1d6c5789d551b002f50",
+      "scripts/ci/check-test-results.mjs": "14dcd2d0191538338459bb9fc422af7c5046739a5653b8a0246406640b3bafc4",
       "scripts/ci/post-merge-context.mjs": "bb2521d74c0319cd6308a0cdcce23062a8d2ce93d4a4a0e5bcdfe16047b2235b",
-      "scripts/ci/check-runtime-contract.mjs": "c3d5467a1d0aedd8ad541ae6a1bfc1ddbabae7346c84a67b2c8ca27933fca912",
-      "tests/ci/runtime-contract.test.mjs": "bf6caa3be5d12298de17530b46fe9784ce879c16164151966b03974eba634e2d"
+      "tests/ci/accessibility-baseline.test.mjs": "3ab657c003c065df77b4ed3ee15ab5a96551ab782b17922cd219a2217d4b6974",
+      "tests/ci/eslint-contract.test.mjs": "7c495a954146d0885ae25baeee7b946641809b71c62c1021451a97d3cd071ef3",
+      "tests/ci/runtime-contract.test.mjs": "00b85dfe9dfddaec69df075f3da8b267e3023e611792667bc18922ee976d6ed3",
+      "tests/ci/security-hotfix.test.mjs": "ec35b6b589945e26c2f9a11836e6dba23613161e97a7cbfa6fb5e59bd42469d1",
+      "tests/ci/test-capability.test.mjs": "cac8f7e6ae3cda08d147cb65f2590c1ad04327b1e2e2fcf846c08584e52f8361",
+      "tests/ci/test-results.test.mjs": "0de3edd1ccabeba76bef6b6a0dc52bd9c7e8df6bb9956109cab0dcc6ee55dcd5"
     },
     "workflowEnvelope": {
       "name": "CI",
       "on": {
         "push": {
-          "branches": [
-            "main"
-          ]
+          "branches": ["main"]
         },
         "pull_request": null,
         "repository_dispatch": {
-          "types": [
-            "post-controlled-auto-merge-ci"
-          ]
+          "types": ["post-controlled-auto-merge-ci"]
         }
       },
       "permissions": {
@@ -95,6 +98,7 @@
         },
         "name": "context · resolve trusted verification commit",
         "outputs": {
+          "baseline_ref": "${{ steps.resolve.outputs.baseline_ref }}",
           "checkout_ref": "${{ steps.resolve.outputs.checkout_ref }}"
         },
         "permissions": {
@@ -124,7 +128,9 @@
             "CLIENT_REVIEWED_HEAD_SHA": "${{ github.event.client_payload.reviewed_head_sha }}",
             "DEFAULT_BRANCH": "${{ github.event.repository.default_branch }}",
             "DISPATCH_ACTION": "${{ github.event.action }}",
+            "EVENT_BEFORE_SHA": "${{ github.event.before }}",
             "EVENT_NAME": "${{ github.event_name }}",
+            "EVENT_PULL_REQUEST_BASE_SHA": "${{ github.event.pull_request.base.sha }}",
             "EVENT_SHA": "${{ github.sha }}",
             "GH_TOKEN": "${{ github.token }}",
             "REPOSITORY": "${{ github.repository }}"
@@ -133,7 +139,7 @@
           "name": "Resolve the exact verification commit",
           "shell": "bash"
         },
-        "runSha256": "918309d1deef0db5cbcde7651e1aab59bd77d552fdcd2c55ea56a149cc73318a"
+        "runSha256": "5fbec89e817d868f7dc4640190308d2412af058bdc7bdc7ce13ba08042bb4abd"
       }
     },
     "workspaceJob": {
@@ -205,7 +211,10 @@
         "DEPENDENCY_SECURITY": "${{ steps.dependency_security.outcome }}",
         "TYPECHECK": "${{ steps.typecheck.outcome }}",
         "LINT": "${{ steps.lint.outcome }}",
+        "FORMAT": "${{ steps.format.outcome }}",
         "UNIT_TESTS": "${{ steps.unit_tests.outcome }}",
+        "BROWSER_INSTALL": "${{ steps.browser_install.outcome }}",
+        "ACCESSIBILITY_BASELINE": "${{ steps.accessibility_baseline.outcome }}",
         "BROWSER_TESTS": "${{ steps.browser_tests.outcome }}",
         "BUILD": "${{ steps.build.outcome }}",
         "PRODUCTION_SMOKE": "${{ steps.production_smoke.outcome }}"
@@ -217,14 +226,17 @@
         "DEPENDENCY_SECURITY",
         "TYPECHECK",
         "LINT",
+        "FORMAT",
         "UNIT_TESTS",
-        "BROWSER_TESTS",
         "BUILD",
+        "BROWSER_INSTALL",
+        "ACCESSIBILITY_BASELINE",
+        "BROWSER_TESTS",
         "PRODUCTION_SMOKE"
       ],
       "runLines": [
         "failed=0",
-        "for stage in RUNTIME_BOOTSTRAP RUNTIME_CONTRACT INSTALL DEPENDENCY_SECURITY TYPECHECK LINT UNIT_TESTS BROWSER_TESTS BUILD PRODUCTION_SMOKE; do",
+        "for stage in RUNTIME_BOOTSTRAP RUNTIME_CONTRACT INSTALL DEPENDENCY_SECURITY TYPECHECK LINT FORMAT UNIT_TESTS BUILD BROWSER_INSTALL ACCESSIBILITY_BASELINE BROWSER_TESTS PRODUCTION_SMOKE; do",
         "  value=\"${!stage}\"",
         "  printf '%s=%s\\n' \"$stage\" \"$value\"",
         "  if [ \"$value\" != \"success\" ]; then",
@@ -235,12 +247,12 @@
       ]
     }
   },
-  "rootScriptsSha256": "4197e7c56c576259a528a83cc2374fec736d98196b66d0e4cb0ab0bebe8429f5",
-  "packageScriptsSha256": "b79a41f45350afc194adaa222a01ea41c8b7579bb5a0c986784af64418369514",
-  "dependencyDeclarationsSha256": "215f95245c54800f36e7fcbc845e4665aa690d0911bea87149255f1b4d8ffcd2",
-  "packageManifestSemanticsSha256": "b8293d323fcee4441e8194c811e6560e828aaf91b38399cdc7bc93de10c57a81",
-  "lockfileSha256": "c4231e9cf0c101ee28a718acd16599c1a4ad623dd0a9292b0ebd302dbfab2d68",
-  "workspaceFileSha256": "214e96b4a6573edfdcc75ccf81fe156f18d81d1b632a37d2a13249306d03736d",
+  "rootScriptsSha256": "250145587b690ee6302e85f8f41cd560d73c00ee081f00e6d63806ff2b070108",
+  "packageScriptsSha256": "229e6ef14ab8b27378c63009e298ee12ceb34932b605be0230de5274374221f8",
+  "dependencyDeclarationsSha256": "7c0b1d1fc6bedb42fb842a92c2f811923353561ddbd0564b4593bcb2b82e7aef",
+  "packageManifestSemanticsSha256": "f2f72cd46826c005b7ecb50f8032e969669534a1a617b8efe64ba58d5dbae9e6",
+  "lockfileSha256": "cfb9553dc2ec4e448048550c402de4c42e6245531e28619bc7a4ccf6e591a57c",
+  "workspaceFileSha256": "a87bdee92d0c79a2bbf712c8eeb101323a76710349773c19f48b2d548087957e",
   "actions": {
     "actions/checkout": {
       "release": "v7.0.0",

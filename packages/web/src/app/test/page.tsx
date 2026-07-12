@@ -3,29 +3,55 @@
 import { useState } from 'react'
 import { useTheme } from '@minniewinnie/ui/providers/ThemeProvider'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 
-export default function TestPage()
-{
+export default function TestPage() {
   const { theme, setTheme } = useTheme()
-  const [ dialogOpen, setDialogOpen ] = useState(false)
-  const [ sheetOpen, setSheetOpen ] = useState(false)
-  const [ selectedValue, setSelectedValue ] = useState('')
-  const [ checkboxChecked, setCheckboxChecked ] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [selectedValue, setSelectedValue] = useState('')
+  const [checkboxChecked, setCheckboxChecked] = useState(false)
   const { toast } = useToast()
 
   return (
     <div className="container mx-auto p-8">
-      {/* Theme Switcher */ }
+      {/* Theme Switcher */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Theme Switcher</CardTitle>
@@ -34,48 +60,50 @@ export default function TestPage()
         <CardContent>
           <div className="flex gap-4 flex-wrap">
             <Button
-              onClick={ () => setTheme('light') }
-              variant={ theme === 'light' ? 'default' : 'secondary' }
+              onClick={() => setTheme('light')}
+              variant={theme === 'light' ? 'default' : 'secondary'}
             >
               Light
             </Button>
             <Button
-              onClick={ () => setTheme('dark') }
-              variant={ theme === 'dark' ? 'default' : 'secondary' }
+              onClick={() => setTheme('dark')}
+              variant={theme === 'dark' ? 'default' : 'secondary'}
             >
               Dark
             </Button>
             <Button
-              onClick={ () => setTheme('contrast') }
-              variant={ theme === 'contrast' ? 'default' : 'secondary' }
+              onClick={() => setTheme('contrast')}
+              variant={theme === 'contrast' ? 'default' : 'secondary'}
             >
               High Contrast
             </Button>
             <Button
-              onClick={ () => setTheme('gentle') }
-              variant={ theme === 'gentle' ? 'default' : 'secondary' }
+              onClick={() => setTheme('gentle')}
+              variant={theme === 'gentle' ? 'default' : 'secondary'}
             >
               Gentle
             </Button>
           </div>
-          <p className="mt-4 text-muted-foreground">Current theme: { theme }</p>
+          <p className="mt-4 text-muted-foreground">Current theme: {theme}</p>
         </CardContent>
       </Card>
 
-      {/* Component Testing Sections */ }
+      {/* Component Testing Sections */}
       <div className="space-y-8">
-        {/* Typography Section */ }
+        {/* Typography Section */}
         <section className="p-6 border rounded-lg">
           <h2 className="text-3xl font-bold mb-4">Typography</h2>
           <h1 className="text-4xl font-bold mb-2">Heading 1</h1>
           <h2 className="text-3xl font-semibold mb-2">Heading 2</h2>
           <h3 className="text-2xl font-medium mb-2">Heading 3</h3>
           <p className="text-base mb-2">Regular paragraph text with standard sizing.</p>
-          <p className="text-sm text-muted-foreground mb-2">Small muted text for secondary information.</p>
+          <p className="text-sm text-muted-foreground mb-2">
+            Small muted text for secondary information.
+          </p>
           <p className="text-xs text-muted-foreground">Extra small text for fine print.</p>
         </section>
 
-        {/* Colors Section */ }
+        {/* Colors Section */}
         <section className="p-6 border rounded-lg">
           <h2 className="text-3xl font-bold mb-4">Color Palette</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -114,7 +142,7 @@ export default function TestPage()
           </div>
         </section>
 
-        {/* Buttons Section */ }
+        {/* Buttons Section */}
         <Card>
           <CardHeader>
             <CardTitle>Buttons</CardTitle>
@@ -141,7 +169,7 @@ export default function TestPage()
           </CardContent>
         </Card>
 
-        {/* Cards Section */ }
+        {/* Cards Section */}
         <Card>
           <CardHeader>
             <CardTitle>Cards</CardTitle>
@@ -156,12 +184,14 @@ export default function TestPage()
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Luna, a gentle golden retriever, was found abandoned and malnourished.
-                    After weeks of care and love, she&apos;s now thriving in her forever home.
+                    Luna, a gentle golden retriever, was found abandoned and malnourished. After
+                    weeks of care and love, she&apos;s now thriving in her forever home.
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" size="sm">Read More</Button>
+                  <Button variant="outline" size="sm">
+                    Read More
+                  </Button>
                 </CardFooter>
               </Card>
 
@@ -189,7 +219,7 @@ export default function TestPage()
           </CardContent>
         </Card>
 
-        {/* Forms Section */ }
+        {/* Forms Section */}
         <Card>
           <CardHeader>
             <CardTitle>Form Elements</CardTitle>
@@ -197,30 +227,40 @@ export default function TestPage()
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">Name</label>
+              <label htmlFor="name" className="text-sm font-medium">
+                Name
+              </label>
               <Input id="name" placeholder="Enter your name" />
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
               <Input id="email" type="email" placeholder="supporter@example.com" />
             </div>
             <div className="space-y-2">
-              <label htmlFor="donation" className="text-sm font-medium">Donation Amount</label>
+              <label htmlFor="donation" className="text-sm font-medium">
+                Donation Amount
+              </label>
               <Input id="donation" type="number" placeholder="25" />
             </div>
             <div className="space-y-2">
-              <label htmlFor="message" className="text-sm font-medium">Message</label>
+              <label htmlFor="message" className="text-sm font-medium">
+                Message
+              </label>
               <Input id="message" placeholder="Share your thoughts..." />
             </div>
             <div className="space-y-2">
-              <label htmlFor="disabled" className="text-sm font-medium">Disabled Input</label>
+              <label htmlFor="disabled" className="text-sm font-medium">
+                Disabled Input
+              </label>
               <Input id="disabled" placeholder="This input is disabled" disabled />
             </div>
             <Button className="w-full">Submit Form</Button>
           </CardContent>
         </Card>
 
-        {/* Dialogs & Sheets Section */ }
+        {/* Dialogs & Sheets Section */}
         <Card>
           <CardHeader>
             <CardTitle>Dialogs & Sheets</CardTitle>
@@ -228,7 +268,7 @@ export default function TestPage()
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4 flex-wrap">
-              <Dialog open={ dialogOpen } onOpenChange={ setDialogOpen }>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>Open Dialog</Button>
                 </DialogTrigger>
@@ -241,8 +281,8 @@ export default function TestPage()
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <p className="text-sm">
-                      We&apos;ve rescued 15 animals this week who urgently need medical care.
-                      Your donation can make the difference between life and death.
+                      We&apos;ve rescued 15 animals this week who urgently need medical care. Your
+                      donation can make the difference between life and death.
                     </p>
                     <div className="space-y-2">
                       <label htmlFor="amount" className="text-sm font-medium">
@@ -252,41 +292,57 @@ export default function TestPage()
                     </div>
                   </div>
                   <div className="flex justify-end gap-4">
-                    <Button variant="outline" onClick={ () => setDialogOpen(false) }>
+                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
                       Maybe Later
                     </Button>
-                    <Button onClick={ () => setDialogOpen(false) }>
-                      Donate Now
-                    </Button>
+                    <Button onClick={() => setDialogOpen(false)}>Donate Now</Button>
                   </div>
                 </DialogContent>
               </Dialog>
 
-              <Sheet open={ sheetOpen } onOpenChange={ setSheetOpen }>
+              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline">Open Sheet</Button>
                 </SheetTrigger>
                 <SheetContent>
                   <SheetHeader>
                     <SheetTitle>Navigation Menu</SheetTitle>
-                    <SheetDescription>
-                      Quick access to all sections
-                    </SheetDescription>
+                    <SheetDescription>Quick access to all sections</SheetDescription>
                   </SheetHeader>
                   <div className="py-4 space-y-2">
-                    <Button variant="ghost" className="w-full justify-start" onClick={ () => setSheetOpen(false) }>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => setSheetOpen(false)}
+                    >
                       Home
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={ () => setSheetOpen(false) }>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => setSheetOpen(false)}
+                    >
                       Rescue Stories
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={ () => setSheetOpen(false) }>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => setSheetOpen(false)}
+                    >
                       How to Help
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={ () => setSheetOpen(false) }>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => setSheetOpen(false)}
+                    >
                       About Us
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={ () => setSheetOpen(false) }>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => setSheetOpen(false)}
+                    >
                       Contact
                     </Button>
                   </div>
@@ -304,7 +360,9 @@ export default function TestPage()
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="country" className="text-sm font-medium">Select Country</label>
+              <label htmlFor="country" className="text-sm font-medium">
+                Select Country
+              </label>
               <Select value={selectedValue} onValueChange={setSelectedValue}>
                 <SelectTrigger id="country">
                   <SelectValue placeholder="Choose a country" />
@@ -320,23 +378,25 @@ export default function TestPage()
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
-              {selectedValue && <p className="text-sm text-muted-foreground">Selected: {selectedValue}</p>}
+              {selectedValue && (
+                <p className="text-sm text-muted-foreground">Selected: {selectedValue}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="story" className="text-sm font-medium">Share Your Story</label>
-              <Textarea 
-                id="story" 
-                placeholder="Tell us about your experience with animal rescue..." 
+              <label htmlFor="story" className="text-sm font-medium">
+                Share Your Story
+              </label>
+              <Textarea
+                id="story"
+                placeholder="Tell us about your experience with animal rescue..."
                 rows={4}
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="feedback" className="text-sm font-medium">Feedback (disabled)</label>
-              <Textarea 
-                id="feedback" 
-                placeholder="This textarea is disabled" 
-                disabled
-              />
+              <label htmlFor="feedback" className="text-sm font-medium">
+                Feedback (disabled)
+              </label>
+              <Textarea id="feedback" placeholder="This textarea is disabled" disabled />
             </div>
           </CardContent>
         </Card>
@@ -349,13 +409,13 @@ export default function TestPage()
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="terms" 
+              <Checkbox
+                id="terms"
                 checked={checkboxChecked}
                 onCheckedChange={(checked) => setCheckboxChecked(!!checked)}
               />
-              <label 
-                htmlFor="terms" 
+              <label
+                htmlFor="terms"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 I agree to receive updates about rescue missions
@@ -363,8 +423,8 @@ export default function TestPage()
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="newsletter" />
-              <label 
-                htmlFor="newsletter" 
+              <label
+                htmlFor="newsletter"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 Subscribe to monthly newsletter
@@ -372,8 +432,8 @@ export default function TestPage()
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="volunteer" />
-              <label 
-                htmlFor="volunteer" 
+              <label
+                htmlFor="volunteer"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 I&apos;m interested in volunteering
@@ -381,14 +441,16 @@ export default function TestPage()
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="disabled-check" disabled />
-              <label 
-                htmlFor="disabled-check" 
+              <label
+                htmlFor="disabled-check"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 Disabled checkbox
               </label>
             </div>
-            {checkboxChecked && <p className="text-sm text-muted-foreground">Thank you for subscribing!</p>}
+            {checkboxChecked && (
+              <p className="text-sm text-muted-foreground">Thank you for subscribing!</p>
+            )}
           </CardContent>
         </Card>
 
@@ -412,7 +474,9 @@ export default function TestPage()
               </AlertDescription>
             </Alert>
             <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
-              <AlertTitle className="text-yellow-800 dark:text-yellow-200">Content Warning</AlertTitle>
+              <AlertTitle className="text-yellow-800 dark:text-yellow-200">
+                Content Warning
+              </AlertTitle>
               <AlertDescription className="text-yellow-700 dark:text-yellow-300">
                 This story contains medical imagery that some may find distressing.
               </AlertDescription>
@@ -437,8 +501,8 @@ export default function TestPage()
               <Button
                 onClick={() => {
                   toast({
-                    title: "Donation Received",
-                    description: "Thank you for your generous contribution!",
+                    title: 'Donation Received',
+                    description: 'Thank you for your generous contribution!',
                   })
                 }}
               >
@@ -448,9 +512,9 @@ export default function TestPage()
                 variant="destructive"
                 onClick={() => {
                   toast({
-                    title: "Error",
-                    description: "Something went wrong. Please try again.",
-                    variant: "destructive",
+                    title: 'Error',
+                    description: 'Something went wrong. Please try again.',
+                    variant: 'destructive',
                   })
                 }}
               >
@@ -460,8 +524,8 @@ export default function TestPage()
                 variant="outline"
                 onClick={() => {
                   toast({
-                    title: "Scheduled Action",
-                    description: "Your volunteer shift has been scheduled for tomorrow.",
+                    title: 'Scheduled Action',
+                    description: 'Your volunteer shift has been scheduled for tomorrow.',
                   })
                 }}
               >

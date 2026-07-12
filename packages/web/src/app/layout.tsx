@@ -8,17 +8,11 @@ export const metadata: Metadata = {
   keywords: ['animal protection', 'animal rescue', 'donation', 'emergency appeals'],
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

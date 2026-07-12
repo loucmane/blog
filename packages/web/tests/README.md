@@ -15,9 +15,11 @@ tests/
 ## Test Files
 
 ### Integration Tests
+
 - `integration/ui-package-imports.test.ts` - Verifies UI package imports work correctly
 
 ### Manual Verification
+
 - `verify-ui-imports.mjs` - Node script to check package exports configuration
 - `components/TestUIImports.tsx` - React component to test runtime imports
 
@@ -27,7 +29,7 @@ tests/
 # Verify package configuration
 node tests/verify-ui-imports.mjs
 
-# Run integration tests (when jest is configured)
+# Run integration tests with the repository Vitest runner
 pnpm test
 
 # Manual verification - start dev server and visit /test-ui

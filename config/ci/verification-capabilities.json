@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "unit": "unsupported",
-  "browser": "unsupported",
+  "unit": "supported",
+  "browser": "supported",
   "ownerTask": "39",
-  "explanation": "Behavior-changing product and dependency pull requests remain ineligible for unattended merge until Task 39 replaces the tracked unsupported-test bridges with real unit, integration, browser, and accessibility execution."
+  "explanation": "Task 39 provides deterministic Vitest unit and integration coverage plus Playwright Chromium and axe accessibility execution. Capability contracts fail closed if commands, effective environments, direct dependencies, active representative tests, or the protected-base accessibility ratchet disappear."
 }

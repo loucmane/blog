@@ -1,3 +1,3 @@
 // Export all hooks
-export * from './useTheme';
-export * from './useMediaQuery';
+export * from './useTheme'
+export * from './useMediaQuery'
