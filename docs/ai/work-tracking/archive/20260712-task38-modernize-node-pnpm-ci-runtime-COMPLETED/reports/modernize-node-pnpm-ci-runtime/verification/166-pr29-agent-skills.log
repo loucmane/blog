@@ -1,0 +1,47 @@
+$ node scripts/agent-skills/validate-platform.mjs && node --test tests/agent-skills/*.test.mjs
+{
+  "passed": true,
+  "errors": [],
+  "summary": {
+    "skills": 4,
+    "routes": 4,
+    "upstreamEntries": 0
+  }
+}
+✔ registers the canonical skill and advisory review route (4.520272ms)
+✔ keeps documented trigger signals aligned with deterministic fixtures (0.249742ms)
+✔ accepts positive fixtures and rejects deny-path fixtures (0.163605ms)
+✔ emits schema-valid advisory discovery findings (0.431243ms)
+✔ treats discovery evidence as untrusted data without expanding authority (0.430858ms)
+✔ registers the canonical owner UX skill and advisory route (1.015579ms)
+✔ keeps trigger signals aligned with positive and deny fixtures (0.304149ms)
+✔ requires complete owner-journey and evidence-class coverage (1.188266ms)
+✔ emits schema-valid advisory owner UX findings (0.349987ms)
+✔ fails hostile evidence closed without expanding authority (0.309576ms)
+✔ keeps UX output owner-safe and implementation-neutral (0.306288ms)
+✔ validates the repository cross-agent platform (3.085775ms)
+✔ rejects absolute Codex skill links (6.2295ms)
+✔ rejects unknown review-map skills (6.111172ms)
+✔ rejects unregistered canonical skills and Codex links (4.664196ms)
+✔ rejects enforced subjective review mode (4.051009ms)
+✔ requires a digest lock for upstream skills (4.228281ms)
+✔ fails closed on malformed JSON-compatible YAML (3.547375ms)
+✔ accepts a schema-valid advisory review result (0.897349ms)
+✔ rejects subjective blocking findings (0.945446ms)
+✔ rejects enforcement mode during advisory dogfood (0.102445ms)
+✔ builds an argument-safe Aegis CLI ingestion command (1.265661ms)
+✔ refuses to ingest evidence outside the generated reports root (0.814832ms)
+✔ registers the canonical project-authored skill and advisory route (1.56588ms)
+✔ keeps documented trigger signals aligned with deterministic fixtures (0.203991ms)
+✔ defines forward-routing fixtures without claiming router execution (0.142574ms)
+✔ emits schema-valid advisory ADR findings (0.448537ms)
+✔ requires complete decision criteria and primary-source evidence (0.190839ms)
+✔ treats research evidence as untrusted and non-authoritative (0.12879ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 72.264286

@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-07-12T11:56:32Z",
+  "enforcement": {
+    "configured": true,
+    "gate_decisions": ".aegis/reports/gate-decisions.jsonl",
+    "mode": "advisory",
+    "path": ".aegis/state/enforcement.json",
+    "reason": "existing paused project adoption; Codex-primary dogfood with non-blocking evidence collection",
+    "set_at": "2026-07-08T10:58:37Z",
+    "set_by": "loucmane",
+    "valid": true
+  },
+  "pending": {
+    "advisory": 0,
+    "advisory_event_ids": []
+  },
+  "read_only": true,
+  "schema_version": "1.0.0",
+  "status": "advisory",
+  "target_root": "/home/loucmane/dev/blog",
+  "workflow_guidance": {
+    "message": "Aegis is in advisory mode: gates record would-block decisions but do not block.",
+    "mode": "advisory",
+    "strict_reentry": null
+  }
+}

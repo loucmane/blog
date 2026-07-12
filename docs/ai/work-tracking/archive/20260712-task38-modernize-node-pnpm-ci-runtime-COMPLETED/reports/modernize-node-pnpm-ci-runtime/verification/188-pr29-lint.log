@@ -1,0 +1,31 @@
+$ pnpm -r lint
+Scope: 3 of 4 workspace projects
+packages/ui lint$ eslint src --ext .js,.jsx,.ts,.tsx
+packages/ui lint: /home/loucmane/dev/blog/packages/ui/src/components/ThemeSwitcher/ThemeSwitcher.tsx
+packages/ui lint:   43:9  warning  The 'allThemes' array makes the dependencies of useEffect Hook (at line 88) change on every render. To fix this, wrap the initialization of 'allThemes' in its own useMemo() Hook  react-hooks/exhaustive-deps
+packages/ui lint: ✖ 1 problem (0 errors, 1 warning)
+packages/ui lint: Done
+packages/web lint$ next lint
+packages/web lint: `next lint` is deprecated and will be removed in Next.js 16.
+packages/web lint: For new projects, use create-next-app to choose your preferred linter.
+packages/web lint: For existing projects, migrate to the ESLint CLI:
+packages/web lint: npx @next/codemod@canary next-lint-to-eslint-cli .
+packages/web lint: ./src/hooks/use-toast.ts
+packages/web lint: 21:7  Warning: 'actionTypes' is assigned a value but only used as a type. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+packages/web lint: ./src/types/analytics.ts
+packages/web lint: 7:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: ./src/types/global.d.ts
+packages/web lint: 75:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: 76:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: 80:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: ./src/types/index.ts
+packages/web lint: 29:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: 36:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: 40:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: 68:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: 76:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: ./src/types/ui.ts
+packages/web lint: 116:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: 156:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web lint: info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+packages/web lint: Done

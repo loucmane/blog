@@ -4,9 +4,116 @@ import { spawnSync } from 'node:child_process'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import { isAlias, isMap, isScalar, parseDocument, visit } from 'yaml'
+const trustedRuntimeYaml = Object.freeze({
+  moduleRelativePath: 'package/dist/index.js',
+  packageRelativePath: 'package',
+  parserDirectoryName: 'runtime-contract-parser',
+  tarballIntegrity: 'sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==',
+  tarballName: 'yaml-2.9.0.tgz',
+  treeSha256: '78762e79d00fae948c123abae639ebd34970e5f4d44df664ec566a91077cb8b1',
+})
+
+function runtimeParserTreeDigest(packageRoot) {
+  const hash = crypto.createHash('sha256')
+  const separator = Buffer.from([0])
+  const writeField = value => {
+    hash.update(String(value))
+    hash.update(separator)
+  }
+  const walk = directory => {
+    const entries = fs.readdirSync(directory, { withFileTypes: true })
+      .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0)
+    for (const entry of entries) {
+      const absolutePath = path.join(directory, entry.name)
+      const relativePath = path.relative(packageRoot, absolutePath).split(path.sep).join('/')
+      if (entry.isDirectory()) {
+        writeField('D')
+        writeField(relativePath)
+        walk(absolutePath)
+      } else if (entry.isFile()) {
+        const bytes = fs.readFileSync(absolutePath)
+        const mode = fs.statSync(absolutePath).mode & 0o777
+        writeField('F')
+        writeField(relativePath)
+        writeField(mode.toString(8))
+        writeField(bytes.length)
+        hash.update(bytes)
+      } else {
+        throw new Error(`trusted runtime parser contains unsupported entry ${relativePath}`)
+      }
+    }
+  }
+  walk(packageRoot)
+  return hash.digest('hex')
+}
+
+function requireDirectory(absolutePath, label) {
+  const stat = fs.lstatSync(absolutePath)
+  if (stat.isSymbolicLink() || !stat.isDirectory()) {
+    throw new Error(`${label} must be a real directory, not a symlink or other object`)
+  }
+}
+
+function requireRegularFile(absolutePath, label) {
+  const stat = fs.lstatSync(absolutePath)
+  if (stat.isSymbolicLink() || !stat.isFile()) {
+    throw new Error(`${label} must be a regular file, not a symlink or other object`)
+  }
+}
+
+function resolveRuntimeYamlModule() {
+  const configuredModule = process.env.RUNTIME_YAML_MODULE?.trim()
+  if (!configuredModule) {
+    if (process.env.GITHUB_ACTIONS === 'true') {
+      throw new Error('RUNTIME_YAML_MODULE is required in GitHub Actions')
+    }
+    return 'yaml'
+  }
+
+  const runnerTemp = process.env.RUNNER_TEMP?.trim()
+  if (!runnerTemp || !path.isAbsolute(runnerTemp)) {
+    throw new Error('RUNNER_TEMP must be an absolute trusted-runner path')
+  }
+  const parserRoot = path.join(runnerTemp, trustedRuntimeYaml.parserDirectoryName)
+  const packageRoot = path.join(parserRoot, trustedRuntimeYaml.packageRelativePath)
+  const expectedModule = path.join(parserRoot, trustedRuntimeYaml.moduleRelativePath)
+  const tarballPath = path.join(parserRoot, trustedRuntimeYaml.tarballName)
+  if (configuredModule !== expectedModule) {
+    throw new Error('RUNTIME_YAML_MODULE must equal the canonical trusted-runner parser path')
+  }
+
+  requireDirectory(parserRoot, 'runtime parser directory')
+  requireDirectory(packageRoot, 'runtime parser package')
+  requireDirectory(path.dirname(expectedModule), 'runtime parser distribution directory')
+  requireRegularFile(expectedModule, 'runtime parser module')
+  requireRegularFile(tarballPath, 'runtime parser tarball')
+
+  const runnerTempReal = fs.realpathSync(runnerTemp)
+  const parserRootReal = fs.realpathSync(parserRoot)
+  const moduleReal = fs.realpathSync(expectedModule)
+  if (
+    path.dirname(parserRootReal) !== runnerTempReal ||
+    moduleReal !== path.join(parserRootReal, trustedRuntimeYaml.moduleRelativePath)
+  ) {
+    throw new Error('runtime parser realpath must remain inside the canonical trusted-runner directory')
+  }
+
+  const tarballIntegrity = `sha512-${crypto.createHash('sha512')
+    .update(fs.readFileSync(tarballPath))
+    .digest('base64')}`
+  if (tarballIntegrity !== trustedRuntimeYaml.tarballIntegrity) {
+    throw new Error('runtime parser tarball integrity does not match the pinned official artifact')
+  }
+  if (runtimeParserTreeDigest(packageRoot) !== trustedRuntimeYaml.treeSha256) {
+    throw new Error('runtime parser package tree does not match the pinned official artifact')
+  }
+  return pathToFileURL(moduleReal).href
+}
+
+const yamlModule = resolveRuntimeYamlModule()
+const { isAlias, isMap, isScalar, parseDocument, visit } = await import(yamlModule)
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const trustedCiFilePaths = [
@@ -465,6 +572,42 @@ export function evaluateRuntimeContract(sources, actual = null) {
   ) {
     errors.push('CI workflow root envelope must exactly match the canonical controls')
   }
+  const contextContract = runtime.ci.contextJob
+  const contextJob = parsedCi.jobs?.[contextContract.job]
+  const contextJobEnvelope = contextJob && typeof contextJob === 'object'
+    ? Object.fromEntries(Object.entries(contextJob).filter(([key]) => key !== 'steps'))
+    : null
+  const contextSteps = Array.isArray(contextJob?.steps) ? contextJob.steps : []
+  const expectedContextCheckout = {
+    name: contextContract.checkout.name,
+    uses: `actions/checkout@${runtime.actions['actions/checkout'].sha}`,
+    with: contextContract.checkout.with,
+  }
+  const expectedContextRuntime = {
+    uses: `actions/setup-node@${runtime.actions['actions/setup-node'].sha}`,
+    with: contextContract.runtime.with,
+  }
+  const contextResolver = contextSteps[2]
+  const contextResolverEnvelope = contextResolver && typeof contextResolver === 'object'
+    ? Object.fromEntries(Object.entries(contextResolver).filter(([key]) => key !== 'run'))
+    : null
+  if (
+    !contextJob ||
+    contextSteps.length !== contextContract.stepCount ||
+    JSON.stringify(stableObject(contextJobEnvelope)) !==
+      JSON.stringify(stableObject(contextContract.envelope)) ||
+    JSON.stringify(stableObject(contextSteps[0])) !==
+      JSON.stringify(stableObject(expectedContextCheckout)) ||
+    JSON.stringify(stableObject(contextSteps[1])) !==
+      JSON.stringify(stableObject(expectedContextRuntime)) ||
+    JSON.stringify(stableObject(contextResolverEnvelope)) !==
+      JSON.stringify(stableObject(contextContract.resolver.envelope)) ||
+    digest(contextResolver?.run ?? '') !== contextContract.resolver.runSha256
+  ) {
+    errors.push(
+      'CI context job must resolve the trusted commit before any repository-controlled execution',
+    )
+  }
   const setupNodeSteps = ciSteps.filter(step =>
     step.uses && parseActionReference(step.uses).action === 'actions/setup-node'
   )
@@ -519,13 +662,14 @@ export function evaluateRuntimeContract(sources, actual = null) {
     JSON.stringify(stableObject(bootstrapStep)) !==
       JSON.stringify(stableObject(expectedBootstrapStep))
   ) {
-    errors.push('CI runtime bootstrap step must exactly match the no-script canonical structure')
+    errors.push('CI runtime bootstrap step must exactly match the pinned-parser canonical structure')
   }
   const runtimeJob = parsedCi.jobs?.[runtime.ci.runtimeStep.job]
   const runtimeSteps = runtimeJob?.steps.filter(step => step.id === runtime.ci.runtimeStep.id) ?? []
   const runtimeStep = runtimeSteps[0]
   const expectedRuntimeStep = {
     'continue-on-error': runtime.ci.runtimeStep.continueOnError,
+    env: runtime.ci.runtimeStep.env,
     id: runtime.ci.runtimeStep.id,
     name: runtime.ci.runtimeStep.name,
     run: runtime.ci.runtimeStep.command,

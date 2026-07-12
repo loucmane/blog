@@ -1,0 +1,453 @@
+{
+  "checks": [
+    {
+      "gate_id": "aegis.manifest_schema",
+      "message": "manifest schema valid",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "mechanical",
+      "gate_id": "claude.readiness",
+      "message": "ok",
+      "method": "executable",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "mechanical",
+      "gate_id": "claude.pretooluse",
+      "message": "hook registered",
+      "method": "settings_hook",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "mechanical",
+      "gate_id": "claude.posttooluse_tracking",
+      "message": "hook registered",
+      "method": "settings_hook",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "mechanical",
+      "gate_id": "claude.stop_tracking",
+      "message": "hook registered",
+      "method": "settings_hook",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "mechanical",
+      "gate_id": "claude.bash_command",
+      "message": "ok",
+      "method": "executable",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "mechanical",
+      "gate_id": "claude.protected_path",
+      "message": "ok",
+      "method": "executable",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "verification",
+      "gate_id": "codex.guard",
+      "message": "ok",
+      "method": "executable",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "verification",
+      "gate_id": "codex.work_tracking_audit",
+      "message": "ok",
+      "method": "executable",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "enforcement": "policy",
+      "gate_id": "mcp.memory_write",
+      "message": "MCP memory writes are not mechanically hookable in every client.",
+      "method": "manual",
+      "required": false,
+      "status": "unsupported"
+    },
+    {
+      "category": "manifest",
+      "details": {
+        "checked": 39,
+        "directories": [],
+        "missing": []
+      },
+      "enforcement": "strict",
+      "gate_id": "manifest.managed_files",
+      "id": "manifest.managed_files",
+      "message": "all manifest managed files exist",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "runtime",
+      "details": {
+        "directory": false,
+        "executable": true,
+        "path": ".aegis/bin/aegis"
+      },
+      "enforcement": "strict",
+      "gate_id": "runtime.local_cli_shim",
+      "id": "runtime.local_cli_shim",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "runtime",
+      "details": {
+        "missing": [],
+        "template_root": ".aegis/templates/workflow"
+      },
+      "enforcement": "strict",
+      "gate_id": "runtime.workflow_templates",
+      "id": "runtime.workflow_templates",
+      "message": "all workflow templates installed",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "missing_path_keys": [],
+        "mode": "task",
+        "status": "completed",
+        "task": {
+          "id": "38",
+          "slug": "modernize-node-pnpm-ci-runtime",
+          "status": "completed",
+          "title": "Modernize Node pnpm and CI Runtime"
+        }
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.current_work",
+      "id": "workflow.current_work",
+      "message": "current work payload is completed and closeout-passed",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "branch": "feat/task-38-modernize-node-pnpm-ci-runtime",
+        "branch_task_id": "38",
+        "current_work_task_id": "38"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.branch_task_alignment",
+      "id": "workflow.branch_task_alignment",
+      "message": "branch task id matches current work",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "directory": false,
+        "executable": false,
+        "path": "sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.session_file",
+      "id": "workflow.session_file",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "directory": false,
+        "executable": false,
+        "path": "sessions/current"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.session_current",
+      "id": "workflow.session_current",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "directory": false,
+        "executable": false,
+        "path": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.plan_file",
+      "id": "workflow.plan_file",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "directory": false,
+        "executable": false,
+        "path": "plans/current"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.plan_current",
+      "id": "workflow.plan_current",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "directory": true,
+        "executable": false,
+        "path": "docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.work_tracking",
+      "id": "workflow.work_tracking",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "directory": true,
+        "executable": false,
+        "path": "docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.reports",
+      "id": "workflow.reports",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "directory": true,
+        "executable": false,
+        "path": ".aegis/templates/workflow"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.workflow_templates_path",
+      "id": "workflow.workflow_templates_path",
+      "message": "ok",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "malformed_steps": [],
+        "missing_steps": [],
+        "path": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.plan_table",
+      "id": "workflow.plan_table",
+      "message": "active plan table is parseable",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "workflow",
+      "details": {
+        "missing": [],
+        "work_tracking": "docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED"
+      },
+      "enforcement": "strict",
+      "gate_id": "workflow.tracking_surfaces",
+      "id": "workflow.tracking_surfaces",
+      "message": "all work-tracking surfaces exist",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "mutation",
+      "details": {
+        "events": 0,
+        "path": ".aegis/state/pending-tracking.json"
+      },
+      "enforcement": "strict",
+      "gate_id": "mutation.pending_tracking_empty",
+      "id": "mutation.pending_tracking_empty",
+      "message": "pending tracking queue absent",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "claude",
+      "details": {
+        "missing": []
+      },
+      "enforcement": "strict",
+      "gate_id": "claude.required_files",
+      "id": "claude.required_files",
+      "message": "all Claude required files exist",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "claude",
+      "details": {
+        "expected": [
+          "claude.posttooluse_tracking",
+          "claude.pretooluse",
+          "claude.stop_tracking"
+        ],
+        "failed": [],
+        "observed": [
+          "claude.pretooluse",
+          "claude.posttooluse_tracking",
+          "claude.stop_tracking"
+        ]
+      },
+      "enforcement": "strict",
+      "gate_id": "claude.hooks_registered",
+      "id": "claude.hooks_registered",
+      "message": "Claude hook registrations are present",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "protection",
+      "details": {
+        "bash_guard": ".claude/scripts/bash-command-guard.sh",
+        "file_tool_guard": ".claude/scripts/codex-path-guard.sh"
+      },
+      "enforcement": "strict",
+      "gate_id": "protection.codex_owned_paths",
+      "id": "protection.codex_owned_paths",
+      "message": "Codex-owned path guard scripts are installed and executable",
+      "method": "strict",
+      "required": true,
+      "status": "pass"
+    },
+    {
+      "category": "integrations",
+      "details": {
+        "detected": true,
+        "path": ".taskmaster",
+        "required": false
+      },
+      "enforcement": "strict",
+      "gate_id": "integrations.taskmaster_optional",
+      "id": "integrations.taskmaster_optional",
+      "message": "taskmaster integration present",
+      "method": "strict",
+      "required": false,
+      "status": "pass"
+    },
+    {
+      "category": "integrations",
+      "details": {
+        "detected": false,
+        "path": ".serena",
+        "required": false
+      },
+      "enforcement": "strict",
+      "gate_id": "integrations.serena_optional",
+      "id": "integrations.serena_optional",
+      "message": "serena integration is optional and absent",
+      "method": "strict",
+      "required": false,
+      "status": "pass"
+    },
+    {
+      "details": {
+        "configured": true,
+        "gate_decisions": ".aegis/reports/gate-decisions.jsonl",
+        "mode": "advisory",
+        "path": ".aegis/state/enforcement.json",
+        "reason": "existing paused project adoption; Codex-primary dogfood with non-blocking evidence collection",
+        "set_at": "2026-07-08T10:58:37Z",
+        "set_by": "loucmane",
+        "valid": true
+      },
+      "gate_id": "runtime.enforcement_mode",
+      "message": "Aegis enforcement is advisory; gates record would-block decisions but do not block.",
+      "required": false,
+      "status": "warn"
+    }
+  ],
+  "dry_run": false,
+  "enforcement": {
+    "configured": true,
+    "gate_decisions": ".aegis/reports/gate-decisions.jsonl",
+    "mode": "advisory",
+    "path": ".aegis/state/enforcement.json",
+    "reason": "existing paused project adoption; Codex-primary dogfood with non-blocking evidence collection",
+    "set_at": "2026-07-08T10:58:37Z",
+    "set_by": "loucmane",
+    "valid": true
+  },
+  "manifest_path": ".aegis/foundation-manifest.json",
+  "mode": "strict",
+  "next_action": {
+    "action": "log_strict_verification_before_closeout",
+    "details": {
+      "evidence": ".aegis/reports/verification-report.json",
+      "pending_tracking_expected": false
+    },
+    "message": "Strict verification passed. Log the verification evidence against plan-step-verify before closeout.",
+    "native_tools_policy": "Use native agent tools for source reads, edits, and project tests. Use Aegis CLI/MCP only for workflow state: install, start, kickoff for explicit external numeric task ids, log, verify, closeout.",
+    "suggested_cli": "./.aegis/bin/aegis log --target-dir . --handler agent:verification --evidence .aegis/reports/verification-report.json --note 'Recorded strict verification evidence' --plan-step plan-step-verify --plan-status completed",
+    "suggested_mcp": {
+      "arguments": {
+        "apply": true,
+        "event_class": "verification",
+        "evidence": ".aegis/reports/verification-report.json",
+        "handler": "agent:verification",
+        "note": "Recorded strict verification evidence",
+        "plan_status": "completed",
+        "plan_step": "plan-step-verify",
+        "target_dir": "."
+      },
+      "tool": "aegis.log"
+    }
+  },
+  "report_written": true,
+  "schema_version": "1.0.0",
+  "status": "passed",
+  "summary": {
+    "failed_required": 0,
+    "total": 31,
+    "unsupported": 1,
+    "warnings": 1
+  },
+  "target_root": "/home/loucmane/dev/blog",
+  "verified_at": "2026-07-12T11:56:30Z"
+}

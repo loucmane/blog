@@ -1,0 +1,9 @@
+# Aegis delivery witness — feat/task-38-modernize-node-pnpm-ci-runtime @ ffbf892 (local mode, base origin/main)
+- scope_mapping: PASS
+- diff_accounting: PASS
+- verification_at_head: PASS
+- done_flip_containment: PASS
+- ci_greenness: PASS [delegated]
+Result: PASS — report at .aegis/reports/witness-report.json
+Boundary event: unchanged
+Legacy S:W:H:E projection: applied

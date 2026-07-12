@@ -1,0 +1,2 @@
+$ pnpm --filter @minniewinnie/ui run build:types && pnpm --filter web exec tsc --noEmit
+$ tsc --emitDeclarationOnly --declaration --declarationDir dist/types

@@ -1,31 +1,31 @@
 # Task 38 Modernize Node pnpm and CI Runtime - Handoff Summary
 
 ## Current State
-- Task 38 runtime implementation, local verification, and both independent final reviews are complete; deterministic closeout is the remaining pre-delivery work.
+- Task 38 closeout and Taskmaster completion are terminal. PR #29 is open; its published pre-remediation head is `ffbf89220dd4d522d09139b98f69d1c9e6136186`. Review rounds closed pre-resolver execution, parser provenance, automatic setup-node metadata reads, stale continuity, and the GitHub-Actions missing-parser fallback. The complete exact-head local matrix and both fresh independent reviews pass. Staged secret scan, signed follow-up commit, push, and hosted checks remain.
 - Branch: `feat/task-38-modernize-node-pnpm-ci-runtime`.
 - Session: `sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md`.
 - Plan: `plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md`.
-- Active work-tracking: `docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/`.
+- Completed work-tracking archive: `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/`.
 - Current work authority: `.aegis/state/current-work.json`.
-- Reports: `docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/reports/modernize-node-pnpm-ci-runtime/`.
+- Reports: `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/`.
 
 ## What Was Done
 - Selected Node `24.18.0`, pnpm `11.11.0`, and optional local Corepack `0.35.0` from dated primary-source evidence.
 - Added canonical runtime projections, exact pnpm build approvals, and deterministic runtime-contract tests while preserving root script and application-dependency semantics.
-- Moved obsolete `.npmrc` enforcement to supported pnpm 11 workspace settings and hardened the contract after two independent adversarial reviews. The checker now uses exact dev-only `yaml@2.9.0`, validates the complete workspace-job envelope and full workspace-file digest, rejects aliases/anchors, and recognizes escaped or flow-style action keys. All 13 top-level focused tests pass: one canonical acceptance group and 12 adversarial rejection groups.
+- Moved obsolete `.npmrc` enforcement to supported pnpm 11 workspace settings and hardened the contract after independent adversarial reviews. The context job resolves trust before any repository-controlled run step and explicitly disables setup-node package-manager autodetection. Workspace fetches exact `yaml@2.9.0` from the official registry into a non-preexisting runner-temp directory; before import the checker verifies exact path, regular object types, realpath containment, published tarball SHA-512, and complete package-tree SHA-256. The checker validates complete workflow/context/workspace envelopes, rejects aliases/anchors, and recognizes escaped or flow-style action keys. All 13 top-level focused tests pass.
 - The lockfile delta is exactly 10 additive lines for the direct YAML parser importer, integrity-pinned package record, and snapshot; no existing resolution changed.
 - The supported Taskmaster test-strategy update is externally blocked by configured provider quotas; no manual JSON edit or unrelated task mutation was used. The verification report is the authoritative executed strategy pending a later supported projection.
 - Updated only the explicitly authorized CI runtime slice; workflow trust boundaries, triggers, permissions, secrets, deployment, and auto-merge policy remain unchanged.
 - Passed the full local workspace, governance, security, Aegis, witness, and legacy guard matrix documented in `reports/modernize-node-pnpm-ci-runtime/task-verification.md`.
 
 ## Current Issues/Blockers
-- No implementation blocker. Unit/integration and browser/accessibility capabilities remain honestly unsupported until Task 39.
+- No known implementation defect, local verification blocker, or independent-review finding remains. Staged secret scan, signed follow-up commit, and hosted checks remain mandatory. Unit/integration and browser/accessibility capabilities remain honestly unsupported until Task 39.
 - Aegis status/next can reuse Task 67's stale closeout report over live Task 38 state; treat this as dogfood evidence, not repair authority.
 
 ## Next Steps
-1. Complete deterministic Aegis closeout and Taskmaster projection.
-2. Deliver the exact task-scoped commit through protected CI.
-3. If every authorized merge gate passes, squash-merge, synchronize main, and start Task 39 on a fresh branch.
+1. Run staged secret/diff checks and inspect the exact staged inventory.
+2. Create and push a signed normal follow-up commit to PR #29, then wait for all protected checks on the new exact head.
+3. If every explicitly authorized Task 38 merge gate passes, squash-merge normally, synchronize main, and start Task 39 on a fresh branch.
 
 ## Important Context
 - Authority: `authority=standing-grant:sota-magazine-2026-autonomy-v2`; reload `AGENTS.md` and `docs/ai/AEGIS_AUTONOMY_GRANT.md` before workflow, PR, or merge decisions.
@@ -38,7 +38,7 @@
 ## Implementation Evidence
 - `docs/decisions/0003-node-pnpm-runtime-foundation.md`
 ## Verification Evidence
-- `docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/reports/modernize-node-pnpm-ci-runtime/task-verification.md`
+- `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/task-verification.md`
 - `.aegis/reports/verification-report.json`
 ## Strict Verification Evidence
 - `.aegis/reports/verification-report.json`
@@ -51,16 +51,12 @@
 - **2026-07-12 02:31 CEST** - [S:20260712|W:task38-modernize-node-pnpm-ci-runtime|H:agent:implementation|E:docs/decisions/0003-node-pnpm-runtime-foundation.md] Implemented Task 38 runtime projections and deterministic CI contract: Node 24.18.0, pnpm 11.11.0 with integrity pin, optional bundled Corepack 0.35.0, exact dependency-build approvals, unchanged root scripts and lockfile, immutable existing action pins, and only the authorized ci.yml runtime slice. Also observed that aegis status/next incorrectly used Task 67 stale closeout delivery guidance while current-work and Taskmaster identify active Task 38; no repair or delivery sync was run. authority=standing-grant:sota-magazine-2026-autonomy-v2.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "0c5190e9690f49fdadb5cea718aaef07", "schema": "legacy-shadow-sweh-projection-v1"} -->
-- **2026-07-12 12:40 CEST** - [S:20260712|W:task38-modernize-node-pnpm-ci-runtime|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded final independently reviewed strict verification evidence; authority=standing-grant:sota-magazine-2026-autonomy-v2
+<!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "9bf3b756070c4336b5d7b0ac5f634e11", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:86b189a0d39...] Delivery state recorded: pr_open for PR #10 at 1cf557a92c8e132....
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:bb214df3ac5...] Scope recorded for 48. Paths: docs/research/2026-07-10-controlled-auto-merge-canary.md, docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., plans/2026-07-10-task48-protected-ci-controlled-auto-merge.....
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:070a32fa48a...] Scope recorded for 48. Paths: docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., .taskmaster/tasks/**, .plan_state/**.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0488508e884...] Delivery state recorded: pr_merged for PR #12 at 3565b2998e2250a....
@@ -83,5 +79,8 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:35a36cbd2e1...] Delivery witness PASS recorded at 81511aa; report: .aegis/reports/witness-report.json.
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:5db7bd6b7bb...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:0c5190e9690...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:c7dd9c53f3f...] Delivery witness FAIL recorded at ffbf892; report: .aegis/reports/witness-report.json.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:4df2911d6d8...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:9bf3b756070...] Delivery witness PASS recorded at ffbf892; report: .aegis/reports/witness-report.json.
 
 <!-- AEGIS:END generated-sweh-projection -->

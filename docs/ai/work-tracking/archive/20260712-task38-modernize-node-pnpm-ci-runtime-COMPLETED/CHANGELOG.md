@@ -5,8 +5,11 @@
 - 2026-07-12 - Closed final independent-review gaps by locking the workspace job envelope, hashing the complete pnpm workspace file, and recognizing escaped and flow-style YAML action keys with a real YAML 1.2 parser.
 - 2026-07-12 - Closed inherited-execution review gaps by exact-matching the workflow root and clearing `BASH_ENV`/`NODE_OPTIONS` across the workspace job.
 - 2026-07-12 - Pinned the runtime checker step to Bash so workflow defaults cannot intercept its execution before the checker validates them.
-- 2026-07-12 - Reordered CI to a safe parser-only bootstrap before runtime validation and a full frozen install afterward; pinned complete CI semantics, action topology, and trusted resolver/checker/test files.
-- 2026-07-12 - Prevalidated runtime and resolver integrity in the context job before executing the unchanged trusted-ref/dispatch resolver.
+- 2026-07-12 - Reordered CI to validate the runtime contract before the full frozen workspace install; pinned complete CI semantics, action topology, and trusted resolver/checker/test files.
+- 2026-07-12 - PR #29 review removed repository-controlled execution before trusted-ref resolution and replaced the root-filtered pnpm parser bootstrap with an isolated official `yaml@2.9.0` tarball whose exact SHA-512 integrity is verified before import.
+- 2026-07-12 - PR #29 follow-up review bound the parser import to the exact runner-temp path, regular-file and realpath checks, the pinned tarball integrity, and a full extracted-package tree digest; the pre-resolver Node action now explicitly disables package-manager autodetection.
+- 2026-07-12 - Final adversarial review made the trusted parser module mandatory whenever `GITHUB_ACTIONS=true`; repository-resolved YAML remains a local-only fallback and a missing-module fixture fails before import.
+- 2026-07-12 - The complete exact-head matrix and fresh implementation/completeness plus adversarial CI reviews passed after all PR #29 trust-boundary remediations.
 - 2026-07-12 - Passed the complete local Task 38 verification matrix; Task 39's test capabilities remain explicitly unsupported-tracked.
 
 ## Progress Log
@@ -17,17 +20,12 @@
 - **2026-07-12 02:31 CEST** - [S:20260712|W:task38-modernize-node-pnpm-ci-runtime|H:agent:implementation|E:docs/decisions/0003-node-pnpm-runtime-foundation.md] Implemented Task 38 runtime projections and deterministic CI contract: Node 24.18.0, pnpm 11.11.0 with integrity pin, optional bundled Corepack 0.35.0, exact dependency-build approvals, unchanged root scripts and lockfile, immutable existing action pins, and only the authorized ci.yml runtime slice. Also observed that aegis status/next incorrectly used Task 67 stale closeout delivery guidance while current-work and Taskmaster identify active Task 38; no repair or delivery sync was run. authority=standing-grant:sota-magazine-2026-autonomy-v2.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "0c5190e9690f49fdadb5cea718aaef07", "schema": "legacy-shadow-sweh-projection-v1"} -->
-- **2026-07-12 12:40 CEST** - [S:20260712|W:task38-modernize-node-pnpm-ci-runtime|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded final independently reviewed strict verification evidence; authority=standing-grant:sota-magazine-2026-autonomy-v2
-- **2026-07-12 12:41 CEST** - [S:20260712|W:task38-modernize-node-pnpm-ci-runtime|H:agent:verification|E:docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/reports/modernize-node-pnpm-ci-runtime/task-verification.md] Task 38 final verification passed: exact Node 24.18.0/pnpm 11.11.0/Corepack 0.35.0 parity; safe parser bootstraps before resolver and lifecycle installation; 13 runtime contract groups; full workspace, security, build, smoke, governance, Aegis, guard, secret, and independent-review gates green; exact yaml@2.9.0 10-line lock delta; unit/browser capability remains tracked for Task 39. authority=standing-grant:sota-magazine-2026-autonomy-v2
+<!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "9bf3b756070c4336b5d7b0ac5f634e11", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:86b189a0d39...] Delivery state recorded: pr_open for PR #10 at 1cf557a92c8e132....
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:bb214df3ac5...] Scope recorded for 48. Paths: docs/research/2026-07-10-controlled-auto-merge-canary.md, docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., plans/2026-07-10-task48-protected-ci-controlled-auto-merge.....
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:070a32fa48a...] Scope recorded for 48. Paths: docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., .taskmaster/tasks/**, .plan_state/**.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0488508e884...] Delivery state recorded: pr_merged for PR #12 at 3565b2998e2250a....
@@ -50,5 +48,8 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:35a36cbd2e1...] Delivery witness PASS recorded at 81511aa; report: .aegis/reports/witness-report.json.
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:5db7bd6b7bb...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:0c5190e9690...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:c7dd9c53f3f...] Delivery witness FAIL recorded at ffbf892; report: .aegis/reports/witness-report.json.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:4df2911d6d8...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:9bf3b756070...] Delivery witness PASS recorded at ffbf892; report: .aegis/reports/witness-report.json.
 
 <!-- AEGIS:END generated-sweh-projection -->

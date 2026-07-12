@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 import {
   evaluateRuntimeContract,
   loadRuntimeSources,
 } from '../../scripts/ci/check-runtime-contract.mjs'
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const checkerPath = path.join(root, 'scripts/ci/check-runtime-contract.mjs')
 
 function sources() {
   const value = loadRuntimeSources()
@@ -182,18 +190,96 @@ test('rejects CI Node, pnpm, and enforcement drift', () => {
   const inheritedRuntimeShell = sources()
   replaceCiWorkflow(
     inheritedRuntimeShell,
-    "      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        shell: bash\n        run: node scripts/ci/check-runtime-contract.mjs",
-    "      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        run: node scripts/ci/check-runtime-contract.mjs",
+    "      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        shell: bash\n        env:\n          RUNTIME_YAML_MODULE: ${{ runner.temp }}/runtime-contract-parser/package/dist/index.js\n        run: node scripts/ci/check-runtime-contract.mjs",
+    "      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        env:\n          RUNTIME_YAML_MODULE: ${{ runner.temp }}/runtime-contract-parser/package/dist/index.js\n        run: node scripts/ci/check-runtime-contract.mjs",
   )
   assert.match(evaluateRuntimeContract(inheritedRuntimeShell).join('\n'), /runtime-contract step/)
 
   const unsafeBootstrap = sources()
   replaceCiWorkflow(
     unsafeBootstrap,
-    '      - name: Bootstrap runtime contract parser\n        id: runtime_bootstrap\n        continue-on-error: true\n        shell: bash\n        run: |\n          mkdir -p ci-artifacts\n          set -o pipefail\n          pnpm install --filter . --frozen-lockfile --ignore-scripts --ignore-pnpmfile',
-    '      - name: Bootstrap runtime contract parser\n        id: runtime_bootstrap\n        continue-on-error: true\n        shell: bash\n        run: |\n          mkdir -p ci-artifacts\n          set -o pipefail\n          pnpm install --filter . --frozen-lockfile',
+    'test "$integrity" = "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="',
+    'test -n "$integrity"',
   )
   assert.match(evaluateRuntimeContract(unsafeBootstrap).join('\n'), /runtime bootstrap step/)
+
+  const untrustedRegistry = sources()
+  replaceCiWorkflow(
+    untrustedRegistry,
+    'export NPM_CONFIG_REGISTRY=https://registry.npmjs.org/',
+    'export NPM_CONFIG_REGISTRY=https://packages.example.invalid/',
+  )
+  assert.match(evaluateRuntimeContract(untrustedRegistry).join('\n'), /runtime bootstrap step/)
+
+  const untrustedParserPath = sources()
+  replaceCiWorkflow(
+    untrustedParserPath,
+    'RUNTIME_YAML_MODULE: ${{ runner.temp }}/runtime-contract-parser/package/dist/index.js',
+    'RUNTIME_YAML_MODULE: ./node_modules/yaml/dist/index.js',
+  )
+  assert.match(evaluateRuntimeContract(untrustedParserPath).join('\n'), /runtime-contract step/)
+
+  const missingModuleEnvironment = { ...process.env, GITHUB_ACTIONS: 'true' }
+  delete missingModuleEnvironment.RUNTIME_YAML_MODULE
+  const missingModuleResult = spawnSync(process.execPath, [checkerPath], {
+    cwd: root,
+    encoding: 'utf8',
+    env: missingModuleEnvironment,
+  })
+  assert.notEqual(missingModuleResult.status, 0)
+  assert.match(
+    `${missingModuleResult.stdout}\n${missingModuleResult.stderr}`,
+    /RUNTIME_YAML_MODULE is required in GitHub Actions/,
+  )
+
+  const parserAttackRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'task38-runtime-parser-'))
+  try {
+    const executionMarker = path.join(parserAttackRoot, 'executed')
+    const maliciousModule = path.join(parserAttackRoot, 'malicious.mjs')
+    fs.writeFileSync(
+      maliciousModule,
+      `import fs from 'node:fs'; fs.writeFileSync(${JSON.stringify(executionMarker)}, 'executed')\n`,
+    )
+    const absoluteLocalResult = spawnSync(process.execPath, [checkerPath], {
+      cwd: root,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        RUNNER_TEMP: parserAttackRoot,
+        RUNTIME_YAML_MODULE: maliciousModule,
+      },
+    })
+    assert.notEqual(absoluteLocalResult.status, 0)
+    assert.match(
+      `${absoluteLocalResult.stdout}\n${absoluteLocalResult.stderr}`,
+      /canonical trusted-runner parser path/,
+    )
+    assert.equal(fs.existsSync(executionMarker), false)
+
+    const symlinkedModule = path.join(
+      parserAttackRoot,
+      'runtime-contract-parser/package/dist/index.js',
+    )
+    fs.mkdirSync(path.dirname(symlinkedModule), { recursive: true })
+    fs.symlinkSync(maliciousModule, symlinkedModule)
+    const symlinkResult = spawnSync(process.execPath, [checkerPath], {
+      cwd: root,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        RUNNER_TEMP: parserAttackRoot,
+        RUNTIME_YAML_MODULE: symlinkedModule,
+      },
+    })
+    assert.notEqual(symlinkResult.status, 0)
+    assert.match(
+      `${symlinkResult.stdout}\n${symlinkResult.stderr}`,
+      /regular file, not a symlink/,
+    )
+    assert.equal(fs.existsSync(executionMarker), false)
+  } finally {
+    fs.rmSync(parserAttackRoot, { force: true, recursive: true })
+  }
 
   const extraPreRuntimeStep = sources()
   replaceCiWorkflow(
@@ -211,15 +297,37 @@ test('rejects CI Node, pnpm, and enforcement drift', () => {
     )
   assert.match(evaluateRuntimeContract(redirectedStandardEvent).join('\n'), /post-merge-context/)
 
-  const bypassedPreResolverValidation = sources()
+  const repositoryCodeBeforeResolver = sources()
   replaceCiWorkflow(
-    bypassedPreResolverValidation,
-    'run: node scripts/ci/check-runtime-contract.mjs --verify-active && node tests/ci/runtime-contract.test.mjs',
-    'run: echo bypass',
+    repositoryCodeBeforeResolver,
+    '      - name: Resolve the exact verification commit',
+    '      - name: Execute repository code before trust resolution\n        shell: bash\n        run: node scripts/ci/check-runtime-contract.mjs\n\n      - name: Resolve the exact verification commit',
   )
   assert.match(
-    evaluateRuntimeContract(bypassedPreResolverValidation).join('\n'),
-    /workflow semantics/,
+    evaluateRuntimeContract(repositoryCodeBeforeResolver).join('\n'),
+    /resolve the trusted commit before any repository-controlled execution/,
+  )
+
+  const lockfileCacheBeforeResolver = sources()
+  replaceCiWorkflow(
+    lockfileCacheBeforeResolver,
+    '      - name: Resolve the exact verification commit',
+    '      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271\n        with:\n          version: 11.11.0\n          run_install: false\n\n      - name: Resolve the exact verification commit',
+  )
+  assert.match(
+    evaluateRuntimeContract(lockfileCacheBeforeResolver).join('\n'),
+    /resolve the trusted commit before any repository-controlled execution/,
+  )
+
+  const automaticContextCache = sources()
+  replaceCiWorkflow(
+    automaticContextCache,
+    '          package-manager-cache: false',
+    '          package-manager-cache: true',
+  )
+  assert.match(
+    evaluateRuntimeContract(automaticContextCache).join('\n'),
+    /resolve the trusted commit before any repository-controlled execution/,
   )
 })
 
@@ -227,8 +335,8 @@ test('rejects commented runtime commands and a weakened enforcement loop', () =>
   const runtimeStep = sources()
   replaceCiWorkflow(
     runtimeStep,
-    `      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        shell: bash\n        run: ${runtimeStep.runtime.ci.runtimeStep.command}`,
-    `      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        shell: bash\n        # run: ${runtimeStep.runtime.ci.runtimeStep.command}\n        run: echo bypass`,
+    `      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        shell: bash\n        env:\n          RUNTIME_YAML_MODULE: \${{ runner.temp }}/runtime-contract-parser/package/dist/index.js\n        run: ${runtimeStep.runtime.ci.runtimeStep.command}`,
+    `      - name: Runtime contract\n        id: runtime_contract\n        if: always() && steps.runtime_bootstrap.outcome == 'success'\n        continue-on-error: true\n        shell: bash\n        env:\n          RUNTIME_YAML_MODULE: \${{ runner.temp }}/runtime-contract-parser/package/dist/index.js\n        # run: ${runtimeStep.runtime.ci.runtimeStep.command}\n        run: echo bypass`,
   )
   assert.match(evaluateRuntimeContract(runtimeStep).join('\n'), /parsed structure/)
 

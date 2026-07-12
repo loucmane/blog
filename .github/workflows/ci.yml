@@ -33,24 +33,10 @@ jobs:
           persist-credentials: false
           ref: ${{ github.sha }}
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
-        with:
-          version: 11.11.0
-          run_install: false
-
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: 24.18.0
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Bootstrap trusted runtime contract parser
-        shell: bash
-        run: pnpm install --filter . --frozen-lockfile --ignore-scripts --ignore-pnpmfile
-
-      - name: Validate trusted runtime and resolver contract
-        shell: bash
-        run: node scripts/ci/check-runtime-contract.mjs --verify-active && node tests/ci/runtime-contract.test.mjs
+          package-manager-cache: false
 
       - name: Resolve the exact verification commit
         id: resolve
@@ -171,14 +157,35 @@ jobs:
         shell: bash
         run: |
           mkdir -p ci-artifacts
-          set -o pipefail
-          pnpm install --filter . --frozen-lockfile --ignore-scripts --ignore-pnpmfile 2>&1 | tee ci-artifacts/runtime-bootstrap.log
+          set -euo pipefail
+          parser_dir="$RUNNER_TEMP/runtime-contract-parser"
+          user_config="$RUNNER_TEMP/runtime-npm-userconfig"
+          global_config="$RUNNER_TEMP/runtime-npm-globalconfig"
+          test ! -e "$parser_dir"
+          mkdir -p "$parser_dir"
+          : > "$user_config"
+          : > "$global_config"
+          export NPM_CONFIG_AUDIT=false
+          export NPM_CONFIG_FUND=false
+          export NPM_CONFIG_GLOBALCONFIG="$global_config"
+          export NPM_CONFIG_IGNORE_SCRIPTS=true
+          export NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+          export NPM_CONFIG_USERCONFIG="$user_config"
+          pack_json=$(cd "$parser_dir" && npm pack yaml@2.9.0 --json 2>&1)
+          filename=$(printf '%s\n' "$pack_json" | jq -er 'if length == 1 then .[0].filename else empty end')
+          integrity=$(printf '%s\n' "$pack_json" | jq -er 'if length == 1 then .[0].integrity else empty end')
+          test "$integrity" = "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="
+          jq -cn --arg filename "$filename" --arg integrity "$integrity" '{filename: $filename, integrity: $integrity}' | tee ci-artifacts/runtime-bootstrap.log
+          tar -xzf "$parser_dir/$filename" -C "$parser_dir"
+          test -f "$parser_dir/package/dist/index.js"
 
       - name: Runtime contract
         id: runtime_contract
         if: always() && steps.runtime_bootstrap.outcome == 'success'
         continue-on-error: true
         shell: bash
+        env:
+          RUNTIME_YAML_MODULE: ${{ runner.temp }}/runtime-contract-parser/package/dist/index.js
         run: node scripts/ci/check-runtime-contract.mjs --verify-active && node tests/ci/runtime-contract.test.mjs
 
       - name: Frozen install

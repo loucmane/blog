@@ -1,0 +1,41 @@
+{"filename":"yaml-2.9.0.tgz","integrity":"sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="}
+{
+  "actual": {
+    "corepack": "0.35.0",
+    "node": "24.18.0",
+    "pnpm": "11.11.0"
+  },
+  "errors": [],
+  "expected": {
+    "allowedBuilds": {
+      "sharp": "0.34.5",
+      "unrs-resolver": "1.7.9"
+    },
+    "corepack": "0.35.0",
+    "node": "24.18.0",
+    "packageManager": "pnpm@11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c51a4d59e951b401e764d3b6ca751cbf51bc50ed7001a6bcb4935e684c34882",
+    "pnpm": "11.11.0"
+  },
+  "status": "passed"
+}
+✔ accepts the canonical static runtime projections (41.690226ms)
+✔ rejects developer and package engine drift (26.855011ms)
+✔ rejects pnpm version, integrity, and script drift (24.445912ms)
+✔ rejects workspace script or dependency declaration drift (33.925752ms)
+✔ rejects legacy pnpm settings and incomplete override migration (21.725582ms)
+✔ rejects missing, broad, unresolved, or additional dependency build approvals (48.828182ms)
+✔ rejects lockfile format and exact override key or value drift (40.909829ms)
+✔ rejects CI Node, pnpm, and enforcement drift (219.449954ms)
+✔ rejects commented runtime commands and a weakened enforcement loop (62.133249ms)
+✔ rejects mutable or unexpected action references (60.382614ms)
+✔ rejects removed or shadowed pnpm settings in .npmrc (29.425025ms)
+✔ rejects pnpm workspace enforcement setting drift (67.656337ms)
+✔ rejects active runtime mismatches (42.652353ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 754.917342

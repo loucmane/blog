@@ -53,12 +53,12 @@
   "ci": {
     "workflowSemanticsSha256": {
       ".github/workflows/auto-merge.yml": "22d891fb034f3f9449a4071db169ee8f55b3f6d1601747c43ba44f45f07db13d",
-      ".github/workflows/ci.yml": "239778888aa46867c6fb9b78d8a847fe7dc53721b7fc250ac25393652675f572"
+      ".github/workflows/ci.yml": "011ab1c6ae5c89322e2f196253fffb57a6a084d389065cdaa7f9b36dd936b8f3"
     },
     "trustedFileSha256": {
       "scripts/ci/post-merge-context.mjs": "bb2521d74c0319cd6308a0cdcce23062a8d2ce93d4a4a0e5bcdfe16047b2235b",
-      "scripts/ci/check-runtime-contract.mjs": "7f34e7fdc8154e7b3d38fb944a688e1fcfb5c7b16b73d8590e5b5743e8f1abd8",
-      "tests/ci/runtime-contract.test.mjs": "0e5cb907a64fca8045f59057b211f6e040bfd0b64772efe8678723ac43ff3629"
+      "scripts/ci/check-runtime-contract.mjs": "c3d5467a1d0aedd8ad541ae6a1bfc1ddbabae7346c84a67b2c8ca27933fca912",
+      "tests/ci/runtime-contract.test.mjs": "bf6caa3be5d12298de17530b46fe9784ce879c16164151966b03974eba634e2d"
     },
     "workflowEnvelope": {
       "name": "CI",
@@ -84,7 +84,58 @@
       }
     },
     "setupNodeCount": 3,
-    "pnpmSetupCount": 2,
+    "pnpmSetupCount": 1,
+    "contextJob": {
+      "job": "context",
+      "stepCount": 3,
+      "envelope": {
+        "env": {
+          "BASH_ENV": "",
+          "NODE_OPTIONS": ""
+        },
+        "name": "context · resolve trusted verification commit",
+        "outputs": {
+          "checkout_ref": "${{ steps.resolve.outputs.checkout_ref }}"
+        },
+        "permissions": {
+          "contents": "read"
+        },
+        "runs-on": "ubuntu-latest"
+      },
+      "checkout": {
+        "name": "Check out the event-defined trusted commit",
+        "with": {
+          "fetch-depth": 0,
+          "persist-credentials": false,
+          "ref": "${{ github.sha }}"
+        }
+      },
+      "runtime": {
+        "with": {
+          "node-version": "24.18.0",
+          "package-manager-cache": false
+        }
+      },
+      "resolver": {
+        "envelope": {
+          "env": {
+            "CLIENT_MERGE_SHA": "${{ github.event.client_payload.merge_sha }}",
+            "CLIENT_PR_NUMBER": "${{ github.event.client_payload.pr_number }}",
+            "CLIENT_REVIEWED_HEAD_SHA": "${{ github.event.client_payload.reviewed_head_sha }}",
+            "DEFAULT_BRANCH": "${{ github.event.repository.default_branch }}",
+            "DISPATCH_ACTION": "${{ github.event.action }}",
+            "EVENT_NAME": "${{ github.event_name }}",
+            "EVENT_SHA": "${{ github.sha }}",
+            "GH_TOKEN": "${{ github.token }}",
+            "REPOSITORY": "${{ github.repository }}"
+          },
+          "id": "resolve",
+          "name": "Resolve the exact verification commit",
+          "shell": "bash"
+        },
+        "runSha256": "918309d1deef0db5cbcde7651e1aab59bd77d552fdcd2c55ea56a149cc73318a"
+      }
+    },
     "workspaceJob": {
       "job": "workspace",
       "envelope": {
@@ -106,8 +157,27 @@
       "shell": "bash",
       "runLines": [
         "mkdir -p ci-artifacts",
-        "set -o pipefail",
-        "pnpm install --filter . --frozen-lockfile --ignore-scripts --ignore-pnpmfile 2>&1 | tee ci-artifacts/runtime-bootstrap.log"
+        "set -euo pipefail",
+        "parser_dir=\"$RUNNER_TEMP/runtime-contract-parser\"",
+        "user_config=\"$RUNNER_TEMP/runtime-npm-userconfig\"",
+        "global_config=\"$RUNNER_TEMP/runtime-npm-globalconfig\"",
+        "test ! -e \"$parser_dir\"",
+        "mkdir -p \"$parser_dir\"",
+        ": > \"$user_config\"",
+        ": > \"$global_config\"",
+        "export NPM_CONFIG_AUDIT=false",
+        "export NPM_CONFIG_FUND=false",
+        "export NPM_CONFIG_GLOBALCONFIG=\"$global_config\"",
+        "export NPM_CONFIG_IGNORE_SCRIPTS=true",
+        "export NPM_CONFIG_REGISTRY=https://registry.npmjs.org/",
+        "export NPM_CONFIG_USERCONFIG=\"$user_config\"",
+        "pack_json=$(cd \"$parser_dir\" && npm pack yaml@2.9.0 --json 2>&1)",
+        "filename=$(printf '%s\\n' \"$pack_json\" | jq -er 'if length == 1 then .[0].filename else empty end')",
+        "integrity=$(printf '%s\\n' \"$pack_json\" | jq -er 'if length == 1 then .[0].integrity else empty end')",
+        "test \"$integrity\" = \"sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==\"",
+        "jq -cn --arg filename \"$filename\" --arg integrity \"$integrity\" '{filename: $filename, integrity: $integrity}' | tee ci-artifacts/runtime-bootstrap.log",
+        "tar -xzf \"$parser_dir/$filename\" -C \"$parser_dir\"",
+        "test -f \"$parser_dir/package/dist/index.js\""
       ]
     },
     "runtimeStep": {
@@ -117,6 +187,9 @@
       "condition": "always() && steps.runtime_bootstrap.outcome == 'success'",
       "continueOnError": true,
       "shell": "bash",
+      "env": {
+        "RUNTIME_YAML_MODULE": "${{ runner.temp }}/runtime-contract-parser/package/dist/index.js"
+      },
       "command": "node scripts/ci/check-runtime-contract.mjs --verify-active && node tests/ci/runtime-contract.test.mjs"
     },
     "enforcementStep": {

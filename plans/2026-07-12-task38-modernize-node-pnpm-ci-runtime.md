@@ -32,7 +32,7 @@ emergency_bypass: false
 | --- | --- | --- | --- |
 | plan-step-scope | Confirm task scope, constraints, expected outputs, and affected files before implementation | docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/FINDINGS.md; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/DECISIONS.md | completed |
 | plan-step-implement | Make only task-scoped changes and record implementation notes | docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/IMPLEMENTATION.md; changed files; docs/decisions/0003-node-pnpm-runtime-foundation.md | completed |
-| plan-step-verify | Run verification, capture reports, and update handoff state | docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/HANDOFF.md; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/TRACKER.md; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/task-verification.md; .aegis/reports/verification-report.json | completed |
+| plan-step-verify | Run verification, capture reports, and update handoff state | docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/HANDOFF.md; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/TRACKER.md; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/task-verification.md; .aegis/reports/verification-report.json; docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/independent-reviews.md | completed |
 | plan-step-emergency | Optional - only if a bypass is explicitly authorized | Waiver plus post-mortem note in docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/DECISIONS.md and docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/FINDINGS.md | n/a |
 
 ## Scope
@@ -69,6 +69,7 @@ emergency_bypass: false
 - 2026-07-12 - `aegis log` updated `plan-step-implement` to `completed` with evidence `docs/decisions/0003-node-pnpm-runtime-foundation.md`.
 - 2026-07-12 - `aegis log` updated `plan-step-verify` to `completed` with evidence `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/task-verification.md`.
 - 2026-07-12 - `aegis log` updated `plan-step-verify` to `completed` with evidence `.aegis/reports/verification-report.json`.
+- 2026-07-12 - `aegis log` updated `plan-step-verify` to `completed` with evidence `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/independent-reviews.md`.
 
 ## Continuation & Handoff
 - Next owner: project owner
@@ -77,7 +78,7 @@ emergency_bypass: false
   2. Read `.aegis/state/current-work.json`.
   3. Read `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/TRACKER.md` and `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/HANDOFF.md`.
   4. Run Aegis readiness/verify commands before mutation.
-- Outstanding risks/todos: integrate independent review verdicts, complete deterministic closeout, and require hosted exact-head checks before the explicitly authorized Task 38 merge.
+- Outstanding risks/todos: require staged secret safety and fresh hosted exact-head checks before the explicitly authorized Task 38 merge; both fresh independent reviews now pass.
 
 ## Conflict & Scope Declaration
 - Related plans: none recorded at kickoff.
@@ -86,7 +87,7 @@ emergency_bypass: false
 ## Evidence Checklist
 - [x] Aegis current work state exists
 - [x] Session and plan current pointers exist
-- [x] Active work-tracking folder exists
+- [x] Completed work-tracking archive exists
 - [x] Scope notes recorded before implementation
 - [x] Implementation notes recorded after changes
 - [x] Verification evidence stored under `docs/ai/work-tracking/archive/20260712-task38-modernize-node-pnpm-ci-runtime-COMPLETED/reports/modernize-node-pnpm-ci-runtime/`
@@ -98,15 +99,12 @@ emergency_bypass: false
 - Any bypass must be explicitly authorized by the user, recorded in DECISIONS.md, and followed by verification evidence.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "0c5190e9690f49fdadb5cea718aaef07", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "9bf3b756070c4336b5d7b0ac5f634e11", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:86b189a0d39...] Delivery state recorded: pr_open for PR #10 at 1cf557a92c8e132....
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:bb214df3ac5...] Scope recorded for 48. Paths: docs/research/2026-07-10-controlled-auto-merge-canary.md, docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., plans/2026-07-10-task48-protected-ci-controlled-auto-merge.....
-- [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:24d1841aa7b...] Delivery state recorded: pr_merged for PR #10 at 5a345df073862bb....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:scope E:ledger:070a32fa48a...] Scope recorded for 48. Paths: docs/ai/work-tracking/active/20260710-task48-protected-ci-c..., .taskmaster/tasks/**, .plan_state/**.
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0321a47226a...] Delivery state recorded: pr_merged for PR #11 at e26daabfb6a6e36....
 - [S:2026-07-10-001-task48-protected-ci-controlled-auto-merge W:task-48-protected-ci-controlled-auto-merge H:delivery E:ledger:0488508e884...] Delivery state recorded: pr_merged for PR #12 at 3565b2998e2250a....
@@ -129,5 +127,8 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:35a36cbd2e1...] Delivery witness PASS recorded at 81511aa; report: .aegis/reports/witness-report.json.
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:5db7bd6b7bb...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
 - [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:0c5190e9690...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:c7dd9c53f3f...] Delivery witness FAIL recorded at ffbf892; report: .aegis/reports/witness-report.json.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:scope E:ledger:4df2911d6d8...] Scope recorded for 38. Paths: .github/workflows/ci.yml, .npmrc, .nvmrc.
+- [S:2026-07-12-001-task38-modernize-node-pnpm-ci-runtime W:task-38-modernize-node-pnpm-ci-runtime H:witness E:ledger:9bf3b756070...] Delivery witness PASS recorded at ffbf892; report: .aegis/reports/witness-report.json.
 
 <!-- AEGIS:END generated-sweh-projection -->

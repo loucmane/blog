@@ -1,0 +1,37 @@
+$ node --test tests/ci/security-hotfix.test.mjs
+✔ dependency policy accepts only a zero-vulnerability audit (0.55486ms)
+✔ dependency policy fails on any advisory severity (0.111185ms)
+✔ dependency policy rejects malformed and inconsistent audit results (0.336335ms)
+✔ production smoke validation requires a complete HTML response (0.484768ms)
+✔ required CI check runs dependency policy and production smoke (0.294784ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41.489281
+$ node scripts/ci/check-dependency-security.mjs
+{
+  "advisories": [],
+  "counts": {
+    "critical": 0,
+    "high": 0,
+    "moderate": 0,
+    "low": 0,
+    "info": 0
+  },
+  "total": 0,
+  "auditExitCode": 0,
+  "errors": [],
+  "policy": {
+    "critical": 0,
+    "high": 0,
+    "info": 0,
+    "low": 0,
+    "moderate": 0
+  },
+  "status": "passed",
+  "generatedAt": "2026-07-12T11:28:27.420Z"
+}
