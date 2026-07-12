@@ -2,7 +2,7 @@
 
 **Status:** Proposed
 
-**Runtime target note:** ADR-0003 supersedes this ADR's Node, pnpm, Corepack, and CI-runtime versions. The Task 39 language and quality-tooling sequence remains proposed and must be re-queried at implementation time.
+**Target notes:** ADR-0003 supersedes this ADR's Node, pnpm, Corepack, and CI-runtime versions. ADR-0006 supersedes the Task 39 TypeScript, lint, formatting, unit/integration, browser, and accessibility targets after re-querying them at implementation time.
 
 **Date:** 2026-07-09
 

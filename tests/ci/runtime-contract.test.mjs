@@ -22,13 +22,13 @@ function sources() {
     packageJson: structuredClone(value.packageJson),
     packageJsons: structuredClone(value.packageJsons),
     runtime: structuredClone(value.runtime),
-    workflows: value.workflows.map(workflow => ({ ...workflow })),
+    workflows: value.workflows.map((workflow) => ({ ...workflow })),
   }
 }
 
 function replaceCiWorkflow(value, search, replacement) {
   value.ciWorkflow = value.ciWorkflow.replace(search, replacement)
-  value.workflows = value.workflows.map(workflow =>
+  value.workflows = value.workflows.map((workflow) =>
     workflow.path === '.github/workflows/ci.yml'
       ? { ...workflow, source: value.ciWorkflow }
       : workflow,
@@ -115,7 +115,7 @@ test('rejects lockfile format and exact override key or value drift', () => {
   assert.match(evaluateRuntimeContract(format).join('\n'), /lockfileVersion/)
 
   const overrides = sources()
-  overrides.lockfile = overrides.lockfile.replace('  yaml@>=2.0.0 <2.8.3: 2.8.3\n', '')
+  overrides.lockfile = overrides.lockfile.replace('  yaml@>=2.0.0 <2.8.3: 2.9.0\n', '')
   assert.match(evaluateRuntimeContract(overrides).join('\n'), /security overrides/)
 
   const value = sources()
@@ -147,12 +147,24 @@ test('rejects CI Node, pnpm, and enforcement drift', () => {
   )
   assert.match(evaluateRuntimeContract(enforcement).join('\n'), /structurally enforce/)
 
-  const skippedJob = sources()
+  const accessibilityStage = sources()
   replaceCiWorkflow(
-    skippedJob,
-    '  workspace:\n    name:',
-    '  workspace:\n    if: false\n    name:',
+    accessibilityStage,
+    'ACCESSIBILITY_BASELINE: ${{ steps.accessibility_baseline.outcome }}',
+    'ACCESSIBILITY_BASELINE: success',
   )
+  assert.match(evaluateRuntimeContract(accessibilityStage).join('\n'), /structurally enforce/)
+
+  const accessibilityPolicy = sources()
+  accessibilityPolicy.ciTrustedFiles['scripts/ci/check-accessibility-baseline.mjs'] +=
+    '\n// bypass\n'
+  assert.match(
+    evaluateRuntimeContract(accessibilityPolicy).join('\n'),
+    /trusted CI support file scripts\/ci\/check-accessibility-baseline\.mjs/,
+  )
+
+  const skippedJob = sources()
+  replaceCiWorkflow(skippedJob, '  workspace:\n    name:', '  workspace:\n    if: false\n    name:')
   assert.match(evaluateRuntimeContract(skippedJob).join('\n'), /workspace job envelope/)
 
   const ignoredJobFailure = sources()
@@ -272,10 +284,7 @@ test('rejects CI Node, pnpm, and enforcement drift', () => {
       },
     })
     assert.notEqual(symlinkResult.status, 0)
-    assert.match(
-      `${symlinkResult.stdout}\n${symlinkResult.stderr}`,
-      /regular file, not a symlink/,
-    )
+    assert.match(`${symlinkResult.stdout}\n${symlinkResult.stderr}`, /regular file, not a symlink/)
     assert.equal(fs.existsSync(executionMarker), false)
   } finally {
     fs.rmSync(parserAttackRoot, { force: true, recursive: true })
@@ -417,7 +426,10 @@ test('rejects mutable or unexpected action references', () => {
     path: '.github/workflows/alias.yml',
     source: `name: Alias\non: push\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - &action\n        uses: actions/cache@0000000000000000000000000000000000000000\n      - *action\n`,
   })
-  assert.match(evaluateRuntimeContract(alias).join('\n'), /aliases are not supported|anchors are not supported/)
+  assert.match(
+    evaluateRuntimeContract(alias).join('\n'),
+    /aliases are not supported|anchors are not supported/,
+  )
 })
 
 test('rejects removed or shadowed pnpm settings in .npmrc', () => {

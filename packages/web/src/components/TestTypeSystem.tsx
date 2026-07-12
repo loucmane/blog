@@ -1,12 +1,12 @@
 // Test component to validate our TypeScript setup and path mapping
 
-import { BlogPost, RescueStory, EmergencyAppeal, ContentSensitivityLevel } from '@/types';
+import type { BlogPost, ContentSensitivityLevel, EmergencyAppeal, RescueStory } from '@/types'
 // Test content path mapping - this should resolve to ../content/*
 // import contentExample from '@/content/blog/example.md'; // Uncomment when MDX is set up
 
 interface TestComponentProps {
-  content: BlogPost | RescueStory | EmergencyAppeal;
-  sensitivityLevel: ContentSensitivityLevel;
+  content: BlogPost | RescueStory | EmergencyAppeal
+  sensitivityLevel: ContentSensitivityLevel
 }
 
 export function TestTypeSystem({ content, sensitivityLevel }: TestComponentProps) {
@@ -18,45 +18,45 @@ export function TestTypeSystem({ content, sensitivityLevel }: TestComponentProps
           <div>
             <h2>{content.title}</h2>
             <p>Blog post by {content.author.name}</p>
-            {content.relatedPosts && (
-              <p>Related posts: {content.relatedPosts.length}</p>
-            )}
+            {content.relatedPosts && <p>Related posts: {content.relatedPosts.length}</p>}
           </div>
-        );
-      
+        )
+
       case 'story':
         return (
           <div>
             <h2>{content.title}</h2>
-            <p>Animal: {content.animalInfo.name} ({content.animalInfo.species})</p>
+            <p>
+              Animal: {content.animalInfo.name} ({content.animalInfo.species})
+            </p>
             <p>Status: {content.animalInfo.currentStatus}</p>
           </div>
-        );
-      
+        )
+
       case 'appeal':
         return (
           <div>
             <h2>{content.title}</h2>
             <p>Urgency: {content.urgencyLevel}</p>
-            <p>Goal: ${content.fundraisingGoal}</p>
-            <p>Raised: ${content.currentAmount}</p>
+            <p>Goal: {`$${content.fundraisingGoal}`}</p>
+            <p>Raised: {`$${content.currentAmount}`}</p>
           </div>
-        );
+        )
     }
-  };
+  }
 
   const getSensitivityColor = (level: ContentSensitivityLevel): string => {
     switch (level) {
       case 1:
-        return 'text-green-600';
+        return 'text-green-600'
       case 2:
-        return 'text-yellow-600';
+        return 'text-yellow-600'
       case 3:
-        return 'text-red-600';
+        return 'text-red-600'
       default:
-        return 'text-gray-600';
+        return 'text-gray-600'
     }
-  };
+  }
 
   return (
     <article className="p-4 border rounded-lg">
@@ -68,8 +68,11 @@ export function TestTypeSystem({ content, sensitivityLevel }: TestComponentProps
         Published: {content.publishedAt.toLocaleDateString()}
       </footer>
     </article>
-  );
+  )
 }
+
+const examplePublishedAt = new Date()
+const exampleUpdatedAt = new Date()
 
 // Example usage with proper typing
 export function ExampleUsage() {
@@ -79,8 +82,8 @@ export function ExampleUsage() {
     title: 'Animal Welfare Best Practices',
     excerpt: 'Learn about the latest in animal care...',
     content: '# Best Practices\n\nHere are some guidelines...',
-    publishedAt: new Date(),
-    updatedAt: new Date(),
+    publishedAt: examplePublishedAt,
+    updatedAt: exampleUpdatedAt,
     tags: ['education', 'welfare'],
     category: 'Education',
     featured: true,
@@ -91,20 +94,15 @@ export function ExampleUsage() {
       name: 'Dr. Sarah Johnson',
       email: 'sarah@animalfoundation.org',
       bio: 'Veterinarian and animal welfare expert',
-      role: 'Veterinarian'
+      role: 'Veterinarian',
     },
     seo: {
       title: 'Animal Welfare Best Practices | Animal Protection Foundation',
       description: 'Learn about the latest in animal care and welfare practices',
-      keywords: ['animal welfare', 'best practices', 'veterinary care']
+      keywords: ['animal welfare', 'best practices', 'veterinary care'],
     },
-    relatedPosts: ['2', '3']
-  };
+    relatedPosts: ['2', '3'],
+  }
 
-  return (
-    <TestTypeSystem 
-      content={blogPost} 
-      sensitivityLevel={1} 
-    />
-  );
+  return <TestTypeSystem content={blogPost} sensitivityLevel={1} />
 }

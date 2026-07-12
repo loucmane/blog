@@ -86,12 +86,13 @@
         "description": "Unify TypeScript and quality tooling, replace broken test scripts with meaningful unit/integration/browser foundations, and make all checks explicit.",
         "details": "Target the approved TypeScript transition, ESLint flat config, Prettier check, Vitest, Testing Library, Playwright, and axe. Do not weaken diagnostics or keep duplicate Jest/tooling versions after parity. Deliver as a separate reversible PR.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "38"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-12T21:39:19.429Z"
       },
       {
         "id": "40",
@@ -547,9 +548,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-12T10:43:30.270Z",
+      "lastModified": "2026-07-12T21:39:19.429Z",
       "taskCount": 35,
-      "completedCount": 16,
+      "completedCount": 17,
       "tags": [
         "master"
       ]

@@ -24,6 +24,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      baseline_ref: ${{ steps.resolve.outputs.baseline_ref }}
       checkout_ref: ${{ steps.resolve.outputs.checkout_ref }}
     steps:
       - name: Check out the event-defined trusted commit
@@ -47,7 +48,9 @@ jobs:
           CLIENT_REVIEWED_HEAD_SHA: ${{ github.event.client_payload.reviewed_head_sha }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           DISPATCH_ACTION: ${{ github.event.action }}
+          EVENT_BEFORE_SHA: ${{ github.event.before }}
           EVENT_NAME: ${{ github.event_name }}
+          EVENT_PULL_REQUEST_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           EVENT_SHA: ${{ github.sha }}
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
@@ -124,6 +127,41 @@ jobs:
             echo "The trusted verification commit is invalid."
             exit 1
           fi
+
+          case "$EVENT_NAME" in
+            pull_request)
+              BASELINE_REF="$EVENT_PULL_REQUEST_BASE_SHA"
+              if [ "$(git rev-parse "${CHECKOUT_REF}^1")" != "$BASELINE_REF" ]; then
+                echo "The pull-request base is not the trusted merge commit's first parent."
+                exit 1
+              fi
+              ;;
+            push)
+              BASELINE_REF="$EVENT_BEFORE_SHA"
+              ;;
+            repository_dispatch)
+              read -r -a MERGE_LINE <<< "$(git rev-list --parents -n 1 "$CHECKOUT_REF")"
+              if [ "${#MERGE_LINE[@]}" -ne 2 ]; then
+                echo "The controlled squash merge must have exactly one parent."
+                exit 1
+              fi
+              BASELINE_REF="${MERGE_LINE[1]}"
+              ;;
+            *)
+              echo "No accessibility predecessor contract exists for event: $EVENT_NAME"
+              exit 1
+              ;;
+          esac
+          if ! [[ "$BASELINE_REF" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]]; then
+            echo "The trusted accessibility baseline commit is invalid."
+            exit 1
+          fi
+          if ! git cat-file -e "${BASELINE_REF}^{commit}" || \
+            ! git merge-base --is-ancestor "$BASELINE_REF" "$CHECKOUT_REF"; then
+            echo "The trusted accessibility baseline commit is not an ancestor of the verification commit."
+            exit 1
+          fi
+          echo "baseline_ref=$BASELINE_REF" >> "$GITHUB_OUTPUT"
           echo "checkout_ref=$CHECKOUT_REF" >> "$GITHUB_OUTPUT"
 
   workspace:
@@ -213,7 +251,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           {
             pnpm test:security-hotfix
             pnpm security:audit
@@ -228,23 +266,27 @@ jobs:
           set -o pipefail
           pnpm lint 2>&1 | tee ci-artifacts/lint.log
 
-      - name: Unit and integration tests - unsupported baseline contract
+      - name: Formatting
+        id: format
+        if: always() && steps.install.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm format:check 2>&1 | tee ci-artifacts/format.log
+
+      - name: Unit and integration tests
         id: unit_tests
         if: always() && steps.install.outcome == 'success'
         continue-on-error: true
         shell: bash
         run: |
-          set -o pipefail
-          pnpm test:capability unit 2>&1 | tee ci-artifacts/unit-test-capability.log
-
-      - name: Playwright and accessibility - unsupported baseline contract
-        id: browser_tests
-        if: always() && steps.install.outcome == 'success'
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          pnpm test:capability browser 2>&1 | tee ci-artifacts/browser-test-capability.log
+          set -euo pipefail
+          {
+            pnpm test:capability unit
+            pnpm test:quality-contract
+            pnpm test:coverage
+          } 2>&1 | tee ci-artifacts/unit-tests.log
 
       - name: Package and application builds
         id: build
@@ -254,6 +296,48 @@ jobs:
         run: |
           set -o pipefail
           pnpm build 2>&1 | tee ci-artifacts/build.log
+
+      - name: Install Playwright Chromium
+        id: browser_install
+        if: always() && steps.install.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test:browser:install 2>&1 | tee ci-artifacts/playwright-install.log
+
+      - name: Accessibility baseline ratchet
+        id: accessibility_baseline
+        if: always() && steps.install.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          BASE_REF: ${{ needs.context.outputs.baseline_ref }}
+          BOOTSTRAP_SHA256: df66af610eae6e9ea87f88aa7e012989463fe188667964e8cd6822e25c17dd9d
+          HEAD_REF: ${{ needs.context.outputs.checkout_ref }}
+        run: |
+          set -euo pipefail
+          node scripts/ci/check-accessibility-baseline.mjs \
+            --base-ref "$BASE_REF" \
+            --bootstrap-sha256 "$BOOTSTRAP_SHA256" \
+            --head-ref "$HEAD_REF" \
+            2>&1 | tee ci-artifacts/accessibility-baseline.log
+
+      - name: Playwright and accessibility
+        id: browser_tests
+        if: >-
+          always() &&
+          steps.build.outcome == 'success' &&
+          steps.browser_install.outcome == 'success' &&
+          steps.accessibility_baseline.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            pnpm test:capability browser
+            pnpm test:browser
+          } 2>&1 | tee ci-artifacts/browser-tests.log
 
       - name: Production web smoke
         id: production_smoke
@@ -274,13 +358,16 @@ jobs:
           DEPENDENCY_SECURITY: ${{ steps.dependency_security.outcome }}
           TYPECHECK: ${{ steps.typecheck.outcome }}
           LINT: ${{ steps.lint.outcome }}
+          FORMAT: ${{ steps.format.outcome }}
           UNIT_TESTS: ${{ steps.unit_tests.outcome }}
+          BROWSER_INSTALL: ${{ steps.browser_install.outcome }}
+          ACCESSIBILITY_BASELINE: ${{ steps.accessibility_baseline.outcome }}
           BROWSER_TESTS: ${{ steps.browser_tests.outcome }}
           BUILD: ${{ steps.build.outcome }}
           PRODUCTION_SMOKE: ${{ steps.production_smoke.outcome }}
         run: |
           failed=0
-          for stage in RUNTIME_BOOTSTRAP RUNTIME_CONTRACT INSTALL DEPENDENCY_SECURITY TYPECHECK LINT UNIT_TESTS BROWSER_TESTS BUILD PRODUCTION_SMOKE; do
+          for stage in RUNTIME_BOOTSTRAP RUNTIME_CONTRACT INSTALL DEPENDENCY_SECURITY TYPECHECK LINT FORMAT UNIT_TESTS BUILD BROWSER_INSTALL ACCESSIBILITY_BASELINE BROWSER_TESTS PRODUCTION_SMOKE; do
             value="${!stage}"
             printf '%s=%s\n' "$stage" "$value"
             if [ "$value" != "success" ]; then

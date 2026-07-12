@@ -2,9 +2,9 @@
 
 **Title:** Modernize TypeScript Lint Formatting and Tests
 
-**Status:** pending
+**Status:** done
 
-**Dependencies:** 38
+**Dependencies:** 38 ✓
 
 **Priority:** high
 

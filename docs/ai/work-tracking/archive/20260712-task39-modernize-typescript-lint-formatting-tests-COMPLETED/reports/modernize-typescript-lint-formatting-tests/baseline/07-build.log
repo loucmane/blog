@@ -1,0 +1,8 @@
+$ pnpm -r build
+Scope: 3 of 4 workspace projects
+packages/backend build$ babel src -d dist
+packages/ui build$ pnpm build:types && pnpm build:js
+packages/backend build: Done
+packages/ui build: Done
+packages/web build$ next build
+packages/web build: Done

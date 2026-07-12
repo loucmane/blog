@@ -1,0 +1,9 @@
+$ pnpm -r test
+Scope: 3 of 4 workspace projects
+packages/backend test$ jest
+packages/ui test$ jest
+packages/ui test: sh: 1: jest: not found
+/home/loucmane/dev/blog/packages/ui:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @minniewinnie/ui@0.1.0 test: `jest`
+spawn ENOENT
+[ELIFECYCLE] Test failed. See above for more details.

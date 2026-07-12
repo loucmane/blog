@@ -1,1 +1,15 @@
 config/agent-skills/*.yaml
+.aegis/
+.codex/
+.git/
+.next/
+.plan_state/
+.taskmaster/
+ci-artifacts/
+coverage/
+dist/
+docs/ai/work-tracking/
+node_modules/
+plans/
+reports/
+sessions/

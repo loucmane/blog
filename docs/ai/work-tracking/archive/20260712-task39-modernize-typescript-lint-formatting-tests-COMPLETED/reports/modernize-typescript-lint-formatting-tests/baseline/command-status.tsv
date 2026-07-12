@@ -1,0 +1,11 @@
+01-frozen-install	0
+02-typecheck	0
+03-lint	0
+04-root-test	1
+05-unit-capability	0
+06-browser-capability	0
+07-build	0
+08-production-smoke	1
+09-dependency-audit	1
+08-production-smoke-unsandboxed	0
+09-dependency-audit-unsandboxed	0

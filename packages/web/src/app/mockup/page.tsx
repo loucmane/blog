@@ -21,12 +21,13 @@ export default function HomepageMockup() {
       <section className="relative h-[70vh] flex items-center justify-center bg-gradient-to-b from-background to-muted">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Stories of Hope.<br />
+            Stories of Hope.
+            <br />
             <span className="text-primary">Actions that Matter.</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Follow our journey rescuing and rehabilitating animals worldwide. 
-            Every story shared brings us closer to a more compassionate world.
+            Follow our journey rescuing and rehabilitating animals worldwide. Every story shared
+            brings us closer to a more compassionate world.
           </p>
           <div className="flex gap-4 justify-center">
             <Button size="lg" asChild>
@@ -65,7 +66,7 @@ export default function HomepageMockup() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             Recent Stories from the Field
           </h2>
-          
+
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {/* Story Card 1 */}
             <Card className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -147,9 +148,9 @@ export default function HomepageMockup() {
             Get weekly updates from the field and learn how you can help make a difference
           </p>
           <div className="flex gap-4 max-w-md mx-auto">
-            <input 
-              type="email" 
-              placeholder="Your email address" 
+            <input
+              type="email"
+              placeholder="Your email address"
               className="flex-1 px-4 py-2 rounded-md border bg-background"
             />
             <Button>Subscribe</Button>
@@ -163,10 +164,8 @@ export default function HomepageMockup() {
       {/* Ways to Help */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Ways You Can Help
-          </h2>
-          
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Ways You Can Help</h2>
+
           <div className="grid gap-8 md:grid-cols-3">
             <Card className="text-center">
               <CardHeader>

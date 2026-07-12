@@ -33,6 +33,7 @@ backend/
 ## API Endpoints
 
 ### Newsletter Management
+
 ```
 POST   /api/v1/newsletter/subscribe
 DELETE /api/v1/newsletter/unsubscribe
@@ -40,6 +41,7 @@ GET    /api/v1/newsletter/segments
 ```
 
 ### Donation Webhooks
+
 ```
 POST   /api/v1/donations/stripe-webhook
 POST   /api/v1/donations/paypal-webhook
@@ -47,6 +49,7 @@ GET    /api/v1/donations/summary
 ```
 
 ### Content Approval
+
 ```
 GET    /api/v1/content/pending
 POST   /api/v1/content/approve/:id
@@ -55,6 +58,7 @@ GET    /api/v1/content/metrics
 ```
 
 ### Analytics
+
 ```
 POST   /api/v1/analytics/event
 GET    /api/v1/analytics/report
@@ -62,6 +66,7 @@ GET    /api/v1/analytics/real-time
 ```
 
 ### Emergency Alerts
+
 ```
 POST   /api/v1/emergency/create
 POST   /api/v1/emergency/notify
@@ -71,18 +76,21 @@ GET    /api/v1/emergency/active
 ## Services
 
 ### Email Service
+
 - Newsletter subscription management
 - Transactional emails
 - Emergency appeal notifications
 - Donor acknowledgments
 
 ### CRM Service
+
 - Donor profile management
 - Giving history tracking
 - Segmentation for campaigns
 - Impact report generation
 
 ### Notification Service
+
 - Push notifications for emergencies
 - SMS alerts for field teams
 - Slack/Discord webhooks
@@ -104,7 +112,7 @@ pnpm build
 pnpm test
 
 # Type checking
-pnpm type-check
+pnpm typecheck
 ```
 
 ## Environment Variables
@@ -142,6 +150,7 @@ RATE_LIMIT_MAX=
 ## Deployment
 
 Deployed as Vercel Functions:
+
 - Automatic scaling
 - Global edge network
 - Zero configuration
@@ -158,17 +167,20 @@ Deployed as Vercel Functions:
 ## Integrations
 
 ### Payment Processors
+
 - Stripe (primary)
 - PayPal (secondary)
 - Regional payment methods
 
 ### Communication
+
 - ConvertKit (newsletters)
 - SendGrid (transactional)
 - Twilio (SMS)
 - Slack (internal)
 
 ### Analytics
+
 - Google Analytics
 - Vercel Analytics
 - Custom event tracking
@@ -176,6 +188,7 @@ Deployed as Vercel Functions:
 ## Error Handling
 
 Standardized error responses:
+
 ```json
 {
   "error": {

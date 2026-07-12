@@ -1,0 +1,166 @@
+{
+  "ownerTask": "41",
+  "reason": "Task 39 discovered pre-existing color-contrast defects in the legacy design-system demonstration. Task 41 owns their visual and accessible remediation.",
+  "removalCriteria": "Remove each entry only when Task 41 proves the corresponding contrast defect is fixed on both configured viewports.",
+  "projects": {
+    "desktop-chromium": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-adopted > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-adopted > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-pending > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-pending > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-coral-500"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-donate > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-donate > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-emergency > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-emergency > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-orange-500"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-yellow-500"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".p-6.bg-muted.border:nth-child(1) > .text-secondary.text-2xl.font-semibold"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".p-6.bg-muted.border:nth-child(2) > .text-secondary.text-2xl.font-semibold"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".space-y-2:nth-child(1) > .bg-teal-500.text-white.high-contrast\\:text-black"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".text-yellow-700"]
+      }
+    ],
+    "mobile-chromium": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-adopted > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-adopted > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-pending > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-adoption-pending > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-coral-500"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-donate > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-donate > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-emergency > .mb-2"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-emergency > p"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-orange-500"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".bg-yellow-500"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".p-6.bg-muted.border:nth-child(1) > .text-secondary.text-2xl.font-semibold"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".p-6.bg-muted.border:nth-child(2) > .text-secondary.text-2xl.font-semibold"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".space-y-2:nth-child(1) > .bg-teal-500.text-white.high-contrast\\:text-black"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".text-yellow-700"]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "target": [".xs\\:bg-yellow-500"]
+      }
+    ]
+  }
+}

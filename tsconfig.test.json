@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "incremental": false,
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./packages/web/src/*"],
+      "@minniewinnie/ui": ["./packages/ui/src/index.ts"],
+      "@minniewinnie/ui/*": ["./packages/ui/src/*"]
+    },
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": [
+    "*.config.ts",
+    "packages/**/*.js",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
+  ],
+  "exclude": ["node_modules", "**/dist", "**/.next", "coverage", "ci-artifacts"]
+}
