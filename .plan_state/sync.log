@@ -664,5 +664,11 @@
     "plan_hash": "c835556d8bbf831d9e57a2a45e49ff13468217565a65cd32422cce3174073b66",
     "tracker_hash": "d29a061fd6072956b5f8427231c9a5c1c3fd60cf8c954e4740356e46332b593b",
     "synced_at": "2026-07-13T01:43:06.524592+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task68-repair-task39-capability-script-contract.md",
+    "plan_hash": "c835556d8bbf831d9e57a2a45e49ff13468217565a65cd32422cce3174073b66",
+    "tracker_hash": "44b042b0ff42d55d8b773ef9b4e72cb0ecea861c5ca89a2f157e6516e502cc4a",
+    "synced_at": "2026-07-13T01:49:55.566704+02:00"
   }
 ]

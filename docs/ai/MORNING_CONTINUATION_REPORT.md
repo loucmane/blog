@@ -13,7 +13,7 @@
 - Goal: Tasks 38 and 39 are merged; deliver the narrowly scoped Task 68 regression repair required to make the Task 39 root capability command genuinely executable.
 - Base: synchronized main commit `afd47eb54b67e0c7a77565ac9b9548e4a55cc55e`, the protected squash merge of PR #30.
 - Task/branch: Task 68 `done` and archived on `feat/task-68-repair-task39-capability-script-contract`.
-- Pull request: not opened yet; commit, push, hosted checks, and trusted-policy classification remain.
+- Pull request: `https://github.com/loucmane/blog/pull/31`; implementation head `ec87bbf60234f9dc19a8e0f5e3b4270e6fbf6988` passed all protected checks before this evidence-only continuity update.
 - User-owned `.codex/hooks.json` remains untracked and must not be inspected, staged, moved, hidden, deleted, or overwritten.
 
 ## Delivered Work
@@ -34,6 +34,8 @@
 - Strict Aegis verification recorded 31 checks, zero required failures, one expected advisory warning, and one unsupported optional integration; enforcement remained advisory.
 - Independent implementation/completeness reviewer `019f5825-0ec0-72f2-b193-f2a09992dfee`: PASS with no blocking findings.
 - Independent adversarial security/scope reviewer `019f5825-160e-79a2-aaa3-0fa86f1b22e7`: PASS with no blocking findings.
+- GitHub reported PR #31 `CLEAN` and `MERGEABLE`, with all four required checks successful, zero labels, zero reviews, zero review threads, and an exact 19-path Task 68 inventory at implementation head `ec87bbf60234f9dc19a8e0f5e3b4270e6fbf6988`.
+- The trusted delivery classifier denied autonomous merge only as `ci-governance` for `scripts/ci/check-test-capability.mjs` and `tests/ci/test-capability.test.mjs`.
 - Verification evidence: `docs/ai/work-tracking/archive/20260713-task68-repair-task39-capability-script-contract-COMPLETED/reports/repair-task39-capability-script-contract/task-verification.md`.
 
 ## Scope And Risks
@@ -45,6 +47,6 @@
 
 ## Next Safe Action
 
-Obtain two independent read-only reviews, stage only the Task 68 inventory, create a signed task-scoped commit, push, open the protected PR, and wait for all hosted checks. Apply only the trusted delivery policy; stop at an attended merge boundary if the verification-script or governance paths are denied.
+Push this evidence-only continuity follow-up, require the four protected checks to pass on the resulting exact PR head, and revalidate mergeability, labels, review threads, and inventory. Because the trusted policy classifies the verification-script paths as `ci-governance`, stop at the attended protected squash-merge boundary and request exact-head approval.
 
 This report is a continuity pointer, not an independent grant or an expansion of authority.
