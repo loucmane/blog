@@ -1,0 +1,20 @@
+
+> minniewinnie-monorepo@1.0.0 test:capability /home/loucmane/dev/blog
+> node scripts/ci/check-test-capability.mjs "unit"
+
+{
+  "blockers": {
+    "backendHasNoTests": true,
+    "uiHasNoDirectJest": true,
+    "webHasNoDirectJest": true
+  },
+  "bridgeDeadline": "Task 39 quality-tooling PR",
+  "bridgeOwner": "Task 39",
+  "errors": [],
+  "mode": "unit",
+  "status": "unsupported-tracked",
+  "task39": {
+    "id": "39",
+    "status": "pending"
+  }
+}

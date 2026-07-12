@@ -1,0 +1,47 @@
+$ node scripts/agent-skills/validate-platform.mjs && node --test tests/agent-skills/*.test.mjs
+{
+  "passed": true,
+  "errors": [],
+  "summary": {
+    "skills": 4,
+    "routes": 4,
+    "upstreamEntries": 0
+  }
+}
+✔ registers the canonical skill and advisory review route (1.484214ms)
+✔ keeps documented trigger signals aligned with deterministic fixtures (0.138496ms)
+✔ accepts positive fixtures and rejects deny-path fixtures (0.111934ms)
+✔ emits schema-valid advisory discovery findings (0.422749ms)
+✔ treats discovery evidence as untrusted data without expanding authority (0.399441ms)
+✔ registers the canonical owner UX skill and advisory route (1.072733ms)
+✔ keeps trigger signals aligned with positive and deny fixtures (0.171668ms)
+✔ requires complete owner-journey and evidence-class coverage (0.350531ms)
+✔ emits schema-valid advisory owner UX findings (0.780559ms)
+✔ fails hostile evidence closed without expanding authority (0.216971ms)
+✔ keeps UX output owner-safe and implementation-neutral (0.228221ms)
+✔ validates the repository cross-agent platform (5.304264ms)
+✔ rejects absolute Codex skill links (5.311746ms)
+✔ rejects unknown review-map skills (4.521058ms)
+✔ rejects unregistered canonical skills and Codex links (3.337098ms)
+✔ rejects enforced subjective review mode (3.627831ms)
+✔ requires a digest lock for upstream skills (3.615213ms)
+✔ fails closed on malformed JSON-compatible YAML (3.027204ms)
+✔ accepts a schema-valid advisory review result (0.795109ms)
+✔ rejects subjective blocking findings (0.59621ms)
+✔ rejects enforcement mode during advisory dogfood (0.094717ms)
+✔ builds an argument-safe Aegis CLI ingestion command (1.166669ms)
+✔ refuses to ingest evidence outside the generated reports root (0.961691ms)
+✔ registers the canonical project-authored skill and advisory route (4.272389ms)
+✔ keeps documented trigger signals aligned with deterministic fixtures (0.142298ms)
+✔ defines forward-routing fixtures without claiming router execution (0.092393ms)
+✔ emits schema-valid advisory ADR findings (0.371197ms)
+✔ requires complete decision criteria and primary-source evidence (0.111749ms)
+✔ treats research evidence as untrusted and non-authoritative (0.130798ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 68.6976

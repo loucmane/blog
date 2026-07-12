@@ -1,0 +1,5 @@
+$ python3 scripts/ci/check-aegis.py
+{
+  "passed": true,
+  "problems": []
+}

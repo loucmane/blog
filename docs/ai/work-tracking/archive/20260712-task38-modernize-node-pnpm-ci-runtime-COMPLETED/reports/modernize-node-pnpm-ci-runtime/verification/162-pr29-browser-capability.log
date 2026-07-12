@@ -1,0 +1,16 @@
+{
+  "blockers": {
+    "noPlaywrightConfig": true,
+    "noBrowserScripts": true,
+    "noDirectBrowserDependencies": true
+  },
+  "bridgeDeadline": "Task 39 quality-tooling PR",
+  "bridgeOwner": "Task 39",
+  "errors": [],
+  "mode": "browser",
+  "status": "unsupported-tracked",
+  "task39": {
+    "id": "39",
+    "status": "pending"
+  }
+}

@@ -1,0 +1,26 @@
+
+> minniewinnie-monorepo@1.0.0 security:audit /home/loucmane/dev/blog
+> node scripts/ci/check-dependency-security.mjs
+
+{
+  "advisories": [],
+  "counts": {
+    "critical": 0,
+    "high": 0,
+    "moderate": 0,
+    "low": 0,
+    "info": 0
+  },
+  "total": 0,
+  "auditExitCode": 0,
+  "errors": [],
+  "policy": {
+    "critical": 0,
+    "high": 0,
+    "info": 0,
+    "low": 0,
+    "moderate": 0
+  },
+  "status": "passed",
+  "generatedAt": "2026-07-12T00:10:29.519Z"
+}

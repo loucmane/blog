@@ -1,0 +1,21 @@
+02-typecheck	0	pnpm typecheck
+03-lint	0	pnpm lint
+04-unit-capability	0	pnpm test:capability unit
+05-browser-capability	0	pnpm test:capability browser
+06-build	0	pnpm build
+07-production-smoke	1	pnpm test:smoke:web
+08-security-hotfix	0	pnpm test:security-hotfix
+09-dependency-audit	1	pnpm security:audit
+10-auto-merge-contracts	0	pnpm ci:auto-merge-policy
+11-agent-skills	0	pnpm ci:agent-skills
+12-taskmaster-health	0	env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/home/loucmane/codex python3 scripts/codex-task taskmaster health
+13-taskmaster-dependencies	0	task-master validate-dependencies --tag master
+14-legacy-guard	1	env PYTHONDONTWRITEBYTECODE=1 pnpm ci:guard
+15-actionlint	0	/tmp/actionlint-v1.7.12/actionlint .github/workflows/ci.yml .github/workflows/auto-merge.yml
+16-aegis-capsule	0	env PYTHONDONTWRITEBYTECODE=1 python3 scripts/ci/check-aegis.py
+17-aegis-ci-witness	0	env PYTHONDONTWRITEBYTECODE=1 python3 scripts/ci/check-aegis.py --witness --base origin/main
+18-diff-check	0	git diff --check
+19-aegis-strict	0	./.aegis/bin/aegis verify --strict --target-dir .
+20-actionlint-checksum	0	checksum-verify actionlint 1.7.12
+21-gitleaks-checksum	0	checksum-verify gitleaks 8.30.1
+22-gitleaks-full-history	0	gitleaks git --log-opts=--all

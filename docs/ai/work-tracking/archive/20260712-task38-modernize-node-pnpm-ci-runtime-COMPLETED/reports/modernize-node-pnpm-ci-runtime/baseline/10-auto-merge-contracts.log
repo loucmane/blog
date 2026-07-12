@@ -1,0 +1,692 @@
+
+> minniewinnie-monorepo@1.0.0 ci:auto-merge-policy /home/loucmane/dev/blog
+> node tests/ci/auto-merge-policy.test.mjs && node tests/ci/auto-merge-workflow.test.mjs
+
+TAP version 13
+# Subtest: allows a documentation-only pull request without an opt-in label
+ok 1 - allows a documentation-only pull request without an opt-in label
+  ---
+  duration_ms: 1.326197
+  type: 'test'
+  ...
+# Subtest: allows cataloged domain-skill paths while protecting the control skill
+ok 2 - allows cataloged domain-skill paths while protecting the control skill
+  ---
+  duration_ms: 0.260787
+  type: 'test'
+  ...
+# Subtest: allows PR \#19 exact verification-only manifest timestamp delta
+ok 3 - allows PR \#19 exact verification-only manifest timestamp delta
+  ---
+  duration_ms: 1.65358
+  type: 'test'
+  ...
+# Subtest: allows only unique regular 100644 blobs for base and head
+ok 4 - allows only unique regular 100644 blobs for base and head
+  ---
+  duration_ms: 0.109048
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: regular file becomes symlink
+ok 5 - denies manifest object fixture: regular file becomes symlink
+  ---
+  duration_ms: 0.559117
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: executable bit is added
+ok 6 - denies manifest object fixture: executable bit is added
+  ---
+  duration_ms: 0.530477
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: manifest blob is missing
+ok 7 - denies manifest object fixture: manifest blob is missing
+  ---
+  duration_ms: 0.450161
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: manifest object has wrong type
+ok 8 - denies manifest object fixture: manifest object has wrong type
+  ---
+  duration_ms: 0.823277
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: manifest entry is ambiguous
+ok 9 - denies manifest object fixture: manifest entry is ambiguous
+  ---
+  duration_ms: 0.575642
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: aegis tree entry is missing
+ok 10 - denies manifest object fixture: aegis tree entry is missing
+  ---
+  duration_ms: 0.520847
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: root tree response is truncated
+ok 11 - denies manifest object fixture: root tree response is truncated
+  ---
+  duration_ms: 0.7935
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: manifest tree response is truncated
+ok 12 - denies manifest object fixture: manifest tree response is truncated
+  ---
+  duration_ms: 0.458249
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: manifest entry is a submodule
+ok 13 - denies manifest object fixture: manifest entry is a submodule
+  ---
+  duration_ms: 0.429278
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: head revision evidence is missing
+ok 14 - denies manifest object fixture: head revision evidence is missing
+  ---
+  duration_ms: 0.371631
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: head revision evidence is duplicated
+ok 15 - denies manifest object fixture: head revision evidence is duplicated
+  ---
+  duration_ms: 0.649438
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: manifest path is unexpected
+ok 16 - denies manifest object fixture: manifest path is unexpected
+  ---
+  duration_ms: 0.43844
+  type: 'test'
+  ...
+# Subtest: denies manifest object fixture: head object evidence has malformed shape
+ok 17 - denies manifest object fixture: head object evidence has malformed shape
+  ---
+  duration_ms: 0.377858
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: malformed base JSON
+ok 18 - denies PR \#19 manifest fixture: malformed base JSON
+  ---
+  duration_ms: 0.187907
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: malformed head JSON
+ok 19 - denies PR \#19 manifest fixture: malformed head JSON
+  ---
+  duration_ms: 0.15304
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: missing base content
+ok 20 - denies PR \#19 manifest fixture: missing base content
+  ---
+  duration_ms: 0.093375
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: missing head content
+ok 21 - denies PR \#19 manifest fixture: missing head content
+  ---
+  duration_ms: 0.116293
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: invalid calendar timestamp
+ok 22 - denies PR \#19 manifest fixture: invalid calendar timestamp
+  ---
+  duration_ms: 0.201552
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: timestamp plus runtime source change
+ok 23 - denies PR \#19 manifest fixture: timestamp plus runtime source change
+  ---
+  duration_ms: 0.587729
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: managed asset checksum change
+ok 24 - denies PR \#19 manifest fixture: managed asset checksum change
+  ---
+  duration_ms: 0.375062
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: enforcement field addition
+ok 25 - denies PR \#19 manifest fixture: enforcement field addition
+  ---
+  duration_ms: 0.467245
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: authority field addition
+ok 26 - denies PR \#19 manifest fixture: authority field addition
+  ---
+  duration_ms: 0.455378
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: verification report-list change
+ok 27 - denies PR \#19 manifest fixture: verification report-list change
+  ---
+  duration_ms: 0.523534
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: verification status change
+ok 28 - denies PR \#19 manifest fixture: verification status change
+  ---
+  duration_ms: 0.332629
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: field deletion
+ok 29 - denies PR \#19 manifest fixture: field deletion
+  ---
+  duration_ms: 0.399446
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: timestamp deletion
+ok 30 - denies PR \#19 manifest fixture: timestamp deletion
+  ---
+  duration_ms: 0.140706
+  type: 'test'
+  ...
+# Subtest: denies PR \#19 manifest fixture: extra nested field
+ok 31 - denies PR \#19 manifest fixture: extra nested field
+  ---
+  duration_ms: 0.462623
+  type: 'test'
+  ...
+# Subtest: allows current time and the exact five-minute skew boundary
+ok 32 - allows current time and the exact five-minute skew boundary
+  ---
+  duration_ms: 0.754085
+  type: 'test'
+  ...
+# Subtest: denies timestamp beyond the five-minute boundary
+ok 33 - denies timestamp beyond the five-minute boundary
+  ---
+  duration_ms: 0.122703
+  type: 'test'
+  ...
+# Subtest: denies year-9999 timestamp
+ok 34 - denies year-9999 timestamp
+  ---
+  duration_ms: 0.071064
+  type: 'test'
+  ...
+# Subtest: denies already-future base timestamp
+ok 35 - denies already-future base timestamp
+  ---
+  duration_ms: 0.064956
+  type: 'test'
+  ...
+# Subtest: denies equal timestamp
+ok 36 - denies equal timestamp
+  ---
+  duration_ms: 0.144658
+  type: 'test'
+  ...
+# Subtest: fails closed without a valid trusted evaluation time
+ok 37 - fails closed without a valid trusted evaluation time
+  ---
+  duration_ms: 0.128306
+  type: 'test'
+  ...
+# Subtest: denies foundation-manifest changes without trusted semantic evidence
+ok 38 - denies foundation-manifest changes without trusted semantic evidence
+  ---
+  duration_ms: 0.085911
+  type: 'test'
+  ...
+# Subtest: denies any additional foundation-manifest semantic change
+ok 39 - denies any additional foundation-manifest semantic change
+  ---
+  duration_ms: 0.463357
+  type: 'test'
+  ...
+# Subtest: denies stale timestamps and non-modified foundation-manifest paths
+ok 40 - denies stale timestamps and non-modified foundation-manifest paths
+  ---
+  duration_ms: 0.578422
+  type: 'test'
+  ...
+# Subtest: keeps every other Aegis path denied beside a verified timestamp change
+ok 41 - keeps every other Aegis path denied beside a verified timestamp change
+  ---
+  duration_ms: 0.379372
+  type: 'test'
+  ...
+# Subtest: denies workflow-permissions path .github/workflows/release.yml
+ok 42 - denies workflow-permissions path .github/workflows/release.yml
+  ---
+  duration_ms: 0.077776
+  type: 'test'
+  ...
+# Subtest: denies ci-governance path scripts/ci/auto-merge-policy.mjs
+ok 43 - denies ci-governance path scripts/ci/auto-merge-policy.mjs
+  ---
+  duration_ms: 0.18577
+  type: 'test'
+  ...
+# Subtest: denies ci-governance path config/ci/verification-capabilities.json
+ok 44 - denies ci-governance path config/ci/verification-capabilities.json
+  ---
+  duration_ms: 0.045303
+  type: 'test'
+  ...
+# Subtest: denies ci-governance path packages/web/tsconfig.json
+ok 45 - denies ci-governance path packages/web/tsconfig.json
+  ---
+  duration_ms: 0.033602
+  type: 'test'
+  ...
+# Subtest: denies secret-material path config/secrets/production.json
+ok 46 - denies secret-material path config/secrets/production.json
+  ---
+  duration_ms: 0.018919
+  type: 'test'
+  ...
+# Subtest: denies production-deployment path infra/production/main.tf
+ok 47 - denies production-deployment path infra/production/main.tf
+  ---
+  duration_ms: 0.016984
+  type: 'test'
+  ...
+# Subtest: denies migration path database/migrations/0001_drop_table.sql
+ok 48 - denies migration path database/migrations/0001_drop_table.sql
+  ---
+  duration_ms: 0.100813
+  type: 'test'
+  ...
+# Subtest: denies destructive-operation path scripts/ops/destroy-preview.sh
+ok 49 - denies destructive-operation path scripts/ops/destroy-preview.sh
+  ---
+  duration_ms: 0.022449
+  type: 'test'
+  ...
+# Subtest: denies branch-protection path config/branch-protection.json
+ok 50 - denies branch-protection path config/branch-protection.json
+  ---
+  duration_ms: 0.017983
+  type: 'test'
+  ...
+# Subtest: denies aegis-retirement path .aegis/contract.md
+ok 51 - denies aegis-retirement path .aegis/contract.md
+  ---
+  duration_ms: 0.02067
+  type: 'test'
+  ...
+# Subtest: denies aegis-retirement path docs/ai/AEGIS_AUTONOMY_GRANT.md
+ok 52 - denies aegis-retirement path docs/ai/AEGIS_AUTONOMY_GRANT.md
+  ---
+  duration_ms: 0.021909
+  type: 'test'
+  ...
+# Subtest: denies changes to workflow and CI enforcement surfaces
+ok 53 - denies changes to workflow and CI enforcement surfaces
+  ---
+  duration_ms: 0.07994
+  type: 'test'
+  ...
+# Subtest: deny labels override otherwise safe paths
+ok 54 - deny labels override otherwise safe paths
+  ---
+  duration_ms: 0.048595
+  type: 'test'
+  ...
+# Subtest: fails closed when the file list is empty or malformed
+ok 55 - fails closed when the file list is empty or malformed
+  ---
+  duration_ms: 0.037729
+  type: 'test'
+  ...
+# Subtest: fails closed unless the caller proves the file inventory is complete
+ok 56 - fails closed unless the caller proves the file inventory is complete
+  ---
+  duration_ms: 0.103757
+  type: 'test'
+  ...
+# Subtest: requires real applicable test capabilities for behavior-changing paths
+ok 57 - requires real applicable test capabilities for behavior-changing paths
+  ---
+  duration_ms: 0.14939
+  type: 'test'
+  ...
+# Subtest: fails closed when a test file is removed
+ok 58 - fails closed when a test file is removed
+  ---
+  duration_ms: 0.116293
+  type: 'test'
+  ...
+# Subtest: classifies both sides of a rename and denies missing rename provenance
+ok 59 - classifies both sides of a rename and denies missing rename provenance
+  ---
+  duration_ms: 0.107159
+  type: 'test'
+  ...
+# Subtest: allows dependency-only manifest changes only when scripts remain trusted
+ok 60 - allows dependency-only manifest changes only when scripts remain trusted
+  ---
+  duration_ms: 0.227918
+  type: 'test'
+  ...
+# Subtest: allows only when every exact required check is green from GitHub Actions
+ok 61 - allows only when every exact required check is green from GitHub Actions
+  ---
+  duration_ms: 0.187632
+  type: 'test'
+  ...
+# Subtest: defers when a required check is missing or pending
+ok 62 - defers when a required check is missing or pending
+  ---
+  duration_ms: 0.082196
+  type: 'test'
+  ...
+# Subtest: denies failed checks and checks from an unexpected app
+ok 63 - denies failed checks and checks from an unexpected app
+  ---
+  duration_ms: 0.107553
+  type: 'test'
+  ...
+# Subtest: uses the newest duplicate check run instead of a stale success
+ok 64 - uses the newest duplicate check run instead of a stale success
+  ---
+  duration_ms: 0.079767
+  type: 'test'
+  ...
+# Subtest: flattens paginated check-run responses
+ok 65 - flattens paginated check-run responses
+  ---
+  duration_ms: 0.043661
+  type: 'test'
+  ...
+1..65
+# tests 65
+# suites 0
+# pass 65
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 31.697469
+TAP version 13
+# Subtest: handles CI completion and pull-request eligibility state changes
+ok 1 - handles CI completion and pull-request eligibility state changes
+  ---
+  duration_ms: 0.711937
+  type: 'test'
+  ...
+# Subtest: grants write access only to contents and pull requests in the merge job
+ok 2 - grants write access only to contents and pull requests in the merge job
+  ---
+  duration_ms: 0.181029
+  type: 'test'
+  ...
+# Subtest: executes trusted default-branch policy instead of pull-request code
+ok 3 - executes trusted default-branch policy instead of pull-request code
+  ---
+  duration_ms: 0.080207
+  type: 'test'
+  ...
+# Subtest: never checks out or fetches a pull-request head or merge ref
+ok 4 - never checks out or fetches a pull-request head or merge ref
+  ---
+  duration_ms: 0.107269
+  type: 'test'
+  ...
+# Subtest: never downloads pull-request artifacts into the privileged job
+ok 5 - never downloads pull-request artifacts into the privileged job
+  ---
+  duration_ms: 0.137816
+  type: 'test'
+  ...
+# Subtest: executes no pull-request-controlled package or script surface
+ok 6 - executes no pull-request-controlled package or script surface
+  ---
+  duration_ms: 1.066795
+  type: 'test'
+  ...
+# Subtest: allows only trusted semantic verification of the Aegis manifest timestamp
+ok 7 - allows only trusted semantic verification of the Aegis manifest timestamp
+  ---
+  duration_ms: 0.142412
+  type: 'test'
+  ...
+# Subtest: proves a unique regular manifest blob before semantic allowance
+ok 8 - proves a unique regular manifest blob before semantic allowance
+  ---
+  duration_ms: 0.156405
+  type: 'test'
+  ...
+# Subtest: binds timestamp evaluation to trusted CLI runner time with five-minute skew
+ok 9 - binds timestamp evaluation to trusted CLI runner time with five-minute skew
+  ---
+  duration_ms: 0.152352
+  type: 'test'
+  ...
+# Subtest: fails closed unless the privileged trigger and API identifiers are valid
+ok 10 - fails closed unless the privileged trigger and API identifiers are valid
+  ---
+  duration_ms: 0.202727
+  type: 'test'
+  ...
+# Subtest: directly inspects check runs and excludes its own check
+ok 11 - directly inspects check runs and excludes its own check
+  ---
+  duration_ms: 0.081674
+  type: 'test'
+  ...
+# Subtest: fails closed for forks, incomplete file inventories, and stale heads
+ok 12 - fails closed for forks, incomplete file inventories, and stale heads
+  ---
+  duration_ms: 0.074365
+  type: 'test'
+  ...
+# Subtest: includes rename provenance in both initial and final inventories
+ok 13 - includes rename provenance in both initial and final inventories
+  ---
+  duration_ms: 0.064818
+  type: 'test'
+  ...
+# Subtest: uses squash merge and deletes only the merged pull-request branch
+ok 14 - uses squash merge and deletes only the merged pull-request branch
+  ---
+  duration_ms: 0.136735
+  type: 'test'
+  ...
+# Subtest: does not require or add an auto-merge label
+ok 15 - does not require or add an auto-merge label
+  ---
+  duration_ms: 0.055978
+  type: 'test'
+  ...
+# Subtest: dispatches exact-commit CI only after a verified squash merge
+ok 16 - dispatches exact-commit CI only after a verified squash merge
+  ---
+  duration_ms: 0.124868
+  type: 'test'
+  ...
+# Subtest: runs repository-dispatched CI from trusted main before exact commit checkout
+ok 17 - runs repository-dispatched CI from trusted main before exact commit checkout
+  ---
+  duration_ms: 0.149729
+  type: 'test'
+  ...
+# Subtest: keeps the pinned Gitleaks action for push and pull-request events
+ok 18 - keeps the pinned Gitleaks action for push and pull-request events
+  ---
+  duration_ms: 0.069028
+  type: 'test'
+  ...
+# Subtest: uses a checksum-pinned official Gitleaks CLI for repository dispatch
+ok 19 - uses a checksum-pinned official Gitleaks CLI for repository dispatch
+  ---
+  duration_ms: 0.05662
+  type: 'test'
+  ...
+# Subtest: binds the dispatch CLI scan to the trusted exact commit and full history
+ok 20 - binds the dispatch CLI scan to the trusted exact commit and full history
+  ---
+  duration_ms: 0.054254
+  type: 'test'
+  ...
+# Subtest: fails closed unless the event-specific Gitleaks path completes
+ok 21 - fails closed unless the event-specific Gitleaks path completes
+  ---
+  duration_ms: 0.049961
+  type: 'test'
+  ...
+# Subtest: executes the event-path outcome contract and denies skipped scanners
+    # Subtest: allows push expected outcomes
+    ok 1 - allows push expected outcomes
+      ---
+      duration_ms: 2.445319
+      type: 'test'
+      ...
+    # Subtest: allows pull_request expected outcomes
+    ok 2 - allows pull_request expected outcomes
+      ---
+      duration_ms: 2.097807
+      type: 'test'
+      ...
+    # Subtest: allows repository_dispatch expected outcomes
+    ok 3 - allows repository_dispatch expected outcomes
+      ---
+      duration_ms: 1.462601
+      type: 'test'
+      ...
+    # Subtest: denies push scanner skipped
+    ok 4 - denies push scanner skipped
+      ---
+      duration_ms: 1.566019
+      type: 'test'
+      ...
+    # Subtest: denies pull-request scanner failed
+    ok 5 - denies pull-request scanner failed
+      ---
+      duration_ms: 1.45475
+      type: 'test'
+      ...
+    # Subtest: denies dispatch installer skipped
+    ok 6 - denies dispatch installer skipped
+      ---
+      duration_ms: 1.412822
+      type: 'test'
+      ...
+    # Subtest: denies dispatch scanner skipped
+    ok 7 - denies dispatch scanner skipped
+      ---
+      duration_ms: 1.481667
+      type: 'test'
+      ...
+    # Subtest: denies dispatch action unexpectedly ran
+    ok 8 - denies dispatch action unexpectedly ran
+      ---
+      duration_ms: 1.492938
+      type: 'test'
+      ...
+    # Subtest: denies unknown event
+    ok 9 - denies unknown event
+      ---
+      duration_ms: 1.642685
+      type: 'test'
+      ...
+    1..9
+ok 22 - executes the event-path outcome contract and denies skipped scanners
+  ---
+  duration_ms: 15.68545
+  type: 'test'
+  ...
+# Subtest: allows standard CI events and the verified post-merge dispatch
+ok 23 - allows standard CI events and the verified post-merge dispatch
+  ---
+  duration_ms: 0.291306
+  type: 'test'
+  ...
+# Subtest: fails closed for malformed and unsupported CI context
+ok 24 - fails closed for malformed and unsupported CI context
+  ---
+  duration_ms: 0.053997
+  type: 'test'
+  ...
+# Subtest: denies adversarial post-merge dispatch evidence
+    # Subtest: wrong dispatch action
+    ok 1 - wrong dispatch action
+      ---
+      duration_ms: 0.114633
+      type: 'test'
+      ...
+    # Subtest: missing payload
+    ok 2 - missing payload
+      ---
+      duration_ms: 0.04368
+      type: 'test'
+      ...
+    # Subtest: malformed merge sha
+    ok 3 - malformed merge sha
+      ---
+      duration_ms: 0.034748
+      type: 'test'
+      ...
+    # Subtest: extra payload field
+    ok 4 - extra payload field
+      ---
+      duration_ms: 0.031061
+      type: 'test'
+      ...
+    # Subtest: invalid pull request number
+    ok 5 - invalid pull request number
+      ---
+      duration_ms: 0.026861
+      type: 'test'
+      ...
+    # Subtest: unmerged pull request
+    ok 6 - unmerged pull request
+      ---
+      duration_ms: 0.02499
+      type: 'test'
+      ...
+    # Subtest: different merge commit
+    ok 7 - different merge commit
+      ---
+      duration_ms: 0.124923
+      type: 'test'
+      ...
+    # Subtest: moved reviewed head
+    ok 8 - moved reviewed head
+      ---
+      duration_ms: 0.056885
+      type: 'test'
+      ...
+    # Subtest: fork repository
+    ok 9 - fork repository
+      ---
+      duration_ms: 0.078482
+      type: 'test'
+      ...
+    # Subtest: wrong base branch
+    ok 10 - wrong base branch
+      ---
+      duration_ms: 0.05694
+      type: 'test'
+      ...
+    # Subtest: wrong base repository
+    ok 11 - wrong base repository
+      ---
+      duration_ms: 0.080345
+      type: 'test'
+      ...
+    # Subtest: merge absent from event main
+    ok 12 - merge absent from event main
+      ---
+      duration_ms: 0.036114
+      type: 'test'
+      ...
+    1..12
+ok 25 - denies adversarial post-merge dispatch evidence
+  ---
+  duration_ms: 1.145141
+  type: 'test'
+  ...
+1..25
+# tests 46
+# suites 0
+# pass 46
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 34.141881

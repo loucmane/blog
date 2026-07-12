@@ -1,0 +1,16 @@
+{
+  "blockers": {
+    "backendHasNoTests": true,
+    "uiHasNoDirectJest": true,
+    "webHasNoDirectJest": true
+  },
+  "bridgeDeadline": "Task 39 quality-tooling PR",
+  "bridgeOwner": "Task 39",
+  "errors": [],
+  "mode": "unit",
+  "status": "unsupported-tracked",
+  "task39": {
+    "id": "39",
+    "status": "pending"
+  }
+}

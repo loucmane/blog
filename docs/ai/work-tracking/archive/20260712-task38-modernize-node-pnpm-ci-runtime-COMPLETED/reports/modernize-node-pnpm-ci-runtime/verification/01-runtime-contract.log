@@ -1,0 +1,53 @@
+## versions
+v24.18.0
+0.35.0
+11.11.0
+## static contract
+{
+  "actual": null,
+  "errors": [],
+  "expected": {
+    "allowedBuilds": {
+      "sharp": "0.34.5",
+      "unrs-resolver": "1.7.9"
+    },
+    "corepack": "0.35.0",
+    "node": "24.18.0",
+    "packageManager": "pnpm@11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c51a4d59e951b401e764d3b6ca751cbf51bc50ed7001a6bcb4935e684c34882",
+    "pnpm": "11.11.0"
+  },
+  "status": "passed"
+}
+## active contract
+{
+  "actual": {
+    "corepack": null,
+    "node": "24.18.0",
+    "pnpm": null
+  },
+  "errors": [
+    "active pnpm must equal 11.11.0",
+    "active Corepack must equal 0.35.0"
+  ],
+  "expected": {
+    "allowedBuilds": {
+      "sharp": "0.34.5",
+      "unrs-resolver": "1.7.9"
+    },
+    "corepack": "0.35.0",
+    "node": "24.18.0",
+    "packageManager": "pnpm@11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c51a4d59e951b401e764d3b6ca751cbf51bc50ed7001a6bcb4935e684c34882",
+    "pnpm": "11.11.0"
+  },
+  "status": "failed"
+}
+## contract tests
+✔ tests/ci/runtime-contract.test.mjs (72.706112ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 77.167725

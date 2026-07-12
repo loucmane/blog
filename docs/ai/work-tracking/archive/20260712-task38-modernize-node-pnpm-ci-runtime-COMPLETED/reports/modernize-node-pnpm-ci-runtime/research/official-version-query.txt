@@ -1,0 +1,181 @@
+--- node official release index ---
+{
+  "latest_current": {
+    "version": "v26.5.0",
+    "date": "2026-07-08",
+    "files": [
+      "aix-ppc64",
+      "headers",
+      "linux-arm64",
+      "linux-ppc64le",
+      "linux-s390x",
+      "linux-x64",
+      "osx-arm64-tar",
+      "osx-x64-pkg",
+      "osx-x64-tar",
+      "src",
+      "win-arm64-7z",
+      "win-arm64-zip",
+      "win-x64-7z",
+      "win-x64-exe",
+      "win-x64-msi",
+      "win-x64-zip"
+    ],
+    "npm": "11.17.0",
+    "v8": "14.6.202.34",
+    "uv": "1.52.1",
+    "zlib": "1.3.2.1-motley",
+    "openssl": "3.5.7",
+    "modules": "147",
+    "lts": false,
+    "security": false
+  },
+  "latest_v24": {
+    "version": "v24.18.0",
+    "date": "2026-06-23",
+    "files": [
+      "aix-ppc64",
+      "headers",
+      "linux-arm64",
+      "linux-ppc64le",
+      "linux-s390x",
+      "linux-x64",
+      "osx-arm64-tar",
+      "osx-x64-pkg",
+      "osx-x64-tar",
+      "src",
+      "win-arm64-7z",
+      "win-arm64-zip",
+      "win-x64-7z",
+      "win-x64-exe",
+      "win-x64-msi",
+      "win-x64-zip"
+    ],
+    "npm": "11.16.0",
+    "v8": "13.6.233.17",
+    "uv": "1.52.1",
+    "zlib": "1.3.1",
+    "openssl": "3.5.7",
+    "modules": "137",
+    "lts": "Krypton",
+    "security": false
+  },
+  "latest_v22": {
+    "version": "v22.23.1",
+    "date": "2026-06-22",
+    "files": [
+      "aix-ppc64",
+      "headers",
+      "linux-arm64",
+      "linux-armv7l",
+      "linux-ppc64le",
+      "linux-s390x",
+      "linux-x64",
+      "osx-arm64-tar",
+      "osx-x64-pkg",
+      "osx-x64-tar",
+      "src",
+      "win-arm64-7z",
+      "win-arm64-zip",
+      "win-x64-7z",
+      "win-x64-exe",
+      "win-x64-msi",
+      "win-x64-zip",
+      "win-x86-7z",
+      "win-x86-exe",
+      "win-x86-msi",
+      "win-x86-zip"
+    ],
+    "npm": "10.9.8",
+    "v8": "12.4.254.21",
+    "uv": "1.51.0",
+    "zlib": "1.3.1",
+    "openssl": "3.5.7",
+    "modules": "127",
+    "lts": "Jod",
+    "security": false
+  }
+}
+--- pnpm registry ---
+{
+  "version": "11.12.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dist-tags": {
+    "latest-1": "1.43.1",
+    "latest-2": "2.25.7",
+    "latest-3": "3.8.1",
+    "latest-4": "4.14.4",
+    "latest-5": "5.18.10",
+    "dev": "6.23.7-202112041634",
+    "pr4475": "0.0.0-pr4475.1",
+    "next-6": "6.35.1",
+    "latest-6": "6.35.1",
+    "latest-7": "7.33.5",
+    "next-7": "7.33.7",
+    "latest-8": "8.15.9",
+    "next-8": "8.15.9",
+    "latest-9": "9.15.9",
+    "next-9": "9.15.9",
+    "latest": "11.12.0",
+    "next-10": "10.34.5",
+    "latest-10": "10.34.5",
+    "next-12": "12.0.0-alpha.8",
+    "latest-11": "11.12.0",
+    "next-11": "11.12.0"
+  }
+}
+--- pnpm release ---
+{
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+--- corepack registry ---
+{
+  "version": "0.35.0",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "dist-tags": {
+    "latest": "0.35.0"
+  }
+}
+--- corepack release ---
+{
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+--- action release commits ---
+actions/checkout@v7.0.0 {
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+actions/setup-node@v6.4.0 {
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+pnpm/action-setup@v6.0.9 {
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+actions/upload-artifact@v7.0.1 {
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+actions/dependency-review-action@v5.0.0 {
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+gitleaks/gitleaks-action@v3.0.0 {
+  "message": "Bad credentials",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}

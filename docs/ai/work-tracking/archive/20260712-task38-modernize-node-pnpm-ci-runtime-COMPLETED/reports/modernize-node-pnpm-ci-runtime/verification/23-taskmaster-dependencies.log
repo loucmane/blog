@@ -1,0 +1,20 @@
+[tag] master
+[INFO] Checking for invalid dependencies in task files...
+[INFO] Analyzing dependencies for 35 tasks and 3 subtasks...
+[SUCCESS] No invalid dependencies found - all dependencies are valid
+
+╭─────────────────────────────────────╮
+│                                     │
+│   All Dependencies Are Valid        │
+│                                     │
+│   Tasks checked: 35                 │
+│   Subtasks checked: 3               │
+│   Total dependencies verified: 75   │
+│                                     │
+╰─────────────────────────────────────╯
+
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│  FYI: Taskmaster now supports separate task lists per tag. Use the --tag     │
+│  flag to create/read/update/filter tasks by tag.                             │
+╰──────────────────────────────────────────────────────────────────────────────╯

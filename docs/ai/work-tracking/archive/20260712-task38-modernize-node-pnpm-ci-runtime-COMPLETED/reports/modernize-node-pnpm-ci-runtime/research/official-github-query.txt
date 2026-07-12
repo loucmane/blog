@@ -1,0 +1,12 @@
+loucmane
+--- pnpm release ---
+{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.12.0","prerelease":false,"published_at":"2026-07-11T21:15:22Z","tag_name":"v11.12.0"}
+--- corepack release ---
+{"draft":false,"html_url":"https://github.com/nodejs/corepack/releases/tag/v0.35.0","prerelease":false,"published_at":"2026-05-15T17:00:45Z","tag_name":"v0.35.0"}
+--- action release commits ---
+actions/checkout@v7.0.0 9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+actions/setup-node@v6.4.0 48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+pnpm/action-setup@v6.0.9 0ebf47130e4866e96fce0953f49152a61190b271
+actions/upload-artifact@v7.0.1 043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+actions/dependency-review-action@v5.0.0 a1d282b36b6f3519aa1f3fc636f609c47dddb294
+gitleaks/gitleaks-action@v3.0.0 e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e

@@ -1,0 +1,7 @@
+
+> minniewinnie-monorepo@1.0.0 typecheck /home/loucmane/dev/blog
+> pnpm --filter @minniewinnie/ui run build:types && pnpm --filter web exec tsc --noEmit
+
+
+> @minniewinnie/ui@0.1.0 build:types /home/loucmane/dev/blog/packages/ui
+> tsc --emitDeclarationOnly --declaration --declarationDir dist/types

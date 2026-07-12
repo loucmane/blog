@@ -1,0 +1,7 @@
+$ node scripts/ci/check-taskmaster.mjs
+{
+  "checkedTasks": 35,
+  "dependencyCount": 75,
+  "errors": [],
+  "status": "passed"
+}
