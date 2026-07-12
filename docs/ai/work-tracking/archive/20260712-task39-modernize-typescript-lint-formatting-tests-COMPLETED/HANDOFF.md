@@ -1,8 +1,10 @@
 # Task 39 Modernize TypeScript Lint Formatting and Tests - Handoff Summary
 
 ## Current State
-- Task 39 implementation, verification, strict closeout, Taskmaster completion, and archive normalization are complete; delivery remains.
+- Task 39 implementation, verification, strict closeout, Taskmaster completion, archive normalization, signed commit, push, and hosted checks are complete; attended merge remains.
 - Branch: `feat/task-39-modernize-typescript-lint-formatting-tests`.
+- Pull request: `https://github.com/loucmane/blog/pull/30`.
+- Reviewed implementation head: `fdece07a44de28db859975f11697bafad7e28e6e`.
 - Session: `sessions/2026/07/2026-07-12-001-task39-modernize-typescript-lint-formatting-tests.md`.
 - Plan: `plans/2026-07-12-task39-modernize-typescript-lint-formatting-tests.md`.
 - Archived work-tracking: `docs/ai/work-tracking/archive/20260712-task39-modernize-typescript-lint-formatting-tests-COMPLETED/`.
@@ -17,15 +19,15 @@
 - Passed the full local workspace, governance, security, Aegis capsule/brief, guard, and secret-scan matrix; two independent read-only reviews report PASS.
 
 ## Current Issues/Blockers
-- No implementation blocker. Signed commit creation is paused because GPG key `0C7D823543E01875` is not cached for the non-interactive session; no commit was created and the reviewed 164-path index remains staged.
-- Hosted checks require a committed PR head.
+- No implementation or verification blocker. All four required hosted checks passed at the reviewed implementation head in GitHub Actions run `29210686925`.
+- Autonomous delivery is intentionally denied because the PR changes `.github/workflows/ci.yml` (`workflow-permissions`) and trusted quality configuration/contracts (`ci-governance`). The attended merge boundary remains mandatory.
 - Task 40 owns Next/React warnings; Task 41 owns visual/contrast and design-build bridges; Task 42 owns the legacy exported `any` bridge.
 
 ## Next Steps
-1. Unlock the existing GPG key interactively, then create the already-staged signed commit without disabling signing or adding `.codex/hooks.json`.
-2. Push the exact Task 39 branch.
-3. Open the Task 39 PR and validate all four protected checks on the exact head.
-4. Apply only the active trusted delivery policy; otherwise stop at the attended merge boundary.
+1. Commit and push the report-only delivery-evidence follow-up without staging `.codex/hooks.json`.
+2. Wait for all four protected checks on the new exact head.
+3. Revalidate mergeability, unresolved threads, labels, changed-path inventory, and trusted-policy denial.
+4. Request exact-head protected squash-merge approval; do not bypass the trusted delivery policy.
 
 ## Important Context
 - Operator authority is `standing-grant:sota-magazine-2026-autonomy-v2` from `docs/ai/AEGIS_AUTONOMY_GRANT.md`; reload and verify its digest before approval decisions.
@@ -50,3 +52,4 @@
 - **2026-07-12 20:23 CEST** - [S:20260712|W:task39-modernize-typescript-lint-formatting-tests|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Moved dependency-ready Taskmaster Task 39 to in-progress through the supported CLI and regenerated only .taskmaster/tasks/task_039.md; authoritative health now reports 35 tasks, 3 subtasks, and 75 valid dependency references. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-12 23:37 CEST** - [S:20260712|W:task39-modernize-typescript-lint-formatting-tests|H:agent:verification|E:docs/ai/work-tracking/active/20260712-task39-modernize-typescript-lint-formatting-tests-ACTIVE/reports/modernize-typescript-lint-formatting-tests/task-verification.md] Recorded Task 39 full verification and independent PASS reviews; authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-12 23:38 CEST** - [S:20260712|W:task39-modernize-typescript-lint-formatting-tests|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded Task 39 strict verification: 31 checks, zero required failures, enforcement advisory; authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-13 00:05 CEST** - [S:20260713|W:task39-modernize-typescript-lint-formatting-tests|H:github:pr-boundary|E:https://github.com/loucmane/blog/pull/30] Signed commit `fdece07a44de28db859975f11697bafad7e28e6e` was pushed; all four protected checks passed in run `29210686925`; GitHub reported CLEAN/mergeable with zero unresolved threads and no labels; the complete 164-path inventory matched locally and remotely; trusted policy denied autonomous delivery only for `workflow-permissions` and `ci-governance`, requiring attended merge. authority=standing-grant:sota-magazine-2026-autonomy-v2
