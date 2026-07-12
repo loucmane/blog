@@ -10,42 +10,41 @@
 
 ## Current State
 
-- Goal: Task 38 delivered; finish Task 39 as a separate TypeScript/lint/format/test foundation PR.
-- Task/branch: Task 39 `done` and archived on `feat/task-39-modernize-typescript-lint-formatting-tests`.
-- Base: `96dba9a24707e3d3d3449869f5877918fa528b39`.
-- Signed Task 39 implementation commit: `fdece07a44de28db859975f11697bafad7e28e6e` with a good signature from `loucmane <lookmanbenali@gmail.com>`.
-- Pull request: `https://github.com/loucmane/blog/pull/30`, open and ready for review at exact head `fdece07a44de28db859975f11697bafad7e28e6e`.
-- Task 39 implementation, local verification, strict closeout, Taskmaster completion, archive normalization, commit, push, and hosted verification are complete.
-- GitHub reports `CLEAN`/mergeable, zero unresolved review threads, no labels, and exact local/remote parity for all 164 changed paths (inventory SHA-256 `e238dc9e51a182bfea27ece2a417c76775c6b8c4867dc80543ddeb4abd72173a`).
+- Goal: Tasks 38 and 39 are merged; deliver the narrowly scoped Task 68 regression repair required to make the Task 39 root capability command genuinely executable.
+- Base: synchronized main commit `afd47eb54b67e0c7a77565ac9b9548e4a55cc55e`, the protected squash merge of PR #30.
+- Task/branch: Task 68 `done` and archived on `feat/task-68-repair-task39-capability-script-contract`.
+- Pull request: not opened yet; commit, push, hosted checks, and trusted-policy classification remain.
 - User-owned `.codex/hooks.json` remains untracked and must not be inspected, staged, moved, hidden, deleted, or overwritten.
 
 ## Delivered Work
 
-- TypeScript `6.0.3`, ESLint 10 flat config, exact Prettier, Vitest/Testing Library, Playwright, and axe foundation.
-- TypeScript 7 is deferred because 7.0 lacks the stable programmatic API required by typescript-eslint; full rationale and sources are in ADR-0006 and the Task 39 research matrix.
-- Six named unit/integration contracts, exact desktop/mobile browser projects, two critical journeys, AST disabled-test denial, machine-readable zero-skip result contracts, and coverage thresholds.
-- Trusted predecessor plus exact `100644` Git-blob accessibility ratchet; first reviewed baseline contains 15 desktop and 16 mobile contrast fingerprints owned by Task 41.
-- CI formatting, coverage, Chromium, accessibility, browser, and smoke stages with unchanged triggers, read-only permissions, dispatch trust boundaries, secrets, action pins, and auto-merge workflow.
-- Broad product-source churn is the intentional first Prettier baseline; normalized review found only lint-driven correctness fixes, including ThemeSwitcher timer/fallback behavior with regression coverage.
+- Reproduced the post-merge defect: argumentless `pnpm test:capability` exited 2 while explicit `unit` and `browser` modes both passed.
+- Kept the root package script unchanged and made `scripts/ci/check-test-capability.mjs` execute exact ordered modes `unit` and `browser` when no mode is supplied.
+- Preserved explicit single-mode diagnostics, added executable root-command coverage, and added adversarial fixtures that deny omission of either required mode.
+- Updated only the two corresponding trusted-file SHA-256 values in `config/runtime.json`.
+- Added and completed Taskmaster Task 68 through supported commands; all 35 pre-existing tasks remain semantically equivalent despite Taskmaster 0.43.1 ID-representation normalization.
+- Completed deterministic handoff repair, final closeout, Taskmaster completion, scoped task-file generation, and archive normalization.
 
 ## Verification
 
-- Two frozen installs, active Node 24 runtime contract, typecheck, lint, format, 22 Vitest tests, 97.01% statement coverage, builds, HTTP 200 smoke, four Playwright runs, zero dependency advisories, actionlint, 111 auto-merge contracts, 29 skill tests, Taskmaster health/dependencies, strict Aegis verification, capsule/brief, five completed-state regressions, legacy guard, Gitleaks over 193 commits, and `git diff --check` passed.
-- Independent implementation reviewer `019f5825-0ec0-72f2-b193-f2a09992dfee`: PASS.
-- Independent adversarial CI reviewer `019f5825-160e-79a2-aaa3-0fa86f1b22e7`: PASS.
-- GitHub Actions run `29210686925`: all four protected checks passed at exact head `fdece07a44de28db859975f11697bafad7e28e6e` (`workspace`, `governance`, `dependency review`, and `gitleaks`).
-- The trusted delivery classifier correctly denies autonomous delivery with `workflow-permissions` for `.github/workflows/ci.yml` and `ci-governance` for the quality-contract/configuration paths. No `auto-merge` label was applied.
-- Task-specific evidence: `docs/ai/work-tracking/archive/20260712-task39-modernize-typescript-lint-formatting-tests-COMPLETED/reports/modernize-typescript-lint-formatting-tests/task-verification.md`.
+- Runtime: Node `24.18.0`, Corepack `0.35.0`, pnpm `11.11.0`; frozen installation passed without package or lockfile drift.
+- Root capability command passed and emitted supported reports for exact modes `unit` and `browser`; focused capability suite passed 16/16.
+- Quality 29/29, runtime 13/13, security 7/7, Vitest 22/22, Playwright 4/4, package/app builds, HTTP 200 production smoke, and zero dependency advisories passed.
+- Auto-merge policy/workflow 65 + 46, skill platform 29, Taskmaster health/dependencies, Aegis CI/strict verification, capsule/brief, witness, completed-state guard 5/5, legacy guard, plan sync, actionlint, Gitleaks, and `git diff --check` passed.
+- Strict Aegis verification recorded 31 checks, zero required failures, one expected advisory warning, and one unsupported optional integration; enforcement remained advisory.
+- Independent implementation/completeness reviewer `019f5825-0ec0-72f2-b193-f2a09992dfee`: PASS with no blocking findings.
+- Independent adversarial security/scope reviewer `019f5825-160e-79a2-aaa3-0fa86f1b22e7`: PASS with no blocking findings.
+- Verification evidence: `docs/ai/work-tracking/archive/20260713-task68-repair-task39-capability-script-contract-COMPLETED/reports/repair-task39-capability-script-contract/task-verification.md`.
 
-## Known Follow-ups
+## Scope And Risks
 
-- Task 40: Next/React migration warnings and React-19-only lint transitions.
-- Task 41: Tailwind/shadcn/workspace migration, contrast debt, UI build warnings, and rollup-plugin-dts replacement evaluation.
-- Task 42: canonical content types and removal of the narrow legacy exported-`any` bridge.
+- No package manifest, lockfile, product, workflow, authority, deployment, secret, Aegis runtime, or Aegis manifest change is present.
+- Taskmaster normalized legacy task ID representation during supported mutation; semantic comparison proves no pre-existing task changed.
+- Existing Task 40 Next/React warnings and Task 41 Tailwind/shadcn/workspace warnings remain outside this repair.
 - The known Aegis completed-task guidance-ordering defect from Task 67 remains dogfood evidence; do not run generic repair, delivery sync, or Task 67 closeout.
 
 ## Next Safe Action
 
-Stop at the attended merge boundary because the exact Task 39 diff changes trusted CI/governance paths and the existing controlled-delivery policy denies autonomous merge. Revalidate the final report-only follow-up head, four required checks, mergeability, review threads, labels, and changed-path inventory, then request exact-head protected squash-merge approval. Do not use `--admin`, bypass protection, force operations, history rewriting, or the `auto-merge` label.
+Obtain two independent read-only reviews, stage only the Task 68 inventory, create a signed task-scoped commit, push, open the protected PR, and wait for all hosted checks. Apply only the trusted delivery policy; stop at an attended merge boundary if the verification-script or governance paths are denied.
 
 This report is a continuity pointer, not an independent grant or an expansion of authority.

@@ -544,13 +544,27 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2026-07-11T20:14:49.807Z"
+      },
+      {
+        "id": "68",
+        "title": "Repair Task 39 Capability Script Contract",
+        "description": "Make the merged root test:capability command execute the complete deterministic unit and browser capability checks.",
+        "details": "Replace the argumentless root script with an executable command that runs both required modes, add a regression contract that fails if either mode is omitted, preserve every existing test capability and CI trust boundary, and make no package-version, lockfile, product, workflow, Aegis-runtime, authority, deployment, or secret changes.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "39"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-12T23:33:03.223Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-12T21:39:19.429Z",
-      "taskCount": 35,
-      "completedCount": 17,
+      "lastModified": "2026-07-12T23:33:03.223Z",
+      "taskCount": 36,
+      "completedCount": 18,
       "tags": [
         "master"
       ]

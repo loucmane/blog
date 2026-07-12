@@ -1,14 +1,22 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 import {
   analyzeTestSource,
+  capabilityCommand,
+  capabilityModes,
+  capabilityModesForCommand,
   criticalBrowserJourneys,
   criticalUnitContracts,
   evaluateCapability,
   expectedBrowserProjects,
   loadCapabilitySources,
+  resolveCapabilityModes,
 } from '../../scripts/ci/check-test-capability.mjs'
+
+const root = fileURLToPath(new URL('../..', import.meta.url))
 
 function cloneSources() {
   return structuredClone(loadCapabilitySources())
@@ -20,6 +28,40 @@ test('accepts the committed unit and integration capability', () => {
 
 test('accepts the committed browser and accessibility capability', () => {
   assert.equal(evaluateCapability('browser', cloneSources()).status, 'supported')
+})
+
+test('runs both supported capability modes from the root command', () => {
+  const sources = cloneSources()
+  assert.deepEqual(capabilityModes, ['unit', 'browser'])
+  assert.deepEqual(resolveCapabilityModes(undefined), capabilityModes)
+  assert.deepEqual(
+    capabilityModesForCommand(sources.manifests.root.scripts['test:capability']),
+    capabilityModes,
+  )
+
+  const result = spawnSync(process.execPath, ['scripts/ci/check-test-capability.mjs'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+  assert.equal(result.status, 0, result.stderr)
+  const report = JSON.parse(result.stdout)
+  assert.equal(report.status, 'supported')
+  assert.deepEqual(
+    report.reports.map(({ mode }) => mode),
+    capabilityModes,
+  )
+})
+
+test('denies a root capability command that omits either mode', () => {
+  for (const mode of capabilityModes) {
+    const sources = cloneSources()
+    sources.manifests.root.scripts['test:capability'] = `${capabilityCommand} ${mode}`
+    assert.match(
+      evaluateCapability(mode, sources).errors.join('\n'),
+      /rootCapabilityCommandRunsAllModes/,
+      mode,
+    )
+  }
 })
 
 test('denies a removed unit command', () => {
