@@ -1,0 +1,38 @@
+--- pnpm recent stable releases ---
+[{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v12.0.0-alpha.8","prerelease":true,"published_at":"2026-07-11T21:15:43Z","tag_name":"v12.0.0-alpha.8"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.12.0","prerelease":false,"published_at":"2026-07-11T21:15:22Z","tag_name":"v11.12.0"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v10.34.5","prerelease":false,"published_at":"2026-07-10T11:39:29Z","tag_name":"v10.34.5"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.11.0","prerelease":false,"published_at":"2026-07-09T20:43:29Z","tag_name":"v11.11.0"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.10.0","prerelease":false,"published_at":"2026-07-04T19:58:37Z","tag_name":"v11.10.0"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.9.0","prerelease":false,"published_at":"2026-06-23T15:55:03Z","tag_name":"v11.9.0"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.8.0","prerelease":false,"published_at":"2026-06-18T10:45:14Z","tag_name":"v11.8.0"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v10.34.4","prerelease":false,"published_at":"2026-06-18T22:52:00Z","tag_name":"v10.34.4"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.7.0","prerelease":false,"published_at":"2026-06-15T06:56:53Z","tag_name":"v11.7.0"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.6.0","prerelease":false,"published_at":"2026-06-11T23:08:38Z","tag_name":"v11.6.0"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v10.34.3","prerelease":false,"published_at":"2026-06-11T17:04:59Z","tag_name":"v10.34.3"},{"draft":false,"html_url":"https://github.com/pnpm/pnpm/releases/tag/v11.5.3","prerelease":false,"published_at":"2026-06-10T11:54:49Z","tag_name":"v11.5.3"}]
+--- selected package metadata ---
+pnpm@11.12.0 {
+  "version": "11.12.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dist.integrity": "sha512-ggpvvQ2fBMImY4ACrq0eRTQKkTndXcB3wdg+9EqiSByOtmN7TJqmlqPH41uoGOSc8nIT5fK5ETjQm3o+JuiYug=="
+}
+pnpm@11.11.0 {
+  "version": "11.11.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dist.integrity": "sha512-RGP2X9gO2A1pvB1L8WPulPYFxzgPwxi7Wy6+FfjNEtScUaTVnpUbQB52TTtsp1HL9RvFDtcAGmvLSTXmhMNIgg=="
+}
+pnpm@11.10.0 {
+  "version": "11.10.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dist.integrity": "sha512-C3+LmAYAMZBMAX46QesYehbUDuuCm5XE+MsDaBdh/Eq1PdIZEVubRH9NzhoFohR2RGHn03AzkqnzL5URzoyGyA=="
+}
+pnpm@11.9.0 {
+  "version": "11.9.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dist.integrity": "sha512-vWgtXQP+Ul73yf1ngMaITR51asTJyf4AxTh4KCQxDc+Q493E9Tg18G3669UIXkGFXgvLs7YN4qxburieUDbwOw=="
+}
+pnpm@10.34.5 {
+  "version": "10.34.5",
+  "engines": {
+    "node": ">=18.12"
+  },
+  "dist.integrity": "sha512-pO4F8vc2WCVb1qiYWcBlpFwopX2u+uLIk6Fo7itzFow3uR6D5X6mdlStA/AwMXRkMOi84442LgQmBfuKvIAZLg=="
+}

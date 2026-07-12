@@ -1,0 +1,89 @@
+
+> minniewinnie-monorepo@1.0.0 ci:guard /home/loucmane/dev/blog
+> python3 scripts/ci/check-legacy-guard.py
+
+$ python3 tests/ci/test_codex_guard_completed_state.py
+
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.005s
+
+OK
+
+$ ./scripts/codex-guard validate
+Guard validation failed:
+  - sessions/state.json: sessions/state.json paused field must be a list
+  - sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md: Taskmaster files changed but the current session lacks a Taskmaster activity entry | entry: Add an S:W:H:E entry with H:task-master:* or evidence pointing to .taskmaster/tasks/*.json/*.txt.
+  - docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/TRACKER.md: Taskmaster files changed but tracker lacks a same-day Taskmaster activity entry | entry: Log the Taskmaster update in TRACKER.md using H:task-master:* and evidence under .taskmaster/tasks/...
+  - sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md: Session missing date command entry (expected E:cmd`date ...` before timestamp edits)
+  - plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md: plan-step-emergency evidence path not found | entry: DECISIONS.md
+  - plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md: plan-step-emergency evidence path not found | entry: FINDINGS.md
+  - .plan_state/sync.log: No sync entry recorded for plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md
+
+Hints:
+  * Add an S:W:H:E entry with H:task-master:* or evidence pointing to .taskmaster/tasks/*.json/*.txt.
+  * DECISIONS.md
+  * FINDINGS.md
+  * Log the Taskmaster update in TRACKER.md using H:task-master:* and evidence under .taskmaster/tasks/...
+
+Reminder: run `python3 scripts/codex-task plan sync` after addressing fixes and store guard logs under reports/session-continuation/.
+For CI enforcement see .github/workflows/meta-workflow-guard.yml.
+
+
+$ ./scripts/codex-guard drift-check --strict
+Template drift report
+
+Generated: 2026-07-12T02:11:28.305249+02:00
+Findings: 16
+
+Counts by category:
+- canonical-doc: 16
+
+Findings:
+- [canonical-doc] [blocking] templates/BEHAVIORS.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/CONVENTIONS.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/MATRICES.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/REGISTRY.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/TOOLS.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/behaviors/git/before-commit.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/behaviors/index.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/behaviors/session/session-end.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/conventions/git/commit-format.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/engine/enforcement/behavioral-hooks.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/engine/enforcement/cannot-proceed.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/handlers/operators/git/create-commit-message.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/matrices/mapping/trigger-to-action.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/shared/tools/tool-selection-matrix.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/tools/git/commands.md — Canonical guidance document is missing
+- [canonical-doc] [blocking] templates/workflows/session/lifecycle.md — Canonical guidance document is missing
+Saved text report to reports/template-drift/summary-20260712-021128.txt
+Saved JSON report to reports/template-drift/summary-20260712-021128.json
+
+
+{
+  "deadline": "Before Aegis strict-mode activation; Task 47 must hand off removal if still present",
+  "errors": [
+    "codex-guard validate exited 1"
+  ],
+  "expectedFindings": [
+    "templates/BEHAVIORS.md",
+    "templates/CONVENTIONS.md",
+    "templates/MATRICES.md",
+    "templates/REGISTRY.md",
+    "templates/TOOLS.md",
+    "templates/behaviors/git/before-commit.md",
+    "templates/behaviors/index.md",
+    "templates/behaviors/session/session-end.md",
+    "templates/conventions/git/commit-format.md",
+    "templates/engine/enforcement/behavioral-hooks.md",
+    "templates/engine/enforcement/cannot-proceed.md",
+    "templates/handlers/operators/git/create-commit-message.md",
+    "templates/matrices/mapping/trigger-to-action.md",
+    "templates/shared/tools/tool-selection-matrix.md",
+    "templates/tools/git/commands.md",
+    "templates/workflows/session/lifecycle.md"
+  ],
+  "owner": "Task 47",
+  "status": "failed"
+}
+ ELIFECYCLE  Command failed with exit code 1.

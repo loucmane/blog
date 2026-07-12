@@ -1,0 +1,10 @@
+$ node scripts/ci/web-production-smoke.mjs
+{
+  "bodyBytes": 21083,
+  "contentType": "text/html; charset=utf-8",
+  "errors": [],
+  "generatedAt": "2026-07-12T10:38:32.629Z",
+  "status": "passed",
+  "statusCode": 200,
+  "url": "http://127.0.0.1:33607/"
+}

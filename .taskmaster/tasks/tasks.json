@@ -71,13 +71,14 @@
         "description": "Migrate the reproducible runtime foundation to the approved Node LTS, pinned pnpm, developer version files, engines, Corepack, and least-privilege CI.",
         "details": "Re-query stable versions and advisories at execution. Use a dedicated reversible PR. Require clean frozen install, CI/local parity, full-SHA action pins, package/app builds, and no unexplained lockfile drift.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "36",
           "48"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-12T10:43:30.270Z"
       },
       {
         "id": "39",
@@ -546,9 +547,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-11T20:14:49.807Z",
+      "lastModified": "2026-07-12T10:43:30.270Z",
       "taskCount": 35,
-      "completedCount": 15,
+      "completedCount": 16,
       "tags": [
         "master"
       ]

@@ -1,0 +1,73 @@
+$ pnpm -r build
+Scope: 3 of 4 workspace projects
+packages/backend build$ babel src -d dist
+packages/ui build$ pnpm build:types && pnpm build:js
+packages/ui build: $ tsc --emitDeclarationOnly --declaration --declarationDir dist/types
+packages/backend build: Successfully compiled 4 files with Babel (332ms).
+packages/backend build: Done
+packages/ui build: $ rollup -c --bundleConfigAsCjs
+packages/ui build: src/index.ts → dist/index.js, dist/index.esm.js...
+packages/ui build: (!) src/providers/ThemeProvider.tsx (1:0): Module level directives cause errors when bundled, "use client" in "src/providers/ThemeProvider.tsx" was ignored.
+packages/ui build: /home/loucmane/dev/blog/packages/ui/src/providers/ThemeProvider.tsx:1:0
+packages/ui build: 1: 'use client';
+packages/ui build:    ^
+packages/ui build: 2: import { jsx as _jsx } from "react/jsx-runtime";
+packages/ui build: 3: import { createContext, useContext, useEffect, useState } from 'react';
+packages/ui build: (!) src/components/ThemeSwitcher/ThemeSwitcher.tsx (1:0): Module level directives cause errors when bundled, "use client" in "src/components/ThemeSwitcher/ThemeSwitcher.tsx" was ignored.
+packages/ui build: /home/loucmane/dev/blog/packages/ui/src/components/ThemeSwitcher/ThemeSwitcher.tsx:1:0
+packages/ui build: 1: 'use client';
+packages/ui build:    ^
+packages/ui build: 2: import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+packages/ui build: 3: import { useState, useRef, useEffect } from 'react';
+packages/ui build: (!) [plugin typescript] @rollup/plugin-typescript: outputToFilesystem option is defaulting to true.
+packages/ui build: created dist/index.js, dist/index.esm.js in 672ms
+packages/ui build: dist/types/index.d.ts → dist/index.d.ts...
+packages/ui build: created dist/index.d.ts in 29ms
+packages/ui build: Done
+packages/web build$ next build
+packages/web build:  ⚠ `experimental.typedRoutes` has been moved to `typedRoutes`. Please update your next.config.ts file accordingly.
+packages/web build:    ▲ Next.js 15.5.20
+packages/web build:    - Experiments (use with caution):
+packages/web build:      ✓ typedRoutes
+packages/web build:      · serverActions
+packages/web build:      · optimizePackageImports
+packages/web build:    Creating an optimized production build ...
+packages/web build:  ✓ Compiled successfully in 1123ms
+packages/web build:    Linting and checking validity of types ...
+packages/web build: ./src/hooks/use-toast.ts
+packages/web build: 21:7  Warning: 'actionTypes' is assigned a value but only used as a type. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+packages/web build: ./src/types/analytics.ts
+packages/web build: 7:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: ./src/types/global.d.ts
+packages/web build: 75:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: 76:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: 80:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: ./src/types/index.ts
+packages/web build: 29:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: 36:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: 40:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: 68:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: 76:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: ./src/types/ui.ts
+packages/web build: 116:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: 156:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+packages/web build: info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+packages/web build:    Collecting page data ...
+packages/web build:    Generating static pages (0/6) ...
+packages/web build:    Generating static pages (1/6)
+packages/web build:    Generating static pages (2/6)
+packages/web build:    Generating static pages (4/6)
+packages/web build:  ✓ Generating static pages (6/6)
+packages/web build:    Finalizing page optimization ...
+packages/web build:    Collecting build traces ...
+packages/web build: Route (app)                                 Size  First Load JS
+packages/web build: ┌ ○ /                                    2.59 kB         168 kB
+packages/web build: ├ ○ /_not-found                            126 B         166 kB
+packages/web build: ├ ○ /mockup                               2.6 kB         168 kB
+packages/web build: └ ○ /test                                29.7 kB         196 kB
+packages/web build: + First Load JS shared by all             166 kB
+packages/web build:   ├ chunks/b6d7ac9b-e7dc5bb52a643bad.js  54.2 kB
+packages/web build:   └ chunks/vendors-58d4c489b9275529.js    110 kB
+packages/web build:   └ other shared chunks (total)          1.91 kB
+packages/web build: ○  (Static)  prerendered as static content
+packages/web build: Done

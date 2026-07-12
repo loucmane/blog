@@ -1,0 +1,11 @@
+# Aegis delivery witness — feat/task-38-modernize-node-pnpm-ci-runtime @ 81511aa (ci mode, base origin/main)
+- scope_mapping: PASS
+- diff_accounting: PASS [globs_not_derivable_in_ci]
+- verification_at_head: PASS [not_derivable_in_ci]
+- done_flip_containment: PASS
+- ci_greenness: PASS [delegated]
+Result: PASS — report at .aegis/reports/witness-report.json
+{
+  "passed": true,
+  "problems": []
+}

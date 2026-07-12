@@ -1,0 +1,91 @@
+{
+  "base": "origin/main",
+  "boundary_event": {
+    "boundary_fingerprint": "sha256:c1dabe6bdcce85e4206a73e864c03bb322bec416c70e12d1f3b7cf8b43acc6fa",
+    "event_id": "35a36cbd2e14473eb296e487f3bd82f9",
+    "event_type": "witness",
+    "status": "unchanged"
+  },
+  "branch": "feat/task-38-modernize-node-pnpm-ci-runtime",
+  "checks": {
+    "ci_greenness": {
+      "detail": "native required checks own CI greenness; the witness never re-implements it",
+      "passed": true,
+      "status": "delegated"
+    },
+    "diff_accounting": {
+      "deleted_tests_escalated": [],
+      "detail": "every diff file must match the scope globs; test deletions escalate to human review",
+      "files_in_diff": 0,
+      "globs": [
+        ".github/workflows/ci.yml",
+        ".npmrc",
+        ".nvmrc",
+        "config/runtime.json",
+        "package.json",
+        "pnpm-workspace.yaml",
+        "scripts/ci/check-runtime-contract.mjs",
+        "tests/ci/runtime-contract.test.mjs",
+        "docs/decisions/0002-runtime-language-and-quality-toolchain.md",
+        "docs/decisions/0003-node-pnpm-runtime-foundation.md",
+        "docs/ai/MORNING_CONTINUATION_REPORT.md",
+        ".taskmaster/tasks/tasks.json",
+        ".taskmaster/tasks/task_038.md",
+        ".plan_state/sync.log",
+        "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+        "plans/current",
+        "sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md",
+        "sessions/current",
+        "sessions/state.json",
+        "docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/**"
+      ],
+      "passed": true,
+      "unaccounted": []
+    },
+    "done_flip_containment": {
+      "detail": "any task flipped done must have a containing commit (the stranded-#73 class)",
+      "passed": true,
+      "uncommitted_done_flip": false
+    },
+    "scope_mapping": {
+      "detail": "branch must map to a scope record or the task-NN convention",
+      "passed": true,
+      "source": "scope_record_confirmed",
+      "task_id": "38"
+    },
+    "verification_at_head": {
+      "detail": "registered gates need pass runs on record at the head commit",
+      "head": "81511aa",
+      "missing_pass_at_head": [],
+      "passed": true,
+      "required": []
+    }
+  },
+  "escalations": [],
+  "generated_at": "2026-07-12T10:08:35Z",
+  "head_commit": "81511aa",
+  "legacy_projection": {
+    "changed": false,
+    "changed_paths": [],
+    "dry_run": false,
+    "event_count": 25,
+    "include_gate_decisions": false,
+    "include_mutations": false,
+    "last_event_id": "5db7bd6b7bb94f4ba14e988d7bfe9e85",
+    "output_path": null,
+    "output_paths": [
+      "/home/loucmane/dev/blog/sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md",
+      "/home/loucmane/dev/blog/plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+      "/home/loucmane/dev/blog/docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/TRACKER.md",
+      "/home/loucmane/dev/blog/docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/FINDINGS.md",
+      "/home/loucmane/dev/blog/docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/IMPLEMENTATION.md",
+      "/home/loucmane/dev/blog/docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/CHANGELOG.md",
+      "/home/loucmane/dev/blog/docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/DECISIONS.md",
+      "/home/loucmane/dev/blog/docs/ai/work-tracking/active/20260712-task38-modernize-node-pnpm-ci-runtime-ACTIVE/HANDOFF.md"
+    ],
+    "status": "applied"
+  },
+  "mode": "local",
+  "passed": true,
+  "schema_version": "1"
+}

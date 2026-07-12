@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-11-001-task67-gitleaks-repository-dispatch.md",
-  "current_path": "sessions/2026/07/2026-07-11-001-task67-gitleaks-repository-dispatch.md",
+  "current": "2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md",
+  "current_path": "sessions/2026/07/2026-07-12-001-task38-modernize-node-pnpm-ci-runtime.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "67",
-    "slug": "gitleaks-repository-dispatch",
+    "id": "38",
+    "slug": "modernize-node-pnpm-ci-runtime",
     "status": "in-progress",
-    "title": "Support Gitleaks on trusted post-merge dispatch"
+    "title": "Modernize Node pnpm and CI Runtime"
   },
-  "updated_at": "2026-07-11T19:58:14Z"
+  "updated_at": "2026-07-12T00:02:52Z"
 }

@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "selectedAt": "2026-07-12T00:14:59Z",
+  "reviewAfter": "2026-07-19T00:00:00Z",
+  "node": {
+    "version": "24.18.0",
+    "engine": ">=24.18.0 <25",
+    "channel": "active-lts",
+    "codename": "Krypton"
+  },
+  "pnpm": {
+    "version": "11.11.0",
+    "engine": ">=11.11.0 <12",
+    "integrityAlgorithm": "sha512",
+    "integrityHex": "4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c51a4d59e951b401e764d3b6ca751cbf51bc50ed7001a6bcb4935e684c34882",
+    "lockfileVersion": "9.0",
+    "workspaceSettings": {
+      "engineStrict": "true",
+      "nodeVersion": "24.18.0",
+      "pmOnFail": "error",
+      "strictDepBuilds": "true"
+    }
+  },
+  "corepack": {
+    "version": "0.35.0",
+    "mode": "bundled-local-only"
+  },
+  "allowedBuilds": {
+    "sharp": "0.34.5",
+    "unrs-resolver": "1.7.9"
+  },
+  "securityOverrides": {
+    "ajv@>=6.0.0 <6.14.0": "6.14.0",
+    "brace-expansion@>=1.0.0 <1.1.13": "1.1.13",
+    "brace-expansion@>=2.0.0 <2.0.3": "2.0.3",
+    "flatted@>=3.0.0 <3.4.2": "3.4.2",
+    "glob@>=10.2.0 <10.5.0": "10.5.0",
+    "js-yaml@>=3.0.0 <3.15.0": "3.15.0",
+    "js-yaml@>=4.0.0 <4.2.0": "4.2.0",
+    "lodash@>=4.0.0 <4.18.0": "4.18.0",
+    "minimatch@>=3.0.0 <3.1.4": "3.1.4",
+    "minimatch@>=5.0.0 <5.1.8": "5.1.8",
+    "minimatch@>=9.0.0 <9.0.7": "9.0.7",
+    "next@15.5.20>postcss": "8.5.10",
+    "path-to-regexp@>=0.1.0 <0.1.13": "0.1.13",
+    "picomatch@>=2.0.0 <2.3.2": "2.3.2",
+    "picomatch@>=4.0.0 <4.0.4": "4.0.4",
+    "svgo@>=2.0.0 <2.8.1": "2.8.1",
+    "svgo@>=3.0.0 <3.3.3": "3.3.3",
+    "yaml@>=1.0.0 <1.10.3": "1.10.3",
+    "yaml@>=2.0.0 <2.8.3": "2.8.3"
+  },
+  "ci": {
+    "workflowSemanticsSha256": {
+      ".github/workflows/auto-merge.yml": "22d891fb034f3f9449a4071db169ee8f55b3f6d1601747c43ba44f45f07db13d",
+      ".github/workflows/ci.yml": "239778888aa46867c6fb9b78d8a847fe7dc53721b7fc250ac25393652675f572"
+    },
+    "trustedFileSha256": {
+      "scripts/ci/post-merge-context.mjs": "bb2521d74c0319cd6308a0cdcce23062a8d2ce93d4a4a0e5bcdfe16047b2235b",
+      "scripts/ci/check-runtime-contract.mjs": "7f34e7fdc8154e7b3d38fb944a688e1fcfb5c7b16b73d8590e5b5743e8f1abd8",
+      "tests/ci/runtime-contract.test.mjs": "0e5cb907a64fca8045f59057b211f6e040bfd0b64772efe8678723ac43ff3629"
+    },
+    "workflowEnvelope": {
+      "name": "CI",
+      "on": {
+        "push": {
+          "branches": [
+            "main"
+          ]
+        },
+        "pull_request": null,
+        "repository_dispatch": {
+          "types": [
+            "post-controlled-auto-merge-ci"
+          ]
+        }
+      },
+      "permissions": {
+        "contents": "read"
+      },
+      "concurrency": {
+        "group": "ci-${{ github.workflow }}-${{ github.event_name == 'repository_dispatch' && github.run_id || github.ref }}",
+        "cancel-in-progress": true
+      }
+    },
+    "setupNodeCount": 3,
+    "pnpmSetupCount": 2,
+    "workspaceJob": {
+      "job": "workspace",
+      "envelope": {
+        "env": {
+          "BASH_ENV": "",
+          "NODE_OPTIONS": ""
+        },
+        "name": "workspace · install · typecheck · lint · tests · build",
+        "needs": "context",
+        "runs-on": "ubuntu-latest"
+      }
+    },
+    "bootstrapStep": {
+      "job": "workspace",
+      "name": "Bootstrap runtime contract parser",
+      "id": "runtime_bootstrap",
+      "condition": null,
+      "continueOnError": true,
+      "shell": "bash",
+      "runLines": [
+        "mkdir -p ci-artifacts",
+        "set -o pipefail",
+        "pnpm install --filter . --frozen-lockfile --ignore-scripts --ignore-pnpmfile 2>&1 | tee ci-artifacts/runtime-bootstrap.log"
+      ]
+    },
+    "runtimeStep": {
+      "job": "workspace",
+      "name": "Runtime contract",
+      "id": "runtime_contract",
+      "condition": "always() && steps.runtime_bootstrap.outcome == 'success'",
+      "continueOnError": true,
+      "shell": "bash",
+      "command": "node scripts/ci/check-runtime-contract.mjs --verify-active && node tests/ci/runtime-contract.test.mjs"
+    },
+    "enforcementStep": {
+      "job": "workspace",
+      "name": "Enforce workspace results",
+      "condition": "always()",
+      "continueOnError": null,
+      "shell": "bash",
+      "env": {
+        "RUNTIME_BOOTSTRAP": "${{ steps.runtime_bootstrap.outcome }}",
+        "RUNTIME_CONTRACT": "${{ steps.runtime_contract.outcome }}",
+        "INSTALL": "${{ steps.install.outcome }}",
+        "DEPENDENCY_SECURITY": "${{ steps.dependency_security.outcome }}",
+        "TYPECHECK": "${{ steps.typecheck.outcome }}",
+        "LINT": "${{ steps.lint.outcome }}",
+        "UNIT_TESTS": "${{ steps.unit_tests.outcome }}",
+        "BROWSER_TESTS": "${{ steps.browser_tests.outcome }}",
+        "BUILD": "${{ steps.build.outcome }}",
+        "PRODUCTION_SMOKE": "${{ steps.production_smoke.outcome }}"
+      },
+      "requiredStages": [
+        "RUNTIME_BOOTSTRAP",
+        "RUNTIME_CONTRACT",
+        "INSTALL",
+        "DEPENDENCY_SECURITY",
+        "TYPECHECK",
+        "LINT",
+        "UNIT_TESTS",
+        "BROWSER_TESTS",
+        "BUILD",
+        "PRODUCTION_SMOKE"
+      ],
+      "runLines": [
+        "failed=0",
+        "for stage in RUNTIME_BOOTSTRAP RUNTIME_CONTRACT INSTALL DEPENDENCY_SECURITY TYPECHECK LINT UNIT_TESTS BROWSER_TESTS BUILD PRODUCTION_SMOKE; do",
+        "  value=\"${!stage}\"",
+        "  printf '%s=%s\\n' \"$stage\" \"$value\"",
+        "  if [ \"$value\" != \"success\" ]; then",
+        "    failed=1",
+        "  fi",
+        "done",
+        "exit \"$failed\""
+      ]
+    }
+  },
+  "rootScriptsSha256": "4197e7c56c576259a528a83cc2374fec736d98196b66d0e4cb0ab0bebe8429f5",
+  "packageScriptsSha256": "b79a41f45350afc194adaa222a01ea41c8b7579bb5a0c986784af64418369514",
+  "dependencyDeclarationsSha256": "215f95245c54800f36e7fcbc845e4665aa690d0911bea87149255f1b4d8ffcd2",
+  "packageManifestSemanticsSha256": "b8293d323fcee4441e8194c811e6560e828aaf91b38399cdc7bc93de10c57a81",
+  "lockfileSha256": "c4231e9cf0c101ee28a718acd16599c1a4ad623dd0a9292b0ebd302dbfab2d68",
+  "workspaceFileSha256": "214e96b4a6573edfdcc75ccf81fe156f18d81d1b632a37d2a13249306d03736d",
+  "actions": {
+    "actions/checkout": {
+      "release": "v7.0.0",
+      "sha": "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"
+    },
+    "actions/setup-node": {
+      "release": "v6.4.0",
+      "sha": "48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e"
+    },
+    "pnpm/action-setup": {
+      "release": "v6.0.9",
+      "sha": "0ebf47130e4866e96fce0953f49152a61190b271"
+    },
+    "actions/upload-artifact": {
+      "release": "v7.0.1",
+      "sha": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+    },
+    "actions/dependency-review-action": {
+      "release": "v5.0.0",
+      "sha": "a1d282b36b6f3519aa1f3fc636f609c47dddb294"
+    },
+    "gitleaks/gitleaks-action": {
+      "release": "v3.0.0",
+      "sha": "e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e"
+    }
+  }
+}

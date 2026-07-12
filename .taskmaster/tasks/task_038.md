@@ -2,9 +2,9 @@
 
 **Title:** Modernize Node pnpm and CI Runtime
 
-**Status:** pending
+**Status:** done
 
-**Dependencies:** 36, 48
+**Dependencies:** 36 ✓, 48 ✓
 
 **Priority:** high
 

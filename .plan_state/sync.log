@@ -532,5 +532,47 @@
     "plan_hash": "310ea3ab8447f17d017b437f484c013c964688e8d64f256bce34a0b6fa00991a",
     "tracker_hash": "207ce601a3695758b5c213e366ac3180b1233bb746f3c9630afc8dceed309c93",
     "synced_at": "2026-07-11T22:22:13.918112+02:00"
+  },
+  {
+    "plan": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+    "plan_hash": "1be2e1b7245b038e989fe9d89e0702e2cb86457a67d46a0d1f32ccb9ffd8d6f7",
+    "tracker_hash": "52a7e97650eacdb8e75d5d2516eda3d348c95174707f4f3ab9e2f56b52375636",
+    "synced_at": "2026-07-12T02:12:30.744001+02:00"
+  },
+  {
+    "plan": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+    "plan_hash": "3a5a2eb9d4cf4f7c100cebf42823b88b2617b18936bda887c7da5764ad69ae2e",
+    "tracker_hash": "2e42f03b291d68c9fbc5ca82c053ea32887d01373dc34dedafae8a8b671340b7",
+    "synced_at": "2026-07-12T02:35:19.682311+02:00"
+  },
+  {
+    "plan": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+    "plan_hash": "6747312d2d5c9dba7af7c8ddb5d1d21946d9d05e1b206d93db8d419f52c90bf9",
+    "tracker_hash": "2da88e77df97d8008b9b3cc29b3b2290f4db085966bb190a7e775a440bee7675",
+    "synced_at": "2026-07-12T02:42:41.110420+02:00"
+  },
+  {
+    "plan": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+    "plan_hash": "d71052b8d76ca594ba0c3b96258f80355ad4c66e59d8212eccdc8e6c21e0acf0",
+    "tracker_hash": "311d1d7e243792a3fa1d811e3f3a8e729e006f8966f67aba1187b3acc165ced7",
+    "synced_at": "2026-07-12T12:06:10.059706+02:00"
+  },
+  {
+    "plan": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+    "plan_hash": "1053c760186af14390ee95cdd91b9e43159e2e8eee13d1d1d68f09f784f31546",
+    "tracker_hash": "a0081bde71a2b91ac03765d83ad54e9a0d2af4a606d6f4d708d72cdeacd882d9",
+    "synced_at": "2026-07-12T12:38:00.039456+02:00"
+  },
+  {
+    "plan": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+    "plan_hash": "1053c760186af14390ee95cdd91b9e43159e2e8eee13d1d1d68f09f784f31546",
+    "tracker_hash": "a0081bde71a2b91ac03765d83ad54e9a0d2af4a606d6f4d708d72cdeacd882d9",
+    "synced_at": "2026-07-12T12:39:32.353800+02:00"
+  },
+  {
+    "plan": "plans/2026-07-12-task38-modernize-node-pnpm-ci-runtime.md",
+    "plan_hash": "c81c8f0f11fc194b5a0a7c3327e41beac0a44d2e0b051e2635d8e86b47260b21",
+    "tracker_hash": "2c06ba41d8570c2eecf6a8a465079a0e362c85b184178a8909b1413c1a32c744",
+    "synced_at": "2026-07-12T12:45:27.592034+02:00"
   }
 ]

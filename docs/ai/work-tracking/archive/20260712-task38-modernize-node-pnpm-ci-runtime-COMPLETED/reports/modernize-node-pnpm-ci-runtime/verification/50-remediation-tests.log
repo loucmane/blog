@@ -1,0 +1,21 @@
+✔ accepts the canonical static runtime projections (12.323384ms)
+✔ rejects developer and package engine drift (10.393411ms)
+✔ rejects pnpm version, integrity, and script drift (9.003749ms)
+✔ rejects workspace script or dependency declaration drift (9.066871ms)
+✔ rejects legacy pnpm settings and incomplete override migration (9.075234ms)
+✔ rejects missing, broad, unresolved, or additional dependency build approvals (17.100613ms)
+✔ rejects lockfile format and exact override key or value drift (20.9364ms)
+✔ rejects CI Node, pnpm, and enforcement drift (14.065838ms)
+✔ rejects commented runtime commands and a weakened enforcement loop (9.020669ms)
+✔ rejects mutable or unexpected action references (8.267572ms)
+✔ rejects removed or shadowed pnpm settings in .npmrc (8.354878ms)
+✔ rejects pnpm workspace enforcement setting drift (16.666491ms)
+✔ rejects active runtime mismatches (8.528726ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 157.764998

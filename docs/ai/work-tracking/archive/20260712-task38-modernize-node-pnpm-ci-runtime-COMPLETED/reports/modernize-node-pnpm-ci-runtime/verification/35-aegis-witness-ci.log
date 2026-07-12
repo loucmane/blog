@@ -1,0 +1,48 @@
+{
+  "base": "origin/main",
+  "boundary_event": {
+    "reason": "ci_mode",
+    "status": "skipped"
+  },
+  "branch": "feat/task-38-modernize-node-pnpm-ci-runtime",
+  "checks": {
+    "ci_greenness": {
+      "detail": "native required checks own CI greenness; the witness never re-implements it",
+      "passed": true,
+      "status": "delegated"
+    },
+    "diff_accounting": {
+      "deleted_tests_escalated": [],
+      "detail": "no scope config available in CI (brief.json is untracked); glob accounting is owned by the local witness report \u2014 test deletions still escalate",
+      "files_in_diff": 0,
+      "passed": true,
+      "status": "globs_not_derivable_in_ci"
+    },
+    "done_flip_containment": {
+      "detail": "any task flipped done must have a containing commit (the stranded-#73 class)",
+      "passed": true,
+      "uncommitted_done_flip": false
+    },
+    "scope_mapping": {
+      "detail": "branch must map to a scope record or the task-NN convention",
+      "passed": true,
+      "source": "branch_convention",
+      "task_id": "38"
+    },
+    "verification_at_head": {
+      "detail": "the out-of-worktree ledger does not travel to CI; the local aegis witness report is the authoritative artifact for this check",
+      "passed": true,
+      "status": "not_derivable_in_ci"
+    }
+  },
+  "escalations": [],
+  "generated_at": "2026-07-12T00:36:52Z",
+  "head_commit": "81511aa",
+  "legacy_projection": {
+    "reason": "ci_mode",
+    "status": "skipped"
+  },
+  "mode": "ci",
+  "passed": true,
+  "schema_version": "1"
+}
