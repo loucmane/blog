@@ -21,11 +21,18 @@ Record decisions before implementation, including options considered, rationale,
 - 2026-07-13 - Accept the architecture for incremental implementation while deferring live
   Neon/R2/Vercel operations and manual screen-reader validation to their explicit later
   tasks. A local pass must not be represented as provider or human-usability proof.
+- 2026-07-13 - Keep Next 16.2.10 unchanged but override its isolated research-only
+  `postcss@8.4.31` dependency to exact `8.5.16`. GitHub's advisory identifies 8.5.10 as the
+  first patched release; 8.5.16 has more than two weeks of registry soak, unlike releases
+  8.5.17-8.5.19 published within the preceding two days. Revert this override with the
+  research harness if Next compatibility fails; do not project it into Task 40 without
+  repeating the security and build evidence there.
 
 ## Progress Log
 - **2026-07-13 14:48 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:aegis:kickoff|E:.aegis/state/current-work.json] Decisions log initialized by Aegis kickoff.
 - **2026-07-13 14:50 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:scope|E:docs/research/spike-plan.md] Confirmed Task 37 scope before implementation: retain only a standalone exact-pinned research workspace under research/task37 outside the root pnpm workspace, synthetic nonpersonal fixtures, Task 37 ADR/research outputs, Taskmaster projection, and sanctioned Aegis/plan/session/tracker evidence. Local ephemeral PostgreSQL/S3-compatible containers may use synthetic credentials. Do not change product source, root package manifests or lockfile, workflows, Aegis managed runtime/authority/enforcement/manifest, deployment, production data, or secrets; live-provider criteria without attended credentials remain explicitly unproven rather than fabricated. Preserve user-owned .codex untouched. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:24 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:decision|E:docs/decisions/0005-use-nextjs-16-for-unified-magazine-framework.md] Selected reversible framework, editor, persistence, scheduling, and media boundaries from primary-source research and executed spikes; authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-13 16:15 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:security-remediation|E:research/task37/pnpm-workspace.yaml] Selected well-soaked patched PostCSS 8.5.16 as an isolated exact override after hosted dependency review rejected Next's vulnerable pin; authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "f288ca098351420189e1e2ed09fd67ab", "schema": "legacy-shadow-sweh-projection-v1"} -->

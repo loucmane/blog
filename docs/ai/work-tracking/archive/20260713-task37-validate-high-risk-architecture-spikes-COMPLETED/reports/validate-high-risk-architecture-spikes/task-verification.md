@@ -67,8 +67,32 @@ credential verification. Containers, networks, and volumes were removed after th
 | Completed-state guard regressions | Pass; 5/5 |
 | Legacy guard and plan sync | Pass; exact 16-path Task 47 template-debt inventory retained |
 | `actionlint` 1.7.12 | Pass for both workflows |
-| Gitleaks 8.30.1 | Pass; 199 commits and approximately 47.67 MB scanned, no leaks |
+| Gitleaks 8.30.1 | Pass; 200 commits and approximately 47.96 MB scanned, no leaks |
 | `git diff --check` | Pass |
+
+## Hosted Dependency Review Remediation
+
+PR #32's first hosted dependency-review run failed correctly on
+`research/task37/pnpm-lock.yaml` because current stable Next 16.2.10 declares exact
+`postcss@8.4.31`, which is affected by GHSA-qx2v-qp2m-jg93. GitHub's advisory API identifies
+8.5.10 as the first patched version. The isolated research workspace now declares an exact
+PostCSS 8.5.16 override: it was published on 2026-06-28 and is deliberately preferred over
+8.5.17-8.5.19, which were less than two days old at evaluation time.
+
+After the correction, two consecutive frozen installs passed without drift, all 21 focused
+unit cases passed, the Next 16.2.10 production build and portable Node smoke passed, and
+`pnpm audit --audit-level moderate` reported no known vulnerabilities. The root package,
+root lockfile, product source, and CI workflow are unchanged. Hosted dependency review must
+still pass on the new exact PR head before delivery.
+
+The complete root matrix also passed under pinned Node 24.18.0, Corepack 0.35.0, and pnpm
+11.11.0: runtime contracts, typecheck, dependency policy, lint/format, 29 quality contracts,
+22 Vitest cases with coverage, package/application builds, 4 Playwright desktop/mobile cases,
+production smoke, 65 auto-merge policy cases, 46 workflow contracts, 29 skill-platform cases,
+Taskmaster health/dependencies, strict Aegis plus capsule/brief, five completed-state guards,
+legacy guard, checksum-verified actionlint/Gitleaks, and `git diff --check` all passed. The
+PostgreSQL/media/restore integration drill also reran successfully and removed its containers,
+network, and volumes.
 
 ## Environment-Only Retries
 

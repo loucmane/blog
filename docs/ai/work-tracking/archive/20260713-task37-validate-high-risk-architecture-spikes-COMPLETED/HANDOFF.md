@@ -23,13 +23,15 @@
 - No Task 37 implementation blocker remains.
 - Live Neon, R2, and Vercel behavior and manual screen-reader usability were deliberately not
   fabricated; they remain later attended acceptance gates.
-- Full local repository verification is complete; exact-head accessibility ratchet, hosted
-  checks, and independent reviews remain delivery gates after the task commit.
+- PR #32's first dependency-review run found Next 16.2.10's vulnerable PostCSS 8.4.31 pin in
+  the isolated lockfile. The research workspace now overrides exact patched 8.5.16, and its
+  frozen install, tests, build/smoke, and audit pass. Hosted checks on the corrected exact head
+  remain the only Task 37 delivery gate.
 
 ## Next Steps
-1. Commit the exact Task 37 scope and rerun commit-SHA-dependent validation.
-2. Push and open the Task 37 pull request under the standing delivery authority.
-3. Require protected checks and independent reviews before policy-governed merge.
+1. Commit and push the research-only PostCSS remediation without rewriting published history.
+2. Require all protected checks on the corrected exact PR #32 head.
+3. Revalidate inventory, mergeability, reviews, and trusted-policy eligibility.
 4. Begin Task 40 only after Task 37 is merged and main is synchronized.
 ## Important Context
 - Taskmaster is optional unless this task marks it required in `.aegis/state/current-work.json`.
@@ -52,6 +54,7 @@
 - **2026-07-13 15:43 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:task-master:set-status|E:.taskmaster/tasks/task_037.md] Taskmaster Task 37 is done and only its scoped projection was regenerated; authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:58 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent-review:independent|E:docs/ai/work-tracking/archive/20260713-task37-validate-high-risk-architecture-spikes-COMPLETED/reports/validate-high-risk-architecture-spikes/independent-reviews.md] Both independent read-only reviews passed after correcting Axe scope and explicit export/search deferrals; authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:59 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:serena:availability|E:serena/memory:absent] Serena is unavailable, so no memory was fabricated; archived Task 37 evidence remains authoritative; authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-13 16:15 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:github-actions:dependency-review|E:https://github.com/loucmane/blog/actions/runs/29256742723/job/86839002408] Remediated the hosted PostCSS advisory with an isolated exact 8.5.16 override; focused frozen install, tests, build/smoke, and audit pass; authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "f288ca098351420189e1e2ed09fd67ab", "schema": "legacy-shadow-sweh-projection-v1"} -->

@@ -44,11 +44,18 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
   from a future full-domain export/import bundle, and deterministic text extraction from search
   ranking/filtering. The ADR now assigns those unresolved production gates to Tasks 42 and 45
   rather than treating them as completed.
+- 2026-07-13 - Protected dependency review on PR #32 found GHSA-qx2v-qp2m-jg93 in
+  Next 16.2.10's exact `postcss@8.4.31` dependency inside the isolated research lockfile.
+  Next 16.2.10 remains the current stable Next release and still declares that vulnerable
+  version. The research workspace now overrides only PostCSS to well-soaked stable 8.5.16,
+  which is above the advisory's 8.5.10 patched floor; frozen install, unit tests, production
+  build/smoke, and npm audit pass without changing product dependencies.
 
 ## Progress Log
 - **2026-07-13 14:48 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:aegis:kickoff|E:.aegis/state/current-work.json] Findings log initialized by Aegis kickoff.
 - **2026-07-13 14:50 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:scope|E:docs/research/spike-plan.md] Confirmed Task 37 scope before implementation: retain only a standalone exact-pinned research workspace under research/task37 outside the root pnpm workspace, synthetic nonpersonal fixtures, Task 37 ADR/research outputs, Taskmaster projection, and sanctioned Aegis/plan/session/tracker evidence. Local ephemeral PostgreSQL/S3-compatible containers may use synthetic credentials. Do not change product source, root package manifests or lockfile, workflows, Aegis managed runtime/authority/enforcement/manifest, deployment, production data, or secrets; live-provider criteria without attended credentials remain explicitly unproven rather than fabricated. Preserve user-owned .codex untouched. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:24 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:findings|E:docs/research/task-37-architecture-spike-results.md] Recorded passed local contracts, rejected alternatives, corrected defects, and explicit provider/manual-accessibility gates; authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-13 16:15 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:github-actions:dependency-review|E:https://github.com/loucmane/blog/actions/runs/29256742723/job/86839002408] Recorded the hosted PostCSS advisory and verified a research-only exact override instead of weakening dependency review; authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "f288ca098351420189e1e2ed09fd67ab", "schema": "legacy-shadow-sweh-projection-v1"} -->

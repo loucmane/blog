@@ -29,6 +29,7 @@
 - **2026-07-13 15:43 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:task-master:set-status|E:.taskmaster/tasks/task_037.md] Marked Taskmaster Task 37 done through the supported CLI and regenerated only its scoped projection; authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:58 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent-review:independent|E:docs/ai/work-tracking/archive/20260713-task37-validate-high-risk-architecture-spikes-COMPLETED/reports/validate-high-risk-architecture-spikes/independent-reviews.md] Implementation/completeness and adversarial security/scope reviews both passed after evidence-precision remediation; no unresolved blocker remains; authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:59 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:serena:availability|E:serena/memory:absent] Serena is not configured for this repository; no memory was fabricated, and the Aegis archive, plan, session, tracker, handoff, and passive ledger remain the continuity sources; authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-13 16:15 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:github-actions:dependency-review|E:https://github.com/loucmane/blog/actions/runs/29256742723/job/86839002408] Hosted dependency review found Next's vulnerable PostCSS pin; the isolated workspace now uses exact patched 8.5.16 and focused verification passes; authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -38,13 +39,14 @@
 
 ## Current State
 Task 37 is completed in Aegis and Taskmaster. Its isolated harness, repository verification,
-strict Aegis verification, witnesses, closeout, and scoped projection all pass. Delivery of the
-closed branch is the remaining lifecycle action.
+strict Aegis verification, witnesses, closeout, and scoped projection all pass. PR #32 is open;
+its first dependency-review run exposed and prompted remediation of Next's vulnerable isolated
+PostCSS pin. Delivery of the corrected exact head is the remaining lifecycle action.
 
 ## Next Steps
-1. Commit the exact Task 37 scope and rerun commit-SHA-dependent validation.
-2. Push the branch and open the Task 37 pull request.
-3. Require protected hosted checks and independent reviews before policy-governed merge.
+1. Commit and push the research-only PostCSS remediation without rewriting history.
+2. Require all protected checks on the corrected exact PR #32 head.
+3. Revalidate inventory, mergeability, reviews, and trusted-policy eligibility.
 4. Start Task 40 only from synchronized main after Task 37 merges.
 
 ## Dependencies & Notes

@@ -58,6 +58,9 @@ emergency_bypass: false
 - 2026-07-13 - `aegis log` updated `plan-step-implement` to `completed` with evidence `docs/research/task-37-architecture-spike-results.md`.
 - 2026-07-13 - `aegis log` updated `plan-step-verify` to `completed` with evidence `docs/ai/work-tracking/active/20260713-task37-validate-high-risk-architecture-spikes-ACTIVE/reports/validate-high-risk-architecture-spikes/task-verification.md`.
 - 2026-07-13 - `aegis log` updated `plan-step-verify` to `completed` with evidence `.aegis/reports/verification-report.json`.
+- 2026-07-13 - PR #32 dependency review found GHSA-qx2v-qp2m-jg93 in Next's isolated
+  PostCSS pin; exact PostCSS 8.5.16 override and focused compatibility evidence were added
+  without changing product dependencies.
 
 ## Continuation & Handoff
 - Next owner: project owner

@@ -13,12 +13,16 @@
 - 2026-07-13 15:58 CEST - Resolved independent review's evidence-precision findings, added
   serialized JSON re-import and hostile rendered-text escaping coverage, and recorded clean
   implementation and adversarial review verdicts.
+- 2026-07-13 16:15 CEST - Remediated PR #32 dependency review by overriding only the
+  isolated research workspace from vulnerable PostCSS 8.4.31 to patched, well-soaked 8.5.16;
+  root product packages and lockfile remain unchanged.
 
 ## Progress Log
 - **2026-07-13 14:48 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:aegis:kickoff|E:.aegis/state/current-work.json] Changelog initialized by Aegis kickoff.
 - **2026-07-13 15:22 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent-skill:stack-research-adr|E:reports/agent-skills/task37-architecture-spikes.json] Recorded advisory Task 37 architecture review with conditional-pass decisions and explicit live-provider/manual-accessibility gaps; authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:22 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:implementation|E:docs/research/task-37-architecture-spike-results.md] Implemented exact-pinned isolated editor migration autosave scheduling PostgreSQL media restore and Next portability spikes; all retained code is research-only and product manifests remain unchanged; authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-13 15:24 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:changelog|E:docs/research/task-37-architecture-spike-results.md] Summarized the retained research artifacts and reversible decisions; authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-13 16:15 CEST** - [S:20260713|W:task37-validate-high-risk-architecture-spikes|H:agent:changelog|E:research/task37/pnpm-lock.yaml] Recorded the exact research-only PostCSS security remediation found by hosted dependency review; authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 25, "last_event_id": "f288ca098351420189e1e2ed09fd67ab", "schema": "legacy-shadow-sweh-projection-v1"} -->
