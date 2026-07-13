@@ -1,10 +1,10 @@
 # ADR 0004: Use Portable Managed Services Behind App-Owned Adapters
 
-**Status:** Proposed; blocked on persistence and deployment spikes
+**Status:** Accepted service-boundary architecture; live provider adoption remains conditional
 
 **Date:** 2026-07-09
 
-**Task:** 33
+**Task:** 33; validated locally by Task 37 on 2026-07-13
 
 ## Context
 
@@ -35,6 +35,27 @@ Every service is accessed through a product-level port. Provider IDs and payload
 - OpenTelemetry server traces/metrics are stable and vendor-neutral; browser instrumentation remains experimental. [JavaScript status](https://opentelemetry.io/docs/languages/js/)
 - Next.js documents self-hosting, so Vercel can be an operational default without becoming the only run target. [Self-hosting](https://nextjs.org/docs/app/guides/self-hosting)
 - Neon uses standard PostgreSQL and documents backup/restore windows. [Backups](https://neon.com/docs/manage/backups)
+
+## Task 37 Validation
+
+The service-boundary architecture passed local, provider-independent proof:
+
+- PostgreSQL 18.4 migration, pg-boss schema 37, two-worker claim competition,
+  transactional enqueue rollback, logical dump, and isolated restore;
+- application-owned SHA-256 for an original and Sharp rendition, retained in object metadata
+  and PostgreSQL, then copied and reverified on a second S3-compatible endpoint;
+- a digest-pinned Next 16.2.10 production build serving static reader, dynamic private preview,
+  and health routes through a generic Node server;
+- database-authoritative publication and outbox models that keep email/search/card failures
+  from reversing a valid public transition.
+
+The exact evidence is in `docs/research/task-37-architecture-spike-results.md`.
+
+No Neon, R2, Vercel, or production credential was used. Provider-specific pooling,
+scale-to-zero, multipart/checksum, custom-domain cache, PITR/snapshot, preview isolation,
+multi-instance cache, billing, full export, and hosted restore criteria remain Tasks 42/46
+gates. These gaps keep provider adoption conditional without blocking portable domain and
+adapter implementation.
 
 ## Consequences
 
