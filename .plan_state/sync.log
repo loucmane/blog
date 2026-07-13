@@ -640,5 +640,35 @@
     "plan_hash": "69c0ac6d28a70b1e401788d527e71e4fde7fcb69fc1668f8e372c55ffd5c47f7",
     "tracker_hash": "dbf4a347f27f3e8e389097244c6d638ce4b639608b005266aca4205da8dbd936",
     "synced_at": "2026-07-13T00:09:21.798141+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task68-repair-task39-capability-script-contract.md",
+    "plan_hash": "1c565820ed1012808709c90e6d19f79c8c1ebde263d089967d38f7d730605c6d",
+    "tracker_hash": "06a13162dce22589644dd07b8b4b8915677c4534ab93c332730cc619409edfc1",
+    "synced_at": "2026-07-13T01:30:39.699031+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task68-repair-task39-capability-script-contract.md",
+    "plan_hash": "4500179a91495e6f3dea892551b52367df37de8e63c826270a18c680207554e3",
+    "tracker_hash": "6697b266c238ed35b9c1cb4468eb5027bec74afa42f70417877b296748aa5765",
+    "synced_at": "2026-07-13T01:34:57.495451+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task68-repair-task39-capability-script-contract.md",
+    "plan_hash": "c835556d8bbf831d9e57a2a45e49ff13468217565a65cd32422cce3174073b66",
+    "tracker_hash": "6697b266c238ed35b9c1cb4468eb5027bec74afa42f70417877b296748aa5765",
+    "synced_at": "2026-07-13T01:38:21.647714+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task68-repair-task39-capability-script-contract.md",
+    "plan_hash": "c835556d8bbf831d9e57a2a45e49ff13468217565a65cd32422cce3174073b66",
+    "tracker_hash": "d29a061fd6072956b5f8427231c9a5c1c3fd60cf8c954e4740356e46332b593b",
+    "synced_at": "2026-07-13T01:43:06.524592+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task68-repair-task39-capability-script-contract.md",
+    "plan_hash": "c835556d8bbf831d9e57a2a45e49ff13468217565a65cd32422cce3174073b66",
+    "tracker_hash": "44b042b0ff42d55d8b773ef9b4e72cb0ecea861c5ca89a2f157e6516e502cc4a",
+    "synced_at": "2026-07-13T01:49:55.566704+02:00"
   }
 ]

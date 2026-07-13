@@ -78,6 +78,8 @@ export const criticalBrowserJourneys = Object.freeze([
   'serves the reader shell and enforces the accessibility baseline',
   'keeps the theme chooser operable from the keyboard',
 ])
+export const capabilityModes = Object.freeze(['unit', 'browser'])
+export const capabilityCommand = 'node scripts/ci/check-test-capability.mjs'
 export const expectedBrowserProjects = Object.freeze(['desktop-chromium', 'mobile-chromium'])
 export const criticalUnitContracts = Object.freeze([
   {
@@ -158,6 +160,19 @@ export function analyzeTestSource(source, file = 'test.ts') {
   }
 }
 
+export function resolveCapabilityModes(mode) {
+  if (mode === undefined) return [...capabilityModes]
+  return capabilityModes.includes(mode) ? [mode] : []
+}
+
+export function capabilityModesForCommand(command) {
+  if (command === capabilityCommand) return resolveCapabilityModes(undefined)
+  for (const mode of capabilityModes) {
+    if (command === `${capabilityCommand} ${mode}`) return [mode]
+  }
+  return []
+}
+
 export function evaluateCapability(mode, sources) {
   if (!['unit', 'browser'].includes(mode)) {
     return {
@@ -182,6 +197,9 @@ export function evaluateCapability(mode, sources) {
       .every(([, analysis]) => analysis.disabledCalls.length === 0)
   const requirements = {
     task39Lifecycle: ['in-progress', 'done'].includes(task39?.status),
+    rootCapabilityCommandRunsAllModes:
+      capabilityModesForCommand(manifests.root.scripts?.['test:capability']).join(',') ===
+      capabilityModes.join(','),
   }
 
   if (mode === 'unit') {
@@ -263,20 +281,29 @@ export function evaluateCapability(mode, sources) {
 }
 
 function main() {
-  const mode = process.argv.at(-1)
-  if (!['unit', 'browser'].includes(mode)) {
+  const requestedMode = process.argv[2]
+  const modes = resolveCapabilityModes(requestedMode)
+  if (modes.length === 0) {
     console.error('Usage: node scripts/ci/check-test-capability.mjs <unit|browser>')
     process.exit(2)
   }
 
-  const report = evaluateCapability(mode, loadCapabilitySources())
+  const sources = loadCapabilitySources()
+  const reports = modes.map((mode) => evaluateCapability(mode, sources))
   fs.mkdirSync(path.join(root, 'ci-artifacts'), { recursive: true })
-  fs.writeFileSync(
-    path.join(root, 'ci-artifacts', `${mode}-test-capability.json`),
-    `${JSON.stringify(report, null, 2)}\n`,
-  )
-  console.log(JSON.stringify(report, null, 2))
-  if (report.errors.length > 0) process.exitCode = 1
+  for (const report of reports) {
+    fs.writeFileSync(
+      path.join(root, 'ci-artifacts', `${report.mode}-test-capability.json`),
+      `${JSON.stringify(report, null, 2)}\n`,
+    )
+  }
+
+  const combined = {
+    reports,
+    status: reports.every((report) => report.errors.length === 0) ? 'supported' : 'failed',
+  }
+  console.log(JSON.stringify(reports.length === 1 ? reports[0] : combined, null, 2))
+  if (combined.status === 'failed') process.exitCode = 1
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

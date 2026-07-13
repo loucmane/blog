@@ -57,14 +57,14 @@
     "trustedFileSha256": {
       "scripts/ci/check-accessibility-baseline.mjs": "6dcde3094d520407572e4a404dab5d2746fdc3dc903fa48d2e13d308d88e9cda",
       "scripts/ci/check-runtime-contract.mjs": "25f72fa4b6770d5b0797e97c232fd6be8a3b83df1a547c521406a1486f765aee",
-      "scripts/ci/check-test-capability.mjs": "2a43844539ac658faa81b22c5105f130d25909ca7441e1d6c5789d551b002f50",
+      "scripts/ci/check-test-capability.mjs": "1532cb12cc8374363eab9a5a4c0439eb9f22454e8aba9e2a1a0db8da48f61b5e",
       "scripts/ci/check-test-results.mjs": "14dcd2d0191538338459bb9fc422af7c5046739a5653b8a0246406640b3bafc4",
       "scripts/ci/post-merge-context.mjs": "bb2521d74c0319cd6308a0cdcce23062a8d2ce93d4a4a0e5bcdfe16047b2235b",
       "tests/ci/accessibility-baseline.test.mjs": "3ab657c003c065df77b4ed3ee15ab5a96551ab782b17922cd219a2217d4b6974",
       "tests/ci/eslint-contract.test.mjs": "7c495a954146d0885ae25baeee7b946641809b71c62c1021451a97d3cd071ef3",
       "tests/ci/runtime-contract.test.mjs": "00b85dfe9dfddaec69df075f3da8b267e3023e611792667bc18922ee976d6ed3",
       "tests/ci/security-hotfix.test.mjs": "ec35b6b589945e26c2f9a11836e6dba23613161e97a7cbfa6fb5e59bd42469d1",
-      "tests/ci/test-capability.test.mjs": "cac8f7e6ae3cda08d147cb65f2590c1ad04327b1e2e2fcf846c08584e52f8361",
+      "tests/ci/test-capability.test.mjs": "ff8bcd72a25b763ad3e0dbc0b81b5dd205ccfac870d435e83ce14e7b341494e8",
       "tests/ci/test-results.test.mjs": "0de3edd1ccabeba76bef6b6a0dc52bd9c7e8df6bb9956109cab0dcc6ee55dcd5"
     },
     "workflowEnvelope": {

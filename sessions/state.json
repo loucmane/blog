@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-13-001-task39-modernize-typescript-lint-formatting-tests-delivery.md",
-  "current_path": "sessions/2026/07/2026-07-13-001-task39-modernize-typescript-lint-formatting-tests-delivery.md",
+  "current": "2026-07-13-001-task68-repair-task39-capability-script-contract.md",
+  "current_path": "sessions/2026/07/2026-07-13-001-task68-repair-task39-capability-script-contract.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "39",
-    "slug": "modernize-typescript-lint-formatting-tests",
+    "id": "68",
+    "slug": "repair-task39-capability-script-contract",
     "status": "done",
-    "title": "Modernize TypeScript Lint Formatting and Tests"
+    "title": "Repair Task 39 Capability Script Contract"
   },
-  "updated_at": "2026-07-12T22:07:57Z"
+  "updated_at": "2026-07-12T23:32:45Z"
 }
