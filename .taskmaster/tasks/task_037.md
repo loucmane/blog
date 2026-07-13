@@ -2,9 +2,9 @@
 
 **Title:** Validate High-Risk Architecture Spikes
 
-**Status:** pending
+**Status:** done
 
-**Dependencies:** 36
+**Dependencies:** 36 ✓
 
 **Priority:** high
 

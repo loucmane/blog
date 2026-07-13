@@ -670,5 +670,47 @@
     "plan_hash": "c835556d8bbf831d9e57a2a45e49ff13468217565a65cd32422cce3174073b66",
     "tracker_hash": "44b042b0ff42d55d8b773ef9b4e72cb0ecea861c5ca89a2f157e6516e502cc4a",
     "synced_at": "2026-07-13T01:49:55.566704+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task37-validate-high-risk-architecture-spikes.md",
+    "plan_hash": "65cea5d6a7097466dbd1ed0b5e30b4b8f417b2b8ea4a501420e2ef28913ff47c",
+    "tracker_hash": "1049b7117eaf94207fa70a4329d0e4565197e27b9444dc410a2a1cc31468b38e",
+    "synced_at": "2026-07-13T15:36:10.432157+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task37-validate-high-risk-architecture-spikes.md",
+    "plan_hash": "9ebf421ac417bbed1eeb5e03fa7e726183fc41900dfc8db510a3841a54f7eb4f",
+    "tracker_hash": "3f410e7e27bef63e1b8740eebb51b5439407bef10e409e051a53b5b3bf801fc9",
+    "synced_at": "2026-07-13T15:39:49.910168+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task37-validate-high-risk-architecture-spikes.md",
+    "plan_hash": "cd88c6584f8672657fbda0188eeb31ebd28ba45c948c2102b71caf143bee9003",
+    "tracker_hash": "013ec63b54c469796a59d46502ba9bd53c9ff3d1b5b06ced75d4cec68359bb94",
+    "synced_at": "2026-07-13T15:45:20.862277+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task37-validate-high-risk-architecture-spikes.md",
+    "plan_hash": "cd88c6584f8672657fbda0188eeb31ebd28ba45c948c2102b71caf143bee9003",
+    "tracker_hash": "1a7ac393397f4515128b613f1dcd882501d0de139053db30ca85745cb81a551f",
+    "synced_at": "2026-07-13T15:59:01.469518+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task37-validate-high-risk-architecture-spikes.md",
+    "plan_hash": "cd88c6584f8672657fbda0188eeb31ebd28ba45c948c2102b71caf143bee9003",
+    "tracker_hash": "2815002548fae040670fcc46acc7f08c958006e66a31595cfe32c622c3f2782c",
+    "synced_at": "2026-07-13T15:59:47.410859+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task37-validate-high-risk-architecture-spikes.md",
+    "plan_hash": "55f8d9542d398d8112a42319a49c88b9f1f247729f5969fac0fa40bc77be0e5c",
+    "tracker_hash": "31a4f6a88662953c3dcf7ef9de3f9c8c4a52f32e9b0f4cf3fd1128b472f1a203",
+    "synced_at": "2026-07-13T16:23:02.148177+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task37-validate-high-risk-architecture-spikes.md",
+    "plan_hash": "55f8d9542d398d8112a42319a49c88b9f1f247729f5969fac0fa40bc77be0e5c",
+    "tracker_hash": "50fd9212747911e2c85dcde804a06cd166dc75d49c5d9976d69202717c8fcfc4",
+    "synced_at": "2026-07-13T16:25:47.196693+02:00"
   }
 ]
