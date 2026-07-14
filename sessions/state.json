@@ -1,13 +1,5 @@
 {
-  "current": "2026-07-13-001-task37-validate-high-risk-architecture-spikes.md",
-  "current_path": "sessions/2026/07/2026-07-13-001-task37-validate-high-risk-architecture-spikes.md",
+  "current": "2026-07-14-001-task40-migrate-react-next-framework-build-system.md",
   "paused": [],
-  "schema_version": "1.0.0",
-  "task": {
-    "id": "37",
-    "slug": "validate-high-risk-architecture-spikes",
-    "status": "in-progress",
-    "title": "Validate High-Risk Architecture Spikes"
-  },
-  "updated_at": "2026-07-13T12:48:06Z"
+  "updated_at": "2026-07-14T08:11:15+02:00"
 }

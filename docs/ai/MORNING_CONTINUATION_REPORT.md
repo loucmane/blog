@@ -10,43 +10,40 @@
 
 ## Current State
 
-- Goal: Tasks 38 and 39 are merged; deliver the narrowly scoped Task 68 regression repair required to make the Task 39 root capability command genuinely executable.
-- Base: synchronized main commit `afd47eb54b67e0c7a77565ac9b9548e4a55cc55e`, the protected squash merge of PR #30.
-- Task/branch: Task 68 `done` and archived on `feat/task-68-repair-task39-capability-script-contract`.
-- Pull request: `https://github.com/loucmane/blog/pull/31`; implementation head `ec87bbf60234f9dc19a8e0f5e3b4270e6fbf6988` passed all protected checks before this evidence-only continuity update.
-- User-owned `.codex/hooks.json` remains untracked and must not be inspected, staged, moved, hidden, deleted, or overwritten.
+- Goal: deliver Task 40, the exact-pinned Next.js/React framework and build-system migration, then continue to Task 41 only after Task 40 merges.
+- Base/HEAD: `0fca7a807a8035b6e3afb9d6795dfb9ac9efc69f` (`origin/main` when Task 40 began).
+- Task/branch: Task 40 `done` on `feat/task-40-migrate-react-next-framework-build-system`; Aegis closeout is terminal and the work-tracking envelope is archived.
+- Pull request: not created; no Task 40 paths are staged or committed.
+- An owner-authorized managed Aegis rollout is present as pre-existing working-tree infrastructure. Preserve it intact and unstaged. User-owned `.codex/` must not be inspected, staged, moved, hidden, deleted, or overwritten.
 
 ## Delivered Work
 
-- Reproduced the post-merge defect: argumentless `pnpm test:capability` exited 2 while explicit `unit` and `browser` modes both passed.
-- Kept the root package script unchanged and made `scripts/ci/check-test-capability.mjs` execute exact ordered modes `unit` and `browser` when no mode is supplied.
-- Preserved explicit single-mode diagnostics, added executable root-command coverage, and added adversarial fixtures that deny omission of either required mode.
-- Updated only the two corresponding trusted-file SHA-256 values in `config/runtime.json`.
-- Added and completed Taskmaster Task 68 through supported commands; all 35 pre-existing tasks remain semantically equivalent despite Taskmaster 0.43.1 ID-representation normalization.
-- Completed deterministic handoff repair, final closeout, Taskmaster completion, scoped task-file generation, and archive normalization.
+- Exact-pinned Next.js `16.2.10`, React/React DOM `19.2.7`, and compatible React types; aligned the workspace on one React runtime.
+- Removed obsolete Webpack/SVGR and stale prototype configuration in favor of Next 16's stable Turbopack path and generic `next start` baseline.
+- Added static reader rendering, canonical metadata, responsive local imagery, protected draft preview, preview disable, authenticated cache invalidation, and same-origin security headers.
+- Added deterministic framework, unit, browser, accessibility, security, and production-smoke contracts without starting Task 41 or Task 42.
+- Repaired only Task 40 daily legacy continuity through the supported helper; Taskmaster health and all 76 dependencies pass, and only Task 40's generated projection was refreshed.
 
 ## Verification
 
-- Runtime: Node `24.18.0`, Corepack `0.35.0`, pnpm `11.11.0`; frozen installation passed without package or lockfile drift.
-- Root capability command passed and emitted supported reports for exact modes `unit` and `browser`; focused capability suite passed 16/16.
-- Quality 29/29, runtime 13/13, security 7/7, Vitest 22/22, Playwright 4/4, package/app builds, HTTP 200 production smoke, and zero dependency advisories passed.
-- Auto-merge policy/workflow 65 + 46, skill platform 29, Taskmaster health/dependencies, Aegis CI/strict verification, capsule/brief, witness, completed-state guard 5/5, legacy guard, plan sync, actionlint, Gitleaks, and `git diff --check` passed.
-- Strict Aegis verification recorded 31 checks, zero required failures, one expected advisory warning, and one unsupported optional integration; enforcement remained advisory.
-- Independent implementation/completeness reviewer `019f5825-0ec0-72f2-b193-f2a09992dfee`: PASS with no blocking findings.
-- Independent adversarial security/scope reviewer `019f5825-160e-79a2-aaa3-0fa86f1b22e7`: PASS with no blocking findings.
-- GitHub reported PR #31 `CLEAN` and `MERGEABLE`, with all four required checks successful, zero labels, zero reviews, zero review threads, and an exact 19-path Task 68 inventory at implementation head `ec87bbf60234f9dc19a8e0f5e3b4270e6fbf6988`.
-- The trusted delivery classifier denied autonomous merge only as `ci-governance` for `scripts/ci/check-test-capability.mjs` and `tests/ci/test-capability.test.mjs`.
-- Verification evidence: `docs/ai/work-tracking/archive/20260713-task68-repair-task39-capability-script-contract-COMPLETED/reports/repair-task39-capability-script-contract/task-verification.md`.
+- Two frozen installs passed with stable package/lock hashes; typecheck, lint, format check, 53-test coverage, package/app builds, HTTP 200 production smoke, and zero dependency advisories passed.
+- Playwright passed 10/10 desktop/mobile journeys with zero serious/critical Axe findings.
+- Quality contract 29/29, security 7/7, auto-merge policy 65, workflow contract 46, skill platform 29, Taskmaster health/dependencies, Aegis CI, completed-state guards 5/5, legacy guard, standard Aegis verification, capsule/brief, witness, and `git diff --check` passed.
+- The sandboxed Turbopack build failed only because process port binding was denied; the identical elevated build passed. This is execution-environment evidence, not a product failure.
+- The attended managed-runtime refresh to stable source `144bd4463dcec9c326b023ff53b45aa71660727e` preserved the advisory-only queue while making it non-blocking. Strict verification and final closeout passed with zero required failures; closeout reported zero warnings.
+- Verification evidence: `docs/ai/work-tracking/archive/20260713-task40-migrate-react-next-framework-build-system-COMPLETED/reports/migrate-react-next-framework-build-system/verification.md`.
 
 ## Scope And Risks
 
-- No package manifest, lockfile, product, workflow, authority, deployment, secret, Aegis runtime, or Aegis manifest change is present.
-- Taskmaster normalized legacy task ID representation during supported mutation; semantic comparison proves no pre-existing task changed.
-- Existing Task 40 Next/React warnings and Task 41 Tailwind/shadcn/workspace warnings remain outside this repair.
-- The known Aegis completed-task guidance-ordering defect from Task 67 remains dogfood evidence; do not run generic repair, delivery sync, or Task 67 closeout.
+- The Task 40 diff is limited to framework packages/lockfile, web framework behavior, deterministic tests, Taskmaster projection, and Task 40 plans/sessions/evidence.
+- The managed Aegis rollout remains unrelated and unstaged; never partially revert it to manufacture a clean tree.
+- UI Rollup drops module-level `use client` directives in its distributable bundle, but the Next app consumes source exports through `transpilePackages` and passes build/browser checks. Task 41 owns that workspace boundary.
+- Browserslist compatibility data is stale; unrelated transitive maintenance remains outside Task 40.
+- Local `actionlint` and `gitleaks` executables are unavailable. Task 40 changes no workflow, and hosted protected CI remains the authoritative Gitleaks gate.
+- The trustworthy advisory-only queue remains preserved. Do not run generic repair or an event-draining loop.
 
 ## Next Safe Action
 
-Push this evidence-only continuity follow-up, require the four protected checks to pass on the resulting exact PR head, and revalidate mergeability, labels, review threads, and inventory. Because the trusted policy classifies the verification-script paths as `ci-governance`, stop at the attended protected squash-merge boundary and request exact-head approval.
+Stage only the explicit Task 40 inventory, leaving every managed rollout path and `.codex/` unstaged. Commit, push, open the Task 40 pull request, and revalidate its exact hosted head before trusted policy evaluation. Begin Task 41 only after Task 40 is merged and local `main` is synchronized.
 
 This report is a continuity pointer, not an independent grant or an expansion of authority.

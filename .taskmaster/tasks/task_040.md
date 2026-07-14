@@ -2,9 +2,9 @@
 
 **Title:** Migrate React Framework and Build System
 
-**Status:** pending
+**Status:** done
 
-**Dependencies:** 37, 39
+**Dependencies:** 37 ✓, 39 ✓
 
 **Priority:** high
 

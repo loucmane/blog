@@ -101,13 +101,14 @@
         "description": "Upgrade React and the selected full-stack framework, remove obsolete prototype configuration, and prove reader/server/preview/cache/deployment behavior.",
         "details": "Requires accepted framework evidence and modern quality tooling. Verify SSR/streaming, metadata, protected draft preview, cache invalidation, images, CSP, managed preview, Node fallback, browser smoke, accessibility, and no reader editor bundle.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "37",
           "39"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-14T12:12:01.620Z"
       },
       {
         "id": "41",
@@ -563,9 +564,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-13T13:42:54.379Z",
+      "lastModified": "2026-07-14T12:12:01.620Z",
       "taskCount": 36,
-      "completedCount": 19,
+      "completedCount": 20,
       "tags": [
         "master"
       ]

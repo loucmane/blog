@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const port = 3100
-const baseURL = `http://127.0.0.1:${port}`
+const baseURL = `http://localhost:${port}`
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -35,6 +35,8 @@ export default defineConfig({
     command: 'pnpm --filter web start',
     env: {
       HOSTNAME: '127.0.0.1',
+      MAGAZINE_PREVIEW_SECRET: 'task40-preview-fixture',
+      MAGAZINE_REVALIDATION_SECRET: 'task40-revalidation-fixture',
       PORT: String(port),
     },
     reuseExistingServer: !process.env.CI,
