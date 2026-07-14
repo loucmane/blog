@@ -712,5 +712,59 @@
     "plan_hash": "55f8d9542d398d8112a42319a49c88b9f1f247729f5969fac0fa40bc77be0e5c",
     "tracker_hash": "50fd9212747911e2c85dcde804a06cd166dc75d49c5d9976d69202717c8fcfc4",
     "synced_at": "2026-07-13T16:25:47.196693+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "e052d821e7f3ed59078b803a23ee47d89eebf315e2a58ee657967166c7ae2d9e",
+    "tracker_hash": "1f40a31cbd4f7ec16b3e78aa6d61ad96d747b8f2e4502a1fcac1531b23ec8fb4",
+    "synced_at": "2026-07-14T08:11:15.626046+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "9871942f5f233f4a4073c888595c25425605d5d79346674617a1d7c03cd44eaf",
+    "tracker_hash": "53982be6c577fe5767b115340fb39de022188e1b04ed092f9049721d759f94fe",
+    "synced_at": "2026-07-14T08:14:47.037746+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "9871942f5f233f4a4073c888595c25425605d5d79346674617a1d7c03cd44eaf",
+    "tracker_hash": "266509e897604b0eebe07d5ee034813c6cb899c0153de27d58f96b66dd555c3e",
+    "synced_at": "2026-07-14T08:22:49.030088+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "28a28631f3cd29aa323f8cdbf1536a69e82c96233490e7528dafa0fb5d5c1c94",
+    "tracker_hash": "e46f07feb4d6699e5f5d08a293c0a0e27032618c0bb72d6cd6c403f2c52246df",
+    "synced_at": "2026-07-14T14:20:08.825808+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "20ee7064706debef224003b8a78c8a5bc77b91e5a406c8ef18113b61446cdf9e",
+    "tracker_hash": "0b0054f3d7a626ac6005b2e8aab8aff43a0162c7440d6127bffac53ff1c0bf42",
+    "synced_at": "2026-07-14T14:51:50.577856+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "a4e166e98492c269f1bea5659cddc8a6b4350bd4a9c2a12809b704d8f295b13b",
+    "tracker_hash": "4d1822507023b39f7917de6d66f42a129a86082da281805e9dfbb63f711c13f1",
+    "synced_at": "2026-07-14T14:52:45.596208+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "a4e166e98492c269f1bea5659cddc8a6b4350bd4a9c2a12809b704d8f295b13b",
+    "tracker_hash": "4d1822507023b39f7917de6d66f42a129a86082da281805e9dfbb63f711c13f1",
+    "synced_at": "2026-07-14T14:53:45.854927+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "a78afd5b6e29a4e817b6484171b23b36a61d2e702d5a191298b1d1cf1110a93a",
+    "tracker_hash": "7855fcf01de73e8c0ea305da82417c6d5964b89561119ee0b56ea4a143e41d62",
+    "synced_at": "2026-07-14T15:42:23.107520+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "a78afd5b6e29a4e817b6484171b23b36a61d2e702d5a191298b1d1cf1110a93a",
+    "tracker_hash": "71c827e7c7158ebd5a2bb2cdaf7b235b15ab79089210ad03e2fae8ce5df42502",
+    "synced_at": "2026-07-14T16:42:05.113050+02:00"
   }
 ]

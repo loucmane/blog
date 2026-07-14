@@ -30,6 +30,25 @@ function baseline() {
   return JSON.parse(committedSource)
 }
 
+function baselineWithDebt() {
+  const value = baseline()
+  for (const projectName of Object.keys(value.projects)) {
+    value.projects[projectName] = [
+      {
+        id: 'color-contrast',
+        impact: 'serious',
+        target: ['.legacy-a'],
+      },
+      {
+        id: 'color-contrast',
+        impact: 'serious',
+        target: ['.legacy-b'],
+      },
+    ]
+  }
+  return value
+}
+
 function evaluate(baseValue, headValue, bootstrapSha256 = '') {
   return evaluateAccessibilityBaseline({
     baseSource: baseValue === null ? null : `${JSON.stringify(baseValue, null, 2)}\n`,
@@ -73,7 +92,7 @@ test('accepts the reviewed bootstrap bytes only at their exact digest', () => {
 })
 
 test('accepts unchanged fingerprints and removal-only debt reduction', () => {
-  const base = baseline()
+  const base = baselineWithDebt()
   assert.deepEqual(evaluate(base, structuredClone(base)), [])
 
   const reduced = structuredClone(base)
@@ -82,7 +101,7 @@ test('accepts unchanged fingerprints and removal-only debt reduction', () => {
 })
 
 test('denies added or rewritten fingerprints', () => {
-  const base = baseline()
+  const base = baselineWithDebt()
   const added = structuredClone(base)
   added.projects['desktop-chromium'].push({
     id: 'color-contrast',
@@ -99,7 +118,7 @@ test('denies added or rewritten fingerprints', () => {
 })
 
 test('denies metadata, project, shape, order, and malformed JSON drift', () => {
-  const base = baseline()
+  const base = baselineWithDebt()
   const metadata = structuredClone(base)
   metadata.ownerTask = '999'
   assert.match(evaluate(base, metadata).join('\n'), /metadata/)

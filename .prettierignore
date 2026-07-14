@@ -10,6 +10,7 @@ coverage/
 dist/
 docs/ai/work-tracking/
 node_modules/
+packages/web/next-env.d.ts
 plans/
 reports/
 sessions/

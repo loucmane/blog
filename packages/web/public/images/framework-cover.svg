@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title description">
+  <title id="title">Layered editorial pages</title>
+  <desc id="description">Warm geometric pages arranged on a deep teal background.</desc>
+  <rect width="1200" height="675" fill="#264653"/>
+  <rect x="135" y="105" width="610" height="465" rx="28" fill="#f4f1de" transform="rotate(-5 440 337)"/>
+  <rect x="420" y="80" width="645" height="500" rx="28" fill="#e9c46a" transform="rotate(4 742 330)"/>
+  <rect x="470" y="130" width="520" height="400" rx="20" fill="#f7f3e8"/>
+  <rect x="535" y="205" width="250" height="26" rx="13" fill="#264653"/>
+  <rect x="535" y="265" width="380" height="16" rx="8" fill="#2a9d8f"/>
+  <rect x="535" y="310" width="335" height="16" rx="8" fill="#2a9d8f"/>
+  <rect x="535" y="355" width="365" height="16" rx="8" fill="#2a9d8f"/>
+  <circle cx="870" cy="205" r="42" fill="#e76f51"/>
+</svg>
