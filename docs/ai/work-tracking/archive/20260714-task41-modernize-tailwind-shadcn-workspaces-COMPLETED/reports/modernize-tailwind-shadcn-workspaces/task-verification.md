@@ -41,6 +41,7 @@ Primary sources: <https://tailwindcss.com/blog/tailwindcss-v4-3>, <https://tailw
 - Two independent read-only reviews identified hidden backend residue, incomplete real-keyboard/open-menu/persistence proof, incomplete forced-colors/reduced-motion browser proof, stale package documentation, and premature ADR acceptance. The implementation removed `packages/backend/.babelrc`, strengthened unit and Playwright journeys, refreshed current-facing documentation, and kept ADR 0005 proposed until closeout.
 - The adversarial re-review then found that the new forced-colors/reduced-motion journey was not yet a required CI capability and that six legacy guidance files still looked current. The critical-journey inventory now requires that browser journey in both capability and result contracts with removal-denial tests; each legacy guide carries an explicit superseded/non-authoritative notice pointing to canonical sources, including a prohibition on its unsafe broad-staging instructions.
 - Final staged package-script comparison proved `packages/web/package.json` scripts are unchanged. Root scripts intentionally remove only the deleted `@minniewinnie/ui` type-build prefix from `typecheck`; no other root script changes. This is required by the workspace removal and correctly forces attended merge review under the trusted delivery policy.
+- Final-head Aegis witness accounts for all 143 changed paths and passes repository state, scope mapping, verification-at-head, and done-flip containment. It intentionally fails the test-deletion escalation for seven removed obsolete tests: `packages/backend/tests/featureController.test.js`, three `packages/ui` tests, and three `packages/web` UI-import smoke fixtures. Their behavior is superseded by the passing 61 unit/integration tests, 29 quality contracts, and 18 desktop/mobile browser journeys. The failure is preserved as attended-review evidence; no witness rule was weakened or bypassed.
 
 ## Aegis Dogfood
 
@@ -49,7 +50,7 @@ After strict verification passed, `aegis log` rejected the new verification even
 ## Delivery Gates
 
 - Aegis closeout passed with zero required failures and zero warnings; Taskmaster Task 41 is `done`, and the completed archive passes legacy guard validation.
-- Commit and push only the explicit Task 41 allowlist, require hosted protected CI, and stop at attended merge review because the root package-script object intentionally changed.
+- Commit and push only the explicit Task 41 allowlist, require hosted protected CI, and stop at attended merge review because the root package-script object intentionally changed and witness escalates seven deliberate test deletions.
 
 ## Independent Review
 

@@ -26,6 +26,7 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
 - 2026-07-14 - Gitleaks `8.30.1` scanned an isolated 62-file Task 41-only copy using the repository ignore file and official default rules. It found no leaks and did not traverse `.codex/`, managed-rollout paths, or unrelated generated state.
 - 2026-07-14 - Aegis closeout correctly archived the Task 41 envelope, but the plan retained former `active/` evidence paths and the default `plan sync` command then failed because no active folder existed. Repointing the plan to the `-COMPLETED` archive and invoking the supported explicit `--plan`/`--tracker` form restored completed-state guard validation without reopening the task.
 - 2026-07-14 - Final staged delivery review confirmed the web package scripts are byte-for-byte unchanged. The root `typecheck` script intentionally removes only `pnpm --filter @minniewinnie/ui run build:types` because Task 41 deletes that obsolete workspace; the root script-object hash therefore changes from `cc7ec2f6ed9c9a8241a4fa585d8a7bd96d65612eb2663efa6ec500d15ea19606` to `518f431c265845ee10c3e4c20317eed9550504b7ef6fedb7d17cb0a1c3fcccdb`. This is task-scoped behavior, not drift, but it places the PR outside the trusted unchanged-package-script auto-merge class and requires attended merge review.
+- 2026-07-14 - Final-head witness at `504fea6a4e9602faf155c6a45c50fe76c38d4b73` accounted for all 143 changed paths after the completed archive was added to the sanctioned Task 41 scope. It remained fail-closed solely because seven obsolete tests are intentionally deleted: the backend placeholder controller test, three standalone UI-package tests, and three UI-import smoke fixtures. Their replacement coverage is the passing 61-test unit/integration suite, 29 deterministic quality contracts, and 18 browser journeys. This is retained as an attended test-deletion escalation rather than bypassed or misrepresented as a passing witness.
 
 ## Progress Log
 - **2026-07-14 17:20 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:aegis:kickoff|E:.aegis/state/current-work.json] Findings log initialized by Aegis kickoff.
@@ -36,18 +37,19 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
 - **2026-07-14 18:20 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:adversarial-remediation|E:scripts/ci/check-test-capability.mjs] Made the forced-colors/reduced-motion journey a required CI capability, superseded stale active guidance, and passed the affected 29-contract and 18-browser suites; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 7, "last_event_id": "3c0305bf4f9643ccbef9198979647ddc", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 8, "last_event_id": "5f72a30d17e84565b1e350e9af5ab141", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:26ad70fab4b...] Session began via compact.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:bf03059e2a8...] Session began via compact.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:57b486fe50d...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:witness E:ledger:6230052eef9...] Delivery witness PASS recorded at d3c5b16; report: .aegis/reports/witness-report.json.
 - [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:2ac11e8be41...] Session began via compact.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:30f3b7335ec...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:3c0305bf4f9...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:7d51ab07a70...] Session began via compact.
+- [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:witness E:ledger:70c72564efd...] Delivery witness FAIL recorded at 504fea6; report: .aegis/reports/witness-report.json.
+- [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:5f72a30d17e...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 
 <!-- AEGIS:END generated-sweh-projection -->

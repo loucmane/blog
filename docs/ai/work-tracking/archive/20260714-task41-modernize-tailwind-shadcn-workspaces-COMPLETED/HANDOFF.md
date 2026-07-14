@@ -22,10 +22,11 @@
 - The Aegis advisory queue is trustworthy and non-blocking, but ordinary `aegis log` still requested pending-event consumption after strict verification passed. Do not drain or reconcile it; preserve this as dogfood evidence.
 - Both independent read-only reviewers report no remaining actionable findings. Final closeout and explicit staging review passed; hosted protected CI remains.
 - The web package scripts are unchanged, but the root `typecheck` script intentionally drops the deleted `@minniewinnie/ui` build stage. Because package scripts are not semantically identical to protected `main`, controlled auto-merge must deny this PR and delivery must stop at attended merge review after CI.
+- Final-head witness accounts for every changed path and passes repository, scope, verification-at-head, and done-flip checks. Its only failure is the intentional fail-closed escalation of seven deleted obsolete tests; replacement deterministic and browser coverage passes, so this escalation must be reviewed attended rather than suppressed.
 
 ## Next Steps
 1. Commit the explicitly staged Task 41 allowlist, push the task branch, and open the PR.
-2. Wait for hosted checks, revalidate the exact head and full changed-path inventory, then stop at attended merge review.
+2. Wait for hosted checks, revalidate the exact head, full changed-path inventory, package-script delta, and seven witness test-deletion escalations, then stop at attended merge review.
 
 ## Important Context
 - Taskmaster is optional unless this task marks it required in `.aegis/state/current-work.json`.
@@ -48,18 +49,19 @@
 - **2026-07-14 18:21 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:independent-review|E:docs/ai/work-tracking/active/20260714-task41-modernize-tailwind-shadcn-workspaces-ACTIVE/reports/modernize-tailwind-shadcn-workspaces/task-verification.md] Both independent read-only reviewers returned no remaining actionable findings after the adversarial remediations; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 7, "last_event_id": "3c0305bf4f9643ccbef9198979647ddc", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 8, "last_event_id": "5f72a30d17e84565b1e350e9af5ab141", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:26ad70fab4b...] Session began via compact.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:bf03059e2a8...] Session began via compact.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:57b486fe50d...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:witness E:ledger:6230052eef9...] Delivery witness PASS recorded at d3c5b16; report: .aegis/reports/witness-report.json.
 - [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:2ac11e8be41...] Session began via compact.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:30f3b7335ec...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:3c0305bf4f9...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:7d51ab07a70...] Session began via compact.
+- [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:witness E:ledger:70c72564efd...] Delivery witness FAIL recorded at 504fea6; report: .aegis/reports/witness-report.json.
+- [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:5f72a30d17e...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 
 <!-- AEGIS:END generated-sweh-projection -->

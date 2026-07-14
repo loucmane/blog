@@ -26,6 +26,7 @@
 - **2026-07-14 18:24 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:implementation|E:packages/web/src/components/theme-menu.tsx] Recorded the representative app-local implementation evidence after the advisory-ordering defect prevented ordinary Aegis logging; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 - **2026-07-14 18:24 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:aegis:strict-verify|E:.aegis/reports/verification-report.json] Recorded final strict verification with zero required failures and an advisory-only non-blocking queue; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 - **2026-07-14 18:32 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:serena-unavailable|E:serena/memory:unavailable] Serena memory tooling is unavailable in this session; no Serena memory was fabricated. The completed Aegis archive, session, plan, tracker, and handoff remain the continuity sources; authority=standing-grant:sota-magazine-2026-autonomy-v2.
+- **2026-07-14 18:36 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:aegis:witness-manual-review|E:.aegis/reports/witness-report.json] Final-head witness accounted for all 143 paths and remained fail-closed only for seven intentional obsolete-test deletions; replacement suites pass and the escalation is preserved for attended merge review; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -46,18 +47,19 @@ Task 41 implementation, local verification matrix, independent re-reviews, witne
 - Direct workflow state writes should go through Aegis CLI or MCP tools.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 7, "last_event_id": "3c0305bf4f9643ccbef9198979647ddc", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 8, "last_event_id": "5f72a30d17e84565b1e350e9af5ab141", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:26ad70fab4b...] Session began via compact.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:bf03059e2a8...] Session began via compact.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:57b486fe50d...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:witness E:ledger:6230052eef9...] Delivery witness PASS recorded at d3c5b16; report: .aegis/reports/witness-report.json.
 - [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:2ac11e8be41...] Session began via compact.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:30f3b7335ec...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 - [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:3c0305bf4f9...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:7d51ab07a70...] Session began via compact.
+- [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:witness E:ledger:70c72564efd...] Delivery witness FAIL recorded at 504fea6; report: .aegis/reports/witness-report.json.
+- [S:2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces W:task-41-modernize-tailwind-shadcn-workspaces H:scope E:ledger:5f72a30d17e...] Scope recorded for 41. Paths: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
 
 <!-- AEGIS:END generated-sweh-projection -->
