@@ -560,13 +560,41 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2026-07-12T23:33:03.223Z"
+      },
+      {
+        "id": "69",
+        "title": "Support Attended Aegis Witness Review for Test Deletions",
+        "description": "Allow the required governance check to distinguish deletion-only Aegis witness escalations from integrity failures while preserving mandatory exact-head attended merge review.",
+        "details": "Implement a blog-local, deterministic wrapper policy in scripts/ci/check-aegis.py. Treat a CI witness result as review-required but check-passing only when every check except diff_accounting passes, every diff path is accounted for, the sole failure is a nonempty exact set of normalized deleted test paths, and the escalation set matches exactly. Preserve fail-closed behavior for malformed reports, unaccounted paths, missing verification, task drift, scope failures, or any additional failure. Do not modify the managed Aegis witness asset. Prove the existing trusted auto-merge classifier still denies removed or renamed-away tests, so the PR can merge only after explicit exact-head owner approval through the normal protected path. Add focused adversarial tests and complete Taskmaster/Aegis evidence.",
+        "testStrategy": "",
+        "status": "in-progress",
+        "dependencies": [
+          "48"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-14T17:15:07.600Z"
+      },
+      {
+        "id": "70",
+        "title": "Publish Owner-Authorized Managed Aegis Runtime Rollout",
+        "description": "Deliver the already-applied, strictly verified Aegis managed-runtime rollout as a separate attended infrastructure change so clean main and isolated governance tasks use the same runtime assets.",
+        "details": "Preserve Tasks 41 and 69. Publish only the exact installer-managed rollout files proven by the applied update report and foundation manifest, including the single approved .codex/hooks.json path while preserving every other .codex path. Exclude incidental Taskmaster migration state, generated reports, bytecode, product code, packages, lockfiles, workflows, authority, enforcement changes, and unrelated work. Prove source commit 144bd4463dcec9c326b023ff53b45aa71660727e, managed-asset hash parity, advisory enforcement, strict Aegis verification, brief/capsule checks, completed-state guards, Taskmaster health/dependencies, secret safety, and a zero-change follow-up update preview. Open an attended governance PR and do not auto-merge.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "56"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-14T19:39:43.852Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-14T12:12:01.620Z",
-      "taskCount": 36,
-      "completedCount": 20,
+      "lastModified": "2026-07-14T19:39:43.853Z",
+      "taskCount": 38,
+      "completedCount": 21,
       "tags": [
         "master"
       ]

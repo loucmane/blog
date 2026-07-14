@@ -50,8 +50,12 @@ AEGIS_BRIEF_REL = ".aegis/brief.json"
 AEGIS_CURRENT_WORK_REL = ".aegis/state/current-work.json"
 AEGIS_CLIENT_RELOAD_REL = ".aegis/state/client-reload-required.json"
 AEGIS_PENDING_TRACKING_REL = ".aegis/state/pending-tracking.json"
+AEGIS_PENDING_TRACKING_SAMPLE_LIMIT = 5
+AEGIS_PENDING_TRACKING_SAMPLE_TEXT_LIMIT = 240
 AEGIS_DEGRADED_EVENTS_REL = ".aegis/state/degraded-events.json"
 AEGIS_ENFORCEMENT_REL = ".aegis/state/enforcement.json"
+AEGIS_DELIVERY_POLICY_REL = "aegis.delivery-policy.json"
+AEGIS_DELIVERY_POLICY_SCHEMA_REL = "schemas/aegis/delivery-policy.schema.json"
 AEGIS_GATE_DECISIONS_REL = ".aegis/reports/gate-decisions.jsonl"
 AEGIS_LOCAL_TASKS_REL = ".aegis/state/local-tasks.json"
 TASKMASTER_TASKS_REL = ".taskmaster/tasks/tasks.json"
@@ -123,12 +127,21 @@ AEGIS_OBSERVATION_RUNTIME_PREFIXES = (
 AEGIS_PENDING_EVENT_SENTINELS = {"current", "latest"}
 AEGIS_PLAN_STATUS_CHOICES = {"pending", "in-progress", "completed", "done", "n/a"}
 AEGIS_ENFORCEMENT_MODES = {"strict", "advisory"}
+AEGIS_DELIVERY_POLICY_MODES = {"attended", "evidence-gated"}
+AEGIS_ROUTINE_AUTHORITY_FIELDS = (
+    "allow_taskmaster_transitions",
+    "allow_safe_repairs",
+    "allow_verified_closeout",
+    "allow_commit_push_pr",
+    "allow_ci_remediation",
+)
 AEGIS_CLAUDE_BLOCK_BEGIN = "<!-- AEGIS:BEGIN claude-runtime -->"
 AEGIS_CLAUDE_BLOCK_END = "<!-- AEGIS:END claude-runtime -->"
 AEGIS_CODEX_BLOCK_BEGIN = "<!-- AEGIS:BEGIN codex-runtime -->"
 AEGIS_CODEX_BLOCK_END = "<!-- AEGIS:END codex-runtime -->"
 AEGIS_AGENTS_BLOCK_BEGIN = "<!-- AEGIS:BEGIN agents-runtime -->"
 AEGIS_AGENTS_BLOCK_END = "<!-- AEGIS:END agents-runtime -->"
+AEGIS_MANAGED_ENTRYPOINT_MAX_NONBLANK_LINES = 25
 
 CLAUDE_PRETOOLUSE_MATCHER = "^(Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__.*)$"
 CLAUDE_PRETOOLUSE_COMMAND = "bash $CLAUDE_PROJECT_DIR/.claude/scripts/pretooluse-gate.sh"
@@ -167,9 +180,41 @@ CLAUDE_GATE_IDS = (
     "claude.bash_command",
     "claude.protected_path",
 )
+CODEX_HOOKS_REL = ".codex/hooks.json"
+CODEX_HOOK_MATCHER = "^(Bash|apply_patch|mcp__.*)$"
+CODEX_HOOK_ROOT = '$(git rev-parse --show-toplevel)'
+CODEX_PRETOOLUSE_COMMAND = (
+    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/pretooluse-gate.sh"'
+)
+CODEX_POSTTOOLUSE_COMMAND = (
+    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/posttooluse-tracking.sh"'
+)
+CODEX_LEDGER_RECORD_COMMAND = (
+    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/ledger-record.sh"'
+)
+CODEX_SESSION_BRIEF_COMMAND = (
+    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/session-brief.sh"'
+)
+CODEX_STOP_TRACKING_COMMAND = (
+    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/tracking-stop-gate.sh"'
+)
+CODEX_SHARED_RUNTIME_FILES = (
+    ".claude/scripts/readiness.sh",
+    ".claude/scripts/pretooluse-gate.sh",
+    ".claude/scripts/posttooluse-tracking.sh",
+    ".claude/scripts/tracking-stop-gate.sh",
+    ".claude/scripts/bash-command-guard.sh",
+    ".claude/scripts/codex-path-guard.sh",
+    ".claude/scripts/ledger-record.sh",
+    ".claude/scripts/session-brief.sh",
+    *CLAUDE_SUPPORT_FILES,
+)
 CODEX_REQUIRED_FILES = (
     "CODEX.md",
+    CODEX_HOOKS_REL,
+    *CODEX_SHARED_RUNTIME_FILES,
     "scripts/_aegis_installer.py",
+    "scripts/aegis-delivery-policy",
     "scripts/codex-task",
     "scripts/codex-guard",
     "scripts/_repo_structure.py",
@@ -178,6 +223,14 @@ CODEX_REQUIRED_FILES = (
     "scripts/template_versioning.py",
 )
 CODEX_GATE_IDS = (
+    "codex.readiness",
+    "codex.pretooluse",
+    "codex.posttooluse_tracking",
+    "codex.posttooluse_ledger",
+    "codex.session_brief",
+    "codex.stop_tracking",
+    "codex.apply_patch",
+    "codex.hook_trust",
     "codex.guard",
     "codex.work_tracking_audit",
 )
@@ -193,6 +246,7 @@ CLAUDE_RUNTIME_HOOK_PHASES = {
     ".claude/scripts/session-brief.sh": "sessionstart",
 }
 SHARED_SCHEMA_FILES = (
+    AEGIS_DELIVERY_POLICY_SCHEMA_REL,
     "schemas/aegis/foundation-manifest.schema.json",
     "schemas/aegis/profile.schema.json",
     "schemas/aegis/install-plan.schema.json",
@@ -397,7 +451,37 @@ def profile_payload() -> dict[str, Any]:
             "codex": {
                 "entrypoint": "CODEX.md",
                 "required_files": list(CODEX_REQUIRED_FILES),
-                "required_hook_registrations": [],
+                "required_hook_registrations": [
+                    {
+                        "settings_path": CODEX_HOOKS_REL,
+                        "event": "PreToolUse",
+                        "matcher": CODEX_HOOK_MATCHER,
+                        "command": CODEX_PRETOOLUSE_COMMAND,
+                    },
+                    {
+                        "settings_path": CODEX_HOOKS_REL,
+                        "event": "PostToolUse",
+                        "matcher": CODEX_HOOK_MATCHER,
+                        "command": CODEX_POSTTOOLUSE_COMMAND,
+                    },
+                    {
+                        "settings_path": CODEX_HOOKS_REL,
+                        "event": "PostToolUse",
+                        "matcher": CODEX_HOOK_MATCHER,
+                        "command": CODEX_LEDGER_RECORD_COMMAND,
+                    },
+                    {
+                        "settings_path": CODEX_HOOKS_REL,
+                        "event": "SessionStart",
+                        "matcher": CLAUDE_SESSION_START_MATCHER,
+                        "command": CODEX_SESSION_BRIEF_COMMAND,
+                    },
+                    {
+                        "settings_path": CODEX_HOOKS_REL,
+                        "event": "Stop",
+                        "command": CODEX_STOP_TRACKING_COMMAND,
+                    },
+                ],
             },
         },
         "conditional_gates": {
@@ -418,28 +502,55 @@ def profile_payload() -> dict[str, Any]:
     }
 
 
-def _render_agents_doc(primary_agent: str, enabled_agents: Sequence[str]) -> bytes:
-    agents = ", ".join(enabled_agents) if enabled_agents else "none"
+def _render_mode_aware_entrypoint(
+    title: str,
+    *,
+    identity_lines: Sequence[str] = (),
+) -> bytes:
     text = "\n".join(
         [
-            "# Agents",
+            title,
             "",
-            "This project is managed by Aegis Foundation.",
+            "This project uses Aegis Foundation.",
+            *identity_lines,
             "",
-            f"- Primary agent: `{primary_agent}`",
-            f"- Enabled adapters: `{agents}`",
-            "- Shared contract: `.aegis/contract.md`",
-            "- Agents may read `.aegis/` directly.",
-            "- Agents must not write `.aegis/` directly; use Aegis MCP tools or the project-local Aegis CLI.",
-            "- Aegis MCP/CLI is the workflow control plane. Use native agent tools for normal source edits, test runs, and git inspection.",
+            "At orientation, inspect enforcement mode once:",
+            "`aegis enforce status` (or `./.aegis/bin/aegis enforce status`).",
+            "",
+            "## Advisory mode",
+            "- Work normally: hooks record evidence and would-block decisions passively; no per-mutation logging or pending-event reconciliation is required.",
+            "- Use `aegis brief` for current orientation and `aegis witness` before delivery.",
+            "- Do not manually drain advisory pending events or run handoff repair/closeout as routine ceremony.",
+            "",
+            "## Strict mode",
+            "- `.aegis/contract.md` is authoritative for readiness, kickoff, logging, verification, and closeout.",
+            "- Use `aegis next` to resolve the single sanctioned workflow step.",
+            "",
+            "## Always",
+            "- Use native agent tools for source edits, tests, and Git inspection; use Aegis CLI/MCP only for workflow state.",
+            "- When Taskmaster is configured, use `task-master next` and `task-master show <id>` for task selection.",
+            "- Never write `.aegis/` directly.",
+            "- If install/update reports a required client reload, restart that client before mutations.",
+            "- Missing hooks or unsupported clients are degraded coverage, not successful capture.",
             "",
             "## Continuation",
             "",
-            AEGIS_CONTINUATION_SUMMARY,
+            AEGIS_ENTRYPOINT_CONTINUATION_SUMMARY,
             "",
         ]
     )
     return text.encode("utf-8")
+
+
+def _render_agents_doc(primary_agent: str, enabled_agents: Sequence[str]) -> bytes:
+    agents = ", ".join(enabled_agents) if enabled_agents else "none"
+    return _render_mode_aware_entrypoint(
+        "# Agents",
+        identity_lines=(
+            f"- Primary agent: `{primary_agent}`",
+            f"- Enabled adapters: `{agents}`",
+        ),
+    )
 
 
 def _render_contract(primary_agent: str, enabled_agents: Sequence[str]) -> bytes:
@@ -508,93 +619,11 @@ def _render_contract(primary_agent: str, enabled_agents: Sequence[str]) -> bytes
 
 
 def _render_claude_entrypoint() -> bytes:
-    text = "\n".join(
-        [
-            "# Claude Runtime Entry",
-            "",
-            "This project uses Aegis Foundation with Claude as an adapter.",
-            "",
-            "Before persistent mutation, Claude must be in a READY state:",
-            "",
-            "```bash",
-            "bash .claude/scripts/readiness.sh --quick",
-            "```",
-            "",
-            "If this project is not initialized yet, run:",
-            "",
-            "```bash",
-            "aegis init",
-            "```",
-            "",
-            "If this `aegis init` created or changed `.claude/settings.json` or `.claude/scripts/*`, stop before source edits and restart Claude Code in this project. Claude loads hooks at session start; after restart, run `aegis next` and continue.",
-            "",
-            "If readiness is BLOCKED because no current work exists and `.taskmaster/` is present, use Taskmaster as the task authority first:",
-            "",
-            "```bash",
-            "task-master next",
-            "task-master show <id>",
-            'aegis kickoff --task <id> --slug <slug> --title "<title>"',
-            "```",
-            "",
-            "Taskmaster done only after Aegis closeout and doctor pass.",
-            "After marking Taskmaster done, refresh generated task files with the project helper when present; otherwise run `task-master generate` deliberately and mention that broad refresh in the final report.",
-            "",
-            "If no Taskmaster numeric task is available, infer a short task title from the user's request and start tracked local work with:",
-            "",
-            "```bash",
-            'aegis start "<task title>"',
-            "```",
-            "",
-            "If `aegis` is not on PATH, use the installed project-local shim: `./.aegis/bin/aegis ...`.",
-            "",
-            "Project hooks route mutation tools through `.claude/scripts/pretooluse-gate.sh`.",
-            "",
-            "Tool routing:",
-            "",
-            "- Use Aegis MCP tools for Aegis workflow state when they are available: inspect, status, next, plan_install, install, start, kickoff for explicit external numeric task ids, log, verify, closeout_ready, closeout, and future reconciliation.",
-            "- If Taskmaster is installed and has available work, run `task-master next` and `task-master show <id>` or the Taskmaster MCP equivalent before `aegis kickoff`.",
-            '- Use `aegis init` for first-time project setup and `aegis start "<task title>"` for local task kickoff only when no external task id exists.',
-            "- Use `aegis ...` or `./.aegis/bin/aegis ...` for the same workflow operations when MCP is unavailable.",
-            "- Use native Claude tools for normal implementation work: reading files, editing source, running tests, and inspecting git status or diffs.",
-            "- Do not use MCP as a replacement for normal source editing. The installed hooks enforce the workflow around native tool use.",
-            "- If `aegis.init` or `aegis.install` reports `client_reload.required=true`, restart Claude before any source edits; then run `aegis next` after the reload.",
-            "",
-            "Normal feature-work loop:",
-            "",
-            '1. Confirm readiness. If Aegis is missing, run `aegis init`. If no current work exists, run `aegis next` or `./.aegis/bin/aegis next`; use Taskmaster next/show plus `aegis kickoff` when Taskmaster provides a numeric task, otherwise infer a task title and run `aegis start "<task title>"`.',
-            '2. Record scope with `aegis log --handler claude:scope --evidence <scope-doc-or-file> --note "Confirmed task scope" --plan-step auto --plan-status completed`.',
-            "3. Make the task-scoped source change requested by the user with native Edit/Write tools.",
-            '4. After the hook records pending tracking, run `aegis log --pending-id current --note "<past-tense note>" --plan-step auto --plan-status completed`.',
-            "5. Run task-specific verification and log it with `--plan-step auto --plan-status completed`.",
-            '6. Run `aegis verify --strict` or `./.aegis/bin/aegis verify --strict`, then log the strict verification pending event with `aegis log --pending-id current --note "Recorded strict verification evidence" --plan-step auto --plan-status completed`.',
-            "7. Run `aegis closeout --dry-run --update-handoff` or call MCP `aegis.closeout_ready` before final closeout.",
-            "8. If handoff semantic gates fail, run `aegis handoff repair` or call MCP `aegis.handoff_repair apply=true`, then re-run closeout readiness.",
-            "9. Run `aegis closeout --update-handoff` or `./.aegis/bin/aegis closeout --update-handoff`; do not report the task complete until closeout passes.",
-            "10. Run read-only `aegis doctor --target-dir .` or call MCP `aegis.doctor` once after closeout; include the health result in the final report.",
-            "11. If Taskmaster is in use, run `task-master set-status --id=<id> --status=done` only after closeout and doctor pass. Then refresh generated task files with `python3 scripts/codex-task taskmaster generate-one --id <id>` when that project helper exists; otherwise run `task-master generate` deliberately and report the broad refresh.",
-            "",
-            'After any mutation, use `aegis log --pending-id <id> --note "<past-tense note>" --plan-step auto` before attempting the next mutation. Use explicit `--handler`, `--evidence`, and explicit plan step only when no pending event exists or auto inference reports ambiguity.',
-            "Read `.aegis/contract.md` for the shared contract and access policy.",
-            "",
-            "## Continuation",
-            "",
-            AEGIS_CONTINUATION_SUMMARY,
-            "",
-        ]
-    )
-    return text.encode("utf-8")
+    return _render_mode_aware_entrypoint("# Claude Runtime Entry")
 
 
 def _render_codex_continuation_block() -> bytes:
-    text = "\n".join(
-        [
-            "## Aegis Continuation",
-            "",
-            AEGIS_CONTINUATION_SUMMARY,
-            "",
-        ]
-    )
-    return text.encode("utf-8")
+    return _render_mode_aware_entrypoint("## Aegis Runtime")
 
 
 def _render_claude_settings() -> bytes:
@@ -710,6 +739,73 @@ def _render_claude_settings() -> bytes:
                 }
             ],
         },
+    }
+    return _dump_json(payload).encode("utf-8")
+
+
+def _render_codex_hooks() -> bytes:
+    """Render project-local Codex hooks using canonical tool names and git-root paths."""
+
+    payload = {
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "matcher": CODEX_HOOK_MATCHER,
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": CODEX_PRETOOLUSE_COMMAND,
+                            "timeout": 30,
+                            "statusMessage": "Evaluating Aegis policy",
+                        }
+                    ],
+                }
+            ],
+            "PostToolUse": [
+                {
+                    "matcher": CODEX_HOOK_MATCHER,
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": CODEX_POSTTOOLUSE_COMMAND,
+                            "timeout": 30,
+                            "statusMessage": "Recording Aegis tracking",
+                        },
+                        {
+                            "type": "command",
+                            "command": CODEX_LEDGER_RECORD_COMMAND,
+                            "timeout": 30,
+                            "statusMessage": "Recording Aegis evidence",
+                        },
+                    ],
+                }
+            ],
+            "SessionStart": [
+                {
+                    "matcher": CLAUDE_SESSION_START_MATCHER,
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": CODEX_SESSION_BRIEF_COMMAND,
+                            "timeout": 30,
+                            "statusMessage": "Loading Aegis brief",
+                        }
+                    ],
+                }
+            ],
+            "Stop": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": CODEX_STOP_TRACKING_COMMAND,
+                            "timeout": 30,
+                            "statusMessage": "Checking Aegis completion evidence",
+                        }
+                    ],
+                }
+            ],
+        }
     }
     return _dump_json(payload).encode("utf-8")
 
@@ -902,6 +998,25 @@ def _adapter_assets(
             assets.append(_asset_from_source(source_root, rel_path, kind="adapter"))
     if "codex" in enabled_agents:
         for rel_path in CODEX_REQUIRED_FILES:
+            if rel_path == CODEX_HOOKS_REL:
+                assets.append(Asset(rel_path, _render_codex_hooks(), kind="adapter"))
+                continue
+            if rel_path in CODEX_SHARED_RUNTIME_FILES:
+                if "claude" in enabled_agents:
+                    continue
+                phase = CLAUDE_RUNTIME_HOOK_PHASES.get(rel_path)
+                if phase is not None:
+                    assets.append(
+                        Asset(
+                            rel_path,
+                            _render_claude_runtime_dispatcher(phase),
+                            executable=True,
+                            kind="adapter",
+                        )
+                    )
+                    continue
+                assets.append(_asset_from_source(source_root, rel_path, kind="adapter"))
+                continue
             assets.append(_asset_from_source(source_root, rel_path, kind="adapter"))
     return assets
 
@@ -1061,13 +1176,51 @@ def _strip_agents_entrypoint(existing: bytes) -> bytes | None:
 def _assets_for_target(target_root: Path, assets: Sequence[Asset]) -> list[Asset]:
     """Materialize target-specific assets such as merged Claude entrypoints."""
 
+    baseline_manifest = _read_json(target_root / AEGIS_MANIFEST_REL)
     materialized: list[Asset] = []
-    managed_paths, customized_paths = _install_ownership(target_root)
     for asset in assets:
+        if asset.path == CODEX_HOOKS_REL:
+            target = target_root / asset.path
+            if target.exists() and target.is_file():
+                existing = target.read_bytes()
+                try:
+                    existing_payload = json.loads(existing.decode("utf-8"))
+                    desired_payload = json.loads(asset.content.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    pass
+                else:
+                    if existing_payload == desired_payload:
+                        # Adopt semantically identical owner-created JSON byte-for-byte.
+                        # Any extra, missing, or changed hook remains a manual-review
+                        # conflict in the normal plan operation classifier below.
+                        materialized.append(
+                            Asset(
+                                path=asset.path,
+                                content=existing,
+                                executable=asset.executable,
+                                kind=asset.kind,
+                            )
+                        )
+                        continue
         if asset.path == "CLAUDE.md" and asset.kind == "adapter":
             target = target_root / asset.path
             if target.exists() and target.is_file():
-                merged = _merge_claude_entrypoint(target.read_bytes(), asset.content)
+                existing = target.read_bytes()
+                recorded_checksum = (
+                    _recorded_managed_checksum(baseline_manifest, asset.path)
+                    if isinstance(baseline_manifest, Mapping)
+                    else None
+                )
+                if (
+                    AEGIS_CLAUDE_BLOCK_BEGIN.encode("utf-8") not in existing
+                    and recorded_checksum == _content_checksum(existing)
+                ):
+                    # Older Aegis releases owned the whole markerless entrypoint. Migrate
+                    # those exact recorded bytes instead of preserving obsolete ceremony
+                    # as if it were project-authored context.
+                    merged = _claude_runtime_block(asset.content).encode("utf-8")
+                else:
+                    merged = _merge_claude_entrypoint(existing, asset.content)
                 if merged is not None:
                     materialized.append(
                         Asset(
@@ -1078,13 +1231,19 @@ def _assets_for_target(target_root: Path, assets: Sequence[Asset]) -> list[Asset
                         )
                     )
                     continue
+            else:
+                materialized.append(
+                    Asset(
+                        path=asset.path,
+                        content=_claude_runtime_block(asset.content).encode("utf-8"),
+                        executable=asset.executable,
+                        kind=asset.kind,
+                    )
+                )
+                continue
         if asset.path == "CODEX.md" and asset.kind == "adapter":
             target = target_root / asset.path
-            if (
-                target.exists()
-                and target.is_file()
-                and (asset.path not in managed_paths or asset.path in customized_paths)
-            ):
+            if target.exists() and target.is_file():
                 merged = _merge_codex_entrypoint(
                     target.read_bytes(),
                     _render_codex_continuation_block(),
@@ -1113,6 +1272,20 @@ def _assets_for_target(target_root: Path, assets: Sequence[Asset]) -> list[Asset
                         )
                     )
                     continue
+            else:
+                materialized.append(
+                    Asset(
+                        path=asset.path,
+                        content=_managed_runtime_block(
+                            begin_marker=AEGIS_AGENTS_BLOCK_BEGIN,
+                            end_marker=AEGIS_AGENTS_BLOCK_END,
+                            entrypoint=asset.content,
+                        ).encode("utf-8"),
+                        executable=asset.executable,
+                        kind=asset.kind,
+                    )
+                )
+                continue
         materialized.append(asset)
     return materialized
 
@@ -1129,7 +1302,10 @@ def _agent_records(
         "codex": [
             asset.path
             for asset in managed_assets
-            if asset.path == "CODEX.md" or asset.path.startswith("scripts/")
+            if asset.path == "CODEX.md"
+            or asset.path == CODEX_HOOKS_REL
+            or asset.path in CODEX_SHARED_RUNTIME_FILES
+            or asset.path.startswith("scripts/")
         ],
         "gemini": [],
     }
@@ -1146,7 +1322,7 @@ def _agent_records(
             "available": True,
             "entrypoint": "CODEX.md",
             "managed_files": managed_by_agent["codex"],
-            "gate_ids": list(CODEX_GATE_IDS) if "codex" in enabled_agents else list(CODEX_GATE_IDS),
+            "gate_ids": list(CODEX_GATE_IDS) if "codex" in enabled_agents else [],
         },
         "gemini": {
             "enabled": "gemini" in enabled_agents,
@@ -1281,6 +1457,114 @@ def _gates(enabled_agents: Sequence[str]) -> list[dict[str, Any]]:
     if "codex" in enabled_agents:
         gates.extend(
             [
+                _gate(
+                    "codex.readiness",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=".claude/scripts/readiness.sh",
+                    method="executable",
+                    failure_mode="fail",
+                ),
+                _gate(
+                    "codex.pretooluse",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=".claude/scripts/pretooluse-gate.sh",
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="PreToolUse",
+                    hook_matcher=CODEX_HOOK_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_PRETOOLUSE_COMMAND,
+                ),
+                _gate(
+                    "codex.posttooluse_tracking",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=".claude/scripts/posttooluse-tracking.sh",
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="PostToolUse",
+                    hook_matcher=CODEX_HOOK_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_POSTTOOLUSE_COMMAND,
+                ),
+                _gate(
+                    "codex.posttooluse_ledger",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=".claude/scripts/ledger-record.sh",
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="PostToolUse",
+                    hook_matcher=CODEX_HOOK_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_LEDGER_RECORD_COMMAND,
+                ),
+                _gate(
+                    "codex.session_brief",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=".claude/scripts/session-brief.sh",
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="SessionStart",
+                    hook_matcher=CLAUDE_SESSION_START_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_SESSION_BRIEF_COMMAND,
+                ),
+                _gate(
+                    "codex.stop_tracking",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=".claude/scripts/tracking-stop-gate.sh",
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="Stop",
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_STOP_TRACKING_COMMAND,
+                ),
+                _gate(
+                    "codex.apply_patch",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=".claude/scripts/gate_lib.py",
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="PreToolUse",
+                    hook_matcher=CODEX_HOOK_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_PRETOOLUSE_COMMAND,
+                ),
+                _gate(
+                    "codex.hook_trust",
+                    required=False,
+                    enforcement="policy",
+                    scope="adapter",
+                    adapter="codex",
+                    path=CODEX_HOOKS_REL,
+                    unsupported_reason=(
+                        "Codex records trust outside the project against the exact hook-definition hash; "
+                        "review the generated definitions with /hooks after reconnecting."
+                    ),
+                    method="manual",
+                    failure_mode="unsupported",
+                    expected=None,
+                ),
                 _gate(
                     "codex.guard",
                     required=True,
@@ -1430,12 +1714,81 @@ def _read_enforcement_state(target_root: Path) -> dict[str, Any]:
     return state
 
 
-def _pending_events_by_mode(target_root: Path, mode: str) -> list[dict[str, Any]]:
-    return [
-        event
-        for event in _pending_tracking_events(target_root)
-        if isinstance(event, Mapping) and str(event.get("mode") or "strict") == mode
-    ]
+def _read_delivery_policy_state(target_root: Path) -> dict[str, Any]:
+    path = target_root / AEGIS_DELIVERY_POLICY_REL
+    state: dict[str, Any] = {
+        "mode": "attended",
+        "configured": path.exists(),
+        "valid": not path.exists(),
+        "active": False,
+        "policy_id": None,
+        "path": AEGIS_DELIVERY_POLICY_REL,
+        "requires_per_pr_approval": True,
+        "autonomous_delivery": False,
+        "routine_authority": {key: False for key in AEGIS_ROUTINE_AUTHORITY_FIELDS},
+        "reason": "delivery policy is absent; attended mode is the backward-compatible default",
+    }
+    if not path.exists():
+        return state
+    if not path.is_file() or path.is_symlink():
+        state["reason"] = "delivery policy must be a regular file"
+        return state
+    raw = _read_json(path)
+    if not isinstance(raw, Mapping):
+        state["reason"] = "delivery policy is invalid JSON or not an object"
+        return state
+    schema = _read_json(target_root / AEGIS_DELIVERY_POLICY_SCHEMA_REL)
+    if not isinstance(schema, Mapping):
+        state["reason"] = "delivery policy schema is unavailable; failing closed to attended mode"
+        return state
+    try:
+        Draft202012Validator(schema, format_checker=FormatChecker()).validate(raw)
+    except Exception as exc:  # noqa: BLE001 - status must stay non-fatal and fail closed.
+        message = exc.message if isinstance(exc, ValidationError) else str(exc)
+        state["reason"] = f"delivery policy is malformed; failing closed: {message}"
+        return state
+    mode = str(raw.get("mode") or "").strip()
+    policy_id = str(raw.get("policy_id") or "").strip()
+    repository = raw.get("repository")
+    authority = raw.get("authority")
+    if (
+        mode not in AEGIS_DELIVERY_POLICY_MODES
+        or not policy_id
+        or not isinstance(repository, Mapping)
+        or not isinstance(authority, Mapping)
+    ):
+        state["reason"] = "delivery policy normalization failed; failing closed to attended mode"
+        return state
+    active = authority.get("status") == "active"
+    effective_mode = mode if active else "attended"
+    autonomous = effective_mode == "evidence-gated"
+    routine = raw.get("routine") if isinstance(raw.get("routine"), Mapping) else {}
+    return {
+        "mode": effective_mode,
+        "configured": True,
+        "valid": True,
+        "active": active,
+        "policy_id": policy_id,
+        "path": AEGIS_DELIVERY_POLICY_REL,
+        "repository": {
+            "full_name": str(repository.get("full_name") or ""),
+            "default_branch": str(repository.get("default_branch") or ""),
+        },
+        "requires_per_pr_approval": not autonomous,
+        "autonomous_delivery": autonomous,
+        "routine_authority": {
+            key: autonomous and bool(routine.get(key)) for key in AEGIS_ROUTINE_AUTHORITY_FIELDS
+        },
+        "reason": (
+            "trusted evidence-gated delivery is active"
+            if autonomous
+            else (
+                "delivery authority is revoked; attended mode is active"
+                if not active
+                else "attended delivery policy is active"
+            )
+        ),
+    }
 
 
 def enforcement_status(
@@ -1445,8 +1798,28 @@ def enforcement_status(
 ) -> dict[str, Any]:
     target_root = _resolve_target_root(target_dir)
     state = _read_enforcement_state(target_root)
-    advisory_pending = _pending_events_by_mode(target_root, "advisory")
+    pending = _classify_pending_tracking(target_root)
     mode = str(state.get("mode") or "strict")
+    advisory_count = int(pending["counts"]["advisory"])
+    strict_reentry: dict[str, Any] | None = None
+    if advisory_count:
+        strict_reentry = {
+            "advisory_pending_events": advisory_count,
+            "suggested_cli": None,
+            "message": (
+                "Advisory-era pending events are preserved audit evidence; they do not "
+                "require repair or draining before strict re-entry."
+            ),
+        }
+    if not pending["delivery_allowed"]:
+        strict_reentry = {
+            "advisory_pending_events": advisory_count,
+            "suggested_cli": "aegis doctor --target-dir .",
+            "message": (
+                "Pending tracking contains required or untrusted state; strict enforcement "
+                "remains fail-closed until the exact queue evidence is resolved."
+            ),
+        }
     return {
         "schema_version": SCHEMA_VERSION,
         "status": mode,
@@ -1455,8 +1828,13 @@ def enforcement_status(
         "read_only": True,
         "enforcement": state,
         "pending": {
-            "advisory": len(advisory_pending),
-            "advisory_event_ids": [str(event.get("id") or "") for event in advisory_pending],
+            **pending,
+            "advisory": advisory_count,
+            "advisory_event_ids": [
+                str(item.get("id") or "")
+                for item in pending["sample"]
+                if item.get("mode") == "advisory"
+            ],
         },
         "workflow_guidance": {
             "mode": mode,
@@ -1465,15 +1843,7 @@ def enforcement_status(
                 if mode == "advisory"
                 else "Aegis is in strict mode: gates block according to readiness, pending tracking, and protected-path policy."
             ),
-            "strict_reentry": (
-                {
-                    "advisory_pending_events": len(advisory_pending),
-                    "suggested_cli": "aegis repair --apply",
-                    "message": "Review or reconcile advisory-era pending events before relying on strict enforcement.",
-                }
-                if advisory_pending
-                else None
-            ),
+            "strict_reentry": strict_reentry,
         },
     }
 
@@ -1840,6 +2210,7 @@ def project_update(
         "workflow_state_evidence": _update_workflow_state_evidence(verification_preview),
         "capsule": capsule,
         "enforcement": _read_enforcement_state(target_root),
+        "delivery_policy": _read_delivery_policy_state(target_root),
         "report_path": AEGIS_UPDATE_REPORT_REL if apply else None,
     }
     if unsafe:
@@ -1854,16 +2225,6 @@ def project_update(
     if not apply:
         return base_report
 
-    runtime_applied = runtime_update(target_root, source_root=source, apply=True)
-    if runtime_applied.get("status") == "refused":
-        base_report.update(
-            {
-                "status": "refused",
-                "reason": "Runtime pointer update was refused.",
-                "runtime": {**base_report["runtime"], "applied": runtime_applied},
-            }
-        )
-        return base_report
     install_applied = install(
         target_root,
         source_root=source,
@@ -1878,6 +2239,16 @@ def project_update(
             {
                 "status": install_applied.get("status"),
                 "reason": install_applied.get("reason", "Install apply did not complete."),
+                "install": {**base_report["install"], "applied": install_applied},
+            }
+        )
+        return base_report
+    runtime_applied = runtime_update(target_root, source_root=source, apply=True)
+    if runtime_applied.get("status") == "refused":
+        base_report.update(
+            {
+                "status": "refused",
+                "reason": "Runtime pointer update was refused after managed install.",
                 "runtime": {**base_report["runtime"], "applied": runtime_applied},
                 "install": {**base_report["install"], "applied": install_applied},
             }
@@ -1947,8 +2318,8 @@ def _manifest_payload(
         "entrypoints": {
             "shared": "AGENTS.md",
             "contract": AEGIS_CONTRACT_REL,
-            "codex": "CODEX.md",
-            "claude": "CLAUDE.md",
+            "codex": "CODEX.md" if "codex" in enabled_agents else None,
+            "claude": "CLAUDE.md" if "claude" in enabled_agents else None,
             "gemini": None,
         },
         "interfaces": {
@@ -2048,7 +2419,11 @@ def _recorded_managed_checksum(manifest: Mapping[str, Any], path: str) -> str | 
 def _source_path_for_managed_asset(path: str) -> str | None:
     if path in SHARED_SCHEMA_FILES or path in CLAUDE_SUPPORT_FILES:
         return path
-    if path in CODEX_REQUIRED_FILES and path != "CODEX.md":
+    if (
+        path in CODEX_REQUIRED_FILES
+        and path not in {"CODEX.md", CODEX_HOOKS_REL}
+        and path not in CLAUDE_RUNTIME_HOOK_PHASES
+    ):
         return path
     template_prefix = f"{AEGIS_WORKFLOW_TEMPLATE_TARGET_ROOT}/"
     if path.startswith(template_prefix):
@@ -2113,15 +2488,6 @@ def _managed_baseline_checksum(
     if checksum is not None:
         return checksum, "legacy source commit"
     return None, None
-
-
-def _install_ownership(target_root: Path) -> tuple[set[str], set[str]]:
-    manifest = _read_json(target_root / AEGIS_MANIFEST_REL)
-    if not isinstance(manifest, Mapping):
-        return set(), set()
-    return _manifest_path_set(manifest, "managed_files"), _manifest_path_set(
-        manifest, "customized_files"
-    )
 
 
 def _plan_operations(
@@ -2335,29 +2701,48 @@ def invoking_agent_from_environment(
 
 
 def _client_reload_blocks_agent(marker: Mapping[str, Any], invoking_agent: str | None) -> bool:
-    marker_agent = str(marker.get("agent") or "").strip().lower()
     normalized_invoker = str(invoking_agent or "").strip().lower()
-    if marker_agent not in AGENT_CHOICES or normalized_invoker not in AGENT_CHOICES:
+    marker_agents = {
+        str(agent).strip().lower()
+        for agent in marker.get("agents", [])
+        if isinstance(agent, str) and str(agent).strip().lower() in AGENT_CHOICES
+    }
+    legacy_agent = str(marker.get("agent") or "").strip().lower()
+    if not marker_agents and legacy_agent in AGENT_CHOICES:
+        marker_agents.add(legacy_agent)
+    if not marker_agents or normalized_invoker not in AGENT_CHOICES:
         return True
-    return marker_agent == normalized_invoker
+    return normalized_invoker in marker_agents
 
 
 def _write_client_reload_marker(target_root: Path, report: Mapping[str, Any]) -> None:
     changed_paths = [
         str(path) for path in report.get("changed_paths", []) if isinstance(path, str) and path
     ]
+    agents = [
+        str(agent)
+        for agent in report.get("agents", [])
+        if isinstance(agent, str) and agent in AGENT_CHOICES
+    ]
+    agent_label = str(report.get("agent") or (agents[0] if len(agents) == 1 else "multi"))
+    hook_trust = report.get("hook_trust") if isinstance(report.get("hook_trust"), Mapping) else {}
     payload = {
         "schema_version": SCHEMA_VERSION,
         "status": "required",
-        "agent": report.get("agent") or "claude",
+        "agent": agent_label,
+        "agents": agents,
         "created_at": _iso_now(),
         "changed_paths": changed_paths,
         "reason": report.get("reason"),
         "instructions": report.get("instructions"),
+        "hook_trust": dict(hook_trust),
         "clearance": {
-            "method": "installed_claude_pretooluse_hook",
+            "method": "installed_agent_pretooluse_hook",
             "path": ".claude/scripts/pretooluse-gate.sh",
-            "description": "A restarted Claude session proves hook activation when PreToolUse runs and clears this marker.",
+            "description": (
+                "A restarted or reconnected enabled client proves hook activation when its trusted "
+                "PreToolUse definition runs and clears that client from this marker."
+            ),
         },
     }
     _write_text(target_root, AEGIS_CLIENT_RELOAD_REL, _dump_json(payload))
@@ -2366,49 +2751,102 @@ def _write_client_reload_marker(target_root: Path, report: Mapping[str, Any]) ->
 def _client_reload_report(
     target_root: Path, plan: Mapping[str, Any], enabled_agents: Sequence[str]
 ) -> dict[str, Any]:
-    changed_paths: list[str] = []
-    if "claude" in enabled_agents:
-        for operation in plan.get("operations", []):
-            if not isinstance(operation, Mapping):
-                continue
-            classification = str(operation.get("classification") or "")
-            rel_path = str(operation.get("path") or "")
-            if classification not in {"create", "modify"}:
-                continue
-            if rel_path == "CLAUDE.md" or rel_path.startswith(".claude/"):
-                changed_paths.append(rel_path)
+    changed_by_agent: dict[str, list[str]] = {"claude": [], "codex": []}
+    for operation in plan.get("operations", []):
+        if not isinstance(operation, Mapping):
+            continue
+        classification = str(operation.get("classification") or "")
+        rel_path = str(operation.get("path") or "")
+        if classification not in {"create", "modify"}:
+            continue
+        if "claude" in enabled_agents and (rel_path == "CLAUDE.md" or rel_path.startswith(".claude/")):
+            changed_by_agent["claude"].append(rel_path)
+        if "codex" in enabled_agents and (
+            rel_path in {"CODEX.md", CODEX_HOOKS_REL} or rel_path in CODEX_SHARED_RUNTIME_FILES
+        ):
+            changed_by_agent["codex"].append(rel_path)
 
-    unique_changed_paths = sorted(set(changed_paths))
     marker = _client_reload_marker(target_root)
     marker_paths = [
         str(path)
         for path in (marker or {}).get("changed_paths", [])
         if isinstance(path, str) and path
     ]
-    effective_paths = unique_changed_paths or sorted(set(marker_paths))
-    required = bool(unique_changed_paths) or marker is not None
+    marker_agents = [
+        str(agent)
+        for agent in (marker or {}).get("agents", [])
+        if isinstance(agent, str) and agent in AGENT_CHOICES
+    ]
+    legacy_marker_agent = str((marker or {}).get("agent") or "")
+    if not marker_agents and legacy_marker_agent in AGENT_CHOICES:
+        marker_agents = [legacy_marker_agent]
+    changed_agents = [agent for agent, paths in changed_by_agent.items() if paths]
+    required_agents = sorted(set(changed_agents) | set(marker_agents))
+    unique_changed_paths = sorted(
+        {path for paths in changed_by_agent.values() for path in paths}
+    )
+    effective_paths = sorted(set(unique_changed_paths) | set(marker_paths))
+    required = bool(required_agents) or marker is not None
+    agent_label = (
+        required_agents[0]
+        if len(required_agents) == 1
+        else "multi" if required_agents else None
+    )
+    marker_hook_trust = (
+        (marker or {}).get("hook_trust")
+        if isinstance((marker or {}).get("hook_trust"), Mapping)
+        else {}
+    )
+    codex_trust_required = "codex" in required_agents and (
+        CODEX_HOOKS_REL in effective_paths
+        or bool(marker_hook_trust.get("required"))
+    )
+    restart_instructions: list[str] = []
+    if "claude" in required_agents:
+        restart_instructions.append("restart Claude Code in this project")
+    if "codex" in required_agents:
+        restart_instructions.append(
+            "reconnect the Codex project session, open /hooks, review the exact definitions and hashes, and trust them"
+        )
+    action_text = "; then ".join(restart_instructions)
     return {
         "required": required,
-        "agent": "claude" if "claude" in enabled_agents else None,
+        "agent": agent_label,
+        "agents": required_agents,
         "severity": "hard_stop" if required else "none",
         "must_stop": required,
         "pending_marker": marker is not None,
         "marker_path": AEGIS_CLIENT_RELOAD_REL if required else None,
         "changed_paths": effective_paths,
         "reason": (
-            "Claude Code loads project hook settings at session start; newly created or changed "
-            ".claude/settings.json and .claude/scripts/* hooks are not guaranteed to govern this already-running session."
+            "Enabled clients load project hook definitions and entry context at session boundaries; newly created or "
+            "changed adapter files are not guaranteed to govern an already-running session."
             if required
-            else "No Claude adapter settings or hook scripts changed in this install."
+            else "No enabled client adapter settings, entry context, or hook scripts changed in this install."
         ),
         "instructions": (
-            "HARD STOP: if this install ran inside Claude Code, do not edit source files, run project verification, "
-            "mutate Taskmaster, or call aegis.start/aegis.kickoff in this same session. restart Claude in this "
-            "project so newly installed hooks are active. After restart, run aegis.next and start or kickoff tracked "
-            "work before mutating files."
+            "HARD STOP: do not edit source files, run project verification, mutate Taskmaster, or call "
+            f"aegis.start/aegis.kickoff in this same session. {action_text}. After reload and any required hook "
+            "trust review, run aegis.next and start or kickoff tracked work before mutating files."
             if required
-            else "No Claude restart is required by this install."
+            else "No client restart, reconnect, or hook-trust review is required by this install."
         ),
+        "hook_trust": {
+            "required": codex_trust_required,
+            "settings_path": CODEX_HOOKS_REL if "codex" in enabled_agents else None,
+            "review_command": "/hooks" if "codex" in enabled_agents else None,
+            "hash_scope": "exact_hook_definition" if "codex" in enabled_agents else None,
+            "bypass_allowed": False,
+            "instructions": (
+                "Review and trust the exact project hook hashes with /hooks; changed hashes remain skipped until trusted."
+                if codex_trust_required
+                else (
+                    "No Codex hook hash changed in this install; use /hooks whenever a future definition changes."
+                    if "codex" in enabled_agents
+                    else "The Codex adapter is not enabled."
+                )
+            ),
+        },
         "forbidden_until_reload": (
             [
                 "source edits",
@@ -2425,7 +2863,8 @@ def _client_reload_report(
         "allowed_until_reload": (
             [
                 "read-only Aegis inspect/status/next/doctor",
-                "tell the user to restart Claude in this project",
+                "tell the user which enabled clients must restart or reconnect",
+                "open /hooks only to review Codex hook definitions and hashes",
             ]
             if required
             else []
@@ -2578,6 +3017,8 @@ def status(
         "migration_required": False,
         "status": "not_installed",
         "enforcement": _read_enforcement_state(target_root),
+        "pending_tracking": _classify_pending_tracking(target_root),
+        "delivery_policy": _read_delivery_policy_state(target_root),
         "ledger": _ledger_status_block(target_root, source),
         "checks": [],
         "recommended_actions": [
@@ -2599,6 +3040,7 @@ def status(
             invoking_agent=invoking_agent,
         )
         payload["workflow_guidance"]["enforcement"] = payload["enforcement"]
+        payload["workflow_guidance"]["delivery_policy"] = payload["delivery_policy"]
         return payload
 
     installed_versions = {
@@ -2666,6 +3108,7 @@ def status(
         invoking_agent=invoking_agent,
     )
     payload["workflow_guidance"]["enforcement"] = payload["enforcement"]
+    payload["workflow_guidance"]["delivery_policy"] = payload["delivery_policy"]
     if payload["enforcement"].get("mode") == "advisory":
         payload["recommended_actions"] = [
             "Aegis enforcement is advisory: gates record would-block decisions but do not block.",
@@ -2685,8 +3128,8 @@ AEGIS_ARCHITECTURE_NOTES = (
 # installed-guidance renderers (contract.md / AGENTS.md / CLAUDE.md) and, via the brief
 # (TM 189), by `aegis next`. It describes how an agent INTERPRETS a short continuation
 # intent and where it STOPS for confirmation — it grants no authority to bypass any gate.
-# Policy (owner-set 2026-06-15): a bare continuation = exactly one safe step then re-consult;
-# repairs and non-dry-run closeout require confirmation; merge/push/destructive git never auto.
+# A bare continuation advances one safe step and then re-consults. Delivery authority is
+# resolved from aegis.delivery-policy.json; attended remains the backward-compatible default.
 AEGIS_CONTINUATION_LINES = (
     'A short continuation intent — "continue", "go", "proceed", "next", "keep going", '
     '"resume" — is NOT a new authority. It means: advance the current Aegis workflow by '
@@ -2706,28 +3149,43 @@ AEGIS_CONTINUATION_LINES = (
     "tests; edit task-scoped source files; `aegis log`; `aegis verify`; "
     "`aegis closeout --dry-run`; `aegis doctor`; advance one plan step.",
     "",
-    "SURFACE and ASK before: applying repairs (`aegis repair --apply` — show the repair plan "
-    "first); running non-dry-run `aegis closeout` (needs an explicit close-out intent or "
-    "confirmation — it records completion and arms delivery); crossing a protected or owned "
-    "path; switching the active task; pushing or opening a PR (only after closeout passes).",
+    "SURFACE before mutation: safe repair plans, closeout preflight, task transitions, "
+    "delivery scope, and CI remediation. A valid active evidence-gated policy may authorize "
+    "routine Taskmaster transitions, deterministic safe repairs, verified closeout, "
+    "commit/push/PR, and CI remediation without another chat approval. Absent, invalid, "
+    "revoked, attended, disabled-capability, manual-review, or protected/owned-path cases "
+    "require explicit confirmation. Merge authority comes only from trusted GitHub policy "
+    "after closeout passes.",
     "",
-    "NEVER automatic on any intent: merge, force-push, `reset --hard`, `branch -D`, history "
-    "rewrite, direct `.aegis/` writes, bypassing BLOCKED readiness, or skipping S:W:H:E "
-    "tracking.",
+    "NEVER automatic on any intent: force-push, `reset --hard`, `branch -D`, history "
+    "rewrite, direct `.aegis/` writes, bypassing BLOCKED readiness, skipping S:W:H:E "
+    "tracking, or delivery outside the active repository policy. A valid active "
+    "evidence-gated policy may authorize an eligible exact-head merge through trusted CI; "
+    "absent, invalid, revoked, or attended policy requires owner approval.",
     "",
     'Completion-flavored intents ("finish this", "wrap up", "done") advance one safe step '
-    "like any continuation. They do NOT authorize skipping closeout, the push confirmation, "
-    "or merge.",
+    "like any continuation. They do NOT authorize skipping closeout or the active delivery "
+    "policy.",
 )
 AEGIS_CONTINUATION_CONTRACT = "\n".join(AEGIS_CONTINUATION_LINES)
 AEGIS_CONTINUATION_SUMMARY = (
     "Continuation contract: a short intent (continue / go / proceed / next / resume) advances "
     "the Aegis workflow by exactly ONE safe step — resolved from `aegis next` (its "
     "`next_safe_action`), never from memory — then re-consult. It is not new authority. "
-    "Surface and ask before repairs (`aegis repair --apply`), non-dry-run `closeout`, "
-    "protected/owned paths, switching tasks, or push/PR. Never automatic: merge, force-push, "
-    'history rewrite, `.aegis/` writes, BLOCKED-readiness bypass, skipping S:W:H:E. "Finish '
-    'this" still stops at these boundaries. Full text in `.aegis/contract.md`.'
+    "Surface routine workflow mutations and follow the active repository policy. A valid "
+    "evidence-gated policy may authorize safe repairs, verified closeout, task transitions, "
+    "commit/push/PR, CI remediation, and trusted exact-head merge; attended/default policy "
+    "requires confirmation. Never automatic: manual-review repair, force-push, history "
+    "rewrite, direct `.aegis/` writes, "
+    'BLOCKED-readiness bypass, or skipping S:W:H:E. "Finish this" still stops at these '
+    "boundaries. Full text in `.aegis/contract.md`."
+)
+AEGIS_ENTRYPOINT_CONTINUATION_SUMMARY = (
+    "Continuation contract: resolve continue / go / next from live `aegis next`, perform "
+    "exactly one safe step, then re-consult. Routine repair/closeout/delivery authority "
+    "comes only from the active repository policy; manual review, protected-path edits, and "
+    "bypass remain attended. Full text in "
+    "`.aegis/contract.md`."
 )
 
 
@@ -2762,7 +3220,9 @@ CONTINUATION_BRIEF_BY_STATE: dict[str, dict[str, Any]] = {
     "installed_taskmaster_present": {
         "continue_means": "select the next Taskmaster task and kickoff",
         "next_safe_action": "taskmaster_next_then_kickoff",
-        "confirmation_boundary": ["switch the active task"],
+        "confirmation_boundary": [
+            "active evidence-gated policy may authorize a routine transition; attended/default policy requires confirmation"
+        ],
     },
     "installed_no_current_work": {
         "continue_means": "pick a Taskmaster task, or start tracked local work",
@@ -2812,7 +3272,7 @@ CONTINUATION_BRIEF_BY_STATE: dict[str, dict[str, Any]] = {
         "next_safe_action": "kickoff_first_task",
         "confirmation_boundary": [
             "kickoff binds and starts the selected task; surface the task id first",
-            "switch to a different task only with explicit confirmation",
+            "active evidence-gated policy may authorize the routine kickoff; attended/default policy requires confirmation",
         ],
         "artifact_policy": "setup-only: kickoff records the session/plan/tracker for the real task; do not edit product source",
     },
@@ -2830,24 +3290,28 @@ CONTINUATION_BRIEF_BY_STATE: dict[str, dict[str, Any]] = {
         "artifact_policy": "save screenshots/notes under reports/; do not edit source",
     },
     "closeout_passed": {
-        "continue_means": "task complete; deliver only with confirmation",
+        "continue_means": "task complete; deliver under the active repository authority policy",
         "next_safe_action": "deliver",
-        "confirmation_boundary": ["push or open a PR", "merge requires explicit user approval"],
+        "confirmation_boundary": [
+            "aegis.delivery-policy.json controls delivery authority",
+            "absent, invalid, revoked, or attended policy requires confirmation",
+        ],
     },
     "delivery_pending": {
-        "continue_means": "the task is closed; deliver via git/GitHub only with explicit confirmation",
-        "next_safe_action": "deliver_with_confirmation",
+        "continue_means": "the task is closed; advance delivery under the active repository authority policy",
+        "next_safe_action": "deliver_under_policy",
         "confirmation_boundary": [
-            "push the branch",
-            "open a PR",
-            "merge requires explicit user approval",
+            "attended mode requires confirmation",
+            "evidence-gated mode delegates eligible exact-head merge to trusted GitHub policy",
         ],
         "artifact_policy": "delivery is git/GitHub only; no source edits",
     },
     "delivery_unknown": {
         "continue_means": "inspect git/branch state before any delivery step",
         "next_safe_action": "inspect_git_state",
-        "confirmation_boundary": ["any push, PR, or merge requires explicit confirmation"],
+        "confirmation_boundary": [
+            "do not deliver until git state is resolved and the active repository policy can evaluate it"
+        ],
         "artifact_policy": "read-only git inspection only",
     },
     "workflow_scaffold_incomplete": {
@@ -2858,7 +3322,8 @@ CONTINUATION_BRIEF_BY_STATE: dict[str, dict[str, Any]] = {
         "continue_means": "review the repair plan (aegis doctor / aegis next), then apply only the safe repairs with aegis repair --apply after surfacing the plan",
         "next_safe_action": "review_repair_plan_then_apply_safe",
         "confirmation_boundary": [
-            "applying repairs with aegis repair --apply (show the repair plan first)",
+            "active evidence-gated policy may authorize deterministic safe repairs after the plan is surfaced",
+            "attended/default or disabled safe-repair authority requires confirmation",
             "any manual-review action needs explicit user confirmation",
         ],
         "artifact_policy": "aegis repair writes the changes; show the plan before applying and do not hand-edit .aegis/",
@@ -2894,9 +3359,11 @@ CONTINUATION_BRIEF_BY_STATE: dict[str, dict[str, Any]] = {
         "artifact_policy": "log the strict-verify report",
     },
     "closeout_required": {
-        "continue_means": "run aegis closeout --dry-run; run non-dry-run closeout only with explicit close-out intent",
+        "continue_means": "run aegis closeout --dry-run; after strict verification, active evidence-gated policy may authorize non-dry-run closeout",
         "next_safe_action": "run_closeout_dry_run",
-        "confirmation_boundary": ["running non-dry-run aegis closeout"],
+        "confirmation_boundary": [
+            "attended/default or disabled verified-closeout authority requires confirmation before non-dry-run closeout"
+        ],
         "artifact_policy": "closeout writes the report; do not hand-edit .aegis/",
     },
 }
@@ -2981,18 +3448,106 @@ def _strict_verify_passed(target_root: Path) -> bool:
     return report.get("mode") == "strict" and report.get("status") == "passed"
 
 
-def _closeout_passed(target_root: Path) -> bool:
+def _closeout_passed(
+    target_root: Path,
+    current_work: Mapping[str, Any] | None,
+) -> bool:
     report = _read_json(target_root / AEGIS_CLOSEOUT_REPORT_REL)
     if isinstance(report, Mapping) and report.get("status") == "passed":
-        return True
-    current_work = _read_json(target_root / AEGIS_CURRENT_WORK_REL)
+        return _closeout_report_matches_current_work(report, current_work)
     return isinstance(current_work, Mapping) and bool(current_work.get("closeout_passed_at"))
+
+
+def _pr_merge_commit_oid(pr: Mapping[str, Any]) -> str:
+    merge_commit = pr.get("mergeCommit")
+    if not isinstance(merge_commit, Mapping):
+        return ""
+    return str(merge_commit.get("oid") or "").strip()
+
+
+def _merged_delivery_proof(
+    target_root: Path,
+    *,
+    current_branch: str,
+    pr: Mapping[str, Any],
+) -> dict[str, Any]:
+    base_branch = str(pr.get("baseRefName") or "").strip()
+    merge_commit = _pr_merge_commit_oid(pr)
+    proof: dict[str, Any] = {
+        "status": "unproven",
+        "current_branch": current_branch,
+        "base_branch": base_branch,
+        "merge_commit": merge_commit or None,
+    }
+    if not merge_commit:
+        proof["reason"] = "missing_merge_commit"
+        return proof
+    if not base_branch or current_branch != base_branch:
+        proof["reason"] = "current_branch_is_not_pr_base"
+        return proof
+
+    upstream_result = _run_target_git(
+        target_root,
+        "rev-parse",
+        "--abbrev-ref",
+        "--symbolic-full-name",
+        "@{u}",
+    )
+    upstream = upstream_result.stdout.strip() if upstream_result.returncode == 0 else ""
+    proof["upstream"] = upstream or None
+    if not upstream:
+        proof["reason"] = "missing_upstream"
+        return proof
+    if upstream != base_branch and not upstream.endswith(f"/{base_branch}"):
+        proof["reason"] = "upstream_does_not_match_pr_base"
+        return proof
+
+    ancestor = _run_target_git(
+        target_root,
+        "merge-base",
+        "--is-ancestor",
+        merge_commit,
+        "HEAD",
+    )
+    proof["merge_commit_in_head"] = ancestor.returncode == 0
+    if ancestor.returncode != 0:
+        proof["reason"] = "merge_commit_not_in_head"
+        return proof
+
+    synchronized = _run_target_git(
+        target_root,
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...@{u}",
+    )
+    if synchronized.returncode != 0:
+        proof["reason"] = "upstream_comparison_failed"
+        return proof
+    counts = synchronized.stdout.strip().split()
+    if len(counts) != 2:
+        proof["reason"] = "invalid_upstream_comparison"
+        return proof
+    try:
+        ahead, behind = (int(value) for value in counts)
+    except ValueError:
+        proof["reason"] = "invalid_upstream_comparison"
+        return proof
+    proof["ahead"] = ahead
+    proof["behind"] = behind
+    if ahead != 0 or behind != 0:
+        proof["reason"] = "upstream_not_synchronized"
+        return proof
+    proof["status"] = "synchronized"
+    return proof
 
 
 def _post_closeout_delivery_guidance(
     target_root: Path,
     current_work: Mapping[str, Any],
 ) -> dict[str, Any]:
+    delivery_policy = _read_delivery_policy_state(target_root)
+    requires_approval = bool(delivery_policy.get("requires_per_pr_approval", True))
     paths = current_work.get("paths") if isinstance(current_work.get("paths"), Mapping) else {}
     recorded_branch = _current_work_branch_name(current_work, paths).strip()
     try:
@@ -3007,6 +3562,53 @@ def _post_closeout_delivery_guidance(
             "details": {"reason": str(exc), "recorded_branch": recorded_branch},
         }
     if recorded_branch and recorded_branch != branch:
+        gh = _run_gh_pr_list(target_root)
+        if not gh.get("available"):
+            proof = {
+                "status": "unproven",
+                "reason": "github_unavailable",
+                "github_reason": gh.get("reason"),
+            }
+        else:
+            matching_prs = [
+                dict(pr)
+                for pr in gh.get("prs", [])
+                if isinstance(pr, Mapping)
+                and str(pr.get("headRefName") or "") == recorded_branch
+            ]
+            merged_prs = [
+                pr
+                for pr in matching_prs
+                if str(pr.get("state") or "").upper() == "MERGED" or pr.get("mergedAt")
+            ]
+            if merged_prs:
+                pr = merged_prs[0]
+                proof = _merged_delivery_proof(
+                    target_root,
+                    current_branch=branch,
+                    pr=pr,
+                )
+                if proof.get("status") == "synchronized":
+                    return {
+                        "state": "merged_complete",
+                        "next_safe_action": "merged_complete",
+                        "next_required_action": "no workflow action required",
+                        "suggested_cli": "./.aegis/bin/aegis status --target-dir .",
+                        "copyable_repairs": [],
+                        "details": {
+                            "current_branch": branch,
+                            "recorded_branch": recorded_branch,
+                            "pr": pr,
+                            "delivery_proof": proof,
+                            "delivery_policy": delivery_policy,
+                        },
+                    }
+            else:
+                proof = {
+                    "status": "unproven",
+                    "reason": "matching_merged_pr_not_found",
+                    "matching_prs": matching_prs,
+                }
         return {
             "state": "delivery_unknown",
             "next_safe_action": "inspect_git_state",
@@ -3015,7 +3617,12 @@ def _post_closeout_delivery_guidance(
             ),
             "suggested_cli": "git status --short --branch",
             "copyable_repairs": ["git status --short --branch"],
-            "details": {"current_branch": branch, "recorded_branch": recorded_branch},
+            "details": {
+                "current_branch": branch,
+                "recorded_branch": recorded_branch,
+                "delivery_proof": proof,
+                "delivery_policy": delivery_policy,
+            },
         }
 
     upstream = _run_target_git(
@@ -3037,7 +3644,8 @@ def _post_closeout_delivery_guidance(
                 "current_branch": branch,
                 "upstream": None,
                 "sanctioned_after_closeout": True,
-                "merge_requires_explicit_user_approval": True,
+                "merge_requires_explicit_user_approval": requires_approval,
+                "delivery_policy": delivery_policy,
             },
         }
 
@@ -3056,7 +3664,8 @@ def _post_closeout_delivery_guidance(
                 "current_branch": branch,
                 "upstream": upstream.stdout.strip(),
                 "github": {"available": False, "reason": gh.get("reason")},
-                "merge_requires_explicit_user_approval": True,
+                "merge_requires_explicit_user_approval": requires_approval,
+                "delivery_policy": delivery_policy,
             },
         }
 
@@ -3093,7 +3702,8 @@ def _post_closeout_delivery_guidance(
             "upstream": upstream.stdout.strip(),
             "pr": pr,
             "checks": checks,
-            "merge_requires_explicit_user_approval": True,
+            "merge_requires_explicit_user_approval": requires_approval,
+            "delivery_policy": delivery_policy,
         }
         if not detail.get("available"):
             details["github_detail"] = {"available": False, "reason": detail.get("reason")}
@@ -3108,6 +3718,18 @@ def _post_closeout_delivery_guidance(
                     ),
                     "suggested_cli": command,
                     "copyable_repairs": [command, checks_command, view_command],
+                    "details": details,
+                }
+            if not requires_approval:
+                return {
+                    "state": "delivery_pending",
+                    "next_safe_action": "await_evidence_gated_merge",
+                    "next_required_action": (
+                        "trusted GitHub delivery policy must revalidate and merge the exact head; "
+                        "no per-PR owner approval is required"
+                    ),
+                    "suggested_cli": checks_command,
+                    "copyable_repairs": [checks_command, view_command],
                     "details": details,
                 }
             return {
@@ -3134,7 +3756,7 @@ def _post_closeout_delivery_guidance(
             "state": "delivery_pending",
             "next_safe_action": "wait_for_ci",
             "next_required_action": (
-                "PR is open; check CI and ask before merging when checks are green"
+                "PR is open; wait for CI and then follow the active delivery policy"
             ),
             "suggested_cli": command,
             "copyable_repairs": [command, view_command],
@@ -3152,7 +3774,8 @@ def _post_closeout_delivery_guidance(
             "current_branch": branch,
             "upstream": upstream.stdout.strip(),
             "matching_prs": prs,
-            "merge_requires_explicit_user_approval": True,
+            "merge_requires_explicit_user_approval": requires_approval,
+            "delivery_policy": delivery_policy,
         },
     }
 
@@ -3456,11 +4079,13 @@ def _workflow_log_handler(target_root: Path, event_class: str) -> str:
 
 
 def _expects_pending_tracking(target_root: Path) -> bool:
-    """Return true when the installed primary workflow is expected to enqueue hook events."""
+    """Return true when the active workflow requires per-mutation reconciliation."""
 
     manifest = _read_json(target_root / AEGIS_MANIFEST_REL)
     if not isinstance(manifest, Mapping):
         return True
+    if _read_enforcement_state(target_root).get("mode") == "advisory":
+        return False
     primary = str(manifest.get("primary_agent") or "").strip()
     return primary == "claude" and "claude" in _enabled_agents_from_manifest(manifest)
 
@@ -3876,29 +4501,59 @@ def next_action(
     else:
         current_task_authority = "local-tracked-work"
 
-    pending_events = _pending_tracking_events(target_root)
-    if pending_events:
-        ids = [str(event.get("id") or "unknown") for event in pending_events]
+    pending_tracking = _classify_pending_tracking(target_root)
+    if not pending_tracking["delivery_allowed"]:
+        required_samples = [
+            item
+            for item in pending_tracking["sample"]
+            if isinstance(item, Mapping) and item.get("mode") == "strict"
+        ]
+        first_required_id = (
+            str(required_samples[0].get("id") or "") if required_samples else ""
+        )
+        required_event_action = bool(first_required_id)
+        pending_event_id = (
+            "current"
+            if pending_tracking["counts"]["total"] == 1
+            and pending_tracking["counts"]["required"] == 1
+            else first_required_id
+        )
+        suggested_cli = (
+            "./.aegis/bin/aegis log --target-dir . "
+            f"--pending-id {_quote_cli(pending_event_id)} "
+            "--note '<past-tense note>' --plan-step auto --plan-status completed"
+            if required_event_action
+            else "./.aegis/bin/aegis doctor --target-dir . --all --json"
+        )
         return _workflow_guidance_payload(
             phase="track",
             state="pending_tracking",
-            next_required_action="log the pending S:W:H:E event before any further mutation",
+            next_required_action=(
+                "log the unresolved required S:W:H:E event before any further mutation"
+                if required_event_action
+                else (
+                    "inspect the malformed, mixed, or unknown pending queue; Aegis is "
+                    "failing closed and will not invent a repair"
+                )
+            ),
             current_task_authority=current_task_authority,
-            suggested_cli="./.aegis/bin/aegis log --target-dir . --pending-id current --note '<past-tense note>' --plan-step auto --plan-status completed",
-            suggested_mcp_tool="aegis.log",
-            suggested_mcp_arguments={
-                "target_dir": ".",
-                "pending_event_id": "current",
-                "note": "<past-tense note>",
-                "plan_step": "auto",
-                "plan_status": "completed",
-                "apply": True,
-            },
+            suggested_cli=suggested_cli,
+            suggested_mcp_tool="aegis.log" if required_event_action else "aegis.doctor",
+            suggested_mcp_arguments=(
+                {
+                    "target_dir": ".",
+                    "pending_event_id": pending_event_id,
+                    "note": "<past-tense note>",
+                    "plan_step": "auto",
+                    "plan_status": "completed",
+                    "apply": True,
+                }
+                if required_event_action
+                else {"target_dir": "."}
+            ),
             missing_gates=["mutation.pending_tracking_empty"],
-            copyable_repairs=[
-                "./.aegis/bin/aegis log --target-dir . --pending-id current --note '<past-tense note>' --plan-step auto --plan-status completed"
-            ],
-            details={"pending_event_ids": ids},
+            copyable_repairs=[suggested_cli],
+            details={"pending_tracking": pending_tracking},
         )
 
     if (
@@ -3996,7 +4651,7 @@ def next_action(
             },
         )
 
-    if _closeout_passed(target_root):
+    if _closeout_passed(target_root, current_work):
         delivery = _post_closeout_delivery_guidance(target_root, current_work)
         if delivery.get("state") != "merged_complete":
             return _workflow_guidance_payload(
@@ -4793,7 +5448,7 @@ def _run_gh_pr_list(target_root: Path) -> dict[str, Any]:
             "--limit",
             "200",
             "--json",
-            "number,state,title,headRefName,headRefOid,baseRefName,mergedAt,closedAt,url,isDraft",
+            "number,state,title,headRefName,headRefOid,baseRefName,mergeCommit,mergedAt,closedAt,url,isDraft",
         ],
         cwd=target_root,
         text=True,
@@ -4831,7 +5486,7 @@ def _run_gh_pr_view(target_root: Path, number: Any) -> dict[str, Any]:
             "view",
             pr_number,
             "--json",
-            "number,state,title,headRefName,headRefOid,baseRefName,mergedAt,closedAt,url,isDraft,mergeStateStatus,statusCheckRollup",
+            "number,state,title,headRefName,headRefOid,baseRefName,mergeCommit,mergedAt,closedAt,url,isDraft,mergeStateStatus,statusCheckRollup",
         ],
         cwd=target_root,
         text=True,
@@ -6354,23 +7009,51 @@ def _workflow_next_action(
 def _post_init_next_action(install_report: Mapping[str, Any]) -> dict[str, Any]:
     client_reload = install_report.get("client_reload")
     if isinstance(client_reload, Mapping) and bool(client_reload.get("required")):
+        reload_agents = [
+            str(agent).strip().lower()
+            for agent in client_reload.get("agents", [])
+            if isinstance(agent, str) and str(agent).strip().lower() in AGENT_CHOICES
+        ]
+        reload_agent = str(client_reload.get("agent") or "").strip().lower()
+        if not reload_agents and reload_agent in AGENT_CHOICES:
+            reload_agents = [reload_agent]
+        if reload_agents == ["claude"]:
+            action = "restart_claude_before_mutation"
+            suggested_cli = (
+                "Restart Claude Code in this project, then run "
+                "./.aegis/bin/aegis next --target-dir ."
+            )
+        elif reload_agents == ["codex"]:
+            action = "restart_codex_before_mutation"
+            suggested_cli = (
+                "Reconnect Codex in this project, use /hooks to review and trust the exact "
+                "definitions and hashes, then run ./.aegis/bin/aegis next --target-dir ."
+            )
+        else:
+            action = "restart_clients_before_mutation"
+            suggested_cli = (
+                "Restart or reconnect every enabled client named in details.agents, complete "
+                "any Codex /hooks trust review, then run ./.aegis/bin/aegis next --target-dir ."
+            )
         changed_paths = [
             str(path)
             for path in client_reload.get("changed_paths", [])
             if isinstance(path, str) and path
         ]
         return _workflow_next_action(
-            "restart_claude_before_mutation",
-            "HARD STOP: Aegis installed or changed Claude hooks/settings. Do not edit source, run project tests, mutate Taskmaster, or call start/kickoff in this same Claude session. restart Claude before any mutation so .claude/settings.json enforcement is active.",
-            suggested_cli="Restart Claude Code in this project, then run ./.aegis/bin/aegis next --target-dir .",
+            action,
+            str(client_reload.get("instructions") or "Client adapter reload is required."),
+            suggested_cli=suggested_cli,
             suggested_mcp_tool="aegis.next",
             suggested_mcp_arguments={"target_dir": "."},
             details={
                 "client_reload_required": True,
                 "must_stop": True,
                 "agent": client_reload.get("agent"),
+                "agents": reload_agents,
                 "changed_paths": changed_paths,
                 "reload_reason": client_reload.get("reason"),
+                "hook_trust": client_reload.get("hook_trust", {}),
                 "forbidden_until_reload": client_reload.get("forbidden_until_reload", []),
                 "allowed_until_reload": client_reload.get("allowed_until_reload", []),
                 "post_reload": "Run aegis.next, then start/kickoff tracked work before source edits.",
@@ -7755,6 +8438,191 @@ def _update_plan_table(
     return True
 
 
+def _bounded_pending_value(value: Any) -> str:
+    text = str(value or "")
+    if len(text) <= AEGIS_PENDING_TRACKING_SAMPLE_TEXT_LIMIT:
+        return text
+    digest = hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()[:10]
+    suffix = f"…#{digest}"
+    return text[: AEGIS_PENDING_TRACKING_SAMPLE_TEXT_LIMIT - len(suffix)] + suffix
+
+
+def _pending_event_sample(event: Any, index: int) -> dict[str, Any]:
+    if not isinstance(event, Mapping):
+        return {
+            "index": index,
+            "valid": False,
+            "type": type(event).__name__,
+            "mode": "unknown",
+        }
+    affected_paths = event.get("affected_paths")
+    affected = (
+        [_bounded_pending_value(path) for path in affected_paths[:AEGIS_PENDING_TRACKING_SAMPLE_LIMIT]]
+        if isinstance(affected_paths, list)
+        else []
+    )
+    sample: dict[str, Any] = {
+        "index": index,
+        "valid": True,
+        "id": _bounded_pending_value(event.get("id")),
+        "mode": _bounded_pending_value(event.get("mode")),
+        "tool": _bounded_pending_value(event.get("tool")),
+        "handler": _bounded_pending_value(event.get("handler")),
+        "evidence": _bounded_pending_value(event.get("evidence")),
+    }
+    if isinstance(affected_paths, list):
+        sample["affected_path_count"] = len(affected_paths)
+        sample["affected_paths"] = affected
+        sample["affected_paths_truncated"] = len(affected_paths) > len(affected)
+    return sample
+
+
+def _classify_pending_tracking(target_root: Path) -> dict[str, Any]:
+    """Classify the complete pending queue without mutating or silently filtering it.
+
+    Advisory-only events are retained audit evidence and are delivery-safe. Explicit
+    strict events and every untrusted queue shape fail closed. The returned payload is
+    intentionally bounded; the queue artifact remains the complete source of evidence.
+    """
+
+    pending_path = target_root / AEGIS_PENDING_TRACKING_REL
+    base: dict[str, Any] = {
+        "path": AEGIS_PENDING_TRACKING_REL,
+        "file_exists": pending_path.exists() or pending_path.is_symlink(),
+        "queue_valid": True,
+        "provenance_trusted": True,
+        "classification": "absent",
+        "delivery_allowed": True,
+        "advisory_preserved": False,
+        "required_unresolved": False,
+        "untrusted_unresolved": False,
+        "counts": {
+            "total": 0,
+            "advisory": 0,
+            "required": 0,
+            "unknown": 0,
+        },
+        "sample": [],
+        "sample_limit": AEGIS_PENDING_TRACKING_SAMPLE_LIMIT,
+        "sample_truncated": False,
+        "reason": "pending tracking queue absent",
+    }
+    if not base["file_exists"]:
+        return base
+    if not pending_path.is_file() or pending_path.is_symlink():
+        return {
+            **base,
+            "queue_valid": False,
+            "provenance_trusted": False,
+            "classification": "malformed",
+            "delivery_allowed": False,
+            "untrusted_unresolved": True,
+            "reason": "pending tracking queue must be a regular file",
+        }
+    try:
+        raw = pending_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return {
+            **base,
+            "queue_valid": False,
+            "provenance_trusted": False,
+            "classification": "malformed",
+            "delivery_allowed": False,
+            "untrusted_unresolved": True,
+            "reason": f"pending tracking queue is unreadable: {type(exc).__name__}",
+        }
+    try:
+        payload = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return {
+            **base,
+            "queue_valid": False,
+            "provenance_trusted": False,
+            "classification": "malformed",
+            "delivery_allowed": False,
+            "untrusted_unresolved": True,
+            "reason": "pending tracking queue is invalid JSON",
+        }
+    if not isinstance(payload, Mapping):
+        return {
+            **base,
+            "queue_valid": False,
+            "provenance_trusted": False,
+            "classification": "malformed",
+            "delivery_allowed": False,
+            "untrusted_unresolved": True,
+            "reason": "pending tracking queue payload is not an object",
+        }
+    events = payload.get("events")
+    if not isinstance(events, list):
+        return {
+            **base,
+            "queue_valid": False,
+            "provenance_trusted": False,
+            "classification": "malformed",
+            "delivery_allowed": False,
+            "untrusted_unresolved": True,
+            "reason": "pending tracking queue events field is not a list",
+        }
+
+    advisory_count = 0
+    required_count = 0
+    unknown_count = 0
+    invalid_event_shape = False
+    sample: list[dict[str, Any]] = []
+    for index, event in enumerate(events):
+        if len(sample) < AEGIS_PENDING_TRACKING_SAMPLE_LIMIT:
+            sample.append(_pending_event_sample(event, index))
+        if not isinstance(event, Mapping):
+            invalid_event_shape = True
+            unknown_count += 1
+            continue
+        mode = str(event.get("mode") or "").strip().lower()
+        if mode == "advisory":
+            advisory_count += 1
+        elif mode == "strict":
+            required_count += 1
+        else:
+            unknown_count += 1
+
+    if not events:
+        classification = "empty"
+        reason = "pending tracking queue empty"
+    elif unknown_count:
+        classification = "unknown"
+        reason = "pending tracking queue contains invalid events or untrusted provenance"
+    elif advisory_count and required_count:
+        classification = "mixed"
+        reason = "pending tracking queue mixes advisory evidence with required strict events"
+    elif required_count:
+        classification = "required_only"
+        reason = "pending tracking queue contains unresolved required strict events"
+    else:
+        classification = "advisory_only"
+        reason = "advisory pending events are preserved audit evidence and do not block delivery"
+
+    delivery_allowed = classification in {"empty", "advisory_only"}
+    return {
+        **base,
+        "queue_valid": not invalid_event_shape,
+        "provenance_trusted": unknown_count == 0,
+        "classification": classification,
+        "delivery_allowed": delivery_allowed,
+        "advisory_preserved": classification == "advisory_only",
+        "required_unresolved": required_count > 0,
+        "untrusted_unresolved": unknown_count > 0,
+        "counts": {
+            "total": len(events),
+            "advisory": advisory_count,
+            "required": required_count,
+            "unknown": unknown_count,
+        },
+        "sample": sample,
+        "sample_truncated": len(events) > len(sample),
+        "reason": reason,
+    }
+
+
 def _pending_tracking_events(target_root: Path) -> list[dict[str, Any]]:
     payload = _read_json(target_root / AEGIS_PENDING_TRACKING_REL)
     if not payload:
@@ -7892,11 +8760,15 @@ def _resolve_pending_tracking_event(
     current_events = [
         event for event in events if _event_matches_current_work(event, task_id=task_id, slug=slug)
     ]
+    valid_ids = [str(event.get("id") or "unknown") for event in current_events]
+    valid = ", ".join(valid_ids[:AEGIS_PENDING_TRACKING_SAMPLE_LIMIT]) or "<none>"
+    if len(valid_ids) > AEGIS_PENDING_TRACKING_SAMPLE_LIMIT:
+        valid += (
+            f", ... {len(valid_ids) - AEGIS_PENDING_TRACKING_SAMPLE_LIMIT} more "
+            f"(inspect {AEGIS_PENDING_TRACKING_REL})"
+        )
     if clean in AEGIS_PENDING_EVENT_SENTINELS:
         if len(current_events) != 1:
-            valid = (
-                ", ".join(str(event.get("id") or "unknown") for event in current_events) or "<none>"
-            )
             raise AegisError(
                 f"pending event sentinel '{clean}' requires exactly one current-work event; valid ids: {valid}"
             )
@@ -7904,13 +8776,12 @@ def _resolve_pending_tracking_event(
     matches = [event for event in current_events if str(event.get("id") or "") == clean]
     if len(matches) == 1:
         return matches[0]
-    valid = ", ".join(str(event.get("id") or "unknown") for event in current_events) or "<none>"
     raise AegisError(f"unknown pending event id: {clean}; valid ids: {valid}")
 
 
 def _format_pending_tracking_for_error(events: Sequence[Mapping[str, Any]]) -> str:
     lines = []
-    for event in events:
+    for event in events[:AEGIS_PENDING_TRACKING_SAMPLE_LIMIT]:
         event_id = event.get("id", "unknown")
         lines.append(
             f"- {event_id}: "
@@ -7926,6 +8797,12 @@ def _format_pending_tracking_for_error(events: Sequence[Mapping[str, Any]]) -> s
             "  repair: aegis log --pending-id "
             f'{event_id} --note "<past-tense note>" '
             "--plan-step <plan-step-id> --plan-status completed"
+        )
+    omitted = len(events) - min(len(events), AEGIS_PENDING_TRACKING_SAMPLE_LIMIT)
+    if omitted:
+        lines.append(
+            f"... {omitted} more pending events; inspect {AEGIS_PENDING_TRACKING_REL} "
+            f"for all {len(events)}."
         )
     return "\n".join(lines)
 
@@ -9041,40 +9918,22 @@ def _strict_current_work_checks(
     return checks, current_work
 
 
-def _strict_pending_tracking_check(target_root: Path) -> dict[str, Any]:
-    pending_path = target_root / AEGIS_PENDING_TRACKING_REL
-    if not pending_path.exists():
-        return _strict_check(
-            "mutation.pending_tracking_empty",
-            category="mutation",
-            required=True,
-            passed=True,
-            message="pending tracking queue absent",
-            details={"path": AEGIS_PENDING_TRACKING_REL, "events": 0},
-        )
-    payload = _read_json(pending_path)
-    if payload is None:
-        return _strict_check(
-            "mutation.pending_tracking_empty",
-            category="mutation",
-            required=True,
-            passed=False,
-            message="pending tracking queue is invalid JSON",
-            details={"path": AEGIS_PENDING_TRACKING_REL},
-        )
-    events = payload.get("events")
-    event_count = len(events) if isinstance(events, list) else 0
+def _strict_pending_tracking_check(
+    target_root: Path,
+    pending_tracking: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    state = (
+        dict(pending_tracking)
+        if isinstance(pending_tracking, Mapping)
+        else _classify_pending_tracking(target_root)
+    )
     return _strict_check(
         "mutation.pending_tracking_empty",
         category="mutation",
         required=True,
-        passed=event_count == 0,
-        message=(
-            "pending tracking queue empty"
-            if event_count == 0
-            else "pending tracking queue has unlogged mutation events"
-        ),
-        details={"path": AEGIS_PENDING_TRACKING_REL, "events": event_count},
+        passed=bool(state.get("delivery_allowed")),
+        message=str(state.get("reason") or "pending tracking state unavailable"),
+        details=state,
     )
 
 
@@ -9159,6 +10018,111 @@ def _strict_claude_checks(target_root: Path, manifest: Mapping[str, Any]) -> lis
     return checks
 
 
+def _strict_codex_checks(target_root: Path, manifest: Mapping[str, Any]) -> list[dict[str, Any]]:
+    required = _agent_enabled(manifest, "codex")
+    if not required:
+        return [
+            _strict_check(
+                "codex.adapter_enabled",
+                category="codex",
+                required=False,
+                passed=True,
+                message="Codex adapter is not enabled for this install",
+            )
+        ]
+
+    missing_required_files = [
+        rel_path for rel_path in CODEX_REQUIRED_FILES if not (target_root / rel_path).is_file()
+    ]
+    checks = [
+        _strict_check(
+            "codex.required_files",
+            category="codex",
+            required=True,
+            passed=not missing_required_files,
+            message=(
+                "all Codex required files exist"
+                if not missing_required_files
+                else "Codex required files missing"
+            ),
+            details={"missing": missing_required_files},
+        )
+    ]
+
+    hook_gate_ids = {
+        "codex.pretooluse",
+        "codex.posttooluse_tracking",
+        "codex.posttooluse_ledger",
+        "codex.session_brief",
+        "codex.stop_tracking",
+        "codex.apply_patch",
+    }
+    hook_results = [
+        _verify_gate(target_root, gate)
+        for gate in manifest.get("gates", [])
+        if isinstance(gate, Mapping) and gate.get("id") in hook_gate_ids
+    ]
+    failed_hooks = [
+        str(result.get("gate_id")) for result in hook_results if result.get("status") != "pass"
+    ]
+    checks.append(
+        _strict_check(
+            "codex.hooks_registered",
+            category="codex",
+            required=True,
+            passed=len(hook_results) == len(hook_gate_ids) and not failed_hooks,
+            message=(
+                "Codex hook registrations are present"
+                if not failed_hooks and len(hook_results) == len(hook_gate_ids)
+                else "Codex hook registrations are missing or invalid"
+            ),
+            details={
+                "expected": sorted(hook_gate_ids),
+                "observed": [str(result.get("gate_id")) for result in hook_results],
+                "failed": failed_hooks,
+            },
+        )
+    )
+
+    install_report = _read_json(target_root / AEGIS_INSTALL_REPORT_REL) or {}
+    reload_report = (
+        install_report.get("client_reload")
+        if isinstance(install_report.get("client_reload"), Mapping)
+        else {}
+    )
+    hook_trust = (
+        reload_report.get("hook_trust")
+        if isinstance(reload_report.get("hook_trust"), Mapping)
+        else {}
+    )
+    trust_guidance_ok = (
+        hook_trust.get("settings_path") == CODEX_HOOKS_REL
+        and hook_trust.get("review_command") == "/hooks"
+        and hook_trust.get("hash_scope") == "exact_hook_definition"
+        and hook_trust.get("bypass_allowed") is False
+    )
+    checks.append(
+        _strict_check(
+            "codex.hook_trust_guidance",
+            category="codex",
+            required=True,
+            passed=trust_guidance_ok,
+            message=(
+                "Codex exact-hash hook trust guidance is present"
+                if trust_guidance_ok
+                else "Codex hook trust guidance is missing or permits bypass"
+            ),
+            details={
+                "settings_path": hook_trust.get("settings_path"),
+                "review_command": hook_trust.get("review_command"),
+                "hash_scope": hook_trust.get("hash_scope"),
+                "bypass_allowed": hook_trust.get("bypass_allowed"),
+            },
+        )
+    )
+    return checks
+
+
 def _strict_integration_checks(
     target_root: Path, current_work: Mapping[str, Any] | None
 ) -> list[dict[str, Any]]:
@@ -9199,7 +10163,10 @@ def _strict_integration_checks(
 
 
 def _strict_verification_checks(
-    target_root: Path, manifest: Mapping[str, Any]
+    target_root: Path,
+    manifest: Mapping[str, Any],
+    *,
+    pending_tracking: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     checks: list[dict[str, Any]] = [
         _strict_managed_files_check(target_root, manifest),
@@ -9214,8 +10181,9 @@ def _strict_verification_checks(
     ]
     workflow_checks, current_work = _strict_current_work_checks(target_root)
     checks.extend(workflow_checks)
-    checks.append(_strict_pending_tracking_check(target_root))
+    checks.append(_strict_pending_tracking_check(target_root, pending_tracking))
     checks.extend(_strict_claude_checks(target_root, manifest))
+    checks.extend(_strict_codex_checks(target_root, manifest))
     checks.extend(_strict_integration_checks(target_root, current_work))
     return checks
 
@@ -9686,6 +10654,7 @@ def doctor(
     source = Path(source_root).resolve()
     manifest_path = target_root / AEGIS_MANIFEST_REL
     manifest = _read_json(manifest_path)
+    pending_tracking = _classify_pending_tracking(target_root)
     checks: list[dict[str, Any]] = []
     current_work: dict[str, Any] | None = None
 
@@ -9724,7 +10693,11 @@ def doctor(
                     details={"path": AEGIS_MANIFEST_REL, "schema_path": list(exc.schema_path)},
                 )
             )
-        strict_checks = _strict_verification_checks(target_root, manifest)
+        strict_checks = _strict_verification_checks(
+            target_root,
+            manifest,
+            pending_tracking=pending_tracking,
+        )
         checks.extend(strict_checks)
         current_work_path = target_root / AEGIS_CURRENT_WORK_REL
         current_work = _read_json(current_work_path)
@@ -9815,6 +10788,7 @@ def doctor(
         "status": status_value,
         "current_state": current_state,
         "enforcement": enforcement,
+        "pending_tracking": pending_tracking,
         "checks": checks,
         "summary": _doctor_summary(checks),
         "repair_plan": {
@@ -10458,10 +11432,21 @@ def format_doctor_summary(report: Mapping[str, Any]) -> str:
     enforcement = (
         report.get("enforcement") if isinstance(report.get("enforcement"), Mapping) else {}
     )
+    pending = (
+        report.get("pending_tracking")
+        if isinstance(report.get("pending_tracking"), Mapping)
+        else {}
+    )
+    pending_counts = pending.get("counts") if isinstance(pending.get("counts"), Mapping) else {}
     return "\n".join(
         [
             f"Aegis doctor: {report.get('status')} ({report.get('current_state')})",
             f"Enforcement: {enforcement.get('mode', 'strict')}",
+            (
+                "Pending tracking: "
+                f"{pending_counts.get('total', 0)} "
+                f"({pending.get('classification', 'unknown')})"
+            ),
             f"Checks: {summary.get('total', 0)} total, {summary.get('failed_required', 0)} required failures, {summary.get('warnings', 0)} warnings",
             f"Repair plan: {repair_plan.get('safe', 0)} safe, {repair_plan.get('manual_review', 0)} manual-review",
             "",
@@ -10473,7 +11458,7 @@ def format_next_summary(payload: Mapping[str, Any]) -> str:
     """TM 189: concise human rendering of `aegis next`, leading with the continuation brief.
 
     A bare "continue" means: do exactly the one next_safe_action below, honour the
-    confirmation boundaries, then re-run `aegis next`. The full payload (--json) carries
+    confirmation boundaries, then re-run `aegis next`. The full payload (`--all --json`) carries
     suggested CLI/MCP calls and copyable repairs."""
 
     brief = (
@@ -10543,6 +11528,7 @@ def verify(
     manifest_path = target_root / AEGIS_MANIFEST_REL
     manifest = _read_json(manifest_path)
     enforcement = _read_enforcement_state(target_root)
+    pending_tracking = _classify_pending_tracking(target_root)
     mode = "strict" if strict else "standard"
     checks: list[dict[str, Any]] = []
     if manifest is None:
@@ -10562,6 +11548,7 @@ def verify(
             "target_root": str(target_root),
             "manifest_path": AEGIS_MANIFEST_REL,
             "enforcement": enforcement,
+            "pending_tracking": pending_tracking,
             "dry_run": dry_run,
             "report_written": False,
             "checks": [
@@ -10622,7 +11609,13 @@ def verify(
             checks.append(_verify_gate(target_root, gate))
 
     if strict:
-        checks.extend(_strict_verification_checks(target_root, manifest))
+        checks.extend(
+            _strict_verification_checks(
+                target_root,
+                manifest,
+                pending_tracking=pending_tracking,
+            )
+        )
     if enforcement.get("mode") == "advisory":
         checks.append(
             {
@@ -10679,6 +11672,7 @@ def verify(
         "target_root": str(target_root),
         "manifest_path": AEGIS_MANIFEST_REL,
         "enforcement": enforcement,
+        "pending_tracking": pending_tracking,
         "dry_run": dry_run,
         "report_written": False,
         "summary": {
@@ -11446,7 +12440,8 @@ def _build_closeout_repair_guidance(
     implementation_tokens: Sequence[str],
     verification_tokens: Sequence[str],
     strict_verify_rel: str,
-    pending_events: Sequence[Mapping[str, Any]],
+    pending_tracking: Mapping[str, Any],
+    target_root: Path,
     checks: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
     entries_by_evidence = _swhe_entries_by_evidence(surface_texts)
@@ -11518,21 +12513,40 @@ def _build_closeout_repair_guidance(
                 item["command_template"] = command_template
             repair_items.append(item)
 
-    for event in pending_events:
-        event_id = str(event.get("id") or "")
-        repair_items.append(
-            {
-                "kind": "pending_tracking_event",
-                "pending_event_id": event_id,
-                "handler": event.get("handler"),
-                "evidence": event.get("evidence"),
-                "command_template": (
-                    "aegis log --pending-id "
-                    f'{_quote_cli(event_id)} --note "<past-tense note>" '
-                    "--plan-step <plan-step-id> --plan-status completed"
-                ),
-            }
-        )
+    if not pending_tracking.get("delivery_allowed"):
+        required_events = [
+            event
+            for event in _pending_tracking_events(target_root)
+            if str(event.get("mode") or "").strip().lower() == "strict"
+        ]
+        for event in required_events[:AEGIS_PENDING_TRACKING_SAMPLE_LIMIT]:
+            event_id = str(event.get("id") or "")
+            repair_items.append(
+                {
+                    "kind": "pending_tracking_event",
+                    "pending_event_id": event_id,
+                    "handler": event.get("handler"),
+                    "evidence": event.get("evidence"),
+                    "command_template": (
+                        "aegis log --pending-id "
+                        f'{_quote_cli(event_id)} --note "<past-tense note>" '
+                        "--plan-step <plan-step-id> --plan-status completed"
+                    ),
+                }
+            )
+        if pending_tracking.get("untrusted_unresolved"):
+            repair_items.append(
+                {
+                    "kind": "pending_tracking_manual_review",
+                    "classification": pending_tracking.get("classification"),
+                    "artifact": AEGIS_PENDING_TRACKING_REL,
+                    "command": "aegis doctor --target-dir . --all --json",
+                    "reason": (
+                        "Aegis cannot safely infer a mutation or deletion for malformed "
+                        "or unknown-provenance pending evidence."
+                    ),
+                }
+            )
 
     failing_gate_ids = [
         str(check.get("gate_id"))
@@ -11579,7 +12593,7 @@ def format_closeout_summary(report: Mapping[str, Any]) -> str:
         if isinstance(report.get("pending_tracking"), Mapping)
         else {}
     )
-    pending_events = pending.get("events") if isinstance(pending.get("events"), list) else []
+    pending_counts = pending.get("counts") if isinstance(pending.get("counts"), Mapping) else {}
     failed_gates = _closeout_failed_required_gate_ids(report)
     next_action = (
         report.get("next_action") if isinstance(report.get("next_action"), Mapping) else {}
@@ -11601,7 +12615,11 @@ def format_closeout_summary(report: Mapping[str, Any]) -> str:
         f"mode: {'dry-run' if dry_run else 'final'}",
         f"failed_required: {summary.get('failed_required', 0)}",
         f"warnings: {summary.get('warnings', 0)}",
-        f"pending_tracking: {len(pending_events)}",
+        (
+            "pending_tracking: "
+            f"{pending_counts.get('total', 0)} "
+            f"({pending.get('classification', 'unknown')})"
+        ),
         f"closeout_report: {AEGIS_CLOSEOUT_REPORT_REL} ({closeout_report_state})",
     ]
     if failed_gates:
@@ -11614,7 +12632,7 @@ def format_closeout_summary(report: Mapping[str, Any]) -> str:
     suggested_cli = str(next_action.get("suggested_cli") or "").strip()
     if suggested_cli:
         lines.append(f"next: {suggested_cli}")
-    lines.append("json: rerun with --json for the full structured report")
+    lines.append("json: rerun with --all --json for the full structured report")
     return "\n".join(lines) + "\n"
 
 
@@ -11893,17 +12911,15 @@ def closeout(
         )
     )
 
-    pending_events = _pending_tracking_events(target_root)
+    pending_tracking = _classify_pending_tracking(target_root)
     checks.append(
         _closeout_check(
             "closeout.pending_tracking",
-            passed=not pending_events,
-            message=(
-                "pending tracking queue is empty"
-                if not pending_events
-                else "pending tracking queue has unlogged mutation events"
+            passed=bool(pending_tracking.get("delivery_allowed")),
+            message=str(
+                pending_tracking.get("reason") or "pending tracking state unavailable"
             ),
-            details={"path": AEGIS_PENDING_TRACKING_REL, "events": pending_events},
+            details=pending_tracking,
         )
     )
     degraded_events = _degraded_events(target_root)
@@ -12041,9 +13057,12 @@ def closeout(
         "would_update_surfaces": [],
         "skipped": [],
         "enabled": False,
-        "reason": "strict verification must pass and pending tracking must be empty before population",
+        "reason": (
+            "strict verification must pass and pending tracking must be delivery-safe "
+            "before population"
+        ),
     }
-    if not pending_events and strict_verify.get("status") == "passed":
+    if pending_tracking.get("delivery_allowed") and strict_verify.get("status") == "passed":
         populate_report = _populate_closeout_surfaces(
             target_root,
             current_work=current_work,
@@ -12128,7 +13147,8 @@ def closeout(
         implementation_tokens=implementation_tokens,
         verification_tokens=verification_tokens,
         strict_verify_rel=strict_verify_rel,
-        pending_events=pending_events,
+        pending_tracking=pending_tracking,
+        target_root=target_root,
         checks=checks,
     )
     report: dict[str, Any] = {
@@ -12151,10 +13171,7 @@ def closeout(
             "required_steps": {step: plan_rows.get(step) for step in required_steps},
             "tracker_steps": {step: tracker_steps.get(step) for step in required_steps},
         },
-        "pending_tracking": {
-            "path": AEGIS_PENDING_TRACKING_REL,
-            "events": pending_events,
-        },
+        "pending_tracking": pending_tracking,
         "degraded_events": {
             "path": AEGIS_DEGRADED_EVENTS_REL,
             "events": degraded_events,
