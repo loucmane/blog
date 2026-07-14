@@ -25,7 +25,9 @@
 - Unit/integration coverage: 72 passed across 11 files; 97.01% statements, 92.3% branches, 100% functions, and 96.87% lines.
 - Browser/accessibility: 16 passed across desktop and mobile Chromium.
 - Cross-agent skill platform: 5 test files passed; platform validation reported 4 registered skills, 4 routes, and zero errors.
-- Typecheck, ESLint, Prettier check, all package/application builds, production HTTP smoke (`200`, 14,976 bytes), security-hotfix tests, dependency audit (zero advisories), capsule check, Taskmaster health (37 tasks, 78 dependencies), Taskmaster dependency validation, legacy guard, and `git diff --check`: passed.
+- Typecheck, ESLint, Prettier check, all package/application builds, production HTTP smoke (`200`, 14,976 bytes), security-hotfix tests, dependency audit (zero advisories), capsule check, Taskmaster health (38 tasks, 79 dependencies), Taskmaster dependency validation, legacy guard, and `git diff --check`: passed.
+- Task 70 merged to `main` as `b62b0fb40fb3dafcc6325f45f83398ef16d1fb03`; Task 69 incorporated that exact tree through normal merge commit `3a477efc113dd7bf4f2b2ee2f6c0592b5fc8070a` without rebase, reset, force-push, or loss of either task's evidence.
+- Strict Aegis verification through clean stable source `/tmp/codex-main-589bf626` passed all 42 required checks with zero required failures; the two unsupported checks and advisory-enforcement warning are expected for this repository mode.
 - Expected legacy template drift remained exactly the 16 Task-47-owned findings.
 - Local `actionlint` and `gitleaks` executables were unavailable; no local pass is claimed. The attended PR must require their existing immutable hosted checks to pass at the exact head.
 
@@ -33,3 +35,4 @@
 
 - Sandbox-only `EPERM` results from child-process spawning and local port binding were rerun unchanged outside the sandbox and passed; they were not product or policy failures.
 - Build output retained only existing Rollup `use client` and stale Browserslist-data warnings; Task 69 introduced no package or build-system change.
+- The first sandboxed Next.js build failed only because Turbopack could not bind a local port (`EPERM`); the unchanged command passed outside the sandbox, as did all 16 browser/accessibility journeys and production smoke.

@@ -2,7 +2,7 @@
 
 **Title:** Support Attended Aegis Witness Review for Test Deletions
 
-**Status:** in-progress
+**Status:** done
 
 **Dependencies:** 48 ✓
 

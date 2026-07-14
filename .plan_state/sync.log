@@ -784,5 +784,11 @@
     "plan_hash": "a48de73fe98fa33ba32c6d90a9f5a2fb16295188fd005ac6bfe0d074977beedf",
     "tracker_hash": "c1d1040afd2ede6694319b3b674384160c392fb48c30fb2c9799f45f4cb5b273",
     "synced_at": "2026-07-14T22:15:31.116042+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task69-attended-test-deletion-witness-review.md",
+    "plan_hash": "776dfe1a7efcb56e30950058acf6badffbb999442f246d23fbd9251e17863f78",
+    "tracker_hash": "9e8beceddd162a88a69b5dfe73457cdb0844c6424b88b0401c87818eecb5c9ff",
+    "synced_at": "2026-07-14T22:29:22.426074+02:00"
   }
 ]
