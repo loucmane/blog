@@ -130,6 +130,13 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
   Both labels now use the existing deep-teal `text-primary` token; all 16
   desktop/mobile browser journeys pass with zero serious or critical findings
   across the three surfaces.
+- 2026-07-14 - PR #33's first hosted run failed closed before installation
+  because Task 38's canonical runtime projections still described the
+  pre-migration package scripts, manifests, lockfile, workspace override, and
+  accessibility-contract bytes. Task 40 now advances only those exact
+  projection values in `config/runtime.json`; checker logic, workflow semantics,
+  action pins, and the Node 24.18.0/pnpm 11.11.0/Corepack 0.35.0 contract are
+  unchanged. The active runtime contract and all 13 adversarial tests pass.
 
 ## Progress Log
 - **2026-07-13 16:38 CEST** - [S:20260713|W:task40-migrate-react-next-framework-build-system|H:aegis:kickoff|E:.aegis/state/current-work.json] Findings log initialized by Aegis kickoff.
@@ -141,6 +148,7 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
 - **2026-07-14 16:14 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:final-security-remediation|E:packages/web/src/lib/request-security.ts] Closed the final low-severity review findings with same-origin preview-exit enforcement, bounded authenticated revalidation, expiry/cookie assertions, and browser-trace-verified handling of `Origin: null`; 72 unit/integration and 16 built-browser checks pass. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 16:37 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:adversarial-rereview-remediation|E:packages/web/src/lib/request-security.ts] Rejected explicit opaque origins, changed private preview referrers to same-origin-only, enforced strong distinct runtime secrets, asserted both custom and Next Draft Mode cookie flags, and revalidated 72 unit/integration plus 16 built-browser checks. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 16:42 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:accessibility-rereview-remediation|E:tests/e2e/homepage.spec.ts] Expanded Axe coverage to the public story and authenticated preview, fixed the resulting story-label contrast defect, and passed all 16 desktop/mobile journeys with zero serious or critical findings on every scanned surface. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 16:52 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:github:hosted-runtime-contract-remediation|E:config/runtime.json] PR #33's exact-head workspace check exposed stale Task 38 projections; updated only the verified Task 40 canonical digests and Next/PostCSS override, then passed the active Node 24 runtime contract and all 13 adversarial tests. authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 6, "last_event_id": "24f30c91403544fe82fa7df384ee0c3e", "schema": "legacy-shadow-sweh-projection-v1"} -->

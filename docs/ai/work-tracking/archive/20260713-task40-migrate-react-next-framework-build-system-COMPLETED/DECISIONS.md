@@ -50,6 +50,11 @@ Record decisions before implementation, including options considered, rationale,
 - 2026-07-14 - Run `next typegen` before the web TypeScript compiler. Generated
   route declarations are a declared input, not an accidental residue from a
   previous build or development server.
+- 2026-07-14 - Advance `config/runtime.json` only as a deterministic projection
+  of Task 40's reviewed package scripts, manifests, lockfile, workspace
+  override, and accessibility-contract bytes. Preserve the runtime checker,
+  workflow envelope, action pins, active Node/pnpm/Corepack target, and every
+  fail-closed adversarial contract unchanged.
 
 ## Progress Log
 - **2026-07-13 16:38 CEST** - [S:20260713|W:task40-migrate-react-next-framework-build-system|H:aegis:kickoff|E:.aegis/state/current-work.json] Decisions log initialized by Aegis kickoff.

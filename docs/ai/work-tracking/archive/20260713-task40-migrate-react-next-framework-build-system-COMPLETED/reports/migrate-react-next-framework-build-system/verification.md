@@ -26,6 +26,7 @@ Primary-source rationale is recorded in `FINDINGS.md`, `DECISIONS.md`, and `docs
 - Generic Node production smoke returned HTTP 200.
 - Dependency security audit reported zero advisories; the focused security-hotfix suite passed 7 of 7 assertions.
 - Quality contract passed 29 of 29 assertions; auto-merge policy passed 65; workflow contract passed 46; cross-agent skill platform passed 29.
+- The Task 38 runtime contract was advanced only to the reviewed Task 40 package-script, manifest, lockfile, workspace-override, and accessibility-contract projections. Under the pinned Node `24.18.0`, pnpm `11.11.0`, and Corepack `0.35.0` runtime, active verification and all 13 adversarial runtime-contract tests passed without changing checker logic, workflow semantics, or immutable action pins.
 - Taskmaster health passed for 36 tasks, 3 subtasks, and 76 dependency references; full dependency validation reported zero invalid references.
 - Aegis capsule/brief check and repository Aegis CI verification passed while enforcement remained advisory.
 - Completed-state guard regression passed 5 of 5 tests.

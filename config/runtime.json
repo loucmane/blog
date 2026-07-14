@@ -40,7 +40,7 @@
     "minimatch@>=3.0.0 <3.1.4": "3.1.4",
     "minimatch@>=5.0.0 <5.1.8": "5.1.8",
     "minimatch@>=9.0.0 <9.0.7": "9.0.7",
-    "next@15.5.20>postcss": "8.5.10",
+    "next@16.2.10>postcss": "8.5.16",
     "path-to-regexp@>=0.1.0 <0.1.13": "0.1.13",
     "picomatch@>=2.0.0 <2.3.2": "2.3.2",
     "picomatch@>=4.0.0 <4.0.4": "4.0.4",
@@ -60,7 +60,7 @@
       "scripts/ci/check-test-capability.mjs": "1532cb12cc8374363eab9a5a4c0439eb9f22454e8aba9e2a1a0db8da48f61b5e",
       "scripts/ci/check-test-results.mjs": "14dcd2d0191538338459bb9fc422af7c5046739a5653b8a0246406640b3bafc4",
       "scripts/ci/post-merge-context.mjs": "bb2521d74c0319cd6308a0cdcce23062a8d2ce93d4a4a0e5bcdfe16047b2235b",
-      "tests/ci/accessibility-baseline.test.mjs": "3ab657c003c065df77b4ed3ee15ab5a96551ab782b17922cd219a2217d4b6974",
+      "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "7c495a954146d0885ae25baeee7b946641809b71c62c1021451a97d3cd071ef3",
       "tests/ci/runtime-contract.test.mjs": "00b85dfe9dfddaec69df075f3da8b267e3023e611792667bc18922ee976d6ed3",
       "tests/ci/security-hotfix.test.mjs": "ec35b6b589945e26c2f9a11836e6dba23613161e97a7cbfa6fb5e59bd42469d1",
@@ -247,12 +247,12 @@
       ]
     }
   },
-  "rootScriptsSha256": "250145587b690ee6302e85f8f41cd560d73c00ee081f00e6d63806ff2b070108",
-  "packageScriptsSha256": "229e6ef14ab8b27378c63009e298ee12ceb34932b605be0230de5274374221f8",
-  "dependencyDeclarationsSha256": "7c0b1d1fc6bedb42fb842a92c2f811923353561ddbd0564b4593bcb2b82e7aef",
-  "packageManifestSemanticsSha256": "f2f72cd46826c005b7ecb50f8032e969669534a1a617b8efe64ba58d5dbae9e6",
-  "lockfileSha256": "cfb9553dc2ec4e448048550c402de4c42e6245531e28619bc7a4ccf6e591a57c",
-  "workspaceFileSha256": "a87bdee92d0c79a2bbf712c8eeb101323a76710349773c19f48b2d548087957e",
+  "rootScriptsSha256": "4bf8eeea3b3e1fbe65bdbae103539286ead4b36f934a4829c33d6d15540352d9",
+  "packageScriptsSha256": "99285196ada48958ad397e7b52881236881427f80421828986b26c04ccc16008",
+  "dependencyDeclarationsSha256": "76efe13ef65b8359536eb1dd9c6768499893b75e340ee980e5df57c837854a75",
+  "packageManifestSemanticsSha256": "ba0cfecb077fe341302b0d7e8c80ab40fabcfd3e36fb60e35521d65b18815129",
+  "lockfileSha256": "cbe6acd3436b8033e0f330e58645ac3427d697a8cc26ed7ad037f4cdc8044727",
+  "workspaceFileSha256": "7afe81e27cce681b94cd473df8b6a8d857a00d601638849e64c72e85493808ae",
   "actions": {
     "actions/checkout": {
       "release": "v7.0.0",

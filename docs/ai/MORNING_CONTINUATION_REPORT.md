@@ -33,6 +33,7 @@
 - Playwright passed 16/16 desktop/mobile journeys with zero serious/critical Axe findings on the homepage, public story, and authenticated preview. The expanded scan exposed and closed a 2.96:1 story-label contrast defect; the matrix also covers raw first-chunk preview fallback, chunked/declared body limits, cross-slug token replay denial, same-origin preview exit with cross-site/opaque-origin denial, complete custom/Next Draft Mode cookie assertions, bounded authenticated revalidation, and observable cache regeneration.
 - A temporary `git archive` reconstruction with no pre-existing `.next` directory completed an offline frozen install and `pnpm typecheck`; `next typegen` generated the required route declarations before `tsc`.
 - Quality contract 29/29, security 7/7, auto-merge policy 65, workflow contract 46, skill platform 29, Taskmaster health/all 76 dependencies, Aegis CI, completed-state guards 5/5, legacy guard, strict Aegis verification (42 checks, zero required failures), capsule/brief, witness, and `git diff --check` passed.
+- PR #33's first hosted workspace run failed closed on stale Task 38 package/workspace/lockfile/accessibility digests. The projection-only `config/runtime.json` correction now passes the active Node 24.18.0/pnpm 11.11.0/Corepack 0.35.0 check and all 13 adversarial runtime-contract tests; checker and workflow semantics are unchanged.
 - The sandboxed Turbopack build failed only because process port binding was denied; the identical elevated build passed. This is execution-environment evidence, not a product failure.
 - The attended managed-runtime refresh to stable source `144bd4463dcec9c326b023ff53b45aa71660727e` preserved the advisory-only queue while making it non-blocking. Strict verification and final closeout passed with zero required failures; closeout reported zero warnings.
 - Verification evidence: `docs/ai/work-tracking/archive/20260713-task40-migrate-react-next-framework-build-system-COMPLETED/reports/migrate-react-next-framework-build-system/verification.md`.
@@ -50,6 +51,6 @@
 
 ## Next Safe Action
 
-Stage only the explicit Task 40 inventory, commit the verified follow-up without rewriting published history, push PR #33, and revalidate its unchanged hosted head before trusted policy evaluation. Begin Task 41 only after Task 40 is merged and local `main` is synchronized.
+Commit and push the verified runtime-projection follow-up without rewriting published history, wait for PR #33's protected checks on the new exact head, and revalidate trusted policy eligibility. Begin Task 41 only after Task 40 is merged and local `main` is synchronized.
 
 This report is a continuity pointer, not an independent grant or an expansion of authority.

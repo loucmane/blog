@@ -25,6 +25,7 @@
 - Stable Aegis runtime `144bd4463dcec9c326b023ff53b45aa71660727e` now preserves the advisory-only queue without treating it as a strict-delivery failure. No queue drain or generic repair was performed.
 - Managed provider preview and production p75 Core Web Vitals remain Task 46 deployment gates; Task 40 proves local static/dynamic HTML and a deterministic document budget without representing those future capabilities as complete.
 - Final independent implementation and adversarial re-reviews report no critical, high, or medium findings. The remaining low CSP nonce/hash hardening follow-up is explicitly deferred until it can preserve static reader caching before rich-content rendering.
+- PR #33's first hosted workspace run correctly failed closed on stale Task 38 canonical digests. `config/runtime.json` now projects the reviewed Task 40 package/workspace/lockfile/accessibility bytes while preserving all runtime checker and workflow controls; active runtime plus 13 adversarial contracts pass.
 
 ## Next Steps
 1. Stage only the explicit Task 40 inventory, commit the follow-up without rewriting published history, and push PR #33 under the standing grant.
@@ -52,6 +53,8 @@
 - **2026-07-14 16:14 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:final-review-handoff|E:tests/e2e/homepage.spec.ts] Recorded resolution of the final low-severity security findings with 72 passing unit/integration and 16 passing built-browser checks; the complete final matrix and delivery steps remain. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 16:37 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:adversarial-review-handoff|E:packages/web/src/lib/request-security.ts] Recorded the final secret-strength, secret-separation, opaque-origin, referrer-policy, and Draft Mode cookie remediations with the complete local matrix green. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 16:46 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:independent-review-verdict|E:tests/e2e/homepage.spec.ts] Both final read-only reviewers reported no critical, high, or medium findings after the accessibility and trust-boundary remediations. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 16:52 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:github:runtime-contract-handoff|E:config/runtime.json] Recorded the projection-only remediation for PR #33's fail-closed hosted runtime-contract result; no checker or workflow control was weakened. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 16:58 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:runtime-projection-reviews|E:config/runtime.json] Two independent read-only reviewers recomputed the staged projections and reported no critical, high, or medium findings and no CI trust-boundary weakening. authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 6, "last_event_id": "24f30c91403544fe82fa7df384ee0c3e", "schema": "legacy-shadow-sweh-projection-v1"} -->
