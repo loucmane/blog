@@ -1,5 +1,13 @@
 {
-  "current": "2026-07-14-001-task40-migrate-react-next-framework-build-system.md",
+  "current": "2026-07-14-001-task69-attended-test-deletion-witness-review.md",
+  "current_path": "sessions/2026/07/2026-07-14-001-task69-attended-test-deletion-witness-review.md",
   "paused": [],
-  "updated_at": "2026-07-14T08:11:15+02:00"
+  "schema_version": "1.0.0",
+  "task": {
+    "id": "69",
+    "slug": "attended-test-deletion-witness-review",
+    "status": "in-progress",
+    "title": "Support Attended Aegis Witness Review for Test Deletions"
+  },
+  "updated_at": "2026-07-14T16:52:44Z"
 }
