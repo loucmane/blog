@@ -768,9 +768,39 @@
     "synced_at": "2026-07-14T16:42:05.113050+02:00"
   },
   {
+    "plan": "plans/2026-07-14-task69-attended-test-deletion-witness-review.md",
+    "plan_hash": "19e45b5d806565c289f24a619e000404c15a6623d5517a1f163a828e026d9956",
+    "tracker_hash": "fd4aff33bdf39e26e9b7e705915493b21686149512867b574c45e721bb6e81ad",
+    "synced_at": "2026-07-14T19:01:27.715332+02:00"
+  },
+  {
     "plan": "plans/2026-07-14-task70-publish-managed-aegis-runtime-rollout.md",
     "plan_hash": "b037216d92aac11439988965611cd893c7207445b3604acdf74a2e5291da9a5d",
     "tracker_hash": "666d05965e6d79886e5b737699c53302aa6048e5747b8bda59ae29d7aebd38ff",
     "synced_at": "2026-07-14T21:52:13.276174+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task69-attended-test-deletion-witness-review.md",
+    "plan_hash": "a48de73fe98fa33ba32c6d90a9f5a2fb16295188fd005ac6bfe0d074977beedf",
+    "tracker_hash": "c1d1040afd2ede6694319b3b674384160c392fb48c30fb2c9799f45f4cb5b273",
+    "synced_at": "2026-07-14T22:15:31.116042+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task69-attended-test-deletion-witness-review.md",
+    "plan_hash": "776dfe1a7efcb56e30950058acf6badffbb999442f246d23fbd9251e17863f78",
+    "tracker_hash": "9e8beceddd162a88a69b5dfe73457cdb0844c6424b88b0401c87818eecb5c9ff",
+    "synced_at": "2026-07-14T22:29:22.426074+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task69-attended-test-deletion-witness-review.md",
+    "plan_hash": "84d934f58f9b0b19d6ab4c6c7be7baf7ab849dacbd1a490871ad6db6fe1e8b32",
+    "tracker_hash": "3edf1de2541458783e8cf2494d620cd4a06f38f4bc7d3014c31d5936c5b7721c",
+    "synced_at": "2026-07-14T22:32:19.207899+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task69-attended-test-deletion-witness-review.md",
+    "plan_hash": "84d934f58f9b0b19d6ab4c6c7be7baf7ab849dacbd1a490871ad6db6fe1e8b32",
+    "tracker_hash": "764b823779192995ccfae69dc22a3fe1e0ec7555f95df5f9b85683965bbbfec4",
+    "synced_at": "2026-07-14T22:33:21.320431+02:00"
   }
 ]

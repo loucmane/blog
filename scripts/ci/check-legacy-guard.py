@@ -48,11 +48,15 @@ def main() -> int:
     validate_command = ["./scripts/codex-guard", "validate"]
     if args.include_untracked:
         validate_command.append("--include-untracked")
+    witness_review_test = run(["python3", "tests/ci/test_aegis_witness_review.py"])
     completed_state_test = run(["python3", "tests/ci/test_codex_guard_completed_state.py"])
     validation = run(validate_command)
     drift = run(["./scripts/codex-guard", "drift-check", "--strict"])
 
     output = "\n".join([
+        "$ python3 tests/ci/test_aegis_witness_review.py",
+        witness_review_test.stdout,
+        witness_review_test.stderr,
         "$ python3 tests/ci/test_codex_guard_completed_state.py",
         completed_state_test.stdout,
         completed_state_test.stderr,
@@ -74,6 +78,8 @@ def main() -> int:
         flags=re.MULTILINE,
     ))
     errors = []
+    if witness_review_test.returncode != 0:
+        errors.append(f"Aegis witness-review tests exited {witness_review_test.returncode}")
     if completed_state_test.returncode != 0:
         errors.append(f"completed-state guard tests exited {completed_state_test.returncode}")
     if validation.returncode != 0:
