@@ -27,24 +27,35 @@ Record decisions before implementation, including options considered, rationale,
   inline script/style compatibility until a measured nonce or hash strategy can
   preserve reader caching without making every route dynamic.
 - 2026-07-14 - Treat preview credentials as write-only request data, never URL
-  state. A successful POST enables Draft Mode and a separate, HttpOnly,
-  five-minute HMAC scope bound to exactly one normalized slug. Redirects are
-  constructed only from the configured site origin; preview responses are
-  private, no-store, and no-referrer.
+  state. A successful JSON POST requires a five-minute per-story HMAC token,
+  then enables Draft Mode and a separate, domain-separated HttpOnly scope bound
+  to exactly one normalized slug. The request body is streamed under a 2 KiB
+  limit before parsing. Redirects use a server-only runtime origin; preview
+  responses are private, no-store, and no-referrer.
 - 2026-07-14 - Use immediate tag expiry for publish/unpublish correctness and
-  reject malformed or unknown slugs before constructing persistent cache keys.
-  Keep the fixed Task 40 fixture route closed to ungenerated parameters; Task 42
-  will replace this fixture boundary with the approved content store.
+  reject malformed or unknown slugs before constructing persistent data-cache
+  keys. Permit known fixture routes to regenerate after invalidation, remove
+  broad loading boundaries so unknown public stories preserve true HTTP 404s,
+  and use separate per-project fixtures for concurrent regeneration proof. Task
+  42 will replace this fixture boundary with the approved content store.
 - 2026-07-14 - Production metadata may never fall back to localhost. Until Task
   46 proves the real canonical deployment origin, missing or invalid production
   configuration resolves to the non-routable
   `https://unconfigured.magazine.invalid` sentinel. Local production tests may
   use HTTP only on loopback.
+- 2026-07-14 - Keep canonical metadata deployment-specific through the
+  build-time `NEXT_PUBLIC_SITE_URL`, but use `MAGAZINE_RUNTIME_SITE_URL` for
+  request-time redirects and cookie security. This makes artifact-promotion
+  semantics explicit instead of silently freezing operational redirects.
+- 2026-07-14 - Run `next typegen` before the web TypeScript compiler. Generated
+  route declarations are a declared input, not an accidental residue from a
+  previous build or development server.
 
 ## Progress Log
 - **2026-07-13 16:38 CEST** - [S:20260713|W:task40-migrate-react-next-framework-build-system|H:aegis:kickoff|E:.aegis/state/current-work.json] Decisions log initialized by Aegis kickoff.
 - **2026-07-14 07:22 CEST** - [S:20260713|W:task40-migrate-react-next-framework-build-system|H:agent:decision|E:docs/ai/work-tracking/active/20260713-task40-migrate-react-next-framework-build-system-ACTIVE/DECISIONS.md] Selected the exact current stable Next 16/React 19.2 pair and Turbopack path. The owner classified the concurrent managed-runtime rollout as pre-existing infrastructure that must remain intact and unstaged, allowing Task 40 to proceed with an explicit task-only inventory. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 14:46 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:security-decisions|E:packages/web/src/lib/request-security.ts] Adopted POST-only, slug-bound preview authorization; trusted-origin redirects; immediate publish-state invalidation; bounded cache construction; and fail-closed production canonical metadata in response to independent review. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 15:31 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:exact-head-decisions|E:packages/web/src/lib/request-security.ts] Separated token/cookie signing, runtime/canonical origins, generated route types, and streaming/cache proof in response to exact-head implementation and adversarial review. authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 6, "last_event_id": "24f30c91403544fe82fa7df384ee0c3e", "schema": "legacy-shadow-sweh-projection-v1"} -->

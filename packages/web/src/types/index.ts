@@ -51,6 +51,10 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
 // Environment and configuration types
 export interface EnvironmentConfig {
   NODE_ENV: 'development' | 'production' | 'test'
+  MAGAZINE_PREVIEW_COOKIE_SECRET?: string
+  MAGAZINE_PREVIEW_TOKEN_SECRET?: string
+  MAGAZINE_REVALIDATION_SECRET?: string
+  MAGAZINE_RUNTIME_SITE_URL?: string
   NEXT_PUBLIC_SITE_URL: string
   NEXT_PUBLIC_API_URL?: string
   DATABASE_URL?: string

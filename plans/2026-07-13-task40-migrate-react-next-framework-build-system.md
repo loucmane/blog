@@ -61,6 +61,7 @@ emergency_bypass: false
 - 2026-07-14 - Stable Aegis runtime `144bd4463dcec9c326b023ff53b45aa71660727e` made the preserved advisory-only queue non-blocking; strict verification and final closeout passed with zero required failures or warnings.
 - 2026-07-14 - Taskmaster Task 40 was marked done, its single generated projection was refreshed, and the work-tracking envelope was archived.
 - 2026-07-14 - Independent implementation and adversarial reviews were completed. Preview, redirect, cache, canonical-origin, initial-HTML, local document-budget, and archive-consistency findings were remediated and reverified; deployed provider preview and p75 Web Vitals remain Task 46 gates.
+- 2026-07-14 - Exact-head review required a second remediation: per-story token authorization with a separate cookie key, streamed request-size enforcement, runtime redirect-origin separation, explicit route type generation, raw preview streaming evidence, true public 404s, and observable cache regeneration. Focused verification and the 16-check browser matrix pass; the final follow-up commit and hosted checks remain.
 
 ## Continuation & Handoff
 - Next owner: project owner

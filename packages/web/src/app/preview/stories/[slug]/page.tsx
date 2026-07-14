@@ -2,8 +2,10 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import { cookies, draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
-import { getFrameworkStory } from '@/lib/framework-content'
+import { PreviewStoryLoading } from '@/components/preview-story-loading'
+import { getFrameworkStory, loadPreviewFrameworkStory } from '@/lib/framework-content'
 import { previewScopeCookieName, previewScopeMatches } from '@/lib/request-security'
 
 interface PreviewStoryPageProps {
@@ -20,16 +22,12 @@ export const metadata: Metadata = {
   title: 'Private story preview',
 }
 
-export default async function PreviewStoryPage({ params }: PreviewStoryPageProps) {
-  const preview = await draftMode()
-  const cookieStore = await cookies()
-  const { slug } = await params
-  const scopeIsValid = previewScopeMatches(
-    cookieStore.get(previewScopeCookieName)?.value,
-    slug,
-    process.env.MAGAZINE_PREVIEW_SECRET,
-  )
-  const story = preview.isEnabled && scopeIsValid ? getFrameworkStory(slug) : null
+interface PreviewStoryContentProps {
+  slug: string
+}
+
+async function PreviewStoryContent({ slug }: PreviewStoryContentProps) {
+  const story = await loadPreviewFrameworkStory(slug)
   if (!story) {
     notFound()
   }
@@ -43,7 +41,6 @@ export default async function PreviewStoryPage({ params }: PreviewStoryPageProps
             This page is not public and search engines are instructed not to index it.
           </p>
           <form action="/api/preview/disable" className="mt-3" method="post">
-            <input name="slug" type="hidden" value={story.slug} />
             <button className="font-semibold text-primary underline" type="submit">
               Exit preview
             </button>
@@ -51,7 +48,7 @@ export default async function PreviewStoryPage({ params }: PreviewStoryPageProps
         </div>
 
         <header className="pb-10">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-secondary">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
             {story.status} · {story.section}
           </p>
           <h1 className="mb-5 text-4xl font-bold text-primary md:text-6xl">{story.title}</h1>
@@ -75,5 +72,25 @@ export default async function PreviewStoryPage({ params }: PreviewStoryPageProps
         </div>
       </article>
     </main>
+  )
+}
+
+export default async function PreviewStoryPage({ params }: PreviewStoryPageProps) {
+  const preview = await draftMode()
+  const cookieStore = await cookies()
+  const { slug } = await params
+  const scopeIsValid = previewScopeMatches(
+    cookieStore.get(previewScopeCookieName)?.value,
+    slug,
+    process.env.MAGAZINE_PREVIEW_COOKIE_SECRET,
+  )
+  if (!preview.isEnabled || !scopeIsValid || !getFrameworkStory(slug)) {
+    notFound()
+  }
+
+  return (
+    <Suspense fallback={<PreviewStoryLoading />}>
+      <PreviewStoryContent slug={slug} />
+    </Suspense>
   )
 }

@@ -1,7 +1,59 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+import http from 'node:http'
 
+import {
+  createPreviewToken,
+  maxPreviewRequestBytes,
+} from '../../packages/web/src/lib/request-security'
 import accessibilityBaseline from './accessibility-baseline.json'
+
+const previewTokenSecret = 'task40-preview-token-secret-with-32-bytes'
+const revalidationSecret = 'task40-revalidation-secret-with-32-bytes'
+
+async function scanSeriousAccessibilityViolations(page: Page) {
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze()
+  return results.violations.filter((violation) =>
+    ['critical', 'serious'].includes(violation.impact ?? ''),
+  )
+}
+
+function previewTokenFor(slug: string): string {
+  const token = createPreviewToken(slug, previewTokenSecret)
+  if (!token) {
+    throw new Error(`Could not create preview token for ${slug}`)
+  }
+  return token
+}
+
+function postChunkedPreview(body: string): Promise<{
+  headers: http.IncomingHttpHeaders
+  status: number | undefined
+}> {
+  return new Promise((resolve, reject) => {
+    const request = http.request(
+      {
+        headers: { 'content-type': 'application/json' },
+        host: '127.0.0.1',
+        method: 'POST',
+        path: '/api/preview',
+        port: 3100,
+      },
+      (response) => {
+        response.resume()
+        response.on('end', () =>
+          resolve({ headers: response.headers, status: response.statusCode }),
+        )
+      },
+    )
+    request.on('error', reject)
+    const splitAt = Math.floor(body.length / 2)
+    request.write(body.slice(0, splitAt))
+    request.end(body.slice(splitAt))
+  })
+}
 
 test('serves the reader shell and enforces the accessibility baseline', async ({
   page,
@@ -12,12 +64,7 @@ test('serves the reader shell and enforces the accessibility baseline', async ({
   await expect(page.locator('main')).toBeVisible()
   await expect(page.locator('h1')).toBeVisible()
 
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze()
-  const seriousViolations = results.violations.filter((violation) =>
-    ['critical', 'serious'].includes(violation.impact ?? ''),
-  )
+  const seriousViolations = await scanSeriousAccessibilityViolations(page)
   const criticalViolations = seriousViolations.filter(
     (violation) => violation.impact === 'critical',
   )
@@ -70,7 +117,7 @@ test('server-renders a canonical story with responsive image and hardened header
   ).toBeVisible()
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'http://localhost:3100/stories/framework-migration-proof',
+    'https://canonical.magazine.invalid/stories/framework-migration-proof',
   )
 
   const contentSecurityPolicy = response?.headers()['content-security-policy'] ?? ''
@@ -85,6 +132,7 @@ test('server-renders a canonical story with responsive image and hardened header
       .join('\n'),
   )
   expect(readerResources).not.toMatch(/tiptap|prosemirror|lexical|editor/i)
+  expect(await scanSeriousAccessibilityViolations(page)).toEqual([])
 })
 
 test('delivers the reader story in initial HTML within the foundation byte budget', async ({
@@ -102,24 +150,35 @@ test('delivers the reader story in initial HTML within the foundation byte budge
 })
 
 test('fails closed before enabling an isolated private preview', async ({ page }) => {
-  await page.goto('/preview/stories/private-framework-draft')
+  const unauthorizedPreview = await page.goto('/preview/stories/private-framework-draft')
+  expect(unauthorizedPreview?.status()).toBe(404)
   await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
   await expect(page.getByText('Private framework preview')).toHaveCount(0)
 
   const previewRequest = page.context().request
   const deniedResponse = await previewRequest.post('/api/preview', {
-    form: {
-      secret: 'wrong-preview-fixture',
+    data: {
       slug: 'private-framework-draft',
+      token: 'wrong-preview-token',
     },
     maxRedirects: 0,
   })
   expect(deniedResponse.status()).toBe(401)
 
+  const crossSlugResponse = await previewRequest.post('/api/preview', {
+    data: {
+      slug: 'framework-migration-proof',
+      token: previewTokenFor('private-framework-draft'),
+    },
+    maxRedirects: 0,
+  })
+  expect(crossSlugResponse.status()).toBe(401)
+  expect(crossSlugResponse.headers()['set-cookie']).toBeUndefined()
+
   const previewResponse = await previewRequest.post('/api/preview', {
-    form: {
-      secret: 'task40-preview-fixture',
+    data: {
       slug: 'private-framework-draft',
+      token: previewTokenFor('private-framework-draft'),
     },
     headers: {
       host: 'attacker.example',
@@ -131,7 +190,35 @@ test('fails closed before enabling an isolated private preview', async ({ page }
     'http://localhost:3100/preview/stories/private-framework-draft',
   )
   expect(previewResponse.headers()['cache-control']).toBe('private, no-store')
-  expect(previewResponse.headers()['referrer-policy']).toBe('no-referrer')
+  expect(previewResponse.headers()['referrer-policy']).toBe('same-origin')
+
+  const setCookies = previewResponse
+    .headersArray()
+    .filter(({ name }) => name.toLowerCase() === 'set-cookie')
+    .map(({ value }) => value)
+  const previewScopeSetCookie = setCookies.find((value) =>
+    value.startsWith('magazine-preview-scope='),
+  )
+  expect(previewScopeSetCookie).toContain('Max-Age=300')
+  expect(previewScopeSetCookie).toContain('Path=/preview')
+  expect(previewScopeSetCookie).toContain('HttpOnly')
+  expect(previewScopeSetCookie?.toLowerCase()).toContain('samesite=strict')
+  const draftModeSetCookie = setCookies.find((value) => value.startsWith('__prerender_bypass='))
+  expect(draftModeSetCookie).toContain('Path=/')
+  expect(draftModeSetCookie).toContain('HttpOnly')
+  expect(draftModeSetCookie).toContain('Secure')
+  expect(draftModeSetCookie?.toLowerCase()).toContain('samesite=none')
+  const cookieHeader = setCookies.map((value) => value.split(';', 1)[0]).join('; ')
+  expect(cookieHeader).toContain('magazine-preview-scope=')
+  const streamedPreview = await fetch(
+    'http://127.0.0.1:3100/preview/stories/private-framework-draft',
+    { headers: { cookie: cookieHeader } },
+  )
+  expect(streamedPreview.status).toBe(200)
+  const firstChunk = await streamedPreview.body?.getReader().read()
+  const firstChunkHtml = new TextDecoder().decode(firstChunk?.value)
+  expect(firstChunkHtml).toContain('data-preview-stream-fallback')
+  expect(firstChunkHtml).not.toContain('Private framework preview')
 
   const previewDocument = await previewRequest.get('/preview/stories/private-framework-draft')
   expect(previewDocument.status()).toBe(200)
@@ -144,45 +231,111 @@ test('fails closed before enabling an isolated private preview', async ({ page }
     'content',
     /noindex.*nofollow|nofollow.*noindex/,
   )
+  expect(await scanSeriousAccessibilityViolations(page)).toEqual([])
 
-  await page.goto('/preview/stories/framework-migration-proof')
+  const crossSiteDisable = await previewRequest.post('/api/preview/disable', {
+    headers: {
+      origin: 'https://attacker.example',
+      'sec-fetch-site': 'cross-site',
+    },
+    maxRedirects: 0,
+  })
+  expect(crossSiteDisable.status()).toBe(403)
+  const opaqueOriginDisable = await previewRequest.post('/api/preview/disable', {
+    headers: {
+      origin: 'null',
+      'sec-fetch-site': 'same-origin',
+    },
+    maxRedirects: 0,
+  })
+  expect(opaqueOriginDisable.status()).toBe(403)
+  await page.goto('/preview/stories/private-framework-draft')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Private framework preview')
+
+  const crossSlugPreview = await page.goto('/preview/stories/framework-migration-proof')
+  expect(crossSlugPreview?.status()).toBe(404)
   await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
   await page.goto('/preview/stories/private-framework-draft')
 
   await page.getByRole('button', { name: 'Exit preview' }).click()
   await expect(page).toHaveURL('/')
-  await page.goto('/preview/stories/private-framework-draft')
+  const disabledPreview = await page.goto('/preview/stories/private-framework-draft')
+  expect(disabledPreview?.status()).toBe(404)
   await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
   await expect(page.getByText('Private framework preview')).toHaveCount(0)
 })
 
-test('protects the cache invalidation boundary and revalidates known story tags', async ({
+test('rejects oversized declared and chunked preview bodies before setting cookies', async ({
   request,
 }) => {
+  const oversized = JSON.stringify({ token: 'x'.repeat(maxPreviewRequestBytes), slug: 'draft' })
+  const declaredResponse = await request.post('/api/preview', {
+    data: oversized,
+    headers: { 'content-type': 'application/json' },
+    maxRedirects: 0,
+  })
+  const chunkedResponse = await postChunkedPreview(oversized)
+
+  expect(declaredResponse.status()).toBe(413)
+  expect(declaredResponse.headers()['set-cookie']).toBeUndefined()
+  expect(chunkedResponse.status).toBe(413)
+  expect(chunkedResponse.headers['set-cookie']).toBeUndefined()
+})
+
+test('protects the cache invalidation boundary and regenerates known story data', async ({
+  request,
+}, testInfo) => {
+  const slug =
+    testInfo.project.name === 'mobile-chromium'
+      ? 'framework-cache-proof-mobile'
+      : 'framework-migration-proof'
+  const storyPath = `/stories/${slug}`
+  const readGeneration = (body: string) =>
+    body.match(/data-framework-cache-generation="([^"]+)"/)?.[1]
+
   const deniedResponse = await request.post('/api/revalidate', {
-    data: { slug: 'framework-migration-proof' },
-    headers: { authorization: 'Bearer wrong-revalidation-fixture' },
+    data: { slug },
+    headers: { authorization: 'Bearer wrong-revalidation-fixture-with-32-bytes' },
   })
   expect(deniedResponse.status()).toBe(401)
 
+  const firstStoryResponse = await request.get(storyPath)
+  const firstGeneration = readGeneration(await firstStoryResponse.text())
+  const secondStoryResponse = await request.get(storyPath)
+  const secondGeneration = readGeneration(await secondStoryResponse.text())
+
+  expect(firstGeneration).toBeTruthy()
+  expect(secondGeneration).toBe(firstGeneration)
+
   const acceptedResponse = await request.post('/api/revalidate', {
-    data: { slug: 'framework-migration-proof' },
-    headers: { authorization: 'Bearer task40-revalidation-fixture' },
+    data: { slug },
+    headers: { authorization: `Bearer ${revalidationSecret}` },
   })
   expect(acceptedResponse.status()).toBe(200)
-  await expect(acceptedResponse.json()).resolves.toEqual({
-    revalidated: true,
-    slug: 'framework-migration-proof',
+  await expect(acceptedResponse.json()).resolves.toEqual({ revalidated: true, slug })
+
+  const oversizedResponse = await request.post('/api/revalidate', {
+    data: JSON.stringify({ slug: 'x'.repeat(1_100) }),
+    headers: {
+      authorization: `Bearer ${revalidationSecret}`,
+      'content-type': 'application/json',
+    },
   })
+  expect(oversizedResponse.status()).toBe(413)
+
+  const revalidatedStoryResponse = await request.get(storyPath)
+  const revalidatedGeneration = readGeneration(await revalidatedStoryResponse.text())
+  expect(revalidatedGeneration).toBeTruthy()
+  expect(revalidatedGeneration).not.toBe(firstGeneration)
 
   const unknownResponse = await request.post('/api/revalidate', {
     data: { slug: '../private-framework-draft' },
-    headers: { authorization: 'Bearer task40-revalidation-fixture' },
+    headers: { authorization: `Bearer ${revalidationSecret}` },
   })
   expect(unknownResponse.status()).toBe(404)
 })
 
-test('rejects oversized public slugs before creating reader cache entries', async ({ page }) => {
+test('rejects oversized public slugs at the reader boundary', async ({ page }) => {
   const response = await page.goto(`/stories/${'a'.repeat(121)}`)
 
   expect(response?.status()).toBe(404)

@@ -36,6 +36,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint src tests next.config.ts",
     "test": "vitest run --root ../.. packages/web"
   },

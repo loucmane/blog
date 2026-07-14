@@ -1,3 +1,5 @@
+import { setTimeout as delay } from 'node:timers/promises'
+
 export type FrameworkStoryStatus = 'draft' | 'published'
 
 export interface FrameworkStory {
@@ -10,6 +12,7 @@ export interface FrameworkStory {
     width: number
   }
   dek: string
+  listed: boolean
   publishedAt: string | null
   readingMinutes: number
   section: string
@@ -32,12 +35,33 @@ const frameworkStories = [
       width: 1200,
     },
     dek: 'A small, explicit fixture that proves the selected framework contract without pretending to be production editorial content.',
+    listed: true,
     publishedAt: '2026-07-14T00:00:00.000Z',
     readingMinutes: 2,
     section: 'Foundation',
     slug: 'framework-migration-proof',
     status: 'published',
     title: 'A portable foundation for the magazine',
+  },
+  {
+    author: 'Editorial team',
+    body: [
+      'This unlisted story isolates the mobile project cache-regeneration proof from the desktop project without expanding the visible magazine index.',
+    ],
+    cover: {
+      alt: 'A cache regeneration proof represented by layered editorial pages',
+      height: 675,
+      src: '/images/framework-cover.svg',
+      width: 1200,
+    },
+    dek: 'An unlisted published fixture used only for concurrent cache-regeneration verification.',
+    listed: false,
+    publishedAt: '2026-07-14T00:00:00.000Z',
+    readingMinutes: 1,
+    section: 'Foundation',
+    slug: 'framework-cache-proof-mobile',
+    status: 'published',
+    title: 'Mobile cache regeneration proof',
   },
   {
     author: 'Editorial team',
@@ -51,6 +75,7 @@ const frameworkStories = [
       width: 1200,
     },
     dek: 'A private fixture used to verify draft-mode authorization and no-index metadata.',
+    listed: false,
     publishedAt: null,
     readingMinutes: 1,
     section: 'Preview',
@@ -64,13 +89,18 @@ export function getFrameworkStory(slug: string): FrameworkStory | null {
   return frameworkStories.find((story) => story.slug === slug) ?? null
 }
 
+export async function loadPreviewFrameworkStory(slug: string): Promise<FrameworkStory | null> {
+  await delay(25)
+  return getFrameworkStory(slug)
+}
+
 export function getPublishedFrameworkStory(slug: string): FrameworkStory | null {
   const story = getFrameworkStory(slug)
   return story?.status === 'published' ? story : null
 }
 
 export function listPublishedFrameworkStories(): readonly FrameworkStory[] {
-  return frameworkStories.filter((story) => story.status === 'published')
+  return frameworkStories.filter((story) => story.status === 'published' && story.listed)
 }
 
 export function storyCacheTag(slug: string): string {

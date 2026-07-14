@@ -29,6 +29,9 @@
 - **2026-07-14 14:05 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded strict verification evidence
 - **2026-07-14 14:46 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:independent-review-remediation|E:docs/ai/work-tracking/archive/20260713-task40-migrate-react-next-framework-build-system-COMPLETED/reports/migrate-react-next-framework-build-system/verification.md] Resolved independent review findings around preview-secret transport and scope, trusted redirects, immediate cache invalidation, bounded cache keys, canonical-origin fallback, initial-HTML proof, and archive-state accuracy. Managed provider preview and production p75 Web Vitals remain explicit Task 46 proof, not Task 40 claims. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 14:52 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:serena-unavailable|E:serena/memory:unavailable] Serena memory tooling is unavailable in this session; no Serena memory was fabricated. The Aegis ledger/archive, Task 40 plan and session, tracker, handoff, and continuation report remain the continuity sources. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 15:31 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:exact-head-verification|E:docs/ai/work-tracking/archive/20260713-task40-migrate-react-next-framework-build-system-COMPLETED/reports/migrate-react-next-framework-build-system/verification.md] Closed exact-head preview, runtime-origin, clean-checkout typegen, streaming, true-404, and cache-regeneration findings; PR #33 remains draft pending final exact-head delivery evidence. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 15:32 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:clean-checkout-typecheck|E:cmd:git-archive+pnpm-typecheck] Reconstructed the Task 40 tree under `/tmp` without `.next`, completed an offline frozen install, and passed the root typecheck after `next typegen` generated route declarations. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 16:38 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:final-review-verification|E:tests/e2e/homepage.spec.ts] Closed final security and completeness findings with 72 unit/integration tests, 16 built-browser journeys, and serious/critical Axe scans across the homepage, public story, and authenticated preview. The complete local delivery matrix is green. authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -37,12 +40,12 @@
 - [ ] plan-step-emergency - Not applicable; no bypass was used
 
 ## Current State
-Task 40 implementation, independent review remediation, workspace verification, browser/accessibility coverage, security audit, Taskmaster health, legacy guard, strict Aegis verification, capsule check, witness, final closeout, and Taskmaster completion are green. The archived envelope is terminal; delivery is the only remaining action.
+Task 40 implementation, two rounds of independent review remediation, workspace verification, browser/accessibility coverage, security audit, Taskmaster health, legacy guard, strict Aegis verification, capsule check, witness, final closeout, and Taskmaster completion are green. The archived envelope is terminal; a final signed follow-up, hosted exact-head checks, and delivery are the remaining actions.
 
 ## Next Steps
-1. Stage only explicit Task 40 paths and verify the managed rollout remains unstaged.
-2. Deliver the Task 40 pull request under the standing grant.
-3. Revalidate the exact hosted head before trusted delivery-policy evaluation.
+1. Stage only explicit Task 40 paths, commit without rewriting history, and push PR #33.
+2. Revalidate the exact hosted head before trusted delivery-policy evaluation.
+3. Begin Task 41 only after protected delivery and synchronized `main` contain Task 40.
 
 ## Dependencies & Notes
 - Taskmaster: optional unless `.aegis/state/current-work.json` marks it required.

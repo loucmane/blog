@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveSiteUrl } from './site-url'
+import { resolveCanonicalSiteUrl, resolveRuntimeSiteUrl, resolveSiteUrl } from './site-url'
 
 describe('site URL resolution', () => {
   it('accepts explicit HTTP and HTTPS origins', () => {
@@ -13,6 +13,19 @@ describe('site URL resolution', () => {
     expect(resolveSiteUrl('http://localhost:3100', { environment: 'production' }).href).toBe(
       'http://localhost:3100/',
     )
+  })
+
+  it('keeps build-time canonical and server runtime origins as separate contracts', () => {
+    expect(
+      resolveCanonicalSiteUrl('https://canonical.magazine.example', {
+        environment: 'production',
+      }).href,
+    ).toBe('https://canonical.magazine.example/')
+    expect(
+      resolveRuntimeSiteUrl('https://runtime.magazine.example', {
+        environment: 'production',
+      }).href,
+    ).toBe('https://runtime.magazine.example/')
   })
 
   it.each([

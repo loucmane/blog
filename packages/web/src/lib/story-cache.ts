@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { unstable_cache } from 'next/cache'
 
 import { getPublishedFrameworkStory, storyCacheTag } from './framework-content'
@@ -10,7 +12,10 @@ export function loadPublishedFrameworkStory(slug: string) {
   }
 
   return unstable_cache(
-    async () => getPublishedFrameworkStory(normalizedSlug),
+    async () => {
+      const story = getPublishedFrameworkStory(normalizedSlug)
+      return story ? { ...story, cacheGeneration: randomUUID() } : null
+    },
     ['framework-story', normalizedSlug],
     {
       revalidate: 3_600,

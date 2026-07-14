@@ -2,18 +2,25 @@ import { draftMode } from 'next/headers'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-import { getPublishedFrameworkStory } from '@/lib/framework-content'
-import { normalizeStorySlug, previewScopeCookieName } from '@/lib/request-security'
-import { resolveSiteUrl } from '@/lib/site-url'
+import { previewScopeCookieName, requestOriginMatches } from '@/lib/request-security'
+import { resolveRuntimeSiteUrl } from '@/lib/site-url'
 
 export async function POST(request: NextRequest) {
+  const siteUrl = resolveRuntimeSiteUrl()
+  if (
+    !requestOriginMatches(
+      request.headers.get('origin'),
+      siteUrl,
+      request.headers.get('sec-fetch-site'),
+    )
+  ) {
+    return NextResponse.json({ error: 'This preview action is not authorized.' }, { status: 403 })
+  }
+
   const preview = await draftMode()
   preview.disable()
 
-  const formData = await request.formData()
-  const slug = normalizeStorySlug(formData.get('slug'))
-  const destination = slug && getPublishedFrameworkStory(slug) ? `/stories/${slug}` : '/'
-  const response = NextResponse.redirect(new URL(destination, resolveSiteUrl()), 303)
+  const response = NextResponse.redirect(new URL('/', siteUrl), 303)
   response.headers.set('Cache-Control', 'private, no-store')
   response.headers.set('Referrer-Policy', 'no-referrer')
   response.cookies.set(previewScopeCookieName, '', {

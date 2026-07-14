@@ -754,5 +754,17 @@
     "plan_hash": "a4e166e98492c269f1bea5659cddc8a6b4350bd4a9c2a12809b704d8f295b13b",
     "tracker_hash": "4d1822507023b39f7917de6d66f42a129a86082da281805e9dfbb63f711c13f1",
     "synced_at": "2026-07-14T14:53:45.854927+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "a78afd5b6e29a4e817b6484171b23b36a61d2e702d5a191298b1d1cf1110a93a",
+    "tracker_hash": "7855fcf01de73e8c0ea305da82417c6d5964b89561119ee0b56ea4a143e41d62",
+    "synced_at": "2026-07-14T15:42:23.107520+02:00"
+  },
+  {
+    "plan": "plans/2026-07-13-task40-migrate-react-next-framework-build-system.md",
+    "plan_hash": "a78afd5b6e29a4e817b6484171b23b36a61d2e702d5a191298b1d1cf1110a93a",
+    "tracker_hash": "71c827e7c7158ebd5a2bb2cdaf7b235b15ab79089210ad03e2fae8ce5df42502",
+    "synced_at": "2026-07-14T16:42:05.113050+02:00"
   }
 ]

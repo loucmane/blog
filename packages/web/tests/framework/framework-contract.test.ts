@@ -8,6 +8,7 @@ import nextConfig from '../../next.config'
 interface PackageManifest {
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
+  scripts?: Record<string, string>
 }
 
 function readManifest(relativePath: string): PackageManifest {
@@ -63,6 +64,15 @@ describe('Next and React migration contract', () => {
     expect(prettierIgnore.split('\n')).toContain('packages/web/next-env.d.ts')
   })
 
+  it('generates route declarations before standalone TypeScript validation', () => {
+    const root = readManifest('package.json')
+    const web = readManifest('packages/web/package.json')
+
+    expect(root.scripts?.typecheck).toContain('pnpm --filter web run typecheck')
+    expect(root.scripts?.typecheck).not.toContain('pnpm --filter web exec tsc --noEmit')
+    expect(web.scripts?.typecheck).toBe('next typegen && tsc --noEmit')
+  })
+
   it('keeps the reader dependency graph free from editor runtimes', () => {
     const web = readManifest('packages/web/package.json')
     const dependencies = Object.keys(web.dependencies ?? {})
@@ -108,6 +118,80 @@ describe('Next and React migration contract', () => {
     expect(sources).toEqual(['/:path*', '/api/preview', '/api/preview/:path*', '/preview/:path*'])
   })
 
+  it('keeps preview credentials slug-bound, purpose-separated, and body-bounded', () => {
+    const previewRouteSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/api/preview/route.ts'),
+      'utf8',
+    )
+    const previewSecuritySource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/lib/request-security.ts'),
+      'utf8',
+    )
+    const disableRouteSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/api/preview/disable/route.ts'),
+      'utf8',
+    )
+
+    expect(previewRouteSource).toContain('previewTokenMatches(token, slug')
+    expect(previewRouteSource).toContain('MAGAZINE_PREVIEW_TOKEN_SECRET')
+    expect(previewRouteSource).toContain('MAGAZINE_PREVIEW_COOKIE_SECRET')
+    expect(previewRouteSource).toContain('readBoundedJson(request, maxPreviewRequestBytes)')
+    expect(previewRouteSource).not.toContain('request.formData()')
+    expect(previewRouteSource).not.toContain('MAGAZINE_PREVIEW_SECRET')
+    expect(previewSecuritySource).toContain("const previewTokenDomain = 'magazine-preview-token'")
+    expect(previewSecuritySource).toContain("const previewScopeDomain = 'magazine-preview-scope'")
+    expect(disableRouteSource).not.toContain('request.formData()')
+    expect(disableRouteSource).toContain('requestOriginMatches(')
+    expect(disableRouteSource).toContain("request.headers.get('sec-fetch-site')")
+  })
+
+  it('separates deployment-specific canonical metadata from request-time redirects', () => {
+    const layoutSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/layout.tsx'),
+      'utf8',
+    )
+    const previewRouteSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/api/preview/route.ts'),
+      'utf8',
+    )
+    const playwrightSource = fs.readFileSync(
+      path.join(process.cwd(), 'playwright.config.ts'),
+      'utf8',
+    )
+
+    expect(layoutSource).toContain('resolveCanonicalSiteUrl()')
+    expect(previewRouteSource).toContain('resolveRuntimeSiteUrl()')
+    expect(playwrightSource).toContain('NEXT_PUBLIC_SITE_URL: canonicalBuildURL')
+    expect(playwrightSource).toContain('MAGAZINE_RUNTIME_SITE_URL: baseURL')
+  })
+
+  it('proves preview streaming and real cache regeneration on the built server', () => {
+    const previewLoadingPath = path.join(
+      process.cwd(),
+      'packages/web/src/app/preview/stories/[slug]/loading.tsx',
+    )
+    const previewPageSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/preview/stories/[slug]/page.tsx'),
+      'utf8',
+    )
+    const browserTestSource = fs.readFileSync(
+      path.join(process.cwd(), 'tests/e2e/homepage.spec.ts'),
+      'utf8',
+    )
+
+    expect(fs.existsSync(previewLoadingPath)).toBe(false)
+    expect(previewPageSource).toContain('<Suspense fallback={<PreviewStoryLoading />}>')
+    expect(previewPageSource).toContain('await loadPreviewFrameworkStory(slug)')
+    expect(previewPageSource.indexOf('if (!preview.isEnabled')).toBeLessThan(
+      previewPageSource.indexOf('<Suspense'),
+    )
+    expect(browserTestSource).toContain('expect(unauthorizedPreview?.status()).toBe(404)')
+    expect(browserTestSource).toContain(
+      "expect(firstChunkHtml).toContain('data-preview-stream-fallback')",
+    )
+    expect(browserTestSource).toContain('expect(revalidatedGeneration).not.toBe(firstGeneration)')
+  })
+
   it('expires publish-state cache entries immediately and rejects unbounded cache keys', () => {
     const revalidationSource = fs.readFileSync(
       path.join(process.cwd(), 'packages/web/src/app/api/revalidate/route.ts'),
@@ -124,8 +208,10 @@ describe('Next and React migration contract', () => {
 
     expect(revalidationSource).toContain('revalidateTag(storyCacheTag(slug), { expire: 0 })')
     expect(revalidationSource).not.toContain("revalidateTag(storyCacheTag(slug), 'max')")
+    expect(revalidationSource).toContain('readBoundedJson(request, maxRevalidationRequestBytes)')
+    expect(revalidationSource).not.toContain('request.json()')
     expect(cacheSource).toContain('normalizeStorySlug(slug)')
     expect(cacheSource).toContain('!getPublishedFrameworkStory(normalizedSlug)')
-    expect(storyPageSource).toContain('export const dynamicParams = false')
+    expect(storyPageSource).toContain('export const dynamicParams = true')
   })
 })

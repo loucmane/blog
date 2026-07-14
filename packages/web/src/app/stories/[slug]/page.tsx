@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { listPublishedFrameworkStories } from '@/lib/framework-content'
-import { resolveSiteUrl } from '@/lib/site-url'
+import { resolveCanonicalSiteUrl } from '@/lib/site-url'
 import { loadPublishedFrameworkStory } from '@/lib/story-cache'
 
 interface StoryPageProps {
@@ -12,7 +12,7 @@ interface StoryPageProps {
 }
 
 export const revalidate = 3_600
-export const dynamicParams = false
+export const dynamicParams = true
 
 export function generateStaticParams() {
   return listPublishedFrameworkStories().map(({ slug }) => ({ slug }))
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: StoryPageProps): Promise<Meta
       publishedTime: story.publishedAt ?? undefined,
       title: story.title,
       type: 'article',
-      url: new URL(canonicalPath, resolveSiteUrl()),
+      url: new URL(canonicalPath, resolveCanonicalSiteUrl()),
     },
     title: story.title,
   }
@@ -52,12 +52,15 @@ export default async function StoryPage({ params }: StoryPageProps) {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <article className="container mx-auto max-w-4xl px-4 py-12">
+      <article
+        className="container mx-auto max-w-4xl px-4 py-12"
+        data-framework-cache-generation={story.cacheGeneration}
+      >
         <Link className="text-sm font-semibold text-primary hover:underline" href="/">
           ← Magazine home
         </Link>
         <header className="py-10">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-secondary">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
             {story.section}
           </p>
           <h1 className="mb-5 text-4xl font-bold text-primary md:text-6xl">{story.title}</h1>

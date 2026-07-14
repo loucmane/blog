@@ -59,6 +59,10 @@ declare module '*.avif' {
 declare namespace NodeJS {
   interface ProcessEnv {
     readonly NODE_ENV: 'development' | 'production' | 'test'
+    readonly MAGAZINE_PREVIEW_COOKIE_SECRET?: string
+    readonly MAGAZINE_PREVIEW_TOKEN_SECRET?: string
+    readonly MAGAZINE_REVALIDATION_SECRET?: string
+    readonly MAGAZINE_RUNTIME_SITE_URL?: string
     readonly NEXT_PUBLIC_SITE_URL: string
     readonly NEXT_PUBLIC_API_URL?: string
     readonly DATABASE_URL?: string

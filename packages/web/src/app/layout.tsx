@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { ThemeProvider } from '@minniewinnie/ui/providers'
 
-import { resolveSiteUrl } from '@/lib/site-url'
+import { resolveCanonicalSiteUrl } from '@/lib/site-url'
 
 import './globals.css'
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
   description:
     'An implementation-ready foundation for an independent, owner-operated editorial magazine.',
-  metadataBase: resolveSiteUrl(),
+  metadataBase: resolveCanonicalSiteUrl(),
   openGraph: {
     description:
       'An implementation-ready foundation for an independent, owner-operated editorial magazine.',

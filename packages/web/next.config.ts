@@ -67,7 +67,7 @@ export function createPreviewPrivacyHeaders() {
     },
     {
       key: 'Referrer-Policy',
-      value: 'no-referrer',
+      value: 'same-origin',
     },
   ]
 }

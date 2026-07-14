@@ -30,10 +30,12 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
   and that unrelated source dirt did not contaminate installed assets. The
   rollout is pre-existing infrastructure, not Task 40: preserve it intact,
   leave it unstaged, and keep user-owned `.codex/` untouched and uninspected.
-- 2026-07-14 - Next 16's streamed App Router `notFound()` response can retain
-  HTTP 200 while rendering the not-found boundary. Preview confidentiality is
-  therefore verified by withheld draft content and the explicit not-found UI,
-  not by treating the streamed status code as the authorization boundary.
+- 2026-07-14 - Next 16's streamed App Router `notFound()` response retains HTTP
+  200 once a loading boundary flushes. The stale root and public-story loading
+  boundaries were removed so unknown public stories return true HTTP 404s;
+  private preview keeps an explicit component-level Suspense boundary after
+  authorization, where confidentiality is independently enforced by withheld
+  draft content and slug-bound scope.
 - 2026-07-14 - Next's production server issued Draft Mode redirects and secure
   cookies for its canonical `localhost` origin. The initial browser harness used
   `127.0.0.1`, so the host-only cookie correctly did not cross the origin
@@ -83,6 +85,51 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
   runtimes on reader resources. It does not claim production p75 Core Web Vitals
   or a provider-managed preview; those require deployed evidence and remain Task
   46 acceptance gates.
+- 2026-07-14 - Exact-head adversarial review found that the first remediation
+  still accepted one global preview secret, reused it for the browser scope,
+  parsed unbounded form bodies, and used a build-frozen public origin for
+  request-time redirects. The final boundary uses a five-minute per-story
+  signed token, domain-separated cookie signing, a streamed 2 KiB JSON parser,
+  and a server-only runtime origin. Cross-slug replay, oversized declared and
+  chunked bodies, hostile Host values, and absent cookies on denial are covered
+  by built-server tests. Deployment ingress rate limiting remains a Task 46
+  control rather than a misleading process-local substitute.
+- 2026-07-14 - Behavior-level testing exposed two framework interactions that
+  source assertions missed: invalidating an ISR route with
+  `dynamicParams=false` caused `NoFallbackError`, and a route-level loading
+  boundary converted unknown-story 404s to streamed 200s. The final design
+  permits on-demand regeneration only after the known-story data-cache guard,
+  removes broad loading boundaries, proves true public and unauthorized-preview
+  404 responses before any streaming boundary, and verifies a changed
+  cache-generation marker after immediate tag expiry. The authenticated raw
+  stream is bound to the exact preview response cookies so a streamed 404
+  fallback cannot masquerade as successful preview streaming.
+- 2026-07-14 - Next 16 generates `next-env.d.ts` references to `.next/types`.
+  A direct clean-checkout `tsc --noEmit` is therefore not reproducible. The web
+  typecheck now runs the documented `next typegen && tsc --noEmit` sequence,
+  and the root delegates to that script.
+- 2026-07-14 - Final adversarial review identified logout CSRF, an unbounded
+  authenticated revalidation body, and missing expiry/cookie regression proof.
+  Preview exit now requires browser-supplied same-origin Fetch Metadata plus an
+  exact origin when the browser supplies one. Chromium initially emitted
+  `Origin: null` because the preview page used `no-referrer`; the final design
+  uses `same-origin` referrer policy, rejects explicit opaque origins, and
+  retains missing-Origin compatibility only with trusted same-origin Fetch
+  Metadata. Revalidation now accepts only bounded 1 KiB JSON, and unit/browser
+  tests cover exact token expiry, hardened custom and Next Draft Mode cookie
+  flags, hostile cross-site/opaque-origin exit, and oversized authenticated
+  revalidation.
+- 2026-07-14 - Final security re-review also found that weak or reused runtime
+  secrets could fail open. Preview token, preview cookie, and revalidation
+  secrets now require 32–512 UTF-8 bytes and must be distinct across purposes;
+  invalid configuration returns 503 before enabling Draft Mode or reading an
+  authenticated revalidation body.
+- 2026-07-14 - Extending the serious/critical Axe scan from the homepage to the
+  public story and authenticated preview exposed the story eyebrow's bright
+  teal `text-secondary` token at 2.96:1 contrast against the warm background.
+  Both labels now use the existing deep-teal `text-primary` token; all 16
+  desktop/mobile browser journeys pass with zero serious or critical findings
+  across the three surfaces.
 
 ## Progress Log
 - **2026-07-13 16:38 CEST** - [S:20260713|W:task40-migrate-react-next-framework-build-system|H:aegis:kickoff|E:.aegis/state/current-work.json] Findings log initialized by Aegis kickoff.
@@ -90,6 +137,10 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
 - **2026-07-14 08:18 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:verification-findings|E:docs/ai/work-tracking/active/20260713-task40-migrate-react-next-framework-build-system-ACTIVE/reports/migrate-react-next-framework-build-system/verification.md] Recorded non-blocking Task 41 packaging and Browserslist follow-ups after green Task 40 behavior verification. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 08:20 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:aegis:closeout-dry-run|E:.aegis/reports/verification-report.json] Recorded the strict-verification/closeout conflict caused solely by advisory pending events; no queue drain, repair, final closeout, or rollout mutation was performed. authority=standing-grant:sota-magazine-2026-autonomy-v2
 - **2026-07-14 14:46 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:security-review|E:docs/ai/work-tracking/archive/20260713-task40-migrate-react-next-framework-build-system-COMPLETED/reports/migrate-react-next-framework-build-system/verification.md] Recorded and resolved both independent reviewers' actionable correctness and trust-boundary findings; retained provider preview and p75 production metrics as explicit Task 46 gates rather than overstating Task 40 evidence. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 15:31 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:exact-head-remediation|E:tests/e2e/homepage.spec.ts] Closed the second exact-head review findings with per-story preview tokens, bounded streamed parsing, runtime redirect origin separation, clean-checkout type generation, raw streaming proof, and behavior-level cache regeneration; the built browser matrix passed 16/16. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 16:14 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:final-security-remediation|E:packages/web/src/lib/request-security.ts] Closed the final low-severity review findings with same-origin preview-exit enforcement, bounded authenticated revalidation, expiry/cookie assertions, and browser-trace-verified handling of `Origin: null`; 72 unit/integration and 16 built-browser checks pass. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 16:37 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:adversarial-rereview-remediation|E:packages/web/src/lib/request-security.ts] Rejected explicit opaque origins, changed private preview referrers to same-origin-only, enforced strong distinct runtime secrets, asserted both custom and Next Draft Mode cookie flags, and revalidated 72 unit/integration plus 16 built-browser checks. authority=standing-grant:sota-magazine-2026-autonomy-v2
+- **2026-07-14 16:42 CEST** - [S:20260714|W:task40-migrate-react-next-framework-build-system|H:agent:accessibility-rereview-remediation|E:tests/e2e/homepage.spec.ts] Expanded Axe coverage to the public story and authenticated preview, fixed the resulting story-label contrast defect, and passed all 16 desktop/mobile journeys with zero serious or critical findings on every scanned surface. authority=standing-grant:sota-magazine-2026-autonomy-v2
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 6, "last_event_id": "24f30c91403544fe82fa7df384ee0c3e", "schema": "legacy-shadow-sweh-projection-v1"} -->

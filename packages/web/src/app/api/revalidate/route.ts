@@ -3,26 +3,56 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 import { getFrameworkStory, storyCacheTag } from '@/lib/framework-content'
-import { normalizeStorySlug, readBearerToken, secureTokenMatches } from '@/lib/request-security'
+import {
+  configuredSecretIsStrong,
+  configuredSecretsAreDistinct,
+  maxRevalidationRequestBytes,
+  normalizeStorySlug,
+  readBearerToken,
+  readBoundedJson,
+  secureTokenMatches,
+} from '@/lib/request-security'
 
 export async function POST(request: NextRequest) {
+  const revalidationSecret = process.env.MAGAZINE_REVALIDATION_SECRET
+  if (
+    !configuredSecretIsStrong(revalidationSecret) ||
+    !configuredSecretsAreDistinct(
+      revalidationSecret,
+      process.env.MAGAZINE_PREVIEW_TOKEN_SECRET,
+      process.env.MAGAZINE_PREVIEW_COOKIE_SECRET,
+    )
+  ) {
+    return NextResponse.json({ error: 'Revalidation is not configured.' }, { status: 503 })
+  }
+
   const providedToken = readBearerToken(request.headers.get('authorization'))
-  if (!secureTokenMatches(providedToken, process.env.MAGAZINE_REVALIDATION_SECRET)) {
+  if (!secureTokenMatches(providedToken, revalidationSecret)) {
     return NextResponse.json(
       { error: 'This revalidation request is not authorized.' },
       { status: 401 },
     )
   }
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
+  const contentType = request.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
+  if (contentType !== 'application/json') {
+    return NextResponse.json({ error: 'Revalidation requests must use JSON.' }, { status: 415 })
+  }
+
+  const parsedBody = await readBoundedJson(request, maxRevalidationRequestBytes)
+  if (!parsedBody.ok) {
     return NextResponse.json(
-      { error: 'The revalidation request is not valid JSON.' },
-      { status: 400 },
+      {
+        error:
+          parsedBody.reason === 'too-large'
+            ? 'The revalidation request is too large.'
+            : 'The revalidation request is not valid JSON.',
+      },
+      { status: parsedBody.reason === 'too-large' ? 413 : 400 },
     )
   }
+
+  const body = parsedBody.value
 
   const slug = normalizeStorySlug(
     typeof body === 'object' && body !== null && 'slug' in body ? body.slug : null,
@@ -33,7 +63,6 @@ export async function POST(request: NextRequest) {
 
   revalidateTag(storyCacheTag(slug), { expire: 0 })
   revalidatePath('/')
-  revalidatePath(`/stories/${slug}`)
 
   return NextResponse.json({ revalidated: true, slug })
 }

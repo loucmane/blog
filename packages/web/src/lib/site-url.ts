@@ -14,7 +14,7 @@ function isLoopbackHost(hostname: string): boolean {
 }
 
 export function resolveSiteUrl(
-  value = process.env.NEXT_PUBLIC_SITE_URL,
+  value: string | undefined,
   { environment = process.env.NODE_ENV }: SiteUrlOptions = {},
 ): URL {
   const fallback = fallbackSiteUrl(environment)
@@ -47,4 +47,18 @@ export function resolveSiteUrl(
   } catch {
     return fallback
   }
+}
+
+export function resolveCanonicalSiteUrl(
+  value = process.env.NEXT_PUBLIC_SITE_URL,
+  options: SiteUrlOptions = {},
+): URL {
+  return resolveSiteUrl(value, options)
+}
+
+export function resolveRuntimeSiteUrl(
+  value = process.env.MAGAZINE_RUNTIME_SITE_URL,
+  options: SiteUrlOptions = {},
+): URL {
+  return resolveSiteUrl(value, options)
 }

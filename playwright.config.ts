@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test'
 
 const port = 3100
 const baseURL = `http://localhost:${port}`
+const canonicalBuildURL = 'https://canonical.magazine.invalid'
+const previewCookieSecret = 'task40-preview-cookie-secret-with-32-bytes'
+const previewTokenSecret = 'task40-preview-token-secret-with-32-bytes'
+const revalidationSecret = 'task40-revalidation-secret-with-32-bytes'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -35,9 +39,11 @@ export default defineConfig({
     command: 'pnpm --filter web build && pnpm --filter web start',
     env: {
       HOSTNAME: '127.0.0.1',
-      MAGAZINE_PREVIEW_SECRET: 'task40-preview-fixture',
-      MAGAZINE_REVALIDATION_SECRET: 'task40-revalidation-fixture',
-      NEXT_PUBLIC_SITE_URL: baseURL,
+      MAGAZINE_PREVIEW_COOKIE_SECRET: previewCookieSecret,
+      MAGAZINE_PREVIEW_TOKEN_SECRET: previewTokenSecret,
+      MAGAZINE_REVALIDATION_SECRET: revalidationSecret,
+      MAGAZINE_RUNTIME_SITE_URL: baseURL,
+      NEXT_PUBLIC_SITE_URL: canonicalBuildURL,
       PORT: String(port),
     },
     reuseExistingServer: !process.env.CI,

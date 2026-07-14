@@ -33,10 +33,10 @@ describe('framework security headers', () => {
     ])
   })
 
-  it('prevents preview responses from being cached or referred', () => {
+  it('prevents preview responses from being cached or referred cross-origin', () => {
     expect(createPreviewPrivacyHeaders()).toEqual([
       { key: 'Cache-Control', value: 'private, no-store' },
-      { key: 'Referrer-Policy', value: 'no-referrer' },
+      { key: 'Referrer-Policy', value: 'same-origin' },
     ])
   })
 })
