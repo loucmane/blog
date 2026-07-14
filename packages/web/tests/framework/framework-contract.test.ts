@@ -100,4 +100,32 @@ describe('Next and React migration contract', () => {
       },
     ])
   })
+
+  it('applies preview privacy headers after the global header policy', async () => {
+    const headers = await nextConfig.headers?.()
+    const sources = headers?.map(({ source }) => source) ?? []
+
+    expect(sources).toEqual(['/:path*', '/api/preview', '/api/preview/:path*', '/preview/:path*'])
+  })
+
+  it('expires publish-state cache entries immediately and rejects unbounded cache keys', () => {
+    const revalidationSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/api/revalidate/route.ts'),
+      'utf8',
+    )
+    const cacheSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/lib/story-cache.ts'),
+      'utf8',
+    )
+    const storyPageSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/stories/[slug]/page.tsx'),
+      'utf8',
+    )
+
+    expect(revalidationSource).toContain('revalidateTag(storyCacheTag(slug), { expire: 0 })')
+    expect(revalidationSource).not.toContain("revalidateTag(storyCacheTag(slug), 'max')")
+    expect(cacheSource).toContain('normalizeStorySlug(slug)')
+    expect(cacheSource).toContain('!getPublishedFrameworkStory(normalizedSlug)')
+    expect(storyPageSource).toContain('export const dynamicParams = false')
+  })
 })

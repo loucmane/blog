@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'The requested story could not be found.' }, { status: 404 })
   }
 
-  revalidateTag(storyCacheTag(slug), 'max')
+  revalidateTag(storyCacheTag(slug), { expire: 0 })
   revalidatePath('/')
   revalidatePath(`/stories/${slug}`)
 

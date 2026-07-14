@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import { draftMode } from 'next/headers'
+import { cookies, draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import { getFrameworkStory } from '@/lib/framework-content'
+import { previewScopeCookieName, previewScopeMatches } from '@/lib/request-security'
 
 interface PreviewStoryPageProps {
   params: Promise<{ slug: string }>
@@ -21,8 +22,14 @@ export const metadata: Metadata = {
 
 export default async function PreviewStoryPage({ params }: PreviewStoryPageProps) {
   const preview = await draftMode()
+  const cookieStore = await cookies()
   const { slug } = await params
-  const story = preview.isEnabled ? getFrameworkStory(slug) : null
+  const scopeIsValid = previewScopeMatches(
+    cookieStore.get(previewScopeCookieName)?.value,
+    slug,
+    process.env.MAGAZINE_PREVIEW_SECRET,
+  )
+  const story = preview.isEnabled && scopeIsValid ? getFrameworkStory(slug) : null
   if (!story) {
     notFound()
   }

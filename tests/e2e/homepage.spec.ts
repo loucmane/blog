@@ -70,7 +70,7 @@ test('server-renders a canonical story with responsive image and hardened header
   ).toBeVisible()
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'http://localhost:3000/stories/framework-migration-proof',
+    'http://localhost:3100/stories/framework-migration-proof',
   )
 
   const contentSecurityPolicy = response?.headers()['content-security-policy'] ?? ''
@@ -87,28 +87,67 @@ test('server-renders a canonical story with responsive image and hardened header
   expect(readerResources).not.toMatch(/tiptap|prosemirror|lexical|editor/i)
 })
 
+test('delivers the reader story in initial HTML within the foundation byte budget', async ({
+  request,
+}) => {
+  const response = await request.get('/stories/framework-migration-proof')
+  const body = await response.text()
+
+  expect(response.status()).toBe(200)
+  expect(response.headers()['content-type']).toContain('text/html')
+  expect(body).toContain('A portable foundation for the magazine')
+  expect(body).toContain('Layered editorial pages represented by warm geometric shapes')
+  expect(body).not.toMatch(/tiptap|prosemirror|lexical|contenteditable/i)
+  expect(Buffer.byteLength(body)).toBeLessThan(150_000)
+})
+
 test('fails closed before enabling an isolated private preview', async ({ page }) => {
   await page.goto('/preview/stories/private-framework-draft')
   await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
   await expect(page.getByText('Private framework preview')).toHaveCount(0)
 
-  const deniedResponse = await page.goto(
-    '/api/preview?secret=wrong-preview-fixture&slug=private-framework-draft',
-  )
-  expect(deniedResponse?.status()).toBe(401)
-  await expect(page.getByText('This preview link is invalid or expired.')).toBeVisible()
+  const previewRequest = page.context().request
+  const deniedResponse = await previewRequest.post('/api/preview', {
+    form: {
+      secret: 'wrong-preview-fixture',
+      slug: 'private-framework-draft',
+    },
+    maxRedirects: 0,
+  })
+  expect(deniedResponse.status()).toBe(401)
 
-  const previewResponse = await page.goto(
-    '/api/preview?secret=task40-preview-fixture&slug=private-framework-draft',
+  const previewResponse = await previewRequest.post('/api/preview', {
+    form: {
+      secret: 'task40-preview-fixture',
+      slug: 'private-framework-draft',
+    },
+    headers: {
+      host: 'attacker.example',
+    },
+    maxRedirects: 0,
+  })
+  expect(previewResponse.status()).toBe(303)
+  expect(previewResponse.headers()['location']).toBe(
+    'http://localhost:3100/preview/stories/private-framework-draft',
   )
-  expect(previewResponse?.status()).toBe(200)
-  await expect(page).toHaveURL(/\/preview\/stories\/private-framework-draft$/)
+  expect(previewResponse.headers()['cache-control']).toBe('private, no-store')
+  expect(previewResponse.headers()['referrer-policy']).toBe('no-referrer')
+
+  const previewDocument = await previewRequest.get('/preview/stories/private-framework-draft')
+  expect(previewDocument.status()).toBe(200)
+  expect(await previewDocument.text()).toContain('Private framework preview')
+
+  await page.goto('/preview/stories/private-framework-draft')
   await expect(page.getByRole('status')).toContainText('Private preview')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Private framework preview')
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     'content',
     /noindex.*nofollow|nofollow.*noindex/,
   )
+
+  await page.goto('/preview/stories/framework-migration-proof')
+  await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
+  await page.goto('/preview/stories/private-framework-draft')
 
   await page.getByRole('button', { name: 'Exit preview' }).click()
   await expect(page).toHaveURL('/')
@@ -141,4 +180,11 @@ test('protects the cache invalidation boundary and revalidates known story tags'
     headers: { authorization: 'Bearer task40-revalidation-fixture' },
   })
   expect(unknownResponse.status()).toBe(404)
+})
+
+test('rejects oversized public slugs before creating reader cache entries', async ({ page }) => {
+  const response = await page.goto(`/stories/${'a'.repeat(121)}`)
+
+  expect(response?.status()).toBe(404)
+  await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
 })

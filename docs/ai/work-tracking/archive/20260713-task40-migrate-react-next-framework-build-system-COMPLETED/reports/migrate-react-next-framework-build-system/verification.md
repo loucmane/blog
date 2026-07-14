@@ -19,8 +19,8 @@ Primary-source rationale is recorded in `FINDINGS.md`, `DECISIONS.md`, and `docs
 
 - Two consecutive `pnpm install --frozen-lockfile` runs passed with unchanged root, UI, web, workspace, and lockfile hashes.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` passed.
-- Vitest coverage passed with 53 tests across 11 files, 97.01% statements, 92.3% branches, 100% functions, and 96.87% lines.
-- Playwright passed 10 of 10 desktop/mobile journeys, including protected preview, revalidation deny paths, reader metadata/images, keyboard operation, and no reader editor resources.
+- Vitest passed 65 tests across 11 files after independent-review remediation; the earlier coverage run passed with 97.01% statements, 92.3% branches, 100% functions, and 96.87% lines.
+- Playwright passed 14 of 14 desktop/mobile journeys, including protected slug-bound preview, hostile-Host redirect resistance, immediate revalidation deny paths, bounded malformed routes, initial static and dynamic HTML, a 150 kB initial-document budget, reader metadata/images, keyboard operation, and no reader editor resources.
 - Accessibility verification reported zero serious or critical Axe violations on the reader surface.
 - Generic Node production smoke returned HTTP 200.
 - Dependency security audit reported zero advisories; the focused security-hotfix suite passed 7 of 7 assertions.
@@ -28,6 +28,7 @@ Primary-source rationale is recorded in `FINDINGS.md`, `DECISIONS.md`, and `docs
 - Taskmaster health passed for 36 tasks, 3 subtasks, and 76 dependency references; full dependency validation reported zero invalid references.
 - Aegis capsule/brief check and repository Aegis CI verification passed while enforcement remained advisory.
 - Completed-state guard regression passed 5 of 5 tests.
+- Independent implementation and adversarial reviews were completed. Preview credentials no longer appear in URLs; Draft Mode requires a short-lived slug-bound HMAC scope; redirects use the configured origin; publish-state tags expire immediately; malformed/unknown slugs cannot create persistent cache keys; and production metadata cannot fall back to localhost.
 
 ## Aegis Delivery Boundary
 
@@ -43,6 +44,7 @@ Primary-source rationale is recorded in `FINDINGS.md`, `DECISIONS.md`, and `docs
 - Browserslist reports stale compatibility data. It is unrelated transitive maintenance and is deliberately excluded from Task 40.
 - The same-origin CSP retains inline script/style compatibility until a measured nonce or hash strategy can preserve static reader caching.
 - Provider-managed preview/deployment proof remains Task 46; Task 40 proves the generic Node fallback locally.
+- Production p75 Core Web Vitals remain Task 46 evidence. Task 40 proves initial static/dynamic HTML and a deterministic local document budget; it does not claim deployed p75 measurements.
 
 ## Rollback
 

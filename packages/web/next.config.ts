@@ -59,6 +59,19 @@ export function createSecurityHeaders(options: SecurityHeaderOptions = {}) {
   ]
 }
 
+export function createPreviewPrivacyHeaders() {
+  return [
+    {
+      key: 'Cache-Control',
+      value: 'private, no-store',
+    },
+    {
+      key: 'Referrer-Policy',
+      value: 'no-referrer',
+    },
+  ]
+}
+
 const nextConfig: NextConfig = {
   compress: true,
   images: {
@@ -74,6 +87,18 @@ const nextConfig: NextConfig = {
       {
         headers: createSecurityHeaders({ development: process.env.NODE_ENV !== 'production' }),
         source: '/:path*',
+      },
+      {
+        headers: createPreviewPrivacyHeaders(),
+        source: '/api/preview',
+      },
+      {
+        headers: createPreviewPrivacyHeaders(),
+        source: '/api/preview/:path*',
+      },
+      {
+        headers: createPreviewPrivacyHeaders(),
+        source: '/preview/:path*',
       },
     ]
   },

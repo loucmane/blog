@@ -11,9 +11,9 @@
 ## Current State
 
 - Goal: deliver Task 40, the exact-pinned Next.js/React framework and build-system migration, then continue to Task 41 only after Task 40 merges.
-- Base/HEAD: `0fca7a807a8035b6e3afb9d6795dfb9ac9efc69f` (`origin/main` when Task 40 began).
+- Base: `0fca7a807a8035b6e3afb9d6795dfb9ac9efc69f` (`origin/main` when Task 40 began). Current local Task 40 commit: `4f80ab94c74460a4a2e872ff558d9d27fbfc1d3d`, with an unstaged independent-review remediation follow-up pending final verification and commit.
 - Task/branch: Task 40 `done` on `feat/task-40-migrate-react-next-framework-build-system`; Aegis closeout is terminal and the work-tracking envelope is archived.
-- Pull request: not created; no Task 40 paths are staged or committed.
+- Pull request: not created; no Task 40 paths are staged. The initial coherent Task 40 implementation commit exists locally and has not been pushed.
 - An owner-authorized managed Aegis rollout is present as pre-existing working-tree infrastructure. Preserve it intact and unstaged. User-owned `.codex/` must not be inspected, staged, moved, hidden, deleted, or overwritten.
 
 ## Delivered Work
@@ -21,13 +21,14 @@
 - Exact-pinned Next.js `16.2.10`, React/React DOM `19.2.7`, and compatible React types; aligned the workspace on one React runtime.
 - Removed obsolete Webpack/SVGR and stale prototype configuration in favor of Next 16's stable Turbopack path and generic `next start` baseline.
 - Added static reader rendering, canonical metadata, responsive local imagery, protected draft preview, preview disable, authenticated cache invalidation, and same-origin security headers.
-- Added deterministic framework, unit, browser, accessibility, security, and production-smoke contracts without starting Task 41 or Task 42.
+- Added deterministic framework, unit, browser, accessibility, security, initial-HTML/document-budget, and production-smoke contracts without starting Task 41 or Task 42.
+- Resolved independent review findings with POST-only slug-bound preview authorization, trusted-origin redirects, immediate invalidation, bounded cache keys, and fail-closed production canonical-origin behavior.
 - Repaired only Task 40 daily legacy continuity through the supported helper; Taskmaster health and all 76 dependencies pass, and only Task 40's generated projection was refreshed.
 
 ## Verification
 
-- Two frozen installs passed with stable package/lock hashes; typecheck, lint, format check, 53-test coverage, package/app builds, HTTP 200 production smoke, and zero dependency advisories passed.
-- Playwright passed 10/10 desktop/mobile journeys with zero serious/critical Axe findings.
+- Two frozen installs passed with stable package/lock hashes; typecheck, lint, format check, 65 unit/integration tests, package/app builds, HTTP 200 production smoke, and zero dependency advisories passed.
+- Playwright passed 14/14 desktop/mobile journeys with zero serious/critical Axe findings.
 - Quality contract 29/29, security 7/7, auto-merge policy 65, workflow contract 46, skill platform 29, Taskmaster health/dependencies, Aegis CI, completed-state guards 5/5, legacy guard, standard Aegis verification, capsule/brief, witness, and `git diff --check` passed.
 - The sandboxed Turbopack build failed only because process port binding was denied; the identical elevated build passed. This is execution-environment evidence, not a product failure.
 - The attended managed-runtime refresh to stable source `144bd4463dcec9c326b023ff53b45aa71660727e` preserved the advisory-only queue while making it non-blocking. Strict verification and final closeout passed with zero required failures; closeout reported zero warnings.
@@ -41,6 +42,7 @@
 - Browserslist compatibility data is stale; unrelated transitive maintenance remains outside Task 40.
 - Local `actionlint` and `gitleaks` executables are unavailable. Task 40 changes no workflow, and hosted protected CI remains the authoritative Gitleaks gate.
 - The trustworthy advisory-only queue remains preserved. Do not run generic repair or an event-draining loop.
+- Managed provider preview and production p75 Core Web Vitals are Task 46 proof; Task 40 does not claim them from local evidence.
 
 ## Next Safe Action
 

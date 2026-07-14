@@ -32,11 +32,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm --filter web start',
+    command: 'pnpm --filter web build && pnpm --filter web start',
     env: {
       HOSTNAME: '127.0.0.1',
       MAGAZINE_PREVIEW_SECRET: 'task40-preview-fixture',
       MAGAZINE_REVALIDATION_SECRET: 'task40-revalidation-fixture',
+      NEXT_PUBLIC_SITE_URL: baseURL,
       PORT: String(port),
     },
     reuseExistingServer: !process.env.CI,

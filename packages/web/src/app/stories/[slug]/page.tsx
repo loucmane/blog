@@ -12,6 +12,7 @@ interface StoryPageProps {
 }
 
 export const revalidate = 3_600
+export const dynamicParams = false
 
 export function generateStaticParams() {
   return listPublishedFrameworkStories().map(({ slug }) => ({ slug }))

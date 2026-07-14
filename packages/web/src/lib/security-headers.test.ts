@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { createContentSecurityPolicy, createSecurityHeaders } from '../../next.config'
+import {
+  createContentSecurityPolicy,
+  createPreviewPrivacyHeaders,
+  createSecurityHeaders,
+} from '../../next.config'
 
 describe('framework security headers', () => {
   it('keeps production origins local and removes obsolete third parties', () => {
@@ -26,6 +30,13 @@ describe('framework security headers', () => {
       'Strict-Transport-Security',
       'X-Content-Type-Options',
       'X-Frame-Options',
+    ])
+  })
+
+  it('prevents preview responses from being cached or referred', () => {
+    expect(createPreviewPrivacyHeaders()).toEqual([
+      { key: 'Cache-Control', value: 'private, no-store' },
+      { key: 'Referrer-Policy', value: 'no-referrer' },
     ])
   })
 })
