@@ -80,7 +80,6 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 86_400,
   },
   poweredByHeader: false,
-  transpilePackages: ['@minniewinnie/ui'],
   typedRoutes: true,
   async headers() {
     return [

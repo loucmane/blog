@@ -1,5 +1,7 @@
 # shadcn/ui Component Usage Patterns
 
+> **Superseded historical reference (Task 41, 2026-07-14).** Do not use this file as implementation authority. It describes the removed animal-foundation demo, four-theme model, and deleted generated component inventory. Current guidance is `docs/architecture/design-system.md`, `docs/architecture/design-system-component-inventory.md`, `docs/development/shadcn-components.md`, and ADR 0005.
+
 This guide provides practical patterns for using shadcn/ui components in the Animal Protection Foundation blog, complementing our [Codebase Patterns](./codebase-patterns.md) guide.
 
 ## Core Principles

@@ -56,19 +56,7 @@
       "@/context/*": ["./src/context/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/config/*": ["./src/config/*"],
-      "@/content/*": ["./content/*"],
-      // Domain-specific modules (business logic organization)
-      "@/trauma-informed/*": ["./src/trauma-informed/*"],
-      "@/donor/*": ["./src/donor/*"],
-      "@/emergency/*": ["./src/emergency/*"],
-      "@/analytics/*": ["./src/analytics/*"],
-      // Workspace packages
-      "@minniewinnie/ui": ["../ui/src"],
-      "@minniewinnie/ui/*": ["../ui/src/*"],
-      "@minniewinnie/backend": ["../backend/src"],
-      "@minniewinnie/backend/*": ["../backend/src/*"],
-      "@minniewinnie/shared": ["../shared/src"],
-      "@minniewinnie/shared/*": ["../shared/src/*"]
+      "@/content/*": ["./content/*"]
     }
   },
   "include": [

@@ -1,86 +1,53 @@
 # Development Workflow
 
-## Best Practices Guidelines (2025)
+## Runtime
 
-### Always Use Latest Standards
-**CRITICAL**: Before implementing any configuration or setup, ALWAYS:
+Use the repository contract rather than a global default:
 
-1. **Check Current Versions**: Verify actual package versions in `package.json` before making assumptions
-2. **Use Context7 First**: Query Context7 for latest 2025 best practices before implementing configs
-3. **Ask for Examples**: When user has modern examples, use those instead of defaulting to "safe" older configs
-4. **Web Search Latest**: For 2025 standards, search for "framework-name 2025 best practices" or similar
-5. **Verify Documentation**: Check official docs for latest features and configurations
+- Node `24.18.0`
+- pnpm `11.11.0`
+- Corepack `0.35.0` for the committed local activation path
 
-### 2025 Configuration Standards
-- **TypeScript**: Use latest TS 5.0+ features (ES2022+ target, strict checks, modern module resolution)
-- **Next.js 15**: Always use latest App Router patterns, React Server Components, and performance features
-- **React 19**: Leverage React 19 features (compiler, concurrent features, new hooks)
-- **Build Tools**: Use modern bundler settings and performance optimizations
+`config/runtime.json`, `.nvmrc`, `package.json`, `pnpm-workspace.yaml`, and protected CI are deterministic projections of that contract.
 
-## Optimal Development Workflow (MCP-Enhanced)
+## Research Before Changes
 
-**ALWAYS follow this workflow to avoid hallucination, outdated patterns, and suboptimal solutions:**
+For version or architecture decisions:
 
-### 1. Task Planning Phase
-- Use `taskmaster-ai` MCP to break down complex tasks into manageable subtasks
-- Track progress with task status updates (pending → in-progress → done)
-- Maintain visibility into project scope and dependencies
+1. inspect the current repository and dependency graph;
+2. query official documentation, release notes, support policies, registries, compatibility matrices, and security advisories;
+3. select stable, supported, compatible, measurable, and reversible versions;
+4. record exact versions and rejected alternatives in an ADR;
+5. keep unrelated upgrades in separate tasks and PRs.
 
-### 2. Research Phase
-- **FIRST**: Use Context7 MCP to get latest, authoritative documentation
-- **SECOND**: Web search for 2025-specific best practices if needed
-- Always prefer Context7 results over assumptions or memory
-
-### 3. Implementation Standards
-- Query Context7 for specific library configurations before implementing
-- Use exact code examples from Context7 when available
-- Verify compatibility between packages using Context7 docs
-
-### 4. Quality Assurance
-- Update taskmaster-ai tasks as work progresses
-- Use Context7 to verify implementation patterns match current standards
-- Keep documentation current with architectural decisions
-
-### 5. Anti-Patterns to Avoid
-- ❌ Using outdated boilerplate configs without verification
-- ❌ Implementing without checking Context7 for latest patterns
-- ❌ Completing tasks without updating taskmaster-ai status
-- ❌ Assuming package compatibility without research
-
-## When in Doubt
-1. **Ask First**: "Do you have a preferred modern 2025 setup for [technology]?"
-2. **Research**: Use Context7 and web search to find latest standards
-3. **Explain Choices**: Always explain why specific configurations were chosen
-4. **Stay Current**: Aim for top-tier, not just "working" solutions
+No tool or model-memory source is automatically authoritative.
 
 ## Common Commands
 
-### Development
 ```bash
-# Always use pnpm, never npm
-pnpm install              # Install dependencies
-pnpm dev                  # Run development server
-pnpm build                # Build all packages
-pnpm lint                 # Run linting
-pnpm type-check           # TypeScript checking
-
-# Package-specific commands
-cd packages/web && pnpm dev    # Run Next.js dev server
-cd packages/ui && pnpm build   # Build UI package
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm lint
+pnpm format:check
+pnpm test
+pnpm test:coverage
+pnpm test:capability
+pnpm build
+pnpm test:smoke:web
+pnpm test:browser
+pnpm security:audit
 ```
 
-### Git Workflow
-```bash
-git status                # Check current changes
-git add .                 # Stage all changes
-git commit -m "..."       # Commit with descriptive message
-git push origin branch    # Push to remote
-```
+Use `python3 scripts/codex-task taskmaster health` and `task-master validate-dependencies` for Taskmaster graph verification. Use Aegis only for sanctioned workflow state, verification, witness, and closeout operations.
 
-### Testing
-```bash
-# Run from project root
-pnpm test                 # Run all tests
-pnpm test:watch          # Watch mode
-pnpm test:coverage       # Coverage report
-```
+## Workspace Boundaries
+
+The current workspace has two importers: the root toolchain and `packages/web`. Design-system source is app-local. Add another package only after proving an independent deployable unit or a real second consumer.
+
+## Git Delivery
+
+- Work on the active `feat/task-*` branch, never directly on `main`.
+- Inspect status, diff, generated files, and secrets before staging.
+- Stage an explicit task allowlist; do not use broad `git add .` in a dirty multi-surface worktree.
+- Push normally without force or history rewriting.
+- Require protected CI and the repository's attended/autonomous-delivery policy before merge.

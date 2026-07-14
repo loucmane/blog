@@ -1,74 +1,24 @@
-# Migration Progress
+# Revival Migration Progress
 
-## Overview
-Migrating the Animal Protection Foundation Blog from Create React App to Next.js 15 with a modern monorepo structure.
+## Completed Foundation
 
-## Completed Tasks
+- Canonical premium magazine product truth and architecture supersede the old animal-foundation prototype.
+- Node, pnpm, Corepack, CI runtime, TypeScript, ESLint, Prettier, Vitest, Testing Library, Playwright, and axe foundations are pinned and verified.
+- Next.js and React framework boundaries are modernized and proven through server rendering, preview, revalidation, image, metadata, security, and production smoke contracts.
+- Tailwind 4, semantic tokens, app-local owned components, system/light/dark preferences, and accessibility media behavior are consolidated in `packages/web`.
+- The unused Express backend, speculative shared package, standalone UI package, duplicate toolchains, component demo, and animal-foundation mockup are removed after consumer and replacement proof.
 
-### Phase 1: Foundation Setup ✅
-- Created Next.js 15 setup with App Router in web package
-- Configured TypeScript and ESLint
-- Set up pnpm workspaces for monorepo
-- Created basic package structure (web, ui, backend, shared)
+## Current Workspace
 
-### Phase 2: Design System Migration ✅
-- Set up UI package infrastructure with TypeScript
-- Migrated design tokens (colors, typography, spacing, animations)
-- Copied theme configurations (light, dark, contrast, gentle)
-- Moved ThemeProvider and ThemeSwitcher components
-- Converted Tailwind config to TypeScript for ESM compatibility
-- Verified all imports and dependencies
+The pnpm workspace contains the root toolchain and `packages/web`. This is intentional, not a prohibition on future boundaries. New services or packages must follow accepted content/persistence architecture and have a real deployment boundary or second consumer.
 
-### Phase 3: UI Package Exports ✅
-- Configured package.json exports in UI package
-- Set up TypeScript path mappings
-- Successfully tested all imports from web package
-- All design tokens, themes, providers, hooks, and components accessible
+## Next Roadmap
 
-### Phase 4: Gradual Migration ✅
-- Updated web package to use @minniewinnie/ui imports
-- Updated app/layout.tsx to use UI package ThemeProvider
-- Updated app/page.tsx to use UI package ThemeSwitcher
-- Updated globals.css to import UI package base styles
-- Updated tailwind.config.js to extend UI package config
-- Verified theme switching works correctly with new imports
-- Theme persistence across page refreshes confirmed
+1. Task 42 — approved content and persistence foundation.
+2. Task 43 — nontechnical owner authoring and publishing foundation.
+3. Task 44 — premium public magazine experience.
+4. Task 45 — SEO, search, newsletter, RSS, and distribution.
+5. Task 46 — production readiness, observability, backup, restore, and rollback.
+6. Task 47 — final foundation hardening and handoff.
 
-### Phase 5: Cleanup ✅
-- Removed duplicate theme components from web package
-- Removed duplicate ThemeContext from web package
-- Consolidated all theme-related code in UI package
-- Documentation updates in progress
-
-### Documentation Organization ✅
-- Created centralized `/docs` directory
-- Moved architecture documentation to `/docs/architecture/`
-- Created package-specific READMEs
-- Updated root README with project information
-
-## Pending Tasks
-
-### Future Implementation
-- MDX content processing setup
-- Layout components (header, footer, navigation)
-- Blog listing and detail pages
-- SEO optimization features
-- shadcn/ui component integration
-- Newsletter integration
-- Search functionality
-- Content approval workflows
-- Analytics integration
-
-## Migration Strategy Notes
-
-### Zero-Downtime Approach
-1. Copy (don't move) during initial phases
-2. Test new setup alongside old
-3. Gradually update imports
-4. Remove old files only after verification
-
-### Package Responsibilities
-- **UI Package**: Design tokens and foundation only
-- **Web Package**: All shadcn/ui components and app-specific code
-- **Shared Package**: Cross-package utilities and types
-- **Backend Package**: API services and integrations
+Historical pre-upgrade evidence remains under `docs/research/` and completed task archives. It documents what existed; it does not override current ADRs or architecture.

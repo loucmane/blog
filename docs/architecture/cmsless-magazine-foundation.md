@@ -109,9 +109,9 @@ Optimize the initial managed deployment for a one-owner operation while preservi
 | Existing area | Classification | Direction |
 | --- | --- | --- |
 | Next.js App Router shell | Useful foundation | Upgrade and simplify after baseline |
-| React components and themes | Mixed | Preserve intentional mechanics; replace stale product design |
-| shared UI package | Unresolved decision | Prefer app-local design system unless reuse justifies package cost |
-| Express backend demo | Obsolete requirement | Remove after full-stack domain routes replace it |
+| React components and themes | Useful foundation | App-local owned design system; preserve system/light/dark and accessibility mechanics |
+| shared UI package | Superseded | Removed after proving one consumer and replacing its useful behavior app-locally |
+| Express backend demo | Superseded | Removed; Task 42 adds accepted full-stack domain boundaries instead of preserving a placeholder |
 | MDX/Git content plan | Obsolete requirement | Replace with database-backed structured content |
 | animal/donation configuration | Stale terminology | Remove in scoped migration |
 | current tests | Existing defect | Establish real unit/integration/browser coverage |

@@ -10,7 +10,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 const typeScriptFiles = ['**/*.{ts,tsx}']
-const reactFiles = ['packages/{ui,web}/**/*.{jsx,tsx}']
+const reactFiles = ['packages/web/**/*.{jsx,tsx}']
 const webRoot = fileURLToPath(new URL('./packages/web/', import.meta.url))
 const reactRecommended = eslintReact.configs['recommended-typescript']
 
@@ -34,8 +34,6 @@ export default [
       'packages/**/dist/**',
       'packages/**/.next/**',
       'packages/**/*.d.ts',
-      'packages/ui/tailwind.config.ts',
-      'packages/web/tailwind.config.js',
       'plans/**',
       'reports/**',
       'sessions/**',
@@ -93,7 +91,6 @@ export default [
   },
   {
     files: [
-      'packages/shared/src/types/index.ts',
       'packages/web/src/types/analytics.ts',
       'packages/web/src/types/index.ts',
       'packages/web/src/types/ui.ts',
@@ -149,12 +146,6 @@ export default [
     files: reactFiles,
     plugins: jsxA11y.configs.recommended.plugins,
     rules: jsxA11y.configs.recommended.rules,
-  },
-  {
-    files: ['packages/web/src/components/ui/alert.tsx'],
-    rules: {
-      'jsx-a11y-x/heading-has-content': 'off',
-    },
   },
   {
     files: ['packages/web/**/*.{js,jsx,ts,tsx}'],

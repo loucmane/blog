@@ -6,6 +6,7 @@ import {
   evaluateVitestResults,
 } from '../../scripts/ci/check-test-results.mjs'
 import {
+  criticalBrowserJourneys,
   criticalUnitContracts,
   expectedBrowserProjects,
 } from '../../scripts/ci/check-test-capability.mjs'
@@ -29,17 +30,14 @@ function vitestReport() {
 
 function playwrightReport() {
   const projects = expectedBrowserProjects
-  const titles = [
-    'serves the reader shell and enforces the accessibility baseline',
-    'keeps the theme chooser operable from the keyboard',
-  ]
+  const titles = criticalBrowserJourneys
   return {
     config: {
       forbidOnly: true,
       projects: projects.map((name) => ({ name })),
     },
     errors: [],
-    stats: { expected: 4, flaky: 0, skipped: 0, unexpected: 0 },
+    stats: { expected: projects.length * titles.length, flaky: 0, skipped: 0, unexpected: 0 },
     suites: [
       {
         specs: projects.flatMap((projectName) =>

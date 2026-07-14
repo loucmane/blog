@@ -6,10 +6,10 @@ The canonical target architecture is [Owner-Operated CMS-less Magazine Foundatio
 
 ## Current Repository
 
-- `packages/web` is a stale Next.js prototype with reusable fragments but obsolete product presentation and configuration.
-- `packages/ui` contains some reusable design tokens and theme mechanics; its independent package boundary is under review.
-- `packages/backend` is a placeholder Express demo and is not the accepted backend.
-- `packages/shared` is incomplete and lacks a package manifest.
+- `packages/web` is the single product workspace for the public magazine and protected owner experience.
+- The design system is app-local owned source using Tailwind CSS 4 and selected stable Base UI primitives.
+- The former standalone UI build, Express placeholder, and incomplete shared package were removed after consumer and replacement verification.
+- Product persistence, content workflows, and service adapters remain future roadmap work; removing placeholders does not imply those capabilities exist.
 
 ## Target Direction
 

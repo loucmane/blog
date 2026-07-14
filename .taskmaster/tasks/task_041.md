@@ -2,9 +2,9 @@
 
 **Title:** Modernize Tailwind shadcn and Workspace Boundaries
 
-**Status:** pending
+**Status:** done
 
-**Dependencies:** 40
+**Dependencies:** 40 ✓, 69 ✓
 
 **Priority:** high
 

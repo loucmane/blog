@@ -4,7 +4,7 @@ This repository is being revived as a premium magazine and blog with an app-owne
 
 ## Current Status
 
-The checked-in application is a stale prototype and is not the target product. Task 33 is establishing canonical product truth, validating architecture, reconciling the delivery roadmap, recording the old baseline, and modernizing the foundation in reversible pull requests.
+The repository now contains a verified Next.js foundation for the reader and future owner workspace. Product capabilities remain intentionally incomplete while the modernization roadmap advances in reversible pull requests.
 
 No legacy animal-foundation, "Mom's Blog," generic demo, or Git/MDX publishing requirement is authoritative.
 
@@ -21,14 +21,11 @@ No legacy animal-foundation, "Mom's Blog," generic demo, or Git/MDX publishing r
 
 ## Repository Shape
 
-The current pnpm workspace contains:
+The pnpm workspace contains one product package:
 
-- `packages/web` — stale Next.js reader prototype; intended to become the public magazine and owner workspace.
-- `packages/ui` — small shared theme/component package under review for consolidation into an app-local design system.
-- `packages/backend` — placeholder Express API scaffold; not accepted as the target backend.
-- `packages/shared` — incomplete shared source without an independent package manifest.
+- `packages/web` — the full-stack Next.js application for the public magazine and protected owner workspace. Its Tailwind theme and shadcn-style components are app-local, owned source.
 
-The target architecture and package boundaries are provisional until the documented spikes and pre-upgrade baseline are complete.
+The obsolete standalone UI build, Express placeholder, and incomplete shared package have been removed. New package boundaries require a proven second consumer or an independently deployable runtime.
 
 ## Delivery Rules
 

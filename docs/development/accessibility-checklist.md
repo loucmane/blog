@@ -1,5 +1,7 @@
 # Accessibility Checklist
 
+> **Superseded historical checklist (Task 41, 2026-07-14).** This WCAG 2.1/four-theme/component-demo checklist is retained for historical context, not current acceptance. The project target is WCAG 2.2 AA; use `docs/development/accessibility-test-results.md`, `docs/architecture/design-system.md`, the supported Playwright/axe capability, and task-specific acceptance criteria.
+
 This document provides comprehensive accessibility testing guidelines for all components in the Animal Protection Foundation blog.
 
 ## Core Accessibility Requirements

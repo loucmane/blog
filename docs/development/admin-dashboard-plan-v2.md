@@ -1,5 +1,7 @@
 # Admin Dashboard Implementation Plan v2
 
+> **Superseded historical proposal (Task 41, 2026-07-14).** This document is retained only as legacy discovery material. Its animal-foundation product, Next.js 15, BlockNote, NextAuth, Vercel KV/Blob, and vendor choices are not approved architecture. Use the canonical PRD, `docs/architecture/cmsless-magazine-foundation.md`, and Tasks 42–43 for current decisions.
+
 ## Overview
 A custom, intuitive content management dashboard for non-technical users to manage the Animal Protection Foundation blog. Built with Next.js 15, shadcn/ui, and BlockNote.js for a delightful editing experience.
 

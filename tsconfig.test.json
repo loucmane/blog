@@ -7,9 +7,7 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
-      "@/*": ["./packages/web/src/*"],
-      "@minniewinnie/ui": ["./packages/ui/src/index.ts"],
-      "@minniewinnie/ui/*": ["./packages/ui/src/*"]
+      "@/*": ["./packages/web/src/*"]
     },
     "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   },

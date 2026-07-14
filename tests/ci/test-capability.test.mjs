@@ -78,25 +78,28 @@ test('denies a removed direct test dependency', () => {
   assert.match(evaluateCapability('unit', sources).errors.join('\n'), /vitestDirect/)
 })
 
-test('denies a missing representative package suite', () => {
+test('denies a missing app-local design-system suite', () => {
   const sources = cloneSources()
-  sources.files = sources.files.filter((file) => !file.startsWith('packages/backend/'))
+  sources.files = sources.files.filter((file) => !file.startsWith('packages/web/src/components/'))
 
   for (const file of Object.keys(sources.testSources)) {
-    if (file.startsWith('packages/backend/')) delete sources.testSources[file]
+    if (file.startsWith('packages/web/src/components/')) delete sources.testSources[file]
   }
 
-  assert.match(evaluateCapability('unit', sources).errors.join('\n'), /backendTestsActive/)
+  assert.match(
+    evaluateCapability('unit', sources).errors.join('\n'),
+    /appLocalDesignSystemTestsActive/,
+  )
 })
 
-test('denies a browser-like backend environment and missing DOM environment declaration', () => {
+test('denies a browser-wide default environment and missing DOM environment declaration', () => {
   const sources = cloneSources()
   sources.configs['vitest.config.ts'] = sources.configs['vitest.config.ts'].replace(
     "environment: 'node'",
     "environment: 'jsdom'",
   )
-  sources.testSources['packages/ui/src/components/Button/Button.test.tsx'] = sources.testSources[
-    'packages/ui/src/components/Button/Button.test.tsx'
+  sources.testSources['packages/web/src/components/theme-menu.test.tsx'] = sources.testSources[
+    'packages/web/src/components/theme-menu.test.tsx'
   ].replace('// @vitest-environment jsdom', '')
 
   const errors = evaluateCapability('unit', sources).errors.join('\n')
@@ -106,9 +109,9 @@ test('denies a browser-like backend environment and missing DOM environment decl
 
 test('denies skipped unit or browser suites', () => {
   const unit = cloneSources()
-  unit.testSources['packages/ui/src/components/Button/Button.test.tsx'] = unit.testSources[
-    'packages/ui/src/components/Button/Button.test.tsx'
-  ].replace("it('exposes", "it.skip('exposes")
+  unit.testSources['packages/web/src/components/theme-menu.test.tsx'] = unit.testSources[
+    'packages/web/src/components/theme-menu.test.tsx'
+  ].replace("it('applies", "it.skip('applies")
   assert.match(evaluateCapability('unit', unit).errors.join('\n'), /noDisabledUnitTests/)
 
   const browser = cloneSources()
@@ -144,20 +147,24 @@ test('recognizes active matrix tests without treating their data call as a test'
   )
 })
 
-test('requires both named critical browser journeys', () => {
+test('requires every named critical browser journey', () => {
   assert.deepEqual(criticalBrowserJourneys, [
     'serves the reader shell and enforces the accessibility baseline',
     'keeps the theme chooser operable from the keyboard',
+    'preserves forced-colors focus and reduced-motion behavior',
   ])
-  const sources = cloneSources()
-  sources.testSources['tests/e2e/homepage.spec.ts'] = sources.testSources[
-    'tests/e2e/homepage.spec.ts'
-  ].replace(criticalBrowserJourneys[0], 'serves a renamed shell')
+  for (const journey of criticalBrowserJourneys) {
+    const sources = cloneSources()
+    sources.testSources['tests/e2e/homepage.spec.ts'] = sources.testSources[
+      'tests/e2e/homepage.spec.ts'
+    ].replace(journey, `renamed: ${journey}`)
 
-  assert.match(
-    evaluateCapability('browser', sources).errors.join('\n'),
-    /criticalBrowserJourneysActive/,
-  )
+    assert.match(
+      evaluateCapability('browser', sources).errors.join('\n'),
+      /criticalBrowserJourneysActive/,
+      journey,
+    )
+  }
 })
 
 test('requires the exact browser project contract and every named unit foundation', () => {
