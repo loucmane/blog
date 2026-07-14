@@ -47,6 +47,16 @@ Primary sources: <https://tailwindcss.com/blog/tailwindcss-v4-3>, <https://tailw
 
 After strict verification passed, `aegis log` rejected the new verification event because the advisory-only pending queue exists. The managed advisory contract says these events are preserved audit evidence and require no reconciliation. No event was consumed, rewritten, or drained. Task 41 records this ordering/reconciliation defect without weakening verification or mutating the queue.
 
+## Current-Main Reconciliation — 2026-07-15
+
+- Created `/tmp/blog-task41-continuation` from the published Task 41 head and merged `origin/main` at `e258426` with normal history. The only conflicts were generated Taskmaster, plan-sync, and current-pointer surfaces. Main's complete 38-task graph and Tasks 69/70 were preserved; Task 41 remains `done` and now retains dependency `69` in addition to `40`.
+- The live Task 41 worktree and its owner-managed Aegis and `.codex/` state were not modified, staged, restored, traversed, or included. Relative to current main, the reconciled tree has zero Aegis runtime, workflow, authority, or managed-governance differences.
+- The authoritative runtime was Node `24.18.0`, pnpm `11.11.0`, and Corepack `0.35.0` via `fnm exec`. The shell's unrelated Node 22 default was detected and not used for acceptance. Two frozen installs left `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` byte-identical.
+- Passed 13 runtime contracts, 29 quality contracts, 7 security-hotfix contracts, both capability modes, typecheck, ESLint, Prettier, 61 unit/integration tests, unchanged coverage (93.03% statements, 91.86% branches, 93.93% functions, 93.42% lines), production build, HTTP 200 smoke, and all 18 desktop/mobile Playwright and accessibility journeys.
+- Passed 65 auto-merge policy tests, 46 workflow-contract tests, 29 cross-agent skill-platform tests, Taskmaster health for 38 tasks/3 subtasks/79 dependencies, full dependency validation, zero-advisory dependency policy, checksum-verified actionlint `1.7.12`, and an isolated Gitleaks `8.30.1` scan of 64 explicit Task 41 files with no findings.
+- Clean-head Aegis capsule validation passed. CI-mode witness at `79cf385` accounted for scope, head, done-flip containment, and the exact seven deleted tests; Task 69's trusted policy accepted the report as `attended_review_required` with no reasons. Clean-head legacy guard and all five completed-state regression tests passed.
+- The pre-closeout strict Aegis report at the reviewed Task 41 implementation head remains the strict verification evidence. Strict verification was not rerun in the isolated checkout because ignored worktree-local Aegis state is intentionally absent and invoking the installed verifier would mutate managed verification state, contrary to the owner's no-Aegis-mutation boundary. Final delivery relies on the clean-head capsule, CI witness policy, guard suite, hosted protected checks, and the preserved strict report rather than fabricating or copying `.aegis/state`.
+
 ## Delivery Gates
 
 - Aegis closeout passed with zero required failures and zero warnings; Taskmaster Task 41 is `done`, and the completed archive passes legacy guard validation.

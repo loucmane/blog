@@ -23,10 +23,11 @@
 - Both independent read-only reviewers report no remaining actionable findings. Final closeout and explicit staging review passed; hosted protected CI remains.
 - The web package scripts are unchanged, but the root `typecheck` script intentionally drops the deleted `@minniewinnie/ui` build stage. Because package scripts are not semantically identical to protected `main`, controlled auto-merge must deny this PR and delivery must stop at attended merge review after CI.
 - Final-head witness accounts for every changed path and passes repository, scope, verification-at-head, and done-flip checks. Its only failure is the intentional fail-closed escalation of seven deleted obsolete tests; replacement deterministic and browser coverage passes, so this escalation must be reviewed attended rather than suppressed.
+- Current main was reconciled through merge commit `79cf385` in `/tmp/blog-task41-continuation`. The live Task 41 worktree, owner-managed Aegis rollout, and `.codex/` state were not modified, staged, restored, or inspected. Task 69's reviewed witness policy accepts the exact seven-test deletion set as `attended_review_required`; it does not suppress or auto-approve the escalation.
 
 ## Next Steps
-1. Commit the explicitly staged Task 41 allowlist, push the task branch, and open the PR.
-2. Wait for hosted checks, revalidate the exact head, full changed-path inventory, package-script delta, and seven witness test-deletion escalations, then stop at attended merge review.
+1. Push the clean continuation to the existing Task 41 PR branch without force and wait for all protected checks.
+2. Revalidate the exact head, full changed-path inventory, package-script delta, review threads, and seven witness test-deletion escalations, then stop at attended merge review.
 
 ## Important Context
 - Taskmaster is optional unless this task marks it required in `.aegis/state/current-work.json`.
@@ -47,6 +48,7 @@
 - **2026-07-14 17:56 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:aegis:witness|E:.aegis/reports/witness-report.json] Recorded passing strict verification and scoped external-ledger witness while preserving the advisory queue and its log-reconciliation defect; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 - **2026-07-14 18:13 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:verification|E:docs/ai/work-tracking/active/20260714-task41-modernize-tailwind-shadcn-workspaces-ACTIVE/reports/modernize-tailwind-shadcn-workspaces/task-verification.md] Closed the first independent-review findings and passed the complete updated local matrix, including 18/18 browser journeys and strict Aegis verification with advisory evidence preserved; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 - **2026-07-14 18:21 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:independent-review|E:docs/ai/work-tracking/active/20260714-task41-modernize-tailwind-shadcn-workspaces-ACTIVE/reports/modernize-tailwind-shadcn-workspaces/task-verification.md] Both independent read-only reviewers returned no remaining actionable findings after the adversarial remediations; authority=standing-grant:sota-magazine-2026-autonomy-v2.
+- **2026-07-15 00:18 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:delivery-revalidation|E:docs/ai/work-tracking/archive/20260714-task41-modernize-tailwind-shadcn-workspaces-COMPLETED/reports/modernize-tailwind-shadcn-workspaces/task-verification.md] Revalidated Task 41 after current-main reconciliation: product implementation bytes remain the independently reviewed Task 41 changes, all deterministic product/governance/security gates pass, and the only retained delivery escalation is the exact seven-test attended review; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 8, "last_event_id": "5f72a30d17e84565b1e350e9af5ab141", "schema": "legacy-shadow-sweh-projection-v1"} -->

@@ -60,6 +60,7 @@ emergency_bypass: false
 
 ## Amendments & Versioning
 - 2026-07-14 - Task 41 kickoff created by Aegis.
+- 2026-07-15 - Reconciled the completed Task 41 branch with `origin/main` at `e258426` in an isolated continuation worktree. Preserved main's Tasks 69/70 and managed runtime, retained Task 41's completed archive and pointers, and revalidated the complete product and protected-CI-equivalent matrix without touching the owner-managed live worktree or its `.codex/` state.
 
 ## Continuation & Handoff
 - Next owner: project owner

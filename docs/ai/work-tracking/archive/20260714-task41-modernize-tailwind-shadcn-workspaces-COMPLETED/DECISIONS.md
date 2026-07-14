@@ -13,11 +13,13 @@ Record decisions before implementation, including options considered, rationale,
 - 2026-07-14 - Use Base UI only for the representative app-local theme menu. Delete the unconsumed Radix/demo component inventory rather than translating it wholesale, and add future primitives only with an actual owner or reader consumer plus focused tests.
 - 2026-07-14 - Support system, light, and dark as product themes. Treat reduced motion and forced colors as independent accessibility behavior instead of preserving the obsolete gentle/high-contrast product modes.
 - 2026-07-14 - Collapse the workspace to root plus `packages/web`; remove the unconsumed Express backend, shared type, standalone UI package, exposed component-demo routes, and duplicate toolchains. Tasks 42+ will introduce only architecture-approved product boundaries.
+- 2026-07-15 - Reconcile the published Task 41 branch through a separate clean worktree and a normal merge from current main. Do not reset, stash, restore, or inspect the dirty live worktree; preserve its owner-managed Aegis rollout and `.codex/` state. Keep main's Task 69 dependency and Task 70 managed-runtime tree while changing no Task 41 implementation decision.
 
 ## Progress Log
 - **2026-07-14 17:20 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:aegis:kickoff|E:.aegis/state/current-work.json] Decisions log initialized by Aegis kickoff.
 - **2026-07-14 17:23 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:scope-decision|E:docs/decisions/0005-app-local-design-system.md] Selected the reversible app-local cutover boundary and explicit no-big-bang primitive migration rule pending exact registry evidence; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 - **2026-07-14 17:49 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:stack-decision|E:docs/decisions/0005-app-local-design-system.md] Accepted the exact stable package chain, app-local ownership, CSS-first Tailwind 4 configuration, Base UI representative primitive, and two-importer workspace boundary; authority=standing-grant:sota-magazine-2026-autonomy-v2.
+- **2026-07-15 00:18 CEST** - [S:20260714|W:task41-modernize-tailwind-shadcn-workspaces|H:agent:reconciliation-decision|E:git:79cf385] Chose a non-rewriting merge continuation so PR #34 preserves published history, receives Tasks 69/70 intact, and excludes the live worktree's uncommitted infrastructure state; authority=standing-grant:sota-magazine-2026-autonomy-v2.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
 <!-- AEGIS:projection-state {"event_count": 8, "last_event_id": "5f72a30d17e84565b1e350e9af5ab141", "schema": "legacy-shadow-sweh-projection-v1"} -->

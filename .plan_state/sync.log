@@ -808,5 +808,11 @@
     "plan_hash": "185c8380b3f69bea7b6477fa46b79f137b1c8ddc45d2b8ef142ab0a4d507f68c",
     "tracker_hash": "bdc63c255e31427835a34010778e060a53d873fc02c51d9a2433681838c089f9",
     "synced_at": "2026-07-15T00:02:54.705018+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task41-modernize-tailwind-shadcn-workspaces.md",
+    "plan_hash": "58e888babb990ec95c32749379c6c1daf1c02a9e88e969e1f5cb167d6d8d10a4",
+    "tracker_hash": "8292eb0a35d13379e5e1ea72465d115c754eae0531d4fca38a88e955738a6c04",
+    "synced_at": "2026-07-15T00:19:44.179413+02:00"
   }
 ]
