@@ -1,7 +1,6 @@
 import Link from 'next/link'
 
-import { ThemeSwitcher } from '@minniewinnie/ui'
-
+import { ThemeMenu } from '@/components/theme-menu'
 import { listPublishedFrameworkStories } from '@/lib/framework-content'
 
 export default function HomePage() {
@@ -15,7 +14,7 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold text-primary">Magazine Foundation</h1>
             <p className="text-sm text-muted-foreground">Portable, owner-operated publishing</p>
           </div>
-          <ThemeSwitcher />
+          <ThemeMenu />
         </div>
       </header>
 

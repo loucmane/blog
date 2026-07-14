@@ -116,12 +116,13 @@
         "description": "Migrate styling and owned components, preserve intentional design mechanics, and resolve obsolete package boundaries without a big-bang visual rewrite.",
         "details": "Upgrade Tailwind and app-local shadcn/Base UI progressively. Audit every UI export/customization, visually and accessibly verify changes, remove duplicate toolchains, and remove backend/shared/UI scaffolds only after consumers and replacement behavior are proven.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "40"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-14T16:26:32.181Z"
       },
       {
         "id": "42",
@@ -564,9 +565,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-14T12:12:01.620Z",
+      "lastModified": "2026-07-14T16:26:32.181Z",
       "taskCount": 36,
-      "completedCount": 20,
+      "completedCount": 21,
       "tags": [
         "master"
       ]

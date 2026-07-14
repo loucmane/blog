@@ -1,5 +1,7 @@
 # AI Session Continuity System - Feasibility Analysis
 
+> **Superseded historical proposal (Task 41, 2026-07-14).** Do not execute the shell aliases, hooks, broad `git add -A`, ad-hoc branch, or session-file procedures below. Current workflow authority is Aegis plus Taskmaster and the task-scoped Git/PR process in `AGENTS.md`, `.aegis/contract.md`, and `docs/development/workflow.md`.
+
 ## Executive Summary
 
 Based on the team feedback, here's what's **immediately feasible** vs. what requires more consideration. The good news: we can implement meaningful improvements **this week** that will solve 80% of the pain points.

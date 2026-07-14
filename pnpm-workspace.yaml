@@ -1,5 +1,5 @@
 packages:
-  - 'packages/*'
+  - 'packages/web'
 
 engineStrict: true
 nodeVersion: 24.18.0

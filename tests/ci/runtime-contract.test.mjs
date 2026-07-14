@@ -66,12 +66,11 @@ test('rejects workspace script or dependency declaration drift', () => {
   assert.match(evaluateRuntimeContract(scripts).join('\n'), /workspace package scripts/)
 
   const dependencies = sources()
-  dependencies.packageJson.dependencies['framer-motion'] = '^99.0.0'
-  dependencies.packageJsons['package.json'].dependencies['framer-motion'] = '^99.0.0'
+  dependencies.packageJsons['packages/web/package.json'].dependencies['framer-motion'] = '^99.0.0'
   assert.match(evaluateRuntimeContract(dependencies).join('\n'), /dependency declarations/)
 
   const bundled = sources()
-  bundled.packageJsons['packages/backend/package.json'].bundleDependencies = ['express']
+  bundled.packageJsons['packages/web/package.json'].bundleDependencies = ['next']
   assert.match(evaluateRuntimeContract(bundled).join('\n'), /manifest semantics/)
 })
 

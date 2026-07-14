@@ -1,6 +1,13 @@
+import { fileURLToPath } from 'node:url'
+
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./packages/web/src', import.meta.url)),
+    },
+  },
   oxc: {
     jsx: {
       importSource: 'react',
@@ -18,10 +25,10 @@ export default defineConfig({
     coverage: {
       exclude: ['**/*.test.*', '**/*.spec.*', '**/index.*'],
       include: [
-        'packages/backend/src/controllers/featureController.js',
-        'packages/ui/src/components/Button/Button.tsx',
-        'packages/ui/src/tokens/breakpoints.ts',
-        'packages/ui/src/tokens/colors.ts',
+        'packages/web/src/components/theme-menu.tsx',
+        'packages/web/src/lib/framework-content.ts',
+        'packages/web/src/lib/request-security.ts',
+        'packages/web/src/lib/site-url.ts',
         'packages/web/src/utils/color-converter.ts',
       ],
       provider: 'v8',

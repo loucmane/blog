@@ -20,6 +20,20 @@ async function scanSeriousAccessibilityViolations(page: Page) {
   )
 }
 
+async function waitForThemeMenuToSettle(page: Page) {
+  const menu = page.getByRole('menu', { name: 'Color theme' })
+  await expect(menu).toBeVisible()
+  await expect
+    .poll(() =>
+      menu.evaluate((element) => ({
+        opacity: window.getComputedStyle(element).opacity,
+        starting: element.hasAttribute('data-starting-style'),
+      })),
+    )
+    .toEqual({ opacity: '1', starting: false })
+  return menu
+}
+
 function previewTokenFor(slug: string): string {
   const token = createPreviewToken(slug, previewTokenSecret)
   if (!token) {
@@ -89,15 +103,76 @@ test('serves the reader shell and enforces the accessibility baseline', async ({
 
 test('keeps the theme chooser operable from the keyboard', async ({ page }) => {
   await page.goto('/')
+  await page.evaluate(() => window.localStorage.setItem('theme', 'system'))
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.reload()
 
-  const lightTheme = page.getByRole('radio', { name: /light theme/i })
-  const darkTheme = page.getByRole('radio', { name: /dark theme/i })
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  const trigger = page.getByRole('button', { name: 'Choose color theme' })
+  await expect(trigger).toBeEnabled()
+  await page.keyboard.press('Tab')
+  await expect(trigger).toBeFocused()
+  await page.keyboard.press('Enter')
 
-  await lightTheme.focus()
-  await page.keyboard.press('ArrowRight')
+  await waitForThemeMenuToSettle(page)
+  let systemTheme = page.getByRole('menuitemradio', { name: /system theme/i })
+  await expect(systemTheme).toHaveAttribute('aria-checked', 'true')
+  await expect(systemTheme).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('menu', { name: 'Color theme' })).toBeHidden()
+  await expect(trigger).toBeFocused()
 
+  await page.keyboard.press('Enter')
+  await waitForThemeMenuToSettle(page)
+  systemTheme = page.getByRole('menuitemradio', { name: /system theme/i })
+  await expect(systemTheme).toBeFocused()
+  expect(await scanSeriousAccessibilityViolations(page)).toEqual([])
+
+  const darkTheme = page.getByRole('menuitemradio', { name: /dark theme/i })
+  await systemTheme.focus()
+  await page.keyboard.press('ArrowUp')
   await expect(darkTheme).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+
+  await page.reload()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await expect(trigger).toBeEnabled()
+  await page.keyboard.press('Tab')
+  await expect(trigger).toBeFocused()
+  await page.keyboard.press('Enter')
+  await waitForThemeMenuToSettle(page)
   await expect(darkTheme).toHaveAttribute('aria-checked', 'true')
+  expect(await scanSeriousAccessibilityViolations(page)).toEqual([])
+})
+
+test('preserves forced-colors focus and reduced-motion behavior', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark', forcedColors: 'active', reducedMotion: 'reduce' })
+  await page.goto('/')
+
+  const trigger = page.getByRole('button', { name: 'Choose color theme' })
+  await expect(trigger).toBeEnabled()
+  await page.keyboard.press('Tab')
+  await expect(trigger).toBeFocused()
+  await expect(page.locator('html')).not.toHaveClass(/gentle|high-contrast/)
+
+  const styles = await trigger.evaluate((element) => {
+    const computed = window.getComputedStyle(element)
+    return {
+      animationDuration: computed.animationDuration,
+      outlineStyle: computed.outlineStyle,
+      outlineWidth: computed.outlineWidth,
+      transitionDuration: computed.transitionDuration,
+    }
+  })
+
+  expect(styles.outlineStyle).toBe('solid')
+  expect(styles.outlineWidth).toBe('2px')
+  for (const duration of [styles.animationDuration, styles.transitionDuration]) {
+    expect(Math.max(...duration.split(',').map((value) => Number.parseFloat(value)))).toBeLessThan(
+      0.001,
+    )
+  }
 })
 
 test('server-renders a canonical story with responsive image and hardened headers', async ({

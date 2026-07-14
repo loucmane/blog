@@ -1,5 +1,7 @@
 # Codebase Patterns Guide
 
+> **Superseded historical reference (Task 41, 2026-07-14).** Do not use the patterns below as current implementation authority. They describe removed `packages/ui`, stale product terminology, and pre-migration framework assumptions. Current boundaries are documented in `docs/architecture/overview.md`, `docs/architecture/monorepo-structure.md`, `docs/architecture/design-system.md`, and `docs/development/workflow.md`.
+
 > **Last Updated**: 2025-06-13
 > **Purpose**: Comprehensive patterns documentation for the Animal Protection Foundation blog codebase
 > **Scope**: All code patterns from file naming to advanced Next.js 15 / React 19 patterns

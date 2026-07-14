@@ -7,7 +7,7 @@ const eslint = new ESLint({ cwd: new URL('../..', import.meta.url).pathname })
 
 async function lintReact(source) {
   const [result] = await eslint.lintText(source, {
-    filePath: 'packages/ui/src/components/LintContract.tsx',
+    filePath: 'packages/web/src/components/LintContract.tsx',
   })
   return result.messages
 }

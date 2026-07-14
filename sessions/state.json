@@ -1,5 +1,13 @@
 {
-  "current": "2026-07-14-001-task40-migrate-react-next-framework-build-system.md",
+  "current": "2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces.md",
+  "current_path": "sessions/2026/07/2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces.md",
   "paused": [],
-  "updated_at": "2026-07-14T08:11:15+02:00"
+  "schema_version": "1.0.0",
+  "task": {
+    "id": "41",
+    "slug": "modernize-tailwind-shadcn-workspaces",
+    "status": "in-progress",
+    "title": "Modernize Tailwind shadcn and Workspace Boundaries"
+  },
+  "updated_at": "2026-07-14T17:49:05+02:00"
 }

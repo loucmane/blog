@@ -46,7 +46,7 @@ ESLint `10.6.0` is the latest stable release reported by the official registry a
 | TypeScript → typescript-eslint | TypeScript `6.0.3`; typescript-eslint `8.63.0`       | Official support is TypeScript `<6.1.0`; pass.                                                         |
 | ESLint → typescript-eslint     | ESLint `10.6.0`                                      | Official support includes ESLint `^10.0.0`; pass.                                                      |
 | ESLint → React semantics       | `@eslint-react/eslint-plugin` `5.9.5`                | Requires Node 22+, ESLint 10.3+, and TypeScript 5+; missing-key contract passes.                       |
-| TypeScript → package builds    | One exact root compiler                              | Web no-emit, UI declaration emit, and test/config typecheck pass.                                      |
+| TypeScript → package builds    | One exact root compiler                              | Web no-emit and test/config typecheck pass; Task 41 removed the duplicate UI declaration build.         |
 | Vitest → Vite                  | Vitest `4.1.10`; Vite `8.1.4`                        | Vite is used only by the test runner; no product Vite app exists.                                      |
 | Vite 8 → TSX                   | Oxc automatic React JSX in `vitest.config.ts`        | Overrides the product root's intentional `jsx: preserve` only for tests.                               |
 | Playwright → browser           | Playwright `1.61.1`; pinned Chromium `149.0.7827.55` | Explicit install and desktop/mobile runs pass locally.                                                 |
@@ -58,8 +58,7 @@ ESLint `10.6.0` is the latest stable release reported by the official registry a
 - ESLint flat config applies core recommended rules, typescript-eslint recommended rules, modern React semantic rules, React Hooks rules, JSX accessibility rules, Next recommended/Core Web Vitals rules, and Prettier conflict suppression.
 - Type-aware linting is deferred. The TypeScript compiler remains the authoritative semantic check, avoiding duplicated project-service cost in this first reversible batch.
 - React-19-only migrations (`forwardRef`, context provider/useContext modernization) and the existing ThemeProvider effect-state refactor are deferred to Task 40, which owns the React migration. The deterministic missing-list-key rule remains blocking and has a focused contract test.
-- `packages/ui/tailwind.config.ts` and `packages/web/tailwind.config.js` remain narrow temporary ignores because Task 41 owns the Tailwind configuration migration.
-- `jsx-a11y-x/heading-has-content` is disabled only for the shadcn-style `AlertTitle` wrapper false positive. Task 41 owns removal or replacement during the component audit.
+- Task 41 resolved the two temporary Tailwind-config ignores by moving to CSS-first Tailwind 4 and removed the unused `AlertTitle` wrapper plus its file-scoped exception.
 - Existing exported `any` defaults and callback parameters remain source-compatible under one file-scoped `no-explicit-any` bridge. Task 42 owns replacing those obsolete prototype contracts with the canonical content model before Task 42 closes; Task 39 does not silently tighten public APIs to `unknown`.
 - No broad diagnostic suppression, disabled test, or permanent legacy compatibility flag is accepted.
 
@@ -77,7 +76,7 @@ Task 39 therefore records exact rule/impact/selector fingerprints in `tests/e2e/
 
 No rule within the selected WCAG tag set and no DOM subtree is excluded from axe. Every CI event resolves an exact trusted predecessor and exact verification commit. The baseline checker requires the head path, and the base path after bootstrap, to be exactly one non-executable `100644` Git blob, reads content by the tree-reported blob identifier, and fails closed on missing, malformed, symlink, executable, wrong-type, ambiguous, or non-ancestor evidence. The initial bootstrap separately proves that protected main lacked the path and that the new regular blob has the reviewed SHA-256. Fingerprints may only be removed, never added or rewritten, and browser results must still exactly match. This follows Playwright's official guidance to fingerprint specific known issues instead of snapshotting implementation-heavy results or broadly disabling rules. Task 41 must remove each fingerprint as the corresponding contrast defect is fixed.
 
-Test capability cannot be declared solely from package presence. TypeScript-AST contracts reject skip, todo, only, fixme, conditional, expected-failure, and chained modifiers; require both named browser journeys; and require the backend, UI, and web suites. Vitest and Playwright also emit machine-readable results that must contain zero skipped, todo, flaky, unexpected, focused, or failed cases. Both critical browser journeys must pass once in each configured viewport.
+Test capability cannot be declared solely from package presence. TypeScript-AST contracts reject skip, todo, only, fixme, conditional, expected-failure, and chained modifiers; require both named browser journeys; and require app-local design-system plus web domain suites. Vitest and Playwright also emit machine-readable results that must contain zero skipped, todo, flaky, unexpected, focused, or failed cases. Both critical browser journeys must pass once in each configured viewport.
 
 ## Rejected Alternatives
 
@@ -97,7 +96,7 @@ Test capability cannot be declared solely from package presence. TypeScript-AST 
 - Roll back by reverting the Task 39 squash commit, which restores package manifests, lockfile, root scripts, CI stages, tsconfigs, lint/format/test configs, and tests together.
 - No application schema, data, secret, deployment, or production state changes exist.
 - If a hosted-only incompatibility appears, correct it inside Task 39 without weakening the declared check. If correction requires framework or visual migration, stop and assign it to the owning task.
-- Temporary bridges have explicit owners: Task 40 owns the React-19-only lint deferrals; Task 41 owns the two Tailwind-config ignores, the `AlertTitle` exception, and the removal-only color-contrast baseline; Task 42 owns removal of the file-scoped legacy `any` compatibility bridge when the obsolete prototype types are replaced.
+- Temporary bridges have explicit owners: Task 41 resolved the Tailwind-config ignores, `AlertTitle` exception, and empty removal-only color-contrast baseline; Task 42 owns removal of the file-scoped legacy `any` compatibility bridge when the obsolete prototype types are replaced.
 
 ## Acceptance Gates
 

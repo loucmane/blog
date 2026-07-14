@@ -766,5 +766,41 @@
     "plan_hash": "a78afd5b6e29a4e817b6484171b23b36a61d2e702d5a191298b1d1cf1110a93a",
     "tracker_hash": "71c827e7c7158ebd5a2bb2cdaf7b235b15ab79089210ad03e2fae8ce5df42502",
     "synced_at": "2026-07-14T16:42:05.113050+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task41-modernize-tailwind-shadcn-workspaces.md",
+    "plan_hash": "a82c61a66a146066a361234f96a6c1ba9bb2f4a5e675bf00d66321536f7947f5",
+    "tracker_hash": "fbd2f2185ca8aea70192541973ef2b16178eec6734642572726676ce08a29c1a",
+    "synced_at": "2026-07-14T17:50:41.035858+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task41-modernize-tailwind-shadcn-workspaces.md",
+    "plan_hash": "13b6d2396d665022ff189d937f8a6202c32e5da5ffd45b83fcfd772715f5a001",
+    "tracker_hash": "a04307d97a5034ac0bdcb92d430ecdcba10b55ef264d6e11e6d64f83daa48e5e",
+    "synced_at": "2026-07-14T18:12:34.512467+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task41-modernize-tailwind-shadcn-workspaces.md",
+    "plan_hash": "1a419cbfadf8c8765d62cd19c5800e4fd837e51201a1139dc3c6927a4a6d4ee8",
+    "tracker_hash": "63ed893139d9ed431a06f38ee2f2583c665e4671d5670525e3f1f7181951e969",
+    "synced_at": "2026-07-14T18:22:59.116599+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task41-modernize-tailwind-shadcn-workspaces.md",
+    "plan_hash": "2057c444363cf47fd28aa661690f2f9c16fe3ef6f8a8d2b69c5df25367c072a2",
+    "tracker_hash": "8768a4884a2ac1c9514df493121003d391af3c9b9bcbc7c23527ea1522792ef3",
+    "synced_at": "2026-07-14T18:25:45.007353+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task41-modernize-tailwind-shadcn-workspaces.md",
+    "plan_hash": "e8cc73c35cea63f09f5254892ce25c1827a2ad3727833181dd930b3904c8e66f",
+    "tracker_hash": "8768a4884a2ac1c9514df493121003d391af3c9b9bcbc7c23527ea1522792ef3",
+    "synced_at": "2026-07-14T18:28:25.530935+02:00"
+  },
+  {
+    "plan": "plans/2026-07-14-task41-modernize-tailwind-shadcn-workspaces.md",
+    "plan_hash": "e8cc73c35cea63f09f5254892ce25c1827a2ad3727833181dd930b3904c8e66f",
+    "tracker_hash": "467f0c2e8450b4a85afa98185807a29b9a92e3413d1dd7934ccecccf4f912357",
+    "synced_at": "2026-07-14T18:33:38.786218+02:00"
   }
 ]

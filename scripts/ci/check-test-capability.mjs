@@ -48,8 +48,6 @@ export function loadCapabilitySources() {
     files,
     manifests: {
       root: readJson('package.json'),
-      backend: readJson('packages/backend/package.json'),
-      ui: readJson('packages/ui/package.json'),
       web: readJson('packages/web/package.json'),
     },
     task39: tasks.find((task) => String(task.id) === '39'),
@@ -77,34 +75,35 @@ const deniedTestModifiers = new Set([
 export const criticalBrowserJourneys = Object.freeze([
   'serves the reader shell and enforces the accessibility baseline',
   'keeps the theme chooser operable from the keyboard',
+  'preserves forced-colors focus and reduced-motion behavior',
 ])
 export const capabilityModes = Object.freeze(['unit', 'browser'])
 export const capabilityCommand = 'node scripts/ci/check-test-capability.mjs'
 export const expectedBrowserProjects = Object.freeze(['desktop-chromium', 'mobile-chromium'])
 export const criticalUnitContracts = Object.freeze([
   {
-    file: 'packages/backend/tests/featureController.test.js',
-    title: 'runs under the server Node environment',
+    file: 'packages/web/src/components/theme-menu.test.tsx',
+    title: 'applies a selected color theme from the keyboard-accessible menu',
   },
   {
-    file: 'packages/ui/src/components/Button/Button.test.tsx',
-    title: 'exposes an accessible name and handles owner interaction',
+    file: 'packages/web/src/lib/framework-content.test.ts',
+    title: 'lists only published stories on reader surfaces',
   },
   {
-    file: 'packages/ui/src/components/ThemeSwitcher/ThemeSwitcher.test.tsx',
-    title: 'uses the first custom theme when the resolved theme is not available',
+    file: 'packages/web/src/lib/request-security.test.ts',
+    title: 'binds short-lived preview credentials and browser scope to one slug and purpose',
   },
   {
-    file: 'packages/ui/src/tokens/tokens.test.ts',
-    title: 'converts RGB channels to a hexadecimal color',
+    file: 'packages/web/src/lib/security-headers.test.ts',
+    title: 'emits the complete baseline header set',
+  },
+  {
+    file: 'packages/web/src/lib/site-url.test.ts',
+    title: 'keeps build-time canonical and server runtime origins as separate contracts',
   },
   {
     file: 'packages/web/src/utils/color-converter.test.ts',
     title: 'rejects missing or nonnumeric channels',
-  },
-  {
-    file: 'packages/web/tests/integration/ui-package-imports.test.ts',
-    title: 'makes design tokens importable',
   },
 ])
 
@@ -221,11 +220,7 @@ export function evaluateCapability(mode, sources) {
       vitestConfigPresent: files.includes('vitest.config.ts'),
       vitestDefaultsToNode: /environment:\s*['"]node['"]/.test(configs['vitest.config.ts']),
       testTypecheckPresent: files.includes('tsconfig.test.json'),
-      backendTestsActive: activeSuite('packages/backend/'),
-      backendEnvironmentAsserted: /typeof document\)\.toBe\(['"]undefined['"]\)/.test(
-        testSources['packages/backend/tests/featureController.test.js'] ?? '',
-      ),
-      uiTestsActive: activeSuite('packages/ui/'),
+      appLocalDesignSystemTestsActive: activeSuite('packages/web/src/components/'),
       webTestsActive: activeSuite('packages/web/'),
       criticalUnitContractsActive: criticalUnitContracts.every(({ file, title }) =>
         testAnalyses[file]?.activeTitles.includes(title),

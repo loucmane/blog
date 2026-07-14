@@ -1,168 +1,57 @@
-# Web Package - Animal Protection Foundation Blog
+# Magazine Web Application
 
-## Overview
+`packages/web` is the single deployable Next.js application for the owner-operated magazine foundation.
 
-The main Next.js application for the Animal Protection Foundation Blog. This package contains the user-facing website with rescue stories, field reports, and donation capabilities.
+## Current Foundation
 
-## ✅ Current Status
+- Next.js `16.2.10` and React `19.2.7`
+- Tailwind CSS `4.3.2` with CSS-first configuration
+- app-local, project-owned component source
+- Base UI `1.6.0` for deliberately adopted accessible primitives
+- `next-themes` for system, light, and dark color preferences
+- Vitest, Testing Library, Playwright, and axe verification
 
-**Theme System Migration Complete**
+The application does not consume a standalone UI package. Styling tokens, theme behavior, and owned components live with their only current consumer. New package boundaries require a proven second consumer and an architecture decision.
 
-- Successfully migrated to use @minniewinnie/ui package for all theme functionality
-- All design tokens, themes, and components now imported from UI package
-- Theme switching fully operational with 4 themes (light, dark, contrast, gentle)
-- Zero duplicate theme code - fully consolidated in UI package
+## Source Shape
 
-## Architecture
-
-```
-web/
+```text
+packages/web/
+├── public/                    # application-owned static assets
 ├── src/
-│   ├── app/              # Next.js App Router
-│   │   ├── (routes)/     # Page routes
-│   │   ├── api/          # API routes
-│   │   └── layout.tsx    # Root layout
-│   ├── components/       # React components (app-specific + shadcn/ui)
-│   │   ├── ui/          # shadcn/ui components (copy-paste)
-│   │   ├── content/     # Content-specific components
-│   │   └── layout/      # Layout components
-│   ├── lib/             # Utilities and helpers
-│   ├── hooks/           # Custom React hooks
-│   └── types/           # TypeScript types
-├── content/             # MDX content files
-│   ├── blog/           # Blog posts
-│   ├── stories/        # Rescue stories
-│   ├── reports/        # Field reports
-│   └── appeals/        # Emergency appeals
-└── public/             # Static assets
+│   ├── app/                   # App Router pages and route handlers
+│   ├── components/            # app-local owned components
+│   ├── domain/                # framework-independent domain contracts
+│   ├── lib/                   # server/client helpers and security boundaries
+│   └── utils/                 # focused utilities
+├── tests/
+│   ├── design-system/         # styling and workspace contracts
+│   └── framework/             # Next.js boundary contracts
+├── components.json            # shadcn-owned source configuration
+├── next.config.ts
+└── postcss.config.mjs
 ```
 
-## Key Features
+## Commands
 
-### Content Management
-
-- MDX-based content with React components
-- Git-based workflow for version control
-- Content sensitivity classification (Level 1-3)
-- Automatic metadata generation
-
-### Performance Optimizations
-
-- Static Site Generation (SSG)
-- Automatic image optimization
-- Code splitting and tree shaking
-- Edge caching via Vercel
-
-### User Experience
-
-- Mobile-first responsive design
-- Progressive disclosure for sensitive content
-- Accessibility (WCAG 2.1 AA)
-- Dark mode support
-
-### Integrations
-
-- Donation platforms (Stripe, PayPal)
-- Newsletter subscriptions
-- Analytics tracking
-- Social media sharing
-
-## Content Sensitivity System
-
-### Level 1 - Hope/Progress (70%)
-
-- Positive outcomes and success stories
-- No content warnings needed
-- Full social sharing enabled
-
-### Level 2 - Medical/Rescue (25%)
-
-- Active rescue operations
-- Content warnings displayed
-- Educational context required
-
-### Level 3 - Crisis/Emergency (5%)
-
-- Urgent situations
-- Age-gating (18+)
-- Limited sharing options
-
-## Development
+Run commands from the repository root with Node `24.18.0` and pnpm `11.11.0`:
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Run development server
-pnpm dev
-
-# Build for production
-pnpm build
-
-# Run production build
-pnpm start
-
-# Type checking
-pnpm typecheck
-
-# Linting
-pnpm lint
+pnpm --filter web dev
+pnpm --filter web typecheck
+pnpm --filter web lint
+pnpm --filter web test
+pnpm --filter web build
 ```
 
-## Content Creation
+The protected root verification commands remain authoritative for delivery.
 
-### Creating a Blog Post
+## Design-System Policy
 
-1. Create new MDX file in `content/blog/`
-2. Add frontmatter:
+- Keep semantic tokens in `src/app/globals.css`.
+- Keep reusable class composition in `src/lib/utils.ts`.
+- Add an owned primitive only when a reader or owner journey needs it.
+- Review upstream shadcn/Base UI source rather than regenerating customized components blindly.
+- Require focused behavior, accessibility, dark-mode, and responsive evidence for every interactive primitive.
 
-```mdx
----
-title: 'Rescue Story Title'
-date: '2024-01-15'
-excerpt: 'Brief description'
-category: 'rescue'
-tags: ['dogs', 'medical', 'success']
-author: 'field-team'
-sensitivity: 1 # 1, 2, or 3
-featured: true
----
-```
-
-3. Write content using Markdown and React components
-4. Commit and push to trigger deployment
-
-## Environment Variables
-
-```env
-# Analytics
-NEXT_PUBLIC_GA_ID=
-NEXT_PUBLIC_VERCEL_ANALYTICS_ID=
-
-# Donations
-STRIPE_PUBLIC_KEY=
-STRIPE_SECRET_KEY=
-
-# Newsletter
-CONVERTKIT_API_KEY=
-CONVERTKIT_FORM_ID=
-
-# CRM
-CRM_API_ENDPOINT=
-CRM_API_KEY=
-```
-
-## Deployment
-
-Automatic deployment via Vercel:
-
-- Production: Merges to `main` branch
-- Preview: All other branches
-- Instant rollback capabilities
-
-## Performance Targets
-
-- Lighthouse Performance: 98+
-- First Contentful Paint: <1s
-- Time to Interactive: <2s
-- Cumulative Layout Shift: <0.1
+Task 42 owns the approved content and persistence foundation. This package must not revive the removed Express placeholder or speculative shared package.

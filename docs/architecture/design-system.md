@@ -1,173 +1,54 @@
-# Design System Architecture
+# App-Local Design System
 
-## Overview
+## Boundary
 
-This document explains our monorepo design system architecture, the role of the UI package, and how shadcn/ui and Radix UI components fit into the structure.
+The magazine has one product application, `packages/web`. Its theme, tokens, utilities, and shadcn-style components live with that application as owned source. There is no separately built UI package, release artifact, or second Tailwind pipeline.
 
-## Package Structure
+Create a package boundary only after a concrete second consumer proves that versioning, build, and release complexity is cheaper than app-local ownership.
 
-```
-blog/
-├── packages/
-│   ├── ui/                    # Shared design system foundation
-│   │   ├── src/
-│   │   │   ├── tokens/        # Design tokens (colors, spacing, typography)
-│   │   │   ├── themes/        # Theme configurations (light, dark, contrast, gentle)
-│   │   │   ├── providers/     # ThemeProvider for theme management
-│   │   │   ├── hooks/         # Shared hooks (useTheme, useMediaQuery)
-│   │   │   ├── styles/        # Base CSS with custom properties
-│   │   │   └── components/    # Only truly shared, custom components
-│   │   └── tailwind.config.ts # Base Tailwind configuration
-│   │
-│   └── web/                   # Next.js application
-│       ├── src/
-│       │   ├── components/    # App-specific components
-│       │   │   ├── ui/        # shadcn/ui components (copied here)
-│       │   │   └── ...        # Other app components
-│       │   └── app/           # Next.js app directory
-│       └── tailwind.config.js # Extends UI package config
-```
+## Stack
 
-## UI Package - Design System Foundation
+- Tailwind CSS `4.3.2` with the `@tailwindcss/postcss` integration and CSS-first configuration.
+- `@tailwindcss/typography` `0.5.20` for controlled editorial prose surfaces.
+- shadcn's copy-and-own model; `components.json` describes app-local placement and keeps the Tailwind 4 config path blank.
+- Stable `@base-ui/react` `1.6.0` for selected new or migrated behavioral primitives.
+- `next-themes` `0.4.6` for no-flash system, light, and dark preference handling.
+- `tailwind-merge` `3.6.0`, `clsx` `2.1.1`, `tw-animate-css` `1.4.0`, and `lucide-react` `1.24.0` as the narrow styling and icon support chain.
 
-The UI package provides the **foundation layer** for our design system:
+The shadcn CLI is research and generation tooling, not a hidden runtime dependency. Generated components are reviewed and owned in this repository.
 
-### What Goes in UI Package
+## Source Layout
 
-1. **Design Tokens** (`src/tokens/`)
-   - Colors: Brand scales (teal, yellow, orange, coral) and semantic colors
-   - Typography: Font families, sizes, weights, line heights
-   - Spacing: Consistent spacing scale based on 4px units
-   - Breakpoints: Responsive design breakpoints
-   - Animations: Reusable animation presets
-
-2. **Theme System** (`src/themes/`)
-   - Light theme (default)
-   - Dark theme (deep teal background)
-   - High contrast theme (accessibility)
-   - Gentle theme (trauma-informed design)
-
-3. **Core Providers & Hooks**
-   - `ThemeProvider`: Manages theme state and system preferences
-   - `useTheme`: Hook for accessing and changing themes
-   - `useMediaQuery`: Responsive design utilities
-
-4. **Base Styles** (`src/styles/base.css`)
-   - CSS custom properties for all theme variations
-   - Tailwind base directives
-
-5. **Minimal Components**
-   - Only components that are truly custom and shared
-   - Not shadcn/ui components (those go in the web package)
-
-### What Does NOT Go in UI Package
-
-- shadcn/ui components
-- App-specific components
-- Business logic
-- Page layouts
-- API integrations
-
-## Web Package - Application Layer
-
-The web package is where the actual Next.js application lives:
-
-### shadcn/ui Integration
-
-```
-web/src/components/
-├── ui/                    # shadcn/ui components
-│   ├── button.tsx        # Copied from shadcn/ui
-│   ├── card.tsx          # Uses our design tokens
-│   ├── dialog.tsx        # Built on Radix UI
-│   └── ...               # Other shadcn components
-└── ...                   # App-specific components
+```text
+packages/web/
+├── components.json
+├── postcss.config.mjs
+└── src/
+    ├── app/globals.css
+    ├── components/
+    │   ├── theme-menu.tsx
+    │   └── theme-provider.tsx
+    └── lib/utils.ts
 ```
 
-**Key Points:**
-- shadcn/ui components are **copied** into your project, not installed
-- They use Radix UI primitives for behavior
-- They use Tailwind classes that reference our design tokens
-- You customize them directly in your codebase
+`globals.css` is the canonical token and theme projection. Component files use semantic utilities such as `bg-background`, `text-foreground`, and `border-border`; they do not own arbitrary palette values.
 
-## How It All Works Together
+## Accessibility and Theme Policy
 
-### 1. Design Token Flow
-```
-UI Package tokens → Tailwind config → CSS classes → shadcn/ui components
-```
+- The user chooses system, light, or dark mode. The system option remains the default.
+- High-contrast behavior comes from operating-system forced colors, not a hand-authored pseudo-accessibility theme.
+- Reduced-motion preferences collapse nonessential animation and smooth scrolling.
+- Interactive primitives require keyboard, focus, screen-reader, desktop/mobile browser, and axe evidence.
+- Touch targets in owner-facing and global controls target at least 44 CSS pixels.
+- Product art direction may vary by editorial template, but owner-authored content cannot inject arbitrary CSS.
 
-### 2. Theme Integration
-```typescript
-// In web package
-import { ThemeProvider } from '@legendary-test/ui'
+## Component Intake
 
-// shadcn/ui components automatically use theme colors via Tailwind
-<Button className="bg-primary text-primary-foreground" />
-// 'primary' comes from our UI package tokens!
-```
+1. Confirm a real product use case.
+2. Prefer semantic HTML when no behavioral primitive is needed.
+3. Compare the current shadcn Base UI and Radix sources; choose per component, not by bulk migration.
+4. Copy reviewed source into `packages/web/src/components` and preserve `data-slot` hooks where useful.
+5. Add focused unit and browser behavior tests before relying on the component.
+6. Record intentional deviations from upstream.
 
-### 3. Import Examples
-
-```typescript
-// From UI package (foundation)
-import { ThemeProvider, useTheme, colors } from '@legendary-test/ui'
-import '@legendary-test/ui/styles' // Base CSS
-
-// From web package (shadcn/ui components)
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-```
-
-## Why This Architecture?
-
-1. **Separation of Concerns**
-   - UI package: Design system foundation (tokens, themes)
-   - Web package: Application implementation (components, pages)
-
-2. **shadcn/ui Philosophy**
-   - Components are meant to be customized
-   - You own the code, not hidden in node_modules
-   - Perfect for project-specific tweaks
-
-3. **Scalability**
-   - Add more apps (admin, mobile) that share the same design tokens
-   - Each app can have its own shadcn/ui customizations
-   - Single source of truth for design decisions
-
-4. **Developer Experience**
-   - Type-safe design tokens
-   - Consistent theming across all apps
-   - Easy to customize shadcn/ui components
-
-## Migration Status
-
-### ✅ Completed
-- [x] Phase 1: UI package infrastructure setup
-- [x] Phase 2: Design tokens and theme system migrated
-- [x] Fixed CommonJS/ESM compatibility (TypeScript Tailwind config)
-
-### 🔄 Next Steps
-- [ ] Phase 3: Update UI package exports
-- [ ] Phase 4: Test imports in web package
-- [ ] Phase 5: Remove duplicates from web package
-- [ ] Install and configure shadcn/ui in web package
-
-## Key Commands
-
-```bash
-# In UI package
-pnpm build          # Build the UI package
-pnpm dev           # Watch mode for development
-
-# In web package
-pnpm dev           # Run Next.js app
-npx shadcn-ui add  # Add shadcn/ui components
-```
-
-## Best Practices
-
-1. **Design Tokens First**: Always define new colors/spacing in UI package tokens
-2. **Theme Consistency**: Use CSS custom properties for theme-aware values
-3. **Component Ownership**: shadcn/ui components live in web package for customization
-4. **Type Safety**: Leverage TypeScript for design tokens and theme types
+The removed prototype inventory and replacement proof are recorded in [the Task 41 component inventory](./design-system-component-inventory.md).

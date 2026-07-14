@@ -1,42 +1,23 @@
-# Web Package Tests
+# Web Tests
 
-This directory contains various tests for the web package.
+These tests enforce the application boundary rather than a removed package-import demo.
 
-## Structure
+## Suites
 
-```
-tests/
-├── integration/        # Integration tests (package imports, etc.)
-├── components/         # Test components for manual verification
-├── unit/              # Unit tests (future)
-└── e2e/               # End-to-end tests (future)
-```
+- `design-system/design-system-contract.test.ts` verifies the exact Tailwind 4/app-local component chain, CSS-first configuration, accessibility media rules, and absence of obsolete workspace packages.
+- `framework/framework-contract.test.ts` verifies the Next.js framework, client/server boundaries, and production configuration.
+- Component behavior tests live beside their source, for example `src/components/theme-menu.test.tsx`.
+- Full production browser journeys live in the repository-level `tests/e2e/` directory.
 
-## Test Files
+## Commands
 
-### Integration Tests
-
-- `integration/ui-package-imports.test.ts` - Verifies UI package imports work correctly
-
-### Manual Verification
-
-- `verify-ui-imports.mjs` - Node script to check package exports configuration
-- `components/TestUIImports.tsx` - React component to test runtime imports
-
-## Running Tests
+From the repository root:
 
 ```bash
-# Verify package configuration
-node tests/verify-ui-imports.mjs
-
-# Run integration tests with the repository Vitest runner
 pnpm test
-
-# Manual verification - start dev server and visit /test-ui
-pnpm dev
-# Then visit http://localhost:3000/test-ui
+pnpm test:coverage
+pnpm test:capability
+pnpm test:browser
 ```
 
-## Temporary Test Page
-
-The `/test-ui` route is temporary and should be removed after verifying imports work.
+There is no public `/test`, `/test-ui`, or `/mockup` route. New component demonstrations belong in focused tests or review artifacts, not production routing.
