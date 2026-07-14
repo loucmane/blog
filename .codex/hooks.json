@@ -1,0 +1,61 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/posttooluse-tracking.sh\"",
+            "statusMessage": "Recording Aegis tracking",
+            "timeout": 30,
+            "type": "command"
+          },
+          {
+            "command": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/ledger-record.sh\"",
+            "statusMessage": "Recording Aegis evidence",
+            "timeout": 30,
+            "type": "command"
+          }
+        ],
+        "matcher": "^(Bash|apply_patch|mcp__.*)$"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/pretooluse-gate.sh\"",
+            "statusMessage": "Evaluating Aegis policy",
+            "timeout": 30,
+            "type": "command"
+          }
+        ],
+        "matcher": "^(Bash|apply_patch|mcp__.*)$"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/session-brief.sh\"",
+            "statusMessage": "Loading Aegis brief",
+            "timeout": 30,
+            "type": "command"
+          }
+        ],
+        "matcher": "startup|resume|clear|compact"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/tracking-stop-gate.sh\"",
+            "statusMessage": "Checking Aegis completion evidence",
+            "timeout": 30,
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  }
+}
