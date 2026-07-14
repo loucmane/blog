@@ -62,8 +62,8 @@ Resolve the intent from live runtime state, never from memory or chat history:
 
 A bare continuation MAY, without re-asking: read; run read-only inspection and project tests; edit task-scoped source files; `aegis log`; `aegis verify`; `aegis closeout --dry-run`; `aegis doctor`; advance one plan step.
 
-SURFACE and ASK before: applying repairs (`aegis repair --apply` — show the repair plan first); running non-dry-run `aegis closeout` (needs an explicit close-out intent or confirmation — it records completion and arms delivery); crossing a protected or owned path; switching the active task; pushing or opening a PR (only after closeout passes).
+SURFACE before mutation: safe repair plans, closeout preflight, task transitions, delivery scope, and CI remediation. A valid active evidence-gated policy may authorize routine Taskmaster transitions, deterministic safe repairs, verified closeout, commit/push/PR, and CI remediation without another chat approval. Absent, invalid, revoked, attended, disabled-capability, manual-review, or protected/owned-path cases require explicit confirmation. Merge authority comes only from trusted GitHub policy after closeout passes.
 
-NEVER automatic on any intent: merge, force-push, `reset --hard`, `branch -D`, history rewrite, direct `.aegis/` writes, bypassing BLOCKED readiness, or skipping S:W:H:E tracking.
+NEVER automatic on any intent: force-push, `reset --hard`, `branch -D`, history rewrite, direct `.aegis/` writes, bypassing BLOCKED readiness, skipping S:W:H:E tracking, or delivery outside the active repository policy. A valid active evidence-gated policy may authorize an eligible exact-head merge through trusted CI; absent, invalid, revoked, or attended policy requires owner approval.
 
-Completion-flavored intents ("finish this", "wrap up", "done") advance one safe step like any continuation. They do NOT authorize skipping closeout, the push confirmation, or merge.
+Completion-flavored intents ("finish this", "wrap up", "done") advance one safe step like any continuation. They do NOT authorize skipping closeout or the active delivery policy.
