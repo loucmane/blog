@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces.md",
-  "current_path": "sessions/2026/07/2026-07-14-001-task41-modernize-tailwind-shadcn-workspaces.md",
+  "current": "2026-07-15-001-task71-refresh-aegis-hook-trust-runtime.md",
+  "current_path": "sessions/2026/07/2026-07-15-001-task71-refresh-aegis-hook-trust-runtime.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
-    "id": "41",
-    "slug": "modernize-tailwind-shadcn-workspaces",
+    "id": "71",
+    "slug": "refresh-aegis-hook-trust-runtime",
     "status": "in-progress",
-    "title": "Modernize Tailwind shadcn and Workspace Boundaries"
+    "title": "Refresh Aegis Runtime for Portable Codex Hook Trust"
   },
-  "updated_at": "2026-07-14T17:49:05+02:00"
+  "updated_at": "2026-07-15T12:27:57Z"
 }
