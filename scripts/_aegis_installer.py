@@ -30,6 +30,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if _REPO_ROOT.as_posix() not in sys.path:
     sys.path.insert(0, _REPO_ROOT.as_posix())
 
+from aegis_foundation import managed_update as _managed_update  # noqa: E402
 from aegis_foundation.version import (  # noqa: E402
     FOUNDATION_NAME,
     FOUNDATION_VERSION,
@@ -181,23 +182,26 @@ CLAUDE_GATE_IDS = (
     "claude.protected_path",
 )
 CODEX_HOOKS_REL = ".codex/hooks.json"
+CODEX_HOOK_TRUST_REVIEW_COMMAND = "/hooks"
+CODEX_HOOK_TRUST_HASH_SCOPE = "exact_hook_definition"
+CODEX_HOOK_TRUST_UNSUPPORTED_REASON = (
+    "Codex records trust outside the project against the exact hook-definition hash; "
+    "review the generated definitions with /hooks after reconnecting."
+)
+CODEX_SESSION_START_MATCHER = "startup|resume|clear|compact"
 CODEX_HOOK_MATCHER = "^(Bash|apply_patch|mcp__.*)$"
-CODEX_HOOK_ROOT = '$(git rev-parse --show-toplevel)'
-CODEX_PRETOOLUSE_COMMAND = (
-    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/pretooluse-gate.sh"'
-)
-CODEX_POSTTOOLUSE_COMMAND = (
-    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/posttooluse-tracking.sh"'
-)
-CODEX_LEDGER_RECORD_COMMAND = (
-    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/ledger-record.sh"'
-)
-CODEX_SESSION_BRIEF_COMMAND = (
-    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/session-brief.sh"'
-)
-CODEX_STOP_TRACKING_COMMAND = (
-    f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/tracking-stop-gate.sh"'
-)
+CODEX_POSTTOOLUSE_MATCHER = CODEX_HOOK_MATCHER
+CODEX_SUBAGENT_MATCHER = ".*"
+CODEX_HOOK_ROOT = "$(git rev-parse --show-toplevel)"
+CODEX_HOOK_COMMAND_PREFIX = f'AEGIS_INVOKING_AGENT=codex "{CODEX_HOOK_ROOT}/.aegis/bin/aegis" hook'
+CODEX_SESSION_START_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} sessionstart"
+CODEX_SUBAGENT_START_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} subagentstart"
+CODEX_SUBAGENT_STOP_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} recordjson"
+CODEX_PRETOOLUSE_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} pretooluse"
+CODEX_POSTTOOLUSE_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} posttooluse"
+CODEX_LEDGER_RECORD_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} record"
+CODEX_SESSION_BRIEF_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} sessionstart"
+CODEX_STOP_TRACKING_COMMAND = f"{CODEX_HOOK_COMMAND_PREFIX} stop"
 CODEX_SHARED_RUNTIME_FILES = (
     ".claude/scripts/readiness.sh",
     ".claude/scripts/pretooluse-gate.sh",
@@ -208,6 +212,40 @@ CODEX_SHARED_RUNTIME_FILES = (
     ".claude/scripts/ledger-record.sh",
     ".claude/scripts/session-brief.sh",
     *CLAUDE_SUPPORT_FILES,
+)
+CODEX_MANAGED_HOOK_COMMANDS = frozenset(
+    {
+        CODEX_PRETOOLUSE_COMMAND,
+        CODEX_POSTTOOLUSE_COMMAND,
+        CODEX_LEDGER_RECORD_COMMAND,
+        CODEX_SESSION_BRIEF_COMMAND,
+        CODEX_STOP_TRACKING_COMMAND,
+        CODEX_SESSION_START_COMMAND,
+        CODEX_SUBAGENT_START_COMMAND,
+        CODEX_SUBAGENT_STOP_COMMAND,
+    }
+)
+CODEX_LEGACY_GIT_ROOT_COMMANDS = frozenset(
+    {
+        f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/pretooluse-gate.sh"',
+        f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/posttooluse-tracking.sh"',
+        f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/ledger-record.sh"',
+        f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/session-brief.sh"',
+        f'AEGIS_INVOKING_AGENT=codex bash "{CODEX_HOOK_ROOT}/.claude/scripts/tracking-stop-gate.sh"',
+        f'"{CODEX_HOOK_ROOT}/.aegis/bin/aegis" hook sessionstart',
+        f'"{CODEX_HOOK_ROOT}/.aegis/bin/aegis" hook record',
+        f'"{CODEX_HOOK_ROOT}/.aegis/bin/aegis" hook recordjson',
+    }
+)
+CODEX_LEGACY_BASH_HOOK_SCRIPTS = frozenset(
+    {
+        "pretooluse-gate.sh",
+        "posttooluse-tracking.sh",
+        "tracking-stop-gate.sh",
+        "ledger-record.sh",
+        "session-brief.sh",
+        "handoff-nudge.sh",
+    }
 )
 CODEX_REQUIRED_FILES = (
     "CODEX.md",
@@ -233,6 +271,10 @@ CODEX_GATE_IDS = (
     "codex.hook_trust",
     "codex.guard",
     "codex.work_tracking_audit",
+    "codex.sessionstart_capture",
+    "codex.posttooluse_capture",
+    "codex.subagent_start_capture",
+    "codex.subagent_stop_capture",
 )
 
 CLAUDE_RUNTIME_HOOK_PHASES = {
@@ -257,14 +299,7 @@ class AegisError(ValueError):
     """Raised for predictable Aegis installer failures."""
 
 
-@dataclass(frozen=True)
-class Asset:
-    """Single target file that Aegis can manage."""
-
-    path: str
-    content: bytes
-    executable: bool = False
-    kind: str = "managed"
+Asset = _managed_update.Asset
 
 
 @dataclass(frozen=True)
@@ -480,6 +515,18 @@ def profile_payload() -> dict[str, Any]:
                         "settings_path": CODEX_HOOKS_REL,
                         "event": "Stop",
                         "command": CODEX_STOP_TRACKING_COMMAND,
+                    },
+                    {
+                        "settings_path": CODEX_HOOKS_REL,
+                        "event": "SubagentStart",
+                        "matcher": CODEX_SUBAGENT_MATCHER,
+                        "command": CODEX_SUBAGENT_START_COMMAND,
+                    },
+                    {
+                        "settings_path": CODEX_HOOKS_REL,
+                        "event": "SubagentStop",
+                        "matcher": CODEX_SUBAGENT_MATCHER,
+                        "command": CODEX_SUBAGENT_STOP_COMMAND,
                     },
                 ],
             },
@@ -743,10 +790,15 @@ def _render_claude_settings() -> bytes:
     return _dump_json(payload).encode("utf-8")
 
 
-def _render_codex_hooks() -> bytes:
-    """Render project-local Codex hooks using canonical tool names and git-root paths."""
+def _codex_hooks_payload() -> dict[str, Any]:
+    """Return the complete Codex hook registrations owned by Aegis.
 
-    payload = {
+    Codex skips asynchronous command handlers, so every handler is synchronous.
+    Commands resolve from the Git root because Codex sessions and subagents may run
+    from any repository worktree or subdirectory.
+    """
+
+    return {
         "hooks": {
             "PreToolUse": [
                 {
@@ -782,14 +834,14 @@ def _render_codex_hooks() -> bytes:
             ],
             "SessionStart": [
                 {
-                    "matcher": CLAUDE_SESSION_START_MATCHER,
+                    "matcher": CODEX_SESSION_START_MATCHER,
                     "hooks": [
                         {
                             "type": "command",
                             "command": CODEX_SESSION_BRIEF_COMMAND,
                             "timeout": 30,
-                            "statusMessage": "Loading Aegis brief",
-                        }
+                            "statusMessage": "Loading Aegis brief and session evidence",
+                        },
                     ],
                 }
             ],
@@ -805,8 +857,222 @@ def _render_codex_hooks() -> bytes:
                     ],
                 }
             ],
+            "SubagentStart": [
+                {
+                    "matcher": CODEX_SUBAGENT_MATCHER,
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": CODEX_SUBAGENT_START_COMMAND,
+                            "timeout": 30,
+                            "statusMessage": "Recording Aegis subagent start",
+                        }
+                    ],
+                }
+            ],
+            "SubagentStop": [
+                {
+                    "matcher": CODEX_SUBAGENT_MATCHER,
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": CODEX_SUBAGENT_STOP_COMMAND,
+                            "timeout": 30,
+                            "statusMessage": "Recording Aegis subagent completion",
+                        }
+                    ],
+                }
+            ],
         }
     }
+
+
+def _render_codex_hooks() -> bytes:
+    return _dump_json(_codex_hooks_payload()).encode("utf-8")
+
+
+def _parse_codex_hooks(content: bytes) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(content.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    hooks = payload.get("hooks")
+    if hooks is not None and not isinstance(hooks, dict):
+        return None
+    return payload
+
+
+def _classify_codex_hook_command(command: object) -> str:
+    """Classify a hook command without guessing ownership from a substring."""
+
+    if not isinstance(command, str) or not command.strip():
+        return "project"
+    if command in CODEX_MANAGED_HOOK_COMMANDS:
+        return "managed"
+    if command in CODEX_LEGACY_GIT_ROOT_COMMANDS:
+        return "legacy"
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return "aegis-unknown" if "/.claude/scripts/" in command else "project"
+    while tokens and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", tokens[0]):
+        tokens.pop(0)
+    if len(tokens) == 2 and tokens[0] == "bash":
+        script = Path(tokens[1])
+        if (
+            script.is_absolute()
+            and script.parent.as_posix().endswith("/.claude/scripts")
+            and script.name in CODEX_LEGACY_BASH_HOOK_SCRIPTS
+        ):
+            return "legacy"
+    if len(tokens) == 3 and Path(tokens[0]).name in {"python", "python3"}:
+        script = Path(tokens[1])
+        if (
+            script.is_absolute()
+            and script.as_posix().endswith("/.claude/scripts/gate_lib.py")
+            and tokens[2]
+            in {
+                "pretooluse",
+                "posttooluse",
+                "stop",
+                "path",
+                "bash",
+                "configchange",
+                "record",
+                "recordjson",
+                "posttoolusefailure",
+                "sessionstart",
+                "sessionend",
+                "subagentstart",
+            }
+        ):
+            return "legacy"
+    if len(tokens) == 3:
+        executable = Path(tokens[0])
+        if (
+            executable.is_absolute()
+            and executable.as_posix().endswith("/.aegis/bin/aegis")
+            and tokens[1] == "hook"
+            and tokens[2]
+            in {
+                "pretooluse",
+                "posttooluse",
+                "stop",
+                "path",
+                "bash",
+                "configchange",
+                "readiness",
+                "record",
+                "recordjson",
+                "posttoolusefailure",
+                "sessionstart",
+                "sessionend",
+                "subagentstart",
+            }
+        ):
+            return "legacy"
+    if any("/.claude/scripts/" in token or "/.aegis/bin/aegis" in token for token in tokens):
+        return "aegis-unknown"
+    return "project"
+
+
+def _codex_hooks_adoptable(content: bytes) -> bool:
+    """Allow adoption only when every Aegis-like command has a known shape."""
+
+    payload = _parse_codex_hooks(content)
+    if payload is None:
+        return False
+    hooks = payload.get("hooks")
+    if not isinstance(hooks, dict):
+        return False
+    saw_legacy = False
+    for groups in hooks.values():
+        if not isinstance(groups, list):
+            return False
+        for group in groups:
+            if not isinstance(group, dict):
+                return False
+            handlers = group.get("hooks")
+            if not isinstance(handlers, list):
+                return False
+            for handler in handlers:
+                if not isinstance(handler, dict):
+                    return False
+                classification = _classify_codex_hook_command(handler.get("command"))
+                if classification == "aegis-unknown":
+                    return False
+                saw_legacy = saw_legacy or classification == "legacy"
+    return saw_legacy
+
+
+def _remove_managed_codex_hook_handlers(payload: MutableMapping[str, Any]) -> bool:
+    """Remove only exact Aegis-owned handlers, preserving every unrelated hook."""
+
+    hooks = payload.get("hooks")
+    if not isinstance(hooks, dict):
+        return False
+    changed = False
+    for event, entries in list(hooks.items()):
+        if not isinstance(entries, list):
+            continue
+        retained_groups: list[Any] = []
+        for group in entries:
+            if not isinstance(group, dict):
+                retained_groups.append(group)
+                continue
+            handlers = group.get("hooks")
+            if not isinstance(handlers, list):
+                retained_groups.append(group)
+                continue
+            retained_handlers = [
+                handler
+                for handler in handlers
+                if not (
+                    isinstance(handler, dict)
+                    and _classify_codex_hook_command(handler.get("command"))
+                    in {"managed", "legacy"}
+                )
+            ]
+            if len(retained_handlers) == len(handlers):
+                retained_groups.append(group)
+                continue
+            changed = True
+            if retained_handlers:
+                retained_group = dict(group)
+                retained_group["hooks"] = retained_handlers
+                retained_groups.append(retained_group)
+        if retained_groups:
+            hooks[event] = retained_groups
+        else:
+            hooks.pop(event, None)
+    if not hooks:
+        payload.pop("hooks", None)
+    return changed
+
+
+def _merge_codex_hooks(existing: bytes, desired: bytes | None = None) -> bytes | None:
+    """Structurally merge Aegis handlers without replacing project-owned hooks."""
+
+    payload = _parse_codex_hooks(existing)
+    wanted = _parse_codex_hooks(desired or _render_codex_hooks())
+    if payload is None or wanted is None:
+        return None
+    _remove_managed_codex_hook_handlers(payload)
+    hooks = payload.setdefault("hooks", {})
+    if not isinstance(hooks, dict):
+        return None
+    wanted_hooks = wanted.get("hooks")
+    if not isinstance(wanted_hooks, dict):
+        return None
+    for event, groups in wanted_hooks.items():
+        existing_groups = hooks.setdefault(event, [])
+        if not isinstance(existing_groups, list) or not isinstance(groups, list):
+            return None
+        # JSON round-tripping prevents later callers from mutating the canonical
+        # desired payload through a shared list/dict reference.
+        existing_groups.extend(json.loads(json.dumps(groups)))
     return _dump_json(payload).encode("utf-8")
 
 
@@ -820,7 +1086,64 @@ def _render_local_cli_shim(source_root: Path) -> bytes:
             'SELF="$0"',
             'SELF_RESOLVED="$(cd "$(dirname "$SELF")" && pwd -P)/$(basename "$SELF")"',
             'AEGIS_DIR="$(cd "$(dirname "$SELF_RESOLVED")/.." && pwd -P)"',
+            'AEGIS_TARGET_ROOT="$(cd "$AEGIS_DIR/.." && pwd -P)"',
+            "export AEGIS_TARGET_ROOT",
             'AEGIS_RUNTIME_ENV="$AEGIS_DIR/runtime.env"',
+            "",
+            "aegis_degraded_hook() {",
+            '  local phase="$1"',
+            '  local marker="$AEGIS_TARGET_ROOT/.aegis/state/hook-bootstrap-$phase.warned"',
+            '  mkdir -p "$AEGIS_TARGET_ROOT/.aegis/state" 2>/dev/null || true',
+            '  if mkdir "$marker" 2>/dev/null; then',
+            '    case "$phase" in',
+            "      pretooluse|path|bash|configchange|readiness)",
+            '        echo "target-local Aegis hook runtime is unavailable for $phase; refusing mutation" >&2',
+            "        ;;",
+            "      *)",
+            '        echo "target-local Aegis hook runtime is unavailable for $phase; passive evidence capture is degraded" >&2',
+            "        ;;",
+            "    esac",
+            "  fi",
+            '  case "$phase" in',
+            "    pretooluse|path|bash|configchange|readiness)",
+            "      return 2",
+            "      ;;",
+            "    *)",
+            "      return 0",
+            "      ;;",
+            "  esac",
+            "}",
+            "",
+            "aegis_clear_hook_marker() {",
+            '  if [ -n "$AEGIS_HOOK_PHASE" ]; then',
+            '    rmdir "$AEGIS_TARGET_ROOT/.aegis/state/hook-bootstrap-$AEGIS_HOOK_PHASE.warned" 2>/dev/null || true',
+            "  fi",
+            "}",
+            "",
+            "# Hook dispatch is deliberately target-local. A central source checkout may be",
+            "# unavailable or mid-update while hooks are firing in other repositories.",
+            'AEGIS_HOOK_PHASE=""',
+            'if [ "${1:-}" = "hook" ]; then',
+            '  AEGIS_HOOK_PHASE="${2:-}"',
+            '  case "$AEGIS_HOOK_PHASE" in',
+            "    pretooluse|posttooluse|stop|path|bash|configchange|readiness|record|recordjson|posttoolusefailure|sessionstart|sessionend|subagentstart)",
+            "      ;;",
+            "    *)",
+            '      echo "unsupported Aegis hook phase: ${AEGIS_HOOK_PHASE:-<missing>}" >&2',
+            "      exit 2",
+            "      ;;",
+            "  esac",
+            '  if [ "$AEGIS_HOOK_PHASE" != "readiness" ]; then',
+            '    AEGIS_HOOK_RUNTIME="$AEGIS_TARGET_ROOT/.claude/scripts/gate_lib.py"',
+            '    if [ -f "$AEGIS_HOOK_RUNTIME" ]; then',
+            "      aegis_clear_hook_marker",
+            "      shift 2",
+            '      exec python3 -B "$AEGIS_HOOK_RUNTIME" "$AEGIS_HOOK_PHASE" "$@"',
+            "    fi",
+            '    aegis_degraded_hook "$AEGIS_HOOK_PHASE"',
+            "    exit $?",
+            "  fi",
+            "fi",
             "",
             f'AEGIS_SOURCE_FALLBACK="{source}"',
             'if [ -z "${AEGIS_SOURCE_ROOT:-}" ] && [ -f "$AEGIS_RUNTIME_ENV" ]; then',
@@ -840,6 +1163,7 @@ def _render_local_cli_shim(source_root: Path) -> bytes:
             '  for AEGIS_PYTHONPATH_CANDIDATE in "$AEGIS_SOURCE_FALLBACK" "$AEGIS_SOURCE_FALLBACK/.." "$AEGIS_SOURCE_FALLBACK/../.."; do',
             "    if PYTHONPATH=\"$AEGIS_PYTHONPATH_CANDIDATE${PYTHONPATH:+:$PYTHONPATH}\" python3 -c 'import aegis_foundation.cli' >/dev/null 2>&1; then",
             '      export PYTHONPATH="$AEGIS_PYTHONPATH_CANDIDATE${PYTHONPATH:+:$PYTHONPATH}"',
+            "      aegis_clear_hook_marker",
             '      exec python3 -m aegis_foundation.cli --source-root "$AEGIS_SOURCE_FALLBACK" "$@"',
             "    fi",
             "  done",
@@ -849,12 +1173,19 @@ def _render_local_cli_shim(source_root: Path) -> bytes:
             '  RESOLVED="$(command -v aegis)"',
             '  RESOLVED_ABS="$(cd "$(dirname "$RESOLVED")" && pwd -P)/$(basename "$RESOLVED")"',
             '  if [ "$RESOLVED_ABS" != "$SELF_RESOLVED" ]; then',
+            "    aegis_clear_hook_marker",
             '    exec "$RESOLVED" "$@"',
             "  fi",
             "fi",
             "",
             "if python3 -c 'import aegis_foundation.cli' >/dev/null 2>&1; then",
+            "  aegis_clear_hook_marker",
             '  exec python3 -m aegis_foundation.cli "$@"',
+            "fi",
+            "",
+            'if [ -n "$AEGIS_HOOK_PHASE" ]; then',
+            '  aegis_degraded_hook "$AEGIS_HOOK_PHASE"',
+            "  exit $?",
             "fi",
             "",
             'echo "Aegis CLI is unavailable. Install aegis-foundation, add aegis to PATH, or set AEGIS_SOURCE_ROOT." >&2',
@@ -905,12 +1236,45 @@ def _render_claude_runtime_dispatcher(phase: str) -> bytes:
     return text.encode("utf-8")
 
 
+def _managed_asset_build_policy() -> _managed_update.AssetBuildPolicy:
+    return _managed_update.AssetBuildPolicy(
+        contract_rel=AEGIS_CONTRACT_REL,
+        local_bin_rel=AEGIS_LOCAL_BIN_REL,
+        runtime_env_rel=AEGIS_RUNTIME_ENV_REL,
+        brief_rel=AEGIS_BRIEF_REL,
+        shared_schema_files=tuple(SHARED_SCHEMA_FILES),
+        workflow_template_source_root=AEGIS_WORKFLOW_TEMPLATE_SOURCE_ROOT,
+        workflow_template_target_root=AEGIS_WORKFLOW_TEMPLATE_TARGET_ROOT,
+        workflow_template_names=tuple(AEGIS_WORKFLOW_TEMPLATE_NAMES),
+        claude_required_files=tuple(CLAUDE_REQUIRED_FILES),
+        claude_support_files=tuple(CLAUDE_SUPPORT_FILES),
+        claude_runtime_hook_phases=CLAUDE_RUNTIME_HOOK_PHASES,
+        codex_required_files=tuple(CODEX_REQUIRED_FILES),
+        codex_shared_runtime_files=tuple(CODEX_SHARED_RUNTIME_FILES),
+        codex_hooks_rel=CODEX_HOOKS_REL,
+    )
+
+
+def _managed_asset_renderers() -> _managed_update.AssetRenderers:
+    return _managed_update.AssetRenderers(
+        read_bytes=_read_bytes,
+        render_agents_doc=_render_agents_doc,
+        render_contract=_render_contract,
+        render_local_cli_shim=_render_local_cli_shim,
+        render_runtime_env=_render_runtime_env,
+        render_default_brief=_render_default_brief,
+        render_claude_entrypoint=_render_claude_entrypoint,
+        render_claude_settings=_render_claude_settings,
+        render_claude_runtime_dispatcher=_render_claude_runtime_dispatcher,
+        render_codex_hooks=_render_codex_hooks,
+    )
+
+
 def _asset_from_source(source_root: Path, rel_path: str, *, kind: str = "managed") -> Asset:
-    path = source_root / rel_path
-    return Asset(
-        path=rel_path,
-        content=_read_bytes(source_root, rel_path),
-        executable=os.access(path, os.X_OK),
+    return _managed_update.asset_from_source(
+        source_root,
+        rel_path,
+        read_bytes=_read_bytes,
         kind=kind,
     )
 
@@ -918,11 +1282,11 @@ def _asset_from_source(source_root: Path, rel_path: str, *, kind: str = "managed
 def _asset_from_source_as(
     source_root: Path, source_rel_path: str, target_rel_path: str, *, kind: str = "managed"
 ) -> Asset:
-    path = source_root / source_rel_path
-    return Asset(
-        path=target_rel_path,
-        content=_read_bytes(source_root, source_rel_path),
-        executable=os.access(path, os.X_OK),
+    return _managed_update.asset_from_source_as(
+        source_root,
+        source_rel_path,
+        target_rel_path,
+        read_bytes=_read_bytes,
         kind=kind,
     )
 
@@ -948,84 +1312,36 @@ def _render_default_brief() -> bytes:
 def _base_assets(
     source_root: Path, primary_agent: str, enabled_agents: Sequence[str]
 ) -> list[Asset]:
-    assets = [
-        Asset("AGENTS.md", _render_agents_doc(primary_agent, enabled_agents)),
-        Asset(AEGIS_CONTRACT_REL, _render_contract(primary_agent, enabled_agents)),
-        Asset(AEGIS_LOCAL_BIN_REL, _render_local_cli_shim(source_root), executable=True),
-        Asset(AEGIS_RUNTIME_ENV_REL, _render_runtime_env(source_root), kind="runtime"),
-        Asset(AEGIS_BRIEF_REL, _render_default_brief(), kind="config"),
-    ]
-    for rel_path in SHARED_SCHEMA_FILES:
-        assets.append(_asset_from_source(source_root, rel_path))
-    for template_name in AEGIS_WORKFLOW_TEMPLATE_NAMES:
-        assets.append(
-            _asset_from_source_as(
-                source_root,
-                f"{AEGIS_WORKFLOW_TEMPLATE_SOURCE_ROOT}/{template_name}",
-                f"{AEGIS_WORKFLOW_TEMPLATE_TARGET_ROOT}/{template_name}",
-            )
-        )
-    return assets
+    return _managed_update.build_base_assets(
+        source_root,
+        primary_agent,
+        enabled_agents,
+        policy=_managed_asset_build_policy(),
+        renderers=_managed_asset_renderers(),
+    )
 
 
 def _adapter_assets(
     source_root: Path, primary_agent: str, enabled_agents: Sequence[str]
 ) -> list[Asset]:
-    assets: list[Asset] = []
-    if "claude" in enabled_agents:
-        assets.extend(
-            [
-                Asset("CLAUDE.md", _render_claude_entrypoint(), kind="adapter"),
-                Asset(".claude/settings.json", _render_claude_settings(), kind="adapter"),
-            ]
-        )
-        for rel_path in CLAUDE_REQUIRED_FILES:
-            if rel_path in {"CLAUDE.md", ".claude/settings.json"}:
-                continue
-            phase = CLAUDE_RUNTIME_HOOK_PHASES.get(rel_path)
-            if phase is not None:
-                assets.append(
-                    Asset(
-                        rel_path,
-                        _render_claude_runtime_dispatcher(phase),
-                        executable=True,
-                        kind="adapter",
-                    )
-                )
-                continue
-            assets.append(_asset_from_source(source_root, rel_path, kind="adapter"))
-        for rel_path in CLAUDE_SUPPORT_FILES:
-            assets.append(_asset_from_source(source_root, rel_path, kind="adapter"))
-    if "codex" in enabled_agents:
-        for rel_path in CODEX_REQUIRED_FILES:
-            if rel_path == CODEX_HOOKS_REL:
-                assets.append(Asset(rel_path, _render_codex_hooks(), kind="adapter"))
-                continue
-            if rel_path in CODEX_SHARED_RUNTIME_FILES:
-                if "claude" in enabled_agents:
-                    continue
-                phase = CLAUDE_RUNTIME_HOOK_PHASES.get(rel_path)
-                if phase is not None:
-                    assets.append(
-                        Asset(
-                            rel_path,
-                            _render_claude_runtime_dispatcher(phase),
-                            executable=True,
-                            kind="adapter",
-                        )
-                    )
-                    continue
-                assets.append(_asset_from_source(source_root, rel_path, kind="adapter"))
-                continue
-            assets.append(_asset_from_source(source_root, rel_path, kind="adapter"))
-    return assets
+    del primary_agent  # Preserved for compatibility with existing private callers.
+    return _managed_update.build_adapter_assets(
+        source_root,
+        enabled_agents,
+        policy=_managed_asset_build_policy(),
+        renderers=_managed_asset_renderers(),
+    )
 
 
 def _managed_assets(
     source_root: Path, primary_agent: str, enabled_agents: Sequence[str]
 ) -> list[Asset]:
-    return _base_assets(source_root, primary_agent, enabled_agents) + _adapter_assets(
-        source_root, primary_agent, enabled_agents
+    return _managed_update.build_managed_assets(
+        source_root,
+        primary_agent,
+        enabled_agents,
+        policy=_managed_asset_build_policy(),
+        renderers=_managed_asset_renderers(),
     )
 
 
@@ -1176,118 +1492,28 @@ def _strip_agents_entrypoint(existing: bytes) -> bytes | None:
 def _assets_for_target(target_root: Path, assets: Sequence[Asset]) -> list[Asset]:
     """Materialize target-specific assets such as merged Claude entrypoints."""
 
-    baseline_manifest = _read_json(target_root / AEGIS_MANIFEST_REL)
-    materialized: list[Asset] = []
-    for asset in assets:
-        if asset.path == CODEX_HOOKS_REL:
-            target = target_root / asset.path
-            if target.exists() and target.is_file():
-                existing = target.read_bytes()
-                try:
-                    existing_payload = json.loads(existing.decode("utf-8"))
-                    desired_payload = json.loads(asset.content.decode("utf-8"))
-                except (UnicodeDecodeError, json.JSONDecodeError):
-                    pass
-                else:
-                    if existing_payload == desired_payload:
-                        # Adopt semantically identical owner-created JSON byte-for-byte.
-                        # Any extra, missing, or changed hook remains a manual-review
-                        # conflict in the normal plan operation classifier below.
-                        materialized.append(
-                            Asset(
-                                path=asset.path,
-                                content=existing,
-                                executable=asset.executable,
-                                kind=asset.kind,
-                            )
-                        )
-                        continue
-        if asset.path == "CLAUDE.md" and asset.kind == "adapter":
-            target = target_root / asset.path
-            if target.exists() and target.is_file():
-                existing = target.read_bytes()
-                recorded_checksum = (
-                    _recorded_managed_checksum(baseline_manifest, asset.path)
-                    if isinstance(baseline_manifest, Mapping)
-                    else None
-                )
-                if (
-                    AEGIS_CLAUDE_BLOCK_BEGIN.encode("utf-8") not in existing
-                    and recorded_checksum == _content_checksum(existing)
-                ):
-                    # Older Aegis releases owned the whole markerless entrypoint. Migrate
-                    # those exact recorded bytes instead of preserving obsolete ceremony
-                    # as if it were project-authored context.
-                    merged = _claude_runtime_block(asset.content).encode("utf-8")
-                else:
-                    merged = _merge_claude_entrypoint(existing, asset.content)
-                if merged is not None:
-                    materialized.append(
-                        Asset(
-                            path=asset.path,
-                            content=merged,
-                            executable=asset.executable,
-                            kind=asset.kind,
-                        )
-                    )
-                    continue
-            else:
-                materialized.append(
-                    Asset(
-                        path=asset.path,
-                        content=_claude_runtime_block(asset.content).encode("utf-8"),
-                        executable=asset.executable,
-                        kind=asset.kind,
-                    )
-                )
-                continue
-        if asset.path == "CODEX.md" and asset.kind == "adapter":
-            target = target_root / asset.path
-            if target.exists() and target.is_file():
-                merged = _merge_codex_entrypoint(
-                    target.read_bytes(),
-                    _render_codex_continuation_block(),
-                )
-                if merged is not None:
-                    materialized.append(
-                        Asset(
-                            path=asset.path,
-                            content=merged,
-                            executable=asset.executable,
-                            kind=asset.kind,
-                        )
-                    )
-                    continue
-        if asset.path == "AGENTS.md":
-            target = target_root / asset.path
-            if target.exists() and target.is_file():
-                merged = _merge_agents_entrypoint(target.read_bytes(), asset.content)
-                if merged is not None:
-                    materialized.append(
-                        Asset(
-                            path=asset.path,
-                            content=merged,
-                            executable=asset.executable,
-                            kind=asset.kind,
-                        )
-                    )
-                    continue
-            else:
-                materialized.append(
-                    Asset(
-                        path=asset.path,
-                        content=_managed_runtime_block(
-                            begin_marker=AEGIS_AGENTS_BLOCK_BEGIN,
-                            end_marker=AEGIS_AGENTS_BLOCK_END,
-                            entrypoint=asset.content,
-                        ).encode("utf-8"),
-                        executable=asset.executable,
-                        kind=asset.kind,
-                    )
-                )
-                continue
-        materialized.append(asset)
-    return materialized
+    return _managed_update.materialize_assets_for_target(
+        target_root,
+        assets,
+        manifest_rel=AEGIS_MANIFEST_REL,
+        codex_hooks_rel=CODEX_HOOKS_REL,
+        claude_block_begin=AEGIS_CLAUDE_BLOCK_BEGIN,
+        materializers=_managed_update.TargetMaterializers(
+            read_json=_read_json,
+            wrap_claude_entrypoint=lambda content: _claude_runtime_block(content).encode("utf-8"),
+            merge_claude_entrypoint=_merge_claude_entrypoint,
+            render_codex_continuation_block=_render_codex_continuation_block,
+            merge_codex_entrypoint=_merge_codex_entrypoint,
+            merge_codex_hooks=_merge_codex_hooks,
+            merge_agents_entrypoint=_merge_agents_entrypoint,
+            wrap_agents_entrypoint=lambda content: _managed_runtime_block(
+                begin_marker=AEGIS_AGENTS_BLOCK_BEGIN,
+                end_marker=AEGIS_AGENTS_BLOCK_END,
+                entrypoint=content,
+            ).encode("utf-8"),
+            codex_hooks_adoptable=_codex_hooks_adoptable,
+        ),
+    )
 
 
 def _agent_records(
@@ -1347,6 +1573,9 @@ def _gate(
     hook_event: str | None = None,
     hook_matcher: str | None = None,
     unsupported_reason: str | None = None,
+    review_command: str | None = None,
+    hash_scope: str | None = None,
+    bypass_allowed: bool | None = None,
     method: str,
     failure_mode: str,
     expected: str | bool | None = True,
@@ -1370,6 +1599,9 @@ def _gate(
         "hook_event": hook_event,
         "hook_matcher": hook_matcher,
         "unsupported_reason": unsupported_reason,
+        "review_command": review_command,
+        "hash_scope": hash_scope,
+        "bypass_allowed": bypass_allowed,
     }.items():
         if value is not None:
             payload[key] = value
@@ -1557,10 +1789,11 @@ def _gates(enabled_agents: Sequence[str]) -> list[dict[str, Any]]:
                     scope="adapter",
                     adapter="codex",
                     path=CODEX_HOOKS_REL,
-                    unsupported_reason=(
-                        "Codex records trust outside the project against the exact hook-definition hash; "
-                        "review the generated definitions with /hooks after reconnecting."
-                    ),
+                    settings_path=CODEX_HOOKS_REL,
+                    unsupported_reason=CODEX_HOOK_TRUST_UNSUPPORTED_REASON,
+                    review_command=CODEX_HOOK_TRUST_REVIEW_COMMAND,
+                    hash_scope=CODEX_HOOK_TRUST_HASH_SCOPE,
+                    bypass_allowed=False,
                     method="manual",
                     failure_mode="unsupported",
                     expected=None,
@@ -1584,6 +1817,62 @@ def _gates(enabled_agents: Sequence[str]) -> list[dict[str, Any]]:
                     path="scripts/codex-task",
                     method="executable",
                     failure_mode="fail",
+                ),
+                _gate(
+                    "codex.sessionstart_capture",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=CODEX_HOOKS_REL,
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="SessionStart",
+                    hook_matcher=CODEX_SESSION_START_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_SESSION_START_COMMAND,
+                ),
+                _gate(
+                    "codex.posttooluse_capture",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=CODEX_HOOKS_REL,
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="PostToolUse",
+                    hook_matcher=CODEX_POSTTOOLUSE_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_LEDGER_RECORD_COMMAND,
+                ),
+                _gate(
+                    "codex.subagent_start_capture",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=CODEX_HOOKS_REL,
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="SubagentStart",
+                    hook_matcher=CODEX_SUBAGENT_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_SUBAGENT_START_COMMAND,
+                ),
+                _gate(
+                    "codex.subagent_stop_capture",
+                    required=True,
+                    enforcement="mechanical",
+                    scope="adapter",
+                    adapter="codex",
+                    path=CODEX_HOOKS_REL,
+                    settings_path=CODEX_HOOKS_REL,
+                    hook_event="SubagentStop",
+                    hook_matcher=CODEX_SUBAGENT_MATCHER,
+                    method="settings_hook",
+                    failure_mode="fail",
+                    expected=CODEX_SUBAGENT_STOP_COMMAND,
                 ),
             ]
         )
@@ -2289,8 +2578,10 @@ def _manifest_payload(
     installed_at: str,
     assets: Sequence[Asset] | None = None,
 ) -> dict[str, Any]:
-    managed_assets = list(assets) if assets is not None else _managed_assets(
-        source_root, primary_agent, enabled_agents
+    managed_assets = (
+        list(assets)
+        if assets is not None
+        else _managed_assets(source_root, primary_agent, enabled_agents)
     )
     existing = _read_json(target_root / AEGIS_MANIFEST_REL)
     verification = (
@@ -2372,110 +2663,56 @@ def _installed_at_for_plan(target_root: Path) -> str:
 
 
 def _manifest_path_set(manifest: Mapping[str, Any], key: str) -> set[str]:
-    records = manifest.get(key)
-    if not isinstance(records, list):
-        return set()
-    paths: set[str] = set()
-    for record in records:
-        if isinstance(record, str) and record:
-            paths.add(record)
-            continue
-        if not isinstance(record, Mapping):
-            continue
-        path = record.get("path")
-        if isinstance(path, str) and path:
-            paths.add(path)
-    return paths
+    return _managed_update.manifest_path_set(manifest, key)
 
 
 def _content_checksum(content: bytes) -> str:
-    return f"sha256:{hashlib.sha256(content).hexdigest()}"
+    return _managed_update.content_checksum(content)
 
 
 def _manifest_file_record(
     manifest: Mapping[str, Any], key: str, path: str
 ) -> Mapping[str, Any] | None:
-    records = manifest.get(key)
-    if not isinstance(records, list):
-        return None
-    for record in records:
-        if isinstance(record, Mapping) and record.get("path") == path:
-            return record
-    return None
+    return _managed_update.manifest_file_record(manifest, key, path)
 
 
 def _recorded_managed_checksum(manifest: Mapping[str, Any], path: str) -> str | None:
-    record = _manifest_file_record(manifest, "managed_files", path)
-    if record is None:
-        return None
-    checksum = record.get("checksum")
-    if not isinstance(checksum, str):
-        return None
-    if not re.fullmatch(r"sha256:[0-9a-f]{64}", checksum):
-        return None
-    return checksum
+    return _managed_update.recorded_managed_checksum(manifest, path)
+
+
+def _managed_plan_policy() -> _managed_update.PlanPolicy:
+    return _managed_update.PlanPolicy(
+        manifest_rel=AEGIS_MANIFEST_REL,
+        codex_hooks_rel=CODEX_HOOKS_REL,
+        shared_schema_files=tuple(SHARED_SCHEMA_FILES),
+        claude_support_files=tuple(CLAUDE_SUPPORT_FILES),
+        codex_required_files=tuple(CODEX_REQUIRED_FILES),
+        workflow_template_source_root=AEGIS_WORKFLOW_TEMPLATE_SOURCE_ROOT,
+        workflow_template_target_root=AEGIS_WORKFLOW_TEMPLATE_TARGET_ROOT,
+        workflow_template_names=tuple(AEGIS_WORKFLOW_TEMPLATE_NAMES),
+    )
 
 
 def _source_path_for_managed_asset(path: str) -> str | None:
-    if path in SHARED_SCHEMA_FILES or path in CLAUDE_SUPPORT_FILES:
-        return path
-    if (
-        path in CODEX_REQUIRED_FILES
-        and path not in {"CODEX.md", CODEX_HOOKS_REL}
-        and path not in CLAUDE_RUNTIME_HOOK_PHASES
-    ):
-        return path
-    template_prefix = f"{AEGIS_WORKFLOW_TEMPLATE_TARGET_ROOT}/"
-    if path.startswith(template_prefix):
-        template_name = path.removeprefix(template_prefix)
-        if template_name in AEGIS_WORKFLOW_TEMPLATE_NAMES:
-            return f"{AEGIS_WORKFLOW_TEMPLATE_SOURCE_ROOT}/{template_name}"
-    return None
+    return _managed_update.source_path_for_managed_asset(
+        path,
+        policy=_managed_plan_policy(),
+    )
 
 
 def _git_blob_checksum(source_root: Path, commit: str, source_path: str) -> str | None:
-    if not re.fullmatch(r"[0-9a-fA-F]{7,64}", commit):
-        return None
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(source_root), "show", f"{commit}:{source_path}"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        )
-    except OSError:
-        return None
-    if result.returncode != 0:
-        return None
-    return _content_checksum(result.stdout)
+    return _managed_update.git_blob_checksum(source_root, commit, source_path)
 
 
 def _legacy_managed_checksum(
     manifest: Mapping[str, Any], current_source_root: Path, path: str
 ) -> str | None:
-    source_path = _source_path_for_managed_asset(path)
-    runtime = manifest.get("runtime")
-    if source_path is None or not isinstance(runtime, Mapping):
-        return None
-    commit = runtime.get("source_commit")
-    if not isinstance(commit, str):
-        return None
-
-    roots: list[Path] = []
-    recorded_root = runtime.get("source_root")
-    if isinstance(recorded_root, str):
-        roots.append(Path(recorded_root).expanduser())
-    roots.append(current_source_root)
-    seen: set[Path] = set()
-    for candidate in roots:
-        resolved = candidate.resolve()
-        if resolved in seen:
-            continue
-        seen.add(resolved)
-        checksum = _git_blob_checksum(resolved, commit, source_path)
-        if checksum is not None:
-            return checksum
-    return None
+    return _managed_update.legacy_managed_checksum(
+        manifest,
+        current_source_root,
+        path,
+        policy=_managed_plan_policy(),
+    )
 
 
 def _managed_baseline_checksum(
@@ -2498,176 +2735,24 @@ def _plan_operations(
     source_root: Path,
     baseline_manifest: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    all_assets = [*assets, Asset(AEGIS_MANIFEST_REL, manifest_bytes)]
-    installed_manifest = baseline_manifest
-    if not isinstance(installed_manifest, Mapping):
-        installed_manifest = _read_json(target_root / AEGIS_MANIFEST_REL)
-    if not isinstance(installed_manifest, Mapping):
-        installed_manifest = {}
-    managed_paths = _manifest_path_set(installed_manifest, "managed_files")
-    customized_paths = _manifest_path_set(installed_manifest, "customized_files")
-    operations: list[dict[str, Any]] = []
-    for asset in all_assets:
-        target = target_root / asset.path
-        if not target.exists():
-            operations.append(
-                {
-                    "action": "create",
-                    "path": asset.path,
-                    "classification": "create",
-                    "safe_to_apply": True,
-                    "managed": True,
-                    "reason": "Target file is missing.",
-                }
-            )
-            continue
-        if target.is_dir():
-            operations.append(
-                {
-                    "action": "conflict",
-                    "path": asset.path,
-                    "classification": "conflict",
-                    "safe_to_apply": False,
-                    "managed": False,
-                    "reason": "Target path is a directory.",
-                }
-            )
-            continue
-        if target.read_bytes() == asset.content:
-            operations.append(
-                {
-                    "action": "skip",
-                    "path": asset.path,
-                    "classification": "skip",
-                    "safe_to_apply": True,
-                    "managed": True,
-                    "reason": "Target file already matches expected content.",
-                }
-            )
-            continue
-        if asset.kind == "config":
-            operations.append(
-                {
-                    "action": "skip",
-                    "path": asset.path,
-                    "classification": "skip",
-                    "safe_to_apply": True,
-                    "managed": True,
-                    "reason": "Per-repo Aegis configuration is owner-maintained; seeded only when missing.",
-                }
-            )
-            continue
-        if asset.path == "CLAUDE.md" and asset.kind == "adapter":
-            operations.append(
-                {
-                    "action": "modify",
-                    "path": asset.path,
-                    "classification": "modify",
-                    "safe_to_apply": True,
-                    "managed": True,
-                    "reason": "Existing Claude instructions will be preserved below an Aegis-managed runtime block.",
-                }
-            )
-            continue
-        if asset.path == "CODEX.md" and asset.kind == "adapter":
-            operations.append(
-                {
-                    "action": "modify",
-                    "path": asset.path,
-                    "classification": "modify",
-                    "safe_to_apply": True,
-                    "managed": True,
-                    "reason": "Existing Codex instructions will be preserved below an Aegis-managed continuation block.",
-                }
-            )
-            continue
-        if asset.path == "AGENTS.md":
-            operations.append(
-                {
-                    "action": "modify",
-                    "path": asset.path,
-                    "classification": "modify",
-                    "safe_to_apply": True,
-                    "managed": True,
-                    "reason": "Existing agent instructions will be preserved below an Aegis-managed runtime block.",
-                }
-            )
-            continue
-        if asset.path in managed_paths and asset.path not in customized_paths:
-            baseline_checksum, baseline_source = _managed_baseline_checksum(
-                installed_manifest, source_root, asset.path
-            )
-            if baseline_checksum is not None:
-                installed_checksum = _content_checksum(target.read_bytes())
-                if installed_checksum != baseline_checksum:
-                    operations.append(
-                        {
-                            "action": "manual-review",
-                            "path": asset.path,
-                            "classification": "manual-review",
-                            "safe_to_apply": False,
-                            "managed": True,
-                            "reason": (
-                                "Installed Aegis-managed file diverged from its "
-                                f"{baseline_source}; refusing semantic overwrite."
-                            ),
-                        }
-                    )
-                    continue
-            elif _source_path_for_managed_asset(asset.path) is not None:
-                operations.append(
-                    {
-                        "action": "manual-review",
-                        "path": asset.path,
-                        "classification": "manual-review",
-                        "safe_to_apply": False,
-                        "managed": True,
-                        "reason": (
-                            "A legacy source-backed managed file differs, but its prior "
-                            "expected bytes cannot be recovered; refusing semantic overwrite."
-                        ),
-                    }
-                )
-                continue
-            operations.append(
-                {
-                    "action": "modify",
-                    "path": asset.path,
-                    "classification": "modify",
-                    "safe_to_apply": True,
-                    "managed": True,
-                    "reason": "Existing Aegis-managed file will be upgraded to the current managed asset.",
-                }
-            )
-            continue
-        operations.append(
-            {
-                "action": "manual-review",
-                "path": asset.path,
-                "classification": "manual-review",
-                "safe_to_apply": False,
-                "managed": False,
-                "reason": "Existing file differs and Aegis V1 refuses unsafe overwrites.",
-            }
-        )
-    return operations
+    return _managed_update.plan_operations(
+        target_root,
+        assets,
+        manifest_bytes,
+        source_root=source_root,
+        policy=_managed_plan_policy(),
+        read_json=_read_json,
+        render_codex_hooks=_render_codex_hooks,
+        merge_codex_hooks=_merge_codex_hooks,
+        codex_hooks_adoptable_fn=_codex_hooks_adoptable,
+        managed_baseline_checksum_fn=_managed_baseline_checksum,
+        source_path_for_managed_asset_fn=_source_path_for_managed_asset,
+        baseline_manifest=baseline_manifest,
+    )
 
 
 def _summary(operations: Sequence[Mapping[str, Any]]) -> dict[str, int]:
-    counts = {key: 0 for key in ("creates", "modifies", "skips", "conflicts", "manual_reviews")}
-    for operation in operations:
-        classification = operation.get("classification")
-        if classification == "create":
-            counts["creates"] += 1
-        elif classification == "modify":
-            counts["modifies"] += 1
-        elif classification == "skip":
-            counts["skips"] += 1
-        elif classification == "conflict":
-            counts["conflicts"] += 1
-        elif classification == "manual-review":
-            counts["manual_reviews"] += 1
-    return counts
+    return _managed_update.summarize_operations(operations)
 
 
 def _client_reload_marker_path(target_root: Path) -> Path:
@@ -2700,16 +2785,24 @@ def invoking_agent_from_environment(
     return None
 
 
-def _client_reload_blocks_agent(marker: Mapping[str, Any], invoking_agent: str | None) -> bool:
-    normalized_invoker = str(invoking_agent or "").strip().lower()
-    marker_agents = {
-        str(agent).strip().lower()
-        for agent in marker.get("agents", [])
-        if isinstance(agent, str) and str(agent).strip().lower() in AGENT_CHOICES
-    }
+def _client_reload_agents(marker: Mapping[str, Any]) -> tuple[str, ...]:
+    raw_agents = marker.get("agents")
+    agents: list[str] = []
+    if isinstance(raw_agents, list):
+        agents.extend(
+            str(agent).strip().lower()
+            for agent in raw_agents
+            if str(agent).strip().lower() in AGENT_CHOICES
+        )
     legacy_agent = str(marker.get("agent") or "").strip().lower()
-    if not marker_agents and legacy_agent in AGENT_CHOICES:
-        marker_agents.add(legacy_agent)
+    if legacy_agent in AGENT_CHOICES:
+        agents.append(legacy_agent)
+    return tuple(dict.fromkeys(agents))
+
+
+def _client_reload_blocks_agent(marker: Mapping[str, Any], invoking_agent: str | None) -> bool:
+    marker_agents = _client_reload_agents(marker)
+    normalized_invoker = str(invoking_agent or "").strip().lower()
     if not marker_agents or normalized_invoker not in AGENT_CHOICES:
         return True
     return normalized_invoker in marker_agents
@@ -2719,11 +2812,44 @@ def _write_client_reload_marker(target_root: Path, report: Mapping[str, Any]) ->
     changed_paths = [
         str(path) for path in report.get("changed_paths", []) if isinstance(path, str) and path
     ]
-    agents = [
-        str(agent)
-        for agent in report.get("agents", [])
-        if isinstance(agent, str) and agent in AGENT_CHOICES
-    ]
+    report_agents = report.get("agents")
+    agents = (
+        [
+            str(agent).strip().lower()
+            for agent in report_agents
+            if str(agent).strip().lower() in AGENT_CHOICES
+        ]
+        if isinstance(report_agents, list)
+        else []
+    )
+    legacy_agent = str(report.get("agent") or "").strip().lower()
+    if legacy_agent in AGENT_CHOICES:
+        agents.append(legacy_agent)
+    agents = list(dict.fromkeys(agents)) or ["claude"]
+    changed_paths_by_agent = report.get("changed_paths_by_agent")
+    if not isinstance(changed_paths_by_agent, Mapping):
+        changed_paths_by_agent = {agent: changed_paths for agent in agents}
+    clearance_by_agent = {
+        "claude": {
+            "method": "installed_agent_pretooluse_hook",
+            "path": ".claude/scripts/pretooluse-gate.sh",
+            "description": (
+                "A restarted Claude session proves hook activation when PreToolUse runs "
+                "and clears only the Claude marker."
+            ),
+        },
+        "codex": {
+            "method": "installed_agent_pretooluse_hook",
+            "path": CODEX_HOOKS_REL,
+            "description": (
+                "A trusted Codex project hook proves activation when SessionStart runs "
+                "and clears only the Codex marker."
+            ),
+        },
+    }
+    active_clearance = {
+        agent: clearance_by_agent[agent] for agent in agents if agent in clearance_by_agent
+    }
     agent_label = str(report.get("agent") or (agents[0] if len(agents) == 1 else "multi"))
     hook_trust = report.get("hook_trust") if isinstance(report.get("hook_trust"), Mapping) else {}
     payload = {
@@ -2733,25 +2859,31 @@ def _write_client_reload_marker(target_root: Path, report: Mapping[str, Any]) ->
         "agents": agents,
         "created_at": _iso_now(),
         "changed_paths": changed_paths,
+        "changed_paths_by_agent": {
+            str(agent): [str(path) for path in paths if isinstance(path, str) and path]
+            for agent, paths in changed_paths_by_agent.items()
+            if str(agent) in agents and isinstance(paths, list)
+        },
         "reason": report.get("reason"),
         "instructions": report.get("instructions"),
+        "clearance": active_clearance.get(agents[0], {}),
+        "clearance_by_agent": active_clearance,
         "hook_trust": dict(hook_trust),
-        "clearance": {
-            "method": "installed_agent_pretooluse_hook",
-            "path": ".claude/scripts/pretooluse-gate.sh",
-            "description": (
-                "A restarted or reconnected enabled client proves hook activation when its trusted "
-                "PreToolUse definition runs and clears that client from this marker."
-            ),
-        },
     }
-    _write_text(target_root, AEGIS_CLIENT_RELOAD_REL, _dump_json(payload))
+    target = target_root / AEGIS_CLIENT_RELOAD_REL
+    _atomic_write_bytes(
+        target,
+        _dump_json(payload).encode("utf-8"),
+        mode=(target.stat().st_mode & 0o7777) if target.exists() else 0o644,
+    )
 
 
 def _client_reload_report(
     target_root: Path, plan: Mapping[str, Any], enabled_agents: Sequence[str]
 ) -> dict[str, Any]:
-    changed_by_agent: dict[str, list[str]] = {"claude": [], "codex": []}
+    changed_by_agent: dict[str, list[str]] = {
+        agent: [] for agent in enabled_agents if agent in AGENT_CHOICES
+    }
     for operation in plan.get("operations", []):
         if not isinstance(operation, Mapping):
             continue
@@ -2759,77 +2891,96 @@ def _client_reload_report(
         rel_path = str(operation.get("path") or "")
         if classification not in {"create", "modify"}:
             continue
-        if "claude" in enabled_agents and (rel_path == "CLAUDE.md" or rel_path.startswith(".claude/")):
+        if "claude" in enabled_agents and (
+            rel_path == "CLAUDE.md" or rel_path.startswith(".claude/")
+        ):
             changed_by_agent["claude"].append(rel_path)
         if "codex" in enabled_agents and (
             rel_path in {"CODEX.md", CODEX_HOOKS_REL} or rel_path in CODEX_SHARED_RUNTIME_FILES
         ):
             changed_by_agent["codex"].append(rel_path)
 
+    unique_by_agent = {
+        agent: sorted(set(paths)) for agent, paths in changed_by_agent.items() if paths
+    }
     marker = _client_reload_marker(target_root)
-    marker_paths = [
-        str(path)
-        for path in (marker or {}).get("changed_paths", [])
-        if isinstance(path, str) and path
-    ]
-    marker_agents = [
-        str(agent)
-        for agent in (marker or {}).get("agents", [])
-        if isinstance(agent, str) and agent in AGENT_CHOICES
-    ]
-    legacy_marker_agent = str((marker or {}).get("agent") or "")
-    if not marker_agents and legacy_marker_agent in AGENT_CHOICES:
-        marker_agents = [legacy_marker_agent]
-    changed_agents = [agent for agent, paths in changed_by_agent.items() if paths]
-    required_agents = sorted(set(changed_agents) | set(marker_agents))
-    unique_changed_paths = sorted(
-        {path for paths in changed_by_agent.values() for path in paths}
-    )
-    effective_paths = sorted(set(unique_changed_paths) | set(marker_paths))
-    required = bool(required_agents) or marker is not None
+    marker_agents = _client_reload_agents(marker or {})
+    marker_by_agent = (marker or {}).get("changed_paths_by_agent")
+    if not isinstance(marker_by_agent, Mapping):
+        legacy_paths = [
+            str(path)
+            for path in (marker or {}).get("changed_paths", [])
+            if isinstance(path, str) and path
+        ]
+        marker_by_agent = {agent: legacy_paths for agent in marker_agents}
+    effective_by_agent: dict[str, list[str]] = {}
+    for agent in dict.fromkeys([*enabled_agents, *marker_agents]):
+        paths = [*unique_by_agent.get(agent, [])]
+        marker_paths = (
+            marker_by_agent.get(agent, []) if isinstance(marker_by_agent, Mapping) else []
+        )
+        if isinstance(marker_paths, list):
+            paths.extend(str(path) for path in marker_paths if isinstance(path, str) and path)
+        if paths or agent in marker_agents:
+            effective_by_agent[agent] = sorted(set(paths))
+    effective_agents = list(effective_by_agent)
+    effective_paths = sorted({path for paths in effective_by_agent.values() for path in paths})
+    required = bool(effective_agents) or marker is not None
+    only_claude = effective_agents == ["claude"]
+    only_codex = effective_agents == ["codex"]
+    if only_claude:
+        reason = (
+            "Claude Code loads project hook settings at session start; newly created or changed "
+            ".claude/settings.json and .claude/scripts/* hooks are not guaranteed to govern this already-running session."
+        )
+        instructions = (
+            "HARD STOP: if this install ran inside Claude Code, do not edit source files, run project verification, "
+            "mutate Taskmaster, or call aegis.start/aegis.kickoff in this same session. restart Claude in this "
+            "project so newly installed hooks are active. After restart, run aegis.next and start or kickoff tracked "
+            "work before mutating files."
+        )
+    elif only_codex:
+        reason = (
+            "Codex loads project hooks at session start and requires hash-based trust for new or changed "
+            ".codex/hooks.json command handlers."
+        )
+        instructions = (
+            "HARD STOP: restart Codex in this project, open /hooks and trust the reviewed project hooks, then "
+            "run /clear (or restart once more) so the trusted SessionStart recorder proves activation. Run "
+            "aegis.next before tracked mutations."
+        )
+    else:
+        reason = "One or more enabled agent adapters changed lifecycle hooks that are loaded and trusted per client session."
+        instructions = (
+            "HARD STOP for each listed adapter until it proves its own hook activation. Restart Claude where enabled; "
+            "for Codex, restart, review/trust the project hooks with /hooks, then run /clear or restart again."
+        )
     agent_label = (
-        required_agents[0]
-        if len(required_agents) == 1
-        else "multi" if required_agents else None
+        effective_agents[0] if len(effective_agents) == 1 else "multi" if effective_agents else None
     )
     marker_hook_trust = (
         (marker or {}).get("hook_trust")
         if isinstance((marker or {}).get("hook_trust"), Mapping)
         else {}
     )
-    codex_trust_required = "codex" in required_agents and (
-        CODEX_HOOKS_REL in effective_paths
-        or bool(marker_hook_trust.get("required"))
+    codex_trust_required = "codex" in effective_agents and (
+        CODEX_HOOKS_REL in effective_paths or bool(marker_hook_trust.get("required"))
     )
-    restart_instructions: list[str] = []
-    if "claude" in required_agents:
-        restart_instructions.append("restart Claude Code in this project")
-    if "codex" in required_agents:
-        restart_instructions.append(
-            "reconnect the Codex project session, open /hooks, review the exact definitions and hashes, and trust them"
-        )
-    action_text = "; then ".join(restart_instructions)
     return {
         "required": required,
         "agent": agent_label,
-        "agents": required_agents,
+        "agents": effective_agents,
         "severity": "hard_stop" if required else "none",
         "must_stop": required,
         "pending_marker": marker is not None,
         "marker_path": AEGIS_CLIENT_RELOAD_REL if required else None,
         "changed_paths": effective_paths,
+        "changed_paths_by_agent": effective_by_agent,
         "reason": (
-            "Enabled clients load project hook definitions and entry context at session boundaries; newly created or "
-            "changed adapter files are not guaranteed to govern an already-running session."
-            if required
-            else "No enabled client adapter settings, entry context, or hook scripts changed in this install."
+            reason if required else "No enabled adapter lifecycle hooks changed in this install."
         ),
         "instructions": (
-            "HARD STOP: do not edit source files, run project verification, mutate Taskmaster, or call "
-            f"aegis.start/aegis.kickoff in this same session. {action_text}. After reload and any required hook "
-            "trust review, run aegis.next and start or kickoff tracked work before mutating files."
-            if required
-            else "No client restart, reconnect, or hook-trust review is required by this install."
+            instructions if required else "No adapter restart is required by this install."
         ),
         "hook_trust": {
             "required": codex_trust_required,
@@ -2863,6 +3014,7 @@ def _client_reload_report(
         "allowed_until_reload": (
             [
                 "read-only Aegis inspect/status/next/doctor",
+                "review the adapter-specific restart/trust instructions",
                 "tell the user which enabled clients must restart or reconnect",
                 "open /hooks only to review Codex hook definitions and hashes",
             ]
@@ -2883,9 +3035,7 @@ def _expected_manifest_summary(primary_agent: str, enabled_agents: Sequence[str]
                 "gate_ids": list(
                     CLAUDE_GATE_IDS
                     if agent == "claude"
-                    else CODEX_GATE_IDS
-                    if agent == "codex"
-                    else ()
+                    else CODEX_GATE_IDS if agent == "codex" else ()
                 ),
             }
             for agent in ("claude", "codex", "gemini")
@@ -3573,8 +3723,7 @@ def _post_closeout_delivery_guidance(
             matching_prs = [
                 dict(pr)
                 for pr in gh.get("prs", [])
-                if isinstance(pr, Mapping)
-                and str(pr.get("headRefName") or "") == recorded_branch
+                if isinstance(pr, Mapping) and str(pr.get("headRefName") or "") == recorded_branch
             ]
             merged_prs = [
                 pr
@@ -4192,10 +4341,12 @@ def next_action(
                 invoking_agent=invoking_agent,
                 _ignore_client_reload=True,
             )
-            marker_agent = str(reload_marker.get("agent") or "unknown")
+            marker_agents = list(_client_reload_agents(reload_marker))
+            marker_agent = marker_agents[0] if marker_agents else "unknown"
             pending_reload = {
                 "status": "required_for_other_agent",
                 "agent": marker_agent,
+                "agents": marker_agents,
                 "invoking_agent": invoking_agent,
                 "blocks_invoking_agent": False,
                 "marker_path": AEGIS_CLIENT_RELOAD_REL,
@@ -4209,23 +4360,56 @@ def next_action(
                 payload["details"] = details
             details["pending_adapter_reload"] = pending_reload
             return payload
-        return _workflow_guidance_payload(
-            phase="bootstrap",
-            state="client_reload_required",
-            next_required_action=(
-                "restart Claude before start/kickoff or source edits so newly installed hooks are active"
-            ),
-            suggested_cli="Restart Claude Code in this project, then run ./.aegis/bin/aegis next --target-dir .",
-            suggested_mcp_tool="aegis.next",
-            suggested_mcp_arguments={"target_dir": "."},
-            missing_gates=["claude.client_reload"],
-            copyable_repairs=[
+        marker_agents = list(_client_reload_agents(reload_marker))
+        normalized_invoker = str(invoking_agent or "").strip().lower()
+        marker_agent = (
+            normalized_invoker
+            if normalized_invoker in marker_agents
+            else marker_agents[0] if marker_agents else "unknown"
+        )
+        if marker_agent == "codex":
+            reload_action = (
+                "restart Codex, trust the reviewed project hooks with /hooks, then run /clear "
+                "before start/kickoff or source edits"
+            )
+            suggested_reload = (
+                "Restart Codex in this project; open /hooks and trust .codex/hooks.json; "
+                "run /clear; then run ./.aegis/bin/aegis next --target-dir ."
+            )
+            reload_repairs = [
+                "Exit this Codex session.",
+                "Start Codex again in this same project directory.",
+                "Open /hooks and trust the reviewed project hooks.",
+                "Run /clear so the trusted SessionStart recorder executes.",
+                "./.aegis/bin/aegis next --target-dir .",
+            ]
+        elif marker_agent == "claude":
+            reload_action = "restart Claude before start/kickoff or source edits so newly installed hooks are active"
+            suggested_reload = "Restart Claude Code in this project, then run ./.aegis/bin/aegis next --target-dir ."
+            reload_repairs = [
                 "Exit this Claude session.",
                 "Start Claude again in this same project directory.",
                 "./.aegis/bin/aegis next --target-dir .",
-            ],
+            ]
+        else:
+            reload_action = "reload and trust every pending agent adapter before tracked mutations"
+            suggested_reload = (
+                "Follow the adapter-specific instructions in the client reload marker."
+            )
+            reload_repairs = [suggested_reload]
+        return _workflow_guidance_payload(
+            phase="bootstrap",
+            state="client_reload_required",
+            next_required_action=reload_action,
+            suggested_cli=suggested_reload,
+            suggested_mcp_tool="aegis.next",
+            suggested_mcp_arguments={"target_dir": "."},
+            missing_gates=[f"{marker_agent}.client_reload"],
+            copyable_repairs=reload_repairs,
             details={
                 "client_reload_required": True,
+                "agent": marker_agent,
+                "agents": marker_agents,
                 "marker_path": AEGIS_CLIENT_RELOAD_REL,
                 "changed_paths": reload_marker.get("changed_paths", []),
                 "clearance": reload_marker.get("clearance", {}),
@@ -4508,9 +4692,7 @@ def next_action(
             for item in pending_tracking["sample"]
             if isinstance(item, Mapping) and item.get("mode") == "strict"
         ]
-        first_required_id = (
-            str(required_samples[0].get("id") or "") if required_samples else ""
-        )
+        first_required_id = str(required_samples[0].get("id") or "") if required_samples else ""
         required_event_action = bool(first_required_id)
         pending_event_id = (
             "current"
@@ -5122,13 +5304,101 @@ def _unsafe_operations(plan: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     ]
 
 
+def _atomic_write_bytes(target: Path, content: bytes, *, mode: int) -> None:
+    """Atomically replace one file without exposing partially written runtime bytes."""
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temp_name = tempfile.mkstemp(
+        prefix=f".{target.name}.aegis-",
+        dir=target.parent,
+    )
+    temp_path = Path(temp_name)
+    try:
+        handle = os.fdopen(descriptor, "wb")
+        descriptor = -1
+        with handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        temp_path.chmod(mode)
+        os.replace(temp_path, target)
+    except Exception:
+        if descriptor >= 0:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        try:
+            temp_path.unlink()
+        except OSError:
+            pass
+        raise
+
+
 def _write_asset(target_root: Path, asset: Asset) -> None:
     target = target_root / asset.path
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(asset.content)
-    if asset.executable:
-        current_mode = target.stat().st_mode
-        target.chmod(current_mode | 0o111)
+    if target.exists():
+        mode = target.stat().st_mode & 0o7777
+        if asset.executable:
+            mode |= 0o111
+    else:
+        mode = 0o755 if asset.executable else 0o644
+    _atomic_write_bytes(target, asset.content, mode=mode)
+
+
+def _install_asset_priority(asset: Asset) -> int:
+    """Order dependencies before entrypoints and activation configuration."""
+
+    if asset.path == ".claude/scripts/gate_lib.py":
+        return 0
+    if asset.path in CLAUDE_SUPPORT_FILES or asset.path == AEGIS_RUNTIME_ENV_REL:
+        return 10
+    if asset.path == AEGIS_LOCAL_BIN_REL:
+        return 20
+    if asset.path in CLAUDE_RUNTIME_HOOK_PHASES:
+        return 30
+    if asset.path in {CODEX_HOOKS_REL, ".claude/settings.json"}:
+        return 40
+    return 10
+
+
+def _ordered_install_assets(assets: Sequence[Asset]) -> list[Asset]:
+    """Return a stable dependency-first install order."""
+
+    indexed = list(enumerate(assets))
+    indexed.sort(key=lambda item: (_install_asset_priority(item[1]), item[0]))
+    return [asset for _index, asset in indexed]
+
+
+def _snapshot_existing_paths(
+    target_root: Path,
+    rel_paths: Iterable[str],
+) -> dict[str, tuple[bytes, int]]:
+    snapshots: dict[str, tuple[bytes, int]] = {}
+    for rel_path in dict.fromkeys(rel_paths):
+        target = target_root / rel_path
+        if target.is_file():
+            snapshots[rel_path] = (target.read_bytes(), target.stat().st_mode & 0o7777)
+    return snapshots
+
+
+def _restore_existing_paths(
+    target_root: Path,
+    snapshots: Mapping[str, tuple[bytes, int]],
+) -> dict[str, Any]:
+    restored: list[str] = []
+    errors: list[dict[str, str]] = []
+    for rel_path, (content, mode) in snapshots.items():
+        try:
+            _atomic_write_bytes(target_root / rel_path, content, mode=mode)
+            restored.append(rel_path)
+        except OSError as exc:
+            errors.append({"path": rel_path, "error": str(exc)})
+    return {
+        "status": "partial" if errors else "completed",
+        "restored_paths": sorted(restored),
+        "errors": errors,
+    }
 
 
 def _cleanup_created_paths(target_root: Path, rel_paths: Iterable[str]) -> dict[str, Any]:
@@ -6105,9 +6375,7 @@ def reconcile(
     status_value = (
         "drift"
         if severity_counts["error"]
-        else "needs_review"
-        if severity_counts["warning"]
-        else "clean"
+        else "needs_review" if severity_counts["warning"] else "clean"
     )
     report = {
         "schema_version": SCHEMA_VERSION,
@@ -8457,7 +8725,10 @@ def _pending_event_sample(event: Any, index: int) -> dict[str, Any]:
         }
     affected_paths = event.get("affected_paths")
     affected = (
-        [_bounded_pending_value(path) for path in affected_paths[:AEGIS_PENDING_TRACKING_SAMPLE_LIMIT]]
+        [
+            _bounded_pending_value(path)
+            for path in affected_paths[:AEGIS_PENDING_TRACKING_SAMPLE_LIMIT]
+        ]
         if isinstance(affected_paths, list)
         else []
     )
@@ -9350,6 +9621,7 @@ def install(
 
     installed_at = _installed_at_for_plan(target_root)
     assets = _assets_for_target(target_root, _managed_assets(source, primary_agent, enabled_agents))
+    ordered_assets = _ordered_install_assets(assets)
     manifest = _manifest_payload(
         source,
         target_root,
@@ -9366,11 +9638,25 @@ def install(
     ]
     runtime_report_paths = [
         rel_path
-        for rel_path in (AEGIS_PLAN_REPORT_REL, AEGIS_INSTALL_REPORT_REL)
+        for rel_path in (
+            AEGIS_PLAN_REPORT_REL,
+            AEGIS_INSTALL_REPORT_REL,
+            AEGIS_CLIENT_RELOAD_REL,
+        )
         if not (target_root / rel_path).exists()
     ]
+    snapshots = _snapshot_existing_paths(
+        target_root,
+        [
+            *(asset.path for asset in ordered_assets),
+            manifest_asset.path,
+            AEGIS_PLAN_REPORT_REL,
+            AEGIS_INSTALL_REPORT_REL,
+            AEGIS_CLIENT_RELOAD_REL,
+        ],
+    )
     try:
-        for asset in [*assets, manifest_asset]:
+        for asset in [*ordered_assets, manifest_asset]:
             target = target_root / asset.path
             if target.exists() and target.is_file() and target.read_bytes() == asset.content:
                 continue
@@ -9381,7 +9667,12 @@ def install(
 
         reports_dir = target_root / AEGIS_REPORTS_REL
         reports_dir.mkdir(parents=True, exist_ok=True)
-        (target_root / AEGIS_PLAN_REPORT_REL).write_text(_dump_json(plan), encoding="utf-8")
+        plan_report_path = target_root / AEGIS_PLAN_REPORT_REL
+        _atomic_write_bytes(
+            plan_report_path,
+            _dump_json(plan).encode("utf-8"),
+            mode=(plan_report_path.stat().st_mode & 0o7777) if plan_report_path.exists() else 0o644,
+        )
         client_reload = _client_reload_report(target_root, plan, enabled_agents)
         if client_reload.get("required") and not client_reload.get("pending_marker"):
             _write_client_reload_marker(target_root, client_reload)
@@ -9396,10 +9687,23 @@ def install(
             "client_reload": client_reload,
             "hygiene": gitignore_hygiene_report(target_root),
         }
-        (target_root / AEGIS_INSTALL_REPORT_REL).write_text(_dump_json(report), encoding="utf-8")
+        install_report_path = target_root / AEGIS_INSTALL_REPORT_REL
+        _atomic_write_bytes(
+            install_report_path,
+            _dump_json(report).encode("utf-8"),
+            mode=(
+                (install_report_path.stat().st_mode & 0o7777)
+                if install_report_path.exists()
+                else 0o644
+            ),
+        )
         return report
     except Exception as exc:
+        rollback = _restore_existing_paths(target_root, snapshots)
         cleanup = _cleanup_created_paths(target_root, [*created_plan_paths, *runtime_report_paths])
+        if cleanup["status"] != "completed":
+            rollback["status"] = "partial"
+        rollback["cleanup"] = cleanup
         return {
             "schema_version": SCHEMA_VERSION,
             "status": "failed",
@@ -9408,6 +9712,7 @@ def install(
             "target_root": str(target_root),
             "plan": plan,
             "cleanup": cleanup,
+            "rollback": rollback,
         }
 
 
@@ -10018,6 +10323,76 @@ def _strict_claude_checks(target_root: Path, manifest: Mapping[str, Any]) -> lis
     return checks
 
 
+def _tracked_codex_hook_trust_guidance(manifest: Mapping[str, Any]) -> dict[str, Any]:
+    gates = manifest.get("gates")
+    if not isinstance(gates, list):
+        return {}
+    matching = [
+        gate for gate in gates if isinstance(gate, Mapping) and gate.get("id") == "codex.hook_trust"
+    ]
+    if len(matching) != 1:
+        return {}
+    gate = matching[0]
+    verification = gate.get("verification")
+    if not isinstance(verification, Mapping):
+        return {}
+    if not (
+        gate.get("required") is False
+        and gate.get("enforcement") == "policy"
+        and gate.get("scope") == "adapter"
+        and gate.get("adapter") == "codex"
+        and gate.get("path") == CODEX_HOOKS_REL
+        and gate.get("settings_path") == CODEX_HOOKS_REL
+        and gate.get("unsupported_reason") == CODEX_HOOK_TRUST_UNSUPPORTED_REASON
+        and gate.get("review_command") == CODEX_HOOK_TRUST_REVIEW_COMMAND
+        and gate.get("hash_scope") == CODEX_HOOK_TRUST_HASH_SCOPE
+        and gate.get("bypass_allowed") is False
+        and verification.get("method") == "manual"
+        and verification.get("failure_mode") == "unsupported"
+        and verification.get("expected") is None
+    ):
+        return {}
+    return {
+        "settings_path": gate.get("settings_path"),
+        "review_command": gate.get("review_command"),
+        "hash_scope": gate.get("hash_scope"),
+        "bypass_allowed": gate.get("bypass_allowed"),
+        "source": "manifest_gate",
+    }
+
+
+def _supplemental_codex_hook_trust_evidence(target_root: Path) -> dict[str, Any]:
+    """Describe generated install guidance without treating it as trust authority."""
+
+    report_path = target_root / AEGIS_INSTALL_REPORT_REL
+    install_report = _read_json(report_path)
+    reload_report = (
+        install_report.get("client_reload")
+        if isinstance(install_report, Mapping)
+        and isinstance(install_report.get("client_reload"), Mapping)
+        else {}
+    )
+    hook_trust = (
+        reload_report.get("hook_trust")
+        if isinstance(reload_report, Mapping)
+        and isinstance(reload_report.get("hook_trust"), Mapping)
+        else {}
+    )
+    matches_contract = bool(hook_trust) and (
+        hook_trust.get("settings_path") == CODEX_HOOKS_REL
+        and hook_trust.get("review_command") == CODEX_HOOK_TRUST_REVIEW_COMMAND
+        and hook_trust.get("hash_scope") == CODEX_HOOK_TRUST_HASH_SCOPE
+        and hook_trust.get("bypass_allowed") is False
+    )
+    return {
+        "install_report_present": report_path.is_file(),
+        "install_report_parsed": isinstance(install_report, Mapping),
+        "hook_trust_guidance_present": bool(hook_trust),
+        "matches_tracked_contract": matches_contract,
+        "client_trust_asserted": False,
+    }
+
+
 def _strict_codex_checks(target_root: Path, manifest: Mapping[str, Any]) -> list[dict[str, Any]]:
     required = _agent_enabled(manifest, "codex")
     if not required:
@@ -10084,21 +10459,12 @@ def _strict_codex_checks(target_root: Path, manifest: Mapping[str, Any]) -> list
         )
     )
 
-    install_report = _read_json(target_root / AEGIS_INSTALL_REPORT_REL) or {}
-    reload_report = (
-        install_report.get("client_reload")
-        if isinstance(install_report.get("client_reload"), Mapping)
-        else {}
-    )
-    hook_trust = (
-        reload_report.get("hook_trust")
-        if isinstance(reload_report.get("hook_trust"), Mapping)
-        else {}
-    )
+    hook_trust = _tracked_codex_hook_trust_guidance(manifest)
+    supplemental_hook_trust = _supplemental_codex_hook_trust_evidence(target_root)
     trust_guidance_ok = (
         hook_trust.get("settings_path") == CODEX_HOOKS_REL
-        and hook_trust.get("review_command") == "/hooks"
-        and hook_trust.get("hash_scope") == "exact_hook_definition"
+        and hook_trust.get("review_command") == CODEX_HOOK_TRUST_REVIEW_COMMAND
+        and hook_trust.get("hash_scope") == CODEX_HOOK_TRUST_HASH_SCOPE
         and hook_trust.get("bypass_allowed") is False
     )
     checks.append(
@@ -10117,6 +10483,9 @@ def _strict_codex_checks(target_root: Path, manifest: Mapping[str, Any]) -> list
                 "review_command": hook_trust.get("review_command"),
                 "hash_scope": hook_trust.get("hash_scope"),
                 "bypass_allowed": hook_trust.get("bypass_allowed"),
+                "source": hook_trust.get("source"),
+                "client_trust_asserted": False,
+                "supplemental_install_evidence": supplemental_hook_trust,
             },
         )
     )
@@ -11210,6 +11579,39 @@ def _entrypoint_uninstall_operation(
     }
 
 
+def _codex_hooks_uninstall_operation(target_root: Path) -> dict[str, Any] | None:
+    target = target_root / CODEX_HOOKS_REL
+    if not target.is_file():
+        return None
+    payload = _parse_codex_hooks(target.read_bytes())
+    if payload is None:
+        return {
+            "action": "manual-review",
+            "path": CODEX_HOOKS_REL,
+            "classification": "manual-review",
+            "safe_to_apply": False,
+            "reason": "Codex hooks are not valid mergeable JSON; refusing to remove project hooks.",
+        }
+    if not _remove_managed_codex_hook_handlers(payload):
+        return None
+    if not payload:
+        return {
+            "action": "remove",
+            "path": CODEX_HOOKS_REL,
+            "classification": "remove",
+            "safe_to_apply": True,
+            "reason": "remove Codex hooks file containing only Aegis-managed handlers",
+        }
+    return {
+        "action": "modify",
+        "path": CODEX_HOOKS_REL,
+        "classification": "modify",
+        "safe_to_apply": True,
+        "reason": "remove exact Aegis Codex handlers and preserve every unrelated project hook",
+        "content": _dump_json(payload),
+    }
+
+
 def _path_uninstall_operation(target_root: Path, rel_path: str) -> dict[str, Any] | None:
     target = target_root / rel_path
     if not target.exists() and not target.is_symlink():
@@ -11250,15 +11652,16 @@ def _uninstall_operations(
     enabled_agents = _enabled_agents_from_manifest(manifest) or ("claude",)
     primary_agent = str((manifest or {}).get("primary_agent") or enabled_agents[0])
     for operation in (
+        _codex_hooks_uninstall_operation(target_root),
         _entrypoint_uninstall_operation(
             target_root,
             "CLAUDE.md",
             begin_marker=AEGIS_CLAUDE_BLOCK_BEGIN,
             end_marker=AEGIS_CLAUDE_BLOCK_END,
             existing_heading="Existing Project Instructions",
-            expected_aegis_content=_render_claude_entrypoint()
-            if "claude" in enabled_agents
-            else None,
+            expected_aegis_content=(
+                _render_claude_entrypoint() if "claude" in enabled_agents else None
+            ),
         ),
         _entrypoint_uninstall_operation(
             target_root,
@@ -11274,9 +11677,11 @@ def _uninstall_operations(
             begin_marker=AEGIS_AGENTS_BLOCK_BEGIN,
             end_marker=AEGIS_AGENTS_BLOCK_END,
             existing_heading="Existing Agent Instructions",
-            expected_aegis_content=_render_agents_doc(primary_agent, enabled_agents)
-            if source_root is not None
-            else None,
+            expected_aegis_content=(
+                _render_agents_doc(primary_agent, enabled_agents)
+                if source_root is not None
+                else None
+            ),
         ),
     ):
         if operation is not None:
@@ -11381,9 +11786,11 @@ def uninstall(
                 "safe": len(operations) - len(manual_review),
                 "manual_review": len(manual_review),
             },
-            "current_session_note": AEGIS_UNINSTALL_TRANSIENT_NOTE
-            if not remove_hook_scripts
-            else "hook scripts are selected for removal; use outside an active Claude session",
+            "current_session_note": (
+                AEGIS_UNINSTALL_TRANSIENT_NOTE
+                if not remove_hook_scripts
+                else "hook scripts are selected for removal; use outside an active Claude session"
+            ),
         }
     if manual_review:
         return {
@@ -11418,9 +11825,11 @@ def uninstall(
             "skipped": sum(1 for item in applied if item.get("status") == "skipped"),
             "failed": len(failures),
         },
-        "current_session_note": AEGIS_UNINSTALL_TRANSIENT_NOTE
-        if not remove_hook_scripts
-        else "hook scripts were selected for removal",
+        "current_session_note": (
+            AEGIS_UNINSTALL_TRANSIENT_NOTE
+            if not remove_hook_scripts
+            else "hook scripts were selected for removal"
+        ),
     }
 
 
@@ -12916,9 +13325,7 @@ def closeout(
         _closeout_check(
             "closeout.pending_tracking",
             passed=bool(pending_tracking.get("delivery_allowed")),
-            message=str(
-                pending_tracking.get("reason") or "pending tracking state unavailable"
-            ),
+            message=str(pending_tracking.get("reason") or "pending tracking state unavailable"),
             details=pending_tracking,
         )
     )

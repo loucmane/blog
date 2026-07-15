@@ -4,7 +4,64 @@ set -euo pipefail
 SELF="$0"
 SELF_RESOLVED="$(cd "$(dirname "$SELF")" && pwd -P)/$(basename "$SELF")"
 AEGIS_DIR="$(cd "$(dirname "$SELF_RESOLVED")/.." && pwd -P)"
+AEGIS_TARGET_ROOT="$(cd "$AEGIS_DIR/.." && pwd -P)"
+export AEGIS_TARGET_ROOT
 AEGIS_RUNTIME_ENV="$AEGIS_DIR/runtime.env"
+
+aegis_degraded_hook() {
+  local phase="$1"
+  local marker="$AEGIS_TARGET_ROOT/.aegis/state/hook-bootstrap-$phase.warned"
+  mkdir -p "$AEGIS_TARGET_ROOT/.aegis/state" 2>/dev/null || true
+  if mkdir "$marker" 2>/dev/null; then
+    case "$phase" in
+      pretooluse|path|bash|configchange|readiness)
+        echo "target-local Aegis hook runtime is unavailable for $phase; refusing mutation" >&2
+        ;;
+      *)
+        echo "target-local Aegis hook runtime is unavailable for $phase; passive evidence capture is degraded" >&2
+        ;;
+    esac
+  fi
+  case "$phase" in
+    pretooluse|path|bash|configchange|readiness)
+      return 2
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+}
+
+aegis_clear_hook_marker() {
+  if [ -n "$AEGIS_HOOK_PHASE" ]; then
+    rmdir "$AEGIS_TARGET_ROOT/.aegis/state/hook-bootstrap-$AEGIS_HOOK_PHASE.warned" 2>/dev/null || true
+  fi
+}
+
+# Hook dispatch is deliberately target-local. A central source checkout may be
+# unavailable or mid-update while hooks are firing in other repositories.
+AEGIS_HOOK_PHASE=""
+if [ "${1:-}" = "hook" ]; then
+  AEGIS_HOOK_PHASE="${2:-}"
+  case "$AEGIS_HOOK_PHASE" in
+    pretooluse|posttooluse|stop|path|bash|configchange|readiness|record|recordjson|posttoolusefailure|sessionstart|sessionend|subagentstart)
+      ;;
+    *)
+      echo "unsupported Aegis hook phase: ${AEGIS_HOOK_PHASE:-<missing>}" >&2
+      exit 2
+      ;;
+  esac
+  if [ "$AEGIS_HOOK_PHASE" != "readiness" ]; then
+    AEGIS_HOOK_RUNTIME="$AEGIS_TARGET_ROOT/.claude/scripts/gate_lib.py"
+    if [ -f "$AEGIS_HOOK_RUNTIME" ]; then
+      aegis_clear_hook_marker
+      shift 2
+      exec python3 -B "$AEGIS_HOOK_RUNTIME" "$AEGIS_HOOK_PHASE" "$@"
+    fi
+    aegis_degraded_hook "$AEGIS_HOOK_PHASE"
+    exit $?
+  fi
+fi
 
 AEGIS_SOURCE_FALLBACK="/home/loucmane/codex"
 if [ -z "${AEGIS_SOURCE_ROOT:-}" ] && [ -f "$AEGIS_RUNTIME_ENV" ]; then
@@ -24,6 +81,7 @@ if [ -d "$AEGIS_SOURCE_FALLBACK" ]; then
   for AEGIS_PYTHONPATH_CANDIDATE in "$AEGIS_SOURCE_FALLBACK" "$AEGIS_SOURCE_FALLBACK/.." "$AEGIS_SOURCE_FALLBACK/../.."; do
     if PYTHONPATH="$AEGIS_PYTHONPATH_CANDIDATE${PYTHONPATH:+:$PYTHONPATH}" python3 -c 'import aegis_foundation.cli' >/dev/null 2>&1; then
       export PYTHONPATH="$AEGIS_PYTHONPATH_CANDIDATE${PYTHONPATH:+:$PYTHONPATH}"
+      aegis_clear_hook_marker
       exec python3 -m aegis_foundation.cli --source-root "$AEGIS_SOURCE_FALLBACK" "$@"
     fi
   done
@@ -33,12 +91,19 @@ if command -v aegis >/dev/null 2>&1; then
   RESOLVED="$(command -v aegis)"
   RESOLVED_ABS="$(cd "$(dirname "$RESOLVED")" && pwd -P)/$(basename "$RESOLVED")"
   if [ "$RESOLVED_ABS" != "$SELF_RESOLVED" ]; then
+    aegis_clear_hook_marker
     exec "$RESOLVED" "$@"
   fi
 fi
 
 if python3 -c 'import aegis_foundation.cli' >/dev/null 2>&1; then
+  aegis_clear_hook_marker
   exec python3 -m aegis_foundation.cli "$@"
+fi
+
+if [ -n "$AEGIS_HOOK_PHASE" ]; then
+  aegis_degraded_hook "$AEGIS_HOOK_PHASE"
+  exit $?
 fi
 
 echo "Aegis CLI is unavailable. Install aegis-foundation, add aegis to PATH, or set AEGIS_SOURCE_ROOT." >&2

@@ -48,7 +48,11 @@
         "codex.apply_patch",
         "codex.hook_trust",
         "codex.guard",
-        "codex.work_tracking_audit"
+        "codex.work_tracking_audit",
+        "codex.sessionstart_capture",
+        "codex.posttooluse_capture",
+        "codex.subagent_start_capture",
+        "codex.subagent_stop_capture"
       ],
       "managed_files": [
         ".claude/scripts/readiness.sh",
@@ -210,7 +214,7 @@
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/pretooluse-gate.sh\"",
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook pretooluse",
         "failure_mode": "fail",
         "method": "settings_hook"
       }
@@ -226,7 +230,7 @@
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/posttooluse-tracking.sh\"",
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook posttooluse",
         "failure_mode": "fail",
         "method": "settings_hook"
       }
@@ -242,7 +246,7 @@
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/ledger-record.sh\"",
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook record",
         "failure_mode": "fail",
         "method": "settings_hook"
       }
@@ -258,7 +262,7 @@
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/session-brief.sh\"",
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook sessionstart",
         "failure_mode": "fail",
         "method": "settings_hook"
       }
@@ -273,7 +277,7 @@
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/tracking-stop-gate.sh\"",
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook stop",
         "failure_mode": "fail",
         "method": "settings_hook"
       }
@@ -289,18 +293,22 @@
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex bash \"$(git rev-parse --show-toplevel)/.claude/scripts/pretooluse-gate.sh\"",
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook pretooluse",
         "failure_mode": "fail",
         "method": "settings_hook"
       }
     },
     {
       "adapter": "codex",
+      "bypass_allowed": false,
       "enforcement": "policy",
+      "hash_scope": "exact_hook_definition",
       "id": "codex.hook_trust",
       "path": ".codex/hooks.json",
       "required": false,
+      "review_command": "/hooks",
       "scope": "adapter",
+      "settings_path": ".codex/hooks.json",
       "unsupported_reason": "Codex records trust outside the project against the exact hook-definition hash; review the generated definitions with /hooks after reconnecting.",
       "verification": {
         "expected": null,
@@ -332,6 +340,70 @@
         "expected": true,
         "failure_mode": "fail",
         "method": "executable"
+      }
+    },
+    {
+      "adapter": "codex",
+      "enforcement": "mechanical",
+      "hook_event": "SessionStart",
+      "hook_matcher": "startup|resume|clear|compact",
+      "id": "codex.sessionstart_capture",
+      "path": ".codex/hooks.json",
+      "required": true,
+      "scope": "adapter",
+      "settings_path": ".codex/hooks.json",
+      "verification": {
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook sessionstart",
+        "failure_mode": "fail",
+        "method": "settings_hook"
+      }
+    },
+    {
+      "adapter": "codex",
+      "enforcement": "mechanical",
+      "hook_event": "PostToolUse",
+      "hook_matcher": "^(Bash|apply_patch|mcp__.*)$",
+      "id": "codex.posttooluse_capture",
+      "path": ".codex/hooks.json",
+      "required": true,
+      "scope": "adapter",
+      "settings_path": ".codex/hooks.json",
+      "verification": {
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook record",
+        "failure_mode": "fail",
+        "method": "settings_hook"
+      }
+    },
+    {
+      "adapter": "codex",
+      "enforcement": "mechanical",
+      "hook_event": "SubagentStart",
+      "hook_matcher": ".*",
+      "id": "codex.subagent_start_capture",
+      "path": ".codex/hooks.json",
+      "required": true,
+      "scope": "adapter",
+      "settings_path": ".codex/hooks.json",
+      "verification": {
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook subagentstart",
+        "failure_mode": "fail",
+        "method": "settings_hook"
+      }
+    },
+    {
+      "adapter": "codex",
+      "enforcement": "mechanical",
+      "hook_event": "SubagentStop",
+      "hook_matcher": ".*",
+      "id": "codex.subagent_stop_capture",
+      "path": ".codex/hooks.json",
+      "required": true,
+      "scope": "adapter",
+      "settings_path": ".codex/hooks.json",
+      "verification": {
+        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook recordjson",
+        "failure_mode": "fail",
+        "method": "settings_hook"
       }
     },
     {
@@ -375,7 +447,7 @@
       "path": ".aegis/contract.md"
     },
     {
-      "checksum": "sha256:4511e937fc6254643e1f9295e6af879638bcb7ea1459aa227a1c68426787d7d9",
+      "checksum": "sha256:3b494e00ff0b3c5436d266944c5130cb435c2154113301f8415635d05bdbd89a",
       "kind": "managed",
       "path": ".aegis/bin/aegis"
     },
@@ -395,7 +467,7 @@
       "path": "schemas/aegis/delivery-policy.schema.json"
     },
     {
-      "checksum": "sha256:b55ecbb823e35b5324a16b19cd7b648771172f3b6806f0de32e6d6e33a90bfe6",
+      "checksum": "sha256:f49f7800c17cf991d81a001c983f2a41e92d2cbdc120ff3a3852eb67c5323b8b",
       "kind": "managed",
       "path": "schemas/aegis/foundation-manifest.schema.json"
     },
@@ -500,12 +572,12 @@
       "path": ".claude/scripts/session-brief.sh"
     },
     {
-      "checksum": "sha256:cf9b57408a2ab0df911e7ee7c2b67a5dc089b0bca6c9b7b9358f3e79bef7f4ba",
+      "checksum": "sha256:173f9fce49300c197f4c34d1fc06538b4bb2c69397959c71743cab4e6c58799c",
       "kind": "adapter",
       "path": ".claude/scripts/gate_lib.py"
     },
     {
-      "checksum": "sha256:7945eb42a39615250b6c2ac65b2f8da6bb19af195c7fc5a90344dbe263f742f4",
+      "checksum": "sha256:21b468e46f134a7bdce1b5eb1e9e7e7defda756f8c714a47b1dabd5d8b8b9b9b",
       "kind": "adapter",
       "path": ".claude/scripts/ledger_lib.py"
     },
@@ -515,7 +587,7 @@
       "path": ".claude/scripts/brief_lib.py"
     },
     {
-      "checksum": "sha256:599ebe262c6aeb0178ce307aa51a8b597917813cba249174754bc1090b60b8d9",
+      "checksum": "sha256:5fc6d4127071a9f36f88c3314c644ad42f5a323878204ddc86f55e55c26f590f",
       "kind": "adapter",
       "path": ".claude/scripts/witness_lib.py"
     },
@@ -525,12 +597,12 @@
       "path": "CODEX.md"
     },
     {
-      "checksum": "sha256:3334c040bd46a92bd542d53e2919a43b14ba1bf001fa79883a5385dc5ba487d5",
+      "checksum": "sha256:0ef4a29027391b1cca79ec7db9c75fd85cd8397335c0039d811383038f60338d",
       "kind": "adapter",
       "path": ".codex/hooks.json"
     },
     {
-      "checksum": "sha256:0d8f2b760742595a242df542cc6d1c9ce80d9167fcba05c87c42fbb1236cd72d",
+      "checksum": "sha256:8a458f4f9e3ac9544b369230c7b4a7418ce942470702e06d6716308c981dc624",
       "kind": "adapter",
       "path": "scripts/_aegis_installer.py"
     },
@@ -545,7 +617,7 @@
       "path": "scripts/codex-task"
     },
     {
-      "checksum": "sha256:7643f2c3d696b3f1e5c4440b725e1a547ffc5e4671715298d5fea03e967576a9",
+      "checksum": "sha256:9956d52a26ebd59968161fa9718c76f49d6ee5180daa6cbd70439a7c2788c8d1",
       "kind": "adapter",
       "path": "scripts/codex-guard"
     },
@@ -580,9 +652,10 @@
       ".claude/settings.json hook registration changes",
       ".claude/scripts/* dispatcher bootstrap changes"
     ],
-    "source_commit": "144bd4463dcec9c326b023ff53b45aa71660727e",
+    "source_commit": "197dc31537f8a6b289b04fb0cc69d244943359ff",
     "source_dirty": true,
     "source_dirty_paths": [
+      " M .codex/config.toml",
       " M .codex/deep-work.config.toml",
       "?? .aegis/capsule/",
       "?? .aegis/coldstart-scenarios/",
@@ -593,11 +666,11 @@
     ],
     "source_root": "/home/loucmane/codex",
     "update_command": "aegis runtime update",
-    "updated_at": "2026-07-14T11:55:19Z"
+    "updated_at": "2026-07-15T15:58:47Z"
   },
   "schema_version": "1.0.0",
   "verification": {
-    "last_verified_at": "2026-07-14T20:27:12Z",
+    "last_verified_at": "2026-07-15T16:06:35Z",
     "reports": [
       ".aegis/reports/verification-report.json"
     ],

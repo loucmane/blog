@@ -590,12 +590,26 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2026-07-14T19:39:43.852Z"
+      },
+      {
+        "id": "71",
+        "title": "Refresh Aegis Runtime for Portable Codex Hook Trust",
+        "description": "Refresh the Blog's installer-managed Aegis runtime from stable source 144bd446 to 420006a so strict verification uses the tracked portable Codex hook-trust contract in clean worktrees.",
+        "details": "Run the supported update preview and apply only with zero conflicts, manual-review paths, unsafe paths, and non-managed paths. Limit changes to the nine reviewed managed Aegis/Codex governance assets, preserve advisory enforcement and unrelated hook registrations, run strict verification and repository governance checks, and deliver through a separate attended PR. Do not modify product code, packages, lockfiles, Task 42 evidence, deployment, secrets, or branch protection.",
+        "testStrategy": "",
+        "status": "in-progress",
+        "dependencies": [
+          "70"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-07-15T12:31:30.370Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-14T22:01:56.334Z",
-      "taskCount": 38,
+      "lastModified": "2026-07-15T12:31:30.371Z",
+      "taskCount": 39,
       "completedCount": 23,
       "tags": [
         "master"
