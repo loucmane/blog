@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:18.4-bookworm@sha256:d9c83446333daec3f0588cc709adb80c26090b7f9f0f7ec8d43c243385d79818
+    environment:
+      POSTGRES_DB: magazine
+      POSTGRES_PASSWORD: task42-local-password
+      POSTGRES_USER: task42
+    ports:
+      - '127.0.0.1:55442:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U task42 -d magazine']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
+  s3-primary:
+    image: versity/versitygw:v1.5.0@sha256:7d56e0a6c246f00e2385ba4fe84065981959be1d822648f88a155c82e0e0652d
+    command:
+      - --port
+      - :7070
+      - --access
+      - task42-access
+      - --secret
+      - task42-local-secret
+      - --health
+      - /health
+      - --quiet
+      - posix
+      - --sidecar
+      - /data/metadata
+      - --versioning-dir
+      - /data/versioning
+      - /data/objects
+    ports:
+      - '127.0.0.1:57042:7070'
+    volumes:
+      - s3-primary-metadata:/data/metadata
+      - s3-primary-objects:/data/objects
+      - s3-primary-versioning:/data/versioning
+
+  s3-restore:
+    image: versity/versitygw:v1.5.0@sha256:7d56e0a6c246f00e2385ba4fe84065981959be1d822648f88a155c82e0e0652d
+    command:
+      - --port
+      - :7070
+      - --access
+      - task42-access
+      - --secret
+      - task42-local-secret
+      - --health
+      - /health
+      - --quiet
+      - posix
+      - --sidecar
+      - /data/metadata
+      - --versioning-dir
+      - /data/versioning
+      - /data/objects
+    ports:
+      - '127.0.0.1:57043:7070'
+    volumes:
+      - s3-restore-metadata:/data/metadata
+      - s3-restore-objects:/data/objects
+      - s3-restore-versioning:/data/versioning
+
+volumes:
+  postgres-data:
+  s3-primary-metadata:
+  s3-primary-objects:
+  s3-primary-versioning:
+  s3-restore-metadata:
+  s3-restore-objects:
+  s3-restore-versioning:

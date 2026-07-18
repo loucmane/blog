@@ -4,6 +4,14 @@
 
 **Updated:** 2026-07-09
 
+## Task 42 Foundation
+
+Task 42 implements provider-independent logical backup command plans, strict portable
+content export/import, media manifests with application-owned SHA-256, and deterministic restore
+comparison. Its isolated Docker drill proves PostgreSQL 18.4 custom-format dump/restore and
+S3-compatible original copying without production credentials or data. Hosted-provider PITR,
+independent encrypted retention, recurring drills, and production RPO/RTO evidence remain Task 46.
+
 ## Objectives
 
 Protect canonical content, revisions, auth records, taxonomies, redirects, subscribers/consent, audit history, scheduled work, and media originals. A backup is valid only when a restore has demonstrated usability.

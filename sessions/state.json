@@ -1,13 +1,5 @@
 {
-  "current": "2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout.md",
-  "current_path": "sessions/2026/07/2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout.md",
+  "current": "2026-07-18-003-task42-content-persistence-foundation-delivery.md",
   "paused": [],
-  "schema_version": "1.0.0",
-  "task": {
-    "id": "71",
-    "slug": "refresh-aegis-hook-trust-runtime-closeout",
-    "status": "in-progress",
-    "title": "Task 71 Remote Control Trust Closeout"
-  },
-  "updated_at": "2026-07-18T07:57:02Z"
+  "updated_at": "2026-07-18T10:53:23+02:00"
 }
