@@ -131,13 +131,14 @@
         "description": "Implement the accepted app-owned content, revision, migration, PostgreSQL, media-original, search, audit, export, and import foundations.",
         "details": "Only begin after relevant spikes and modern application foundation pass. Deliver schema and service slices in scoped PRs with migration/restore/export tests, provider adapters, security checks, and explicit rollback.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           "37",
           "41"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-17T19:56:04.833Z"
       },
       {
         "id": "43",
@@ -608,7 +609,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-15T12:31:30.371Z",
+      "lastModified": "2026-07-17T19:56:04.835Z",
       "taskCount": 39,
       "completedCount": 23,
       "tags": [

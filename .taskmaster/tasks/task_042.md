@@ -2,9 +2,9 @@
 
 **Title:** Implement Content and Persistence Foundation
 
-**Status:** pending
+**Status:** in-progress
 
-**Dependencies:** 37, 41
+**Dependencies:** 37 ✓, 41 ✓
 
 **Priority:** high
 

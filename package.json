@@ -14,6 +14,7 @@
     "test:coverage": "vitest run --coverage --reporter=default --reporter=json --outputFile.json=ci-artifacts/vitest-results.json && node scripts/ci/check-test-results.mjs unit ci-artifacts/vitest-results.json",
     "test:browser": "playwright test && node scripts/ci/check-test-results.mjs browser ci-artifacts/playwright-results.json",
     "test:browser:install": "playwright install --with-deps chromium",
+    "test:content:integration": "node packages/web/scripts/run-content-integration.mjs",
     "test:quality-contract": "node --test tests/ci/accessibility-baseline.test.mjs tests/ci/eslint-contract.test.mjs tests/ci/test-capability.test.mjs tests/ci/test-results.test.mjs",
     "test:security-hotfix": "node --test tests/ci/security-hotfix.test.mjs",
     "test:smoke:web": "node scripts/ci/web-production-smoke.mjs",
