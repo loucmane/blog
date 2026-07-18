@@ -1,13 +1,13 @@
 {
-  "current": "2026-07-15-001-task71-refresh-aegis-hook-trust-runtime.md",
-  "current_path": "sessions/2026/07/2026-07-15-001-task71-refresh-aegis-hook-trust-runtime.md",
+  "current": "2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout.md",
+  "current_path": "sessions/2026/07/2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout.md",
   "paused": [],
   "schema_version": "1.0.0",
   "task": {
     "id": "71",
-    "slug": "refresh-aegis-hook-trust-runtime",
+    "slug": "refresh-aegis-hook-trust-runtime-closeout",
     "status": "in-progress",
-    "title": "Refresh Aegis Runtime for Portable Codex Hook Trust"
+    "title": "Task 71 Remote Control Trust Closeout"
   },
-  "updated_at": "2026-07-15T12:27:57Z"
+  "updated_at": "2026-07-18T07:57:02Z"
 }
