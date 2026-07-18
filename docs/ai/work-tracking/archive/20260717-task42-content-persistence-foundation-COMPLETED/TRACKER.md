@@ -1,12 +1,12 @@
 # Task 42 Implement Content and Persistence Foundation Tracker
 
 **Started**: 2026-07-17
-**Status**: ACTIVE
-**Last Updated**: 2026-07-17
+**Status**: COMPLETED
+**Last Updated**: 2026-07-18
 **Authority**: `.aegis/state/current-work.json`
 **Session**: `sessions/2026/07/2026-07-17-001-task42-content-persistence-foundation.md`
 **Plan**: `plans/2026-07-17-task42-content-persistence-foundation.md`
-**Reports**: `docs/ai/work-tracking/active/20260717-task42-content-persistence-foundation-ACTIVE/reports/content-persistence-foundation/`
+**Reports**: `docs/ai/work-tracking/archive/20260717-task42-content-persistence-foundation-COMPLETED/reports/content-persistence-foundation/`
 
 ## Goals
 - [x] Implement the accepted app-owned content revision and publishing-state foundations
@@ -25,6 +25,14 @@
 - **2026-07-17 23:23 CEST** - [S:20260717|W:task42-content-persistence-foundation|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded final pre-closeout strict verification evidence
 - **2026-07-17 23:27 CEST** - [S:20260717|W:task42-content-persistence-foundation|H:agent:closeout-boundary|E:docs/ai/work-tracking/active/20260717-task42-content-persistence-foundation-ACTIVE/FINDINGS.md] Closeout reduced to inherited concurrent Task 71 ACTIVE readiness blocker; Task 71 remains untouched
 - **2026-07-17 23:30 CEST** - [S:20260717|W:task42-content-persistence-foundation|H:agent:delivery-boundary|E:docs/ai/work-tracking/active/20260717-task42-content-persistence-foundation-ACTIVE/FINDINGS.md] Confirmed merged PR 37 intentionally preserves active Task 71; Task 42 remains paused at closeout readiness
+- **2026-07-18 10:46 CEST** - [S:20260718|W:task42-content-persistence-foundation|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded strict Task 42 verification evidence after Task 71 reconciliation
+- **2026-07-18 10:48 CEST** - [S:20260718|W:task42-content-persistence-foundation|H:agent:verification|E:docs/ai/work-tracking/active/20260717-task42-content-persistence-foundation-ACTIVE/reports/content-persistence-foundation/task-verification.md] Recorded complete Task 42 verification matrix and delivery-time gates
+- **2026-07-18 10:53** — [S:20260718|W:task42-content-persistence-foundation|H:shell:date|E:cmd`date "+%Y-%m-%d %H:%M %Z"`] Confirmed current timestamp as `2026-07-18 10:53 CEST`
+- **2026-07-18 10:53** — [S:20260718|W:task42-content-persistence-foundation|H:scripts/codex-task:sessions-continue|E:sessions/2026/07/2026-07-18-003-task42-content-persistence-foundation-delivery.md] Created a fresh daily Task 42 continuation session while reusing the existing completed source archive
+- **2026-07-18 10:53** — [S:20260718|W:task42-content-persistence-foundation|H:plans/current|E:plans/2026-07-17-task42-content-persistence-foundation.md] Reused the existing Task 42 plan for continuation
+- **2026-07-18 10:53** — [S:20260718|W:task42-content-persistence-foundation|H:sessions/state.json|E:sessions/state.json] Repointed session state to the Task 42 continuation session
+- **2026-07-18 10:53** — [S:20260718|W:task42-content-persistence-foundation|H:task-master:set-status|E:.taskmaster/tasks/task_042.md] Marked Taskmaster Task 42 done through the supported CLI and regenerated only task_042.md
+- **2026-07-18 10:57** — [S:20260718|W:task42-content-persistence-foundation|H:serena/memory:status|E:serena/memory:none] Serena is not configured; no memory artifact was fabricated, and the completed Task 42 archive remains the continuity source
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -33,15 +41,14 @@
 - [ ] plan-step-emergency (if applicable)
 
 ## Current State
-Task 42 implementation is complete in the isolated worktree. Focused verification and the real
-PostgreSQL/S3 restore drill pass. Full repository verification, evidence closeout, and delivery
-remain.
+Task 42 implementation, current-main verification, final Aegis closeout, Taskmaster completion,
+and scoped projection generation are complete. The exact-head delivery commit, witness, hosted
+checks, and protected merge remain.
 
 ## Next Steps
-1. Run the complete repository verification matrix.
-2. Review the final diff for Task 42 scope and generated artifacts.
-3. Complete Aegis handoff/closeout only after all deterministic gates pass.
-4. Commit, push, and validate the exact-head Task 42 pull request.
+1. Pass the post-archive guard and strict Aegis verification.
+2. Review and commit the closeout-only diff.
+3. Run the exact-head witness, push, and validate the protected Task 42 pull request.
 
 ## Dependencies & Notes
 - Taskmaster: optional unless `.aegis/state/current-work.json` marks it required.
@@ -49,30 +56,22 @@ remain.
 - Direct workflow state writes should go through Aegis CLI or MCP tools.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 19, "last_event_id": "ae93d7375a7b43f59bc952e60e937507", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 11, "last_event_id": "235ee5780e394f9a9ed7517d90cea6bc", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:2026-07-15-001-task71-refresh-aegis-hook-trust-runtime W:task-71-refresh-aegis-hook-trust-runtime H:witness E:ledger:37ff249a315...] Delivery witness FAIL recorded at 6e6fa16; report: .aegis/reports/witness-report.json.
-- [S:2026-07-15-001-task71-refresh-aegis-hook-trust-runtime W:task-71-refresh-aegis-hook-trust-runtime H:scope E:ledger:1cfefc77801...] Scope recorded for 71. Paths: .aegis/bin/aegis, .aegis/foundation-manifest.json, .claude/scripts/gate_lib.py.
-- [S:2026-07-15-001-task71-refresh-aegis-hook-trust-runtime W:task-71-refresh-aegis-hook-trust-runtime H:witness E:ledger:f389a8f80d9...] Delivery witness PASS recorded at 6e6fa16; report: .aegis/reports/witness-report.json.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:delivery E:ledger:71210f744ea...] Delivery state recorded: Bash.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:84b84167be6...] Session began via compact.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:40058918f91...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:9b26f97ef54...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:e8eeb808a9e...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:2499d60ec16...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:b62bc0cf89f...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:cdef777736a...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:834fd0bc1f6...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:90e8f4e798a...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:543e7b1d08d...] Session began via resume.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:b7970d667e4...] Session began via compact.
-- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:task-truth E:ledger:74559cffc5c...] Task truth recorded for task truth: changed.
 - [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:bd7410e27ba...] Session began via compact.
 - [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:1a4ab2250ec...] Session began via compact.
 - [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:witness E:ledger:ae93d7375a7...] Delivery witness FAIL recorded at 7871ecc; report: .aegis/reports/witness-report.json.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:task-truth E:ledger:9a57279aeb2...] Task truth recorded for task truth: changed.
+- [S:2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout W:task-71-refresh-aegis-hook-trust-runtime-closeout H:scope E:ledger:772fbbc0a38...] Scope recorded for 71. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/task_071.md.
+- [S:2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout W:task-71-refresh-aegis-hook-trust-runtime-closeout H:witness E:ledger:1b6f207afa9...] Delivery witness PASS recorded at 8185180; report: .aegis/reports/witness-report.json.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:delivery E:ledger:11504cecd3b...] Delivery state recorded: Bash.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:delivery E:ledger:ea2284fd382...] Delivery state recorded: Bash.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:delivery E:ledger:54e5c2dcc03...] Delivery state recorded: Bash.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:delivery E:ledger:eb8f546842a...] Delivery state recorded: Bash.
+- [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:witness E:ledger:235ee5780e3...] Delivery witness FAIL recorded at ba32cd5; report: .aegis/reports/witness-report.json.
 
 <!-- AEGIS:END generated-sweh-projection -->

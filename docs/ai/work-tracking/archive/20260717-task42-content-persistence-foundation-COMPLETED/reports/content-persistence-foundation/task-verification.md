@@ -1,6 +1,6 @@
 # Task 42 Verification Report
 
-**Date:** 2026-07-17
+**Date:** 2026-07-18
 
 **Authority:** `standing-grant:sota-magazine-2026-autonomy-v2`
 
@@ -28,9 +28,9 @@
 - Production build: passed with Next.js 16.2.10.
 - Browser capability: supported with no disabled tests.
 - Playwright/axe: 18 desktop/mobile journeys passed.
-- Production smoke: HTTP 200, HTML content type, 13,480 response bytes.
+- Production smoke: HTTP 200, HTML content type, 13,502 response bytes.
 - Local `playwright install --with-deps chromium` reached the host `sudo` password boundary; the already pinned Chromium installation was then verified with unprivileged `playwright install chromium`, and the complete browser suite passed. Hosted CI retains and must pass the privileged dependency-install stage.
-- The exact-commit accessibility ratchet cannot compare identical pre-commit base/head SHAs. It remains unchanged, its 7 focused contract assertions passed through the quality suite, and hosted exact-head CI must provide the commit-bound ratchet proof.
+- The exact-commit accessibility ratchet passed between synchronized `main` at `14ccef0` and signed Task 42 merge head `ba32cd5`; the baseline remained a regular `100644` blob with unchanged content.
 
 ## Governance And Security Gates
 
@@ -43,8 +43,8 @@
 - Aegis brief/capsule: passed.
 - Strict Aegis verification: passed, 46 checks, zero required failures. The two non-required unsupported checks are client-local Codex hook trust and universally hookable MCP memory writes; the sole warning is the owner-configured advisory enforcement mode.
 - Repository Aegis CI gate: passed.
-- Pre-commit witness correctly reported local diff accounting unsupported while the implementation was uncommitted; final-head witness remains required after commit.
-- Legacy regression tests: 18 witness-review plus 5 completed-state tests passed. The pre-closeout guard then failed only because synchronized main already contains the unrelated Task 71 ACTIVE archive and Task 42 is also active. Task 71 remains untouched; the guard must be rerun after Task 42 archives its own envelope.
+- Pre-commit witness correctly reported local diff accounting unsupported before Task 42 scope was registered. The exact Task 42 path families are now recorded in the Aegis ledger; final-head witness remains required after the closeout evidence commit.
+- Legacy regression tests: 18 witness-review plus 5 completed-state tests passed. Task 71 is terminal on current `main`; Task 42 final closeout archived only its own envelope.
 - Checksum-pinned Gitleaks 8.30.1 history scan: 219 commits and approximately 50.12 MB scanned, no leaks.
 - Gitleaks Git-visible working-tree snapshot: approximately 7.82 MB scanned, no leaks. A raw directory scan found only six generic-key signatures in ignored `.next` build output; no source or deliverable path was implicated.
 - No workflow file changed, so actionlint has no Task 42 workflow delta to assess; the unchanged workflow contract suite passed and hosted CI remains authoritative for the checked-in workflow bytes.
@@ -52,12 +52,8 @@
 
 ## Closeout Conditions
 
-The implementation, data-integrity, security, and repository verification gates pass. Deterministic handoff repair resolved all four semantic HANDOFF gates while preserving the progress log. Final closeout is currently blocked only by `closeout.readiness`: synchronized main contains the unrelated, genuinely in-progress Task 71 ACTIVE envelope, while Task 42 is also ACTIVE. Task 42 must not archive, hide, or modify Task 71.
-
-Before delivery:
-
-1. allow Task 71 to reach its separately governed terminal state;
-2. rerun Task 42 closeout dry-run without changing Task 71;
-3. archive only Task 42, mark only Task 42 done, and regenerate only `task_042.md`;
-4. rerun the legacy guard and final diff checks;
-5. commit, run exact-head accessibility/witness checks, push, and require all hosted checks.
+Final closeout passed all 23 gates with zero required failures, zero warnings, and no pending
+tracking. Taskmaster Task 42 is `done`, only `task_042.md` was regenerated, and the completed
+archive is the authoritative work-tracking surface. Remaining delivery gates are the post-archive
+guard, signed closeout-evidence commit, exact-head witness, protected hosted checks, and
+policy-governed merge.

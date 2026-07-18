@@ -1,12 +1,5 @@
 {
-  "current": "2026-07-17-001-task42-content-persistence-foundation.md",
-  "current_path": "sessions/2026/07/2026-07-17-001-task42-content-persistence-foundation.md",
-  "schema_version": "1.0.0",
-  "task": {
-    "id": "42",
-    "slug": "content-persistence-foundation",
-    "status": "in-progress",
-    "title": "Implement Content and Persistence Foundation"
-  },
-  "updated_at": "2026-07-17T19:54:22Z"
+  "current": "2026-07-18-003-task42-content-persistence-foundation-delivery.md",
+  "paused": [],
+  "updated_at": "2026-07-18T10:53:23+02:00"
 }
