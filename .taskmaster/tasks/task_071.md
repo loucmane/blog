@@ -2,7 +2,7 @@
 
 **Title:** Refresh Aegis Runtime for Portable Codex Hook Trust
 
-**Status:** in-progress
+**Status:** done
 
 **Dependencies:** 70 ✓
 

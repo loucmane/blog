@@ -597,20 +597,20 @@
         "description": "Refresh the Blog's installer-managed Aegis runtime from stable source 144bd446 to 420006a so strict verification uses the tracked portable Codex hook-trust contract in clean worktrees.",
         "details": "Run the supported update preview and apply only with zero conflicts, manual-review paths, unsafe paths, and non-managed paths. Limit changes to the nine reviewed managed Aegis/Codex governance assets, preserve advisory enforcement and unrelated hook registrations, run strict verification and repository governance checks, and deliver through a separate attended PR. Do not modify product code, packages, lockfiles, Task 42 evidence, deployment, secrets, or branch protection.",
         "testStrategy": "",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           "70"
         ],
         "priority": "high",
         "subtasks": [],
-        "updatedAt": "2026-07-15T12:31:30.370Z"
+        "updatedAt": "2026-07-18T08:11:03.312Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-15T12:31:30.371Z",
+      "lastModified": "2026-07-18T08:11:03.313Z",
       "taskCount": 39,
-      "completedCount": 23,
+      "completedCount": 24,
       "tags": [
         "master"
       ]
