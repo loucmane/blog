@@ -52,13 +52,15 @@
 - **2026-07-18 16:33 CEST** - [S:2026-07-18-001-task43-owner-publishing-foundation|W:task43-owner-publishing-foundation|H:agent:independent-review|E:docs/ai/work-tracking/active/20260718-task43-owner-publishing-foundation-ACTIVE/HANDOFF.md] Recorded both NO-BLOCKERS verdicts, 115-unit/34-browser evidence, worker poison/retry closure, and the unchanged attended accessibility boundary.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 0, "last_event_id": null, "schema": "legacy-shadow-sweh-projection-v1"} -->
-- **2026-07-18 15:38 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded final Task 43 strict verification evidence after restore and scheduling remediation
+<!-- AEGIS:projection-state {"event_count": 4, "last_event_id": "ad37f2e4e1404268baaeee5bd14528db", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- No projectable ledger events found.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:witness E:ledger:0fbcc5caf39...] Delivery witness FAIL recorded at ae4be10; report: .aegis/reports/witness-report.json.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:scope E:ledger:dec6557ce66...] Scope recorded for 43. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/tasks.json.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:witness E:ledger:da12226cf38...] Delivery witness PASS recorded at ae4be10; report: .aegis/reports/witness-report.json.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:scope E:ledger:ad37f2e4e14...] Scope recorded for 43. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/tasks.json.
 
 <!-- AEGIS:END generated-sweh-projection -->

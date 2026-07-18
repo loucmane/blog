@@ -52,12 +52,15 @@ Record decisions before implementation, including options considered, rationale,
 - **2026-07-18 14:00 CEST** - [S:2026-07-18-001-task43-owner-publishing-foundation|W:task43-owner-publishing-foundation|H:agent:browser-regression|E:packages/web/src/components/owner/story-editor.tsx] Recorded lifecycle-message precedence after the full mobile browser matrix exposed an autosave feedback race.
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 0, "last_event_id": null, "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 4, "last_event_id": "ad37f2e4e1404268baaeee5bd14528db", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- No projectable ledger events found.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:witness E:ledger:0fbcc5caf39...] Delivery witness FAIL recorded at ae4be10; report: .aegis/reports/witness-report.json.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:scope E:ledger:dec6557ce66...] Scope recorded for 43. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/tasks.json.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:witness E:ledger:da12226cf38...] Delivery witness PASS recorded at ae4be10; report: .aegis/reports/witness-report.json.
+- [S:2026-07-18-001-task43-owner-publishing-foundation W:task-43-owner-publishing-foundation H:scope E:ledger:ad37f2e4e14...] Scope recorded for 43. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/tasks.json.
 
 <!-- AEGIS:END generated-sweh-projection -->

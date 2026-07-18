@@ -958,5 +958,11 @@
     "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
     "tracker_hash": "0c661c0794bfecc72ac583c6f5baed17fce221f49998cbfb148ba6e8c37454e5",
     "synced_at": "2026-07-18T16:53:29.131156+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "a700d70b3b51be1ed885c62f5dc590b230e5b14e1632a9c21adaaca2eda3505a",
+    "tracker_hash": "ae9677e48b70a94d24c2bbc947ea20121d3b2114e65bf4c03860e9c3d8453600",
+    "synced_at": "2026-07-18T17:03:37.023547+02:00"
   }
 ]
