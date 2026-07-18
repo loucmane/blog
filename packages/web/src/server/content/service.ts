@@ -61,6 +61,7 @@ export interface PublishInput {
 
 export interface SchedulePublicationInput extends PublishInput {
   readonly runAt: string
+  readonly timeZone: string
 }
 
 export interface ArticleMutationResult {
@@ -93,7 +94,7 @@ async function requireArticle(
   transaction: ContentTransaction,
   articleId: string,
 ): Promise<Article> {
-  const article = await transaction.getArticle(articleId)
+  const article = await transaction.getArticleForUpdate(articleId)
   if (!article) throw new ContentNotFoundError('Article', articleId)
   return article
 }
@@ -108,6 +109,53 @@ async function requireRevision(
     throw new ContentNotFoundError('Article revision', revisionId)
   }
   return revision
+}
+
+async function requireActiveScheduledJob(
+  transaction: ContentTransaction,
+  article: Article,
+): Promise<PublicationJob> {
+  const activeJobs = (await transaction.listPublicationJobs(article.id)).filter(
+    ({ status }) => status === 'pending' || status === 'claimed',
+  )
+  const job = activeJobs[0]
+  if (
+    activeJobs.length !== 1 ||
+    !job ||
+    article.scheduledAt === null ||
+    article.scheduledRevisionId === null ||
+    job.revisionId !== article.scheduledRevisionId ||
+    job.runAt !== article.scheduledAt
+  ) {
+    throw new InvalidContentTransitionError(
+      'The existing publication schedule is incomplete. Cancel it only after the schedule is repaired.',
+    )
+  }
+  return job
+}
+
+async function supersedePublicationJob(
+  transaction: ContentTransaction,
+  job: PublicationJob,
+  now: string,
+): Promise<PublicationJob> {
+  const superseded: PublicationJob = {
+    ...job,
+    claimedBy: null,
+    leaseUntil: null,
+    status: 'superseded',
+    updatedAt: now,
+  }
+  await transaction.savePublicationJob(superseded)
+  return superseded
+}
+
+function assertEditorialReason(reason: string): string {
+  const normalized = reason.trim()
+  if (!normalized || normalized.length > 1_000) {
+    throw new InvalidContentTransitionError('Add a brief reason before unpublishing this story.')
+  }
+  return normalized
 }
 
 async function assertExpectedVersion(
@@ -131,6 +179,15 @@ function idempotency<T>(record: IdempotencyRecord | null): T | null {
   return record ? (clone(record.result) as T) : null
 }
 
+async function replayIdempotency<T>(
+  transaction: ContentTransaction,
+  operation: string,
+  key: string,
+): Promise<T | null> {
+  await transaction.lockIdempotency(operation, key)
+  return idempotency<T>(await transaction.getIdempotency(operation, key))
+}
+
 export class ContentService {
   constructor(
     private readonly repository: ContentRepository,
@@ -140,8 +197,10 @@ export class ContentService {
 
   async createArticle(input: CreateArticleInput): Promise<ArticleMutationResult> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<ArticleMutationResult>(
-        await transaction.getIdempotency('article.create', input.idempotencyKey),
+      const replay = await replayIdempotency<ArticleMutationResult>(
+        transaction,
+        'article.create',
+        input.idempotencyKey,
       )
       if (replay) return replay
 
@@ -152,9 +211,11 @@ export class ContentService {
       const revision: ArticleRevision = {
         articleId,
         createdAt: now,
+        dek: input.dek,
         document,
         id: this.identifiers.next('revision'),
         revisionNumber: 1,
+        title: input.title,
       }
       const article: Article = {
         createdAt: now,
@@ -187,8 +248,10 @@ export class ContentService {
 
   async saveDraft(input: SaveDraftInput): Promise<ArticleMutationResult> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<ArticleMutationResult>(
-        await transaction.getIdempotency('article.save-draft', input.idempotencyKey),
+      const replay = await replayIdempotency<ArticleMutationResult>(
+        transaction,
+        'article.save-draft',
+        input.idempotencyKey,
       )
       if (replay) return replay
 
@@ -201,9 +264,11 @@ export class ContentService {
       const revision: ArticleRevision = {
         articleId: input.articleId,
         createdAt: now,
+        dek: input.dek ?? current.dek,
         document,
         id: this.identifiers.next('revision'),
         revisionNumber: Math.max(0, ...revisions.map(({ revisionNumber }) => revisionNumber)) + 1,
+        title: input.title ?? current.title,
       }
       const article: Article = {
         ...current,
@@ -236,14 +301,21 @@ export class ContentService {
 
   async publish(input: PublishInput): Promise<ArticleMutationResult> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<ArticleMutationResult>(
-        await transaction.getIdempotency('article.publish', input.idempotencyKey),
+      const replay = await replayIdempotency<ArticleMutationResult>(
+        transaction,
+        'article.publish',
+        input.idempotencyKey,
       )
       if (replay) return replay
       const current = await requireArticle(transaction, input.articleId)
       assertAvailable(current)
       await assertExpectedVersion(transaction, current, input.expectedVersion)
       const revision = await requireRevision(transaction, input.articleId, input.revisionId)
+      if (revision.id !== current.currentDraftRevisionId) {
+        throw new InvalidContentTransitionError(
+          'Save and validate the latest draft before publishing it.',
+        )
+      }
       const now = this.clock.now().toISOString()
       const article: Article = {
         ...current,
@@ -269,14 +341,21 @@ export class ContentService {
 
   async schedulePublication(input: SchedulePublicationInput): Promise<ScheduledPublicationResult> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<ScheduledPublicationResult>(
-        await transaction.getIdempotency('article.schedule', input.idempotencyKey),
+      const replay = await replayIdempotency<ScheduledPublicationResult>(
+        transaction,
+        'article.schedule',
+        input.idempotencyKey,
       )
       if (replay) return replay
       const current = await requireArticle(transaction, input.articleId)
       assertAvailable(current)
       await assertExpectedVersion(transaction, current, input.expectedVersion)
       const revision = await requireRevision(transaction, input.articleId, input.revisionId)
+      if (revision.id !== current.currentDraftRevisionId) {
+        throw new InvalidContentTransitionError(
+          'Save and validate the latest draft before scheduling it.',
+        )
+      }
       const nowDate = this.clock.now()
       const runAt = new Date(input.runAt)
       if (!Number.isFinite(runAt.valueOf()) || runAt <= nowDate) {
@@ -285,6 +364,12 @@ export class ContentService {
         )
       }
       const now = nowDate.toISOString()
+      let previousStatus: PublicationJob['previousStatus']
+      if (current.status === 'scheduled') {
+        previousStatus = (await requireActiveScheduledJob(transaction, current)).previousStatus
+      } else {
+        previousStatus = current.status
+      }
       await this.cancelPendingJobs(transaction, current.id, now)
       const job: PublicationJob = {
         articleId: current.id,
@@ -294,9 +379,11 @@ export class ContentService {
         id: this.identifiers.next('publication-job'),
         idempotencyKey: input.idempotencyKey,
         leaseUntil: null,
+        previousStatus,
         revisionId: revision.id,
         runAt: runAt.toISOString(),
         status: 'pending',
+        timeZone: input.timeZone,
         updatedAt: now,
       }
       const article: Article = {
@@ -320,15 +407,69 @@ export class ContentService {
     })
   }
 
+  async cancelScheduledPublication(input: {
+    actorId?: string | null
+    articleId: string
+    expectedVersion: number
+    idempotencyKey: string
+  }): Promise<Article> {
+    return this.repository.transaction(async (transaction) => {
+      const replay = await replayIdempotency<Article>(
+        transaction,
+        'article.cancel-schedule',
+        input.idempotencyKey,
+      )
+      if (replay) return replay
+      const current = await requireArticle(transaction, input.articleId)
+      assertAvailable(current)
+      await assertExpectedVersion(transaction, current, input.expectedVersion)
+      if (current.status !== 'scheduled') {
+        throw new InvalidContentTransitionError('This article has no scheduled publication.')
+      }
+      const active = await requireActiveScheduledJob(transaction, current)
+      const now = this.clock.now().toISOString()
+      const article: Article = {
+        ...current,
+        scheduledAt: null,
+        scheduledRevisionId: null,
+        status: active.previousStatus,
+        updatedAt: now,
+        version: current.version + 1,
+      }
+      await this.cancelPendingJobs(transaction, article.id, now)
+      await transaction.saveArticle(article, current.version)
+      await this.audit(
+        transaction,
+        article.id,
+        'article.schedule-cancelled',
+        input.actorId ?? null,
+        now,
+        { restoredStatus: article.status },
+      )
+      await this.remember(
+        transaction,
+        'article.cancel-schedule',
+        input.idempotencyKey,
+        article,
+        now,
+      )
+      return clone(article)
+    })
+  }
+
   async claimDuePublication(input: {
     leaseMilliseconds: number
+    now?: string
     workerId: string
   }): Promise<PublicationJob | null> {
     if (!Number.isInteger(input.leaseMilliseconds) || input.leaseMilliseconds < 1_000) {
       throw new InvalidContentTransitionError('Publication leases must be at least one second.')
     }
     return this.repository.transaction(async (transaction) => {
-      const nowDate = this.clock.now()
+      const nowDate = input.now ? new Date(input.now) : this.clock.now()
+      if (!Number.isFinite(nowDate.valueOf())) {
+        throw new InvalidContentTransitionError('Publication evaluation time must be valid.')
+      }
       return transaction.claimDuePublicationJob({
         leaseUntil: new Date(nowDate.valueOf() + input.leaseMilliseconds).toISOString(),
         now: nowDate.toISOString(),
@@ -338,13 +479,16 @@ export class ContentService {
   }
 
   async completeScheduledPublication(input: {
+    completedAt?: string
     jobId: string
     workerId: string
   }): Promise<{ article: Article | null; duplicate: boolean; job: PublicationJob }> {
     return this.repository.transaction(async (transaction) => {
-      const currentJob = await transaction.getPublicationJob(input.jobId)
+      const observedJob = await transaction.getPublicationJob(input.jobId)
+      if (!observedJob) throw new ContentNotFoundError('Publication job', input.jobId)
+      const existingArticle = await transaction.getArticleForUpdate(observedJob.articleId)
+      const currentJob = await transaction.getPublicationJobForUpdate(input.jobId)
       if (!currentJob) throw new ContentNotFoundError('Publication job', input.jobId)
-      const existingArticle = await transaction.getArticle(currentJob.articleId)
       if (currentJob.status === 'completed') {
         return { article: existingArticle, duplicate: true, job: currentJob }
       }
@@ -353,23 +497,59 @@ export class ContentService {
           'The worker does not own the active publication lease.',
         )
       }
-      if (!existingArticle) throw new ContentNotFoundError('Article', currentJob.articleId)
-      const now = this.clock.now().toISOString()
+      const completionDate = input.completedAt ? new Date(input.completedAt) : this.clock.now()
+      if (!Number.isFinite(completionDate.valueOf())) {
+        throw new InvalidContentTransitionError('Publication completion time must be valid.')
+      }
+      const claimedAt = new Date(currentJob.updatedAt)
+      const leaseUntil = currentJob.leaseUntil ? new Date(currentJob.leaseUntil) : null
+      if (
+        !leaseUntil ||
+        !Number.isFinite(claimedAt.valueOf()) ||
+        !Number.isFinite(leaseUntil.valueOf()) ||
+        completionDate < claimedAt ||
+        completionDate >= leaseUntil
+      ) {
+        throw new InvalidContentTransitionError(
+          'The active publication lease expired before completion.',
+        )
+      }
+      const now = completionDate.toISOString()
+      if (currentJob.articleId !== observedJob.articleId) {
+        const superseded = await supersedePublicationJob(transaction, currentJob, now)
+        return { article: null, duplicate: true, job: superseded }
+      }
+      if (!existingArticle) {
+        const superseded = await supersedePublicationJob(transaction, currentJob, now)
+        return { article: null, duplicate: true, job: superseded }
+      }
+      const activeJobs = (await transaction.listPublicationJobs(existingArticle.id)).filter(
+        ({ status }) => status === 'pending' || status === 'claimed',
+      )
+      if (activeJobs.length !== 1 || activeJobs[0]?.id !== currentJob.id) {
+        let supersededCurrent = currentJob
+        for (const activeJob of activeJobs) {
+          const superseded = await supersedePublicationJob(transaction, activeJob, now)
+          if (activeJob.id === currentJob.id) supersededCurrent = superseded
+        }
+        if (!activeJobs.some(({ id }) => id === currentJob.id)) {
+          supersededCurrent = await supersedePublicationJob(transaction, currentJob, now)
+        }
+        return { article: existingArticle, duplicate: true, job: supersededCurrent }
+      }
       if (
         existingArticle.status !== 'scheduled' ||
-        existingArticle.scheduledRevisionId !== currentJob.revisionId
+        existingArticle.scheduledRevisionId !== currentJob.revisionId ||
+        existingArticle.scheduledAt !== currentJob.runAt
       ) {
-        const superseded: PublicationJob = {
-          ...currentJob,
-          claimedBy: null,
-          leaseUntil: null,
-          status: 'superseded',
-          updatedAt: now,
-        }
-        await transaction.savePublicationJob(superseded)
+        const superseded = await supersedePublicationJob(transaction, currentJob, now)
         return { article: existingArticle, duplicate: true, job: superseded }
       }
-      const revision = await requireRevision(transaction, existingArticle.id, currentJob.revisionId)
+      const revision = await transaction.getRevision(currentJob.revisionId)
+      if (!revision || revision.articleId !== existingArticle.id) {
+        const superseded = await supersedePublicationJob(transaction, currentJob, now)
+        return { article: existingArticle, duplicate: true, job: superseded }
+      }
       const article: Article = {
         ...existingArticle,
         publishedAt: now,
@@ -403,10 +583,13 @@ export class ContentService {
     articleId: string
     expectedVersion: number
     idempotencyKey: string
+    reason: string
   }): Promise<Article> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<Article>(
-        await transaction.getIdempotency('article.unpublish', input.idempotencyKey),
+      const replay = await replayIdempotency<Article>(
+        transaction,
+        'article.unpublish',
+        input.idempotencyKey,
       )
       if (replay) return replay
       const current = await requireArticle(transaction, input.articleId)
@@ -417,6 +600,10 @@ export class ContentService {
           'Only published or scheduled articles can be unpublished.',
         )
       }
+      if (current.status === 'scheduled') {
+        await requireActiveScheduledJob(transaction, current)
+      }
+      const reason = assertEditorialReason(input.reason)
       const now = this.clock.now().toISOString()
       const article: Article = {
         ...current,
@@ -431,14 +618,9 @@ export class ContentService {
       await this.saveOutbox(transaction, article.id, 'article.unpublished', now, {
         publishedRevisionId: article.publishedRevisionId,
       })
-      await this.audit(
-        transaction,
-        article.id,
-        'article.unpublished',
-        input.actorId ?? null,
-        now,
-        {},
-      )
+      await this.audit(transaction, article.id, 'article.unpublished', input.actorId ?? null, now, {
+        reason,
+      })
       await this.remember(transaction, 'article.unpublish', input.idempotencyKey, article, now)
       return clone(article)
     })
@@ -452,8 +634,10 @@ export class ContentService {
     slug: string
   }): Promise<{ article: Article; redirect: SlugRedirect }> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<{ article: Article; redirect: SlugRedirect }>(
-        await transaction.getIdempotency('article.change-slug', input.idempotencyKey),
+      const replay = await replayIdempotency<{ article: Article; redirect: SlugRedirect }>(
+        transaction,
+        'article.change-slug',
+        input.idempotencyKey,
       )
       if (replay) return replay
       const current = await requireArticle(transaction, input.articleId)
@@ -503,8 +687,10 @@ export class ContentService {
     idempotencyKey: string
   }): Promise<Article> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<Article>(
-        await transaction.getIdempotency('article.soft-delete', input.idempotencyKey),
+      const replay = await replayIdempotency<Article>(
+        transaction,
+        'article.soft-delete',
+        input.idempotencyKey,
       )
       if (replay) return replay
       const current = await requireArticle(transaction, input.articleId)
@@ -544,8 +730,10 @@ export class ContentService {
     idempotencyKey: string
   }): Promise<Article> {
     return this.repository.transaction(async (transaction) => {
-      const replay = idempotency<Article>(
-        await transaction.getIdempotency('article.restore', input.idempotencyKey),
+      const replay = await replayIdempotency<Article>(
+        transaction,
+        'article.restore',
+        input.idempotencyKey,
       )
       if (replay) return replay
       const current = await requireArticle(transaction, input.articleId)

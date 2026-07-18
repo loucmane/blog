@@ -16,6 +16,7 @@ import type {
   SlugRedirect,
   TaxonomyTerm,
 } from './domain'
+import { parseMigratedContentDocument } from './document'
 import { ContentConflictError, DuplicateSlugError } from './errors'
 import type { ContentRepository, ContentTransaction } from './ports'
 
@@ -108,6 +109,10 @@ class InMemoryContentTransaction implements ContentTransaction {
     return clone(this.state.articles.get(id) ?? null)
   }
 
+  async getArticleForUpdate(id: string): Promise<Article | null> {
+    return this.getArticle(id)
+  }
+
   async getArticleBySlug(slug: string): Promise<Article | null> {
     const article = [...this.state.articles.values()].find(
       ({ slug: candidate }) => candidate === slug,
@@ -131,13 +136,22 @@ class InMemoryContentTransaction implements ContentTransaction {
     return clone(this.state.publicationJobs.get(id) ?? null)
   }
 
+  async getPublicationJobForUpdate(id: string): Promise<PublicationJob | null> {
+    return this.getPublicationJob(id)
+  }
+
   async getPublicationSettings(): Promise<PublicationSettings | null> {
     return clone(this.state.publicationSettings.values().next().value ?? null)
   }
 
   async getRevision(id: string): Promise<ArticleRevision | null> {
-    return clone(this.state.revisions.get(id) ?? null)
+    const revision = this.state.revisions.get(id)
+    return revision
+      ? clone({ ...revision, document: parseMigratedContentDocument(revision.document) })
+      : null
   }
+
+  async lockIdempotency(_operation: string, _key: string): Promise<void> {}
 
   async listArticles(): Promise<readonly Article[]> {
     return values(this.state.articles)
@@ -188,7 +202,10 @@ class InMemoryContentTransaction implements ContentTransaction {
   }
 
   async listReusableBlockRevisions(): Promise<readonly ReusableBlockRevision[]> {
-    return values(this.state.reusableBlockRevisions)
+    return values(this.state.reusableBlockRevisions).map((revision) => ({
+      ...revision,
+      document: parseMigratedContentDocument(revision.document),
+    }))
   }
 
   async listReusableBlocks(): Promise<readonly ReusableBlock[]> {
@@ -198,6 +215,10 @@ class InMemoryContentTransaction implements ContentTransaction {
   async listRevisions(articleId?: string): Promise<readonly ArticleRevision[]> {
     return values(this.state.revisions)
       .filter((revision) => articleId === undefined || revision.articleId === articleId)
+      .map((revision) => ({
+        ...revision,
+        document: parseMigratedContentDocument(revision.document),
+      }))
       .sort((left, right) => left.revisionNumber - right.revisionNumber)
   }
 
@@ -294,18 +315,35 @@ class InMemoryContentTransaction implements ContentTransaction {
 
 export class InMemoryContentRepository implements ContentRepository {
   private state = createState()
+  private transactionBarrier: Promise<void> = Promise.resolve()
 
-  async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
-    const original = cloneState(this.state)
+  private async runExclusive<T>(work: () => Promise<T>): Promise<T> {
+    const previous = this.transactionBarrier
+    let release: () => void = () => undefined
+    this.transactionBarrier = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    await previous
     try {
-      return await work(new InMemoryContentTransaction(this.state))
-    } catch (error) {
-      this.state = original
-      throw error
+      return await work()
+    } finally {
+      release()
     }
   }
 
+  async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
+    return this.runExclusive(async () => {
+      const original = cloneState(this.state)
+      try {
+        return await work(new InMemoryContentTransaction(this.state))
+      } catch (error) {
+        this.state = original
+        throw error
+      }
+    })
+  }
+
   async inspect<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
-    return work(new InMemoryContentTransaction(this.state))
+    return this.runExclusive(() => work(new InMemoryContentTransaction(this.state)))
   }
 }

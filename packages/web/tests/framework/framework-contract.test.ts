@@ -68,19 +68,47 @@ describe('Next and React migration contract', () => {
     expect(web.scripts?.typecheck).toBe('next typegen && tsc --noEmit')
   })
 
-  it('keeps the reader dependency graph free from editor runtimes', () => {
-    const web = readManifest('packages/web/package.json')
-    const dependencies = Object.keys(web.dependencies ?? {})
+  it('keeps reader route sources free from owner editor runtimes', () => {
+    const appRoot = path.join(process.cwd(), 'packages/web/src/app')
+    const sources: string[] = []
+    const visit = (directory: string) => {
+      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const absolute = path.join(directory, entry.name)
+        const relative = path.relative(appRoot, absolute)
+        if (entry.isDirectory()) {
+          if (relative === 'owner' || relative === 'api/owner' || relative === 'api/auth') continue
+          visit(absolute)
+        } else if (/\.(?:ts|tsx)$/.test(entry.name)) {
+          sources.push(fs.readFileSync(absolute, 'utf8'))
+        }
+      }
+    }
+    visit(appRoot)
+    const readerSource = sources.join('\n')
 
-    expect(dependencies).not.toEqual(
-      expect.arrayContaining([
-        '@tiptap/core',
-        '@tiptap/react',
-        'lexical',
-        'prosemirror-model',
-        'prosemirror-state',
-      ]),
-    )
+    for (const runtime of [
+      '@tiptap/core',
+      '@tiptap/react',
+      'lexical',
+      'prosemirror-model',
+      'prosemirror-state',
+      '@/components/owner/',
+    ]) {
+      expect(readerSource, runtime).not.toContain(runtime)
+    }
+  })
+
+  it('revalidates owner sessions in every leaf loader before reading private data', () => {
+    for (const relativePath of [
+      'packages/web/src/app/owner/(workspace)/page.tsx',
+      'packages/web/src/app/owner/(workspace)/stories/new/page.tsx',
+      'packages/web/src/app/owner/(workspace)/stories/[id]/page.tsx',
+      'packages/web/src/app/owner/(workspace)/stories/[id]/preview/page.tsx',
+    ]) {
+      const source = fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8')
+      expect(source, relativePath).toContain('await requireOwnerPageSession()')
+      expect(source, relativePath).toContain('getOwnerRuntime()')
+    }
   })
 
   it('pins Next internal PostCSS to the workspace patched release', () => {
@@ -106,11 +134,29 @@ describe('Next and React migration contract', () => {
     ])
   })
 
-  it('applies preview privacy headers after the global header policy', async () => {
+  it('applies preview and owner privacy headers after the global header policy', async () => {
     const headers = await nextConfig.headers?.()
     const sources = headers?.map(({ source }) => source) ?? []
 
-    expect(sources).toEqual(['/:path*', '/api/preview', '/api/preview/:path*', '/preview/:path*'])
+    expect(sources).toEqual([
+      '/:path*',
+      '/api/preview',
+      '/api/preview/:path*',
+      '/preview/:path*',
+      '/owner/:path*',
+      '/api/owner/:path*',
+    ])
+    const ownerHeaders = headers?.filter(({ source }) => source.includes('owner')) ?? []
+    expect(ownerHeaders).toHaveLength(2)
+    for (const entry of ownerHeaders) {
+      expect(entry.headers).toEqual(
+        expect.arrayContaining([
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Referrer-Policy', value: 'same-origin' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+        ]),
+      )
+    }
   })
 
   it('keeps preview credentials slug-bound, purpose-separated, and body-bounded', () => {

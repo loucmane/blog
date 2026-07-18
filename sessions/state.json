@@ -1,5 +1,13 @@
 {
-  "current": "2026-07-18-003-task42-content-persistence-foundation-delivery.md",
+  "current": "2026-07-18-001-task43-owner-publishing-foundation.md",
+  "current_path": "sessions/2026/07/2026-07-18-001-task43-owner-publishing-foundation.md",
   "paused": [],
-  "updated_at": "2026-07-18T10:53:23+02:00"
+  "schema_version": "1.0.0",
+  "task": {
+    "id": "43",
+    "slug": "owner-publishing-foundation",
+    "status": "in-progress",
+    "title": "Implement Owner Publishing Foundation"
+  },
+  "updated_at": "2026-07-18T12:49:00+02:00"
 }

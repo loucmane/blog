@@ -146,12 +146,13 @@
         "description": "Build the protected owner shell and foundational draft, autosave, recovery, revision, preview, media, schedule, publish, update, unpublish, and authentication workflows.",
         "details": "This task establishes owner-operable foundations, not the complete dashboard. Require understandable failure states, accessibility, idempotency, audit, browser smoke coverage, and no normal dependency on developer or hosting tools.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           "42"
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-07-18T09:35:10.644Z"
       },
       {
         "id": "44",
@@ -609,7 +610,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-18T08:49:20.580Z",
+      "lastModified": "2026-07-18T09:35:10.648Z",
       "taskCount": 39,
       "completedCount": 25,
       "tags": [

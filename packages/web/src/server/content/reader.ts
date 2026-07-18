@@ -28,11 +28,26 @@ export class ContentReader {
       if (
         !article ||
         article.deletedAt !== null ||
-        article.status !== 'published' ||
+        !['published', 'scheduled'].includes(article.status) ||
         article.publishedAt === null ||
         article.publishedRevisionId === null
       ) {
         return null
+      }
+      if (article.status === 'scheduled') {
+        const activeJobs = (await transaction.listPublicationJobs(article.id)).filter(
+          ({ status }) => status === 'pending' || status === 'claimed',
+        )
+        const activeJob = activeJobs[0]
+        if (
+          activeJobs.length !== 1 ||
+          !activeJob ||
+          activeJob.previousStatus !== 'published' ||
+          activeJob.revisionId !== article.scheduledRevisionId ||
+          activeJob.runAt !== article.scheduledAt
+        ) {
+          return null
+        }
       }
       const revision = await transaction.getRevision(article.publishedRevisionId)
       if (!revision || revision.articleId !== article.id) {

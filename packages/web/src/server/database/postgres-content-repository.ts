@@ -18,6 +18,7 @@ import type {
   SlugRedirect,
   TaxonomyTerm,
 } from '../content/domain'
+import { parseMigratedContentDocument } from '../content/document'
 import { ContentConflictError, DuplicateSlugError } from '../content/errors'
 import type { ContentRepository, ContentTransaction } from '../content/ports'
 
@@ -50,9 +51,11 @@ interface ArticleRow extends QueryResultRow {
 interface RevisionRow extends QueryResultRow {
   article_id: string
   created_at: Date | string
+  dek: string | null
   document: ArticleRevision['document']
   id: string
   revision_number: number
+  title: string | null
 }
 
 interface AutosaveRow extends QueryResultRow {
@@ -80,9 +83,11 @@ interface PublicationJobRow extends QueryResultRow {
   id: string
   idempotency_key: string
   lease_until: Date | string | null
+  previous_status: PublicationJob['previousStatus']
   revision_id: string
   run_at: Date | string
   status: PublicationJob['status']
+  time_zone: string
   updated_at: Date | string
 }
 
@@ -197,9 +202,11 @@ function mapRevision(row: RevisionRow): ArticleRevision {
   return {
     articleId: row.article_id,
     createdAt: iso(row.created_at),
-    document: row.document,
+    ...(row.dek === null ? {} : { dek: row.dek }),
+    document: parseMigratedContentDocument(row.document),
     id: row.id,
     revisionNumber: row.revision_number,
+    ...(row.title === null ? {} : { title: row.title }),
   }
 }
 
@@ -223,9 +230,11 @@ function mapJob(row: PublicationJobRow): PublicationJob {
     id: row.id,
     idempotencyKey: row.idempotency_key,
     leaseUntil: nullableIso(row.lease_until),
+    previousStatus: row.previous_status,
     revisionId: row.revision_id,
     runAt: iso(row.run_at),
     status: row.status,
+    timeZone: row.time_zone,
     updatedAt: iso(row.updated_at),
   }
 }
@@ -324,6 +333,14 @@ class PostgresContentTransaction implements ContentTransaction {
     return result.rows[0] ? mapArticle(result.rows[0]) : null
   }
 
+  async getArticleForUpdate(id: string): Promise<Article | null> {
+    const result = await this.client.query<ArticleRow>(
+      'SELECT * FROM articles WHERE id = $1 FOR UPDATE',
+      [id],
+    )
+    return result.rows[0] ? mapArticle(result.rows[0]) : null
+  }
+
   async getArticleBySlug(slug: string): Promise<Article | null> {
     const result = await this.client.query<ArticleRow>(
       'SELECT * FROM articles WHERE slug = $1 AND deleted_at IS NULL',
@@ -352,6 +369,13 @@ class PostgresContentTransaction implements ContentTransaction {
       : null
   }
 
+  async lockIdempotency(operation: string, key: string): Promise<void> {
+    await this.client.query('SELECT pg_advisory_xact_lock(hashtext($1), hashtext($2))', [
+      operation,
+      key,
+    ])
+  }
+
   async getMediaAsset(id: string): Promise<MediaAsset | null> {
     const result = await this.client.query<MediaAssetRow>(
       'SELECT * FROM media_assets WHERE id = $1',
@@ -370,6 +394,14 @@ class PostgresContentTransaction implements ContentTransaction {
   async getPublicationJob(id: string): Promise<PublicationJob | null> {
     const result = await this.client.query<PublicationJobRow>(
       'SELECT * FROM publishing_jobs WHERE id = $1',
+      [id],
+    )
+    return result.rows[0] ? mapJob(result.rows[0]) : null
+  }
+
+  async getPublicationJobForUpdate(id: string): Promise<PublicationJob | null> {
+    const result = await this.client.query<PublicationJobRow>(
+      'SELECT * FROM publishing_jobs WHERE id = $1 FOR UPDATE',
       [id],
     )
     return result.rows[0] ? mapJob(result.rows[0]) : null
@@ -520,7 +552,7 @@ class PostgresContentTransaction implements ContentTransaction {
     ).rows.map((row) => ({
       blockId: row.block_id,
       createdAt: iso(row.created_at),
-      document: row.document,
+      document: parseMigratedContentDocument(row.document),
       id: row.id,
       revisionNumber: row.revision_number,
     }))
@@ -750,8 +782,8 @@ class PostgresContentTransaction implements ContentTransaction {
     await this.client.query(
       `INSERT INTO publishing_jobs
         (id, article_id, revision_id, run_at, status, idempotency_key, attempt,
-         claimed_by, lease_until, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         claimed_by, lease_until, previous_status, time_zone, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        ON CONFLICT (id) DO UPDATE SET
          status = EXCLUDED.status, attempt = EXCLUDED.attempt,
          claimed_by = EXCLUDED.claimed_by, lease_until = EXCLUDED.lease_until,
@@ -766,6 +798,8 @@ class PostgresContentTransaction implements ContentTransaction {
         job.attempt,
         job.claimedBy,
         job.leaseUntil,
+        job.previousStatus,
+        job.timeZone,
         job.createdAt,
         job.updatedAt,
       ],
@@ -836,14 +870,16 @@ class PostgresContentTransaction implements ContentTransaction {
   async saveRevision(revision: ArticleRevision): Promise<void> {
     await this.client.query(
       `INSERT INTO article_revisions
-        (id, article_id, revision_number, document_schema_version, document, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+        (id, article_id, revision_number, document_schema_version, document, title, dek, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         revision.id,
         revision.articleId,
         revision.revisionNumber,
         revision.document.schemaVersion,
         revision.document,
+        revision.title ?? null,
+        revision.dek ?? null,
         revision.createdAt,
       ],
     )

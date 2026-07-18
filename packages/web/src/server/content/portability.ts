@@ -22,7 +22,7 @@ import {
   type SlugRedirect,
   type TaxonomyTerm,
 } from './domain'
-import { parseContentDocument } from './document'
+import { parseMigratedContentDocument } from './document'
 import { ImportCollisionError } from './errors'
 import type { ContentRepository, OriginalObjectStore } from './ports'
 
@@ -101,9 +101,11 @@ const revisionSchema = z
   .object({
     articleId: id,
     createdAt: timestamp,
+    dek: z.string().optional(),
     document: z.unknown(),
     id,
     revisionNumber: z.number().int().positive(),
+    title: z.string().min(1).max(300).optional(),
   })
   .strict()
 const autosaveSchema = z
@@ -128,12 +130,23 @@ const jobSchema = z
     id,
     idempotencyKey: id,
     leaseUntil: nullableTimestamp,
+    previousStatus: z.enum(['draft', 'published', 'unpublished']).optional(),
     revisionId: id,
     runAt: timestamp,
     status: z.enum(publicationJobStatuses),
+    timeZone: z.string().min(1).max(100).optional(),
     updatedAt: timestamp,
   })
   .strict()
+  .superRefine((job, context) => {
+    const claimed = job.status === 'claimed'
+    if (claimed && (!job.claimedBy || !job.leaseUntil || job.attempt < 1)) {
+      context.addIssue({ code: 'custom', message: 'claimed job requires an owner and lease' })
+    }
+    if (!claimed && (job.claimedBy !== null || job.leaseUntil !== null)) {
+      context.addIssue({ code: 'custom', message: 'only claimed jobs may retain a lease' })
+    }
+  })
 const outboxSchema = z
   .object({
     aggregateId: id,
@@ -282,6 +295,28 @@ const unsignedBundleSchema = z
   .strict()
 const bundleSchema = unsignedBundleSchema.extend({ digest: sha256 }).strict()
 
+function normalizePortableBundle(bundle: z.infer<typeof bundleSchema>): PortableContentBundle {
+  const articles = new Map(bundle.data.articles.map((article) => [article.id, article]))
+  const fallbackTimeZone = bundle.data.publicationSettings?.ownerTimeZone ?? 'UTC'
+  return {
+    ...bundle,
+    data: {
+      ...bundle.data,
+      publicationJobs: bundle.data.publicationJobs.map((job) => ({
+        ...job,
+        previousStatus:
+          job.previousStatus ??
+          (articles.get(job.articleId)?.status === 'published'
+            ? 'published'
+            : articles.get(job.articleId)?.status === 'unpublished'
+              ? 'unpublished'
+              : 'draft'),
+        timeZone: job.timeZone ?? fallbackTimeZone,
+      })),
+    },
+  } as unknown as PortableContentBundle
+}
+
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize)
   if (value !== null && typeof value === 'object') {
@@ -315,7 +350,8 @@ function uniqueIds(values: readonly { readonly id: string }[], label: string, is
 }
 
 function validateRelationships(bundle: PortableContentBundle, issues: string[]) {
-  const articleIds = new Set(bundle.data.articles.map(({ id: articleId }) => articleId))
+  const articles = new Map(bundle.data.articles.map((article) => [article.id, article]))
+  const articleIds = new Set(articles.keys())
   const revisions = new Map(bundle.data.revisions.map((revision) => [revision.id, revision]))
   const taxonomyIds = new Set(bundle.data.taxonomies.map(({ id: taxonomyId }) => taxonomyId))
   const mediaIds = new Set(bundle.data.mediaAssets.map(({ id: mediaId }) => mediaId))
@@ -337,13 +373,56 @@ function validateRelationships(bundle: PortableContentBundle, issues: string[]) 
         issues.push(`article ${article.id} has invalid ${field} ${revisionId}`)
       }
     }
+    const activeJobs = bundle.data.publicationJobs.filter(
+      (job) =>
+        job.articleId === article.id && (job.status === 'pending' || job.status === 'claimed'),
+    )
+    if (article.status === 'scheduled' && activeJobs.length !== 1) {
+      issues.push(`scheduled article ${article.id} must have exactly one active publication job`)
+    }
+    if (
+      article.status === 'scheduled' &&
+      (article.scheduledAt === null || article.scheduledRevisionId === null)
+    ) {
+      issues.push(`scheduled article ${article.id} is missing schedule metadata`)
+    }
+    if (
+      article.status !== 'scheduled' &&
+      (article.scheduledAt !== null || article.scheduledRevisionId !== null)
+    ) {
+      issues.push(`non-scheduled article ${article.id} retains schedule metadata`)
+    }
+    if ((article.publishedAt === null) !== (article.publishedRevisionId === null)) {
+      issues.push(`article ${article.id} has incomplete published revision metadata`)
+    }
+    if (
+      article.status === 'published' &&
+      (article.publishedAt === null || article.publishedRevisionId === null)
+    ) {
+      issues.push(`published article ${article.id} has no published revision`)
+    }
+    if (article.status === 'scheduled' && activeJobs.length === 1) {
+      const activeJob = activeJobs[0]!
+      if (
+        activeJob.revisionId !== article.scheduledRevisionId ||
+        activeJob.runAt !== article.scheduledAt
+      ) {
+        issues.push(`scheduled article ${article.id} does not match its active publication job`)
+      }
+      if (
+        activeJob.previousStatus === 'published' &&
+        (article.publishedAt === null || article.publishedRevisionId === null)
+      ) {
+        issues.push(`scheduled article ${article.id} cannot restore published visibility`)
+      }
+    }
   }
   for (const revision of bundle.data.revisions) {
     if (!articleIds.has(revision.articleId)) {
       issues.push(`revision ${revision.id} references missing article ${revision.articleId}`)
     }
     try {
-      const document = parseContentDocument(revision.document)
+      const document = parseMigratedContentDocument(revision.document)
       if (document.articleId !== revision.articleId) {
         issues.push(`revision ${revision.id} document identity does not match its article`)
       }
@@ -357,8 +436,30 @@ function validateRelationships(bundle: PortableContentBundle, issues: string[]) 
     }
   }
   for (const autosave of bundle.data.autosaves) {
-    if (!articleIds.has(autosave.articleId) || !revisions.has(autosave.revisionId)) {
+    const revision = revisions.get(autosave.revisionId)
+    if (
+      !articleIds.has(autosave.articleId) ||
+      !revision ||
+      revision.articleId !== autosave.articleId
+    ) {
       issues.push(`autosave ${autosave.id} is unresolved`)
+    }
+  }
+  for (const job of bundle.data.publicationJobs) {
+    const article = articles.get(job.articleId)
+    const revision = revisions.get(job.revisionId)
+    if (!article) {
+      issues.push(`publication job ${job.id} references missing article ${job.articleId}`)
+      continue
+    }
+    if (!revision || revision.articleId !== article.id) {
+      issues.push(`publication job ${job.id} has invalid revision ${job.revisionId}`)
+    }
+    if (
+      (job.status === 'pending' || job.status === 'claimed') &&
+      (article.status !== 'scheduled' || article.scheduledRevisionId !== job.revisionId)
+    ) {
+      issues.push(`active publication job ${job.id} does not match its scheduled article`)
     }
   }
   for (const rendition of bundle.data.mediaRenditions) {
@@ -376,7 +477,7 @@ function validateRelationships(bundle: PortableContentBundle, issues: string[]) 
       issues.push(`reusable block revision ${revision.id} has no block`)
     }
     try {
-      parseContentDocument(revision.document)
+      parseMigratedContentDocument(revision.document)
     } catch (error) {
       issues.push(`reusable block revision ${revision.id} document is invalid: ${String(error)}`)
     }
@@ -472,11 +573,12 @@ export function inspectPortableContentBundle(value: unknown): PortableContentIns
       status: 'invalid',
     }
   }
-  const { digest: claimedDigest, ...unsigned } = parsed.data
+  const { digest: claimedDigest } = parsed.data
+  const { digest: _originalDigest, ...unsigned } = original as Record<string, unknown>
   const issues: string[] = []
   if (digest(unsigned) !== claimedDigest)
     issues.push('bundle digest does not match canonical content')
-  const bundle = parsed.data as PortableContentBundle
+  const bundle = normalizePortableBundle(parsed.data)
   for (const [label, values] of [
     ['articles', bundle.data.articles],
     ['revisions', bundle.data.revisions],

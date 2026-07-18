@@ -1,5 +1,6 @@
 import {
   bigint,
+  boolean,
   customType,
   doublePrecision,
   index,
@@ -41,6 +42,116 @@ export const authors = pgTable(
   (table) => [uniqueIndex('authors_slug_key').on(table.slug)],
 )
 
+export const ownerUsers = pgTable(
+  'owner_users',
+  {
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    email: text('email').notNull(),
+    emailVerified: boolean('email_verified').default(false).notNull(),
+    id: text('id').primaryKey(),
+    image: text('image'),
+    name: text('name').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex('owner_users_email_key').on(table.email)],
+)
+
+export const ownerSessions = pgTable(
+  'owner_sessions',
+  {
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    id: text('id').primaryKey(),
+    ipAddress: text('ip_address'),
+    token: text('token').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    userAgent: text('user_agent'),
+    userId: text('user_id')
+      .notNull()
+      .references(() => ownerUsers.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    uniqueIndex('owner_sessions_token_key').on(table.token),
+    index('owner_sessions_user_id_idx').on(table.userId),
+  ],
+)
+
+export const ownerAccounts = pgTable(
+  'owner_accounts',
+  {
+    accessToken: text('access_token'),
+    accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+    accountId: text('account_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    id: text('id').primaryKey(),
+    idToken: text('id_token'),
+    password: text('password'),
+    providerId: text('provider_id').notNull(),
+    refreshToken: text('refresh_token'),
+    refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+    scope: text('scope'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => ownerUsers.id, { onDelete: 'cascade' }),
+  },
+  (table) => [index('owner_accounts_user_id_idx').on(table.userId)],
+)
+
+export const ownerVerifications = pgTable(
+  'owner_verifications',
+  {
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    id: text('id').primaryKey(),
+    identifier: text('identifier').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    value: text('value').notNull(),
+  },
+  (table) => [index('owner_verifications_identifier_idx').on(table.identifier)],
+)
+
+export const ownerPasskeys = pgTable(
+  'owner_passkeys',
+  {
+    aaguid: text('aaguid'),
+    backedUp: boolean('backed_up').notNull(),
+    counter: integer('counter').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    credentialID: text('credential_id').notNull(),
+    deviceType: text('device_type').notNull(),
+    id: text('id').primaryKey(),
+    name: text('name'),
+    publicKey: text('public_key').notNull(),
+    transports: text('transports'),
+    userId: text('user_id')
+      .notNull()
+      .references(() => ownerUsers.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    index('owner_passkeys_user_id_idx').on(table.userId),
+    uniqueIndex('owner_passkeys_credential_id_key').on(table.credentialID),
+  ],
+)
+
+export const ownerAuthSchema = {
+  account: ownerAccounts,
+  passkey: ownerPasskeys,
+  session: ownerSessions,
+  user: ownerUsers,
+  verification: ownerVerifications,
+} as const
+
+export const ownerAuthTables = [
+  ownerAccounts,
+  ownerPasskeys,
+  ownerSessions,
+  ownerUsers,
+  ownerVerifications,
+] as const
+
+export const ownerAuthTableNames = ownerAuthTables.map((table) => getTableName(table)).sort()
+
 export const articles = pgTable(
   'articles',
   {
@@ -70,10 +181,12 @@ export const articleRevisions = pgTable(
   {
     articleId: text('article_id').notNull(),
     createdAt: timestampWithTimezone('created_at').notNull(),
+    dek: text('dek'),
     document: jsonb('document').$type<ContentDocument>().notNull(),
     documentSchemaVersion: integer('document_schema_version').notNull(),
     id: text('id').primaryKey(),
     revisionNumber: integer('revision_number').notNull(),
+    title: text('title'),
   },
   (table) => [
     uniqueIndex('article_revisions_article_number_key').on(table.articleId, table.revisionNumber),
@@ -217,9 +330,11 @@ export const publishingJobs = pgTable(
     id: text('id').primaryKey(),
     idempotencyKey: text('idempotency_key').notNull(),
     leaseUntil: timestampWithTimezone('lease_until'),
+    previousStatus: text('previous_status').notNull(),
     revisionId: text('revision_id').notNull(),
     runAt: timestampWithTimezone('run_at').notNull(),
     status: text('status').notNull(),
+    timeZone: text('time_zone').notNull(),
     updatedAt: timestampWithTimezone('updated_at').notNull(),
   },
   (table) => [

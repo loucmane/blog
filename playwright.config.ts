@@ -6,6 +6,10 @@ const canonicalBuildURL = 'https://canonical.magazine.invalid'
 const previewCookieSecret = 'task40-preview-cookie-secret-with-32-bytes'
 const previewTokenSecret = 'task40-preview-token-secret-with-32-bytes'
 const revalidationSecret = 'task40-revalidation-secret-with-32-bytes'
+const ownerTestToken = 'task43-owner-test-token-with-more-than-thirty-two-bytes'
+const publicationWorkerToken = ['task43', 'publication', 'worker', 'token', 'more-than-32'].join(
+  '-',
+)
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -13,7 +17,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: [
     ['list'],
     ['json', { outputFile: 'ci-artifacts/playwright-results.json' }],
@@ -36,17 +40,25 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm --filter web build && pnpm --filter web start',
+    command:
+      'env -u MAGAZINE_OWNER_TEST_MODE -u MAGAZINE_OWNER_TEST_TOKEN pnpm --filter web build && NODE_ENV=test pnpm --filter web start',
     env: {
       HOSTNAME: '127.0.0.1',
       MAGAZINE_PREVIEW_COOKIE_SECRET: previewCookieSecret,
       MAGAZINE_PREVIEW_TOKEN_SECRET: previewTokenSecret,
       MAGAZINE_REVALIDATION_SECRET: revalidationSecret,
       MAGAZINE_RUNTIME_SITE_URL: baseURL,
+      MAGAZINE_OWNER_EMAIL: 'owner@example.test',
+      MAGAZINE_OWNER_NAME: 'Editorial owner',
+      MAGAZINE_OWNER_TEST_MODE: '1',
+      MAGAZINE_OWNER_TEST_TOKEN: ownerTestToken,
+      MAGAZINE_OWNER_TIME_ZONE: 'Europe/Stockholm',
+      MAGAZINE_PUBLICATION_WORKER_TOKEN: publicationWorkerToken,
+      BETTER_AUTH_URL: baseURL,
       NEXT_PUBLIC_SITE_URL: canonicalBuildURL,
       PORT: String(port),
     },
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
     url: baseURL,
   },
