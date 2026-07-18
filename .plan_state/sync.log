@@ -844,5 +844,17 @@
     "plan_hash": "e6d6bc4a7f822631c317b16bebcdaddc8d8122e477806d9427e5e802054879b3",
     "tracker_hash": "dc9a8247dfe3cebdf69f2d374662d629d20165f3945359554ff1e398422658b6",
     "synced_at": "2026-07-18T10:15:42.044476+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task71-refresh-aegis-hook-trust-runtime-closeout.md",
+    "plan_hash": "e1926fc9a13f5110308bd1ab236ee0298104d9f138a97992296d05e8e783e837",
+    "tracker_hash": "4882c136ae11532bed710827ca2bfa36a1ae9807d47c8ffd1771905e0b7d4226",
+    "synced_at": "2026-07-18T10:20:15.578829+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task71-refresh-aegis-hook-trust-runtime-closeout.md",
+    "plan_hash": "e1926fc9a13f5110308bd1ab236ee0298104d9f138a97992296d05e8e783e837",
+    "tracker_hash": "1bc9459d5b359bcb1f60f228b886f80341d012abb732222a24002beb4791cc5c",
+    "synced_at": "2026-07-18T10:21:24.611706+02:00"
   }
 ]

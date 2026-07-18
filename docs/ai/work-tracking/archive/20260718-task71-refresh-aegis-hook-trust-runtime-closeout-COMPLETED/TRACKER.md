@@ -24,6 +24,7 @@
 - **2026-07-18 10:09 CEST** - [S:20260718|W:task71-refresh-aegis-hook-trust-runtime-closeout|H:agent:verification|E:docs/ai/work-tracking/active/20260718-task71-refresh-aegis-hook-trust-runtime-closeout-ACTIVE/reports/refresh-aegis-hook-trust-runtime-closeout/task-verification.md] Recorded Task 71 trust, Taskmaster, governance, security, archive, and scope verification evidence
 - **2026-07-18 10:09 CEST** - [S:20260718|W:task71-refresh-aegis-hook-trust-runtime-closeout|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded strict verification: 46 checks, zero required failures, two unsupported checks, and the expected advisory-enforcement warning
 - **2026-07-18 10:14 CEST** - [S:20260718|W:task71-refresh-aegis-hook-trust-runtime-closeout|H:task-master:set-status|E:.taskmaster/tasks/tasks.json] Marked Task 71 done after successful Aegis closeout and regenerated only `.taskmaster/tasks/task_071.md`; preserved the legacy helper incompatibility as evidence
+- **2026-07-18 10:21 CEST** - [S:20260718|W:task71-refresh-aegis-hook-trust-runtime-closeout|H:serena/memory:status|E:serena/memory:none] Recorded that Serena was absent and optional, so no Serena memory artifact was created; this is an explicit absence marker, not a fabricated memory reference
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -43,3 +44,19 @@ Task 71 passed final Aegis closeout with 23 gates, zero required failures, and z
 - Taskmaster: optional unless `.aegis/state/current-work.json` marks it required.
 - Serena: optional continuity only; never required for READY.
 - Direct workflow state writes should go through Aegis CLI or MCP tools.
+
+<!-- AEGIS:BEGIN generated-sweh-projection -->
+<!-- AEGIS:projection-state {"event_count": 6, "last_event_id": "1b6f207afa944cbcaa702899c5af0428", "schema": "legacy-shadow-sweh-projection-v1"} -->
+
+## Generated S:W:H:E Projection
+
+_Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
+
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:bd7410e27ba...] Session began via compact.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:session E:ledger:1a4ab2250ec...] Session began via compact.
+- [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:witness E:ledger:ae93d7375a7...] Delivery witness FAIL recorded at 7871ecc; report: .aegis/reports/witness-report.json.
+- [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:task-truth E:ledger:9a57279aeb2...] Task truth recorded for task truth: changed.
+- [S:2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout W:task-71-refresh-aegis-hook-trust-runtime-closeout H:scope E:ledger:772fbbc0a38...] Scope recorded for 71. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/task_071.md.
+- [S:2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout W:task-71-refresh-aegis-hook-trust-runtime-closeout H:witness E:ledger:1b6f207afa9...] Delivery witness PASS recorded at 8185180; report: .aegis/reports/witness-report.json.
+
+<!-- AEGIS:END generated-sweh-projection -->
