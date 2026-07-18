@@ -164,6 +164,7 @@ describe('content document contract', () => {
       expect(result.document.migrationProvenance).toEqual([
         { from: 1, migration: 'content-v1-to-v2', to: 2 },
         { from: 2, migration: 'content-v2-to-v3', to: 3 },
+        { from: 3, migration: 'content-v3-to-v4', to: 4 },
       ])
       expect(result.document.document.content?.[1]?.attrs).toEqual({
         alt: 'Archive photograph',
@@ -174,6 +175,45 @@ describe('content document contract', () => {
       })
       expect(migrateContentDocument(result.document)).toMatchObject({ status: 'current' })
     }
+  })
+
+  it('supports accessible task lists and migrates version-three documents without loss', () => {
+    const versionThree = {
+      ...currentDocument(),
+      schemaVersion: 3,
+    }
+    const migrated = migrateContentDocument(versionThree)
+    expect(migrated.status).toBe('migrated')
+    if (migrated.status !== 'migrated') return
+    expect(migrated.document.document).toEqual(currentDocument().document)
+    expect(migrated.document.migrationProvenance).toEqual([
+      { from: 3, migration: 'content-v3-to-v4', to: 4 },
+    ])
+
+    const taskDocument: ContentDocument = {
+      ...currentDocument(),
+      document: {
+        content: [
+          {
+            content: [
+              {
+                attrs: { checked: false },
+                content: [
+                  {
+                    content: [{ text: 'Confirm the publication date', type: 'text' }],
+                    type: 'paragraph',
+                  },
+                ],
+                type: 'taskItem',
+              },
+            ],
+            type: 'taskList',
+          },
+        ],
+        type: 'doc',
+      },
+    }
+    expect(parseContentDocument(taskDocument)).toEqual(taskDocument)
   })
 
   it('quarantines malformed wrappers, unknown marks, and unmigrated old documents', () => {

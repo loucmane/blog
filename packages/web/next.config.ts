@@ -72,6 +72,23 @@ export function createPreviewPrivacyHeaders() {
   ]
 }
 
+export function createOwnerPrivacyHeaders() {
+  return [
+    {
+      key: 'Cache-Control',
+      value: 'private, no-store',
+    },
+    {
+      key: 'Referrer-Policy',
+      value: 'same-origin',
+    },
+    {
+      key: 'X-Robots-Tag',
+      value: 'noindex, nofollow, noarchive',
+    },
+  ]
+}
+
 const nextConfig: NextConfig = {
   compress: true,
   images: {
@@ -98,6 +115,14 @@ const nextConfig: NextConfig = {
       {
         headers: createPreviewPrivacyHeaders(),
         source: '/preview/:path*',
+      },
+      {
+        headers: createOwnerPrivacyHeaders(),
+        source: '/owner/:path*',
+      },
+      {
+        headers: createOwnerPrivacyHeaders(),
+        source: '/api/owner/:path*',
       },
     ]
   },
