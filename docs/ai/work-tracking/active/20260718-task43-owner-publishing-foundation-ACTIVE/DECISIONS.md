@@ -37,6 +37,8 @@ Record decisions before implementation, including options considered, rationale,
 - 2026-07-18 - Expose the structured editor as an ARIA multiline textbox and disable media mutation controls during preview, lifecycle, and revision-restore barriers.
 
 ## Progress Log
+- 2026-07-18 16:46 CEST - Advance only Task 43's canonical runtime projections and exact override map in `config/runtime.json`; preserve checker logic, workflow semantics, runtime versions, package scripts, and every trust boundary unchanged.
+
 - **2026-07-18 11:31 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:aegis:kickoff|E:.aegis/state/current-work.json] Decisions log initialized by Aegis kickoff.
 - **2026-07-18 11:39 CEST** - [S:2026-07-18-001-task43-owner-publishing-foundation|W:task43-owner-publishing-foundation|H:agent:scope|E:docs/ai/work-tracking/active/20260718-task43-owner-publishing-foundation-ACTIVE/DECISIONS.md] Locked the independently reversible Task 43 implementation boundary before source edits.
 - **2026-07-18 11:39 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:agent:scope|E:docs/ai/work-tracking/active/20260718-task43-owner-publishing-foundation-ACTIVE/FINDINGS.md] Confirmed Task 43 owner publishing scope before implementation under standing-grant:sota-magazine-2026-autonomy-v2

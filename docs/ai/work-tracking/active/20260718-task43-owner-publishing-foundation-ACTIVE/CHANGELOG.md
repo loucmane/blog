@@ -10,6 +10,7 @@
 - 2026-07-18 15:29 CEST - Guarded restore-in-flight edits, required exactly one active scheduled job, aligned article→job lock order, and passed 111 unit tests plus all 32 desktop/mobile browser journeys.
 - 2026-07-18 16:10 CEST - Closed exact schedule-identity, lost-response replay, preview freshness, auditable unpublish, portable consistency, and toolbar semantics findings; passed 111 unit tests plus all 34 desktop/mobile browser journeys.
 - 2026-07-18 16:33 CEST - Closed stale-run-time completion, orphan/poison-job starvation, retry-state evidence, multiline-editor semantics, media-control freeze, and upload-size findings; both reviewers returned NO BLOCKERS and 115 unit/34 browser tests passed.
+- 2026-07-18 16:46 CEST - Corrected the stale runtime-contract projection reported by hosted PR #40 CI without changing workflow or checker semantics.
 
 ## Progress Log
 - **2026-07-18 11:31 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:aegis:kickoff|E:.aegis/state/current-work.json] Changelog initialized by Aegis kickoff.

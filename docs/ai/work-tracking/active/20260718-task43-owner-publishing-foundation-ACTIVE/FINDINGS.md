@@ -37,6 +37,8 @@ Record discoveries, gaps, risks, failed assumptions, and evidence-backed observa
 - 2026-07-18 - Final accessibility review required explicit multiline textbox semantics and complete lifecycle freezing of media controls. Both are implemented and covered in the desktop/mobile owner journeys. The final implementation and adversarial closure reviews returned `NO BLOCKERS`.
 
 ## Progress Log
+- 2026-07-18 16:46 CEST - Protected PR #40 exposed stale canonical runtime projections: the Task 43 dependency declarations, lockfile, workspace bytes, and security overrides were reviewed but `config/runtime.json` still described Task 42. This was a fail-closed contract projection gap, not dependency drift or workflow failure.
+
 - **2026-07-18 11:31 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:aegis:kickoff|E:.aegis/state/current-work.json] Findings log initialized by Aegis kickoff.
 - **2026-07-18 11:39 CEST** - [S:2026-07-18-001-task43-owner-publishing-foundation|W:task43-owner-publishing-foundation|H:agent:scope|E:docs/ai/work-tracking/active/20260718-task43-owner-publishing-foundation-ACTIVE/FINDINGS.md] Audited canonical product truth, Task 42 implementation, Task 37 spikes, owner UX contract, dependency metadata, task graph, and isolated Git/Aegis state before implementation.
 - **2026-07-18 11:39 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:agent:scope|E:docs/ai/work-tracking/active/20260718-task43-owner-publishing-foundation-ACTIVE/FINDINGS.md] Confirmed Task 43 owner publishing scope before implementation under standing-grant:sota-magazine-2026-autonomy-v2

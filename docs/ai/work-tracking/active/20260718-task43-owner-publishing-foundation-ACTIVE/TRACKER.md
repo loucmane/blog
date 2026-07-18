@@ -37,6 +37,8 @@
 - **2026-07-18 16:10 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:agent:verification|E:docs/ai/work-tracking/active/20260718-task43-owner-publishing-foundation-ACTIVE/reports/owner-publishing-foundation/verification.md] Closed exact schedule, lifecycle replay, preview, unpublish, portability, and ARIA findings; passed 111 unit tests, 34 browser journeys, PostgreSQL/S3 integration, production build/smoke, security, governance, and strict Aegis gates.
 - **2026-07-18 16:33 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:agent:independent-review|E:docs/ai/work-tracking/active/20260718-task43-owner-publishing-foundation-ACTIVE/FINDINGS.md] Both final reviewers returned NO BLOCKERS after stale-run-time, orphan/poison-job, retry-state, multiline-editor, media-freeze, and upload-size remediations; 115 unit and 34 browser tests pass.
 - **2026-07-18 15:38 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:agent:verification|E:.aegis/reports/verification-report.json] Recorded final Task 43 strict verification evidence after restore and scheduling remediation
+- **2026-07-18 16:51 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:serena:availability|E:serena/memory:absent] Serena memory tooling is unavailable in this session; no Serena memory was read, written, or fabricated. The Aegis ledger, active envelope, plan, session, tracker, and handoff remain the continuity sources; authority=standing-grant:sota-magazine-2026-autonomy-v2.
+- **2026-07-18 16:52 CEST** - [S:20260718|W:task43-owner-publishing-foundation|H:agent:hosted-ci-remediation|E:config/runtime.json] Advanced only the reviewed Task 43 runtime projections; frozen install, active runtime parity, 13 contract tests, typecheck, lint, format, 29 quality contracts, 115 unit tests, build, smoke, dependency audit, and diff check passed.
 
 ## Plan Compliance Checklist
 - [x] plan-step-scope - Confirm task scope, constraints, expected outputs, and affected files
@@ -45,7 +47,7 @@
 - [ ] plan-step-emergency (if applicable)
 
 ## Current State
-Task 43 implementation and all identified deterministic review remediations are complete on `feat/task-43-owner-publishing-foundation`. Both final independent reviews are closed with NO BLOCKERS. Refreshed exact-head Aegis/secret evidence, attended screen-reader validation, and protected delivery remain.
+Task 43 implementation and all identified deterministic review remediations are complete on `feat/task-43-owner-publishing-foundation`. Both final independent reviews are closed with NO BLOCKERS. PR #40's stale runtime projection is corrected locally; exact-head CI revalidation and attended screen-reader validation remain.
 
 ## Next Steps
 1. Refresh deterministic Aegis, witness, guard, secret-scan, and diff evidence.

@@ -31,6 +31,7 @@
 5. Follow trusted protected delivery policy without bypass.
 
 ## Important Context
+- PR #40's first hosted workspace run failed closed before install because `config/runtime.json` retained Task 42 package/workspace digests. The Task 43 projection correction changes no workflow, checker, runtime version, or package script semantics and requires exact-head CI revalidation.
 - Taskmaster Task 43 remains in progress until deterministic closeout; its full dependency graph is valid.
 - Serena is optional continuity only and is not readiness evidence by itself.
 - If context is compacted, resume by reading `.aegis/state/current-work.json`, `sessions/current`, `plans/current`, and this file.

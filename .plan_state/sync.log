@@ -946,5 +946,17 @@
     "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
     "tracker_hash": "cd74f5036f95d0a202d4e5683fa3002216de20161a76a8d8f7f51af59d43a7cc",
     "synced_at": "2026-07-18T16:37:11.069244+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "b4cf5218b56ddbdc4046126ee8b296733a9458e1752734418a9d6b0e314252bd",
+    "synced_at": "2026-07-18T16:52:36.928822+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "0c661c0794bfecc72ac583c6f5baed17fce221f49998cbfb148ba6e8c37454e5",
+    "synced_at": "2026-07-18T16:53:29.131156+02:00"
   }
 ]

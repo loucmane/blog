@@ -42,6 +42,8 @@
 
 ## Governance Verification
 
+- PR #40 run `29648538903` failed closed at the runtime-contract stage before install because `config/runtime.json` retained Task 42 dependency, manifest, lockfile, workspace, and override projections. The correction advances only those canonical Task 43 projections; runtime versions, package scripts, checker logic, workflow bytes, permissions, triggers, and trust boundaries remain unchanged.
+- The corrected projection passed frozen installation with no drift, active Node/pnpm/Corepack parity, all 13 runtime-contract tests, typecheck, lint, formatting, 29 quality contracts, all 115 unit tests, production build, HTTP 200 smoke, zero-advisory dependency audit, and `git diff --check`.
 - Taskmaster health: 39 tasks, 3 subtasks, 80 dependency references, zero invalid references.
 - `task-master validate-dependencies`: passed.
 - Taskmaster's incidental `migrationNoticeShown` change was reverted byte-for-byte; `.taskmaster/state.json` retained SHA-256 `19e3f504f0b1698af18a46097142fae8a59890f2f3aab54c6c5770ee819a5d35`.
