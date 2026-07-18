@@ -62,3 +62,4 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:2026-07-15-001-task71-refresh-aegis-hook-trust-runtime W:task-71-refresh-aegis-hook-trust-runtime H:witness E:ledger:f389a8f80d9...] Delivery witness PASS recorded at 6e6fa16; report: .aegis/reports/witness-report.json.
 
 <!-- AEGIS:END generated-sweh-projection -->
+- Archived on 2026-07-18 10:03 CEST — Folder moved to archive and tracker marked COMPLETED.
