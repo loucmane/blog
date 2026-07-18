@@ -35,13 +35,12 @@ Task 42 continuation was created via `python3 scripts/codex-task sessions contin
 - **[10:53]** — [S:20260718|W:task42-content-persistence-foundation|H:task-master:set-status|E:.taskmaster/tasks/task_042.md] Marked Taskmaster Task 42 done through the supported CLI and regenerated only task_042.md
 
 <!-- AEGIS:BEGIN generated-sweh-projection -->
-<!-- AEGIS:projection-state {"event_count": 10, "last_event_id": "706b75e1492e44cabfa869f6c37501d5", "schema": "legacy-shadow-sweh-projection-v1"} -->
+<!-- AEGIS:projection-state {"event_count": 11, "last_event_id": "04ffb4ba330b454283899b214baea92c", "schema": "legacy-shadow-sweh-projection-v1"} -->
 
 ## Generated S:W:H:E Projection
 
 _Generated from the passive Aegis ledger. Human-authored content outside this block is preserved._
 
-- [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:witness E:ledger:ae93d7375a7...] Delivery witness FAIL recorded at 7871ecc; report: .aegis/reports/witness-report.json.
 - [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:task-truth E:ledger:9a57279aeb2...] Task truth recorded for task truth: changed.
 - [S:2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout W:task-71-refresh-aegis-hook-trust-runtime-closeout H:scope E:ledger:772fbbc0a38...] Scope recorded for 71. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/task_071.md.
 - [S:2026-07-18-002-task71-refresh-aegis-hook-trust-runtime-closeout W:task-71-refresh-aegis-hook-trust-runtime-closeout H:witness E:ledger:1b6f207afa9...] Delivery witness PASS recorded at 8185180; report: .aegis/reports/witness-report.json.
@@ -51,5 +50,7 @@ _Generated from the passive Aegis ledger. Human-authored content outside this bl
 - [S:019f417f-980b-79e1-b1f0-46bbc740a7bf W:feat/task-41-modernize-tailwind-shadcn-workspaces H:delivery E:ledger:eb8f546842a...] Delivery state recorded: Bash.
 - [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:witness E:ledger:235ee5780e3...] Delivery witness FAIL recorded at ba32cd5; report: .aegis/reports/witness-report.json.
 - [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:scope E:ledger:706b75e1492...] Scope recorded for 42. Paths: .aegis/foundation-manifest.json, .taskmaster/tasks/task_042.md, .taskmaster/tasks/tasks.json.
+- [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:scope E:ledger:7285b5469ab...] Scope recorded for 42. Paths: .aegis/foundation-manifest.json, .plan_state/sync.log, .taskmaster/tasks/task_042.md.
+- [S:2026-07-17-001-task42-content-persistence-foundation W:task-42-content-persistence-foundation H:witness E:ledger:04ffb4ba330...] Delivery witness PASS recorded at fe5bdcb; report: .aegis/reports/witness-report.json.
 
 <!-- AEGIS:END generated-sweh-projection -->
