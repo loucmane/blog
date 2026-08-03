@@ -42,3 +42,13 @@ reports/agent-skills/
 coverage/
 .idea/
 *.local
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+
+# Gas City
+.beads/*
+!.beads/identity.toml
