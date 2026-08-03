@@ -100,6 +100,7 @@
         "beads-task-authority",
         "gas-city-dispatch-planning",
         "managed-worker-coordination",
+        "formula-catalog-entrypoint-guard",
         "worklog-evidence",
         "acceptance-and-review-routing"
       ],
