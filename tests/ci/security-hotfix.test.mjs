@@ -62,6 +62,7 @@ test('security-patched direct and transitive versions remain pinned', () => {
   assert.match(workspace, /'brace-expansion@>=4\.0\.0 <5\.0\.9': 5\.0\.9/)
   assert.match(workspace, /'next@16\.2\.12>postcss': 8\.5\.23/)
   assert.match(workspace, /'next@16\.2\.12>sharp': 0\.35\.0/)
+  assert.match(workspace, /'undici@>=7\.0\.0 <7\.29\.0': 7\.29\.0/)
 })
 
 test('production smoke validation requires a complete HTML response', () => {
