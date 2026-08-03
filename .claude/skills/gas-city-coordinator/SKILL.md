@@ -28,6 +28,38 @@ routing variables before native calls, keep `GC_HOME` explicit, and include
 Do not infer the rig from the current directory, a bead prefix, or inherited
 environment state when an explicit rig route is available.
 
+## Formula Entrypoint Authority
+
+`gc formula catalog` is the sole workflow-formula entrypoint authority. Before
+selecting a formula, query the native catalog with the isolated city home and
+explicit Blog routing, then pass that exact JSON to the deterministic guard:
+
+```bash
+env -u BEADS_DIR -u BEADS_DB -u BEADS_DOLT_SERVER_PORT \
+  GC_HOME=/home/loucmane/gascity/home \
+  /home/loucmane/gascity/bin/gc --city /home/loucmane/gascity/city \
+  --rig blog formula catalog --json \
+  | node scripts/agent-skills/formula-catalog-guard.mjs --formula "$FORMULA"
+```
+
+Only an exact formula name returned by that catalog is eligible. `gc formula
+list`, formula filenames or source paths, resolver suggestions, cached pack
+contents, and similarly named roles are discovery or diagnostic evidence, not
+entrypoint authority. They must never upgrade a denied selection.
+
+If the catalog is unavailable or malformed, or the requested formula is absent,
+stop before `gc formula cook`, stop before `gc sling`, and stop before any
+operation that could create workflow beads. Record the denied decision and ask
+for a public catalog-authorized entrypoint rather than guessing or overriding
+the formula.
+
+The 2026-08-03 Phase 5 failure is the pinned regression: `planning-base`
+appeared in `gc formula list` and had a resolvable `.formula.toml` filename, but
+was absent from the catalog. It was therefore ineligible and should have
+stopped before workflow cooking or dispatch. Phase 5 must not be retried until
+the catalog guard is merged and a public planning entrypoint appears in the
+catalog.
+
 ## Authority Boundary
 
 The project-local agent owns project intent, sequencing, task selection, scope,
@@ -53,12 +85,13 @@ does not broaden any of those boundaries.
 3. **Preview delegation.** Propose the dispatch before its first execution.
    Name the bead, managed role, formula, branch/worktree behavior, acceptance
    checks, worklog location, and retained operator boundaries. Do not dispatch
-   until the proposal has the authority required by the active operator policy.
+   until the proposal has the authority required by the active operator policy
+   and its formula has passed the catalog guard above.
 4. **Activate workers.** Resume the Blog rig and verify real worker processes,
    not merely configured sessions. Reconcile `gc rig status blog`, session
    state, and host process evidence before treating a worker as available. Use
-   `GC_HOME=/home/loucmane/gascity/home /home/loucmane/gascity/bin/gc rig
-   resume blog` when resumption is authorized.
+   the native `gc rig resume blog` operation with the isolated city home when
+   resumption is authorized.
 5. **Delegate deliberately.** Delegate to an appropriate managed role or
    formula. Prefer a builder for implementation, a reviewer for independent
    review, and a sweeper only for low-risk currency, formatting, or triage.
