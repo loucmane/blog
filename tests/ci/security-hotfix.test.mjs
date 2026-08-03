@@ -57,10 +57,10 @@ test('security-patched direct and transitive versions remain pinned', () => {
 
   assert.equal(rootPackage.devDependencies['@next/eslint-plugin-next'], '16.2.12')
   assert.equal(webPackage.dependencies.next, '16.2.12')
-  assert.equal(webPackage.devDependencies.postcss, '8.5.18')
+  assert.equal(webPackage.devDependencies.postcss, '8.5.23')
   assert.match(workspace, /'sharp@0\.35\.0': true/)
-  assert.match(workspace, /'brace-expansion@>=4\.0\.0 <5\.0\.8': 5\.0\.8/)
-  assert.match(workspace, /'next@16\.2\.12>postcss': 8\.5\.18/)
+  assert.match(workspace, /'brace-expansion@>=4\.0\.0 <5\.0\.9': 5\.0\.9/)
+  assert.match(workspace, /'next@16\.2\.12>postcss': 8\.5\.23/)
   assert.match(workspace, /'next@16\.2\.12>sharp': 0\.35\.0/)
 })
 
