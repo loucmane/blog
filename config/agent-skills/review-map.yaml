@@ -77,6 +77,24 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "gas-city-coordinator",
+      "match": [
+        ".beads/**",
+        "AGENTS.md",
+        "CLAUDE.md"
+      ],
+      "skills": [
+        "gas-city-coordinator"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }

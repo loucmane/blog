@@ -25,6 +25,8 @@ function copyFixture() {
     "schemas/agent-skills/review-result.schema.json",
     ".claude/skills/cross-agent-skill-platform/SKILL.md",
     ".claude/skills/cross-agent-skill-platform/agents/openai.yaml",
+    ".claude/skills/gas-city-coordinator/SKILL.md",
+    ".claude/skills/gas-city-coordinator/agents/openai.yaml",
     ".claude/skills/magazine-product-discovery/SKILL.md",
     ".claude/skills/magazine-product-discovery/agents/openai.yaml",
     ".claude/skills/owner-publishing-ux/SKILL.md",
@@ -54,6 +56,10 @@ function copyFixture() {
     "../../.claude/skills/owner-publishing-ux",
     path.join(root, ".agents/skills/owner-publishing-ux"),
   );
+  fs.symlinkSync(
+    "../../.claude/skills/gas-city-coordinator",
+    path.join(root, ".agents/skills/gas-city-coordinator"),
+  );
   return root;
 }
 
@@ -69,8 +75,8 @@ test("validates the repository cross-agent platform", () => {
   assert.deepEqual(report.errors, []);
   assert.equal(report.passed, true);
   assert.deepEqual(report.summary, {
-    skills: 4,
-    routes: 4,
+    skills: 5,
+    routes: 5,
     upstreamEntries: 0,
   });
 });

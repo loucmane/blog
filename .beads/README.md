@@ -1,81 +1,28 @@
-# Beads - AI-Native Issue Tracking
+# Blog Beads Store
 
-Welcome to Beads! This repository uses **Beads** for issue tracking - a modern, AI-native tool designed to live directly in your codebase alongside your code.
+This directory identifies the Blog rig's Beads database. Beads is the sole
+active task authority for this repository. Historical `.taskmaster/` and legacy
+Aegis workflow data remain preserved but are not active task state.
 
-## What is Beads?
+Project agents coordinate work through the project-local
+`gas-city-coordinator` skill. Gas City owns delegated execution; the
+project-local agent retains intent, sequencing, task selection, and acceptance.
 
-Beads is issue tracking that lives in your repo, making it perfect for AI coding agents and developers who want their issues close to their code. No web UI required - everything works through the CLI and integrates seamlessly with git.
+## Required Routing
 
-**Learn more:** [github.com/steveyegge/beads](https://github.com/steveyegge/beads)
-
-## Quick Start
-
-### Essential Commands
-
-```bash
-# Create new issues
-bd create "Add user authentication"
-
-# View all issues
-bd list
-
-# View issue details
-bd show <issue-id>
-
-# Update issue status
-bd update <issue-id> --claim
-bd update <issue-id> --status done
-
-# Sync with Dolt remote
-bd dolt push
-```
-
-### Working with Issues
-
-Issues in Beads are:
-- **Git-native**: Stored in Dolt database with version control and branching
-- **AI-friendly**: CLI-first design works perfectly with AI coding agents
-- **Branch-aware**: Issues can follow your branch workflow
-- **Sync-ready**: Uses Dolt remotes for backup and team sharing
-
-## Why Beads?
-
-✨ **AI-Native Design**
-- Built specifically for AI-assisted development workflows
-- CLI-first interface works seamlessly with AI coding agents
-- No context switching to web UIs
-
-🚀 **Developer Focused**
-- Issues live in your repo, right next to your code
-- Works offline, syncs when you push
-- Fast, lightweight, and stays out of your way
-
-🔧 **Git Integration**
-- Dolt-native sync via bd dolt push / bd dolt pull
-- Branch-aware issue tracking
-- Dolt-native three-way merge resolution
-
-## Get Started with Beads
-
-Try Beads in your own projects:
+Use the native Gas City client, isolated city home, and explicit Blog rig for
+every Beads operation:
 
 ```bash
-# Install Beads
-curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
-
-# Initialize in your repo
-bd init
-
-# Create your first issue
-bd create "Try out Beads"
+env -u BEADS_DIR -u BEADS_DB -u BEADS_DOLT_SERVER_PORT \
+  GC_HOME=/home/loucmane/gascity/home \
+  /home/loucmane/gascity/bin/gc bd list --rig blog
 ```
 
-## Learn More
+Never trust inherited `BEADS_*` values and never use a cross-rig bare `bd`
+command. Consult `gc-city`, `gc-rigs`, `gc-agents`, `gc-work`, and
+`gc-dispatch` before lifecycle or delegation operations.
 
-- **Documentation**: [github.com/steveyegge/beads/docs](https://github.com/steveyegge/beads/tree/main/docs)
-- **Quick Start Guide**: Run `bd quickstart`
-- **Examples**: [github.com/steveyegge/beads/examples](https://github.com/steveyegge/beads/tree/main/examples)
-
----
-
-*Beads: Issue tracking that moves at the speed of thought* ⚡
+Every work bead receives a worklog. Merge, publishing, destructive cleanup,
+credential actions, and authority changes retain their existing operator
+confirmation boundaries.

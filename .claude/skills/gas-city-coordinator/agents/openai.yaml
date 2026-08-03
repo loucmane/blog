@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gas City Coordinator"
+  short_description: "Coordinate Blog work through Beads and Gas City"
+  default_prompt: "Use $gas-city-coordinator to reconcile Blog work and propose an evidence-bounded native Gas City dispatch."

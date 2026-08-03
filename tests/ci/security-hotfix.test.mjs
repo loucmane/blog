@@ -48,6 +48,22 @@ test('dependency policy rejects malformed and inconsistent audit results', () =>
   assert.match(evaluateAudit(auditPayload({ critical: 0 }), 2).errors[0], /exited 2/)
 })
 
+test('security-patched direct and transitive versions remain pinned', () => {
+  const rootPackage = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url)))
+  const webPackage = JSON.parse(
+    fs.readFileSync(new URL('../../packages/web/package.json', import.meta.url)),
+  )
+  const workspace = fs.readFileSync(new URL('../../pnpm-workspace.yaml', import.meta.url), 'utf8')
+
+  assert.equal(rootPackage.devDependencies['@next/eslint-plugin-next'], '16.2.12')
+  assert.equal(webPackage.dependencies.next, '16.2.12')
+  assert.equal(webPackage.devDependencies.postcss, '8.5.18')
+  assert.match(workspace, /'sharp@0\.35\.0': true/)
+  assert.match(workspace, /'brace-expansion@>=4\.0\.0 <5\.0\.8': 5\.0\.8/)
+  assert.match(workspace, /'next@16\.2\.12>postcss': 8\.5\.18/)
+  assert.match(workspace, /'next@16\.2\.12>sharp': 0\.35\.0/)
+})
+
 test('production smoke validation requires a complete HTML response', () => {
   const validBody = `<html><body>${'rendered '.repeat(80)}</body></html>`
   assert.deepEqual(
