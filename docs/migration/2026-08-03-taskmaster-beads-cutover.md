@@ -89,3 +89,24 @@ Taskmaster Task 43 and subtask 43.1 are now Beads `blog-0043` and
 `taskmaster:master:43` and `taskmaster:master:43.1`. All continuation and
 disposition work happens through Beads. Closed and cancelled work remains as
 provenance; no migrated record is deleted to tidy history.
+
+## Archive completion
+
+The one-way `legacy-2025` Obsidian archive completed after cutover. The first
+render was preserved owner-only rather than edited after Obsidian showed that
+unescaped wikilink alias pipes inside its index table exposed only the two
+non-table links. Render revision 2 supersedes that tree append-forward.
+
+- Historical record notes: 294
+- Total Markdown notes: 296 (records, index, and manifest)
+- Obsidian-resolved outgoing index links: 296
+- Render revision 2 tree digest:
+  `e4653efb014c95d72b93efc0fc045fc403afc748b525fda692fc2229815395fc`
+- Archive manifest SHA-256:
+  `d014c19f45980608a5f4e5bb0a813a572ceb9b84993a7e540948d7ca8d14d7f6`
+- Archive receipt SHA-256:
+  `6c6bfd1368688a837e4e928ad24b5a969e16c1a7932011db90c422bbc55449af`
+
+Every Markdown note carries `authority: historical-non-authoritative`; all
+files are owner-only, all local archive links resolve, and no reverse-sync or
+write-back path exists.
