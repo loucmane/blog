@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" role="img" aria-labelledby="title description">
+  <title id="title">A quiet winter room</title>
+  <desc id="description">A modern interior with a wide window overlooking snow-covered trees.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#dce7f1"/>
+      <stop offset="1" stop-color="#f7f7f2"/>
+    </linearGradient>
+    <linearGradient id="room" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#e9e8e1"/>
+      <stop offset="0.6" stop-color="#babdbb"/>
+      <stop offset="1" stop-color="#727a7c"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" x2="1">
+      <stop offset="0" stop-color="#7a7770"/>
+      <stop offset="1" stop-color="#c9c4b9"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="12"/></filter>
+  </defs>
+  <rect width="1600" height="1100" fill="url(#room)"/>
+  <rect x="445" y="95" width="860" height="710" fill="url(#sky)" stroke="#30383b" stroke-width="30"/>
+  <path d="M670 95v710M900 95v710M1130 95v710M445 410h860" stroke="#30383b" stroke-width="24"/>
+  <g fill="#f8fbfc" stroke="#a9b7bd" stroke-width="8" opacity=".96">
+    <path d="M445 805L510 530l80 275zM560 805l95-420 95 420zM710 805l85-330 80 330z"/>
+    <path d="M920 805l95-450 105 450zM1080 805l75-330 85 330zM1210 805l55-220 40 220z"/>
+  </g>
+  <g stroke="#708087" stroke-width="11" opacity=".72">
+    <path d="M540 585l30-270M600 600l60-350M770 560l-10-250M1030 570l40-330M1180 590l-20-280"/>
+  </g>
+  <path d="M0 770l1600-40v370H0z" fill="url(#floor)"/>
+  <path d="M0 850h610l130 250H0z" fill="#d6d0c4"/>
+  <path d="M80 680h410v260H80z" fill="#8e918d"/>
+  <path d="M105 700h360v95H105z" fill="#c8c7bf"/>
+  <path d="M1030 790h300l-55 190H980z" fill="#373b3b"/>
+  <path d="M1050 780l70-175h165l50 180" fill="none" stroke="#252b2c" stroke-width="25"/>
+  <circle cx="1415" cy="235" r="185" fill="#172425" opacity=".55" filter="url(#soft)"/>
+  <circle cx="1510" cy="535" r="230" fill="#253c37" opacity=".7" filter="url(#soft)"/>
+</svg>

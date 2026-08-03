@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": "33",
+        "id": 33,
         "title": "Establish SOTA 2026 Magazine Foundation",
         "description": "Transform the stale prototype into an implementation-ready, owner-operated premium magazine foundation with canonical product truth, validated architecture, an executable roadmap, a recorded baseline, and a modern production stack delivered through reversible reviewed PR batches.",
         "details": "Archive and supersede obsolete product requirements; author the canonical PRD and ADRs; research stable supported July 2026 stack options from primary sources; validate editor, content, persistence, media, deployment, backup, and export assumptions through focused spikes; reconcile Taskmaster; record the frozen pre-upgrade baseline; modernize runtime, tooling, framework, design system, workspace, and approved content platform in independent branches and PRs. Preserve Aegis advisory coexistence and both capsule/ledger and legacy S:W:H:E evidence. Do not build the complete magazine, retire Aegis legacy scaffolding, or merge without explicit human approval.",
@@ -14,7 +14,7 @@
         "updatedAt": "2026-07-09T20:39:54.057Z"
       },
       {
-        "id": "34",
+        "id": 34,
         "title": "Publish Canonical Product Truth and Architecture",
         "description": "Archive obsolete requirements and establish the authoritative 2026 magazine PRD, product workflows, content model, nonfunctional requirements, cited stack research, ADRs, deployment, recovery, and migration roadmap.",
         "details": "Planning/architecture-only delivery under Program Task 33. No package upgrades or product implementation. Acceptance: legacy PRD preserved with superseded notice; canonical links resolve; decisions show alternatives, risks, rollback, and spike gates; draft PR awaits human merge approval.",
@@ -25,7 +25,7 @@
         "subtasks": []
       },
       {
-        "id": "35",
+        "id": 35,
         "title": "Reconcile Taskmaster and Delivery Evidence",
         "description": "Preserve the 2025 graph as legacy history and create a truthful canonical task graph for the magazine foundation while maintaining Aegis capsule/ledger and readable S:W:H:E evidence.",
         "details": "Use supported Taskmaster commands only. Classify all legacy tasks, generate both legacy and canonical projections, validate dependencies, record Taskmaster migration behavior and Aegis stale-observation dogfood without destructive repair.",
@@ -38,7 +38,7 @@
         "subtasks": []
       },
       {
-        "id": "36",
+        "id": 36,
         "title": "Record Frozen Pre-Upgrade Baseline",
         "description": "Establish the reproducible behavior of the stale prototype before changing packages or architecture.",
         "details": "Record runtime/tool versions; run frozen install, explicit typecheck where available, lint, tests, package builds, and production build. Classify existing failures separately from migration regressions. Revert incidental lockfile, cache, or generated drift and publish a baseline report.",
@@ -53,7 +53,7 @@
         "updatedAt": "2026-07-09T22:18:12.370Z"
       },
       {
-        "id": "37",
+        "id": 37,
         "title": "Validate High-Risk Architecture Spikes",
         "description": "Run pre-criterioned spikes for editor round-trip and rendering, document migration, autosave/recovery, scheduling, PostgreSQL/media persistence, deployment portability, and backup/restore.",
         "details": "Use committed synthetic fixtures and the criteria in docs/research/spike-plan.md. Keep production code only through a later reviewed implementation task. Update provisional ADRs with pass/fail evidence, versions, cost, lock-in, and rollback.",
@@ -67,7 +67,7 @@
         "updatedAt": "2026-07-13T13:42:54.378Z"
       },
       {
-        "id": "38",
+        "id": 38,
         "title": "Modernize Node pnpm and CI Runtime",
         "description": "Migrate the reproducible runtime foundation to the approved Node LTS, pinned pnpm, developer version files, engines, Corepack, and least-privilege CI.",
         "details": "Re-query stable versions and advisories at execution. Use a dedicated reversible PR. Require clean frozen install, CI/local parity, full-SHA action pins, package/app builds, and no unexplained lockfile drift.",
@@ -82,7 +82,7 @@
         "updatedAt": "2026-07-12T10:43:30.270Z"
       },
       {
-        "id": "39",
+        "id": 39,
         "title": "Modernize TypeScript Lint Formatting and Tests",
         "description": "Unify TypeScript and quality tooling, replace broken test scripts with meaningful unit/integration/browser foundations, and make all checks explicit.",
         "details": "Target the approved TypeScript transition, ESLint flat config, Prettier check, Vitest, Testing Library, Playwright, and axe. Do not weaken diagnostics or keep duplicate Jest/tooling versions after parity. Deliver as a separate reversible PR.",
@@ -96,7 +96,7 @@
         "updatedAt": "2026-07-12T21:39:19.429Z"
       },
       {
-        "id": "40",
+        "id": 40,
         "title": "Migrate React Framework and Build System",
         "description": "Upgrade React and the selected full-stack framework, remove obsolete prototype configuration, and prove reader/server/preview/cache/deployment behavior.",
         "details": "Requires accepted framework evidence and modern quality tooling. Verify SSR/streaming, metadata, protected draft preview, cache invalidation, images, CSP, managed preview, Node fallback, browser smoke, accessibility, and no reader editor bundle.",
@@ -111,7 +111,7 @@
         "updatedAt": "2026-07-14T12:12:01.620Z"
       },
       {
-        "id": "41",
+        "id": 41,
         "title": "Modernize Tailwind shadcn and Workspace Boundaries",
         "description": "Migrate styling and owned components, preserve intentional design mechanics, and resolve obsolete package boundaries without a big-bang visual rewrite.",
         "details": "Upgrade Tailwind and app-local shadcn/Base UI progressively. Audit every UI export/customization, visually and accessibly verify changes, remove duplicate toolchains, and remove backend/shared/UI scaffolds only after consumers and replacement behavior are proven.",
@@ -126,7 +126,7 @@
         "updatedAt": "2026-07-14T22:01:56.334Z"
       },
       {
-        "id": "42",
+        "id": 42,
         "title": "Implement Content and Persistence Foundation",
         "description": "Implement the accepted app-owned content, revision, migration, PostgreSQL, media-original, search, audit, export, and import foundations.",
         "details": "Only begin after relevant spikes and modern application foundation pass. Deliver schema and service slices in scoped PRs with migration/restore/export tests, provider adapters, security checks, and explicit rollback.",
@@ -141,7 +141,7 @@
         "updatedAt": "2026-07-18T08:49:20.579Z"
       },
       {
-        "id": "43",
+        "id": 43,
         "title": "Implement Owner Publishing Foundation",
         "description": "Build the protected owner shell and foundational draft, autosave, recovery, revision, preview, media, schedule, publish, update, unpublish, and authentication workflows.",
         "details": "This task establishes owner-operable foundations, not the complete dashboard. Require understandable failure states, accessibility, idempotency, audit, browser smoke coverage, and no normal dependency on developer or hosting tools.",
@@ -151,11 +151,21 @@
           "42"
         ],
         "priority": "high",
-        "subtasks": [],
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Integrate Backend-Connected Design Bakeoff Harness",
+            "description": "Move the proven Folio, Contact, and Halo owner-publishing bakeoffs from temporary files into a tracked modular design-lab surface backed by the Task 43 owner APIs.",
+            "details": "Create a reusable bakeoff registry and fail-closed renderer contract; keep owner lifecycle, persistence, media, publication, and story mapping shared; register Folio, Contact, and Halo as pure visual directions; add focused contract and browser coverage; keep the design lab non-production and exclude package, lockfile, workflow, Aegis runtime, and unrelated product changes.",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 43
+          }
+        ],
         "updatedAt": "2026-07-18T09:35:10.644Z"
       },
       {
-        "id": "44",
+        "id": 44,
         "title": "Implement Public Magazine Foundation",
         "description": "Build representative premium reader templates and rendering foundations for home, section, article, author, taxonomy, related content, and responsive media.",
         "details": "Use server-safe structured rendering, premium typography, art-directed responsive templates, canonical URLs, accessible interaction, performance budgets, visual evidence, and no editor code on reader routes. Do not complete the whole magazine in Task 33.",
@@ -169,7 +179,7 @@
         "subtasks": []
       },
       {
-        "id": "45",
+        "id": 45,
         "title": "Add Distribution Search SEO and Newsletter Foundations",
         "description": "Establish reader discovery and distribution through search, redirects, RSS, sitemap, structured data, social cards, newsletter consent/delivery, analytics, and Web Vitals.",
         "details": "Keep subscriber and consent data app-owned, provider calls asynchronous and replaceable, analytics privacy-conscious, and derived indexes/cards/feeds rebuildable. Verify metadata, draft exclusion, outages, export, and accessibility.",
@@ -183,7 +193,7 @@
         "subtasks": []
       },
       {
-        "id": "46",
+        "id": 46,
         "title": "Harden Production Deployment Security and Recovery",
         "description": "Prove production readiness through managed and portable deployment, security, observability, cost, accessibility, performance, backup, restore, and rollback evidence.",
         "details": "Require preview/production isolation, least privilege, restore drill, provider exit, RPO/RTO measurement, p75 Core Web Vitals targets, WCAG 2.2 AA evidence, clean CI, runbooks, budget alerts, and explicit human approval for every merge.",
@@ -198,7 +208,7 @@
         "subtasks": []
       },
       {
-        "id": "47",
+        "id": 47,
         "title": "Conclude Foundation and Define Owner-Publishing Goal",
         "description": "Close the SOTA foundation program only after canonical truth, accepted spike decisions, modern verified stack batches, synchronized merges, and useful Aegis/legacy evidence exist.",
         "details": "Confirm Task 33 definition of done, final exact main state, delivery evidence, unresolved risks, and a concrete next goal for full owner publishing. Do not retire Aegis legacy scaffolding or claim the complete magazine is built.",
@@ -211,7 +221,7 @@
         "subtasks": []
       },
       {
-        "id": "48",
+        "id": 48,
         "title": "Bootstrap Protected CI and Controlled Auto-Merge",
         "description": "Establish GitHub Actions CI, protected public main, and a separately reviewed controlled auto-merge path before any package or code modernization.",
         "details": "Depend on Task 36 frozen baseline. Adapt the proven HP-Fetcher CI and auto-merge workflow designs without carrying app-specific paths, secrets, D1 migrations, environment files, lockfile paths, or Vite variables. Bootstrap CI first at committed Node 22 and pnpm 9 using actual baseline-supported root workspace scripts: frozen install, valid typecheck, lint, tests, package/application builds, Taskmaster health/dependency validation, Aegis witness/guard validation, secret scanning, dependency review, and only honestly supported Playwright/accessibility checks. Keep CI permissions contents:read, protect fork PR secrets, publish failure artifacts, and use concurrency cancellation. Deliver workflow CI as its own human-reviewed PR; after merge inspect exact check names and configure main to require PRs, current required checks, conversation resolution, compatible linear history, and block force-push/deletion. Adapt auto-merge separately with contents:write and pull-requests:write only, explicit auto-merge label, workflow_run plus labeled race handling, direct check-run inspection excluding its merge job, squash merge, branch deletion, and a documentation-only canary. Never auto-label or auto-merge workflow/security/secret/deployment/migration/destructive/branch-protection/Aegis-retirement changes.",
@@ -225,7 +235,7 @@
         "updatedAt": "2026-07-10T11:26:02.009Z"
       },
       {
-        "id": "49",
+        "id": 49,
         "title": "Build Cross-Agent Skill Platform Skeleton",
         "description": "Establish the project-owned cross-agent skill infrastructure shared by Claude and Codex.",
         "details": "Create .claude/skills as the canonical project skill root and repository-relative .agents/skills symlinks for Codex. Add config/agent-skills/catalog.yaml, review-map.yaml, upstream.lock.json, schemas/agent-skills/review-result.schema.json, deterministic validators under scripts/agent-skills, focused tests under tests/agent-skills, generated evidence under reports/agent-skills, and CI validation. Treat subjective skill findings as advisory, ingest evidence through supported Aegis operations, fail closed on malformed configuration or links, and do not broaden workflow permissions.",
@@ -239,7 +249,7 @@
         "updatedAt": "2026-07-10T12:27:04.101Z"
       },
       {
-        "id": "50",
+        "id": 50,
         "title": "Implement Magazine Product Discovery Skill",
         "description": "Create a reusable cross-agent workflow for turning owner and reader needs into evidence-backed magazine product decisions.",
         "details": "Implement .claude/skills/magazine-product-discovery with concise trigger metadata, an owner-safe discovery workflow, structured assumptions and open questions, portable output conforming to the project review-result contract, and focused positive and deny-path tests. Link it through the Codex skill view, register it in the catalog and review map, and keep subjective recommendations advisory.",
@@ -255,7 +265,7 @@
         "updatedAt": "2026-07-10T20:06:04.847Z"
       },
       {
-        "id": "51",
+        "id": 51,
         "title": "Implement Stack Research ADR Skill",
         "description": "Create a reusable cross-agent workflow for primary-source stack research and decision-ready architecture records.",
         "details": "Implement .claude/skills/stack-research-adr with current-version verification from primary sources, stable/support/security/compatibility/cost/lock-in/rollback criteria, explicit rejected alternatives, citation requirements, structured ADR output, and focused validator tests. Register it in the catalog and review map, expose it through the Codex symlink tree, and keep qualitative review findings advisory.",
@@ -271,7 +281,7 @@
         "updatedAt": "2026-07-10T23:27:16.640Z"
       },
       {
-        "id": "52",
+        "id": 52,
         "title": "Implement Owner Publishing UX Skill",
         "description": "Create a reusable cross-agent workflow for designing and reviewing nontechnical owner publishing journeys.",
         "details": "Implement .claude/skills/owner-publishing-ux around drafts, autosave, recovery, preview, revisions, scheduling, publish/unpublish, taxonomy, SEO/social fields, media accessibility, portable export/import, and future multi-author readiness. Require concrete owner journeys and failure recovery, produce schema-valid advisory review results, register the skill, link it for Codex, and add focused tests.",
@@ -287,7 +297,7 @@
         "updatedAt": "2026-07-11T14:30:28.965Z"
       },
       {
-        "id": "53",
+        "id": 53,
         "title": "Implement Frontend and Editorial Agent Skills",
         "description": "Add focused cross-agent skills for premium reader UI, editorial systems, accessibility, and performance review.",
         "details": "Create independently invocable frontend and editorial skills that cover premium typography, art-directed responsive layouts, reusable editorial blocks, visual integrity, WCAG 2.2 AA, Core Web Vitals, and media semantics. Register and link every skill, provide deterministic schema/link tests, and keep visual or stylistic judgments advisory until dogfood evidence supports enforcement.",
@@ -303,7 +313,7 @@
         "subtasks": []
       },
       {
-        "id": "54",
+        "id": 54,
         "title": "Implement SEO and Release Witness Skills",
         "description": "Add focused cross-agent skills for discoverability, distribution, release evidence, and rollback readiness.",
         "details": "Create independently invocable SEO and release-witness skills covering canonical URLs, structured data, social cards, RSS, sitemap, search/newsletter integration, verification evidence, security and accessibility signals, rollback, and truthful test reporting. Register and link the skills, validate outputs deterministically, and keep subjective findings advisory.",
@@ -320,7 +330,7 @@
         "subtasks": []
       },
       {
-        "id": "55",
+        "id": 55,
         "title": "Add Skill Routing Forward Evaluation and Five-PR Dogfood",
         "description": "Validate cross-agent skill selection and usefulness through deterministic routing tests, forward evaluation, and five pull requests of advisory dogfood.",
         "details": "Implement routing rules and result ingestion, forward-test skills without leaking expected answers, record false-positive and false-negative evidence across five task-scoped pull requests, and publish generated reports under reports/agent-skills without committing ephemeral output. Only deterministic schema, link, script, build, typecheck, lint, security, and critical browser checks may block CI; subjective LLM findings remain advisory until evidence supports a separate enforcement decision.",
@@ -361,7 +371,7 @@
         ]
       },
       {
-        "id": "56",
+        "id": 56,
         "title": "Refresh Aegis Managed Runtime to Active Upstream",
         "description": "Refresh the project-local Aegis managed runtime from manifest source commit 43e9a660c0b58f95c2f97031e16830443b40aa2e to active upstream source commit 3d051ba9937d5e88178e86067e2be4c898897263, without product or package changes.",
         "details": "Run ./.aegis/bin/aegis update --target-dir . as a preview and inspect every operation. Apply only with zero conflicts, unsafe paths, and manual-review paths, then run update --apply. Prove manifest and active source commits equal 3d051ba, compare installed managed-asset hashes to upstream, and verify strict Aegis, brief --check, legacy projections, witness, guards, Taskmaster health, secret scanning, and git diff --check while enforcement remains advisory. Record dogfood that top-level status reported current despite source and asset skew; treat runtime status plus update-preview parity as authoritative. Do not repair unrelated state, enable strict mode, retire legacy scaffolding, or change product/package code. Deliver as a separate attended PR without auto-merge.",
@@ -387,7 +397,7 @@
         "updatedAt": "2026-07-10T15:22:22.676Z"
       },
       {
-        "id": "57",
+        "id": 57,
         "title": "Complete the v1 cross-agent skill-system roadmap",
         "description": "Reconcile the Taskmaster roadmap into a complete v1 cross-agent skill system for designing, building, reviewing, and delivering the owner-operated SOTA magazine.",
         "details": "Planning and governance only. Preserve Tasks 50 through 55, add separate independently deliverable tasks for content-platform/backend, security/identity/privacy, and quality/reliability/observability skills, establish the complete dependency graph, strengthen Task 55 routing and five-PR dogfood acceptance criteria, define v1 completion, regenerate only affected task files, and validate Taskmaster, skill-platform, Aegis, witness, and diff health. Do not implement skill bodies, product code, packages, or framework changes. Deliver through an attended governance PR without auto-merge.",
@@ -402,7 +412,7 @@
         "updatedAt": "2026-07-10T18:05:47.713Z"
       },
       {
-        "id": "58",
+        "id": 58,
         "title": "Implement Content Platform and Backend Skill",
         "description": "Create an independently invocable cross-agent skill for designing and reviewing the magazine's app-owned content platform and backend.",
         "details": "Implement .claude/skills/content-platform-backend as a project-authored skill covering the editorial content domain model; draft, revision, publish, unpublish, and scheduling state machines; API and server boundaries; database schema and reversible migrations; media storage, processing, ownership, and failure handling; background jobs and scheduling; search indexing; portable import and export; backup and recovery; and data-integrity and failure-path review. Register it in the catalog and review map, add the repository-relative Codex link, emit schema-valid structured review results, and add focused deterministic validation and routing fixtures. Keep subjective architecture findings advisory.",
@@ -417,7 +427,7 @@
         "subtasks": []
       },
       {
-        "id": "59",
+        "id": 59,
         "title": "Implement Security, Identity, and Privacy Skill",
         "description": "Create an independently invocable cross-agent skill for security, owner identity, authorization, privacy, and supply-chain review.",
         "details": "Implement .claude/skills/security-identity-privacy as a project-authored skill covering owner authentication and account recovery; authorization and future role boundaries; session, credential, and secret handling; rich-content sanitization; upload and media security; abuse and rate-limit controls; privacy and data-retention review; dependency and supply-chain risk; and a lightweight structured threat-model output. Register it in the catalog and review map, add the repository-relative Codex link, emit schema-valid review results, and add deterministic positive, negative, and deny-path fixtures. Keep subjective risk ranking advisory while deterministic security checks remain blocking-eligible.",
@@ -432,7 +442,7 @@
         "subtasks": []
       },
       {
-        "id": "60",
+        "id": 60,
         "title": "Implement Quality, Reliability, and Observability Skill",
         "description": "Create an independently invocable cross-agent skill for test strategy, accessibility, performance, observability, production verification, and recovery readiness.",
         "details": "Implement .claude/skills/quality-reliability-observability as a project-authored skill covering unit, integration, contract, and browser test strategy; owner publishing acceptance journeys; accessibility automation and manual review; performance budgets and Core Web Vitals; structured logging and error reporting; health and readiness checks; production verification; backup and restore drills; and incident and rollback readiness. Register it in the catalog and review map, add the repository-relative Codex link, emit schema-valid review results, and add focused deterministic fixtures and tests. Keep subjective quality findings advisory while deterministic test, accessibility, performance-budget, and health checks remain blocking-eligible.",
@@ -450,7 +460,7 @@
         "subtasks": []
       },
       {
-        "id": "61",
+        "id": 61,
         "title": "Implement project-wide evidence-authorized autonomous delivery",
         "description": "Make unattended squash merge the default for ordinary Taskmaster/Aegis-scoped same-repository pull requests after the trusted protected pipeline proves the exact head is current, mergeable, fully tested, secret-safe, independently reviewed where required, and policy-eligible.",
         "details": "Remove the mandatory auto-merge opt-in label and retain manual-merge/high-risk labels as opt-outs. Permit normal product source, tests, documentation, dependencies, lockfiles, runtime/framework/build/test configuration, and cataloged domain skills. Preserve attended boundaries for merge-policy or CI-workflow changes, branch protection and permissions, operator authority, Aegis/hooks/agent entry points, secrets, production deployment or data, irreversible migrations, destructive operations, and history rewriting. Revalidate the exact head, complete file inventory, current labels, mergeability, unresolved conversations, required check identities, trusted check apps, and final policy immediately before merge. Prevent package-script or test-command changes from creating false-green evidence. Persist the project-wide authority across compaction, add comprehensive allow/deny and workflow security tests, and prove the complete task-to-next-task path with a representative canary.",
@@ -465,7 +475,7 @@
         "updatedAt": "2026-07-10T22:36:33.145Z"
       },
       {
-        "id": "62",
+        "id": 62,
         "title": "Prove project-wide evidence-authorized delivery canary",
         "description": "Run a same-repository non-behavioral canary after Task 61 lands and prove that the trusted workflow evaluates it without an auto-merge label, waits for all required exact-head evidence, squash-merges it automatically, deletes only its task branch, synchronizes main, and advances to the next dependency-ready task without a chat approval.",
         "details": "The canary must be a real Taskmaster/Aegis-scoped PR with a harmless documentation-only change. Capture the CI run, controlled-auto-merge decision, exact head, merge commit, branch deletion, local-main synchronization, Aegis delivery state, and next-task continuation. Include negative confirmation that manual-merge/high-risk labels and prohibited paths remain denied. If any automatic step fails, leave Task 62 blocked with the exact workflow evidence and do not bypass the protected path.",
@@ -479,7 +489,7 @@
         "updatedAt": "2026-07-10T23:18:07.440Z"
       },
       {
-        "id": "63",
+        "id": 63,
         "title": "Eliminate Critical and High Dependency Vulnerabilities",
         "description": "Remove the current critical and high dependency vulnerability baseline before broad SOTA framework modernization, without suppressing advisories or weakening verification.",
         "details": "Inventory GitHub Dependabot and pnpm audit findings. Upgrade Next.js within major 15 to a patched release with matching Next lint packages. Refresh or narrowly override vulnerable transitive packages only to documented fixed releases. Add deterministic audit-policy and production-web smoke verification. Preserve Tasks 38, 39, and 40 as the owners of Node/pnpm, full test-tooling, and major framework modernization. Require frozen install, typecheck, lint, package/application builds, targeted security and smoke tests, Taskmaster/Aegis/guard validation, and before/after alert evidence. Do not bulk-update unrelated majors, dismiss advisories, or weaken checks.",
@@ -494,7 +504,7 @@
         "updatedAt": "2026-07-11T09:19:26.320Z"
       },
       {
-        "id": "64",
+        "id": 64,
         "title": "Permit Verification-Only Aegis Manifest Diffs in Autonomous Delivery",
         "description": "Permit autonomous delivery to accept .aegis/foundation-manifest.json only when a trusted semantic comparison proves the sole change is verification.last_verified_at, while every other Aegis manifest, runtime, authority, report, managed-asset, and enforcement change remains denied.",
         "details": "Extend the trusted auto-merge policy with an exact semantic JSON comparison against protected main. Eligibility requires that the complete manifest delta contains only verification.last_verified_at and that all other keys and values are equivalent. Preserve existing deny classifications for every other .aegis path and for any additional foundation-manifest mutation. Add focused positive and negative policy tests, document the trust boundary and rollback, run protected-CI-equivalent verification, and deliver as an attended governance PR because merge-policy behavior changes. Do not modify workflow permissions, Aegis runtime assets, operator authority, product code, packages, or lockfiles.",
@@ -509,7 +519,7 @@
         "updatedAt": "2026-07-11T10:29:19.287Z"
       },
       {
-        "id": "65",
+        "id": 65,
         "title": "Guarantee post-merge CI after controlled auto-merge",
         "description": "Ensure controlled auto-merge explicitly launches trusted CI for the exact squash merge commit because pushes created with github.token do not produce a push-triggered workflow run.",
         "details": "Add a protected-default-branch post-merge verification dispatch with least privilege, exact merge-SHA binding, fail-closed validation, adversarial workflow contract tests, and evidence that the merged commit receives deterministic CI without executing PR-controlled code. Preserve all existing auto-merge trust-boundary, branch-protection, and deny-path controls. Do not change product code, packages, lockfiles, Aegis runtime, authority, deployment, or secrets.",
@@ -524,7 +534,7 @@
         "updatedAt": "2026-07-11T16:07:43.918Z"
       },
       {
-        "id": "66",
+        "id": 66,
         "title": "Prove controlled post-merge CI dispatch canary",
         "description": "Deliver a documentation-only canary through the controlled auto-merge workflow and prove repository_dispatch verifies the exact squash merge commit on protected main.",
         "details": "Keep scope to Taskmaster, planning/session/Aegis evidence, and safe canary documentation. Record the initial Task 65 main-push React typecheck/build flake and its successful single rerun without changing product or package code. Require green protected PR checks, policy eligibility, controlled squash merge, deletion only of the canary branch, an exact post-controlled-auto-merge-ci repository_dispatch run resolving the canary merge SHA, successful workspace/governance/gitleaks jobs, PR-only dependency review evidence, synchronized clean main, and terminal archived Task 66 evidence. Do not change workflows, permissions, packages, lockfiles, product code, Aegis runtime, authority, deployment, or secrets.",
@@ -538,7 +548,7 @@
         "updatedAt": "2026-07-11T19:11:12.322Z"
       },
       {
-        "id": "67",
+        "id": 67,
         "title": "Support Gitleaks on trusted post-merge dispatch",
         "description": "Remediate the repository_dispatch incompatibility exposed by Task 66 without weakening secret scanning.",
         "details": "Keep the immutable-SHA-pinned gitleaks/gitleaks-action path for push and pull_request. Add a separate repository_dispatch path using an immutable-version-pinned official Gitleaks CLI artifact with published checksum verification. Scan exactly needs.context.outputs.checkout_ref after trusted-context validation, preserve fetch-depth 0 and existing configuration/history coverage, fail closed on malformed dispatch context, and never execute PR-controlled code or artifacts. Add deterministic workflow-contract tests for both paths and run the complete workflow, governance, workspace, Taskmaster, Aegis, guard, secret-scan, and diff verification matrix. Scope changes to CI/workflow tests, Taskmaster, planning, and Aegis evidence; no product, package-version, lockfile, runtime, authority, deployment, or secret changes. Task 66 remains complete and archived.",
@@ -552,7 +562,7 @@
         "updatedAt": "2026-07-11T20:14:49.807Z"
       },
       {
-        "id": "68",
+        "id": 68,
         "title": "Repair Task 39 Capability Script Contract",
         "description": "Make the merged root test:capability command execute the complete deterministic unit and browser capability checks.",
         "details": "Replace the argumentless root script with an executable command that runs both required modes, add a regression contract that fails if either mode is omitted, preserve every existing test capability and CI trust boundary, and make no package-version, lockfile, product, workflow, Aegis-runtime, authority, deployment, or secret changes.",
@@ -566,7 +576,7 @@
         "updatedAt": "2026-07-12T23:33:03.223Z"
       },
       {
-        "id": "69",
+        "id": 69,
         "title": "Support Attended Aegis Witness Review for Test Deletions",
         "description": "Allow the required governance check to distinguish deletion-only Aegis witness escalations from integrity failures while preserving mandatory exact-head attended merge review.",
         "details": "Implement a blog-local, deterministic wrapper policy in scripts/ci/check-aegis.py. Treat a CI witness result as review-required but check-passing only when every check except diff_accounting passes, every diff path is accounted for, the sole failure is a nonempty exact set of normalized deleted test paths, and the escalation set matches exactly. Preserve fail-closed behavior for malformed reports, unaccounted paths, missing verification, task drift, scope failures, or any additional failure. Do not modify the managed Aegis witness asset. Prove the existing trusted auto-merge classifier still denies removed or renamed-away tests, so the PR can merge only after explicit exact-head owner approval through the normal protected path. Add focused adversarial tests and complete Taskmaster/Aegis evidence.",
@@ -580,7 +590,7 @@
         "updatedAt": "2026-07-14T20:26:04.658Z"
       },
       {
-        "id": "70",
+        "id": 70,
         "title": "Publish Owner-Authorized Managed Aegis Runtime Rollout",
         "description": "Deliver the already-applied, strictly verified Aegis managed-runtime rollout as a separate attended infrastructure change so clean main and isolated governance tasks use the same runtime assets.",
         "details": "Preserve Tasks 41 and 69. Publish only the exact installer-managed rollout files proven by the applied update report and foundation manifest, including the single approved .codex/hooks.json path while preserving every other .codex path. Exclude incidental Taskmaster migration state, generated reports, bytecode, product code, packages, lockfiles, workflows, authority, enforcement changes, and unrelated work. Prove source commit 144bd4463dcec9c326b023ff53b45aa71660727e, managed-asset hash parity, advisory enforcement, strict Aegis verification, brief/capsule checks, completed-state guards, Taskmaster health/dependencies, secret safety, and a zero-change follow-up update preview. Open an attended governance PR and do not auto-merge.",
@@ -594,7 +604,7 @@
         "updatedAt": "2026-07-14T19:39:43.852Z"
       },
       {
-        "id": "71",
+        "id": 71,
         "title": "Refresh Aegis Runtime for Portable Codex Hook Trust",
         "description": "Refresh the Blog's installer-managed Aegis runtime from stable source 144bd446 to 420006a so strict verification uses the tracked portable Codex hook-trust contract in clean worktrees.",
         "details": "Run the supported update preview and apply only with zero conflicts, manual-review paths, unsafe paths, and non-managed paths. Limit changes to the nine reviewed managed Aegis/Codex governance assets, preserve advisory enforcement and unrelated hook registrations, run strict verification and repository governance checks, and deliver through a separate attended PR. Do not modify product code, packages, lockfiles, Task 42 evidence, deployment, secrets, or branch protection.",
@@ -615,7 +625,9 @@
       "completedCount": 25,
       "tags": [
         "master"
-      ]
+      ],
+      "created": "2026-07-20T09:45:36.610Z",
+      "description": "Tasks for master context"
     }
   },
   "legacy-2025": {

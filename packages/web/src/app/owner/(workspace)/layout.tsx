@@ -34,6 +34,9 @@ export default async function OwnerWorkspaceLayout({
             >
               New story
             </Link>
+            <Link className="min-h-11 rounded-md px-3 py-3 hover:bg-muted" href="/owner/design-lab">
+              Design lab
+            </Link>
             <Link className="min-h-11 rounded-md px-3 py-3 hover:bg-muted" href="/owner/account">
               Account
             </Link>

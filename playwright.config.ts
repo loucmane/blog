@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const port = 3100
+const port = Number(process.env.PLAYWRIGHT_PORT ?? '3100')
 const baseURL = `http://localhost:${port}`
 const canonicalBuildURL = 'https://canonical.magazine.invalid'
 const previewCookieSecret = 'task40-preview-cookie-secret-with-32-bytes'

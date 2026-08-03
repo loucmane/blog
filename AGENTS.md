@@ -56,3 +56,11 @@ missing, invalid, expired, out of scope, or fails a deterministic precondition.
 The grant does not authorize actions listed under its mandatory confirmation
 boundaries. The agent must not edit, broaden, renew, or remove the grant without
 a new explicit owner instruction.
+
+## Persistent Worktrees
+
+Before creating or resuming task work, read `docs/ai/WORKTREE_POLICY.md`.
+Active development worktrees belong under
+`/home/loucmane/dev/blog-worktrees/`; `/tmp` is only for disposable,
+reproducible verification. Reuse the worktree that owns the task branch and
+record its absolute path in the active plan and handoff.

@@ -224,7 +224,9 @@ test('delivers the reader story in initial HTML within the foundation byte budge
   expect(Buffer.byteLength(body)).toBeLessThan(150_000)
 })
 
-test('fails closed before enabling an isolated private preview', async ({ page }) => {
+test('fails closed before enabling an isolated private preview', async ({ baseURL, page }) => {
+  expect(baseURL).toBeTruthy()
+  const privatePreviewUrl = new URL('/preview/stories/private-framework-draft', baseURL)
   const unauthorizedPreview = await page.goto('/preview/stories/private-framework-draft')
   expect(unauthorizedPreview?.status()).toBe(404)
   await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
@@ -261,9 +263,7 @@ test('fails closed before enabling an isolated private preview', async ({ page }
     maxRedirects: 0,
   })
   expect(previewResponse.status()).toBe(303)
-  expect(previewResponse.headers()['location']).toBe(
-    'http://localhost:3100/preview/stories/private-framework-draft',
-  )
+  expect(previewResponse.headers()['location']).toBe(privatePreviewUrl.href)
   expect(previewResponse.headers()['cache-control']).toBe('private, no-store')
   expect(previewResponse.headers()['referrer-policy']).toBe('same-origin')
 
@@ -285,10 +285,9 @@ test('fails closed before enabling an isolated private preview', async ({ page }
   expect(draftModeSetCookie?.toLowerCase()).toContain('samesite=none')
   const cookieHeader = setCookies.map((value) => value.split(';', 1)[0]).join('; ')
   expect(cookieHeader).toContain('magazine-preview-scope=')
-  const streamedPreview = await fetch(
-    'http://127.0.0.1:3100/preview/stories/private-framework-draft',
-    { headers: { cookie: cookieHeader } },
-  )
+  const streamedPreviewUrl = new URL(privatePreviewUrl)
+  streamedPreviewUrl.hostname = '127.0.0.1'
+  const streamedPreview = await fetch(streamedPreviewUrl, { headers: { cookie: cookieHeader } })
   expect(streamedPreview.status).toBe(200)
   const firstChunk = await streamedPreview.body?.getReader().read()
   const firstChunkHtml = new TextDecoder().decode(firstChunk?.value)

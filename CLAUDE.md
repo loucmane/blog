@@ -26,3 +26,13 @@ At orientation, inspect enforcement mode once:
 
 Continuation contract: resolve continue / go / next from live `aegis next`, perform exactly one safe step, then re-consult. Routine repair/closeout/delivery authority comes only from the active repository policy; manual review, protected-path edits, and bypass remain attended. Full text in `.aegis/contract.md`.
 <!-- AEGIS:END claude-runtime -->
+
+---
+
+## Persistent Worktrees
+
+Before creating or resuming task work, read `docs/ai/WORKTREE_POLICY.md`.
+Active development worktrees belong under
+`/home/loucmane/dev/blog-worktrees/`; `/tmp` is only for disposable,
+reproducible verification. Reuse the worktree that owns the task branch and
+record its absolute path in the active plan and handoff.

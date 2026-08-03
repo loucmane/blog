@@ -1,13 +1,12 @@
 {
-  "current": "2026-07-18-001-task43-owner-publishing-foundation.md",
-  "current_path": "sessions/2026/07/2026-07-18-001-task43-owner-publishing-foundation.md",
-  "paused": [],
+  "current": "2026-07-20-001-task43-backend-connected-design-bakeoff-harness.md",
+  "current_path": "sessions/2026/07/2026-07-20-001-task43-backend-connected-design-bakeoff-harness.md",
   "schema_version": "1.0.0",
   "task": {
     "id": "43",
-    "slug": "owner-publishing-foundation",
+    "slug": "backend-connected-design-bakeoff-harness",
     "status": "in-progress",
-    "title": "Implement Owner Publishing Foundation"
+    "title": "Backend-Connected Design Bakeoff Harness"
   },
-  "updated_at": "2026-07-18T12:49:00+02:00"
+  "updated_at": "2026-07-20T09:47:09Z"
 }
