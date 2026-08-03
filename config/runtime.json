@@ -48,6 +48,7 @@
     "picomatch@>=4.0.0 <4.0.4": "4.0.4",
     "svgo@>=2.0.0 <2.8.1": "2.8.1",
     "svgo@>=3.0.0 <3.3.3": "3.3.3",
+    "undici@>=7.0.0 <7.29.0": "7.29.0",
     "yaml@>=1.0.0 <1.10.3": "1.10.3",
     "yaml@>=2.0.0 <2.8.3": "2.9.0"
   },
@@ -65,7 +66,7 @@
       "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "2186a655bc706f191189c21dc0919c12584714719239209304f19879e78f3170",
       "tests/ci/runtime-contract.test.mjs": "198a3eb627e9196c83ccb772dad08ec07179db421ebdf9a6c6ded719366116c1",
-      "tests/ci/security-hotfix.test.mjs": "7851054b2c65e253a188027b865a08acdee43581e49aa79e67e00410a081523e",
+      "tests/ci/security-hotfix.test.mjs": "e13f97b23f03fd0edb393aeaee5844eccb5d2fc095296998e53587240ab597ea",
       "tests/ci/test-capability.test.mjs": "d15f5278ba272de4fe73175102a54de15608277f3b97f72a2cba3dc2b0e361c9",
       "tests/ci/test-results.test.mjs": "0edea1509359b9914a9b553d4ed61eedd5f1eca96456c631aa31f39307ef4fbe"
     },
@@ -253,8 +254,8 @@
   "packageScriptsSha256": "743f4e89acb3845b8425cc00dbc6d9cd64a53edd03544e51b7c672424a6565b2",
   "dependencyDeclarationsSha256": "e8505e8a208e37ed84b02319b12e77425d55cff59a639a938b56bd8f6ef48785",
   "packageManifestSemanticsSha256": "cb0a2a33454a1375306eb1e1cad12c8ba9a93f19bc01aec20fb83daaadd38a4d",
-  "lockfileSha256": "b56e04741d05fb0cb009065887637d1fe73e35aa82b572e7015cb95b403c3922",
-  "workspaceFileSha256": "536f56c79a64af1902833b9da6b4e639f7a249120981659805b46130f54917ff",
+  "lockfileSha256": "ba02b524670fe4e60f4b25d2d5b1c36792776e1342ab16df175dab31dd3e7a24",
+  "workspaceFileSha256": "8b3f45b7f4e91fda2674504c9f0ada0e82544972f40aca96a417d4dae6251a93",
   "actions": {
     "actions/checkout": {
       "release": "v7.0.0",
