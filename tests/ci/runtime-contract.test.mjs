@@ -86,16 +86,16 @@ test('rejects legacy pnpm settings and incomplete override migration', () => {
 
 test('rejects missing, broad, unresolved, or additional dependency build approvals', () => {
   const missing = sources()
-  missing.workspace = missing.workspace.replace("  'sharp@0.34.5': true\n", '')
+  missing.workspace = missing.workspace.replace("  'sharp@0.35.0': true\n", '')
   assert.match(evaluateRuntimeContract(missing).join('\n'), /allowBuilds/)
 
   const broad = sources()
-  broad.workspace = broad.workspace.replace("  'sharp@0.34.5': true", '  sharp: true')
+  broad.workspace = broad.workspace.replace("  'sharp@0.35.0': true", '  sharp: true')
   assert.match(evaluateRuntimeContract(broad).join('\n'), /allowBuilds/)
 
   const unresolved = sources()
   unresolved.workspace = unresolved.workspace.replace(
-    "  'sharp@0.34.5': true",
+    "  'sharp@0.35.0': true",
     '  sharp: set this to true or false',
   )
   assert.match(evaluateRuntimeContract(unresolved).join('\n'), /allowBuilds/)
