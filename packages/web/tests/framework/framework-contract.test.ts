@@ -85,7 +85,7 @@ describe('Next and React migration contract', () => {
 
   it('pins Next internal PostCSS to the workspace patched release', () => {
     const workspace = fs.readFileSync(path.join(process.cwd(), 'pnpm-workspace.yaml'), 'utf8')
-    expect(workspace).toContain("'next@16.2.12>postcss': 8.5.18")
+    expect(workspace).toContain("'next@16.2.12>postcss': 8.5.23")
     expect(workspace).toContain("'next@16.2.12>sharp': 0.35.0")
     expect(workspace).not.toContain('next@15.5.20')
   })
