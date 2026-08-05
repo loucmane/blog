@@ -29,10 +29,31 @@ Continuation contract: resolve continue / go / next from live `aegis next`, perf
 
 ---
 
+## Active Project Coordination
+
+This section supersedes stale task-selection and continuation wording in the
+managed historical block above.
+
+- Beads is the sole active task authority. `.taskmaster/` and the legacy Aegis
+  workflow are frozen historical inputs: preserve them, but they must not be
+  updated or repaired.
+- The project-local agent owns project intent, sequencing, task selection, and
+  acceptance. Gas City is the delegated execution layer.
+- Consult the native skills `gc-city`, `gc-rigs`, `gc-agents`, `gc-work`, and
+  `gc-dispatch`, then use the project-local `gas-city-coordinator` skill.
+- The registered rig is `blog`. Invoke the absolute native client at
+  `/home/loucmane/gascity/bin/gc` with isolated
+  `GC_HOME=/home/loucmane/gascity/home` and explicit `--rig blog` routing for
+  Beads operations.
+- Never trust inherited `BEADS_*` variables and never use a cross-rig bare `bd`
+  command. Every work bead receives a worklog.
+- Merge, publishing, destructive cleanup, credential actions, and authority
+  changes each retain their existing operator confirmation boundary. No
+  coordinator or delegated worker may broaden those boundaries.
+
 ## Persistent Worktrees
 
 Before creating or resuming task work, read `docs/ai/WORKTREE_POLICY.md`.
 Active development worktrees belong under
 `/home/loucmane/dev/blog-worktrees/`; `/tmp` is only for disposable,
-reproducible verification. Reuse the worktree that owns the task branch and
-record its absolute path in the active plan and handoff.
+reproducible verification. Reuse the worktree that owns the task branch.

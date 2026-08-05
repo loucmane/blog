@@ -1,0 +1,41 @@
+{
+  "observedAt": "2026-08-03",
+  "requestedFormula": "planning-base",
+  "catalog": {
+    "schema_version": "1",
+    "ok": true,
+    "formulas": [
+      { "name": "build-basic" },
+      { "name": "build-from-convoy" },
+      { "name": "build-from-decompose" },
+      { "name": "build-from-plan" },
+      { "name": "build-from-requirements" },
+      { "name": "build-from-review" },
+      { "name": "design-review" },
+      { "name": "gap-analysis" },
+      { "name": "github-issue-fix" },
+      { "name": "github-issue-triage" },
+      { "name": "github-pr-review" },
+      { "name": "implement" },
+      { "name": "review" }
+    ],
+    "summary": { "count": 13 }
+  },
+  "nonAuthorityEvidence": {
+    "formulaList": [
+      {
+        "name": "planning-base",
+        "source": "/home/loucmane/gascity/home/cache/repos/90e14213b066b7bc38fe4a02946b16d027fc9d84cb8ab7a3367a32dbe1362a70/gascity/formulas/planning-base.formula.toml"
+      }
+    ],
+    "filename": "planning-base.formula.toml",
+    "resolverSuggestions": ["planning-base"]
+  },
+  "expectedDecision": {
+    "allowed": false,
+    "authority": "gc formula catalog",
+    "category": "formula_not_cataloged",
+    "formula": "planning-base",
+    "stopBefore": ["gc formula cook", "gc sling", "workflow bead creation"]
+  }
+}

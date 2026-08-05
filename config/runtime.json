@@ -26,7 +26,7 @@
     "mode": "bundled-local-only"
   },
   "allowedBuilds": {
-    "sharp": "0.34.5"
+    "sharp": "0.35.0"
   },
   "securityOverrides": {
     "@tiptap/core": "3.27.3",
@@ -58,6 +58,7 @@
     "ajv@>=6.0.0 <6.14.0": "6.14.0",
     "brace-expansion@>=1.0.0 <1.1.13": "1.1.13",
     "brace-expansion@>=2.0.0 <2.0.3": "2.0.3",
+    "brace-expansion@>=4.0.0 <5.0.9": "5.0.9",
     "flatted@>=3.0.0 <3.4.2": "3.4.2",
     "fdir@6.5.0>picomatch": "4.0.4",
     "glob@>=10.2.0 <10.5.0": "10.5.0",
@@ -67,20 +68,22 @@
     "minimatch@>=3.0.0 <3.1.4": "3.1.4",
     "minimatch@>=5.0.0 <5.1.8": "5.1.8",
     "minimatch@>=9.0.0 <9.0.7": "9.0.7",
-    "next@16.2.10>postcss": "8.5.16",
+    "next@16.2.12>postcss": "8.5.23",
+    "next@16.2.12>sharp": "0.35.0",
     "path-to-regexp@>=0.1.0 <0.1.13": "0.1.13",
     "picomatch@>=2.0.0 <2.3.2": "2.3.2",
     "picomatch@>=4.0.0 <4.0.4": "4.0.4",
     "tinyglobby@0.2.17>picomatch": "4.0.4",
     "svgo@>=2.0.0 <2.8.1": "2.8.1",
     "svgo@>=3.0.0 <3.3.3": "3.3.3",
+    "undici@>=7.0.0 <7.29.0": "7.29.0",
     "yaml@>=1.0.0 <1.10.3": "1.10.3",
     "yaml@>=2.0.0 <2.8.3": "2.9.0"
   },
   "ci": {
     "workflowSemanticsSha256": {
       ".github/workflows/auto-merge.yml": "22d891fb034f3f9449a4071db169ee8f55b3f6d1601747c43ba44f45f07db13d",
-      ".github/workflows/ci.yml": "62b1d616fcd5d494616980389207485cb6fce4cdb237bb1edeefbf54e184b01a"
+      ".github/workflows/ci.yml": "3ab84608069144da282f12702f21dd8eaa619fb3e479687837a60388b4b4c8eb"
     },
     "trustedFileSha256": {
       "scripts/ci/check-accessibility-baseline.mjs": "6dcde3094d520407572e4a404dab5d2746fdc3dc903fa48d2e13d308d88e9cda",
@@ -90,8 +93,8 @@
       "scripts/ci/post-merge-context.mjs": "bb2521d74c0319cd6308a0cdcce23062a8d2ce93d4a4a0e5bcdfe16047b2235b",
       "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "2186a655bc706f191189c21dc0919c12584714719239209304f19879e78f3170",
-      "tests/ci/runtime-contract.test.mjs": "10f24f2d6b8f6fc995dfcd95a0bb5fc198b2b825236027875c50b54f2488a1f9",
-      "tests/ci/security-hotfix.test.mjs": "ec35b6b589945e26c2f9a11836e6dba23613161e97a7cbfa6fb5e59bd42469d1",
+      "tests/ci/runtime-contract.test.mjs": "198a3eb627e9196c83ccb772dad08ec07179db421ebdf9a6c6ded719366116c1",
+      "tests/ci/security-hotfix.test.mjs": "e13f97b23f03fd0edb393aeaee5844eccb5d2fc095296998e53587240ab597ea",
       "tests/ci/test-capability.test.mjs": "d15f5278ba272de4fe73175102a54de15608277f3b97f72a2cba3dc2b0e361c9",
       "tests/ci/test-results.test.mjs": "0edea1509359b9914a9b553d4ed61eedd5f1eca96456c631aa31f39307ef4fbe"
     },
@@ -277,10 +280,10 @@
   },
   "rootScriptsSha256": "311611205ea7a62b52d7f75fa9d3660785b32bcc38bc7e7c8c3ecceb524b48de",
   "packageScriptsSha256": "743f4e89acb3845b8425cc00dbc6d9cd64a53edd03544e51b7c672424a6565b2",
-  "dependencyDeclarationsSha256": "d2d9dc99c1ee0a310e4c71d1d7d327019e7bfcc57f8849dffcd74963f037cccf",
-  "packageManifestSemanticsSha256": "c9f70c21cde9ce1128b88b701e3e041e50bb6c82ba4c8db7fdd8538a46b1a88d",
-  "lockfileSha256": "288af11d11aea3cb81c93f6a3d8a271a43c4c1945f131ac12c1876891a57b736",
-  "workspaceFileSha256": "7b2dbd98cc316d8bbc91eb99622aff99f05985a76014a31bcb2e13d354ba1130",
+  "dependencyDeclarationsSha256": "697e8a599f229ab9b68cb11fecc3160d2b471fac2577e1b7d9db01572232dde6",
+  "packageManifestSemanticsSha256": "3965c4a105a8b342b99acc8630561e1430af76fe228aae70222a846d161ed28f",
+  "lockfileSha256": "9ab10ec7493eeedcd653921deffbb4b53b41673759b937f4d72eda6136d931fb",
+  "workspaceFileSha256": "9ab1e2e785b14df9875003b6821805d0a390d2508637d66a0ac17d92579c9a38",
   "actions": {
     "actions/checkout": {
       "release": "v7.0.0",

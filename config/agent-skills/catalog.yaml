@@ -86,6 +86,25 @@
         "advisory-owner-ux-review"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "gas-city-coordinator",
+      "status": "active",
+      "entrypoint": ".claude/skills/gas-city-coordinator/SKILL.md",
+      "codexLink": ".agents/skills/gas-city-coordinator",
+      "provenance": {
+        "type": "project-authored",
+        "task": "pr-41-native-beads-onboarding"
+      },
+      "capabilities": [
+        "beads-task-authority",
+        "gas-city-dispatch-planning",
+        "managed-worker-coordination",
+        "formula-catalog-entrypoint-guard",
+        "worklog-evidence",
+        "acceptance-and-review-routing"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }

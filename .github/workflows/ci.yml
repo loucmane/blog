@@ -410,26 +410,22 @@ jobs:
         continue-on-error: true
         run: node scripts/agent-skills/validate-platform.mjs && node --test tests/agent-skills/*.test.mjs
 
-      - name: Taskmaster health and dependency validation
+      - name: Frozen Taskmaster archive integrity
         id: taskmaster
         continue-on-error: true
         run: node scripts/ci/check-taskmaster.mjs
 
-      - name: Aegis capsule validation
+      - name: Frozen Aegis archive integrity
         id: aegis_capsule
         continue-on-error: true
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 scripts/ci/check-aegis.py
 
-      - name: Aegis CI witness
-        id: aegis_witness
-        if: github.event_name == 'pull_request'
+      - name: Native Beads and Gas City authority
+        id: native_coordination
         continue-on-error: true
-        env:
-          GITHUB_HEAD_REF: ${{ github.head_ref }}
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 scripts/ci/check-aegis.py --witness --base origin/${{ github.base_ref }}
+        run: node --test tests/agent-skills/gas-city-coordinator.test.mjs
 
       - name: Codex guard and exact legacy-drift baseline
         id: guard
@@ -444,24 +440,19 @@ jobs:
         env:
           AGENT_SKILLS: ${{ steps.agent_skills.outcome }}
           AUTO_MERGE_POLICY: ${{ steps.auto_merge_policy.outcome }}
-          EVENT_NAME: ${{ github.event_name }}
           TASKMASTER: ${{ steps.taskmaster.outcome }}
           AEGIS_CAPSULE: ${{ steps.aegis_capsule.outcome }}
-          AEGIS_WITNESS: ${{ steps.aegis_witness.outcome }}
+          NATIVE_COORDINATION: ${{ steps.native_coordination.outcome }}
           GUARD: ${{ steps.guard.outcome }}
         run: |
           failed=0
-          for stage in AGENT_SKILLS AUTO_MERGE_POLICY TASKMASTER AEGIS_CAPSULE GUARD; do
+          for stage in AGENT_SKILLS AUTO_MERGE_POLICY TASKMASTER AEGIS_CAPSULE NATIVE_COORDINATION GUARD; do
             value="${!stage}"
             printf '%s=%s\n' "$stage" "$value"
             if [ "$value" != "success" ]; then
               failed=1
             fi
           done
-          printf 'AEGIS_WITNESS=%s\n' "$AEGIS_WITNESS"
-          if [ "$EVENT_NAME" = "pull_request" ] && [ "$AEGIS_WITNESS" != "success" ]; then
-            failed=1
-          fi
           exit "$failed"
 
       - name: Upload governance failure artifacts

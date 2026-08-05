@@ -20,7 +20,7 @@ describe('Next and React migration contract', () => {
     const root = readManifest('package.json')
     const web = readManifest('packages/web/package.json')
 
-    expect(root.devDependencies?.['@next/eslint-plugin-next']).toBe('16.2.10')
+    expect(root.devDependencies?.['@next/eslint-plugin-next']).toBe('16.2.12')
     expect(root.devDependencies).toMatchObject({
       react: '19.2.7',
       'react-dom': '19.2.7',
@@ -28,7 +28,7 @@ describe('Next and React migration contract', () => {
     expect(web.dependencies).toMatchObject({
       '@types/react': '19.2.17',
       '@types/react-dom': '19.2.3',
-      next: '16.2.10',
+      next: '16.2.12',
       react: '19.2.7',
       'react-dom': '19.2.7',
     })
@@ -113,7 +113,8 @@ describe('Next and React migration contract', () => {
 
   it('pins Next internal PostCSS to the workspace patched release', () => {
     const workspace = fs.readFileSync(path.join(process.cwd(), 'pnpm-workspace.yaml'), 'utf8')
-    expect(workspace).toContain("'next@16.2.10>postcss': 8.5.16")
+    expect(workspace).toContain("'next@16.2.12>postcss': 8.5.23")
+    expect(workspace).toContain("'next@16.2.12>sharp': 0.35.0")
     expect(workspace).not.toContain('next@15.5.20')
   })
 
