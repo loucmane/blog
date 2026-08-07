@@ -95,7 +95,7 @@ test('indexes every direction and round-trips URL navigation', async ({ context,
   await page.goto('/owner/design-lab')
   await expect(page.getByTestId('design-lab-connection')).toHaveAttribute(
     'aria-label',
-    'Live backend · protected owner workspace',
+    'Live · private owner workspace',
   )
 
   await expect(page.getByRole('heading', { level: 1, name: 'All directions' })).toBeVisible()
@@ -181,49 +181,123 @@ test('indexes every direction and round-trips URL navigation', async ({ context,
   await expect(page.locator('.design-lab-stage-swap')).toHaveCSS('animation-name', 'none')
 })
 
-test('shares one protected publishing journey across every design direction', async ({
+test('shares one private publishing journey across every design direction', async ({
   context,
   page,
 }, testInfo) => {
   test.setTimeout(120_000)
   await authenticate(context)
+  await page.route(
+    '**/api/owner/stories',
+    async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          body: JSON.stringify({ stories: [] }),
+          contentType: 'application/json',
+        })
+        return
+      }
+      await route.continue()
+    },
+    { times: 1 },
+  )
   await page.goto('/owner/design-lab')
   const touch = testInfo.project.name === 'mobile-chromium'
+  const seedTitle = `Readiness draft ${testInfo.project.name} ${Date.now()}`
   const directionViolations: Array<{
     readonly direction: string
     readonly violations: Awaited<ReturnType<typeof seriousAccessibilityViolations>>
   }> = []
   await expect(page.getByTestId('design-lab-connection')).toHaveAttribute(
     'aria-label',
-    'Live backend · protected owner workspace',
+    'Live · private owner workspace',
   )
   await page.getByTestId('design-lab-card-folio').click()
   await expect(page).toHaveURL(/direction=folio&view=desk/)
 
+  await activateControl(page, page.getByRole('button', { name: 'write', exact: true }), touch)
+  await expect(page).toHaveURL(/direction=folio&view=write/)
+  await page.getByLabel('Story title').fill(seedTitle)
+  await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
+  let publicationDialog = page.getByRole('dialog', { name: 'publication review' })
+  await expect(publicationDialog.getByText('Save the draft first', { exact: true })).toBeVisible()
+  await expect(publicationDialog.getByRole('button', { name: 'Save draft' })).toBeVisible()
+  await expect(
+    publicationDialog.getByRole('button', { name: 'Schedule publication' }),
+  ).toBeDisabled()
+  await expect(publicationDialog.getByRole('button', { name: 'Publish story now' })).toBeDisabled()
+  await expect(
+    publicationDialog.getByText('Publish becomes available when the checklist is done.'),
+  ).toBeVisible()
+  await expect(publicationDialog).not.toContainText(/protected/i)
+  await publicationDialog.getByRole('button', { name: 'Save draft' }).click()
+  await expect(page).toHaveURL(/[?&]story=article-[^&]+/)
+  await expect(publicationDialog.getByTestId('publication-check-draft')).toContainText('Done')
+  const closePublicationReview = page.getByRole('button', { name: 'Close publication review' })
+  if (touch) {
+    await expect
+      .poll(() =>
+        closePublicationReview.evaluate((button) => {
+          const bounds = button.getBoundingClientRect()
+          const hitTarget = document.elementFromPoint(
+            bounds.left + bounds.width / 2,
+            bounds.top + bounds.height / 2,
+          )
+          return hitTarget === button || (hitTarget !== null && button.contains(hitTarget))
+        }),
+      )
+      .toBe(true)
+  }
+  await activateControl(page, closePublicationReview, touch)
+  await expect(publicationDialog).toBeHidden()
+  await activateControl(page, page.getByRole('button', { name: 'desk', exact: true }), touch)
+  await expect(page).toHaveURL(/direction=folio&view=desk/)
+
   const title = `Tracked design lab ${testInfo.project.name} ${Date.now()}`
   await page
-    .getByRole('button', { name: /Begin a story|Start a story|Start a protected draft/ })
+    .getByRole('button', { name: /Begin a story|Start a story|Start a (private|protected) draft/ })
     .click()
   await page.getByLabel('Working title').fill(title)
-  await page.getByRole('button', { name: 'Create protected draft' }).click()
+  await page.getByRole('button', { name: 'Create private draft' }).click()
   await expect(page).toHaveURL(/story=article-/)
 
-  await page
-    .getByLabel('Short summary')
-    .fill('A protected owner workflow shared by fourteen premium visual directions.')
+  await page.getByLabel('Story title').fill('No')
+  await page.getByLabel('Story body').fill('Short')
+  await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
+  publicationDialog = page.getByRole('dialog', { name: 'publication review' })
+  for (const blocker of [
+    'Add a headline and some writing',
+    'Add a short summary (about a sentence)',
+    'Describe the image for readers who cannot see it',
+  ]) {
+    await expect(publicationDialog.getByText(blocker, { exact: true })).toBeVisible()
+  }
+  await expect(page.getByTestId('publication-check-draft')).toContainText('Done')
+  await expect(
+    publicationDialog.getByRole('button', { name: 'Schedule publication' }),
+  ).toBeDisabled()
+  await expect(publicationDialog.getByRole('button', { name: 'Publish story now' })).toBeDisabled()
+
+  await publicationDialog.getByRole('button', { name: 'Go to story' }).click()
+  await expect(page.getByLabel('Story title')).toBeFocused()
+  await page.getByLabel('Story title').fill(title)
   await page
     .getByLabel('Story body')
     .fill(
-      'The owner starts with one calm decision.\n\nEvery edit is autosaved to one protected story.\n\nPublication remains explicit and reversible.',
+      'The owner starts with one calm decision.\n\nEvery edit is autosaved to one private story.\n\nPublication remains explicit and reversible.',
     )
-  await expect(page.getByText('Saved to the protected workspace', { exact: true })).toBeVisible({
-    timeout: 15_000,
-  })
 
-  const addImageButton = page.getByRole('button', {
-    name: touch ? '+ Media' : 'Add image',
-  })
-  await activateControl(page, addImageButton, touch)
+  await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
+  await page.getByRole('button', { name: 'Go to summary' }).click()
+  await expect(page.getByLabel('Short summary')).toBeFocused()
+  await page
+    .getByLabel('Short summary')
+    .fill('A private owner workflow shared by fifteen premium visual directions.')
+
+  await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
+  await page.getByRole('button', { name: 'Describe image' }).click()
+  await expect(page.getByRole('dialog', { name: 'editorial image upload' })).toBeVisible()
+
   await page.getByLabel('Image file').setInputFiles({
     buffer: pngPixel,
     mimeType: 'image/png',
@@ -231,7 +305,7 @@ test('shares one protected publishing journey across every design direction', as
   })
   await page
     .getByLabel('Description for people who cannot see it')
-    .fill('A protected editorial image in the design lab')
+    .fill('A private editorial image in the design lab')
   await page.getByLabel('Caption').fill('Design-lab publication proof')
   await page.getByLabel('Credit').fill('North House studio')
   await page.getByRole('button', { name: 'Upload and use image' }).click()
@@ -239,6 +313,8 @@ test('shares one protected publishing journey across every design direction', as
 
   const reviewPublicationButton = page.getByRole('button', { name: 'Review publication' })
   await activateControl(page, reviewPublicationButton, touch)
+  await expect(page.getByRole('button', { name: 'Schedule publication' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Publish story now' })).toBeEnabled()
   await page.getByRole('button', { name: 'Publish story now' }).click()
   await expect(page.getByText('Live reader story')).toBeVisible()
 
@@ -250,11 +326,16 @@ test('shares one protected publishing journey across every design direction', as
         ? page.getByText(/^Published /)
         : page.getByText('Live reader story'),
     ).toBeVisible()
+    if (direction === 'fullbleed') {
+      await expect(
+        page.getByText(
+          'A study in how a northern room receives, holds, and releases the briefest light.',
+        ),
+      ).toHaveCount(0)
+    }
     await activateControl(page, page.getByRole('button', { name: 'write', exact: true }), touch)
     await expect(page.getByLabel('Story title')).toHaveValue(title)
-    await expect(
-      page.getByText('Saved to the protected workspace', { exact: true }).first(),
-    ).toBeVisible()
+    await expect(page.getByText('Saved just now', { exact: true }).first()).toBeVisible()
     if (!touch) {
       const violations = await seriousAccessibilityViolations(page)
       if (violations.length > 0) directionViolations.push({ direction, violations })
@@ -268,7 +349,7 @@ test('shares one protected publishing journey across every design direction', as
   await page.getByLabel('Reason for the editorial record').fill('Lifecycle canary')
   await page.getByRole('button', { name: 'Unpublish story' }).click()
   await expect(
-    page.getByText('Unpublished. The story and revision history remain safe.', { exact: true }),
+    page.getByText('Unpublished. The story and earlier drafts remain safe.', { exact: true }),
   ).toBeVisible()
 
   await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
@@ -280,7 +361,7 @@ test('shares one protected publishing journey across every design direction', as
   await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
   await page.getByRole('button', { name: 'Cancel scheduled publication' }).click()
   await expect(
-    page.getByText('Schedule cancelled. The protected story remains available.', { exact: true }),
+    page.getByText('Schedule cancelled. The private draft remains available.', { exact: true }),
   ).toBeVisible()
 
   await page.reload()

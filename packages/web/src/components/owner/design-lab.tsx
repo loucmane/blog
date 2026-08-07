@@ -20,6 +20,7 @@ import {
   storyToDocument,
   workspaceIntoStory,
 } from '@/design-lab/story-document'
+import { readinessChecks, type ReadinessCheckId } from '@/design-lab/view-helpers'
 import type {
   DesignLabActions,
   DesignLabDirection,
@@ -44,17 +45,14 @@ function tomorrowAtEight(): string {
 
 function ownerMessage(error: unknown): string {
   if (error instanceof OwnerApiError) return error.message
-  return 'The protected workspace could not be reached. Your visible edits remain on this page.'
+  return 'The private workspace could not be reached. Your visible edits remain on this page.'
 }
 
-function publicationReady(story: DesignLabStory): boolean {
-  return (
-    story.title.trim().length >= 4 &&
-    story.dek.trim().length >= 12 &&
-    story.body.trim().length >= 20 &&
-    Boolean(story.imageAlt.trim()) &&
-    Boolean(story.server)
-  )
+const readinessActionLabels: Readonly<Record<ReadinessCheckId, string>> = {
+  draft: 'Save draft',
+  image: 'Describe image',
+  story: 'Go to story',
+  summary: 'Go to summary',
 }
 
 function rememberStory(articleId: string): string {
@@ -87,7 +85,7 @@ function DesignLabDialog({ children, close, label }: DesignLabDialogProps) {
   return (
     <dialog
       aria-label={label}
-      className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-950/65 p-4 backdrop-blur-xl"
+      className="design-lab-dialog fixed inset-0 z-[100] grid items-start justify-items-center overflow-y-auto bg-slate-950/65 p-4 backdrop-blur-xl sm:items-center"
       onCancel={(event) => {
         event.preventDefault()
         close()
@@ -95,16 +93,18 @@ function DesignLabDialog({ children, close, label }: DesignLabDialogProps) {
       ref={dialogRef}
       tabIndex={-1}
     >
-      <div className="relative my-8 w-[min(34rem,100%)] rounded-[2rem] bg-[#fbfcfa] p-[clamp(1.5rem,5vw,3rem)] text-slate-950 shadow-[0_50px_160px_rgba(0,0,0,.4)]">
+      <div className="design-lab-dialog-shell relative my-8 w-full max-w-[34rem]">
         <button
           aria-label={`Close ${label}`}
-          className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-slate-200 text-xl"
+          className="design-lab-dialog-close absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-slate-200 text-xl"
           onClick={close}
           type="button"
         >
           ×
         </button>
-        {children}
+        <div className="design-lab-dialog-panel rounded-[2rem] bg-[#fbfcfa] p-[clamp(1.5rem,5vw,3rem)] text-slate-950 shadow-[0_50px_160px_rgba(0,0,0,.4)]">
+          {children}
+        </div>
       </div>
     </dialog>
   )
@@ -117,14 +117,20 @@ export function DesignLab() {
   )
   const [currentSearch, setCurrentSearch] = useState('')
   const [announcement, setAnnouncement] = useState('')
-  const [story, setStoryState] = useState(createDesignLabStory)
-  const [connection, setConnection] = useState('Connecting to protected workspace…')
+  const [story, setStoryState] = useState(() => ({
+    ...createDesignLabStory(),
+    saved: 'Private new draft',
+  }))
+  const [connection, setConnection] = useState('Connecting to private workspace…')
   const [busy, setBusy] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [newOpen, setNewOpen] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [publicationOpen, setPublicationOpen] = useState(false)
   const [mediaOpen, setMediaOpen] = useState(false)
+  const [focusTarget, setFocusTarget] = useState<'design-lab-summary' | 'design-lab-title' | null>(
+    null,
+  )
   const [scheduleAt, setScheduleAt] = useState(tomorrowAtEight)
   const [unpublishReason, setUnpublishReason] = useState('')
   const [toast, setToast] = useState('')
@@ -160,10 +166,8 @@ export function DesignLab() {
       })
       .then((result) => {
         persistedGenerationRef.current = generation
-        const next = mutationIntoStory(storyRef.current, result)
-        commitStory(
-          generationRef.current === generation ? next : { ...next, saved: 'Saving newer changes…' },
-        )
+        const next = { ...mutationIntoStory(storyRef.current, result), saved: 'Saved just now' }
+        commitStory(generationRef.current === generation ? next : { ...next, saved: 'Saving…' })
         return next
       })
       .catch((error: unknown) => {
@@ -171,8 +175,8 @@ export function DesignLab() {
           ...storyRef.current,
           saved:
             error instanceof OwnerApiError && error.status === 409
-              ? 'A newer version needs review'
-              : 'Save paused · visible edits remain here',
+              ? 'A newer draft needs review'
+              : 'Save paused. Your changes are still here.',
         }
         commitStory(next)
         showToast(ownerMessage(error))
@@ -219,11 +223,14 @@ export function DesignLab() {
           stories.find(({ deletedAt }) => deletedAt === null)
         if (existing) {
           const workspace = await client.loadStory(existing.id)
-          const next = workspaceIntoStory(workspace, createDesignLabStory())
+          const next = {
+            ...workspaceIntoStory(workspace, createDesignLabStory()),
+            saved: 'Saved just now',
+          }
           commitStory(next)
           setCurrentSearch(rememberStory(next.server!.id))
         }
-        setConnection('Live backend · protected owner workspace')
+        setConnection('Live · private owner workspace')
       })
       .catch((error: unknown) => {
         setConnection('Backend unavailable · local visual preview')
@@ -252,6 +259,14 @@ export function DesignLab() {
     [navigate, navigation.directionId],
   )
 
+  useEffect(() => {
+    if (!focusTarget || navigation.view !== 'write') return
+    const field = document.getElementById(focusTarget)
+    if (!(field instanceof HTMLElement)) return
+    field.focus()
+    setFocusTarget(null)
+  }, [focusTarget, navigation.view])
+
   const change = useCallback(
     (field: EditableStoryField, value: string) => {
       generationRef.current += 1
@@ -259,9 +274,7 @@ export function DesignLab() {
       const next = {
         ...current,
         [field]: value,
-        saved: current.server
-          ? 'Saving to protected workspace…'
-          : 'Preview edit · start a draft to save',
+        saved: current.server ? 'Saving…' : 'Private new draft',
       }
       commitStory(next)
       if (current.server) scheduleSave()
@@ -277,7 +290,7 @@ export function DesignLab() {
       body: 'Begin with the scene, idea, or detail that made this story matter.',
       dek: '',
       imageAlt: '',
-      saved: 'Creating protected draft…',
+      saved: 'Creating private draft…',
       title: newTitle.trim(),
     }
     try {
@@ -287,7 +300,7 @@ export function DesignLab() {
         idempotencyKey: crypto.randomUUID(),
         title: draft.title,
       })
-      const next = mutationIntoStory(draft, result)
+      const next = { ...mutationIntoStory(draft, result), saved: 'Draft created' }
       generationRef.current = 0
       persistedGenerationRef.current = 0
       commitStory(next)
@@ -295,13 +308,57 @@ export function DesignLab() {
       setNewOpen(false)
       setNewTitle('')
       setView('write')
-      showToast(`Protected draft created. All ${directionCount} directions now share this story.`)
+      showToast(`Draft created. All ${directionCount} directions now share it privately.`)
     } catch (error) {
       showToast(ownerMessage(error))
     } finally {
       setBusy(false)
     }
   }, [busy, client, commitStory, newTitle, setView, showToast])
+
+  const saveCurrentDraft = useCallback(async () => {
+    if (busy || storyRef.current.server) return
+    setBusy(true)
+    const draft = { ...storyRef.current, saved: 'Saving…' }
+    commitStory(draft)
+    try {
+      const result = await client.createStory({
+        dek: draft.dek,
+        document: storyToDocument(draft),
+        idempotencyKey: crypto.randomUUID(),
+        title: draft.title,
+      })
+      const next = { ...mutationIntoStory(draft, result), saved: 'Draft created' }
+      generationRef.current = 0
+      persistedGenerationRef.current = 0
+      commitStory(next)
+      setCurrentSearch(rememberStory(next.server!.id))
+      showToast('Draft created. It stays private until you publish it.')
+    } catch (error) {
+      commitStory({ ...storyRef.current, saved: 'Save paused. Your changes are still here.' })
+      showToast(ownerMessage(error))
+    } finally {
+      setBusy(false)
+    }
+  }, [busy, client, commitStory, showToast])
+
+  const fixReadiness = useCallback(
+    (id: ReadinessCheckId) => {
+      if (id === 'draft') {
+        void saveCurrentDraft()
+        return
+      }
+      if (id === 'image') {
+        setPublicationOpen(false)
+        setMediaOpen(true)
+        return
+      }
+      setPublicationOpen(false)
+      setFocusTarget(id === 'story' ? 'design-lab-title' : 'design-lab-summary')
+      setView('write')
+    },
+    [saveCurrentDraft, setView],
+  )
 
   const runAction = useCallback(
     async (
@@ -313,13 +370,13 @@ export function DesignLab() {
       setBusy(true)
       try {
         const saved = await persistLatest()
-        if (!saved?.server) throw new Error('A protected story is required')
+        if (!saved?.server) throw new Error('A private draft is required')
         const result: StoryActionDto = await client.runStoryAction(saved.server.id, {
           expectedVersion: saved.server.version,
           idempotencyKey: crypto.randomUUID(),
           ...input(saved),
         })
-        const next = actionIntoStory(saved, result)
+        const next = { ...actionIntoStory(saved, result), saved: 'Saved just now' }
         commitStory(next)
         setPublicationOpen(false)
         setView(destination)
@@ -336,19 +393,19 @@ export function DesignLab() {
   const preview = useCallback(async () => {
     const saved = await persistLatest()
     if (!saved?.server) {
-      showToast('Create a protected draft before opening the reader preview.')
+      showToast('Save a private draft before opening the reader preview.')
       return
     }
     setPublicationOpen(false)
     setView('reader')
-    showToast('Private preview opened from the latest protected revision.')
+    showToast('Private preview opened from the latest saved draft.')
   }, [persistLatest, setView, showToast])
 
   const uploadMedia = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault()
       if (!storyRef.current.server || busy) {
-        showToast('Create a protected draft before adding media.')
+        showToast('Save a private draft before adding media.')
         return
       }
       setBusy(true)
@@ -368,7 +425,7 @@ export function DesignLab() {
           imageCaption: asset.caption,
           imageCredit: asset.creditName,
           mediaId: asset.id,
-          saved: 'Saving image with protected story…',
+          saved: 'Saving…',
         }
         commitStory(next)
         setMediaOpen(false)
@@ -420,7 +477,8 @@ export function DesignLab() {
   )
   const direction = navigation.directionId ? designLabRegistry.get(navigation.directionId) : null
   const DirectionView = direction ? direction.views[navigation.view] : null
-  const ready = publicationReady(story)
+  const checks = readinessChecks(story)
+  const ready = checks.every(({ ready: checkReady }) => checkReady)
   const navigationBaseHref = `https://design-lab.local/owner/design-lab${currentSearch}`
   const indexHref = createDesignLabNavigationHref(navigationBaseHref, { kind: 'index' })
 
@@ -495,14 +553,14 @@ export function DesignLab() {
       ) : null}
 
       {newOpen ? (
-        <DesignLabDialog close={() => setNewOpen(false)} label="new protected story">
+        <DesignLabDialog close={() => setNewOpen(false)} label="new private story">
           <form
             onSubmit={(event) => {
               event.preventDefault()
               void createStory()
             }}
           >
-            <p className="design-lab-mono-label text-indigo-600">Protected new draft</p>
+            <p className="design-lab-mono-label text-indigo-600">Private new draft</p>
             <h2 className="mt-4 text-5xl leading-[.9] tracking-[-.065em]">
               Start with a working title.
             </h2>
@@ -519,7 +577,7 @@ export function DesignLab() {
               A private draft is created before the writing view opens.
             </p>
             <button className="design-lab-dialog-action" disabled={busy} type="submit">
-              Create protected draft
+              Create private draft
             </button>
           </form>
         </DesignLabDialog>
@@ -570,6 +628,34 @@ export function DesignLab() {
           <p className="mt-5 text-sm text-slate-600">
             Your story stays private until you explicitly publish it.
           </p>
+          <ol aria-label="Publication checklist" className="design-lab-publication-checklist">
+            {checks.map((check, index) => (
+              <li
+                data-ready={check.ready}
+                data-testid={`publication-check-${check.id}`}
+                key={check.id}
+              >
+                <span className="design-lab-publication-check-copy">
+                  <span aria-hidden="true" className="design-lab-publication-check-number">
+                    {index + 1}
+                  </span>
+                  <span>{check.label}</span>
+                </span>
+                {check.ready ? (
+                  <strong className="design-lab-publication-check-done">Done</strong>
+                ) : (
+                  <button
+                    className="design-lab-publication-fix"
+                    disabled={busy && check.id === 'draft'}
+                    onClick={() => fixReadiness(check.id)}
+                    type="button"
+                  >
+                    {readinessActionLabels[check.id]}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ol>
           <div className="mt-6 grid gap-2">
             <button
               className="design-lab-dialog-action secondary"
@@ -578,7 +664,7 @@ export function DesignLab() {
             >
               Open private reader preview
             </button>
-            {ready && story.status !== 'published' && story.status !== 'scheduled' ? (
+            {story.status !== 'published' && story.status !== 'scheduled' ? (
               <>
                 <label className="design-lab-dialog-label">
                   Publish later
@@ -590,8 +676,9 @@ export function DesignLab() {
                   />
                 </label>
                 <button
+                  aria-describedby={!ready ? 'publication-actions-reason' : undefined}
                   className="design-lab-dialog-action"
-                  disabled={busy}
+                  disabled={busy || !ready}
                   onClick={() =>
                     void runAction(
                       (saved) => ({
@@ -609,8 +696,9 @@ export function DesignLab() {
                   Schedule publication
                 </button>
                 <button
+                  aria-describedby={!ready ? 'publication-actions-reason' : undefined}
                   className="design-lab-dialog-action"
-                  disabled={busy}
+                  disabled={busy || !ready}
                   onClick={() =>
                     void runAction(
                       (saved) => ({ action: 'publish', revisionId: saved.server!.revisionId }),
@@ -622,6 +710,11 @@ export function DesignLab() {
                 >
                   Publish story now
                 </button>
+                {!ready ? (
+                  <p className="design-lab-publication-reason" id="publication-actions-reason">
+                    Publish becomes available when the checklist is done.
+                  </p>
+                ) : null}
               </>
             ) : null}
             {story.status === 'published' ? (
@@ -641,7 +734,7 @@ export function DesignLab() {
                   onClick={() =>
                     void runAction(
                       () => ({ action: 'unpublish', reason: unpublishReason }),
-                      'Unpublished. The story and revision history remain safe.',
+                      'Unpublished. The story and earlier drafts remain safe.',
                       'write',
                     )
                   }
@@ -658,7 +751,7 @@ export function DesignLab() {
                 onClick={() =>
                   void runAction(
                     () => ({ action: 'cancel-schedule' }),
-                    'Schedule cancelled. The protected story remains available.',
+                    'Schedule cancelled. The private draft remains available.',
                     'write',
                   )
                 }

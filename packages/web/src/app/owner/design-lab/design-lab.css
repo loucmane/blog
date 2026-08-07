@@ -1158,6 +1158,25 @@
   max-width: 70rem;
 }
 
+.design-lab-dialog {
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  overflow-x: hidden;
+  border: 0;
+}
+
+.design-lab-dialog-panel {
+  min-width: 0;
+}
+
+.design-lab-dialog-close {
+  z-index: 1;
+  touch-action: manipulation;
+}
+
 .design-lab-dialog-label {
   display: block;
   margin-top: 1.25rem;
@@ -1180,6 +1199,114 @@
 .design-lab-dialog-field:focus {
   border-color: #244edb;
   box-shadow: 0 0 0 3px rgb(36 78 219 / 12%);
+}
+
+.design-lab-publication-checklist {
+  display: grid;
+  gap: 0;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border: 1px solid #d6dbd8;
+  border-radius: 1rem;
+  background: #f4f6f4;
+}
+
+.design-lab-publication-checklist > li {
+  display: flex;
+  min-height: 4.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+}
+
+.design-lab-publication-checklist > li + li {
+  border-top: 1px solid #d6dbd8;
+}
+
+.design-lab-publication-checklist > li[data-ready='true'] {
+  background: #fbfcfa;
+}
+
+.design-lab-publication-check-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.design-lab-publication-check-number {
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #c7cdca;
+  border-radius: 999px;
+  color: #4f5856;
+  background: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.65rem;
+  font-weight: 750;
+}
+
+.design-lab-publication-check-done {
+  color: #08745b;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.design-lab-publication-fix {
+  position: relative;
+  z-index: 1;
+  min-height: 2.5rem;
+  flex: 0 0 auto;
+  padding: 0 0.85rem;
+  border: 1px solid #1d2524;
+  border-radius: 999px;
+  color: #fff;
+  background: #1d2524;
+  font-size: 0.68rem;
+  font-weight: 750;
+  touch-action: manipulation;
+}
+
+.design-lab-publication-fix:focus-visible {
+  outline: 3px solid rgb(36 78 219 / 24%);
+  outline-offset: 2px;
+}
+
+.design-lab-publication-fix:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.design-lab-publication-reason {
+  margin-top: 0.5rem;
+  color: #596360;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .design-lab-publication-checklist > li {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .design-lab-publication-check-done {
+    align-self: flex-end;
+  }
+
+  .design-lab-publication-fix {
+    width: 100%;
+    min-height: 2.75rem;
+  }
 }
 
 .design-lab-dialog-action {

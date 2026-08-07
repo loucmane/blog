@@ -310,9 +310,6 @@ export function FullbleedReader({ actions, story }: DesignLabDirectionProps) {
           </div>
         </header>
         <div className={styles.readerBody}>
-          <p className={styles.readerLead}>
-            A study in how a northern room receives, holds, and releases the briefest light.
-          </p>
           <StoryCopy className={styles.readerCopy!} story={story} />
           <figure className={styles.inlineFigure}>
             <StoryImage className={styles.inlineImage!} story={story} />

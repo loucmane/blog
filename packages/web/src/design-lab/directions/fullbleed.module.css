@@ -504,18 +504,10 @@
   padding: clamp(4rem, 9vw, 9rem) 1.5rem 0;
 }
 
-.readerLead,
 .readerCopy {
   max-width: 42rem;
   margin-right: auto;
   margin-left: auto;
-}
-
-.readerLead {
-  color: var(--fullbleed-readable);
-  font-size: clamp(1.5rem, 3vw, 2.25rem);
-  font-weight: 700;
-  line-height: 1.25;
 }
 
 .readerCopy {
