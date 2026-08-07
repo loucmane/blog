@@ -2,6 +2,7 @@ import { archiveDesignLabDirections } from './archive-registry'
 import { createDesignLabRegistry, defineDesignLabDirection } from './contract'
 import { ContactDesk, ContactReader, ContactWrite } from './directions/contact'
 import { FolioDesk, FolioReader, FolioWrite } from './directions/folio'
+import { fullbleedDirection } from './directions/fullbleed'
 import { HaloDesk, HaloReader, HaloWrite } from './directions/halo'
 
 export const designLabRegistry = createDesignLabRegistry([
@@ -49,4 +50,5 @@ export const designLabRegistry = createDesignLabRegistry([
     views: { desk: HaloDesk, reader: HaloReader, write: HaloWrite },
   }),
   ...archiveDesignLabDirections,
+  fullbleedDirection,
 ])

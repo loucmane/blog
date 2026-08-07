@@ -2,6 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import {
+  createDesignLabNavigationHref,
+  DesignLabIndex,
+  DesignLabNavigation,
+  groupDesignLabDirections,
+  normalizeLegacyDesignLabHash,
+  resolveDesignLabNavigation,
+  type DesignLabNavigationDestination,
+} from '@/design-lab/navigation'
 import { designLabRegistry } from '@/design-lab/registry'
 import { OwnerApiClient, OwnerApiError } from '@/design-lab/owner-api-client'
 import { createDesignLabStory } from '@/design-lab/seed'
@@ -22,14 +31,10 @@ import type {
 
 const saveDelay = 650
 const ownerTimeZone = 'Europe/Stockholm'
-const directionGroups = Array.from(
-  designLabRegistry.list().reduce((groups, direction) => {
-    const collection = groups.get(direction.metadata.collection) ?? []
-    collection.push(direction)
-    groups.set(direction.metadata.collection, collection)
-    return groups
-  }, new Map<string, DesignLabDirection[]>()),
-)
+const registeredDirections = designLabRegistry.list()
+const directionGroups = groupDesignLabDirections(registeredDirections)
+const knownDirectionIds = new Set(registeredDirections.map(({ id }) => id))
+const directionCount = registeredDirections.length
 
 function tomorrowAtEight(): string {
   const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -52,10 +57,11 @@ function publicationReady(story: DesignLabStory): boolean {
   )
 }
 
-function rememberStory(articleId: string): void {
+function rememberStory(articleId: string): string {
   const location = new URL(window.location.href)
   location.searchParams.set('story', articleId)
   window.history.replaceState(null, '', `${location.pathname}${location.search}${location.hash}`)
+  return location.search
 }
 
 interface DesignLabDialogProps {
@@ -106,8 +112,11 @@ function DesignLabDialog({ children, close, label }: DesignLabDialogProps) {
 
 export function DesignLab() {
   const client = useMemo(() => new OwnerApiClient(), [])
-  const [directionId, setDirectionId] = useState(designLabRegistry.first().id)
-  const [view, setViewState] = useState<DesignLabView>('desk')
+  const [navigation, setNavigation] = useState(() =>
+    resolveDesignLabNavigation('', knownDirectionIds),
+  )
+  const [currentSearch, setCurrentSearch] = useState('')
+  const [announcement, setAnnouncement] = useState('')
   const [story, setStoryState] = useState(createDesignLabStory)
   const [connection, setConnection] = useState('Connecting to protected workspace…')
   const [busy, setBusy] = useState(false)
@@ -185,10 +194,22 @@ export function DesignLab() {
     saveTimerRef.current = setTimeout(() => void persistLatest(), saveDelay)
   }, [persistLatest])
 
+  const syncNavigation = useCallback((href: string) => {
+    const location = new URL(href)
+    setCurrentSearch(location.search)
+    setNavigation(resolveDesignLabNavigation(location.search, knownDirectionIds))
+  }, [])
+
   useEffect(() => {
-    const [hashDirection, hashView] = window.location.hash.slice(1).split('/')
-    if (hashDirection && designLabRegistry.has(hashDirection)) setDirectionId(hashDirection)
-    if (hashView === 'desk' || hashView === 'write' || hashView === 'reader') setViewState(hashView)
+    const normalizedHref = normalizeLegacyDesignLabHash(window.location.href)
+    if (normalizedHref) window.history.replaceState(null, '', normalizedHref)
+    syncNavigation(window.location.href)
+    const syncFromHistory = () => syncNavigation(window.location.href)
+    window.addEventListener('popstate', syncFromHistory)
+    return () => window.removeEventListener('popstate', syncFromHistory)
+  }, [syncNavigation])
+
+  useEffect(() => {
     const requestedStoryId = new URLSearchParams(window.location.search).get('story')
     void client
       .listStories()
@@ -200,7 +221,7 @@ export function DesignLab() {
           const workspace = await client.loadStory(existing.id)
           const next = workspaceIntoStory(workspace, createDesignLabStory())
           commitStory(next)
-          rememberStory(next.server!.id)
+          setCurrentSearch(rememberStory(next.server!.id))
         }
         setConnection('Live backend · protected owner workspace')
       })
@@ -213,15 +234,22 @@ export function DesignLab() {
     }
   }, [client, commitStory, showToast])
 
-  const setView = useCallback(
-    (nextView: DesignLabView) => {
-      setViewState(nextView)
-      const location = new URL(window.location.href)
-      location.hash = `${directionId}/${nextView}`
-      window.history.replaceState(null, '', location)
+  const navigate = useCallback(
+    (destination: DesignLabNavigationDestination) => {
+      const href = createDesignLabNavigationHref(window.location.href, destination)
+      window.history.pushState(null, '', href)
+      syncNavigation(window.location.href)
       window.scrollTo({ behavior: 'auto', top: 0 })
     },
-    [directionId],
+    [syncNavigation],
+  )
+
+  const setView = useCallback(
+    (nextView: DesignLabView) => {
+      if (!navigation.directionId) return
+      navigate({ directionId: navigation.directionId, kind: 'direction', view: nextView })
+    },
+    [navigate, navigation.directionId],
   )
 
   const change = useCallback(
@@ -263,11 +291,11 @@ export function DesignLab() {
       generationRef.current = 0
       persistedGenerationRef.current = 0
       commitStory(next)
-      rememberStory(next.server!.id)
+      setCurrentSearch(rememberStory(next.server!.id))
       setNewOpen(false)
       setNewTitle('')
       setView('write')
-      showToast('Protected draft created. All 14 directions now share this story.')
+      showToast(`Protected draft created. All ${directionCount} directions now share this story.`)
     } catch (error) {
       showToast(ownerMessage(error))
     } finally {
@@ -356,15 +384,26 @@ export function DesignLab() {
     [busy, client, commitStory, persistLatest, showToast],
   )
 
-  const selectDirection = useCallback(
-    (id: string) => {
-      setDirectionId(id)
-      const location = new URL(window.location.href)
-      location.hash = `${id}/${view}`
-      window.history.replaceState(null, '', location)
+  const openDirection = useCallback(
+    (
+      nextDirection: DesignLabDirection,
+      nextView: DesignLabView = navigation.directionId ? navigation.view : 'desk',
+    ) => {
+      navigate({ directionId: nextDirection.id, kind: 'direction', view: nextView })
+      const group = directionGroups.find(({ directions }) =>
+        directions.some(({ id }) => id === nextDirection.id),
+      )
+      setAnnouncement(
+        `Now viewing ${nextDirection.metadata.name} — ${group?.label ?? nextDirection.metadata.collection}.`,
+      )
     },
-    [view],
+    [navigate, navigation.directionId, navigation.view],
   )
+
+  const openIndex = useCallback(() => {
+    navigate({ kind: 'index' })
+    setAnnouncement('Showing all directions.')
+  }, [navigate])
 
   const actions = useMemo<DesignLabActions>(
     () => ({
@@ -379,82 +418,59 @@ export function DesignLab() {
     }),
     [change, setView],
   )
-  const direction = designLabRegistry.get(directionId)
-  const DirectionView = direction.views[view]
+  const direction = navigation.directionId ? designLabRegistry.get(navigation.directionId) : null
+  const DirectionView = direction ? direction.views[navigation.view] : null
   const ready = publicationReady(story)
+  const navigationBaseHref = `https://design-lab.local/owner/design-lab${currentSearch}`
+  const indexHref = createDesignLabNavigationHref(navigationBaseHref, { kind: 'index' })
 
   return (
     <div className="design-lab-root min-h-screen bg-slate-100">
       <a className="sr-only focus:not-sr-only" href="#design-lab-stage">
         Skip to design
       </a>
-      <nav className="design-lab-controls" aria-label="Design bakeoff controls">
-        <a className="flex items-center gap-3" href="/owner">
-          <b className="grid size-10 place-items-center rounded-full bg-white text-[.65rem] text-slate-950">
-            NH
-          </b>
-          <span className="hidden sm:block">
-            <strong className="block text-xs">Design directions</strong>
-            <small className="design-lab-mono-label text-slate-400">Owner studio + magazine</small>
-          </span>
-        </a>
-        <label className="design-lab-direction-picker">
-          <span>
-            <b>{direction.metadata.order}</b>
-            <small>14 directions</small>
-          </span>
-          <select
-            aria-label="Visual direction"
-            onChange={(event) => selectDirection(event.target.value)}
-            value={directionId}
-          >
-            {directionGroups.map(([collection, directions]) => (
-              <optgroup key={collection} label={collection}>
-                {directions.map((candidate) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {candidate.metadata.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
-        <div className="design-lab-segment" aria-label="Experience view">
-          {(['desk', 'write', 'reader'] as const).map((candidate) => (
-            <button
-              aria-pressed={candidate === view}
-              className={candidate === view ? 'active' : ''}
-              key={candidate}
-              onClick={() => setView(candidate)}
-              type="button"
-            >
-              {candidate}
-            </button>
-          ))}
-        </div>
-        <span
-          aria-label={connection}
-          className="design-lab-connection"
-          data-testid="design-lab-connection"
-          role="status"
-        >
-          <i className="size-2 rounded-full bg-emerald-400" />
-          <span>{connection}</span>
-        </span>
-        <button
-          className="design-lab-control-button"
-          onClick={() => setNotesOpen(true)}
-          type="button"
-        >
-          Direction notes +
-        </button>
-      </nav>
+      <DesignLabNavigation
+        announcement={announcement}
+        connection={connection}
+        direction={direction}
+        groups={directionGroups}
+        indexHref={indexHref}
+        onDirection={openDirection}
+        onIndex={openIndex}
+        onNotes={() => setNotesOpen(true)}
+        onView={setView}
+        view={navigation.view}
+      />
 
       <main id="design-lab-stage">
-        <DirectionView actions={actions} story={story} />
+        {direction && DirectionView ? (
+          <>
+            {navigation.notice ? (
+              <p className="design-lab-state-notice" role="status">
+                {navigation.notice}
+              </p>
+            ) : null}
+            <div className="design-lab-stage-swap" key={`${direction.id}-${navigation.view}`}>
+              <DirectionView actions={actions} story={story} />
+            </div>
+          </>
+        ) : (
+          <DesignLabIndex
+            groups={directionGroups}
+            hrefForDirection={(directionId) =>
+              createDesignLabNavigationHref(navigationBaseHref, {
+                directionId,
+                kind: 'direction',
+                view: 'desk',
+              })
+            }
+            notice={navigation.notice}
+            onDirection={(nextDirection) => openDirection(nextDirection, 'desk')}
+          />
+        )}
       </main>
 
-      {notesOpen ? (
+      {notesOpen && direction ? (
         <DesignLabDialog close={() => setNotesOpen(false)} label="direction notes">
           <p className="design-lab-mono-label text-indigo-600">
             {direction.metadata.collection} · Direction {direction.metadata.order}
@@ -598,7 +614,7 @@ export function DesignLab() {
                   onClick={() =>
                     void runAction(
                       (saved) => ({ action: 'publish', revisionId: saved.server!.revisionId }),
-                      'Published. All 14 directions now show the same live story.',
+                      `Published. All ${directionCount} directions now show the same live story.`,
                       'reader',
                     )
                   }

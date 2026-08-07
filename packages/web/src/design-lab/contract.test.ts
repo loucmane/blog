@@ -44,8 +44,9 @@ describe('design-lab direction contract', () => {
       'mercury',
       'cutline',
       'edition-os',
+      'fullbleed',
     ])
-    expect(designLabRegistry.list()).toHaveLength(14)
+    expect(designLabRegistry.list()).toHaveLength(15)
   })
 
   it('groups the complete bakeoff history without losing any required view', () => {
@@ -55,6 +56,7 @@ describe('design-lab direction contract', () => {
         'Round 2 · Studio Systems',
         'Round 3 · Refined Instruments',
         'Round 4 · Finalists',
+        'Round 5 · New concepts',
       ]),
     )
     for (const direction of designLabRegistry.list()) {

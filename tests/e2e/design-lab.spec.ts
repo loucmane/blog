@@ -21,6 +21,24 @@ const designDirections = [
   'mercury',
   'cutline',
   'edition-os',
+  'fullbleed',
+] as const
+const indexDirectionOrder = [
+  'blue-pencil',
+  'light-table',
+  'edition-zero',
+  'margin-studio',
+  'pressroom',
+  'galley-27',
+  'aperture',
+  'live-issue',
+  'mercury',
+  'cutline',
+  'edition-os',
+  'folio',
+  'contact',
+  'halo',
+  'fullbleed',
 ] as const
 
 async function authenticate(context: BrowserContext) {
@@ -30,7 +48,18 @@ async function authenticate(context: BrowserContext) {
   expect(response.status()).toBe(200)
 }
 
+async function waitForDirectionSwap(page: Page) {
+  const stage = page.locator('.design-lab-stage-swap')
+  if ((await stage.count()) === 0) return
+  await stage.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished.catch(() => undefined)),
+    )
+  })
+}
+
 async function seriousAccessibilityViolations(page: Page) {
+  await waitForDirectionSwap(page)
   const result = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze()
@@ -60,6 +89,98 @@ async function activateControl(page: Page, locator: Locator, touch: boolean) {
   await locator.evaluate((element: HTMLElement) => element.click())
 }
 
+test('indexes every direction and round-trips URL navigation', async ({ context, page }) => {
+  test.setTimeout(120_000)
+  await authenticate(context)
+  await page.goto('/owner/design-lab')
+  await expect(page.getByTestId('design-lab-connection')).toHaveAttribute(
+    'aria-label',
+    'Live backend · protected owner workspace',
+  )
+
+  await expect(page.getByRole('heading', { level: 1, name: 'All directions' })).toBeVisible()
+  for (const heading of [
+    'Round 1 · Archive',
+    'Round 2 · Archive',
+    'Round 3 · Archive',
+    'Round 4 · Finalists',
+    'Round 5 · New concepts',
+  ]) {
+    await expect(page.getByRole('heading', { level: 2, name: heading })).toBeVisible()
+  }
+  for (const direction of indexDirectionOrder) {
+    await expect(page.getByTestId(`design-lab-card-${direction}`)).toHaveAttribute(
+      'href',
+      new RegExp(`direction=${direction}&view=desk`),
+    )
+  }
+  expect(await seriousAccessibilityViolations(page)).toEqual([])
+
+  const storyId = new URL(page.url()).searchParams.get('story')
+  await page.getByTestId('design-lab-card-blue-pencil').click()
+  await expect(page.locator('select[aria-label="Visual direction"]')).toHaveValue('blue-pencil')
+  for (const expectedDirection of indexDirectionOrder.slice(1)) {
+    await page.getByRole('button', { name: /^Next direction:/ }).click()
+    await expect(page.locator('select[aria-label="Visual direction"]')).toHaveValue(
+      expectedDirection,
+    )
+  }
+  await page.getByRole('button', { name: /^Next direction:/ }).click()
+  await expect(page.locator('select[aria-label="Visual direction"]')).toHaveValue('blue-pencil')
+
+  await page.getByRole('button', { name: 'write', exact: true }).click()
+  await expect(page).toHaveURL(/direction=blue-pencil&view=write/)
+  await page.getByRole('button', { name: 'reader', exact: true }).click()
+  await expect(page).toHaveURL(/direction=blue-pencil&view=reader/)
+  await page.goBack()
+  await expect(page.getByRole('button', { name: 'write', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await page.goForward()
+  await expect(page.getByRole('button', { name: 'reader', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  if (storyId) expect(new URL(page.url()).searchParams.get('story')).toBe(storyId)
+  await page.reload()
+  await expect(page.locator('select[aria-label="Visual direction"]')).toHaveValue('blue-pencil')
+  await expect(page.getByRole('button', { name: 'reader', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(await seriousAccessibilityViolations(page)).toEqual([])
+
+  await page.goto('/owner/design-lab?direction=edition-11&view=reader')
+  await expect(page.getByRole('heading', { level: 1, name: 'All directions' })).toBeVisible()
+  await expect(
+    page.getByText('“edition-11” isn’t a direction. Showing all directions.'),
+  ).toBeVisible()
+
+  await page.goto('/owner/design-lab?direction=folio&view=grid')
+  await expect(page.locator('select[aria-label="Visual direction"]')).toHaveValue('folio')
+  await expect(page.getByRole('button', { name: 'desk', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(page.getByText('“grid” isn’t a view. Showing the desk view.')).toBeVisible()
+
+  await page.goto('/owner/design-lab#halo/reader')
+  await expect(page.locator('select[aria-label="Visual direction"]')).toHaveValue('halo')
+  await expect(page.getByRole('button', { name: 'reader', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(new URL(page.url()).hash).toBe('')
+  expect(new URL(page.url()).searchParams.get('direction')).toBe('halo')
+  expect(new URL(page.url()).searchParams.get('view')).toBe('reader')
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/owner/design-lab?direction=fullbleed&view=write')
+  await expect(page.locator('select[aria-label="Visual direction"]')).toHaveValue('fullbleed')
+  await expect(page.locator('.design-lab-stage-swap')).toHaveCSS('animation-name', 'none')
+})
+
 test('shares one protected publishing journey across every design direction', async ({
   context,
   page,
@@ -76,6 +197,8 @@ test('shares one protected publishing journey across every design direction', as
     'aria-label',
     'Live backend · protected owner workspace',
   )
+  await page.getByTestId('design-lab-card-folio').click()
+  await expect(page).toHaveURL(/direction=folio&view=desk/)
 
   const title = `Tracked design lab ${testInfo.project.name} ${Date.now()}`
   await page
@@ -122,7 +245,11 @@ test('shares one protected publishing journey across every design direction', as
   for (const direction of designDirections) {
     await page.getByLabel('Visual direction').selectOption(direction)
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible()
-    await expect(page.getByText('Live reader story')).toBeVisible()
+    await expect(
+      direction === 'fullbleed'
+        ? page.getByText(/^Published /)
+        : page.getByText('Live reader story'),
+    ).toBeVisible()
     await activateControl(page, page.getByRole('button', { name: 'write', exact: true }), touch)
     await expect(page.getByLabel('Story title')).toHaveValue(title)
     await expect(
@@ -146,7 +273,9 @@ test('shares one protected publishing journey across every design direction', as
 
   await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
   await page.getByRole('button', { name: 'Schedule publication' }).click()
-  await expect(page.getByText('SCHEDULED', { exact: true }).first()).toBeVisible()
+  await expect(page.getByTestId('fullbleed-lifecycle-state')).toHaveText(
+    'Scheduled for Sunday 08:00',
+  )
   await activateControl(page, page.getByRole('button', { name: 'write', exact: true }), touch)
   await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
   await page.getByRole('button', { name: 'Cancel scheduled publication' }).click()
