@@ -62,8 +62,9 @@ describe('design-lab direction contract', () => {
       'vitrine',
       'pulse',
       'ledger',
+      'meridian',
     ])
-    expect(designLabRegistry.list()).toHaveLength(20)
+    expect(designLabRegistry.list()).toHaveLength(21)
   })
 
   it('groups the complete bakeoff history without losing any required view', () => {
