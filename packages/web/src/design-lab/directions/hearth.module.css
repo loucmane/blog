@@ -1,0 +1,661 @@
+.root {
+  --oat: #ede8df;
+  --oat-deep: #e3dcce;
+  --walnut: #3b2f26;
+  --thread: #a63b2a;
+  --indigo: #31547a;
+  min-height: calc(100vh - 4rem);
+  overflow: clip;
+  background: var(--oat);
+  color: var(--walnut);
+  font-family: var(--font-hearth), 'Trebuchet MS', Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 450;
+  line-height: 1.55;
+}
+
+.root,
+.root * {
+  box-sizing: border-box;
+}
+
+.root button {
+  border-radius: 2px;
+  color: inherit;
+  font: inherit;
+}
+
+.root button:focus-visible,
+.root textarea:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 4px;
+}
+
+.root :global(.design-lab-title-field),
+.root :global(.design-lab-summary-field),
+.root :global(.design-lab-body-field) {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  border: 0;
+  border-bottom: 2px solid var(--walnut);
+  border-radius: 0;
+  background: transparent;
+  color: var(--walnut);
+  font-family: inherit;
+}
+
+.root :global(.design-lab-title-field) {
+  min-height: 8rem;
+  padding: 1.1rem 0;
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.root :global(.design-lab-summary-field) {
+  min-height: 6rem;
+  padding: 1.25rem 0;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: 550;
+  line-height: 1.4;
+}
+
+.root :global(.design-lab-body-field) {
+  min-height: 26rem;
+  padding: 1.5rem 0;
+  font-size: 1.08rem;
+  font-weight: 450;
+  line-height: 1.72;
+}
+
+.eyebrow,
+.saved,
+.readerSection {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.workroomHeader {
+  display: grid;
+  width: min(100%, 86rem);
+  grid-template-columns: minmax(9rem, 0.45fr) minmax(36rem, 1.55fr);
+  gap: clamp(1.5rem, 5vw, 5rem);
+  align-items: start;
+  margin: 0 auto;
+  border-bottom: 2px solid var(--walnut);
+  padding: clamp(1.4rem, 3vw, 2.4rem) clamp(1rem, 4vw, 3.5rem) 1.25rem;
+}
+
+.workroomHeader > div:first-child {
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.25rem;
+}
+
+.saved {
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.journey {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.journey ol {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journey ol::before {
+  position: absolute;
+  top: 0.8rem;
+  right: 10%;
+  left: 10%;
+  border-top: 2px dashed var(--thread);
+  content: '';
+}
+
+.journey li {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 1.65rem auto minmax(2.5rem, auto);
+  justify-items: center;
+  padding-inline: 0.25rem;
+  text-align: center;
+}
+
+.stitch {
+  display: block;
+  width: 1.65rem;
+  height: 1.65rem;
+  background: var(--oat);
+}
+
+.stitch svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.stitchGround,
+.stitchThread {
+  transform-origin: center;
+}
+
+.stitchGround {
+  fill: var(--oat);
+  stroke: var(--walnut);
+  stroke-width: 2;
+}
+
+.journey li[data-complete='true']:not([data-current='true']) .stitchGround {
+  fill: var(--walnut);
+}
+
+.stitchThread {
+  fill: var(--thread);
+  opacity: 0;
+  stroke: var(--thread);
+  stroke-dasharray: 50.3;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.stitchThread[data-current='true'] {
+  opacity: 1;
+  animation: hearth-sew-in 300ms ease-out both;
+}
+
+.stationLabel {
+  margin-top: 0.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stateSentence {
+  max-width: 12rem;
+  margin-top: 0.45rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.stateSpacer {
+  min-height: 2.5rem;
+}
+
+.deskMain {
+  display: grid;
+  width: min(100%, 78rem);
+  grid-template-columns: minmax(17rem, 0.72fr) minmax(28rem, 1.28fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  align-items: center;
+  margin: 0 auto;
+  padding: clamp(3.5rem, 8vw, 8rem) clamp(1rem, 4vw, 3.5rem);
+}
+
+.deskIntro h1,
+.writeHeading h1,
+.readerStory h1 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.deskIntro h1 {
+  margin: 1.1rem 0 2.25rem;
+  font-size: clamp(2.9rem, 6vw, 5.8rem);
+}
+
+.primaryAction,
+.secondaryAction {
+  cursor: pointer;
+  padding: 0.85rem 1.25rem;
+  font-weight: 700 !important;
+}
+
+.primaryAction {
+  border: 2px solid var(--walnut) !important;
+  background: var(--walnut);
+  color: var(--oat) !important;
+}
+
+.primaryAction:hover {
+  background: var(--indigo);
+}
+
+.secondaryAction {
+  border: 2px solid var(--walnut) !important;
+  background: transparent;
+}
+
+.secondaryAction:hover,
+.quietAction:hover,
+.swatchActions button:hover,
+.photoAction:hover {
+  background: var(--oat-deep);
+}
+
+.swatchCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(13rem, 0.95fr);
+  overflow: hidden;
+  border: 2px solid var(--walnut);
+  background: var(--oat-deep);
+}
+
+.figure {
+  position: relative;
+  margin: 0;
+}
+
+.photoImage {
+  position: relative;
+  width: 100%;
+  background: #d7cebd;
+}
+
+.figure figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 2px dashed var(--thread);
+  padding: 0.7rem 0;
+  line-height: 1.35;
+}
+
+.figure cite {
+  flex: none;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.deskPhoto {
+  grid-row: 1 / span 2;
+  border-right: 2px solid var(--walnut);
+}
+
+.deskPhoto .photoImage {
+  height: 100%;
+  min-height: 25rem;
+}
+
+.deskPhoto figcaption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--oat-deep);
+  padding-inline: 0.75rem;
+}
+
+.swatchCopy {
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+}
+
+.swatchCopy h2 {
+  margin: 0.8rem 0 1rem;
+  font-size: clamp(1.9rem, 3.4vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+}
+
+.swatchCopy > p:last-child {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 550;
+}
+
+.threadRule {
+  display: block;
+  width: 100%;
+  border-top: 2px dashed var(--thread);
+}
+
+.swatchCard > .threadRule {
+  grid-column: 2;
+}
+
+.swatchActions {
+  display: grid;
+  grid-column: 2;
+  grid-template-columns: 1fr 1fr;
+}
+
+.swatchActions button {
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.swatchActions button + button {
+  border-left: 2px solid var(--walnut);
+}
+
+.writeMain {
+  width: min(100%, 56rem);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 5.5rem) clamp(1rem, 4vw, 3rem) 7rem;
+}
+
+.writeHeading {
+  display: grid;
+  justify-items: start;
+}
+
+.writeHeading .eyebrow {
+  margin-top: 2.5rem;
+}
+
+.writeHeading h1 {
+  margin: 0.8rem 0 2.5rem;
+  font-size: clamp(2.8rem, 6vw, 5.25rem);
+}
+
+.quietAction,
+.photoAction {
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  padding: 0.55rem 0.8rem;
+  font-weight: 700;
+}
+
+.quietAction {
+  margin-left: -0.8rem;
+}
+
+.writingSurface {
+  border: 2px solid var(--walnut);
+  background: var(--oat-deep);
+  padding: clamp(1.5rem, 4vw, 3.75rem);
+}
+
+.writingSurface > .threadRule {
+  margin-bottom: 1rem;
+}
+
+.pinnedPhoto {
+  position: relative;
+  margin: 2.5rem 0 0;
+  padding: 0 clamp(0rem, 3vw, 2.5rem) 1.5rem;
+}
+
+.writePhoto {
+  border: 2px solid var(--walnut);
+  background: var(--oat);
+  padding: 0.65rem;
+}
+
+.writePhoto .photoImage {
+  aspect-ratio: 16 / 9;
+}
+
+.writePhoto figcaption {
+  padding-inline: 0.2rem;
+}
+
+.photoPin {
+  position: absolute;
+  z-index: 2;
+  top: -0.75rem;
+  left: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--walnut);
+  border-radius: 50%;
+  background: var(--indigo);
+  transform: translateX(-50%);
+}
+
+.photoAction {
+  display: block;
+  margin: 0.75rem auto 0;
+  border-color: var(--walnut);
+}
+
+.writeActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.readerOwnerBar {
+  display: flex;
+  width: min(100%, 70ch);
+  justify-content: flex-start;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.readerStory {
+  width: min(100% - 2rem, 70ch);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 6rem) 0 clamp(3rem, 7vw, 7rem);
+}
+
+.readerStory > header {
+  margin-bottom: clamp(2.5rem, 5vw, 5rem);
+}
+
+.readerSection {
+  font-size: 0.78rem;
+}
+
+.readerStory h1 {
+  margin: 1rem 0 1.5rem;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+}
+
+.readerDek {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.8vw, 1.8rem);
+  font-weight: 550;
+  line-height: 1.35;
+}
+
+.readerPhoto {
+  margin-bottom: clamp(2.5rem, 5vw, 5rem);
+}
+
+.readerPhoto .photoImage {
+  aspect-ratio: 16 / 10;
+  border: 2px solid var(--walnut);
+}
+
+.readerCopy {
+  font-size: clamp(1.08rem, 1.7vw, 1.25rem);
+  line-height: 1.78;
+}
+
+.readerCopy p,
+.readerCopy blockquote {
+  margin: 0 0 1.55em;
+}
+
+.readerCopy p:first-child {
+  font-size: 1.18em;
+  font-weight: 550;
+}
+
+.readerCopy blockquote {
+  border-block: 2px dashed var(--thread);
+  padding: 1.3em 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.readerActionBar {
+  display: flex;
+  width: min(100%, 70ch);
+  justify-content: flex-end;
+  margin: 0 auto;
+  padding: 0 1rem 5rem;
+}
+
+@keyframes hearth-sew-in {
+  from {
+    stroke-dashoffset: 50.3;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (max-width: 64rem) {
+  .workroomHeader {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .deskMain {
+    grid-template-columns: 1fr;
+  }
+
+  .deskIntro {
+    width: min(100%, 42rem);
+  }
+
+  .swatchCard {
+    width: min(100%, 52rem);
+  }
+}
+
+@media (max-width: 44rem) {
+  .root {
+    min-height: 100dvh;
+  }
+
+  .workroomHeader {
+    padding: 1.25rem 1rem 0.75rem;
+  }
+
+  .journey ol::before {
+    right: 8%;
+    left: 8%;
+  }
+
+  .journey li {
+    grid-template-rows: 1.55rem auto minmax(3.75rem, auto);
+    padding-inline: 0.1rem;
+  }
+
+  .stitch {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .stationLabel {
+    max-width: 4.5rem;
+  }
+
+  .stateSentence {
+    max-width: 6.75rem;
+  }
+
+  .deskMain {
+    gap: 3rem;
+    padding: 3.25rem 1rem 5rem;
+  }
+
+  .deskIntro h1 {
+    font-size: clamp(2.8rem, 14vw, 4.8rem);
+  }
+
+  .swatchCard {
+    display: block;
+  }
+
+  .deskPhoto {
+    border-right: 0;
+    border-bottom: 2px solid var(--walnut);
+  }
+
+  .deskPhoto .photoImage {
+    min-height: 19rem;
+    aspect-ratio: 4 / 3;
+  }
+
+  .swatchCard > .threadRule {
+    margin-top: 0;
+  }
+
+  .swatchActions {
+    grid-template-columns: 1fr;
+  }
+
+  .swatchActions button + button {
+    border-top: 2px solid var(--walnut);
+    border-left: 0;
+  }
+
+  .writeMain {
+    padding: 2.25rem 1rem 5rem;
+  }
+
+  .writeHeading h1 {
+    font-size: clamp(2.7rem, 13vw, 4.6rem);
+  }
+
+  .writingSurface {
+    padding: 1.25rem;
+  }
+
+  .pinnedPhoto {
+    padding-inline: 0;
+  }
+
+  .figure figcaption {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .writeActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .writeActions button,
+  .readerActionBar button {
+    width: 100%;
+  }
+
+  .readerOwnerBar,
+  .readerActionBar {
+    padding-inline: 1rem;
+  }
+
+  .readerStory h1 {
+    font-size: clamp(3rem, 15vw, 5.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitchThread[data-current='true'] {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

@@ -4,6 +4,7 @@ import { ContactDesk, ContactReader, ContactWrite } from './directions/contact'
 import { FolioDesk, FolioReader, FolioWrite } from './directions/folio'
 import { fullbleedDirection } from './directions/fullbleed'
 import { HaloDesk, HaloReader, HaloWrite } from './directions/halo'
+import { hearthDirection } from './directions/hearth'
 import { spreadDirection } from './directions/spread'
 
 export const designLabRegistry = createDesignLabRegistry([
@@ -53,4 +54,5 @@ export const designLabRegistry = createDesignLabRegistry([
   ...archiveDesignLabDirections,
   fullbleedDirection,
   spreadDirection,
+  hearthDirection,
 ])
