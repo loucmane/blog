@@ -26,6 +26,7 @@ const designDirections = [
   'hearth',
   'vitrine',
   'pulse',
+  'ledger',
 ] as const
 const indexDirectionOrder = [
   'blue-pencil',
@@ -47,6 +48,7 @@ const indexDirectionOrder = [
   'hearth',
   'vitrine',
   'pulse',
+  'ledger',
 ] as const
 
 async function authenticate(context: BrowserContext) {
@@ -340,7 +342,9 @@ test('shares one private publishing journey across every design direction', asyn
               ? page.getByText('Published', { exact: true })
               : direction === 'pulse'
                 ? page.getByText('Published', { exact: true })
-                : page.getByText('Live reader story'),
+                : direction === 'ledger'
+                  ? page.getByTestId('ledger-lifecycle-copy')
+                  : page.getByText('Live reader story'),
     ).toBeVisible()
     if (direction === 'fullbleed') {
       await expect(

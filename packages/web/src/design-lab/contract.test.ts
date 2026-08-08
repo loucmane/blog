@@ -5,6 +5,7 @@ vi.mock('next/font/google', () => ({
   Archivo_Black: () => ({ variable: 'spread-display-font' }),
   Archivo_Narrow: () => ({ variable: 'spread-text-font' }),
   IBM_Plex_Mono: () => ({ variable: 'pulse-stamp-font' }),
+  IBM_Plex_Sans: () => ({ variable: 'ledger-text-font' }),
   Montserrat: () => ({ variable: 'vitrine-display-font' }),
   Newsreader: () => ({ variable: 'vitrine-text-font' }),
   Nunito_Sans: () => ({ variable: 'hearth-font' }),
@@ -60,8 +61,9 @@ describe('design-lab direction contract', () => {
       'hearth',
       'vitrine',
       'pulse',
+      'ledger',
     ])
-    expect(designLabRegistry.list()).toHaveLength(19)
+    expect(designLabRegistry.list()).toHaveLength(20)
   })
 
   it('groups the complete bakeoff history without losing any required view', () => {
