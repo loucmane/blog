@@ -1,4 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('next/font/google', () => ({
+  Archivo_Black: () => ({ variable: 'spread-display-font' }),
+  Archivo_Narrow: () => ({ variable: 'spread-text-font' }),
+}))
 
 import { createDesignLabRegistry, defineDesignLabDirection } from './contract'
 import { designLabRegistry } from './registry'
@@ -45,8 +50,9 @@ describe('design-lab direction contract', () => {
       'cutline',
       'edition-os',
       'fullbleed',
+      'spread',
     ])
-    expect(designLabRegistry.list()).toHaveLength(15)
+    expect(designLabRegistry.list()).toHaveLength(16)
   })
 
   it('groups the complete bakeoff history without losing any required view', () => {
@@ -57,6 +63,7 @@ describe('design-lab direction contract', () => {
         'Round 3 · Refined Instruments',
         'Round 4 · Finalists',
         'Round 5 · New concepts',
+        'Round 6 · Client set',
       ]),
     )
     for (const direction of designLabRegistry.list()) {

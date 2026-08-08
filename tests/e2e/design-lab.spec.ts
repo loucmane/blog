@@ -22,6 +22,7 @@ const designDirections = [
   'cutline',
   'edition-os',
   'fullbleed',
+  'spread',
 ] as const
 const indexDirectionOrder = [
   'blue-pencil',
@@ -39,6 +40,7 @@ const indexDirectionOrder = [
   'contact',
   'halo',
   'fullbleed',
+  'spread',
 ] as const
 
 async function authenticate(context: BrowserContext) {
@@ -324,7 +326,9 @@ test('shares one private publishing journey across every design direction', asyn
     await expect(
       direction === 'fullbleed'
         ? page.getByText(/^Published /)
-        : page.getByText('Live reader story'),
+        : direction === 'spread'
+          ? page.getByText('Published', { exact: true })
+          : page.getByText('Live reader story'),
     ).toBeVisible()
     if (direction === 'fullbleed') {
       await expect(
@@ -344,6 +348,8 @@ test('shares one private publishing journey across every design direction', asyn
   }
   expect(directionViolations).toEqual([])
 
+  await page.getByLabel('Visual direction').selectOption('fullbleed')
+  await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible()
   await activateControl(page, page.getByRole('button', { name: 'write', exact: true }), touch)
   await activateControl(page, page.getByRole('button', { name: 'Review publication' }), touch)
   await page.getByLabel('Reason for the editorial record').fill('Lifecycle canary')
