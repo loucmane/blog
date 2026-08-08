@@ -5,6 +5,7 @@ import { FolioDesk, FolioReader, FolioWrite } from './directions/folio'
 import { fullbleedDirection } from './directions/fullbleed'
 import { HaloDesk, HaloReader, HaloWrite } from './directions/halo'
 import { hearthDirection } from './directions/hearth'
+import { pulseDirection } from './directions/pulse'
 import { spreadDirection } from './directions/spread'
 import { vitrineDirection } from './directions/vitrine'
 
@@ -57,4 +58,5 @@ export const designLabRegistry = createDesignLabRegistry([
   spreadDirection,
   hearthDirection,
   vitrineDirection,
+  pulseDirection,
 ])

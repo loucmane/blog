@@ -25,6 +25,7 @@ const designDirections = [
   'spread',
   'hearth',
   'vitrine',
+  'pulse',
 ] as const
 const indexDirectionOrder = [
   'blue-pencil',
@@ -45,6 +46,7 @@ const indexDirectionOrder = [
   'spread',
   'hearth',
   'vitrine',
+  'pulse',
 ] as const
 
 async function authenticate(context: BrowserContext) {
@@ -336,7 +338,9 @@ test('shares one private publishing journey across every design direction', asyn
             ? page.getByText('Published — readers can see this', { exact: true })
             : direction === 'vitrine'
               ? page.getByText('Published', { exact: true })
-              : page.getByText('Live reader story'),
+              : direction === 'pulse'
+                ? page.getByText('Published', { exact: true })
+                : page.getByText('Live reader story'),
     ).toBeVisible()
     if (direction === 'fullbleed') {
       await expect(
