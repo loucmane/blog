@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('next/font/google', () => ({
   Archivo_Black: () => ({ variable: 'spread-display-font' }),
   Archivo_Narrow: () => ({ variable: 'spread-text-font' }),
+  Montserrat: () => ({ variable: 'vitrine-display-font' }),
+  Newsreader: () => ({ variable: 'vitrine-text-font' }),
   Nunito_Sans: () => ({ variable: 'hearth-font' }),
 }))
 
@@ -53,8 +55,9 @@ describe('design-lab direction contract', () => {
       'fullbleed',
       'spread',
       'hearth',
+      'vitrine',
     ])
-    expect(designLabRegistry.list()).toHaveLength(17)
+    expect(designLabRegistry.list()).toHaveLength(18)
   })
 
   it('groups the complete bakeoff history without losing any required view', () => {

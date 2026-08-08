@@ -6,6 +6,7 @@ import { fullbleedDirection } from './directions/fullbleed'
 import { HaloDesk, HaloReader, HaloWrite } from './directions/halo'
 import { hearthDirection } from './directions/hearth'
 import { spreadDirection } from './directions/spread'
+import { vitrineDirection } from './directions/vitrine'
 
 export const designLabRegistry = createDesignLabRegistry([
   defineDesignLabDirection({
@@ -55,4 +56,5 @@ export const designLabRegistry = createDesignLabRegistry([
   fullbleedDirection,
   spreadDirection,
   hearthDirection,
+  vitrineDirection,
 ])
