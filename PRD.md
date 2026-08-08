@@ -1,15 +1,24 @@
 ---
 schema: gc.build.requirements.v1
 workflow:
-  id: blog-t0v
-  formula: planning-base
+  id: blog-gwe
+  formula: gct-project-planning
 methodology:
   pack: planning-base
   name: planning-base-requirements
 producer:
-  formula: planning-base
+  formula: gct-project-planning
   stage: requirements
   attempt: 1
+lineage:
+  supersedes_workflow: blog-t0v
+  preserved_at_commit: eb0b1ae
+  reverified_at_commit: 7d8b8f4
+  note: >-
+    Content carried forward unchanged from the draft preserved at eb0b1ae. The prior workflow was
+    retired for workflow-infrastructure reasons (catalog guard and public planning entrypoint), not
+    for defects in this artifact. All five trace.upstream hashes were re-verified against the
+    working tree at 7d8b8f4 on 2026-08-04 and are unchanged.
 status: draft
 title: Phase 5 Publishing and Distribution Foundation
 scope: repository root requirements artifact derived from the frozen canonical PRD
