@@ -43,10 +43,14 @@ managed historical block above.
   acceptance. Gas City is the delegated execution layer.
 - Consult the native skills `gc-city`, `gc-rigs`, `gc-agents`, `gc-work`, and
   `gc-dispatch`, then use the project-local `gas-city-coordinator` skill.
-- The registered rig is `blog`. Invoke the absolute native client at
-  `/home/loucmane/gascity/bin/gc` with isolated
-  `GC_HOME=/home/loucmane/gascity/home` and explicit `--rig blog` routing for
-  Beads operations.
+- The registered rig is `blog`. Operator/coordinator host probes use the
+  isolated `GC_HOME=/home/loucmane/gascity/home` context and explicit
+  `--city`/`--rig blog` routing.
+- Managed worker sessions already inherit the isolated `GC_HOME`. Their native
+  commands must start with the bare absolute executable path
+  `/home/loucmane/gascity/bin/gc` or `/home/loucmane/gascity/bin/bd` as
+  `argv[0]`; never prefix them with `/usr/bin/env`, `GC_HOME=...`, `PATH=...`,
+  or another assignment, alias, wrapper, variable, or substitution.
 - Never trust inherited `BEADS_*` variables and never use a cross-rig bare `bd`
   command. Every work bead receives a worklog.
 - Merge, publishing, destructive cleanup, credential actions, and authority
