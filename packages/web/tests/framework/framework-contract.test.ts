@@ -146,6 +146,9 @@ describe('Next and React migration contract', () => {
       '/preview/:path*',
       '/owner/:path*',
       '/api/owner/:path*',
+      '/',
+      '/stories/:slug',
+      '/sections/:slug',
     ])
     const ownerHeaders = headers?.filter(({ source }) => source.includes('owner')) ?? []
     expect(ownerHeaders).toHaveLength(2)
@@ -158,6 +161,40 @@ describe('Next and React migration contract', () => {
         ]),
       )
     }
+  })
+
+  it('keeps every response that could carry a Reader Lab override private and unindexed', async () => {
+    const headers = await nextConfig.headers?.()
+    const readerRoutes = ['/', '/stories/:slug', '/sections/:slug']
+    const labRules = headers?.filter(({ has }) => has !== undefined) ?? []
+
+    expect(labRules.map(({ source }) => source)).toEqual(readerRoutes)
+    for (const rule of labRules) {
+      expect(rule.has, rule.source).toEqual([{ key: 'reader_lab_direction', type: 'cookie' }])
+      expect(rule.missing, rule.source).toBeUndefined()
+      expect(rule.headers, rule.source).toEqual(
+        expect.arrayContaining([
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+        ]),
+      )
+    }
+    const unconditional = headers?.filter(({ has }) => has === undefined) ?? []
+    for (const route of readerRoutes) {
+      expect(unconditional.map(({ source }) => source)).not.toContain(route)
+    }
+  })
+
+  it('guards the Reader Lab page with the owner session before reading anything', () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/owner/(workspace)/reader-lab/page.tsx'),
+      'utf8',
+    )
+    const guard = source.indexOf('await requireOwnerPageSession()')
+
+    expect(guard).toBeGreaterThan(-1)
+    expect(guard).toBeLessThan(source.indexOf('loadHomeView('))
+    expect(guard).toBeLessThan(source.indexOf('await cookies()'))
   })
 
   it('keeps preview credentials slug-bound, purpose-separated, and body-bounded', () => {

@@ -23,7 +23,7 @@ export default async function OwnerWorkspaceLayout({
           </Link>
           <nav
             aria-label="Owner workspace"
-            className="flex items-center gap-2 text-sm font-semibold"
+            className="flex flex-wrap items-center gap-2 text-sm font-semibold"
           >
             <Link className="min-h-11 rounded-md px-3 py-3 hover:bg-muted" href="/owner">
               Stories
@@ -33,6 +33,9 @@ export default async function OwnerWorkspaceLayout({
               href="/owner/stories/new"
             >
               New story
+            </Link>
+            <Link className="min-h-11 rounded-md px-3 py-3 hover:bg-muted" href="/owner/reader-lab">
+              Reader Lab
             </Link>
             <Link className="min-h-11 rounded-md px-3 py-3 hover:bg-muted" href="/owner/account">
               Account

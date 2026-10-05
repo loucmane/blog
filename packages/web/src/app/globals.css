@@ -94,6 +94,11 @@
     color-scheme: dark;
   }
 
+  /* Keep focused and scrolled-to content clear of the owner's floating Reader Lab bar. */
+  html:has([data-reader-lab-bar]) {
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
   }
