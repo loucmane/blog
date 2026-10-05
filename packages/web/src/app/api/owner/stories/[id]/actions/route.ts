@@ -1,9 +1,11 @@
+import { expirePublicReader } from '@/reader/cache'
 import { InvalidContentTransitionError } from '@/server/content/errors'
 import { assertOwnerMutationRequest, readOwnerJson, withOwner } from '@/server/owner/api'
 import { ownerStoryActionSchema } from '@/server/owner/contracts'
 import { publicationReadiness } from '@/server/owner/document'
 import { getOwnerRuntime } from '@/server/owner/runtime'
 import { resolveScheduledPublication, validateTimeZone } from '@/server/owner/schedule'
+import type { OwnerSession } from '@/server/owner/session'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -30,84 +32,91 @@ async function requireReady(articleId: string, revisionId: string) {
   return workspace
 }
 
+async function applyStoryAction(request: Request, context: RouteContext, owner: OwnerSession) {
+  assertOwnerMutationRequest(request)
+  const { id } = await context.params
+  const input = await readOwnerJson(request, ownerStoryActionSchema)
+  const runtime = getOwnerRuntime()
+  switch (input.action) {
+    case 'publish':
+      await requireReady(id, input.revisionId)
+      return runtime.content.publish({
+        actorId: owner.id,
+        articleId: id,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+        revisionId: input.revisionId,
+      })
+    case 'schedule': {
+      await requireReady(id, input.revisionId)
+      const timeZone = validateTimeZone(input.timeZone)
+      return runtime.content.schedulePublication({
+        actorId: owner.id,
+        articleId: id,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+        revisionId: input.revisionId,
+        runAt: resolveScheduledPublication({
+          localDateTime: input.localDateTime,
+          timeZone,
+        }),
+        timeZone,
+      })
+    }
+    case 'cancel-schedule':
+      return runtime.content.cancelScheduledPublication({
+        actorId: owner.id,
+        articleId: id,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+      })
+    case 'unpublish':
+      return runtime.content.unpublish({
+        actorId: owner.id,
+        articleId: id,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+        reason: input.reason,
+      })
+    case 'delete':
+      return runtime.content.softDelete({
+        actorId: owner.id,
+        articleId: id,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+      })
+    case 'restore':
+      return runtime.content.restore({
+        actorId: owner.id,
+        articleId: id,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+      })
+    case 'restore-revision': {
+      const workspace = await runtime.workspace.loadStory(id)
+      const revision = workspace.revisions.find(
+        ({ id: revisionId }) => revisionId === input.revisionId,
+      )
+      if (!revision)
+        throw new InvalidContentTransitionError('That revision is no longer available.')
+      return runtime.content.saveDraft({
+        actorId: owner.id,
+        articleId: id,
+        dek: revision.dek ?? workspace.article.dek,
+        document: revision.document,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+        title: revision.title ?? revision.document.title ?? workspace.article.title,
+      })
+    }
+  }
+}
+
 export async function POST(request: Request, context: RouteContext) {
   return withOwner(request, async (owner) => {
-    assertOwnerMutationRequest(request)
-    const { id } = await context.params
-    const input = await readOwnerJson(request, ownerStoryActionSchema)
-    const runtime = getOwnerRuntime()
-    switch (input.action) {
-      case 'publish':
-        await requireReady(id, input.revisionId)
-        return runtime.content.publish({
-          actorId: owner.id,
-          articleId: id,
-          expectedVersion: input.expectedVersion,
-          idempotencyKey: input.idempotencyKey,
-          revisionId: input.revisionId,
-        })
-      case 'schedule': {
-        await requireReady(id, input.revisionId)
-        const timeZone = validateTimeZone(input.timeZone)
-        return runtime.content.schedulePublication({
-          actorId: owner.id,
-          articleId: id,
-          expectedVersion: input.expectedVersion,
-          idempotencyKey: input.idempotencyKey,
-          revisionId: input.revisionId,
-          runAt: resolveScheduledPublication({
-            localDateTime: input.localDateTime,
-            timeZone,
-          }),
-          timeZone,
-        })
-      }
-      case 'cancel-schedule':
-        return runtime.content.cancelScheduledPublication({
-          actorId: owner.id,
-          articleId: id,
-          expectedVersion: input.expectedVersion,
-          idempotencyKey: input.idempotencyKey,
-        })
-      case 'unpublish':
-        return runtime.content.unpublish({
-          actorId: owner.id,
-          articleId: id,
-          expectedVersion: input.expectedVersion,
-          idempotencyKey: input.idempotencyKey,
-          reason: input.reason,
-        })
-      case 'delete':
-        return runtime.content.softDelete({
-          actorId: owner.id,
-          articleId: id,
-          expectedVersion: input.expectedVersion,
-          idempotencyKey: input.idempotencyKey,
-        })
-      case 'restore':
-        return runtime.content.restore({
-          actorId: owner.id,
-          articleId: id,
-          expectedVersion: input.expectedVersion,
-          idempotencyKey: input.idempotencyKey,
-        })
-      case 'restore-revision': {
-        const workspace = await runtime.workspace.loadStory(id)
-        const revision = workspace.revisions.find(
-          ({ id: revisionId }) => revisionId === input.revisionId,
-        )
-        if (!revision)
-          throw new InvalidContentTransitionError('That revision is no longer available.')
-        return runtime.content.saveDraft({
-          actorId: owner.id,
-          articleId: id,
-          dek: revision.dek ?? workspace.article.dek,
-          document: revision.document,
-          expectedVersion: input.expectedVersion,
-          idempotencyKey: input.idempotencyKey,
-          title: revision.title ?? revision.document.title ?? workspace.article.title,
-        })
-      }
-    }
+    const result = await applyStoryAction(request, context, owner)
+    // Lifecycle actions change what readers may see, so cached reader views expire at once.
+    expirePublicReader()
+    return result
   })
 }

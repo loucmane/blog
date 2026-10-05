@@ -1,97 +1,107 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { connection } from 'next/server'
 
-import { listPublishedFrameworkStories } from '@/lib/framework-content'
 import { resolveCanonicalSiteUrl } from '@/lib/site-url'
-import { loadPublishedFrameworkStory } from '@/lib/story-cache'
+import { loadArticleView } from '@/reader/cache'
+import { ArticleBody } from '@/reader/components/article-body'
+import { ReaderFigure } from '@/reader/components/reader-image'
+import { SiteHeader } from '@/reader/components/site-header'
+import { formatPublishedDate, formatReadingTime } from '@/reader/format'
+import { normalizeReaderSlug } from '@/reader/slug'
 
 interface StoryPageProps {
   params: Promise<{ slug: string }>
 }
 
-export const revalidate = 3_600
-export const dynamicParams = true
-
-export function generateStaticParams() {
-  return listPublishedFrameworkStories().map(({ slug }) => ({ slug }))
+async function loadPublishedArticle(params: StoryPageProps['params']) {
+  await connection()
+  const slug = normalizeReaderSlug((await params).slug)
+  if (!slug) return null
+  const result = await loadArticleView(slug)
+  return result.status === 'ready' && result.view ? { ...result, view: result.view } : null
 }
 
 export async function generateMetadata({ params }: StoryPageProps): Promise<Metadata> {
-  const { slug } = await params
-  const story = await loadPublishedFrameworkStory(slug)
-  if (!story) {
-    return {}
-  }
-
-  const canonicalPath = `/stories/${story.slug}`
+  const article = await loadPublishedArticle(params)
+  if (!article) return {}
+  const { view } = article
   return {
     alternates: {
-      canonical: canonicalPath,
+      canonical: view.href,
     },
-    authors: [{ name: story.author }],
-    description: story.dek,
+    authors: view.authors.map((name) => ({ name })),
+    description: view.dek,
     openGraph: {
-      description: story.dek,
-      publishedTime: story.publishedAt ?? undefined,
-      title: story.title,
+      description: view.dek,
+      ...(view.hero
+        ? {
+            images: [
+              {
+                alt: view.hero.alt,
+                url: view.hero.src,
+                ...(view.hero.width !== null && view.hero.height !== null
+                  ? { height: view.hero.height, width: view.hero.width }
+                  : {}),
+              },
+            ],
+          }
+        : {}),
+      publishedTime: view.publishedAt,
+      title: view.title,
       type: 'article',
-      url: new URL(canonicalPath, resolveCanonicalSiteUrl()),
+      url: new URL(view.href, resolveCanonicalSiteUrl()),
     },
-    title: story.title,
+    title: view.title,
   }
 }
 
 export default async function StoryPage({ params }: StoryPageProps) {
-  const { slug } = await params
-  const story = await loadPublishedFrameworkStory(slug)
-  if (!story || !story.publishedAt) {
-    notFound()
-  }
+  const article = await loadPublishedArticle(params)
+  if (!article) notFound()
+  const { cacheGeneration, view } = article
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <article
-        className="container mx-auto max-w-4xl px-4 py-12"
-        data-framework-cache-generation={story.cacheGeneration}
-      >
-        <Link className="text-sm font-semibold text-primary hover:underline" href="/">
-          ← Magazine home
-        </Link>
-        <header className="py-10">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-            {story.section}
-          </p>
-          <h1 className="mb-5 text-4xl font-bold text-primary md:text-6xl">{story.title}</h1>
-          <p className="mb-5 text-xl text-muted-foreground">{story.dek}</p>
-          <p className="text-sm text-muted-foreground">
-            By {story.author} ·{' '}
-            <time dateTime={story.publishedAt}>
-              {new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(
-                new Date(story.publishedAt),
-              )}
-            </time>{' '}
-            · {story.readingMinutes} min read
-          </p>
-        </header>
+    <div className="min-h-screen bg-background text-foreground">
+      <SiteHeader navigation={view.navigation} />
+      <main className="container mx-auto px-4 py-10">
+        <article className="mx-auto max-w-4xl" data-reader-cache-generation={cacheGeneration}>
+          <header className="mb-10 flex max-w-3xl flex-col gap-4">
+            {view.section ? (
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">
+                <Link className="underline-offset-4 hover:underline" href={view.section.href}>
+                  {view.section.name}
+                </Link>
+              </p>
+            ) : null}
+            <h1 className="text-4xl font-semibold break-words md:text-6xl">{view.title}</h1>
+            {view.dek ? <p className="text-xl text-muted-foreground">{view.dek}</p> : null}
+            <p className="text-sm text-muted-foreground">
+              {view.authors.length > 0 ? <>By {view.authors.join(', ')} · </> : null}
+              <time dateTime={view.publishedAt}>
+                {formatPublishedDate(view.publishedAt)}
+              </time> · {formatReadingTime(view.readingMinutes)}
+            </p>
+          </header>
 
-        <Image
-          alt={story.cover.alt}
-          className="h-auto w-full rounded-lg border border-border bg-muted"
-          height={story.cover.height}
-          priority
-          sizes="(min-width: 896px) 864px, 100vw"
-          src={story.cover.src}
-          width={story.cover.width}
-        />
+          {view.hero ? (
+            <div className="mb-10">
+              <ReaderFigure
+                captionClassName="mt-3 text-sm text-muted-foreground"
+                className="rounded-lg"
+                image={view.hero}
+                preload
+                sizes="(min-width: 896px) 56rem, 100vw"
+              />
+            </div>
+          ) : null}
 
-        <div className="mx-auto max-w-2xl space-y-6 py-10 text-lg leading-8">
-          {story.body.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
-      </article>
-    </main>
+          <div className="prose prose-lg max-w-2xl dark:prose-invert prose-figcaption:text-muted-foreground prose-pre:break-words prose-pre:whitespace-pre-wrap">
+            <ArticleBody blocks={view.body} />
+          </div>
+        </article>
+      </main>
+    </div>
   )
 }

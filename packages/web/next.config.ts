@@ -94,6 +94,9 @@ const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: false,
     formats: ['image/avif', 'image/webp'],
+    // Only static images may be optimized. The optimizer keeps serving cached copies after their
+    // source is gone, so public media (`/api/media/*`) must never pass through it.
+    localPatterns: [{ pathname: '/images/**', search: '' }],
     minimumCacheTTL: 86_400,
   },
   poweredByHeader: false,

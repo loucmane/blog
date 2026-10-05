@@ -6,6 +6,12 @@ import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3'
 import { Pool } from 'pg'
 import { describe, expect, it } from 'vitest'
 
+import {
+  readArticleView,
+  readHomeView,
+  readPublicMediaIds,
+  readSectionView,
+} from '../../reader/read-model'
 import { verifyRestoredContent } from '../content/backup'
 import {
   CURRENT_CONTENT_DOCUMENT_VERSION,
@@ -16,7 +22,10 @@ import { MediaOriginalService } from '../content/media'
 import { ContentConflictError } from '../content/errors'
 import { createPortableContentBundle, verifyPortableMedia } from '../content/portability'
 import type { Clock, IdentifierSource } from '../content/ports'
+import { SectionService } from '../content/sections'
 import { ContentService } from '../content/service'
+import { labImages } from '../lab/north-house'
+import { seedLabContent } from '../lab/seed'
 import { applyContentMigrations, readContentMigrations } from './migrations'
 import { PostgresContentRepository } from './postgres-content-repository'
 import { PostgresSearchProjection } from './postgres-search-projection'
@@ -398,5 +407,80 @@ describe('PostgreSQL and media persistence integration', () => {
     await pool.end()
     primaryClient.destroy()
     restoreClient.destroy()
+  }, 120_000)
+
+  it('serves public reader views and the Reader Lab seed from PostgreSQL and S3', async () => {
+    const pool = new Pool({ connectionString: databaseUrl, max: 2 })
+    const repository = new PostgresContentRepository(pool)
+    const source = { mediaAvailable: true, repository }
+    const clockAt = (isoTimestamp: string): Clock => ({ now: () => new Date(isoTimestamp) })
+    const sections = new SectionService(repository, clock)
+    const interiors = await sections.ensureSection({ name: 'Interiors', slug: 'reader-interiors' })
+    const publishStory = async (slug: string, publishedAt: string) => {
+      const service = new ContentService(repository, clockAt(publishedAt))
+      const articleId = `article-${slug}`
+      const created = await service.createArticle({
+        dek: `Summary of ${slug}`,
+        document: { ...document(articleId), title: `Title of ${slug}` },
+        id: articleId,
+        idempotencyKey: `create-${slug}`,
+        slug,
+        title: `Title of ${slug}`,
+      })
+      await sections.assignSection({ articleId, sectionId: interiors.id })
+      const published = await service.publish({
+        articleId,
+        expectedVersion: created.article.version,
+        idempotencyKey: `publish-${slug}`,
+        revisionId: created.revision.id,
+      })
+      return { published, service }
+    }
+    await publishStory('reader-older-story', '2026-08-01T07:00:00.000Z')
+    const newer = await publishStory('reader-newer-story', '2026-08-02T07:00:00.000Z')
+
+    const home = await readHomeView(source)
+    const homeSlugs = [home.lead, ...home.recent].flatMap((card) => (card ? [card.slug] : []))
+    expect(homeSlugs.indexOf('reader-newer-story')).toBeGreaterThanOrEqual(0)
+    expect(homeSlugs.indexOf('reader-newer-story')).toBeLessThan(
+      homeSlugs.indexOf('reader-older-story'),
+    )
+    expect(await readArticleView(source, 'reader-newer-story')).toMatchObject({
+      publishedAt: '2026-08-02T07:00:00.000Z',
+      section: { name: 'Interiors', slug: 'reader-interiors' },
+      title: 'Title of reader-newer-story',
+    })
+    expect(
+      (await readSectionView(source, 'reader-interiors'))?.stories.map(({ slug }) => slug),
+    ).toEqual(['reader-newer-story', 'reader-older-story'])
+
+    await newer.service.unpublish({
+      articleId: newer.published.article.id,
+      expectedVersion: newer.published.article.version,
+      idempotencyKey: 'unpublish-reader-newer-story',
+      reason: 'Integration check',
+    })
+    expect(await readArticleView(source, 'reader-newer-story')).toBeNull()
+    expect(
+      (await readSectionView(source, 'reader-interiors'))?.stories.map(({ slug }) => slug),
+    ).toEqual(['reader-older-story'])
+
+    const mediaClient = s3(primaryS3Endpoint)
+    const labBucket = 'reader-lab-media'
+    await mediaClient.send(new CreateBucketCommand({ Bucket: labBucket }))
+    const target = { objects: new S3OriginalObjectStore(mediaClient, labBucket), repository }
+    const seeded = await seedLabContent(target)
+    expect(seeded.stories.created).toHaveLength(8)
+    expect(seeded.images.created).toEqual(labImages.map(({ id }) => id))
+    expect((await readHomeView(source)).lead?.title).toBe('The quiet architecture of winter light')
+    expect(await readPublicMediaIds(source)).toEqual(
+      expect.arrayContaining(labImages.map(({ id }) => id)),
+    )
+    const reseeded = await seedLabContent(target)
+    expect(reseeded.stories.created).toEqual([])
+    expect(reseeded.images.created).toEqual([])
+
+    mediaClient.destroy()
+    await pool.end()
   }, 120_000)
 })

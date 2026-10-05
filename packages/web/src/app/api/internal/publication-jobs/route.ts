@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 
 import { readBearerToken, secureTokenMatches } from '@/lib/request-security'
+import { expirePublicReader } from '@/reader/cache'
 import {
   resolveOwnerFixtureConfiguration,
   resolvePublicationWorkerToken,
@@ -34,6 +35,8 @@ export async function POST(request: Request) {
     ...(requestedEvaluationTime ? { evaluationTime: requestedEvaluationTime } : {}),
     workerId: `publication-worker-${randomUUID()}`,
   })
+  // A completed scheduled publication changes what readers see.
+  if (report.processed > 0) expirePublicReader()
   return NextResponse.json(report, {
     headers: { 'cache-control': 'private, no-store' },
   })
