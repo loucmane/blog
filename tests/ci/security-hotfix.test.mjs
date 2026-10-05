@@ -3,7 +3,11 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import test from 'node:test'
 
-import { evaluateAudit, summarizeAudit } from '../../scripts/ci/check-dependency-security.mjs'
+import {
+  evaluateAudit,
+  fetchPublishedVersions,
+  summarizeAudit,
+} from '../../scripts/ci/check-dependency-security.mjs'
 import { validateHtmlResponse } from '../../scripts/ci/web-production-smoke.mjs'
 
 function auditPayload(vulnerabilities, advisories = {}) {
@@ -90,12 +94,19 @@ function bracesAudit({
   })
 }
 
+// Registry stand-in: no braces release lies above the advisory's <=3.0.3 bound.
+const bracesReleases = ['1.8.5', '2.3.2', '3.0.0', '3.0.1', '3.0.2', '3.0.3']
+
 function evaluateWithExceptions(
   payload,
-  { exceptions = [bracesException()], now = auditDate } = {},
+  {
+    exceptions = [bracesException()],
+    now = auditDate,
+    publishedVersions = () => bracesReleases,
+  } = {},
 ) {
   const auditExitCode = Object.keys(payload.advisories).length > 0 ? 1 : 0
-  return evaluateAudit(payload, auditExitCode, { exceptions, now })
+  return evaluateAudit(payload, auditExitCode, { exceptions, now, publishedVersions })
 }
 
 test('dependency exceptions pass only an approved advisory and keep it visible', () => {
@@ -174,33 +185,141 @@ test('dependency exceptions fail on a version that is not listed', () => {
   assert.match(report.errors.join('\n'), /braces@3\.0\.2 is not a listed version/)
 })
 
-test('dependency exceptions fail once the advisory reports a patched release', () => {
-  const missingPatch = bracesAudit()
-  delete missingPatch.advisories[1240992].patched_versions
-  for (const payload of [
-    missingPatch,
-    bracesAudit({ patched: '<0.0.0' }),
-    bracesAudit({ patched: '' }),
-    bracesAudit({ patched: null }),
+test('dependency exceptions fail once a release above the vulnerable range is published', () => {
+  const lookups = []
+  const unpatched = evaluateWithExceptions(bracesAudit(), {
+    publishedVersions: (module) => {
+      lookups.push(module)
+      return bracesReleases
+    },
+  })
+  assert.equal(unpatched.status, 'passed')
+  assert.deepEqual(lookups, ['braces'])
+
+  // The advisory still reads <=3.0.3 after a fix ships, so only the registry shows the fix.
+  const fixed = evaluateWithExceptions(bracesAudit(), {
+    publishedVersions: () => [...bracesReleases, '3.0.4'],
+  })
+  assert.equal(fixed.status, 'failed')
+  assert.deepEqual(fixed.excepted, [])
+  assert.match(
+    fixed.errors.join('\n'),
+    /braces 3\.0\.4 is published outside the vulnerable range <=3\.0\.3; upgrade instead/,
+  )
+
+  for (const [published, message] of [
+    [['4.0.0'], /braces 4\.0\.0 is published outside/],
+    [['4.0.0', '3.0.5', '3.0.4'], /braces 3\.0\.4 is published outside/],
+    [[...bracesReleases, '3.0.4+build-1'], /braces 3\.0\.4\+build-1 is published outside/],
   ]) {
-    assert.equal(evaluateWithExceptions(payload).status, 'passed')
+    const report = evaluateWithExceptions(bracesAudit(), { publishedVersions: () => published })
+    assert.equal(report.status, 'failed', published.join(' '))
+    assert.match(report.errors.join('\n'), message)
   }
 
-  const fixedRelease = evaluateWithExceptions(bracesAudit({ vulnerable: '<3.0.4' }))
-  assert.equal(fixedRelease.status, 'failed')
-  assert.match(fixedRelease.errors.join('\n'), /reports patched versions >=3\.0\.4/)
+  for (const published of [['3.0.4-beta.1'], [...bracesReleases, '3.0.4-beta.1', '4.0.0-rc.0']]) {
+    const report = evaluateWithExceptions(bracesAudit(), { publishedVersions: () => published })
+    assert.equal(report.status, 'passed', published.join(' '))
+  }
+})
 
-  const otherRange = evaluateWithExceptions(bracesAudit({ patched: '>=4.0.0' }))
-  assert.equal(otherRange.status, 'failed')
-  assert.match(otherRange.errors.join('\n'), /reports patched versions >=4\.0\.0/)
+test('dependency exceptions fail closed when the registry lookup fails', () => {
+  const unreachable = () => {
+    throw new Error('registry unreachable')
+  }
+  for (const [publishedVersions, message] of [
+    [unreachable, /: registry unreachable/],
+    [() => [], /: the registry returned no versions/],
+    [() => '3.0.3', /: the registry returned no versions/],
+    [() => [...bracesReleases, 'latest'], /: the registry listed an unreadable version "latest"/],
+    [() => [3], /: the registry listed an unreadable version 3/],
+  ]) {
+    const report = evaluateWithExceptions(bracesAudit(), { publishedVersions })
+    assert.equal(report.status, 'failed')
+    assert.deepEqual(report.excepted, [])
+    assert.match(report.errors.join('\n'), /cannot confirm that no patched braces release exists/)
+    assert.match(report.errors.join('\n'), message)
+  }
 
-  const listedPatch = evaluateWithExceptions(bracesAudit(), {
-    exceptions: [bracesException({ versions: ['3.0.3', '3.0.4'] })],
+  const unwired = evaluateAudit(bracesAudit(), 1, {
+    exceptions: [bracesException()],
+    now: auditDate,
   })
-  assert.equal(listedPatch.status, 'failed')
+  assert.equal(unwired.status, 'failed')
+  assert.match(unwired.errors.join('\n'), /no published-version lookup was provided/)
+  assert.throws(
+    () => evaluateAudit(bracesAudit(), 1, { publishedVersions: bracesReleases }),
+    /publishedVersions/,
+  )
+})
+
+test('dependency exceptions fail closed on a vulnerable range without one upper bound', () => {
+  const missingRange = bracesAudit()
+  delete missingRange.advisories[1240992].vulnerable_versions
+  const unbounded = ['', '*', '>=3.0.0', '3.0.x', '<=3.0.3-beta', '<1.8.6 || >=2.0.0 <=3.0.3']
+  const payloads = [missingRange, ...unbounded.map((vulnerable) => bracesAudit({ vulnerable }))]
+  for (const payload of payloads) {
+    const report = evaluateWithExceptions(payload)
+    const vulnerable = payload.advisories[1240992].vulnerable_versions
+    assert.equal(report.status, 'failed', `vulnerable range ${JSON.stringify(vulnerable)}`)
+    assert.match(report.errors.join('\n'), /cannot confirm that no patched braces release exists/)
+    assert.match(report.errors.join('\n'), /has no single x\.y\.z upper bound/)
+  }
+
+  for (const [vulnerable, published, status] of [
+    ['>=3.0.0 <=3.0.3', bracesReleases, 'passed'],
+    ['>= 3.0.0 < 3.0.4', bracesReleases, 'passed'],
+    ['<3.0.4', [...bracesReleases, '3.0.4'], 'failed'],
+  ]) {
+    const report = evaluateWithExceptions(bracesAudit({ vulnerable }), {
+      publishedVersions: () => published,
+    })
+    assert.equal(report.status, status, vulnerable)
+  }
+})
+
+test('the registry lookup reads pnpm view and rejects an unusable answer', () => {
+  const calls = []
+  const versions = fetchPublishedVersions('braces', (command, args, options) => {
+    calls.push([command, args, options.encoding])
+    return { status: 0, stderr: '', stdout: '["3.0.2","3.0.3"]\n' }
+  })
+  assert.deepEqual(versions, ['3.0.2', '3.0.3'])
+  assert.deepEqual(calls, [['pnpm', ['view', 'braces', 'versions', '--json'], 'utf8']])
+
+  // npm-style view prints a bare string for a package with a single version.
+  const single = () => ({ status: 0, stderr: '', stdout: '"1.0.0"\n' })
+  assert.deepEqual(fetchPublishedVersions('solo', single), ['1.0.0'])
+
+  for (const [result, message] of [
+    [{ error: new Error('spawnSync pnpm ENOENT') }, /spawnSync pnpm ENOENT/],
+    [{ status: 1, stderr: 'ERR_PNPM_FETCH_404\n', stdout: '' }, /exited 1: ERR_PNPM_FETCH_404$/],
+    [{ status: null, stderr: '', stdout: '' }, /exited null/],
+    [{ status: 0, stderr: '', stdout: 'not json' }, /did not return JSON/],
+  ]) {
+    assert.throws(() => fetchPublishedVersions('braces', () => result), message)
+  }
+
+  // pnpm 11 `view --json` prints its own errors as JSON on stdout, as seen offline.
+  const fetchFailure = {
+    error: {
+      code: 'ERR_PNPM_META_FETCH_FAIL',
+      message: 'GET https://registry.npmjs.org/braces: fetch failed',
+    },
+  }
+  const offline = () => ({
+    status: 1,
+    stderr: '',
+    stdout: `${JSON.stringify(fetchFailure, null, 2)}\n`,
+  })
+  const report = evaluateWithExceptions(bracesAudit(), {
+    publishedVersions: (module) => fetchPublishedVersions(module, offline),
+  })
+  assert.equal(report.status, 'failed')
+  assert.match(report.errors.join('\n'), /cannot confirm that no patched braces release exists/)
   assert.match(
-    listedPatch.errors.join('\n'),
-    /listed version 3\.0\.4 satisfies the patched range >=3\.0\.4/,
+    report.errors.join('\n'),
+    /pnpm view braces versions exited 1: \{ "error": \{ "code": "ERR_PNPM_META_FETCH_FAIL"/,
   )
 })
 
@@ -275,7 +394,14 @@ test('security-patched direct and transitive versions remain pinned', () => {
   assert.equal(webPackage.devDependencies.postcss, '8.5.23')
   assert.match(workspace, /'sharp@0\.35\.4': true/)
   assert.match(workspace, /'baseline-browser-mapping@>=2\.0\.0 <2\.11\.0': 2\.11\.0/)
-  assert.match(workspace, /'brace-expansion@>=4\.0\.0 <5\.0\.12': 5\.0\.12/)
+  // One floor per major line: the highest patched version across GHSA-q2hr-2g5m-vwhr,
+  // GHSA-qhr7-859c-m2p7, and GHSA-6j4f-fj2g-mc7p.
+  assert.deepEqual(workspace.match(/^ {2}'brace-expansion@.+$/gm), [
+    "  'brace-expansion@>=1.0.0 <1.1.21': 1.1.21",
+    "  'brace-expansion@>=2.0.0 <2.1.7': 2.1.7",
+    "  'brace-expansion@>=3.0.0 <3.0.9': 3.0.9",
+    "  'brace-expansion@>=4.0.0 <5.0.12': 5.0.12",
+  ])
   assert.match(workspace, /'browserslist@>=4\.0\.0 <4\.28\.7': 4\.28\.7/)
   assert.match(workspace, /'nanoid@>=3\.0\.0 <3\.3\.18': 3\.3\.18/)
   assert.match(workspace, /'next@16\.3\.8>postcss': 8\.5\.23/)

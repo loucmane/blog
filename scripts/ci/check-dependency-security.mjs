@@ -18,6 +18,8 @@ const exceptionFields = [
 const maxExceptions = 3
 // pnpm stops recording paths for a finding at 100 (MAX_PATHS_PER_FINDING).
 const pnpmPathLimit = 100
+// A registry version: x.y.z, an optional prerelease after "-", optional build metadata after "+".
+const publishedVersionPattern = /^(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/
 
 export function summarizeAudit(payload) {
   const sourceCounts = payload?.metadata?.vulnerabilities
@@ -140,29 +142,68 @@ function exceptionListErrors(exceptions, now) {
   return errors
 }
 
-// pnpm 11 infers patched_versions from vulnerable_versions; it does not report a release.
-// A `<=x.y.z` bound names the last affected version, which is how an advisory with no
-// patched release reads, so the `>=x.y.(z+1)` that pnpm infers from it is not a known fix.
-function patchedReleaseProblem(advisory, versions) {
-  const patched = String(advisory.patched_versions ?? '').trim()
-  if (patched === '' || patched === '<0.0.0') return null
-
-  const vulnerable = String(advisory.vulnerable_versions ?? '').trim()
-  const lastAffected = vulnerable.match(/(?:^|\s)<=\s*(\d+)\.(\d+)\.(\d+)$/)
-  const [major, minor, patch] = lastAffected ? lastAffected.slice(1).map(Number) : []
-  if (!lastAffected || patched !== `>=${major}.${minor}.${patch + 1}`) {
-    return `the advisory reports patched versions ${patched} (vulnerable ${vulnerable}); upgrade`
-  }
-  const patchedListing = versions.find(version => {
-    const [listedMajor, listedMinor, listedPatch] = version.split('.').map(Number)
-    return (listedMajor - major || listedMinor - minor || listedPatch - patch) > 0
-  })
-  return patchedListing
-    ? `listed version ${patchedListing} satisfies the patched range ${patched}`
-    : null
+// The vulnerable range must be one comparator set with a single x.y.z upper bound, such as
+// "<=3.0.3" or ">=2.0.0 <2.0.3". Any other shape cannot bound a fix, so it yields null.
+function vulnerableUpperBound(range) {
+  const comparators = String(range ?? '')
+    .trim()
+    .replace(/([<>]=?)\s+/g, '$1')
+    .split(/\s+/)
+    .map(comparator => comparator.match(/^([<>]=?)(\d+)\.(\d+)\.(\d+)$/))
+  const upper = comparators.filter(comparator => comparator?.[1].startsWith('<'))
+  if (comparators.includes(null) || upper.length !== 1) return null
+  const [, operator, ...version] = upper[0]
+  return { inclusive: operator === '<=', version: version.map(Number) }
 }
 
-function exceptionViolations(advisory, exception) {
+function compareVersions(left, right) {
+  return left[0] - right[0] || left[1] - right[1] || left[2] - right[2]
+}
+
+// Advisory text does not change when a fix ships, and pnpm 11 infers patched_versions from
+// vulnerable_versions, so neither proves that no fix exists. The registry does: no published
+// release (prereleases aside) may lie above the advisory's vulnerable range.
+function publishedReleaseProblem(advisory, moduleName, publishedVersions) {
+  const unconfirmed = `cannot confirm that no patched ${moduleName} release exists`
+  const range = advisory.vulnerable_versions
+  const bound = vulnerableUpperBound(range)
+  if (!bound) {
+    const shown = JSON.stringify(range)
+    return `${unconfirmed}: vulnerable range ${shown} has no single x.y.z upper bound`
+  }
+
+  let versions
+  try {
+    versions = publishedVersions(moduleName)
+  } catch (error) {
+    return `${unconfirmed}: ${error?.message ?? error}`
+  }
+  if (!Array.isArray(versions) || versions.length === 0) {
+    return `${unconfirmed}: the registry returned no versions`
+  }
+  const releases = []
+  for (const version of versions) {
+    const match = typeof version === 'string' && version.match(publishedVersionPattern)
+    if (!match) {
+      return `${unconfirmed}: the registry listed an unreadable version ${JSON.stringify(version)}`
+    }
+    // A prerelease is not a fix to upgrade to.
+    if (!match[4]) releases.push({ parts: match.slice(1, 4).map(Number), version })
+  }
+  const [fix] = releases
+    .filter(release => {
+      const order = compareVersions(release.parts, bound.version)
+      return bound.inclusive ? order > 0 : order >= 0
+    })
+    .sort((left, right) => compareVersions(left.parts, right.parts))
+  if (!fix) return null
+  return (
+    `${moduleName} ${fix.version} is published outside the vulnerable range ${range}; ` +
+    'upgrade instead of excepting'
+  )
+}
+
+function exceptionViolations(advisory, exception, publishedVersions) {
   const findings = Array.isArray(advisory.findings) ? advisory.findings : []
   if (findings.length === 0) return ['pnpm audit reported no findings to verify']
 
@@ -186,18 +227,26 @@ function exceptionViolations(advisory, exception) {
       }
     }
   }
-  const patchProblem = patchedReleaseProblem(advisory, exception.versions)
-  if (patchProblem) violations.push(patchProblem)
+  const releaseProblem = publishedReleaseProblem(advisory, exception.module, publishedVersions)
+  if (releaseProblem) violations.push(releaseProblem)
   return violations
+}
+
+// Without a registry lookup no exception can show that a fix is unpublished, so it fails closed.
+function missingVersionLookup() {
+  throw new Error('no published-version lookup was provided')
 }
 
 export function evaluateAudit(
   payload,
   auditExitCode = 0,
-  { exceptions = [], now = new Date() } = {},
+  { exceptions = [], now = new Date(), publishedVersions = missingVersionLookup } = {},
 ) {
   if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
     throw new Error('evaluateAudit needs a valid now date')
+  }
+  if (typeof publishedVersions !== 'function') {
+    throw new Error('evaluateAudit needs a publishedVersions function')
   }
   const summary = summarizeAudit(payload)
   const errors = []
@@ -217,7 +266,7 @@ export function evaluateAudit(
     )
     if (!exception) continue
 
-    const violations = exceptionViolations(advisory, exception)
+    const violations = exceptionViolations(advisory, exception, publishedVersions)
     if (violations.length > 0) {
       const label = exceptionLabel(exception)
       errors.push(...violations.map(violation => `${label} does not apply: ${violation}`))
@@ -267,6 +316,33 @@ export function evaluateAudit(
   }
 }
 
+export function fetchPublishedVersions(moduleName, run = spawnSync) {
+  const command = `pnpm view ${moduleName} versions`
+  const result = run('pnpm', ['view', moduleName, 'versions', '--json'], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    maxBuffer: 16 * 1024 * 1024,
+  })
+
+  if (result.error) {
+    throw result.error
+  }
+  if (result.status !== 0) {
+    // pnpm 11 `view --json` prints its own errors as JSON on stdout, not stderr.
+    const detail = (result.stderr.trim() || result.stdout.trim()).replace(/\s+/g, ' ')
+    throw new Error(`${command} exited ${result.status}: ${detail}`)
+  }
+
+  let versions
+  try {
+    versions = JSON.parse(result.stdout)
+  } catch (error) {
+    throw new Error(`${command} did not return JSON: ${error.message}`, { cause: error })
+  }
+  // npm-style view prints a bare string for a package with a single version.
+  return typeof versions === 'string' ? [versions] : versions
+}
+
 function main() {
   const runtime = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), 'config/runtime.json'), 'utf8'),
@@ -295,6 +371,7 @@ function main() {
     ...evaluateAudit(payload, result.status ?? 1, {
       exceptions: runtime.dependencySecurityExceptions ?? [],
       now,
+      publishedVersions: fetchPublishedVersions,
     }),
     generatedAt: now.toISOString(),
   }

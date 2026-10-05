@@ -31,8 +31,9 @@
   "securityOverrides": {
     "ajv@>=6.0.0 <6.14.0": "6.14.0",
     "baseline-browser-mapping@>=2.0.0 <2.11.0": "2.11.0",
-    "brace-expansion@>=1.0.0 <1.1.13": "1.1.13",
-    "brace-expansion@>=2.0.0 <2.0.3": "2.0.3",
+    "brace-expansion@>=1.0.0 <1.1.21": "1.1.21",
+    "brace-expansion@>=2.0.0 <2.1.7": "2.1.7",
+    "brace-expansion@>=3.0.0 <3.0.9": "3.0.9",
     "brace-expansion@>=4.0.0 <5.0.12": "5.0.12",
     "browserslist@>=4.0.0 <4.28.7": "4.28.7",
     "flatted@>=3.0.0 <3.4.2": "3.4.2",
@@ -82,7 +83,7 @@
       "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "2186a655bc706f191189c21dc0919c12584714719239209304f19879e78f3170",
       "tests/ci/runtime-contract.test.mjs": "930d7f111b321d323bab5a48bb4672a220249eae867320fc62f6a5098c8c80d4",
-      "tests/ci/security-hotfix.test.mjs": "ce9dac5ca7b413902195ef0a0efea06c3c73bfa4ddd93e915f86ce3f0d434eba",
+      "tests/ci/security-hotfix.test.mjs": "2573602dbfdea8d54312cf4ed24a3584a794b4ef5c4bb7616a77b8e87781cca6",
       "tests/ci/test-capability.test.mjs": "d15f5278ba272de4fe73175102a54de15608277f3b97f72a2cba3dc2b0e361c9",
       "tests/ci/test-results.test.mjs": "0edea1509359b9914a9b553d4ed61eedd5f1eca96456c631aa31f39307ef4fbe"
     },
@@ -270,8 +271,8 @@
   "packageScriptsSha256": "743f4e89acb3845b8425cc00dbc6d9cd64a53edd03544e51b7c672424a6565b2",
   "dependencyDeclarationsSha256": "a1391bb4a6931d86a4be6d746e5cce674eec29511ea0cad8cca0c27e00b1c98b",
   "packageManifestSemanticsSha256": "940dfe672c18e7f413dd260f6cd0abe3fdc7a0defe5cc9cb38ee65f1fe5cc840",
-  "lockfileSha256": "50a7f0dab67a4a3f889b9646a303e5594c0077c7f5b8dfc8ec7916a22232cd18",
-  "workspaceFileSha256": "47ecb48c9ee3b419762f8984ecc2dc8f250c0be051b9ba1fb6ada3077859aaf2",
+  "lockfileSha256": "9bc6943722b29826c435f1224641070a62c8b2bc2c46598d4ffb2b613ad48b91",
+  "workspaceFileSha256": "00c12676aa0a35b437fdb57817274bde7dab55e1a718ad0e2357b736215919ec",
   "actions": {
     "actions/checkout": {
       "release": "v7.0.0",
