@@ -235,25 +235,49 @@ describe('Next and React migration contract', () => {
   })
 
   it('expires publish-state cache entries immediately and rejects unbounded cache keys', () => {
-    const revalidationSource = fs.readFileSync(
-      path.join(process.cwd(), 'packages/web/src/app/api/revalidate/route.ts'),
-      'utf8',
-    )
-    const cacheSource = fs.readFileSync(
-      path.join(process.cwd(), 'packages/web/src/lib/story-cache.ts'),
-      'utf8',
-    )
-    const storyPageSource = fs.readFileSync(
-      path.join(process.cwd(), 'packages/web/src/app/stories/[slug]/page.tsx'),
-      'utf8',
-    )
+    const read = (relativePath: string) =>
+      fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8')
+    const revalidationSource = read('packages/web/src/app/api/revalidate/route.ts')
+    const cacheSource = read('packages/web/src/reader/cache.ts')
 
-    expect(revalidationSource).toContain('revalidateTag(storyCacheTag(slug), { expire: 0 })')
-    expect(revalidationSource).not.toContain("revalidateTag(storyCacheTag(slug), 'max')")
+    expect(cacheSource).toContain('revalidateTag(storyCacheTag(slug), { expire: 0 })')
+    expect(cacheSource).toContain('revalidateTag(readerCacheTag, { expire: 0 })')
+    expect(cacheSource).not.toContain("'max')")
+    expect(revalidationSource).toContain('expirePublicReader(slug)')
+    expect(revalidationSource).toContain('normalizeReaderSlug(')
     expect(revalidationSource).toContain('readBoundedJson(request, maxRevalidationRequestBytes)')
     expect(revalidationSource).not.toContain('request.json()')
-    expect(cacheSource).toContain('normalizeStorySlug(slug)')
-    expect(cacheSource).toContain('!getPublishedFrameworkStory(normalizedSlug)')
-    expect(storyPageSource).toContain('export const dynamicParams = true')
+    for (const relativePath of [
+      'packages/web/src/app/stories/[slug]/page.tsx',
+      'packages/web/src/app/sections/[slug]/page.tsx',
+    ]) {
+      const pageSource = read(relativePath)
+      expect(pageSource, relativePath).toContain('normalizeReaderSlug(')
+      expect(pageSource, relativePath).toContain('await connection()')
+    }
+  })
+
+  it('reads public reader routes from the content store, not the framework fixture', () => {
+    const read = (relativePath: string) =>
+      fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8')
+
+    for (const relativePath of [
+      'packages/web/src/app/page.tsx',
+      'packages/web/src/app/stories/[slug]/page.tsx',
+      'packages/web/src/app/sections/[slug]/page.tsx',
+      'packages/web/src/app/api/media/[id]/route.ts',
+      'packages/web/src/app/api/revalidate/route.ts',
+    ]) {
+      const source = read(relativePath)
+      expect(source, relativePath).not.toContain('framework-content')
+      expect(source, relativePath).not.toContain('@/server/database')
+    }
+    expect(read('packages/web/src/app/page.tsx')).toContain('await connection()')
+    expect(read('packages/web/src/app/api/owner/stories/[id]/actions/route.ts')).toContain(
+      'expirePublicReader()',
+    )
+    expect(read('packages/web/src/app/api/internal/publication-jobs/route.ts')).toContain(
+      'expirePublicReader()',
+    )
   })
 })

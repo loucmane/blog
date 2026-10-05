@@ -7,6 +7,7 @@ const previewCookieSecret = 'task40-preview-cookie-secret-with-32-bytes'
 const previewTokenSecret = 'task40-preview-token-secret-with-32-bytes'
 const revalidationSecret = 'task40-revalidation-secret-with-32-bytes'
 const ownerTestToken = 'task43-owner-test-token-with-more-than-thirty-two-bytes'
+const labSeedToken = 'task44-lab-seed-token-with-more-than-32-bytes'
 const publicationWorkerToken = ['task43', 'publication', 'worker', 'token', 'more-than-32'].join(
   '-',
 )
@@ -46,6 +47,7 @@ export default defineConfig({
       HOSTNAME: '127.0.0.1',
       MAGAZINE_PREVIEW_COOKIE_SECRET: previewCookieSecret,
       MAGAZINE_PREVIEW_TOKEN_SECRET: previewTokenSecret,
+      MAGAZINE_LAB_SEED_TOKEN: labSeedToken,
       MAGAZINE_REVALIDATION_SECRET: revalidationSecret,
       MAGAZINE_RUNTIME_SITE_URL: baseURL,
       MAGAZINE_OWNER_EMAIL: 'owner@example.test',

@@ -1,61 +1,68 @@
-import Link from 'next/link'
+import { connection } from 'next/server'
 
-import { ThemeMenu } from '@/components/theme-menu'
-import { listPublishedFrameworkStories } from '@/lib/framework-content'
+import { loadHomeView } from '@/reader/cache'
+import { SiteHeader } from '@/reader/components/site-header'
+import { StoryCardView } from '@/reader/components/story-card'
 
-export default function HomePage() {
-  const stories = listPublishedFrameworkStories()
+const leadImageSizes = '(min-width: 1024px) 60rem, 100vw'
+const recentImageSizes = '(min-width: 1024px) 30rem, (min-width: 768px) 45vw, 100vw'
+
+export default async function HomePage() {
+  await connection()
+  const result = await loadHomeView()
+  const view = result.status === 'ready' ? result.view : null
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-background/95">
-        <div className="container mx-auto flex items-center justify-between gap-6 px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">Magazine Foundation</h1>
-            <p className="text-sm text-muted-foreground">Portable, owner-operated publishing</p>
-          </div>
-          <ThemeMenu />
-        </div>
-      </header>
-
-      <section className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-            Framework migration proof
-          </p>
-          <h2 className="mb-5 text-4xl font-bold text-primary md:text-6xl">
-            A stable reader and owner foundation, before the full magazine is built.
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            This deliberately small shell proves the selected rendering, preview, cache, image,
-            metadata, accessibility, and portable Node boundaries. Product design and content
-            implementation remain separate roadmap tasks.
-          </p>
-        </div>
-      </section>
-
-      <section aria-labelledby="foundation-stories" className="container mx-auto px-4 pb-16">
-        <h2 id="foundation-stories" className="mb-6 text-2xl font-semibold text-primary">
-          Published framework fixture
-        </h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          {stories.map((story) => (
-            <article className="rounded-lg border border-border bg-card p-6" key={story.slug}>
-              <p className="mb-2 text-sm text-muted-foreground">
-                {story.section} · {story.readingMinutes} min read
-              </p>
-              <h3 className="mb-3 text-2xl font-semibold">{story.title}</h3>
-              <p className="mb-5 text-muted-foreground">{story.dek}</p>
-              <Link
-                className="font-semibold text-primary underline-offset-4 hover:underline"
-                href={`/stories/${story.slug}`}
-              >
-                Read the framework story
-              </Link>
-            </article>
-          ))}
-        </div>
-      </section>
-    </main>
+    <div className="min-h-screen bg-background text-foreground">
+      <SiteHeader isHome navigation={view?.navigation ?? { sections: [] }} />
+      <main className="container mx-auto flex flex-col gap-16 px-4 py-10">
+        {!view ? (
+          <section aria-labelledby="reader-unavailable" className="max-w-2xl py-12">
+            <h2 className="mb-4 text-3xl font-semibold" id="reader-unavailable">
+              Stories are unavailable
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              The magazine cannot reach its stories right now. Please try again later.
+            </p>
+          </section>
+        ) : !view.lead ? (
+          <section aria-labelledby="no-stories" className="max-w-2xl py-12">
+            <h2 className="mb-4 text-3xl font-semibold" id="no-stories">
+              No stories yet
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Nothing has been published so far. New stories appear here as soon as they are
+              published.
+            </p>
+          </section>
+        ) : (
+          <>
+            <section aria-label="Lead story" className="max-w-5xl">
+              <StoryCardView
+                card={view.lead}
+                headingLevel={2}
+                imageSizes={leadImageSizes}
+                preloadImage
+                prominence="lead"
+              />
+            </section>
+            {view.recent.length > 0 ? (
+              <section aria-labelledby="recent-stories">
+                <h2 className="mb-8 text-2xl font-semibold" id="recent-stories">
+                  Recent stories
+                </h2>
+                <ul className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+                  {view.recent.map((card) => (
+                    <li key={card.slug}>
+                      <StoryCardView card={card} headingLevel={3} imageSizes={recentImageSizes} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+          </>
+        )}
+      </main>
+    </div>
   )
 }

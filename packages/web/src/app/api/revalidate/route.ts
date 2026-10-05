@@ -1,17 +1,17 @@
-import { revalidatePath, revalidateTag } from 'next/cache'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-import { getFrameworkStory, storyCacheTag } from '@/lib/framework-content'
 import {
   configuredSecretIsStrong,
   configuredSecretsAreDistinct,
   maxRevalidationRequestBytes,
-  normalizeStorySlug,
   readBearerToken,
   readBoundedJson,
   secureTokenMatches,
 } from '@/lib/request-security'
+import { expirePublicReader } from '@/reader/cache'
+import { normalizeReaderSlug } from '@/reader/slug'
+import { resolveReaderStore } from '@/reader/store'
 
 export async function POST(request: NextRequest) {
   const revalidationSecret = process.env.MAGAZINE_REVALIDATION_SECRET
@@ -54,15 +54,19 @@ export async function POST(request: NextRequest) {
 
   const body = parsedBody.value
 
-  const slug = normalizeStorySlug(
+  const slug = normalizeReaderSlug(
     typeof body === 'object' && body !== null && 'slug' in body ? body.slug : null,
   )
-  if (!slug || !getFrameworkStory(slug)) {
+  const store = slug ? resolveReaderStore() : null
+  const article =
+    slug && store
+      ? await store.repository.transaction((transaction) => transaction.getArticleBySlug(slug))
+      : null
+  if (!slug || !article) {
     return NextResponse.json({ error: 'The requested story could not be found.' }, { status: 404 })
   }
 
-  revalidateTag(storyCacheTag(slug), { expire: 0 })
-  revalidatePath('/')
+  expirePublicReader(slug)
 
   return NextResponse.json({ revalidated: true, slug })
 }

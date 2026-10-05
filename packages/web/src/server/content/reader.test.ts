@@ -59,4 +59,40 @@ describe('content reader boundary', () => {
     )
     expect((await reader.loadPreview(created.article.id))?.revision.id).toBe(saved.revision.id)
   })
+
+  it('lists every visible story newest first with its published revision', async () => {
+    sequence = 0
+    const repository = new InMemoryContentRepository()
+    const reader = new ContentReader(repository)
+    for (const [index, slug] of ['first-story', 'second-story', 'draft-story'].entries()) {
+      const service = new ContentService(
+        repository,
+        { now: () => new Date(Date.UTC(2026, 6, index + 1)) },
+        identifiers,
+      )
+      const created = await service.createArticle({
+        dek: slug,
+        document: document(`article-${slug}`, `Body of ${slug}`),
+        id: `article-${slug}`,
+        idempotencyKey: `create-${slug}`,
+        slug,
+        title: slug,
+      })
+      if (slug === 'draft-story') continue
+      await service.publish({
+        articleId: created.article.id,
+        expectedVersion: 1,
+        idempotencyKey: `publish-${slug}`,
+        revisionId: created.revision.id,
+      })
+    }
+
+    const stories = await reader.listPublished()
+
+    expect(stories.map(({ article }) => article.slug)).toEqual(['second-story', 'first-story'])
+    expect(stories.map(({ revision }) => revision.document.title)).toEqual([
+      'Body of second-story',
+      'Body of first-story',
+    ])
+  })
 })

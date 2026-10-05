@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 import http from 'node:http'
 
 import {
@@ -10,6 +10,20 @@ import accessibilityBaseline from './accessibility-baseline.json'
 
 const previewTokenSecret = 'task40-preview-token-secret-with-32-bytes'
 const revalidationSecret = 'task40-revalidation-secret-with-32-bytes'
+const labSeedToken = 'task44-lab-seed-token-with-more-than-32-bytes'
+const seededStory = {
+  heroAlt:
+    'Illustration of low winter sun: a tall window of pale gold light on a blue-grey wall, casting a soft patch across a pine floor',
+  slug: 'the-quiet-architecture-of-winter-light',
+  title: 'The quiet architecture of winter light',
+}
+
+async function seedReaderLab(request: APIRequestContext) {
+  const response = await request.post('/api/internal/lab-seed', {
+    headers: { authorization: `Bearer ${labSeedToken}` },
+  })
+  expect(response.status()).toBe(200)
+}
 
 async function scanSeriousAccessibilityViolations(page: Page) {
   const results = await new AxeBuilder({ page })
@@ -177,22 +191,18 @@ test('preserves forced-colors focus and reduced-motion behavior', async ({ page 
 
 test('server-renders a canonical story with responsive image and hardened headers', async ({
   page,
+  request,
 }) => {
-  const response = await page.goto('/stories/framework-migration-proof')
+  await seedReaderLab(request)
+  const response = await page.goto(`/stories/${seededStory.slug}`)
 
   expect(response?.status()).toBe(200)
-  await expect(page).toHaveTitle('A portable foundation for the magazine | Magazine Foundation')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'A portable foundation for the magazine',
-  )
-  await expect(
-    page.getByRole('img', {
-      name: 'Layered editorial pages represented by warm geometric shapes',
-    }),
-  ).toBeVisible()
+  await expect(page).toHaveTitle(`${seededStory.title} | Magazine Foundation`)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(seededStory.title)
+  await expect(page.getByRole('img', { name: seededStory.heroAlt })).toBeVisible()
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://canonical.magazine.invalid/stories/framework-migration-proof',
+    `https://canonical.magazine.invalid/stories/${seededStory.slug}`,
   )
 
   const contentSecurityPolicy = response?.headers()['content-security-policy'] ?? ''
@@ -213,13 +223,14 @@ test('server-renders a canonical story with responsive image and hardened header
 test('delivers the reader story in initial HTML within the foundation byte budget', async ({
   request,
 }) => {
-  const response = await request.get('/stories/framework-migration-proof')
+  await seedReaderLab(request)
+  const response = await request.get(`/stories/${seededStory.slug}`)
   const body = await response.text()
 
   expect(response.status()).toBe(200)
   expect(response.headers()['content-type']).toContain('text/html')
-  expect(body).toContain('A portable foundation for the magazine')
-  expect(body).toContain('Layered editorial pages represented by warm geometric shapes')
+  expect(body).toContain(seededStory.title)
+  expect(body).toContain(seededStory.heroAlt)
   expect(body).not.toMatch(/tiptap|prosemirror|lexical|contenteditable/i)
   expect(Buffer.byteLength(body)).toBeLessThan(150_000)
 })
@@ -360,13 +371,13 @@ test('rejects oversized declared and chunked preview bodies before setting cooki
 test('protects the cache invalidation boundary and regenerates known story data', async ({
   request,
 }, testInfo) => {
+  await seedReaderLab(request)
   const slug =
     testInfo.project.name === 'mobile-chromium'
-      ? 'framework-cache-proof-mobile'
-      : 'framework-migration-proof'
+      ? 'three-cabins-and-the-case-for-building-less'
+      : seededStory.slug
   const storyPath = `/stories/${slug}`
-  const readGeneration = (body: string) =>
-    body.match(/data-framework-cache-generation="([^"]+)"/)?.[1]
+  const readGeneration = (body: string) => body.match(/data-reader-cache-generation="([^"]+)"/)?.[1]
 
   const deniedResponse = await request.post('/api/revalidate', {
     data: { slug },
@@ -411,7 +422,7 @@ test('protects the cache invalidation boundary and regenerates known story data'
 })
 
 test('rejects oversized public slugs at the reader boundary', async ({ page }) => {
-  const response = await page.goto(`/stories/${'a'.repeat(121)}`)
+  const response = await page.goto(`/stories/${'a'.repeat(181)}`)
 
   expect(response?.status()).toBe(404)
   await expect(page.getByRole('heading', { name: 'Page Not Found' })).toBeVisible()
