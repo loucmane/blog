@@ -280,4 +280,8 @@ describe('Next and React migration contract', () => {
       'expirePublicReader()',
     )
   })
+
+  it('keeps public media out of the image optimizer, whose cache outlives an unpublish', () => {
+    expect(nextConfig.images?.localPatterns).toEqual([{ pathname: '/images/**', search: '' }])
+  })
 })

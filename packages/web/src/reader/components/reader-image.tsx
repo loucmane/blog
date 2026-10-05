@@ -12,6 +12,10 @@ interface ReaderImageProps {
 /**
  * Renders a stored image with its stored dimensions. Originals saved without dimensions fill a
  * 3:2 frame cropped around the focal point, so the layout never shifts while they load.
+ *
+ * Images load straight from the public media route (`unoptimized`), which checks on every
+ * request that a visible story still uses them. The Next image optimizer would keep serving its
+ * cached copies after an unpublish.
  */
 export function ReaderImageView({ className, image, preload = false, sizes }: ReaderImageProps) {
   if (image.width !== null && image.height !== null) {
@@ -23,6 +27,7 @@ export function ReaderImageView({ className, image, preload = false, sizes }: Re
         preload={preload}
         sizes={sizes}
         src={image.src}
+        unoptimized
         width={image.width}
       />
     )
@@ -41,6 +46,7 @@ export function ReaderImageView({ className, image, preload = false, sizes }: Re
         sizes={sizes}
         src={image.src}
         style={{ objectPosition: `${image.focalPoint.x * 100}% ${image.focalPoint.y * 100}%` }}
+        unoptimized
       />
     </div>
   )

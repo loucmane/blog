@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { loadPublicMediaIds } from '@/reader/cache'
+import { ifNoneMatchIncludes, mediaEntityTag, publicMediaCacheControl } from '@/reader/media'
 import { resolveReaderStore } from '@/reader/store'
 
 export const runtime = 'nodejs'
@@ -20,9 +21,11 @@ function notFoundResponse() {
 
 /**
  * Serves a media original to readers only while a publicly visible revision references it, so
- * images in drafts, unpublished stories, and deleted stories stay private.
+ * images in drafts, unpublished stories, and deleted stories stay private. Caches must revalidate
+ * every use, so an unpublished image is gone on the next request. A conditional request gets its
+ * 304 only after the same visibility check as a full response.
  */
-export async function GET(_request: Request, context: RouteContext): Promise<Response> {
+export async function GET(request: Request, context: RouteContext): Promise<Response> {
   const { id } = await context.params
   if (!mediaIdPattern.test(id)) return notFoundResponse()
   const publicMedia = await loadPublicMediaIds()
@@ -31,14 +34,19 @@ export async function GET(_request: Request, context: RouteContext): Promise<Res
   if (!store?.objects) return notFoundResponse()
   const asset = await store.repository.transaction((transaction) => transaction.getMediaAsset(id))
   if (!asset) return notFoundResponse()
+  const entityTag = mediaEntityTag(asset)
+  const headers = {
+    'cache-control': publicMediaCacheControl,
+    ...(entityTag ? { etag: entityTag } : {}),
+    'x-content-type-options': 'nosniff',
+  }
+  if (entityTag && ifNoneMatchIncludes(request.headers.get('if-none-match'), entityTag)) {
+    return new Response(null, { headers, status: 304 })
+  }
   const { objects } = store
   const body = await objects.getOriginal(asset.originalKey).catch(() => null)
   if (!body) return notFoundResponse()
   return new Response(Uint8Array.from(body).buffer, {
-    headers: {
-      'cache-control': 'public, max-age=300',
-      'content-type': asset.contentType,
-      'x-content-type-options': 'nosniff',
-    },
+    headers: { ...headers, 'content-type': asset.contentType },
   })
 }

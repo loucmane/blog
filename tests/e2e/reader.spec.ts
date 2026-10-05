@@ -11,6 +11,10 @@ import {
 const labSeedToken = 'task44-lab-seed-token-with-more-than-32-bytes'
 const ownerTestToken = 'task43-owner-test-token-with-more-than-thirty-two-bytes'
 const siteOrigin = 'http://localhost:3100'
+const pngPixel = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQmcAAAAASUVORK5CYII=',
+  'base64',
+)
 const readerPages = [
   '/',
   '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen',
@@ -46,8 +50,19 @@ async function wcagViolations(page: Page) {
   }))
 }
 
-function storyDocument(text: string) {
-  return { content: [{ content: [{ text, type: 'text' }], type: 'paragraph' }], type: 'doc' }
+function storyDocument(text: string, image?: { readonly alt: string; readonly mediaId: string }) {
+  const paragraph = { content: [{ text, type: 'text' }], type: 'paragraph' }
+  if (!image) return { content: [paragraph], type: 'doc' }
+  const imageNode = {
+    attrs: {
+      ...image,
+      caption: '',
+      credit: { name: 'Reader journey', url: null },
+      focalPoint: { x: 0.5, y: 0.5 },
+    },
+    type: 'mediaImage',
+  }
+  return { content: [imageNode, paragraph], type: 'doc' }
 }
 
 async function json<T>(response: APIResponse): Promise<T> {
@@ -74,6 +89,7 @@ test('renders home, article, and section pages with landmarks and no axe violati
       const label = `${path} at ${viewport.width}px`
 
       expect(response?.status(), label).toBe(200)
+      expect(response?.headers()['cache-control'], label).toContain('no-store')
       await expect(page.getByRole('banner'), label).toHaveCount(1)
       await expect(page.getByRole('main'), label).toHaveCount(1)
       await expect(page.getByRole('heading', { level: 1 }), label).toHaveCount(1)
@@ -102,16 +118,34 @@ test('links seeded stories between home, sections, and articles', async ({ page,
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Three cabins and the case for building less',
   )
-  await expect(page.getByRole('img', { name: /small cabin window at first light/ })).toBeVisible()
+  const cabinImage = page.getByRole('img', { name: /small cabin window at first light/ })
+  await expect(cabinImage).toBeVisible()
+  await expect(cabinImage).toHaveAttribute('src', '/api/media/media-lab-cabin-morning')
 
   const image = await request.get('/api/media/media-lab-cabin-morning')
   expect(image.status()).toBe(200)
   expect(image.headers()['content-type']).toBe('image/png')
-  expect((await request.get('/api/media/media-lab-unknown')).status()).toBe(404)
+  expect(image.headers()['cache-control']).toBe('public, no-cache')
+  const entityTag = image.headers()['etag'] ?? ''
+  expect(entityTag).toMatch(/^"[0-9a-f]{64}"$/)
+  const revalidated = await request.get('/api/media/media-lab-cabin-morning', {
+    headers: { 'if-none-match': entityTag },
+  })
+  expect(revalidated.status()).toBe(304)
+  const unknownImage = await request.get('/api/media/media-lab-unknown', {
+    headers: { 'if-none-match': entityTag },
+  })
+  expect(unknownImage.status()).toBe(404)
+  expect(unknownImage.headers()['cache-control']).toBe('no-store')
+  const optimizedImage = await request.get(
+    `/_next/image?url=${encodeURIComponent('/api/media/media-lab-cabin-morning')}&w=640&q=75`,
+  )
+  expect(optimizedImage.status()).toBe(400)
+  expect(await optimizedImage.text()).toBe('"url" parameter is not allowed')
   expect((await request.get('/sections/unknown-section')).status()).toBe(404)
 })
 
-test('shows owner-published stories on the next request, removes unpublished ones, and shows republished revisions', async ({
+test('shows owner-published stories on the next request, removes unpublished ones and their images, and shows republished revisions', async ({
   context,
   page,
 }, testInfo) => {
@@ -122,13 +156,25 @@ test('shows owner-published stories on the next request, removes unpublished one
   const dek = 'A complete summary that prepares readers for this reader journey story.'
   const firstText = 'The first published version of this story reaches readers right away.'
   const revisedText = 'The revised version replaces the first one as soon as it is republished.'
+  const imageAlt = `Reader journey image ${suffix}`
   const ownerHeaders = { origin: siteOrigin }
 
+  const uploaded = await json<{ readonly asset: { readonly id: string } }>(
+    await context.request.post('/api/owner/media', {
+      headers: ownerHeaders,
+      multipart: {
+        alt: imageAlt,
+        creditName: 'Reader journey',
+        file: { buffer: pngPixel, mimeType: 'image/png', name: 'reader-journey.png' },
+      },
+    }),
+  )
+  const imagePath = `/api/media/${uploaded.asset.id}`
   const created = await json<StoryMutation>(
     await context.request.post('/api/owner/stories', {
       data: {
         dek,
-        document: storyDocument(firstText),
+        document: storyDocument(firstText, { alt: imageAlt, mediaId: uploaded.asset.id }),
         idempotencyKey: `reader-create-${suffix}`,
         title,
       },
@@ -155,6 +201,13 @@ test('shows owner-published stories on the next request, removes unpublished one
   expect((await page.goto(storyPath))?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(title)
   await expect(page.getByText(firstText)).toBeVisible()
+  await expect(page.getByRole('img', { name: imageAlt })).toHaveAttribute('src', imagePath)
+  const servedImage = await context.request.get(imagePath)
+  expect(servedImage.status()).toBe(200)
+  expect(servedImage.headers()['cache-control']).toBe('public, no-cache')
+  const cachedImage = { headers: { 'if-none-match': servedImage.headers()['etag'] ?? '' } }
+  expect(cachedImage.headers['if-none-match']).toMatch(/^"[0-9a-f]{64}"$/)
+  expect((await context.request.get(imagePath, cachedImage)).status()).toBe(304)
 
   const unpublished = await json<{ readonly version: number }>(
     await act({
@@ -164,7 +217,12 @@ test('shows owner-published stories on the next request, removes unpublished one
       reason: 'Holding the story for corrections.',
     }),
   )
-  expect((await page.goto(storyPath))?.status()).toBe(404)
+  const unpublishedPage = await page.goto(storyPath)
+  expect(unpublishedPage?.status()).toBe(404)
+  expect(unpublishedPage?.headers()['cache-control']).toContain('no-store')
+  const revokedImage = await context.request.get(imagePath, cachedImage)
+  expect(revokedImage.status()).toBe(404)
+  expect(revokedImage.headers()['cache-control']).toBe('no-store')
   await page.goto('/')
   await expect(page.getByRole('link', { name: title })).toHaveCount(0)
 
@@ -191,4 +249,5 @@ test('shows owner-published stories on the next request, removes unpublished one
   expect((await page.goto(storyPath))?.status()).toBe(200)
   await expect(page.getByText(revisedText)).toBeVisible()
   await expect(page.getByText(firstText)).toHaveCount(0)
+  expect((await context.request.get(imagePath, cachedImage)).status()).toBe(404)
 })

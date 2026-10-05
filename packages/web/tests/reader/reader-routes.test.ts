@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import { revalidateTag } from 'next/cache'
 import { NextRequest } from 'next/server'
 import type { ReactElement } from 'react'
@@ -35,6 +37,7 @@ const pngPixel = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQmcAAAAASUVORK5CYII=',
   'base64',
 )
+const pngPixelEntityTag = `"${createHash('sha256').update(pngPixel).digest('hex')}"`
 
 function resetOwnerRuntime() {
   delete (globalThis as { [runtimeKey]?: unknown })[runtimeKey]
@@ -123,6 +126,45 @@ const winterLight = {
   slug: 'quiet-architecture-of-winter-light',
   text: 'By three in the afternoon the light is already leaving, and the room changes its mind.',
   title: 'The quiet architecture of winter light',
+}
+
+/** Stores `media-public` (the story's lead image) and `media-private` (in no story). */
+async function publishStoryWithImage() {
+  const media = getOwnerRuntime().media
+  if (!media) throw new Error('The test runtime should store media in memory.')
+  for (const id of ['media-public', 'media-private']) {
+    await media.store({
+      alt: 'A pixel',
+      body: pngPixel,
+      contentType: 'image/png',
+      creditName: 'Studio',
+      height: 1,
+      id,
+      width: 1,
+    })
+  }
+  return publishStory({
+    ...winterLight,
+    content: [
+      {
+        attrs: {
+          alt: 'A pixel of winter light',
+          caption: 'Lead image',
+          credit: { name: 'Studio', url: null },
+          focalPoint: { x: 0.5, y: 0.5 },
+          mediaId: 'media-public',
+        },
+        type: 'mediaImage',
+      },
+      paragraph(winterLight.text),
+    ],
+  })
+}
+
+function requestMedia(id: string, headers?: Record<string, string>) {
+  return getMedia(new Request(`${siteOrigin}/api/media/${id}`, { headers }), {
+    params: Promise.resolve({ id }),
+  })
 }
 
 describe('public reader routes', () => {
@@ -273,47 +315,15 @@ describe('public reader routes', () => {
   })
 
   it('serves media only while a visible revision references it', async () => {
-    const media = getOwnerRuntime().media
-    if (!media) throw new Error('The test runtime should store media in memory.')
-    for (const id of ['media-public', 'media-private']) {
-      await media.store({
-        alt: 'A pixel',
-        body: pngPixel,
-        contentType: 'image/png',
-        creditName: 'Studio',
-        height: 1,
-        id,
-        width: 1,
-      })
-    }
-    const published = await publishStory({
-      ...winterLight,
-      content: [
-        {
-          attrs: {
-            alt: 'A pixel of winter light',
-            caption: 'Lead image',
-            credit: { name: 'Studio', url: null },
-            focalPoint: { x: 0.5, y: 0.5 },
-            mediaId: 'media-public',
-          },
-          type: 'mediaImage',
-        },
-        paragraph(winterLight.text),
-      ],
-    })
-    const request = (id: string) =>
-      getMedia(new Request(`${siteOrigin}/api/media/${id}`), {
-        params: Promise.resolve({ id }),
-      })
+    const published = await publishStoryWithImage()
 
-    const servedImage = await request('media-public')
+    const servedImage = await requestMedia('media-public')
     expect(servedImage.status).toBe(200)
     expect(servedImage.headers.get('content-type')).toBe('image/png')
     expect(servedImage.headers.get('x-content-type-options')).toBe('nosniff')
     expect(Buffer.from(await servedImage.arrayBuffer())).toEqual(pngPixel)
-    expect((await request('media-private')).status).toBe(404)
-    expect((await request('..%2Fmedia-public')).status).toBe(404)
+    expect((await requestMedia('media-private')).status).toBe(404)
+    expect((await requestMedia('..%2Fmedia-public')).status).toBe(404)
     expect(await render(StoryPage(slugParams(winterLight.slug)))).toContain(
       'alt="A pixel of winter light"',
     )
@@ -324,7 +334,87 @@ describe('public reader routes', () => {
       idempotencyKey: 'unpublish-media-story',
       reason: 'Image rights expired',
     })
-    expect((await request('media-public')).status).toBe(404)
+    expect((await requestMedia('media-public')).status).toBe(404)
+  })
+
+  it('lets caches keep public media only if they revalidate it against a strong ETag', async () => {
+    await publishStoryWithImage()
+
+    const response = await requestMedia('media-public')
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('cache-control')).toBe('public, no-cache')
+    expect(response.headers.get('etag')).toBe(pngPixelEntityTag)
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+  })
+
+  it('confirms a cached image with 304 only while a visible revision still references it', async () => {
+    const published = await publishStoryWithImage()
+    const objects = getOwnerRuntime().objects
+    if (!objects) throw new Error('The test runtime should store media in memory.')
+    const readOriginal = vi.spyOn(objects, 'getOriginal')
+
+    const notModified = await requestMedia('media-public', { 'if-none-match': pngPixelEntityTag })
+
+    expect(notModified.status).toBe(304)
+    expect(await notModified.text()).toBe('')
+    expect(notModified.headers.get('cache-control')).toBe('public, no-cache')
+    expect(notModified.headers.get('etag')).toBe(pngPixelEntityTag)
+    expect(notModified.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(readOriginal).not.toHaveBeenCalled()
+    const listed = await requestMedia('media-public', {
+      'if-none-match': `"an-older-image", W/${pngPixelEntityTag}`,
+    })
+    expect(listed.status).toBe(304)
+    const changed = await requestMedia('media-public', { 'if-none-match': '"an-older-image"' })
+    expect(changed.status).toBe(200)
+    expect(Buffer.from(await changed.arrayBuffer())).toEqual(pngPixel)
+
+    await getOwnerRuntime().content.unpublish({
+      articleId: published.article.id,
+      expectedVersion: published.article.version,
+      idempotencyKey: 'unpublish-cached-media-story',
+      reason: 'Image rights expired',
+    })
+
+    for (const condition of [pngPixelEntityTag, '*']) {
+      const revoked = await requestMedia('media-public', { 'if-none-match': condition })
+      expect(revoked.status, condition).toBe(404)
+      expect(revoked.headers.get('cache-control'), condition).toBe('no-store')
+      expect(revoked.headers.get('etag'), condition).toBeNull()
+    }
+  })
+
+  it('answers hidden, unknown, and malformed media ids with the same uncacheable not-found', async () => {
+    await publishStoryWithImage()
+
+    for (const id of ['media-private', 'media-unknown', '..%2Fmedia-public']) {
+      for (const condition of [null, pngPixelEntityTag, `W/${pngPixelEntityTag}`, '*']) {
+        const label = `${id} with ${condition ?? 'no condition'}`
+        const response = await requestMedia(
+          id,
+          condition === null ? undefined : { 'if-none-match': condition },
+        )
+        expect(response.status, label).toBe(404)
+        expect(response.headers.get('cache-control'), label).toBe('no-store')
+        expect(response.headers.get('etag'), label).toBeNull()
+        await expect(response.json(), label).resolves.toEqual({
+          error: 'That image could not be found.',
+        })
+      }
+    }
+  })
+
+  it('renders reader images from the revocable media route, not the image optimizer', async () => {
+    await publishStoryWithImage()
+
+    for (const markup of [
+      await render(HomePage()),
+      await render(StoryPage(slugParams(winterLight.slug))),
+    ]) {
+      expect(markup).toContain('src="/api/media/media-public"')
+      expect(markup).not.toContain('/_next/image')
+    }
   })
 
   it('expires reader caches through the revalidation boundary for known stories only', async () => {
