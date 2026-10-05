@@ -35,9 +35,11 @@ export interface Article {
 export interface ArticleRevision {
   readonly articleId: string
   readonly createdAt: string
+  readonly dek?: string
   readonly document: ContentDocument
   readonly id: string
   readonly revisionNumber: number
+  readonly title?: string
 }
 
 export interface DraftAutosave {
@@ -65,9 +67,11 @@ export interface PublicationJob {
   readonly id: string
   readonly idempotencyKey: string
   readonly leaseUntil: string | null
+  readonly previousStatus: Exclude<ArticleStatus, 'scheduled'>
   readonly revisionId: string
   readonly runAt: string
   readonly status: PublicationJobStatus
+  readonly timeZone: string
   readonly updatedAt: string
 }
 

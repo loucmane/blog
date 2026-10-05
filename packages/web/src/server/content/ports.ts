@@ -32,13 +32,16 @@ export interface ContentTransaction {
     workerId: string
   }): Promise<PublicationJob | null>
   getArticle(id: string): Promise<Article | null>
+  getArticleForUpdate(id: string): Promise<Article | null>
   getArticleBySlug(slug: string): Promise<Article | null>
   getIdempotency(operation: string, key: string): Promise<IdempotencyRecord | null>
   getMediaAsset(id: string): Promise<MediaAsset | null>
   getOutboxEvent(id: string): Promise<OutboxEvent | null>
   getPublicationJob(id: string): Promise<PublicationJob | null>
+  getPublicationJobForUpdate(id: string): Promise<PublicationJob | null>
   getPublicationSettings(): Promise<PublicationSettings | null>
   getRevision(id: string): Promise<ArticleRevision | null>
+  lockIdempotency(operation: string, key: string): Promise<void>
   listArticles(): Promise<readonly Article[]>
   listArticleTaxonomies(): Promise<readonly ArticleTaxonomy[]>
   listAuditEvents(articleId?: string): Promise<readonly AuditEvent[]>

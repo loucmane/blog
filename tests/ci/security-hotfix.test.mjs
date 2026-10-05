@@ -407,6 +407,16 @@ test('security-patched direct and transitive versions remain pinned', () => {
   assert.match(workspace, /'next@16\.3\.8>postcss': 8\.5\.23/)
   assert.match(workspace, /'next@16\.3\.8>sharp': 0\.35\.4/)
   assert.match(workspace, /'undici@>=7\.0\.0 <7\.29\.1': 7\.29\.1/)
+  // @tiptap/core is patched for GHSA-cp6q-959q-f8rh from 3.30.4 and GHSA-j95f-988m-3j2f from
+  // 3.30.5. Every direct pin and transitive override in the editor family moves in lockstep.
+  const tiptapPins = Object.entries(webPackage.dependencies).filter(([name]) =>
+    name.startsWith('@tiptap/'),
+  )
+  const tiptapOverrides = workspace.match(/^ {2}'@tiptap\/.+$/gm) ?? []
+  assert.equal(tiptapPins.length, 7)
+  assert.equal(tiptapOverrides.length, 26)
+  for (const [name, version] of tiptapPins) assert.equal(version, '3.31.4', name)
+  for (const override of tiptapOverrides) assert.match(override, /': 3\.31\.4$/)
 })
 
 test('production smoke validation requires a complete HTML response', () => {

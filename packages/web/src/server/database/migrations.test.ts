@@ -5,7 +5,7 @@ import { getTableColumns, getTableName } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 
 import { applyContentMigrations, readContentMigrations, type MigrationClient } from './migrations'
-import { contentTableNames, contentTables } from './schema'
+import { contentTableNames, contentTables, ownerAuthTableNames, ownerAuthTables } from './schema'
 
 class FakeMigrationClient implements MigrationClient {
   readonly queries: { text: string; values: readonly unknown[] }[] = []
@@ -43,6 +43,10 @@ describe('content database migrations', () => {
       'packages/web/migrations/0001_content_foundation.sql',
     )
     const sql = await readFile(migrationPath, 'utf8')
+    const followUpSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0002_owner_auth.sql'),
+      'utf8',
+    )
     const createdTables = [...sql.matchAll(/CREATE TABLE ([a-z_]+)/g)]
       .map((match) => match[1])
       .sort()
@@ -53,9 +57,9 @@ describe('content database migrations', () => {
       const block = sql.match(new RegExp(`CREATE TABLE ${tableName} \\(([\\s\\S]*?)\\n\\);`))?.[1]
       expect(block, `${tableName} SQL block`).toBeDefined()
       for (const column of Object.values(getTableColumns(table))) {
-        expect(block, `${tableName}.${column.name}`).toMatch(
-          new RegExp(`^\\s+${column.name}\\s`, 'm'),
-        )
+        const createdInitially = new RegExp(`^\\s+${column.name}\\s`, 'm').test(block ?? '')
+        const addedLater = new RegExp(`ADD COLUMN ${column.name}\\s`, 'm').test(followUpSql)
+        expect(createdInitially || addedLater, `${tableName}.${column.name}`).toBe(true)
       }
     }
     expect(sql).toContain('DEFERRABLE INITIALLY DEFERRED')
@@ -65,22 +69,57 @@ describe('content database migrations', () => {
     expect(sql).not.toContain('CREATE EXTENSION')
   })
 
+  it('keeps the owner authentication migration aligned with its app-owned projection', async () => {
+    const migrationPath = path.join(process.cwd(), 'packages/web/migrations/0002_owner_auth.sql')
+    const sql = await readFile(migrationPath, 'utf8')
+    const createdTables = [...sql.matchAll(/CREATE TABLE ([a-z_]+)/g)]
+      .map((match) => match[1])
+      .sort()
+
+    expect(createdTables).toEqual([...ownerAuthTableNames].sort())
+    for (const table of ownerAuthTables) {
+      const tableName = getTableName(table)
+      const block = sql.match(new RegExp(`CREATE TABLE ${tableName} \\(([\\s\\S]*?)\\n\\);`))?.[1]
+      expect(block, `${tableName} SQL block`).toBeDefined()
+      for (const column of Object.values(getTableColumns(table))) {
+        expect(block, `${tableName}.${column.name}`).toMatch(
+          new RegExp(`^\\s+${column.name}\\s`, 'm'),
+        )
+      }
+    }
+    expect(sql).toContain('ON DELETE CASCADE')
+    expect(sql).toContain('credential_id text NOT NULL UNIQUE')
+    expect(sql).toContain("WHEN article.status = 'published' THEN 'published'")
+    expect(sql).toContain("WHEN article.status = 'unpublished' THEN 'unpublished'")
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0002_owner_auth.down.sql'),
+      'utf8',
+    )
+    expect(downSql).toContain("DELETE FROM content_schema_migrations WHERE id = '0002_owner_auth'")
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
 
     await expect(
       applyContentMigrations({ connect: async () => first }, migrations),
-    ).resolves.toEqual({ applied: ['0001_content_foundation'], skipped: [] })
+    ).resolves.toEqual({
+      applied: ['0001_content_foundation', '0002_owner_auth'],
+      skipped: [],
+    })
     expect(first.queries.at(0)?.text).toBe('BEGIN')
     expect(first.queries.at(-1)?.text).toBe('COMMIT')
     expect(first.released).toBe(true)
 
     const second = new FakeMigrationClient()
-    second.existing.set(migrations[0]!.id, migrations[0]!.checksum)
+    for (const migration of migrations) second.existing.set(migration.id, migration.checksum)
     await expect(
       applyContentMigrations({ connect: async () => second }, migrations),
-    ).resolves.toEqual({ applied: [], skipped: ['0001_content_foundation'] })
+    ).resolves.toEqual({
+      applied: [],
+      skipped: ['0001_content_foundation', '0002_owner_auth'],
+    })
   })
 
   it('fails closed on checksum drift and rolls interrupted migrations back', async () => {
