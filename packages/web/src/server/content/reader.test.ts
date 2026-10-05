@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ContentDocument } from './document'
+import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentDocument } from './document'
 import { InMemoryContentRepository } from './in-memory-repository'
 import type { Clock, IdentifierSource } from './ports'
 import { ContentReader } from './reader'
@@ -20,7 +20,7 @@ function document(articleId: string, text: string): ContentDocument {
     articleId,
     document: { content: [{ content: [{ text, type: 'text' }], type: 'paragraph' }], type: 'doc' },
     migrationProvenance: [],
-    schemaVersion: 3,
+    schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
     title: text,
   }
 }

@@ -880,5 +880,89 @@
     "plan_hash": "825942880ff4f21283d8f23eccfd3daedca915acb821e47f5cdb2b82f2aa4bdb",
     "tracker_hash": "63b9d761568f1d86cc6c09c4088b773ca36bcea96972b0cae89d295f25cbfa14",
     "synced_at": "2026-07-18T11:10:57.327583+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "1ed78926478150e205eb7936b912e60c367a5cd8cf51dbba3ac7afbc3479d8ca",
+    "tracker_hash": "8a3ca6782909e91eb09777ffcb95f0525ddf38042edc23be6aed6d40ed5d29e2",
+    "synced_at": "2026-07-18T12:52:11.854900+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "1ed78926478150e205eb7936b912e60c367a5cd8cf51dbba3ac7afbc3479d8ca",
+    "tracker_hash": "fed6215123481391c098d5c63e8ba72411fb64e8fdcfbbc05c52c4b4ebc8d064",
+    "synced_at": "2026-07-18T12:53:17.909079+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "1ed78926478150e205eb7936b912e60c367a5cd8cf51dbba3ac7afbc3479d8ca",
+    "tracker_hash": "955ba355c2bbc9a521b2d46e5176574590bbf16f4c740b5fdcfe0e2ae743c84d",
+    "synced_at": "2026-07-18T13:54:23.869580+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "903b5d665b588b176a741b13a11746b379bd2aba9d7755cfbd21f40aadec341d",
+    "tracker_hash": "586ad314f5ff52ef2c23d7d72d4f24aeaa3e1459852523ee397ec7a43d0aaa4c",
+    "synced_at": "2026-07-18T14:02:11.030632+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "903b5d665b588b176a741b13a11746b379bd2aba9d7755cfbd21f40aadec341d",
+    "tracker_hash": "51986c9b97f4678e0b53aafccc7d649523fb76b59c577b29ff1e707e235f126e",
+    "synced_at": "2026-07-18T14:33:44.895051+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "903b5d665b588b176a741b13a11746b379bd2aba9d7755cfbd21f40aadec341d",
+    "tracker_hash": "60bae1a0d95e9a6ae40ae9d106e49189d475be43cf55c84f92f44aed27ee4e0e",
+    "synced_at": "2026-07-18T15:37:54.261527+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "55058bbeb16402b279a6d87c4d8fec0df296dbbbaf7fa983d389f2485e991850",
+    "synced_at": "2026-07-18T16:09:05.875431+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "d12bb342dc199c43b6b7263a0aaf8be1c8661a40f1d78dfb89481e6597093ce4",
+    "synced_at": "2026-07-18T16:20:10.202689+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "cd74f5036f95d0a202d4e5683fa3002216de20161a76a8d8f7f51af59d43a7cc",
+    "synced_at": "2026-07-18T16:35:29.194034+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "cd74f5036f95d0a202d4e5683fa3002216de20161a76a8d8f7f51af59d43a7cc",
+    "synced_at": "2026-07-18T16:36:07.979610+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "cd74f5036f95d0a202d4e5683fa3002216de20161a76a8d8f7f51af59d43a7cc",
+    "synced_at": "2026-07-18T16:37:11.069244+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "b4cf5218b56ddbdc4046126ee8b296733a9458e1752734418a9d6b0e314252bd",
+    "synced_at": "2026-07-18T16:52:36.928822+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "05adb815de9dfa1690eb7b77cdbfa114aa72b7ded9cb82034855195a574a088b",
+    "tracker_hash": "0c661c0794bfecc72ac583c6f5baed17fce221f49998cbfb148ba6e8c37454e5",
+    "synced_at": "2026-07-18T16:53:29.131156+02:00"
+  },
+  {
+    "plan": "plans/2026-07-18-task43-owner-publishing-foundation.md",
+    "plan_hash": "a700d70b3b51be1ed885c62f5dc590b230e5b14e1632a9c21adaaca2eda3505a",
+    "tracker_hash": "ae9677e48b70a94d24c2bbc947ea20121d3b2114e65bf4c03860e9c3d8453600",
+    "synced_at": "2026-07-18T17:03:37.023547+02:00"
   }
 ]

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const CURRENT_CONTENT_DOCUMENT_VERSION = 3
+export const CURRENT_CONTENT_DOCUMENT_VERSION = 4
 export const MAX_CONTENT_DOCUMENT_BYTES = 2_000_000
 
 const knownNodeTypes = [
@@ -20,6 +20,8 @@ const knownNodeTypes = [
   'orderedList',
   'paragraph',
   'pullQuote',
+  'taskItem',
+  'taskList',
   'text',
 ] as const
 
@@ -96,6 +98,7 @@ export type ContentDocumentMigration =
   | Extract<ContentDocumentInspection, { status: 'quarantined' }>
 
 export class ContentDocumentValidationError extends Error {
+  readonly code = 'content_document_invalid' as const
   readonly inspection: Extract<ContentDocumentInspection, { status: 'quarantined' }>
 
   constructor(inspection: Extract<ContentDocumentInspection, { status: 'quarantined' }>) {
@@ -171,9 +174,16 @@ const attributeSchemas: Readonly<Partial<Record<ContentNodeType, z.ZodType>>> = 
   horizontalRule: z.object({}).strict(),
   listItem: z.object({}).strict(),
   mediaImage: mediaItemSchema,
-  orderedList: z.object({ start: z.number().int().min(1).max(10_000) }).strict(),
+  orderedList: z
+    .object({
+      start: z.number().int().min(1).max(10_000),
+      type: z.enum(['1', 'a', 'A', 'i', 'I']).nullable().optional(),
+    })
+    .strict(),
   paragraph: z.object({}).strict(),
   pullQuote: z.object({ attribution: nonEmptyText }).strict(),
+  taskItem: z.object({ checked: z.boolean() }).strict(),
+  taskList: z.object({}).strict(),
   text: z.object({}).strict(),
 }
 
@@ -289,7 +299,13 @@ function validateMarks(
     const type = rawMark.type as ContentMarkType
     if (type === 'link') {
       const parsed = z
-        .object({ href: z.string(), title: z.string().max(300).nullable() })
+        .object({
+          class: z.string().max(300).nullable().optional(),
+          href: z.string(),
+          rel: z.string().max(300).nullable().optional(),
+          target: z.enum(['_blank', '_self']).nullable().optional(),
+          title: z.string().max(300).nullable().optional(),
+        })
         .strict()
         .safeParse(rawMark.attrs)
       if (!parsed.success) {
@@ -333,6 +349,7 @@ const blockNodes = new Set<ContentNodeType>([
   'orderedList',
   'paragraph',
   'pullQuote',
+  'taskList',
 ])
 const inlineNodes = new Set<ContentNodeType>(['hardBreak', 'text'])
 const leafNodes = new Set<ContentNodeType>([
@@ -347,7 +364,9 @@ const leafNodes = new Set<ContentNodeType>([
 function allowedChild(parent: ContentNodeType, child: ContentNodeType): boolean {
   if (parent === 'doc' || parent === 'editorialBlock') return blockNodes.has(child)
   if (parent === 'bulletList' || parent === 'orderedList') return child === 'listItem'
+  if (parent === 'taskList') return child === 'taskItem'
   if (parent === 'listItem') return blockNodes.has(child)
+  if (parent === 'taskItem') return blockNodes.has(child)
   if (parent === 'codeBlock') return child === 'text'
   return inlineNodes.has(child)
 }
@@ -528,6 +547,14 @@ export function parseContentDocument(value: unknown): ContentDocument {
   return inspection.document
 }
 
+export function parseMigratedContentDocument(value: unknown): ContentDocument {
+  const migration = migrateContentDocument(value)
+  if (migration.status === 'quarantined') {
+    throw new ContentDocumentValidationError(migration)
+  }
+  return migration.document
+}
+
 function visitRawNodes(value: unknown, visitor: (node: Record<string, unknown>) => void) {
   if (!isRecord(value)) return
   visitor(value)
@@ -580,9 +607,14 @@ function migrateVersionTwo(value: Record<string, unknown>) {
   value.schemaVersion = 3
 }
 
+function migrateVersionThree(value: Record<string, unknown>) {
+  value.schemaVersion = 4
+}
+
 const migrations = new Map<number, (value: Record<string, unknown>) => void>([
   [1, migrateVersionOne],
   [2, migrateVersionTwo],
+  [3, migrateVersionThree],
 ])
 
 export function migrateContentDocument(value: unknown): ContentDocumentMigration {
