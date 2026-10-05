@@ -8,6 +8,7 @@ import {
   jsonb,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -423,3 +424,12 @@ export const contentTables = [
 ] as const
 
 export const contentTableNames = contentTables.map((table) => getTableName(table)).sort()
+
+/**
+ * The publication version: one row whose counter advances in the commit of every change to what
+ * readers may see. Cached reader views are keyed by it.
+ */
+export const contentPublicationState = pgTable('content_publication_state', {
+  id: smallint('id').primaryKey(),
+  version: bigint('version', { mode: 'number' }).notNull(),
+})

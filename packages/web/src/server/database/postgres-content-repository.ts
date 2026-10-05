@@ -294,6 +294,8 @@ function postgresCode(error: unknown): string | null {
 }
 
 class PostgresContentTransaction implements ContentTransaction {
+  publicationChanged = false
+
   constructor(private readonly client: PoolClient) {}
 
   async claimDuePublicationJob(input: {
@@ -595,6 +597,10 @@ class PostgresContentTransaction implements ContentTransaction {
     }))
   }
 
+  recordPublicationChange(): void {
+    this.publicationChanged = true
+  }
+
   async saveArticle(article: Article, expectedVersion: number | null): Promise<void> {
     try {
       if (expectedVersion === null) {
@@ -893,15 +899,36 @@ class PostgresContentTransaction implements ContentTransaction {
   }
 }
 
+const missingPublicationVersion =
+  'The publication version is missing. Apply the content migrations.'
+
 export class PostgresContentRepository implements ContentRepository {
   constructor(private readonly pool: Pool) {}
+
+  async readPublicationVersion(): Promise<number> {
+    const result = await this.pool.query<QueryResultRow & { version: string }>(
+      'SELECT version FROM content_publication_state WHERE id = 1',
+    )
+    const version = Number(result.rows[0]?.version)
+    if (!Number.isSafeInteger(version) || version < 0) throw new Error(missingPublicationVersion)
+    return version
+  }
 
   async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
     const client = await this.pool.connect()
     try {
       await client.query('BEGIN')
       await client.query('SET CONSTRAINTS ALL DEFERRED')
-      const result = await work(new PostgresContentTransaction(client))
+      const transaction = new PostgresContentTransaction(client)
+      const result = await work(transaction)
+      if (transaction.publicationChanged) {
+        // Run last, so the counter's row lock comes after every other lock this change needs and
+        // is held only until the commit.
+        const advanced = await client.query(
+          'UPDATE content_publication_state SET version = version + 1 WHERE id = 1',
+        )
+        if (advanced.rowCount !== 1) throw new Error(missingPublicationVersion)
+      }
       await client.query('COMMIT')
       return result
     } catch (error) {

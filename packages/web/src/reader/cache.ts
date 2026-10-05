@@ -14,10 +14,17 @@ import { resolveReaderStore } from './store'
 import type { ArticleView, HomeView, ReaderResult, SectionView } from './views'
 
 /*
- * Reader caching follows the project's existing convention: data is cached with tags through
- * `unstable_cache`, and every publication-state change expires the tags immediately
- * (`revalidateTag(tag, { expire: 0 })`), so the next request reads fresh content. Public pages
- * render per request with `connection()`, so builds never touch the content store.
+ * Reader views are cached through `unstable_cache` under keys that include the publication
+ * version: a counter the content store advances in the same commit as every change to what
+ * readers may see. Each request reads the version fresh, with one query, never from a cache.
+ *
+ * Expiring tags is not enough on its own. Next stamps a cache entry when it is written, and a tag
+ * expiry hides only entries stamped before it. So a read that starts before a publication change
+ * and finishes after the expiry writes the old view back as a fresh entry. Under a versioned key,
+ * that entry can reach only requests that read the old version, which began before the change
+ * committed. Every publication change still expires the tags at once
+ * (`revalidateTag(tag, { expire: 0 })`). Public pages render per request with `connection()`, so
+ * builds never touch the content store.
  */
 
 export const readerCacheTag = 'reader'
@@ -35,9 +42,9 @@ const cacheScopeKey = Symbol.for('magazine.reader-cache-scope')
 type CacheScopeGlobal = typeof globalThis & { [cacheScopeKey]?: string }
 
 /**
- * Cache entries are scoped to this server process. The in-memory test store starts empty in every
- * process and the data cache outlives restarts, so a process-scoped key keeps one run's stories
- * out of the next. A restart also picks up writes made by other processes.
+ * Cache entries are scoped to this server process. The in-memory test store starts empty, at
+ * publication version 0, in every process, and the data cache outlives restarts, so a
+ * process-scoped key keeps one run's views out of the next.
  */
 function cacheScope(): string {
   const scopeGlobal = globalThis as CacheScopeGlobal
@@ -45,18 +52,21 @@ function cacheScope(): string {
   return scopeGlobal[cacheScopeKey]
 }
 
-function cachedRead<T>(
+async function cachedRead<T>(
   key: readonly string[],
   tags: readonly string[],
   read: (source: ReaderSource) => Promise<T>,
 ): Promise<ReaderResult<T>> {
+  const store = resolveReaderStore()
+  if (!store) return { status: 'unavailable' }
+  const publicationVersion = await store.repository.readPublicationVersion()
   return unstable_cache(
-    async (): Promise<ReaderResult<T>> => {
-      const store = resolveReaderStore()
-      if (!store) return { status: 'unavailable' }
-      return { cacheGeneration: randomUUID(), status: 'ready', view: await read(store) }
-    },
-    ['public-reader', cacheScope(), ...key],
+    async (): Promise<ReaderResult<T>> => ({
+      cacheGeneration: randomUUID(),
+      status: 'ready',
+      view: await read(store),
+    }),
+    ['public-reader', cacheScope(), `publication-${publicationVersion}`, ...key],
     { revalidate: readerCacheSeconds, tags: [readerCacheTag, ...tags] },
   )()
 }

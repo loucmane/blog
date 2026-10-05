@@ -147,6 +147,8 @@ async function supersedePublicationJob(
     updatedAt: now,
   }
   await transaction.savePublicationJob(superseded)
+  // A scheduled story stays visible only while its schedule has one active job.
+  transaction.recordPublicationChange()
   return superseded
 }
 
@@ -329,6 +331,7 @@ export class ContentService {
       }
       await this.cancelPendingJobs(transaction, article.id, now)
       await transaction.saveArticle(article, current.version)
+      transaction.recordPublicationChange()
       await this.publicationOutbox(transaction, article, revision, now)
       await this.audit(transaction, article.id, 'article.published', input.actorId ?? null, now, {
         revisionId: revision.id,
@@ -396,6 +399,7 @@ export class ContentService {
       }
       await transaction.savePublicationJob(job)
       await transaction.saveArticle(article, current.version)
+      transaction.recordPublicationChange()
       await this.audit(transaction, article.id, 'article.scheduled', input.actorId ?? null, now, {
         jobId: job.id,
         revisionId: revision.id,
@@ -438,6 +442,7 @@ export class ContentService {
       }
       await this.cancelPendingJobs(transaction, article.id, now)
       await transaction.saveArticle(article, current.version)
+      transaction.recordPublicationChange()
       await this.audit(
         transaction,
         article.id,
@@ -569,6 +574,7 @@ export class ContentService {
       }
       await transaction.saveArticle(article, existingArticle.version)
       await transaction.savePublicationJob(completed)
+      transaction.recordPublicationChange()
       await this.publicationOutbox(transaction, article, revision, now)
       await this.audit(transaction, article.id, 'article.scheduled-publish-completed', null, now, {
         jobId: completed.id,
@@ -615,6 +621,7 @@ export class ContentService {
       }
       await this.cancelPendingJobs(transaction, article.id, now)
       await transaction.saveArticle(article, current.version)
+      transaction.recordPublicationChange()
       await this.saveOutbox(transaction, article.id, 'article.unpublished', now, {
         publishedRevisionId: article.publishedRevisionId,
       })
@@ -663,6 +670,7 @@ export class ContentService {
       }
       await transaction.saveRedirect(redirect)
       await transaction.saveArticle(article, current.version)
+      transaction.recordPublicationChange()
       await this.audit(
         transaction,
         article.id,
@@ -709,6 +717,7 @@ export class ContentService {
       }
       await this.cancelPendingJobs(transaction, article.id, now)
       await transaction.saveArticle(article, current.version)
+      transaction.recordPublicationChange()
       await this.saveOutbox(transaction, article.id, 'article.deleted', now, {})
       await this.audit(
         transaction,
@@ -752,6 +761,7 @@ export class ContentService {
         version: current.version + 1,
       }
       await transaction.saveArticle(article, current.version)
+      transaction.recordPublicationChange()
       await this.audit(transaction, article.id, 'article.restored', input.actorId ?? null, now, {
         restoredStatus,
       })
