@@ -1,5 +1,6 @@
 import { baselineDirection } from './baseline'
 import { createReaderDirectionRegistry } from './contract'
+import { quietMonographDirection } from './quiet-monograph'
 
 /**
  * The reader directions, in Reader Lab order. To add one, import it and add it to `directions`;
@@ -7,5 +8,5 @@ import { createReaderDirectionRegistry } from './contract'
  */
 export const readerDirections = createReaderDirectionRegistry({
   defaultId: baselineDirection.id,
-  directions: [baselineDirection],
+  directions: [baselineDirection, quietMonographDirection],
 })
