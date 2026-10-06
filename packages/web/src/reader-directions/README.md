@@ -41,6 +41,12 @@ registry.
 - **The shared renderers.** Use `ArticleBody` for story bodies, and `ReaderImageView` or
   `ReaderFigure` for images, so blocks and image privacy rules stay in one place. Style their
   semantic HTML and `data-block` attributes rather than reimplementing them.
+- **Images are `<picture>` elements.** `ReaderImageView` renders resized AVIF and WebP variants
+  with a fallback, as `<picture class="contents">` around the `<img>`. The picture takes no part in
+  layout, but it does sit between the `<img>` and its parent in the DOM. So select images with a
+  descendant selector such as `figure img`, never a child selector such as `figure > img`. Pass a
+  `sizes` value that matches the width the image is laid out at, and set `preload` only on the
+  page's lead image.
 
 ## Assets load only for the active direction
 

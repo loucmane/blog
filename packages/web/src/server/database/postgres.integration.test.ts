@@ -2,8 +2,9 @@ import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3'
+import { CreateBucketCommand, DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { Pool } from 'pg'
+import sharp from 'sharp'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -18,17 +19,21 @@ import {
   extractContentText,
   type ContentDocument,
 } from '../content/document'
-import { MediaOriginalService } from '../content/media'
+import type { MediaAsset } from '../content/domain'
+import { MediaOriginalService, originalObjectKey, sha256Bytes } from '../content/media'
+import { MediaVariantService, mediaVariantObjectKey } from '../content/media-variants'
 import { ContentConflictError } from '../content/errors'
 import { createPortableContentBundle, verifyPortableMedia } from '../content/portability'
 import type { Clock, IdentifierSource } from '../content/ports'
 import { SectionService } from '../content/sections'
 import { ContentService } from '../content/service'
+import { renderIllustration } from '../lab/illustrations'
 import { labImages } from '../lab/north-house'
 import { seedLabContent } from '../lab/seed'
 import { applyContentMigrations, readContentMigrations } from './migrations'
 import { PostgresContentRepository } from './postgres-content-repository'
 import { PostgresSearchProjection } from './postgres-search-projection'
+import { S3MediaVariantStore } from './s3-media-variant-store'
 import { S3OriginalObjectStore } from './s3-original-object-store'
 
 function requiredEnvironment(name: string): string {
@@ -96,13 +101,19 @@ describe('PostgreSQL and media persistence integration', () => {
   it('migrates, rolls back failures, projects search, and restores database plus media', async () => {
     const pool = new Pool({ connectionString: databaseUrl, max: 4 })
     const migrations = await readContentMigrations()
+    const migrationIds = [
+      '0001_content_foundation',
+      '0002_owner_auth',
+      '0003_publication_version',
+      '0004_media_asset_animation',
+    ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
-      applied: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
+      applied: migrationIds,
       skipped: [],
     })
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: [],
-      skipped: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
+      skipped: migrationIds,
     })
 
     const repository = new PostgresContentRepository(pool)
@@ -291,11 +302,18 @@ describe('PostgreSQL and media persistence integration', () => {
 
     const media = await mediaService.store({
       alt: 'Synthetic local persistence fixture',
+      animated: true,
       body: new TextEncoder().encode('task42 synthetic media original'),
       contentType: 'image/png',
       creditName: 'Task 42 integration',
+      height: 48,
       id: 'media-integration',
+      width: 64,
     })
+    // What was measured about the original when it was stored comes back from PostgreSQL.
+    await expect(
+      repository.transaction((transaction) => transaction.getMediaAsset('media-integration')),
+    ).resolves.toMatchObject({ animated: true, height: 48, width: 64 })
 
     const projection = new PostgresSearchProjection(pool)
     await projection.upsertPublishedArticle({
@@ -400,7 +418,11 @@ describe('PostgreSQL and media persistence integration', () => {
     await restoredPool.query('COMMIT')
     await expect(applyContentMigrations(restoredPool, migrations)).resolves.toEqual({
       applied: ['0002_owner_auth'],
-      skipped: ['0001_content_foundation', '0003_publication_version'],
+      skipped: [
+        '0001_content_foundation',
+        '0003_publication_version',
+        '0004_media_asset_animation',
+      ],
     })
 
     await restoredPool.end()
@@ -529,5 +551,68 @@ describe('PostgreSQL and media persistence integration', () => {
     ])
 
     await pool.end()
+  }, 120_000)
+
+  it('keeps derived media variants beside the originals in S3 and rebuilds deleted ones', async () => {
+    const client = s3(primaryS3Endpoint)
+    const bucket = 'media-variants'
+    await client.send(new CreateBucketCommand({ Bucket: bucket }))
+    const originals = new S3OriginalObjectStore(client, bucket)
+    const variants = new S3MediaVariantStore(client, bucket)
+    const winterLight = labImages.find(({ id }) => id === 'media-lab-winter-light')
+    if (!winterLight) throw new Error('The lab seed should include the winter light image.')
+    const body = renderIllustration(winterLight.illustration)
+    const checksum = sha256Bytes(body)
+    const originalKey = originalObjectKey(winterLight.id, checksum)
+    await originals.putOriginal({
+      body,
+      contentType: 'image/png',
+      key: originalKey,
+      sha256: checksum,
+    })
+    const asset: MediaAsset = {
+      alt: winterLight.alt,
+      animated: false,
+      bytes: body.byteLength,
+      caption: winterLight.caption,
+      contentType: 'image/png',
+      createdAt: clock.now().toISOString(),
+      creditName: winterLight.creditName,
+      creditUrl: null,
+      focalX: winterLight.focalPoint.x,
+      focalY: winterLight.focalPoint.y,
+      height: winterLight.illustration.height,
+      id: winterLight.id,
+      originalKey,
+      originalSha256: checksum,
+      updatedAt: clock.now().toISOString(),
+      width: winterLight.illustration.width,
+    }
+    const variant = { format: 'avif', width: 960 } as const
+    const key = mediaVariantObjectKey(asset, variant)
+    expect(await variants.getVariant(key)).toBeNull()
+
+    const generated = await new MediaVariantService(originals, variants).load(asset, variant)
+
+    expect(await variants.getVariant(key)).toEqual(generated)
+    expect(await sharp(generated).metadata()).toMatchObject({
+      format: 'heif',
+      height: 640,
+      width: 960,
+    })
+
+    // Variants are derived copies: deleting one is safe, and the next request rebuilds it.
+    await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
+    expect(await variants.getVariant(key)).toBeNull()
+    const rebuilt = await new MediaVariantService(originals, variants).load(asset, variant)
+    expect(await sharp(rebuilt).metadata()).toMatchObject({
+      format: 'heif',
+      height: 640,
+      width: 960,
+    })
+    expect(await variants.getVariant(key)).toEqual(rebuilt)
+    expect(await originals.verifyOriginal(originalKey, checksum)).toBe(true)
+
+    client.destroy()
   }, 120_000)
 })

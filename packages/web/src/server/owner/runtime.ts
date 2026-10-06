@@ -3,9 +3,15 @@ import { Pool } from 'pg'
 
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { InMemoryOriginalObjectStore, MediaOriginalService } from '@/server/content/media'
-import type { ContentRepository, OriginalObjectStore } from '@/server/content/ports'
+import { InMemoryMediaVariantStore, MediaVariantService } from '@/server/content/media-variants'
+import type {
+  ContentRepository,
+  MediaVariantStore,
+  OriginalObjectStore,
+} from '@/server/content/ports'
 import { ContentService } from '@/server/content/service'
 import { PostgresContentRepository } from '@/server/database/postgres-content-repository'
+import { S3MediaVariantStore } from '@/server/database/s3-media-variant-store'
 import { S3OriginalObjectStore } from '@/server/database/s3-original-object-store'
 
 import {
@@ -21,10 +27,17 @@ export interface OwnerRuntime {
   readonly objects: OriginalObjectStore | null
   readonly pool: Pool | null
   readonly repository: ContentRepository
+  /** Resized variants of public images; null when media storage is not configured. */
+  readonly variants: MediaVariantService | null
   readonly workspace: OwnerWorkspaceService
 }
 
-function optionalS3Objects(environment: OwnerEnvironment): OriginalObjectStore | null {
+interface MediaStorage {
+  readonly objects: OriginalObjectStore
+  readonly variants: MediaVariantStore
+}
+
+function optionalS3Media(environment: OwnerEnvironment): MediaStorage | null {
   const bucket = environment.MAGAZINE_MEDIA_BUCKET
   const region = environment.MAGAZINE_MEDIA_REGION
   if (!bucket && !region) return null
@@ -43,17 +56,23 @@ function optionalS3Objects(environment: OwnerEnvironment): OriginalObjectStore |
       : {}),
     region,
   })
-  return new S3OriginalObjectStore(client, bucket)
+  return {
+    objects: new S3OriginalObjectStore(client, bucket),
+    variants: new S3MediaVariantStore(client, bucket),
+  }
 }
 
 export function createOwnerRuntime(environment: OwnerEnvironment = process.env): OwnerRuntime {
   const fixture = resolveOwnerFixtureConfiguration(environment)
   let repository: ContentRepository
-  let objects: OriginalObjectStore | null
+  let storage: MediaStorage | null
   let pool: Pool | null
   if (fixture) {
     repository = new InMemoryContentRepository()
-    objects = new InMemoryOriginalObjectStore()
+    storage = {
+      objects: new InMemoryOriginalObjectStore(),
+      variants: new InMemoryMediaVariantStore(),
+    }
     pool = null
   } else {
     const databaseUrl = environment.DATABASE_URL
@@ -62,14 +81,15 @@ export function createOwnerRuntime(environment: OwnerEnvironment = process.env):
     }
     pool = new Pool({ connectionString: databaseUrl, max: 8 })
     repository = new PostgresContentRepository(pool)
-    objects = optionalS3Objects(environment)
+    storage = optionalS3Media(environment)
   }
   return {
     content: new ContentService(repository),
-    media: objects ? new MediaOriginalService(repository, objects) : null,
-    objects,
+    media: storage ? new MediaOriginalService(repository, storage.objects) : null,
+    objects: storage?.objects ?? null,
     pool,
     repository,
+    variants: storage ? new MediaVariantService(storage.objects, storage.variants) : null,
     workspace: new OwnerWorkspaceService(repository),
   }
 }

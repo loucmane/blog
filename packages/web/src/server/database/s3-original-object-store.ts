@@ -10,7 +10,7 @@ import {
 
 import type { OriginalObjectStore, StoredOriginalObject } from '../content/ports'
 
-async function bodyBytes(body: unknown): Promise<Uint8Array> {
+export async function bodyBytes(body: unknown): Promise<Uint8Array> {
   if (
     typeof body === 'object' &&
     body !== null &&

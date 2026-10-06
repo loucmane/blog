@@ -254,7 +254,13 @@ describe('reader read model', () => {
     expect(article).toMatchObject({
       authors: [],
       body: [{ kind: 'paragraph' }],
-      hero: { height: 600, mediaId: 'media-lead', src: '/api/media/media-lead', width: 900 },
+      hero: {
+        contentType: 'image/png',
+        height: 600,
+        mediaId: 'media-lead',
+        src: '/api/media/media-lead',
+        width: 900,
+      },
       href: '/stories/with-image',
       navigation: { sections: [{ slug: 'architecture' }] },
       section: { name: 'architecture', slug: 'architecture' },
