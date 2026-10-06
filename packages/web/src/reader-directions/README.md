@@ -69,3 +69,5 @@ imported stylesheet into each reader page, whichever direction is active. A buil
 - `vitest run packages/web/src/reader-directions` runs the contract, contrast, and registry tests.
 - `tests/e2e/reader-lab.spec.ts` opens every registered direction from the lab and runs axe on
   home, an article, and a section at 390 and 1440 pixels, with the lab bar showing.
+- The [signed-in Lighthouse harness](../../../../scripts/lab-lighthouse.md) measures home,
+  article, and section with the owner session and selected direction, and rejects baseline fallback.
