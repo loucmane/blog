@@ -15,7 +15,7 @@ function directionSources(): { readonly file: string; readonly source: string }[
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
       const absolute = path.join(directory, entry.name)
       if (entry.isDirectory()) visit(absolute)
-      else if (/\.(?:ts|tsx)$/.test(entry.name) && !/\.test\.(?:ts|tsx)$/.test(entry.name)) {
+      else if (/\.(?:[cm]?[jt]sx?)$/.test(entry.name) && !/\.test\.(?:ts|tsx)$/.test(entry.name)) {
         sources.push({
           file: path.relative(process.cwd(), absolute),
           source: fs.readFileSync(absolute, 'utf8'),
@@ -31,69 +31,31 @@ function parse(source: string, file: string): ts.SourceFile {
   return ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
 }
 
-/**
- * Next preloads every font that a route's module graph declares, whichever direction is active,
- * so direction fonts must opt out of preloading and load only when the active direction uses them.
- * Returns each `next/font` loader call that does not pass `preload: false`.
- */
-function fontsThatPreload(source: string, file: string): string[] {
-  const sourceFile = parse(source, file)
-  const loaders = new Set<string>()
-  for (const statement of sourceFile.statements) {
-    if (
-      !ts.isImportDeclaration(statement) ||
-      !ts.isStringLiteral(statement.moduleSpecifier) ||
-      !statement.moduleSpecifier.text.startsWith('next/font/')
-    ) {
-      continue
-    }
-    const clause = statement.importClause
-    if (clause?.name) loaders.add(clause.name.text)
-    if (clause?.namedBindings && ts.isNamedImports(clause.namedBindings)) {
-      for (const element of clause.namedBindings.elements) loaders.add(element.name.text)
-    }
-  }
-
+/** Static, re-exported, dynamic and CommonJS asset imports all enter the route graph. */
+function forbiddenAssetImports(source: string, file: string): string[] {
   const violations: string[] = []
   const visit = (node: ts.Node) => {
-    if (
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      loaders.has(node.expression.text)
-    ) {
-      const [options] = node.arguments
-      const preloadsFont = !(
-        options &&
-        ts.isObjectLiteralExpression(options) &&
-        options.properties.some(
-          (property) =>
-            ts.isPropertyAssignment(property) &&
-            ts.isIdentifier(property.name) &&
-            property.name.text === 'preload' &&
-            property.initializer.kind === ts.SyntaxKind.FalseKeyword,
-        )
-      )
-      if (preloadsFont) {
-        const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart())
-        violations.push(`${file}:${line + 1} ${node.expression.text}()`)
+    if (ts.isStringLiteralLike(node)) {
+      const parent = node.parent
+      const isModule =
+        ((ts.isImportDeclaration(parent) || ts.isExportDeclaration(parent)) &&
+          parent.moduleSpecifier === node) ||
+        ts.isExternalModuleReference(parent) ||
+        (ts.isCallExpression(parent) &&
+          (parent.expression.kind === ts.SyntaxKind.ImportKeyword ||
+            (ts.isIdentifier(parent.expression) && parent.expression.text === 'require')))
+      if (
+        isModule &&
+        (/^next\/font(?:\/|$)/.test(node.text) ||
+          /\.(?:css|scss|sass|less)(?:\?.*)?$/.test(node.text))
+      ) {
+        violations.push(`${file}: ${node.text}`)
       }
     }
     ts.forEachChild(node, visit)
   }
-  visit(sourceFile)
+  visit(parse(source, file))
   return violations
-}
-
-/** Returns each stylesheet import. Next bundles imported CSS into every reader page. */
-function stylesheetImports(source: string, file: string): string[] {
-  return parse(source, file)
-    .statements.filter(
-      (statement): statement is ts.ImportDeclaration =>
-        ts.isImportDeclaration(statement) &&
-        ts.isStringLiteral(statement.moduleSpecifier) &&
-        /\.(?:css|scss|sass|less)(?:\?.*)?$/.test(statement.moduleSpecifier.text),
-    )
-    .map((statement) => `${file}: ${(statement.moduleSpecifier as ts.StringLiteral).text}`)
 }
 
 function themeTokens(selector: ':root' | '.dark'): Map<string, string> {
@@ -123,41 +85,44 @@ describe('registered reader directions', () => {
     }
   })
 
-  it('finds direction fonts that would preload on every reader page', () => {
-    const preloading = `
+  it('rejects next/font even with preload disabled, and every form of stylesheet import', () => {
+    const source = `
       import localFont from 'next/font/local'
-      import { Fraunces as Display, Inter } from 'next/font/google'
-      const a = localFont({ preload: false, src: './a.woff2', variable: '--a' })
-      const b = Display({ subsets: ['latin'], variable: '--b' })
-      const c = Inter({ preload: true, subsets: ['latin'], variable: '--c' })
-      const d = localFont({ src: './d.woff2' })
+      import { Jost } from 'next/font/google'
+      const font = Jost({ preload: false })
+      export { font } from 'next/font/google'
+      const lazy = import('next/font/local')
+      const common = require('next/font/google')
+      import styles from './a.module.css'
+      import './b.css'
+      const lazyCss = import('./c.css')
+      export * from './d.css'
+      const commonCss = require('./e.css')
     `
-
-    expect(fontsThatPreload(preloading, 'sample.ts')).toEqual([
-      'sample.ts:5 Display()',
-      'sample.ts:6 Inter()',
-      'sample.ts:7 localFont()',
+    expect(forbiddenAssetImports(source, 'sample.ts')).toEqual([
+      'sample.ts: next/font/local',
+      'sample.ts: next/font/google',
+      'sample.ts: next/font/google',
+      'sample.ts: next/font/local',
+      'sample.ts: next/font/google',
+      'sample.ts: ./a.module.css',
+      'sample.ts: ./b.css',
+      'sample.ts: ./c.css',
+      'sample.ts: ./d.css',
+      'sample.ts: ./e.css',
     ])
   })
 
-  it('declares every direction font without preloading, so only the active direction loads it', () => {
-    const violations = directionSources().flatMap(({ file, source }) =>
-      fontsThatPreload(source, file),
-    )
-
-    expect(violations).toEqual([])
-  })
-
-  it('keeps direction stylesheets out of the shared reader bundle', () => {
+  it('keeps direction font CSS and imported stylesheets out of the shared route graph', () => {
     expect(
-      stylesheetImports(`import styles from './a.module.css'\nimport './b.css'`, 'x.ts'),
-    ).toEqual(['x.ts: ./a.module.css', 'x.ts: ./b.css'])
-
-    const imports = directionSources().flatMap(({ file, source }) =>
-      stylesheetImports(source, file),
+      directionSources().flatMap(({ file, source }) => forbiddenAssetImports(source, file)),
+    ).toEqual([])
+    expect(readerDirections.defaultDirection.fonts).toEqual([])
+    const globalCss = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/globals.css'),
+      'utf8',
     )
-
-    expect(imports).toEqual([])
+    expect(globalCss).not.toMatch(/@font-face|reader-directions\//)
   })
 
   it('keeps the theme colors that baseline and the lab bar use at WCAG AA in light and dark', () => {

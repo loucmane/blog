@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createReaderDirectionRegistry,
   defineReaderDirection,
-  readerDirectionFontClassName,
+  readerDirectionFontCss,
   readerDirectionStyleCss,
   readerDirectionTokenCss,
   ReaderDirectionError,
@@ -27,15 +27,18 @@ function definition(overrides: Partial<ReaderDirectionDefinition> = {}): ReaderD
 }
 
 const displayFont = {
-  className: 'display-font-class',
-  style: { fontFamily: "'Display', serif" },
-  variable: 'display-font-variable',
-}
-const textFont = {
-  className: 'text-font-class',
-  style: { fontFamily: "'Text', serif" },
-  variable: 'text-font-variable',
-}
+  fallback: {
+    family: 'Times New Roman',
+    ascentOverride: '95.27%',
+    descentOverride: '29.59%',
+    lineGapOverride: '0.00%',
+    sizeAdjust: '96.98%',
+  },
+  genericFamily: 'serif',
+  sources: [{ file: 'display-latin-400.woff2', weight: 400 }],
+  variable: '--font-display',
+} as const
+const textFont = { ...displayFont, variable: '--font-text' } as const
 
 describe('reader direction contract', () => {
   it('accepts a complete direction and freezes it', () => {
@@ -113,18 +116,27 @@ describe('reader direction contract', () => {
     )
   })
 
-  it('rejects fonts that cannot be scoped to the direction', () => {
-    expect(() =>
-      defineReaderDirection(definition({ fonts: [{ ...displayFont, variable: '' }] })),
-    ).toThrow(/font variable/)
-    expect(() =>
-      defineReaderDirection(definition({ fonts: [{ ...displayFont, variable: 'two classes' }] })),
-    ).toThrow(/font variable/)
-    expect(() =>
-      defineReaderDirection(
-        definition({ fonts: [{ ...displayFont, style: { fontFamily: ' ' } }] }),
-      ),
-    ).toThrow(/font family/)
+  it('rejects fonts that could escape the direction scope or inject CSS', () => {
+    const invalid = [
+      { variable: '' },
+      { variable: 'two classes' },
+      { variable: '--font;}' },
+      { genericFamily: 'serif; color: red' },
+      { fallback: { ...displayFont.fallback, family: '";}</style>' } },
+      { fallback: { ...displayFont.fallback, ascentOverride: '95%;}' } },
+      { fallback: { ...displayFont.fallback, sizeAdjust: '0%' } },
+      { fallback: { ...displayFont.fallback, descentOverride: '-1%' } },
+      { sources: [] },
+      { sources: [{ file: '../other/font.woff2', weight: 400 }] },
+      { sources: [{ file: 'https://example.test/font.woff2', weight: 400 }] },
+      { sources: [{ file: 'font.woff2', weight: 1001 }] },
+      { sources: [{ file: 'font.woff2', weight: 0 }] },
+    ]
+    for (const overrides of invalid) {
+      expect(() =>
+        defineReaderDirection(definition({ fonts: [{ ...displayFont, ...overrides } as never] })),
+      ).toThrow(ReaderDirectionError)
+    }
     expect(() => defineReaderDirection(definition({ fonts: [displayFont, displayFont] }))).toThrow(
       /listed twice/,
     )
@@ -242,13 +254,19 @@ describe('reader direction contract', () => {
     expect(readerDirectionStyleCss(quoted)).toContain('.b { content')
   })
 
-  it('applies only its own font variables', () => {
-    expect(
-      readerDirectionFontClassName(
-        defineReaderDirection(definition({ fonts: [displayFont, textFont] })),
-      ),
-    ).toBe('display-font-variable text-font-variable')
-    expect(readerDirectionFontClassName(defineReaderDirection(definition()))).toBeUndefined()
+  it('emits top-level font faces and variables scoped to its own root only', () => {
+    const direction = defineReaderDirection(definition({ fonts: [displayFont] }))
+    expect(readerDirectionFontCss(direction)).toBe(
+      '@font-face{font-family:"reader-quiet-monograph__font-display";font-style:normal;font-weight:400;font-display:optional;src:url("/reader-directions/quiet-monograph/fonts/display-latin-400.woff2") format("woff2");}' +
+        '@font-face{font-family:"reader-quiet-monograph__font-display fallback";src:local("Times New Roman");ascent-override:95.27%;descent-override:29.59%;line-gap-override:0.00%;size-adjust:96.98%;}' +
+        '[data-reader-direction="quiet-monograph"]{--font-display:"reader-quiet-monograph__font-display","reader-quiet-monograph__font-display fallback",serif;}',
+    )
+    const second = defineReaderDirection(definition({ id: 'second', fonts: [displayFont] }))
+    expect(readerDirectionFontCss(second)).not.toContain('reader-quiet-monograph')
+    expect(readerDirectionFontCss(second)).toContain('reader-second__font-display')
+    expect(readerDirectionFontCss(defineReaderDirection(definition()))).toBeNull()
+    expect(Object.isFrozen(direction.fonts[0]?.fallback)).toBe(true)
+    expect(Object.isFrozen(direction.fonts[0]?.sources[0])).toBe(true)
   })
 })
 
