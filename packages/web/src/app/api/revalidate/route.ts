@@ -60,7 +60,13 @@ export async function POST(request: NextRequest) {
   const store = slug ? resolveReaderStore() : null
   const article =
     slug && store
-      ? await store.repository.transaction((transaction) => transaction.getArticleBySlug(slug))
+      ? await store.repository.transaction(async (transaction) => {
+          const found = await transaction.getArticleBySlug(slug)
+          // Revalidation exists for changes made outside the content services, so it advances the
+          // publication version too: a tag expiry alone can be undone by a read already in flight.
+          if (found) transaction.recordPublicationChange()
+          return found
+        })
       : null
   if (!slug || !article) {
     return NextResponse.json({ error: 'The requested story could not be found.' }, { status: 404 })

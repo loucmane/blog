@@ -652,6 +652,7 @@ export async function importPortableContentBundle(
     for (const job of data.publicationJobs) await transaction.savePublicationJob(job)
     for (const event of data.outboxEvents) await transaction.saveOutboxEvent(event)
     for (const event of data.auditEvents) await transaction.saveAuditEvent(event)
+    transaction.recordPublicationChange()
   })
 
   return {

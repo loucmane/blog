@@ -21,9 +21,10 @@ function notFoundResponse() {
 
 /**
  * Serves a media original to readers only while a publicly visible revision references it, so
- * images in drafts, unpublished stories, and deleted stories stay private. Caches must revalidate
- * every use, so an unpublished image is gone on the next request. A conditional request gets its
- * 304 only after the same visibility check as a full response.
+ * images in drafts, unpublished stories, and deleted stories stay private. The check uses the
+ * media set of the current publication version, read fresh for each request, and caches must
+ * revalidate every use, so an unpublished image is gone on the next request. A conditional request
+ * gets its 304 only after the same visibility check as a full response.
  */
 export async function GET(request: Request, context: RouteContext): Promise<Response> {
   const { id } = await context.params

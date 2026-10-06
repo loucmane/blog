@@ -5,7 +5,13 @@ import { getTableColumns, getTableName } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 
 import { applyContentMigrations, readContentMigrations, type MigrationClient } from './migrations'
-import { contentTableNames, contentTables, ownerAuthTableNames, ownerAuthTables } from './schema'
+import {
+  contentPublicationState,
+  contentTableNames,
+  contentTables,
+  ownerAuthTableNames,
+  ownerAuthTables,
+} from './schema'
 
 class FakeMigrationClient implements MigrationClient {
   readonly queries: { text: string; values: readonly unknown[] }[] = []
@@ -98,6 +104,34 @@ describe('content database migrations', () => {
     expect(downSql).toContain("DELETE FROM content_schema_migrations WHERE id = '0002_owner_auth'")
   })
 
+  it('keeps the publication version migration aligned with its projection', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0003_publication_version.sql'),
+      'utf8',
+    )
+    const tableName = getTableName(contentPublicationState)
+
+    expect([...sql.matchAll(/CREATE TABLE ([a-z_]+)/g)].map((match) => match[1])).toEqual([
+      tableName,
+    ])
+    const block = sql.match(new RegExp(`CREATE TABLE ${tableName} \\(([\\s\\S]*?)\\n\\);`))?.[1]
+    for (const column of Object.values(getTableColumns(contentPublicationState))) {
+      expect(block, `${tableName}.${column.name}`).toMatch(
+        new RegExp(`^\\s+${column.name}\\s`, 'm'),
+      )
+    }
+    expect(sql).toContain('CHECK (id = 1)')
+    expect(sql).toContain(`INSERT INTO ${tableName} (id, version) VALUES (1, 0);`)
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0003_publication_version.down.sql'),
+      'utf8',
+    )
+    expect(downSql).toContain(`DROP TABLE IF EXISTS ${tableName};`)
+    expect(downSql).toContain(
+      "DELETE FROM content_schema_migrations WHERE id = '0003_publication_version'",
+    )
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
@@ -105,7 +139,7 @@ describe('content database migrations', () => {
     await expect(
       applyContentMigrations({ connect: async () => first }, migrations),
     ).resolves.toEqual({
-      applied: ['0001_content_foundation', '0002_owner_auth'],
+      applied: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
       skipped: [],
     })
     expect(first.queries.at(0)?.text).toBe('BEGIN')
@@ -118,7 +152,7 @@ describe('content database migrations', () => {
       applyContentMigrations({ connect: async () => second }, migrations),
     ).resolves.toEqual({
       applied: [],
-      skipped: ['0001_content_foundation', '0002_owner_auth'],
+      skipped: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
     })
   })
 

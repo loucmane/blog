@@ -243,6 +243,10 @@ describe('Next and React migration contract', () => {
     expect(cacheSource).toContain('revalidateTag(storyCacheTag(slug), { expire: 0 })')
     expect(cacheSource).toContain('revalidateTag(readerCacheTag, { expire: 0 })')
     expect(cacheSource).not.toContain("'max')")
+    // A tag expiry alone lets a read that started earlier write the old view back afterwards, so
+    // every cached view is keyed by the publication version, read fresh on each request.
+    expect(cacheSource).toContain('await store.repository.readPublicationVersion()')
+    expect(cacheSource).toContain('`publication-${publicationVersion}`')
     expect(revalidationSource).toContain('expirePublicReader(slug)')
     expect(revalidationSource).toContain('normalizeReaderSlug(')
     expect(revalidationSource).toContain('readBoundedJson(request, maxRevalidationRequestBytes)')
