@@ -13,7 +13,7 @@ real site, with real published stories, in any registered direction.
 | `id`                         | Short lowercase kebab-case, such as `quiet-monograph`.                                              |
 | `name`, `thesis`             | What the owner sees in the lab: a name of up to 48 characters and a one-line idea.                  |
 | `Home`, `Article`, `Section` | Server components that receive `{ view }` (`HomeView`, `ArticleView`, `SectionView`).               |
-| `fonts` (optional)           | `next/font` loaders, each with a `variable` and `preload: false`.                                   |
+| `fonts` (optional)           | Local WOFF2 faces, a CSS variable, and metric-adjusted fallback data (see below).                   |
 | `tokens` (optional)          | CSS custom properties for `light` and `dark`, plus the `textPairs` that must reach WCAG AA (4.5:1). |
 | `styles` (optional)          | CSS that is nested under the direction's root element, so it reaches only this direction.           |
 
@@ -50,16 +50,37 @@ registry.
 
 ## Assets load only for the active direction
 
-Next preloads every font declared anywhere in a route's module graph, and it bundles every
-imported stylesheet into each reader page, whichever direction is active. A build of Next 16.3.8
-(Turbopack) showed that `next/dynamic` does not change this. So:
+Next bundles `next/font` CSS into reader route entries even when `preload: false` prevents
+font-file preloads. The inherited Next 16.3.8 production manifest confirms this for Quiet
+Monograph; a dynamic import alone is not proof of isolation. Direction modules must never
+import or re-export `next/font` (Google or local), or import a stylesheet, including dynamically.
 
-- **Fonts** set `preload: false`. The page applies a direction's font `variable` classes only on
-  that direction's root element, so the browser downloads a direction's font files only when that
-  direction renders text with them. `registry.test.ts` fails if a direction font can preload.
+- **Fonts are data.** Declare `fonts` in the direction's own `fonts.ts`, following
+  [Quiet Monograph](quiet-monograph/fonts.ts). Each declaration provides a `variable` CSS custom
+  property, a `genericFamily` (`serif`, `sans-serif` or `monospace`), `sources` of `{ file, weight }`
+  for the normal weights used, and a `fallback` with `family`, `ascentOverride`, `descentOverride`,
+  `lineGapOverride` and `sizeAdjust`. Metrics are nonnegative percentages; size adjustment is positive.
+  Document their source and reproduction command. The contract validates and freezes the data.
+- **Local, licensed subsets.** Put WOFF2 files in `public/reader-directions/<id>/fonts/`, with
+  their full licence text and source URLs/hashes. `file` is a lowercase filename, not a URL or
+  path. Ship only subsets and weights actually used. No new per-direction shared plumbing is
+  needed: the root generates URLs, unique family names, and scoped variable declarations.
+- **Only the active root emits font CSS.** `ReaderDirectionRoot` renders an ordinary inline
+  `<style data-reader-direction-fonts="<id>">` before the direction's content, with no `href` or
+  `precedence`. It is removed on a switch to baseline; React must not retain it as a hoisted
+  stylesheet. `@font-face` rules are top-level because selectors cannot scope them; their family
+  names include the direction id and variable, and only that root gets the variables. Do not
+  manually emit font rules or preloads from views, a shared layout, tokens, or `styles`.
+- **Stable first layout.** Generated web faces use `font-display: optional`, no preloads, and
+  local fallbacks with size/ascent/descent/line-gap overrides. A slow first visit can retain its
+  adjusted fallback for that navigation; a warm visit can use the intended font immediately.
+  Metrics alone do not guarantee zero shift; keep the no-late-swap policy and verify CLS in a browser.
+- **Baseline has no font rules or references.** The registry remains safe to import on every
+  route because declarations are plain data. Visitor authorization, cache behavior, publication
+  versions and CSP are unchanged. Existing `font-src 'self'` and inline-style policy suffice.
 - **No imported stylesheets** (`.css`, `.module.css`). Use Tailwind utilities, `tokens`, and
   `styles`. The page inlines a direction's tokens and styles only when it renders that direction.
-  `registry.test.ts` fails on a stylesheet import.
+  `registry.test.ts` rejects font and stylesheet imports; root and visitor tests guard active-only emission.
 - **Page background.** If a direction paints its own page background, paint the root too (for
   example `styles: '& { background: var(--paper); }'`). The Reader Lab reserves room for its bar at
   the end of the root.

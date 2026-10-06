@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import {
-  readerDirectionFontClassName,
+  readerDirectionFontCss,
   readerDirectionStyleCss,
   readerDirectionTokenCss,
   type ReaderDirection,
@@ -14,8 +14,8 @@ interface ReaderDirectionRootProps {
 }
 
 /**
- * The element a direction renders inside. It applies the direction's font variables and hoists its
- * tokens and styles into the document head, so a direction's assets load only with that direction.
+ * The element a direction renders inside. Font rules belong to this root's lifetime; tokens and
+ * styles are hoisted into the head. Only the selected direction emits assets.
  */
 export function ReaderDirectionRoot({
   cacheGeneration,
@@ -24,12 +24,10 @@ export function ReaderDirectionRoot({
 }: ReaderDirectionRootProps) {
   const tokens = readerDirectionTokenCss(direction)
   const styles = readerDirectionStyleCss(direction)
+  const fonts = readerDirectionFontCss(direction)
   return (
-    <div
-      className={readerDirectionFontClassName(direction)}
-      data-reader-cache-generation={cacheGeneration}
-      data-reader-direction={direction.id}
-    >
+    <div data-reader-cache-generation={cacheGeneration} data-reader-direction={direction.id}>
+      {fonts ? <style data-reader-direction-fonts={direction.id}>{fonts}</style> : null}
       {tokens ? (
         <style href={`reader-direction-tokens-${direction.id}`} precedence="reader-direction">
           {tokens}

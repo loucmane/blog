@@ -11,10 +11,9 @@ import { contrastRatio, wcagTextContrast } from './contrast'
  * the Reader Lab.
  *
  * A direction's assets load only while it is the active direction: the page applies its font
- * variables, tokens, and styles only when it renders that direction. Next preloads every declared
- * font and bundles every imported stylesheet into all reader pages, whichever direction is active,
- * so direction fonts set `preload: false`, and direction CSS lives in `tokens` and `styles` instead
- * of imported stylesheets. The registry tests enforce both rules.
+ * faces, variables, tokens, and styles only when it renders that direction. Fonts are local WOFF2
+ * assets described as data, never `next/font` loaders: even with preload disabled, Next bundles
+ * their generated CSS into every reader page. The registry tests reject font and CSS imports.
  */
 
 export interface HomeDirectionProps {
@@ -29,12 +28,24 @@ export interface SectionDirectionProps {
   readonly view: SectionView
 }
 
-/** What a `next/font` loader returns when it is declared with a `variable`. */
+/** Local normal-style font faces, emitted only when this direction renders. */
 export interface ReaderDirectionFont {
-  readonly className: string
-  readonly style: { readonly fontFamily: string }
-  /** The class that defines the font's CSS variable. It is applied to the direction's root. */
-  readonly variable: string
+  /** Metric overrides, reproduced and documented alongside the direction's font assets. */
+  readonly fallback: {
+    readonly family: string
+    readonly ascentOverride: string
+    readonly descentOverride: string
+    readonly lineGapOverride: string
+    readonly sizeAdjust: string
+  }
+  readonly genericFamily: 'serif' | 'sans-serif' | 'monospace'
+  readonly sources: readonly {
+    /** Filename under public/reader-directions/<id>/fonts/, with its licence alongside. */
+    readonly file: string
+    readonly weight: number
+  }[]
+  /** Custom property applied only to this direction's root; family names are generated. */
+  readonly variable: `--${string}`
 }
 
 export type ReaderDirectionTokenName = `--${string}`
@@ -55,7 +66,7 @@ export interface ReaderDirectionTokens {
 
 export interface ReaderDirectionDefinition {
   readonly Article: FunctionComponent<ArticleDirectionProps>
-  /** `next/font` loaders, each declared with `preload: false` and a `variable`. */
+  /** Self-hosted faces with adjusted fallbacks; always optional display, never preloaded. */
   readonly fonts?: readonly ReaderDirectionFont[]
   readonly Home: FunctionComponent<HomeDirectionProps>
   /** Short lowercase kebab-case, such as `quiet-monograph`. */
@@ -104,7 +115,8 @@ const maxIdLength = 48
 const maxNameLength = 48
 const maxThesisLength = 180
 const tokenNamePattern = /^--[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
-const fontVariablePattern = /^[A-Za-z0-9_-]+$/
+const fontFilePattern = /^[a-z0-9][a-z0-9_-]*\.woff2$/
+const fontMetricPattern = /^\d+(?:\.\d+)?%$/
 const views = ['Home', 'Article', 'Section'] as const
 
 function fail(id: string, problem: string): never {
@@ -122,16 +134,61 @@ function requireText(id: string, field: 'name' | 'thesis', value: unknown, maxLe
 function requireFonts(id: string, fonts: readonly ReaderDirectionFont[] | undefined) {
   const variables = new Set<string>()
   for (const font of fonts ?? []) {
-    if (typeof font?.variable !== 'string' || !fontVariablePattern.test(font.variable)) {
-      fail(id, 'every font needs the single class name from its font variable (`variable`).')
+    if (typeof font?.variable !== 'string' || !tokenNamePattern.test(font.variable)) {
+      fail(
+        id,
+        'every font variable must be a lowercase CSS custom property, such as --font-display.',
+      )
     }
-    if (typeof font.style?.fontFamily !== 'string' || !font.style.fontFamily.trim()) {
-      fail(id, `the font with variable "${font.variable}" has no font family.`)
+    if (!['serif', 'sans-serif', 'monospace'].includes(font.genericFamily)) {
+      fail(id, `the font ${font.variable} needs a generic font family.`)
+    }
+    if (
+      !font.fallback ||
+      typeof font.fallback.family !== 'string' ||
+      !/^[A-Za-z][A-Za-z0-9 -]*$/.test(font.fallback.family)
+    ) {
+      fail(id, `the font ${font.variable} needs a plain local fallback family name.`)
+    }
+    for (const metric of [
+      'ascentOverride',
+      'descentOverride',
+      'lineGapOverride',
+      'sizeAdjust',
+    ] as const) {
+      if (!fontMetricPattern.test(font.fallback[metric])) {
+        fail(id, `the font ${font.variable} needs a nonnegative percentage for ${metric}.`)
+      }
+    }
+    if (parseFloat(font.fallback.sizeAdjust) === 0) {
+      fail(id, `the font ${font.variable} needs a positive sizeAdjust.`)
+    }
+    if (!Array.isArray(font.sources) || font.sources.length === 0) {
+      fail(id, `the font ${font.variable} needs at least one local WOFF2 source.`)
+    }
+    for (const source of font.sources) {
+      if (typeof source?.file !== 'string' || !fontFilePattern.test(source.file)) {
+        fail(
+          id,
+          `the font ${font.variable} needs a WOFF2 filename inside its own direction folder.`,
+        )
+      }
+      if (!Number.isInteger(source.weight) || source.weight < 1 || source.weight > 1000) {
+        fail(id, `the font ${font.variable} needs a weight from 1 to 1000.`)
+      }
     }
     if (variables.has(font.variable)) fail(id, `the font "${font.variable}" is listed twice.`)
     variables.add(font.variable)
   }
-  return Object.freeze([...(fonts ?? [])])
+  return Object.freeze(
+    (fonts ?? []).map((font) =>
+      Object.freeze({
+        ...font,
+        fallback: Object.freeze({ ...font.fallback }),
+        sources: Object.freeze(font.sources.map((source) => Object.freeze({ ...source }))),
+      }),
+    ),
+  )
 }
 
 function requireTokenSet(id: string, theme: string, tokens: unknown): ReaderDirectionTokenSet {
@@ -323,7 +380,28 @@ export function readerDirectionStyleCss(direction: ReaderDirection): string | nu
   return direction.styles ? `${scope(direction)}{${direction.styles}}` : null
 }
 
-/** The font variable classes for the direction's root element. */
-export function readerDirectionFontClassName(direction: ReaderDirection): string | undefined {
-  return direction.fonts.map(({ variable }) => variable).join(' ') || undefined
+/**
+ * Top-level font faces with names unique to this direction, followed by scoped variables.
+ * @font-face cannot be nested under a selector. Only the active root emits these rules.
+ */
+export function readerDirectionFontCss(direction: ReaderDirection): string | null {
+  if (direction.fonts.length === 0) return null
+  return direction.fonts
+    .map((font) => {
+      // The separator cannot occur in either validated id or variable, avoiding name collisions.
+      const family = `reader-${direction.id}__${font.variable.slice(2)}`
+      const fallback = `${family} fallback`
+      const metrics = font.fallback
+      return (
+        font.sources
+          .map(
+            ({ file, weight }) =>
+              `@font-face{font-family:"${family}";font-style:normal;font-weight:${weight};font-display:optional;src:url("/reader-directions/${direction.id}/fonts/${file}") format("woff2");}`,
+          )
+          .join('') +
+        `@font-face{font-family:"${fallback}";src:local("${metrics.family}");ascent-override:${metrics.ascentOverride};descent-override:${metrics.descentOverride};line-gap-override:${metrics.lineGapOverride};size-adjust:${metrics.sizeAdjust};}` +
+        `${scope(direction)}{${font.variable}:"${family}","${fallback}",${font.genericFamily};}`
+      )
+    })
+    .join('')
 }
