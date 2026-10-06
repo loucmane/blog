@@ -450,31 +450,37 @@ describe('public reader routes', () => {
     expect(vi.mocked(revalidateTag)).toHaveBeenCalledWith('reader', { expire: 0 })
   })
 
-  it('seeds the Reader Lab through the guarded route and never in production', async () => {
-    const request = (token: string) =>
-      seedLab(
-        new Request(`${siteOrigin}/api/internal/lab-seed`, {
-          headers: { authorization: `Bearer ${token}` },
-          method: 'POST',
-        }),
+  // Nine sharp-generated fixture images can exceed 5s on a shared CI runner. Keep the
+  // allowance local and bounded (3x the default), so a stalled seed still fails promptly.
+  it(
+    'seeds the Reader Lab through the guarded route and never in production',
+    { timeout: 15_000 },
+    async () => {
+      const request = (token: string) =>
+        seedLab(
+          new Request(`${siteOrigin}/api/internal/lab-seed`, {
+            headers: { authorization: `Bearer ${token}` },
+            method: 'POST',
+          }),
+        )
+
+      expect((await request(labSeedToken)).status).toBe(404)
+      vi.stubEnv('MAGAZINE_LAB_SEED_TOKEN', labSeedToken)
+      expect((await request('wrong-lab-seed-token-with-more-than-32-bytes')).status).toBe(404)
+      vi.stubEnv('NODE_ENV', 'production')
+      expect((await request(labSeedToken)).status).toBe(404)
+      vi.stubEnv('NODE_ENV', 'test')
+
+      const seeded = await request(labSeedToken)
+
+      expect(seeded.status).toBe(200)
+      expect(seeded.headers.get('cache-control')).toBe('private, no-store')
+      expect((await seeded.json()).stories.created).toHaveLength(8)
+      expect(vi.mocked(revalidateTag)).toHaveBeenCalledWith('reader', { expire: 0 })
+      expect(await render(HomePage())).toContain('The quiet architecture of winter light')
+      expect(await render(SectionPage(slugParams('architecture')))).toContain(
+        'Three cabins and the case for building less',
       )
-
-    expect((await request(labSeedToken)).status).toBe(404)
-    vi.stubEnv('MAGAZINE_LAB_SEED_TOKEN', labSeedToken)
-    expect((await request('wrong-lab-seed-token-with-more-than-32-bytes')).status).toBe(404)
-    vi.stubEnv('NODE_ENV', 'production')
-    expect((await request(labSeedToken)).status).toBe(404)
-    vi.stubEnv('NODE_ENV', 'test')
-
-    const seeded = await request(labSeedToken)
-
-    expect(seeded.status).toBe(200)
-    expect(seeded.headers.get('cache-control')).toBe('private, no-store')
-    expect((await seeded.json()).stories.created).toHaveLength(8)
-    expect(vi.mocked(revalidateTag)).toHaveBeenCalledWith('reader', { expire: 0 })
-    expect(await render(HomePage())).toContain('The quiet architecture of winter light')
-    expect(await render(SectionPage(slugParams('architecture')))).toContain(
-      'Three cabins and the case for building less',
-    )
-  })
+    },
+  )
 })
