@@ -406,6 +406,14 @@ test('security-patched direct and transitive versions remain pinned', () => {
   assert.match(workspace, /'nanoid@>=3\.0\.0 <3\.3\.18': 3\.3\.18/)
   assert.match(workspace, /'next@16\.3\.8>postcss': 8\.5\.23/)
   assert.match(workspace, /'next@16\.3\.8>sharp': 0\.35\.4/)
+  // GHSA-rj75-hqrm-r3gf has no patched 6.x release, so the only copy (6.0.10, under
+  // @tailwindcss/typography) moves across the major line to 7.1.6.
+  assert.deepEqual(workspace.match(/^ {2}'postcss-selector-parser@.+$/gm), [
+    "  'postcss-selector-parser@>=6.0.0 <7.1.6': 7.1.6",
+  ])
+  assert.deepEqual(workspace.match(/^ {2}'source-map-js@.+$/gm), [
+    "  'source-map-js@>=1.0.0 <1.2.2': 1.2.2",
+  ])
   assert.match(workspace, /'undici@>=7\.0\.0 <7\.29\.1': 7\.29\.1/)
   // @tiptap/core is patched for GHSA-cp6q-959q-f8rh from 3.30.4 and GHSA-j95f-988m-3j2f from
   // 3.30.5. Every direct pin and transitive override in the editor family moves in lockstep.
