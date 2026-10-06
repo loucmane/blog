@@ -84,6 +84,88 @@ describe('Quiet Monograph with real published North House content', () => {
     expect(textLead.document.querySelector('.qm-cover-text')).toBeTruthy()
     expect(textLead.document.querySelectorAll('img')).toHaveLength(0)
     expect(textLead.document.querySelectorAll('.qm-recent, .qm-more')).toHaveLength(0)
+    expect(empty.document.querySelector('link[as="image"]')).toBeNull()
+    expect(textLead.document.querySelector('link[as="image"]')).toBeNull()
+  })
+
+  it('discovers each page’s lead image early with the same responsive source and reserved dimensions', () => {
+    const article = articles.get('article-lab-long-table')!
+    const cases = [
+      { element: <MonographHome view={home} />, image: home.lead!.image! },
+      { element: <MonographArticle view={article} />, image: article.hero! },
+      { element: <MonographSection view={section} />, image: section.stories[0]!.image! },
+    ]
+    for (const { element, image } of cases) {
+      const { document } = markup(element)
+      const lead = document.querySelector('main img')!
+      const preferred = document.querySelector('main picture source')!
+      const preloads = document.querySelectorAll('link[rel="preload"][as="image"]')
+      expect(preloads).toHaveLength(1)
+      const preload = preloads[0]!
+      expect(preload.getAttribute('type')).toBe('image/avif')
+      expect(preload.getAttribute('imagesrcset')).toBe(preferred.getAttribute('srcset'))
+      expect(preload.getAttribute('imagesizes')).toBe(preferred.getAttribute('sizes'))
+      expect(preload.getAttribute('imagesizes')).toBe(lead.getAttribute('sizes'))
+      expect(preload.getAttribute('fetchpriority')).toBe('high')
+      expect(preload.getAttribute('href')).toBe(`/api/media/${image.mediaId}?w=320&fm=avif`)
+      const html = renderToStaticMarkup(
+        <html lang="en">
+          {/* eslint-disable-next-line @next/next/no-head-element -- Test React's HTML hoisting, without a Next runtime. */}
+          <head />
+          <body>{element}</body>
+        </html>,
+      )
+      expect(html.indexOf('<link')).toBeGreaterThan(html.indexOf('<head>'))
+      expect(html.indexOf('<link')).toBeLessThan(html.indexOf('</head>'))
+      expect(lead.getAttribute('fetchpriority')).toBe('high')
+      expect(lead.getAttribute('loading')).not.toBe('lazy')
+      expect(lead.getAttribute('width')).toBe(String(image.width))
+      expect(lead.getAttribute('height')).toBe(String(image.height))
+      for (const laterImage of [...document.querySelectorAll('main img')].slice(1)) {
+        expect(laterImage.getAttribute('loading')).toBe('lazy')
+        expect(laterImage.hasAttribute('fetchpriority')).toBe(false)
+      }
+    }
+  })
+
+  it('preloads the original when a hero cannot safely use responsive variants', () => {
+    const article = articles.get('article-lab-long-table')!
+    for (const hero of [
+      { ...article.hero!, animated: true },
+      { ...article.hero!, contentType: 'image/gif' },
+      { ...article.hero!, width: 9000, height: 9000 },
+      { ...article.hero!, width: null, height: null },
+    ]) {
+      const { document } = markup(<MonographArticle view={{ ...article, hero }} />)
+      const image = document.querySelector('.qm-hero img')!
+      const preloads = document.querySelectorAll('link[rel="preload"][as="image"]')
+      expect(preloads).toHaveLength(1)
+      expect(preloads[0]!.getAttribute('href')).toBe(hero.src)
+      expect(preloads[0]!.getAttribute('type')).toBe(hero.contentType)
+      expect(preloads[0]!.hasAttribute('imagesrcset')).toBe(false)
+      expect(preloads[0]!.hasAttribute('imagesizes')).toBe(false)
+      expect(document.querySelector('.qm-hero source')).toBeNull()
+      expect(image.getAttribute('src')).toBe(hero.src)
+      if (hero.width === null) {
+        expect(image.hasAttribute('width')).toBe(false)
+        expect(image.hasAttribute('height')).toBe(false)
+        expect(image.closest('picture')!.parentElement!.className).toContain('aspect-[3/2]')
+      }
+    }
+  })
+
+  it('does not promote a later section image when the first card is text only', () => {
+    const stories = [{ ...section.stories[0]!, image: null }, ...section.stories.slice(1)]
+    const { document } = markup(<MonographSection view={{ ...section, stories }} />)
+    expect(document.querySelector('link[as="image"]')).toBeNull()
+    expect(document.querySelectorAll('main img').length).toBeGreaterThan(0)
+    for (const image of document.querySelectorAll('main img')) {
+      expect(image.getAttribute('loading')).toBe('lazy')
+      expect(image.hasAttribute('fetchpriority')).toBe(false)
+    }
+    const article = articles.get('article-lab-long-table')!
+    const noHero = markup(<MonographArticle view={{ ...article, hero: null }} />)
+    expect(noHero.document.querySelector('link[as="image"]')).toBeNull()
   })
 
   it('keeps long titles, a very short post, absent heroes, all body blocks, captions and links', () => {
@@ -138,6 +220,7 @@ describe('Quiet Monograph with real published North House content', () => {
         expect(screen.getByRole('heading', { name: story.title })).toBeTruthy()
       if (stories.length === 0)
         expect(screen.getByText('No stories have been published in this section yet.')).toBeTruthy()
+      if (stories.length === 0) expect(document.querySelector('link[as="image"]')).toBeNull()
     }
   })
 })

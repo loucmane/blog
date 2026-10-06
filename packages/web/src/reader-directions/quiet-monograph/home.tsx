@@ -13,7 +13,11 @@ export function MonographHome({ view }: HomeDirectionProps) {
   const recent = view.recent.slice(0, 3)
   const more = view.recent.slice(3)
   return (
-    <MonographShell isHome navigation={view.navigation}>
+    <MonographShell
+      isHome
+      leadImage={lead?.image ? { image: lead.image, sizes: coverSizes } : null}
+      navigation={view.navigation}
+    >
       {lead ? (
         <>
           <section
