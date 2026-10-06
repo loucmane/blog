@@ -13,8 +13,11 @@ interface ReaderImageProps {
  * Renders a stored image as resized variants over the allowlisted widths: AVIF and WebP sources
  * for browsers that decode them, and a fallback in the original's type. Images with stored
  * dimensions keep them. Originals saved without dimensions fill a 3:2 frame cropped around the
- * focal point, so the layout never shifts while they load. A GIF loads as its original, since it
- * may be animated.
+ * focal point, so the layout never shifts while they load.
+ *
+ * An image loads as its original when variants would misrepresent it: a GIF or an original
+ * measured as animated, since a variant keeps one frame; one above the pixel limit; and one of
+ * unknown width, since no width descriptor could be known to be true.
  *
  * Every variant loads from the public media route, which checks on every request that a visible
  * story still uses the image. The Next image optimizer would keep serving its cached copies after

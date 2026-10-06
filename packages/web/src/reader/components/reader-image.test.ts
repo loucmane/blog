@@ -8,6 +8,7 @@ import { ReaderImageView } from './reader-image'
 
 const image: ReaderImage = {
   alt: 'Illustration of low winter sun on a pine floor',
+  animated: false,
   caption: null,
   contentType: 'image/png',
   credit: null,
@@ -44,13 +45,6 @@ const cappedAt1600 = [
   [1280, 1280],
   [1920, 1600],
 ] as const
-const everyWidth = [
-  [320, 320],
-  [640, 640],
-  [960, 960],
-  [1280, 1280],
-  [1920, 1920],
-] as const
 
 describe('reader images', () => {
   it('renders AVIF and WebP sources and a fallback over the allowlisted widths, with the stored size', () => {
@@ -77,19 +71,30 @@ describe('reader images', () => {
     expect(img?.getAttribute('decoding')).toBe('async')
   })
 
-  it('fills a 3:2 frame with every allowlisted width when the original has no stored size', () => {
-    const container = render({ ...image, height: null, width: null })
+  it('loads an original of unknown size as itself in a 3:2 frame, since no width could be claimed truthfully', () => {
+    const container = render({ ...image, animated: null, height: null, width: null })
     const frame = container.firstElementChild
     const img = container.querySelector('picture > img')
 
     expect(frame?.className).toContain('aspect-[3/2]')
-    expect(
-      container.querySelector('picture > source[type="image/avif"]')?.getAttribute('srcset'),
-    ).toBe(srcSet('avif', everyWidth))
-    expect(img?.getAttribute('srcset')).toBe(srcSet('png', everyWidth))
+    expect(container.querySelectorAll('source')).toHaveLength(0)
+    expect(img?.getAttribute('src')).toBe('/api/media/media-lab-winter-light')
+    expect(img?.hasAttribute('srcset')).toBe(false)
+    expect(img?.hasAttribute('sizes')).toBe(false)
     expect(img?.hasAttribute('width')).toBe(false)
     expect(img?.hasAttribute('height')).toBe(false)
     expect(img?.getAttribute('style')).toContain('object-position:50% 40%')
+  })
+
+  it('loads an animated original as itself, at its recorded size, so that every frame plays', () => {
+    const container = render({ ...image, animated: true, contentType: 'image/webp' })
+    const img = container.querySelector('picture > img')
+
+    expect(container.querySelectorAll('source')).toHaveLength(0)
+    expect(img?.getAttribute('src')).toBe('/api/media/media-lab-winter-light')
+    expect(img?.hasAttribute('srcset')).toBe(false)
+    expect(img?.getAttribute('width')).toBe('1600')
+    expect(img?.getAttribute('height')).toBe('900')
   })
 
   it('falls back to JPEG for a JPEG original', () => {
@@ -130,6 +135,7 @@ describe('reader images', () => {
       image,
       { ...image, height: null, width: null },
       { ...image, contentType: 'image/gif' },
+      { ...image, animated: true, contentType: 'image/webp' },
     ]) {
       expect(render(value, true).innerHTML).not.toContain('/_next/image')
     }

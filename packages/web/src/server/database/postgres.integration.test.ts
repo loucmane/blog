@@ -101,13 +101,19 @@ describe('PostgreSQL and media persistence integration', () => {
   it('migrates, rolls back failures, projects search, and restores database plus media', async () => {
     const pool = new Pool({ connectionString: databaseUrl, max: 4 })
     const migrations = await readContentMigrations()
+    const migrationIds = [
+      '0001_content_foundation',
+      '0002_owner_auth',
+      '0003_publication_version',
+      '0004_media_asset_animation',
+    ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
-      applied: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
+      applied: migrationIds,
       skipped: [],
     })
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: [],
-      skipped: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
+      skipped: migrationIds,
     })
 
     const repository = new PostgresContentRepository(pool)
@@ -296,11 +302,18 @@ describe('PostgreSQL and media persistence integration', () => {
 
     const media = await mediaService.store({
       alt: 'Synthetic local persistence fixture',
+      animated: true,
       body: new TextEncoder().encode('task42 synthetic media original'),
       contentType: 'image/png',
       creditName: 'Task 42 integration',
+      height: 48,
       id: 'media-integration',
+      width: 64,
     })
+    // What was measured about the original when it was stored comes back from PostgreSQL.
+    await expect(
+      repository.transaction((transaction) => transaction.getMediaAsset('media-integration')),
+    ).resolves.toMatchObject({ animated: true, height: 48, width: 64 })
 
     const projection = new PostgresSearchProjection(pool)
     await projection.upsertPublishedArticle({
@@ -405,7 +418,11 @@ describe('PostgreSQL and media persistence integration', () => {
     await restoredPool.query('COMMIT')
     await expect(applyContentMigrations(restoredPool, migrations)).resolves.toEqual({
       applied: ['0002_owner_auth'],
-      skipped: ['0001_content_foundation', '0003_publication_version'],
+      skipped: [
+        '0001_content_foundation',
+        '0003_publication_version',
+        '0004_media_asset_animation',
+      ],
     })
 
     await restoredPool.end()
@@ -555,6 +572,7 @@ describe('PostgreSQL and media persistence integration', () => {
     })
     const asset: MediaAsset = {
       alt: winterLight.alt,
+      animated: false,
       bytes: body.byteLength,
       caption: winterLight.caption,
       contentType: 'image/png',

@@ -1,14 +1,19 @@
 import { crc32, deflateSync } from 'node:zlib'
 
+import { renderToStaticMarkup } from 'react-dom/server'
 import sharp from 'sharp'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { GET as getMedia } from '@/app/api/media/[id]/route'
+import { POST as uploadMedia } from '@/app/api/owner/media/route'
+import StoryPage from '@/app/stories/[slug]/page'
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/content/document'
 import type { MediaAsset } from '@/server/content/domain'
+import { sha256Bytes } from '@/server/content/media'
 import { mediaVariantWidths, type MediaVariant } from '@/server/content/media-variant-rules'
 import { InMemoryMediaVariantStore, mediaVariantObjectKey } from '@/server/content/media-variants'
 import { getOwnerRuntime } from '@/server/owner/runtime'
+import { createOwnerFixtureSession, ownerFixtureCookieName } from '@/server/owner/session'
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
@@ -48,6 +53,22 @@ function solid(width: number, height: number) {
   return sharp({ create: { background: '#5a7a96', channels: 3, height, width } })
 }
 
+/** An animated WebP: two 64 × 48 frames, 100 ms each. */
+async function animatedWebp(): Promise<Uint8Array> {
+  const frames = await Promise.all(
+    ['#5a7a96', '#96785a'].map((background) =>
+      sharp({ create: { background, channels: 3, height: 48, width: 64 } })
+        .png()
+        .toBuffer(),
+    ),
+  )
+  return new Uint8Array(
+    await sharp(frames, { join: { animated: true } })
+      .webp({ delay: [100, 100], loop: 0 })
+      .toBuffer(),
+  )
+}
+
 function pngChunk(type: string, data: Uint8Array): Buffer {
   const typeAndData = Buffer.concat([Buffer.from(type, 'ascii'), data])
   const chunk = Buffer.alloc(typeAndData.length + 8)
@@ -83,6 +104,7 @@ const undecodablePng = Buffer.from(
 )
 
 interface Original {
+  readonly animated?: boolean
   readonly body: Uint8Array
   readonly contentType: string
   readonly height?: number
@@ -128,6 +150,17 @@ async function originals(): Promise<readonly Original[]> {
       contentType: 'image/png',
       id: 'media-private',
     },
+    // Measured as animated when it was stored, as owner uploads are.
+    {
+      animated: true,
+      body: await animatedWebp(),
+      contentType: 'image/webp',
+      height: 48,
+      id: 'media-animated',
+      width: 64,
+    },
+    // Stored without being measured: only its bytes show that it is animated.
+    { body: await animatedWebp(), contentType: 'image/webp', id: 'media-animated-unmeasured' },
   ]
 }
 
@@ -139,6 +172,8 @@ const publicIds = [
   'media-svg',
   'media-pixel',
   'media-undecodable',
+  'media-animated',
+  'media-animated-unmeasured',
 ]
 
 function imageNode(mediaId: string): ContentNode {
@@ -178,6 +213,7 @@ async function publishStoryWithImages() {
       original.id,
       await runtime.media.store({
         alt: `Image ${original.id}`,
+        animated: original.animated ?? null,
         body: original.body,
         contentType: original.contentType,
         creditName: 'Studio',
@@ -255,6 +291,67 @@ async function expectNotFound(response: Response, label: string) {
   })
 }
 
+async function renderStory(slug: string): Promise<string> {
+  return renderToStaticMarkup(await StoryPage({ params: Promise.resolve({ slug }) }))
+}
+
+/** The `<img>` tag that loads the given media, from rendered markup. */
+function imageTag(markup: string, mediaId: string): string {
+  return markup.match(new RegExp(`<img[^>]*src="/api/media/${mediaId}[?"][^>]*>`))?.[0] ?? ''
+}
+
+/** Uploads an image the way the owner workspace does, which never sends its dimensions. */
+async function upload(file: {
+  readonly alt: string
+  readonly body: Uint8Array
+  readonly contentType: string
+  readonly name: string
+}): Promise<MediaAsset> {
+  const form = new FormData()
+  form.set('alt', file.alt)
+  form.set('creditName', 'Studio')
+  form.set('file', new File([Buffer.from(file.body)], file.name, { type: file.contentType }))
+  const encoded = new Response(form)
+  const body = new Uint8Array(await encoded.arrayBuffer())
+  const response = await uploadMedia(
+    new Request(`${siteOrigin}/api/owner/media`, {
+      body,
+      headers: {
+        'content-length': String(body.byteLength),
+        'content-type': encoded.headers.get('content-type') ?? '',
+        cookie: `${ownerFixtureCookieName}=${createOwnerFixtureSession()}`,
+        origin: siteOrigin,
+      },
+      method: 'POST',
+    }),
+  )
+  expect(response.status).toBe(200)
+  return ((await response.json()) as { readonly asset: MediaAsset }).asset
+}
+
+/** Publishes a story that shows the given images, in order. */
+async function publishStoryWith(slug: string, mediaIds: readonly string[]) {
+  const runtime = getOwnerRuntime()
+  const articleId = `article-${slug}`
+  const created = await runtime.content.createArticle({
+    dek: 'How a north-facing room learns to hold the low sun of December.',
+    document: storyDocument(articleId, [
+      ...mediaIds.map(imageNode),
+      paragraph('By three in the afternoon the light is already leaving.'),
+    ]),
+    id: articleId,
+    idempotencyKey: `create-${slug}`,
+    slug,
+    title: 'Variants of winter light',
+  })
+  await runtime.content.publish({
+    articleId,
+    expectedVersion: created.article.version,
+    idempotencyKey: `publish-${slug}`,
+    revisionId: created.revision.id,
+  })
+}
+
 describe('public media variants', () => {
   it('serves an allowed width and format as a resized image of that type', async () => {
     const { asset } = await publishStoryWithImages()
@@ -270,7 +367,7 @@ describe('public media variants', () => {
       expect(response.status, format).toBe(200)
       expect(response.headers.get('content-type'), format).toBe(contentType)
       expect(response.headers.get('cache-control'), format).toBe('public, no-cache')
-      expect(response.headers.get('etag'), format).toBe(`"${wide.originalSha256}-v1-640.${format}"`)
+      expect(response.headers.get('etag'), format).toBe(`"${wide.originalSha256}-v2-640.${format}"`)
       expect(response.headers.get('x-content-type-options'), format).toBe('nosniff')
       expect(await decoded(response), format).toEqual({
         format: decodedFormat,
@@ -319,7 +416,7 @@ describe('public media variants', () => {
         expect(response.headers.get('content-type'), search).toBe(contentType)
         expect(response.headers.get('cache-control'), search).toBe('public, no-cache')
         expect(response.headers.get('etag'), search).toBe(
-          `"${pixel.originalSha256}-v1-${width}.${format}"`,
+          `"${pixel.originalSha256}-v2-${width}.${format}"`,
         )
         expect(await decoded(response), search).toEqual({
           format: decodedFormat,
@@ -381,7 +478,7 @@ describe('public media variants', () => {
 
   it('answers hidden, unknown, and malformed ids with the same uncacheable not-found, whatever the query', async () => {
     const { asset } = await publishStoryWithImages()
-    const privateTag = `"${asset('media-private').originalSha256}-v1-640.avif"`
+    const privateTag = `"${asset('media-private').originalSha256}-v2-640.avif"`
 
     for (const id of ['media-private', 'media-unknown', '..%2Fmedia-wide']) {
       for (const search of ['', 'w=640&fm=avif', 'w=500&fm=avif', 'w=640&fm=gif', 'q=1']) {
@@ -404,7 +501,7 @@ describe('public media variants', () => {
     const { unpublish } = await publishStoryWithImages()
     const first = await requestMedia('media-wide', 'w=960&fm=avif')
     const entityTag = first.headers.get('etag') ?? ''
-    expect(entityTag).toMatch(/^"[0-9a-f]{64}-v1-960\.avif"$/)
+    expect(entityTag).toMatch(/^"[0-9a-f]{64}-v2-960\.avif"$/)
     const objects = getOwnerRuntime().objects
     if (!objects) throw new Error('The test runtime should store media in memory.')
     const readOriginal = vi.spyOn(objects, 'getOriginal')
@@ -552,5 +649,145 @@ describe('public media variants', () => {
     expect(logged).toHaveBeenCalledTimes(2)
     expect(logged).toHaveBeenCalledWith('Public media media-photo could not be served.', failure)
     expect(storedVariantKeys()).toEqual([])
+  })
+
+  it('sends readers to an animated original instead of a variant that would keep one frame', async () => {
+    const { asset, unpublish } = await publishStoryWithImages()
+    const objects = getOwnerRuntime().objects
+    if (!objects) throw new Error('The test runtime should store media in memory.')
+    const readOriginal = vi.spyOn(objects, 'getOriginal')
+
+    for (const search of ['w=320&fm=avif', 'w=640&fm=webp', 'w=1920&fm=png']) {
+      const response = await requestMedia('media-animated', search)
+
+      expect(response.status, search).toBe(307)
+      expect(response.headers.get('location'), search).toBe('/api/media/media-animated')
+      expect(response.headers.get('cache-control'), search).toBe('no-store')
+      expect(response.headers.get('etag'), search).toBeNull()
+    }
+    // What was recorded when the original was stored decides, without reading the original.
+    expect(readOriginal).not.toHaveBeenCalled()
+
+    // An original stored without being measured is checked by its own bytes.
+    const unmeasured = await requestMedia('media-animated-unmeasured', 'w=320&fm=webp')
+    expect(unmeasured.status).toBe(307)
+    expect(unmeasured.headers.get('location')).toBe('/api/media/media-animated-unmeasured')
+    expect(unmeasured.headers.get('cache-control')).toBe('no-store')
+    expect(storedVariantKeys()).toEqual([])
+
+    // Readers get the original itself, with every frame.
+    const original = await requestMedia('media-animated')
+    expect(original.status).toBe(200)
+    expect(original.headers.get('content-type')).toBe('image/webp')
+    const bytes = new Uint8Array(await original.arrayBuffer())
+    expect(sha256Bytes(bytes)).toBe(asset('media-animated').originalSha256)
+    expect((await sharp(bytes).metadata()).pages).toBe(2)
+
+    await unpublish()
+
+    for (const id of ['media-animated', 'media-animated-unmeasured']) {
+      await expectNotFound(await requestMedia(id, 'w=320&fm=webp'), `${id} variant`)
+      await expectNotFound(await requestMedia(id), `${id} original`)
+    }
+  })
+
+  it('never serves or confirms a variant from the earlier revision, which flattened animations', async () => {
+    const { asset } = await publishStoryWithImages()
+    const animated = asset('media-animated-unmeasured')
+    // Revision 1 stored the first frame of an animated original under its own keys.
+    await variantStore().putVariant({
+      body: new Uint8Array(await solid(64, 48).webp().toBuffer()),
+      contentType: 'image/webp',
+      key: `variants/${animated.id}/${animated.originalSha256}/v1/320.webp`,
+    })
+
+    const flattened = await requestMedia('media-animated-unmeasured', 'w=320&fm=webp')
+    expect(flattened.status).toBe(307)
+    expect(flattened.headers.get('location')).toBe('/api/media/media-animated-unmeasured')
+
+    // A cache holding a revision 1 variant gets the current bytes, not a confirmation.
+    const wide = asset('media-wide')
+    const revalidated = await requestMedia('media-wide', 'w=640&fm=avif', {
+      'if-none-match': `"${wide.originalSha256}-v1-640.avif"`,
+    })
+    expect(revalidated.status).toBe(200)
+    expect(revalidated.headers.get('etag')).toBe(`"${wide.originalSha256}-v2-640.avif"`)
+  })
+
+  it('renders animated originals and originals of unknown size as themselves on the story page', async () => {
+    await publishStoryWithImages()
+
+    const markup = await renderStory('variants-of-winter-light')
+
+    for (const id of [
+      'media-animated',
+      'media-animated-unmeasured',
+      'media-anim',
+      'media-photo',
+      'media-pixel',
+    ]) {
+      expect(markup, id).toContain(`src="/api/media/${id}"`)
+      expect(markup, id).not.toContain(`/api/media/${id}?`)
+    }
+    // A still image whose size was recorded keeps its variants, described at their real widths.
+    expect(markup).toContain('/api/media/media-wide?w=1920&amp;fm=avif 1440w')
+    expect(markup).not.toContain('/api/media/media-wide?w=1920&amp;fm=avif 1920w')
+  })
+})
+
+describe('owner uploads', () => {
+  it('records the size of an uploaded image, so that its widths are described truthfully', async () => {
+    const photo = await upload({
+      alt: 'An 800 by 600 photograph',
+      body: new Uint8Array(await solid(800, 600).png().toBuffer()),
+      contentType: 'image/png',
+      name: 'photograph.png',
+    })
+    expect(photo).toMatchObject({ animated: false, height: 600, width: 800 })
+    await publishStoryWith('an-uploaded-photograph', [photo.id])
+
+    const markup = await renderStory('an-uploaded-photograph')
+
+    for (const format of ['avif', 'webp', 'png']) {
+      expect(markup, format).toContain(
+        [
+          `/api/media/${photo.id}?w=320&amp;fm=${format} 320w`,
+          `/api/media/${photo.id}?w=640&amp;fm=${format} 640w`,
+          `/api/media/${photo.id}?w=960&amp;fm=${format} 800w`,
+        ].join(', '),
+      )
+      expect(markup, format).not.toContain(`/api/media/${photo.id}?w=1280`)
+      expect(markup, format).not.toContain(`/api/media/${photo.id}?w=1920`)
+    }
+    const img = imageTag(markup, photo.id)
+    expect(img).toContain(`src="/api/media/${photo.id}?w=960&amp;fm=png"`)
+    expect(img).toContain('width="800"')
+    expect(img).toContain('height="600"')
+    const largest = await requestMedia(photo.id, 'w=960&fm=webp')
+    expect(await decoded(largest)).toEqual({ format: 'webp', height: 600, width: 800 })
+  })
+
+  it('records an uploaded animation as animated, so that readers get its original', async () => {
+    const loop = await upload({
+      alt: 'A two-frame loop',
+      body: await animatedWebp(),
+      contentType: 'image/webp',
+      name: 'loop.webp',
+    })
+    expect(loop).toMatchObject({ animated: true, height: 48, width: 64 })
+    await publishStoryWith('an-uploaded-loop', [loop.id])
+
+    const markup = await renderStory('an-uploaded-loop')
+
+    const img = imageTag(markup, loop.id)
+    expect(img).toContain(`src="/api/media/${loop.id}"`)
+    expect(img).toContain('width="64"')
+    expect(img).toContain('height="48"')
+    expect(img.toLowerCase()).not.toContain('srcset')
+    expect(markup).not.toContain(`/api/media/${loop.id}?`)
+    expect(markup).not.toContain('<source')
+    const variant = await requestMedia(loop.id, 'w=320&fm=webp')
+    expect(variant.status).toBe(307)
+    expect(variant.headers.get('location')).toBe(`/api/media/${loop.id}`)
   })
 })

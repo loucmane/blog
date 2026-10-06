@@ -74,12 +74,16 @@ describe('public media variant requests', () => {
 })
 
 describe('reader image candidates', () => {
-  it('lists every width when the original width is unknown or larger than the widest variant', () => {
-    for (const originalWidth of [null, 1920, 4000]) {
+  it('lists every width for an original at least as wide as the widest variant', () => {
+    for (const originalWidth of [1920, 4000]) {
       expect(mediaVariantCandidates(originalWidth), String(originalWidth)).toEqual(
         mediaVariantWidths.map((width) => ({ descriptor: width, width })),
       )
     }
+  })
+
+  it('lists no width for an original of unknown width, since none could be described truthfully', () => {
+    expect(mediaVariantCandidates(null)).toEqual([])
   })
 
   it('stops at the first width that reaches the original, described at the original width', () => {
@@ -96,6 +100,11 @@ describe('reader image candidates', () => {
       { descriptor: 960, width: 960 },
       { descriptor: 1280, width: 1280 },
     ])
+    expect(mediaVariantCandidates(800)).toEqual([
+      { descriptor: 320, width: 320 },
+      { descriptor: 640, width: 640 },
+      { descriptor: 800, width: 960 },
+    ])
     expect(mediaVariantCandidates(100)).toEqual([{ descriptor: 100, width: 320 }])
   })
 
@@ -110,7 +119,13 @@ describe('reader image candidates', () => {
       ].join(', ')
 
     expect(
-      readerImageSources({ contentType: 'image/png', mediaId: 'media-wide', width: 1600 }),
+      readerImageSources({
+        animated: false,
+        contentType: 'image/png',
+        height: 900,
+        mediaId: 'media-wide',
+        width: 1600,
+      }),
     ).toEqual({
       fallback: { src: '/api/media/media-wide?w=1920&fm=png', srcSet: srcSet('png') },
       sources: [
@@ -119,19 +134,41 @@ describe('reader image candidates', () => {
       ],
     })
     expect(
-      readerImageSources({ contentType: 'image/jpeg', mediaId: 'media-photo', width: null })
-        ?.fallback,
+      readerImageSources({
+        animated: false,
+        contentType: 'image/jpeg',
+        height: 600,
+        mediaId: 'media-photo',
+        width: 800,
+      })?.fallback,
     ).toEqual({
-      src: '/api/media/media-photo?w=1920&fm=jpeg',
-      srcSet: mediaVariantWidths
-        .map((width) => `/api/media/media-photo?w=${width}&fm=jpeg ${width}w`)
-        .join(', '),
+      src: '/api/media/media-photo?w=960&fm=jpeg',
+      srcSet: [
+        '/api/media/media-photo?w=320&fm=jpeg 320w',
+        '/api/media/media-photo?w=640&fm=jpeg 640w',
+        '/api/media/media-photo?w=960&fm=jpeg 800w',
+      ].join(', '),
     })
   })
 
-  it('leaves a GIF to its original, which may be animated', () => {
-    expect(
-      readerImageSources({ contentType: 'image/gif', mediaId: 'media-anim', width: 800 }),
-    ).toBeNull()
+  it('leaves an image to its original when a variant could lose frames, be too large, or claim a width it lacks', () => {
+    const still = {
+      animated: false,
+      contentType: 'image/png',
+      height: 600,
+      mediaId: 'media-still',
+      width: 800,
+    }
+
+    for (const [label, image] of [
+      ['a GIF, which may be animated', { ...still, contentType: 'image/gif' }],
+      ['an animated WebP', { ...still, animated: true, contentType: 'image/webp' }],
+      ['an animated PNG', { ...still, animated: true }],
+      ['an image above the pixel limit', { ...still, height: 9000, width: 9000 }],
+      ['an image of unknown size', { ...still, height: null, width: null }],
+      ['an image never measured', { ...still, animated: null, height: null, width: null }],
+    ] as const) {
+      expect(readerImageSources(image), label).toBeNull()
+    }
   })
 })

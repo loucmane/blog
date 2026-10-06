@@ -2,6 +2,7 @@ import {
   mediaVariantContentType,
   mediaVariantFormats,
   mediaVariantFormatsFor,
+  mediaVariantsRuledOut,
   mediaVariantWidths,
   type MediaVariant,
   type MediaVariantFormat,
@@ -57,14 +58,16 @@ export interface MediaVariantCandidate {
 /**
  * The variant widths worth listing for an original of the given width. Variants never upscale, so
  * the list stops at the first width that reaches the original, and describes that one at the
- * original's width. When the width is unknown, every width is listed.
+ * original's width. When the width is unknown, none is listed, since no `w` descriptor could be
+ * known to be true.
  */
 export function mediaVariantCandidates(
   originalWidth: number | null,
 ): readonly MediaVariantCandidate[] {
+  if (originalWidth === null) return []
   const candidates: MediaVariantCandidate[] = []
   for (const width of mediaVariantWidths) {
-    if (originalWidth !== null && width >= originalWidth) {
+    if (width >= originalWidth) {
       candidates.push({ descriptor: originalWidth, width })
       break
     }
@@ -80,10 +83,14 @@ export interface ReaderImageSources {
   readonly sources: readonly { readonly srcSet: string; readonly type: string }[]
 }
 
-/** The responsive sources for a reader image, or null when it is served only as its original. */
+/**
+ * The responsive sources for a reader image, or null when it is served only as its original: a
+ * GIF, an original measured as animated or above the pixel limit, or one of unknown width.
+ */
 export function readerImageSources(
-  image: Pick<ReaderImage, 'contentType' | 'mediaId' | 'width'>,
+  image: Pick<ReaderImage, 'animated' | 'contentType' | 'height' | 'mediaId' | 'width'>,
 ): ReaderImageSources | null {
+  if (mediaVariantsRuledOut(image)) return null
   const formats = mediaVariantFormatsFor(image.contentType)
   const fallbackFormat = formats.at(-1)
   const candidates = mediaVariantCandidates(image.width)

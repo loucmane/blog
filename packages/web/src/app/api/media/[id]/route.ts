@@ -14,6 +14,7 @@ import type { MediaAsset } from '@/server/content/domain'
 import {
   mediaVariantContentType,
   mediaVariantFormatsFor,
+  mediaVariantsRuledOut,
   type MediaVariant,
 } from '@/server/content/media-variant-rules'
 import {
@@ -54,6 +55,17 @@ function serverErrorResponse(mediaId: string, error: unknown) {
     { error: 'That image could not be loaded.' },
     { headers: { 'cache-control': 'no-store' }, status: 500 },
   )
+}
+
+/**
+ * Sends a reader from a variant to the original, for a visible image that has no variants. The
+ * original route checks visibility again, and nothing is cached.
+ */
+function originalRedirectResponse(mediaId: string) {
+  return new Response(null, {
+    headers: { 'cache-control': 'no-store', location: publicMediaPath(mediaId) },
+    status: 307,
+  })
 }
 
 /** Headers for a served image: any cache may keep it, but must revalidate it before each use. */
@@ -97,6 +109,9 @@ async function serveVariant(
   if (!mediaVariantFormatsFor(asset.contentType).includes(variant.format)) {
     return badRequestResponse()
   }
+  // What was measured when the original was stored can rule variants out without reading it: an
+  // animated original would keep only its first frame.
+  if (mediaVariantsRuledOut(asset)) return originalRedirectResponse(asset.id)
   const entityTag = mediaVariantEntityTag(asset, variant)
   const headers = revalidatedHeaders(entityTag)
   if (isNotModified(request, entityTag)) return new Response(null, { headers, status: 304 })
@@ -106,11 +121,8 @@ async function serveVariant(
   } catch (error) {
     if (!isMediaVariantUnavailable(error)) return serverErrorResponse(asset.id, error)
     // An original that cannot be resized safely is still public: send the reader to it, as
-    // before variants existed. The original route checks visibility again.
-    return new Response(null, {
-      headers: { 'cache-control': 'no-store', location: publicMediaPath(asset.id) },
-      status: 307,
-    })
+    // before variants existed.
+    return originalRedirectResponse(asset.id)
   }
   return new Response(Uint8Array.from(body).buffer, {
     headers: { ...headers, 'content-type': mediaVariantContentType(variant.format) },
@@ -124,8 +136,9 @@ async function serveVariant(
  * read fresh for each request, and runs before anything else about the request is considered.
  * Caches must revalidate every use, so an unpublished image is gone on the next request, even when
  * variants of it are stored. A conditional request gets its 304 only after the same visibility
- * check as a full response. A visible image that cannot be resized is redirected to its original,
- * and one whose bytes cannot be read is a logged server error, never a not-found.
+ * check as a full response. A visible image that has no variants, such as an animated one, or that
+ * cannot be resized is redirected to its original, and one whose bytes cannot be read is a logged
+ * server error, never a not-found.
  */
 export async function GET(request: Request, context: RouteContext): Promise<Response> {
   const { id } = await context.params

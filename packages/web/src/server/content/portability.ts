@@ -207,6 +207,8 @@ const settingsSchema = z
 const mediaAssetSchema = z
   .object({
     alt: z.string().min(1),
+    // Bundles exported before originals were measured have no `animated` field.
+    animated: z.boolean().nullable().optional(),
     bytes: z.number().int().nonnegative(),
     caption: z.string(),
     contentType: id,
@@ -302,6 +304,10 @@ function normalizePortableBundle(bundle: z.infer<typeof bundleSchema>): Portable
     ...bundle,
     data: {
       ...bundle.data,
+      mediaAssets: bundle.data.mediaAssets.map((asset) => ({
+        ...asset,
+        animated: asset.animated ?? null,
+      })),
       publicationJobs: bundle.data.publicationJobs.map((job) => ({
         ...job,
         previousStatus:

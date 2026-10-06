@@ -3,8 +3,10 @@ import sharp, { type Metadata, type Sharp } from 'sharp'
 import type { MediaAsset } from './domain'
 import { assertMediaKeyParts } from './media'
 import {
+  MAX_MEDIA_VARIANT_INPUT_PIXELS,
   mediaVariantContentType,
   mediaVariantRevision,
+  type MediaOriginalFacts,
   type MediaVariant,
   type MediaVariantFormat,
 } from './media-variant-rules'
@@ -17,13 +19,6 @@ import type { MediaVariantStore, OriginalObjectStore } from './ports'
  * The public media route checks that a visible story uses an image before it asks for a variant,
  * so a stored variant never outlives the right to show its image.
  */
-
-/**
- * Originals with more pixels are refused before any decoding: 8192 × 8192, more than any common
- * camera short of medium format. With MEDIA_VARIANT_CONCURRENCY, this bounds the memory that
- * making variants can use, whatever the originals claim to be.
- */
-export const MAX_MEDIA_VARIANT_INPUT_PIXELS = 8192 * 8192
 
 /** How many variants one server process makes at once. Further requests wait their turn. */
 export const MEDIA_VARIANT_CONCURRENCY = 2
@@ -39,7 +34,8 @@ export function mediaVariantObjectKey(
   return `variants/${asset.id}/${asset.originalSha256}/v${mediaVariantRevision}/${variant.width}.${variant.format}`
 }
 
-export type MediaVariantUnavailableReason = 'format-mismatch' | 'too-many-pixels' | 'unreadable'
+export type MediaVariantUnavailableReason =
+  'animated' | 'format-mismatch' | 'too-many-pixels' | 'unreadable'
 
 /** An original that cannot be resized safely. Readers should get the original instead. */
 export class MediaVariantUnavailableError extends Error {
@@ -72,10 +68,10 @@ function latin1(bytes: Uint8Array, start: number, end: number): string {
 }
 
 /**
- * Whether the bytes start the way the declared type does: the PNG, JPEG, or WebP signature, or an
- * ISO-BMFF `ftyp` box that names an AVIF brand. sharp picks its decoder from these same bytes, so
- * this runs before any decoding and decides that no decoder for another format sharp knows (SVG,
- * PDF, TIFF, HEIC, and more) ever sees an original.
+ * Whether the bytes start the way the declared type does: the PNG, JPEG, GIF, or WebP signature,
+ * or an ISO-BMFF `ftyp` box that names an AVIF brand. sharp picks its decoder from these same
+ * bytes, so this runs before any decoding and decides that no decoder for another format sharp
+ * knows (SVG, PDF, TIFF, HEIC, and more) ever sees an original.
  */
 function hasSignature(contentType: string, bytes: Uint8Array): boolean {
   switch (contentType) {
@@ -84,6 +80,8 @@ function hasSignature(contentType: string, bytes: Uint8Array): boolean {
       const boxEnd = new DataView(bytes.buffer, bytes.byteOffset).getUint32(0)
       return /avif|avis/.test(latin1(bytes, 8, Math.min(boxEnd, 64)))
     }
+    case 'image/gif':
+      return ['GIF87a', 'GIF89a'].includes(latin1(bytes, 0, 6))
     case 'image/jpeg':
       return latin1(bytes, 0, 3) === '\xff\xd8\xff'
     case 'image/png':
@@ -92,6 +90,85 @@ function hasSignature(contentType: string, bytes: Uint8Array): boolean {
       return latin1(bytes, 0, 4) === 'RIFF' && latin1(bytes, 8, 12) === 'WEBP'
     default:
       return false
+  }
+}
+
+/**
+ * Whether a PNG is animated: an animated PNG has an animation control chunk (`acTL`) before its
+ * image data. libpng decodes only the first frame of one, and sharp reports no pages for it.
+ */
+function isAnimatedPng(bytes: Uint8Array): boolean {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+  // After the 8-byte signature, each chunk is a 4-byte length, a 4-byte type, its data, and a CRC.
+  for (let offset = 8; offset + 8 <= bytes.byteLength; offset += 12 + view.getUint32(offset)) {
+    const type = latin1(bytes, offset + 4, offset + 8)
+    if (type === 'acTL') return true
+    if (type === 'IDAT') return false
+  }
+  return false
+}
+
+/**
+ * Whether an AVIF file is an image sequence: its `ftyp` box names the `avis` brand, as its major
+ * brand or a compatible one. sharp decodes HEIF still images, not the frames of a sequence.
+ */
+function isAvifSequence(bytes: Uint8Array): boolean {
+  if (bytes.byteLength < 16 || latin1(bytes, 4, 8) !== 'ftyp') return false
+  const boxEnd = Math.min(new DataView(bytes.buffer, bytes.byteOffset).getUint32(0), 256)
+  if (latin1(bytes, 8, 12) === 'avis') return true
+  // Compatible brands follow the major brand and the 4-byte minor version.
+  for (let offset = 16; offset + 4 <= Math.min(boxEnd, bytes.byteLength); offset += 4) {
+    if (latin1(bytes, offset, offset + 4) === 'avis') return true
+  }
+  return false
+}
+
+/**
+ * Whether the container itself says the original is animated, where sharp does not count frames:
+ * an animated PNG or an AVIF image sequence. sharp counts the frames of WebP and GIF animations.
+ */
+function hasAnimatedContainer(contentType: string, bytes: Uint8Array): boolean {
+  switch (contentType) {
+    case 'image/avif':
+      return isAvifSequence(bytes)
+    case 'image/png':
+      return isAnimatedPng(bytes)
+    default:
+      return false
+  }
+}
+
+/** Whether sharp found more than one frame or page, as in an animated WebP or GIF. */
+function hasManyFrames(metadata: Metadata): boolean {
+  return (metadata.pages ?? 1) > 1
+}
+
+const unmeasured: MediaOriginalFacts = { animated: null, height: null, width: null }
+
+/**
+ * Measures an original from its own bytes when it is stored: whether it is animated, and the size
+ * readers see once its EXIF orientation is applied, which is the size of one frame. Only the
+ * header is read, so measuring a decompression bomb costs nothing. Bytes that are not the declared
+ * type are not measured at all, and a header that cannot be read leaves the size unknown.
+ */
+export async function measureMediaOriginal(
+  contentType: string,
+  original: Uint8Array,
+): Promise<MediaOriginalFacts> {
+  if (!hasSignature(contentType, original)) return unmeasured
+  const animatedContainer = hasAnimatedContainer(contentType, original)
+  let metadata: Metadata
+  try {
+    metadata = await sharp(original, { limitInputPixels: false }).metadata()
+  } catch {
+    return animatedContainer ? { ...unmeasured, animated: true } : unmeasured
+  }
+  const { height, width } = metadata.autoOrient
+  const sized = Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0
+  return {
+    animated: animatedContainer || hasManyFrames(metadata),
+    height: sized ? height : null,
+    width: sized ? width : null,
   }
 }
 
@@ -120,8 +197,9 @@ export interface RenderMediaVariantInput {
 /**
  * Makes one variant: the original, turned upright by its EXIF orientation, scaled down to the
  * variant's width (never up), and encoded in the variant's format with no metadata. It refuses,
- * with a MediaVariantUnavailableError, bytes that are not the declared type, originals above the
- * pixel limit (judged from the header alone), and anything that fails or takes too long.
+ * with a MediaVariantUnavailableError, bytes that are not the declared type, animated originals
+ * (a variant would keep only their first frame), originals above the pixel limit, and anything
+ * that fails or takes too long. Animation and size are judged from the header alone.
  */
 export async function renderMediaVariant({
   contentType,
@@ -132,11 +210,17 @@ export async function renderMediaVariant({
   if (!hasSignature(contentType, original)) {
     throw new MediaVariantUnavailableError('format-mismatch')
   }
+  if (hasAnimatedContainer(contentType, original)) {
+    throw new MediaVariantUnavailableError('animated')
+  }
   let metadata: Metadata
   try {
     metadata = await sharp(original, { limitInputPixels: false }).metadata()
   } catch (error) {
     throw new MediaVariantUnavailableError('unreadable', error)
+  }
+  if (hasManyFrames(metadata)) {
+    throw new MediaVariantUnavailableError('animated')
   }
   if (metadata.width * metadata.height > maxInputPixels) {
     throw new MediaVariantUnavailableError('too-many-pixels')

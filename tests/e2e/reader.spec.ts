@@ -23,6 +23,11 @@ const undecodablePng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQmcAAAAASUVORK5CYII=',
   'base64',
 )
+/** A 4 × 4 animated WebP of two frames. Readers get it as its original, with every frame. */
+const animatedWebp = Buffer.from(
+  'UklGRogAAABXRUJQVlA4WAoAAAACAAAAAwAAAwAAQU5JTQYAAAD/////AABBTk1GKgAAAAAAAAAAAAMAAAMAAGQAAAJWUDhMEQAAAC8DwAAAB1C9atWy/4GI6H8AAEFOTUYqAAAAAAAAAAAAAwAAAwAAZAAAAFZQOEwRAAAALwPAAAAHULxaVqv/gYjofwAA',
+  'base64',
+)
 const readerPages = [
   '/',
   '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen',
@@ -148,7 +153,7 @@ test('links seeded stories between home, sections, and articles', async ({ page,
   expect(loadedVariant.status()).toBe(200)
   expect(loadedVariant.headers()['content-type']).toBe('image/avif')
   expect(loadedVariant.headers()['cache-control']).toBe('public, no-cache')
-  expect(loadedVariant.headers()['etag']).toMatch(/^"[0-9a-f]{64}-v1-\d+\.avif"$/)
+  expect(loadedVariant.headers()['etag']).toMatch(/^"[0-9a-f]{64}-v2-\d+\.avif"$/)
 
   const image = await request.get('/api/media/media-lab-cabin-morning')
   expect(image.status()).toBe(200)
@@ -186,16 +191,17 @@ test('shows owner-published stories on the next request, removes unpublished one
   const revisedText = 'The revised version replaces the first one as soon as it is republished.'
   const imageAlt = `Reader journey image ${suffix}`
   const undecodableAlt = `Undecodable journey image ${suffix}`
+  const animatedAlt = `Animated journey image ${suffix}`
   const ownerHeaders = { origin: siteOrigin }
 
-  const upload = async (alt: string, buffer: Buffer) => {
+  const upload = async (alt: string, buffer: Buffer, mimeType = 'image/png') => {
     const uploaded = await json<{ readonly asset: { readonly id: string } }>(
       await context.request.post('/api/owner/media', {
         headers: ownerHeaders,
         multipart: {
           alt,
           creditName: 'Reader journey',
-          file: { buffer, mimeType: 'image/png', name: 'reader-journey.png' },
+          file: { buffer, mimeType, name: `reader-journey.${mimeType.replace('image/', '')}` },
         },
       }),
     )
@@ -203,8 +209,10 @@ test('shows owner-published stories on the next request, removes unpublished one
   }
   const imageId = await upload(imageAlt, pngPixel)
   const undecodableId = await upload(undecodableAlt, undecodablePng)
+  const animatedId = await upload(animatedAlt, animatedWebp, 'image/webp')
   const imagePath = `/api/media/${imageId}`
   const undecodablePath = `/api/media/${undecodableId}`
+  const animatedPath = `/api/media/${animatedId}`
   const created = await json<StoryMutation>(
     await context.request.post('/api/owner/stories', {
       data: {
@@ -212,6 +220,7 @@ test('shows owner-published stories on the next request, removes unpublished one
         document: storyDocument(firstText, [
           { alt: imageAlt, mediaId: imageId },
           { alt: undecodableAlt, mediaId: undecodableId },
+          { alt: animatedAlt, mediaId: animatedId },
         ]),
         idempotencyKey: `reader-create-${suffix}`,
         title,
@@ -239,11 +248,20 @@ test('shows owner-published stories on the next request, removes unpublished one
   expect((await page.goto(storyPath))?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(title)
   await expect(page.getByText(firstText)).toBeVisible()
-  // Owner uploads store no dimensions, so the image lists every width and falls back to the widest.
+  // Uploads record the image's own size, so the 1 × 1 original has one candidate: the 320 variant.
   await expect(page.getByRole('img', { name: imageAlt })).toHaveAttribute(
     'src',
-    `${imagePath}?w=1920&fm=png`,
+    `${imagePath}?w=320&fm=png`,
   )
+  // An animated upload loads as its original, with every frame, and offers no variants.
+  const animatedImage = page.getByRole('img', { name: animatedAlt })
+  await expect(animatedImage).toHaveAttribute('src', animatedPath)
+  await expect(animatedImage).not.toHaveAttribute('srcset')
+  expect(
+    await animatedImage.evaluate(
+      (image) => image.parentElement?.querySelectorAll('source').length ?? -1,
+    ),
+  ).toBe(0)
   const servedImage = await context.request.get(imagePath)
   expect(servedImage.status()).toBe(200)
   expect(servedImage.headers()['cache-control']).toBe('public, no-cache')
@@ -256,7 +274,7 @@ test('shows owner-published stories on the next request, removes unpublished one
   expect(servedVariant.headers()['content-type']).toBe('image/webp')
   expect(servedVariant.headers()['cache-control']).toBe('public, no-cache')
   const cachedVariant = { headers: { 'if-none-match': servedVariant.headers()['etag'] ?? '' } }
-  expect(cachedVariant.headers['if-none-match']).toMatch(/^"[0-9a-f]{64}-v1-320\.webp"$/)
+  expect(cachedVariant.headers['if-none-match']).toMatch(/^"[0-9a-f]{64}-v2-320\.webp"$/)
   expect((await context.request.get(variantPath, cachedVariant)).status()).toBe(304)
   // An image that cannot be resized still shows: its variants send readers to the original.
   const fallbackPath = `${undecodablePath}?w=320&fm=webp`
@@ -265,6 +283,16 @@ test('shows owner-published stories on the next request, removes unpublished one
   expect(fallback.headers()['location']).toBe(undecodablePath)
   expect(fallback.headers()['cache-control']).toBe('no-store')
   expect((await context.request.get(undecodablePath)).status()).toBe(200)
+  // A variant of an animation would keep one frame, so its URL sends readers to the original.
+  const animatedVariantPath = `${animatedPath}?w=320&fm=webp`
+  const animatedVariant = await context.request.get(animatedVariantPath, { maxRedirects: 0 })
+  expect(animatedVariant.status()).toBe(307)
+  expect(animatedVariant.headers()['location']).toBe(animatedPath)
+  expect(animatedVariant.headers()['cache-control']).toBe('no-store')
+  const animatedOriginal = await context.request.get(animatedPath)
+  expect(animatedOriginal.status()).toBe(200)
+  expect(animatedOriginal.headers()['content-type']).toBe('image/webp')
+  expect(await animatedOriginal.body()).toEqual(animatedWebp)
 
   const unpublished = await json<{ readonly version: number }>(
     await act({
@@ -286,6 +314,11 @@ test('shows owner-published stories on the next request, removes unpublished one
   const revokedFallback = await context.request.get(fallbackPath, { maxRedirects: 0 })
   expect(revokedFallback.status()).toBe(404)
   expect(revokedFallback.headers()['cache-control']).toBe('no-store')
+  for (const path of [animatedVariantPath, animatedPath]) {
+    const revokedAnimation = await context.request.get(path, { maxRedirects: 0 })
+    expect(revokedAnimation.status(), path).toBe(404)
+    expect(revokedAnimation.headers()['cache-control'], path).toBe('no-store')
+  }
   await page.goto('/')
   await expect(page.getByRole('link', { name: title })).toHaveCount(0)
 

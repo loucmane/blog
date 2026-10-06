@@ -18,10 +18,11 @@ import type { ArticleBlock } from './views'
 
 function asset(
   id: string,
-  dimensions: { height: number | null; width: number | null },
+  facts: { animated?: boolean | null; height: number | null; width: number | null },
 ): MediaAsset {
   return {
     alt: `Stored alt for ${id}`,
+    animated: facts.animated ?? null,
     bytes: 10,
     caption: '',
     contentType: 'image/png',
@@ -30,18 +31,19 @@ function asset(
     creditUrl: null,
     focalX: 0.25,
     focalY: 0.75,
-    height: dimensions.height,
+    height: facts.height,
     id,
     originalKey: `originals/${id}/sha`,
     originalSha256: 'sha',
     updatedAt: '2026-09-01T00:00:00.000Z',
-    width: dimensions.width,
+    width: facts.width,
   }
 }
 
 const media: ReaderMediaLookup = new Map([
-  ['media-a', asset('media-a', { height: 800, width: 1200 })],
+  ['media-a', asset('media-a', { animated: false, height: 800, width: 1200 })],
   ['media-b', asset('media-b', { height: null, width: null })],
+  ['media-c', asset('media-c', { animated: true, height: 48, width: 64 })],
 ])
 
 function text(value: string, marks?: ContentNode['marks']): ContentNode {
@@ -198,6 +200,7 @@ describe('reader document blocks', () => {
     expect(blocks[8]).toEqual({
       image: {
         alt: 'Alt for media-a',
+        animated: false,
         caption: 'A caption',
         contentType: 'image/png',
         credit: { name: 'Studio', url: 'https://example.test/studio' },
@@ -235,6 +238,24 @@ describe('reader document blocks', () => {
       caption: null,
       credit: { name: 'Stored credit', url: null },
       focalPoint: { x: 0.25, y: 0.75 },
+    })
+  })
+
+  it('gives readers what was recorded about each original: its animation and its size', () => {
+    expect(resolveImage({ mediaId: 'media-a' }, media)).toMatchObject({
+      animated: false,
+      height: 800,
+      width: 1200,
+    })
+    expect(resolveImage({ mediaId: 'media-b' }, media)).toMatchObject({
+      animated: null,
+      height: null,
+      width: null,
+    })
+    expect(resolveImage({ mediaId: 'media-c' }, media)).toMatchObject({
+      animated: true,
+      height: 48,
+      width: 64,
     })
   })
 

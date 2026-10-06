@@ -8,6 +8,8 @@ import type { PublicMediaPath, SectionPath, StoryPath } from './paths'
 
 export interface ReaderImage {
   readonly alt: string
+  /** Whether the original was measured as animated, or null when it was never measured. */
+  readonly animated: boolean | null
   readonly caption: string | null
   /** The original's media type, which decides the variant formats a reader can load. */
   readonly contentType: string

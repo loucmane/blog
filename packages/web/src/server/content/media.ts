@@ -36,6 +36,8 @@ export function originalObjectKey(mediaId: string, sha256: string): string {
 
 export interface StoreMediaOriginalInput {
   readonly alt: string
+  /** Whether the original was measured as animated; null or absent when it was not measured. */
+  readonly animated?: boolean | null
   readonly body: Uint8Array
   readonly caption?: string
   readonly contentType: string
@@ -118,6 +120,7 @@ export class MediaOriginalService {
     const focalPoint = input.focalPoint ?? { x: 0.5, y: 0.5 }
     const asset: MediaAsset = {
       alt: input.alt.trim(),
+      animated: input.animated ?? null,
       bytes: input.body.byteLength,
       caption: input.caption?.trim() ?? '',
       contentType: input.contentType,

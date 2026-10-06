@@ -78,6 +78,7 @@ export function resolveImage(attrs: unknown, media: ReaderMediaLookup): ReaderIm
   const focalPoint = isRecord(attrs.focalPoint) ? attrs.focalPoint : null
   return {
     alt: text(attrs.alt) || asset.alt,
+    animated: asset.animated,
     caption: text(attrs.caption) || null,
     contentType: asset.contentType,
     credit: creditName

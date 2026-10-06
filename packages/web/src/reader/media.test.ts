@@ -20,13 +20,13 @@ describe('public media validators', () => {
     }
   })
 
-  it('derives a variant entity tag from the original checksum, the width, and the format', () => {
+  it('derives a variant entity tag from the original checksum, the revision, the width, and the format', () => {
     const variantTag = mediaVariantEntityTag(
       { originalSha256: checksum },
       { format: 'avif', width: 640 },
     )
 
-    expect(variantTag).toBe(`"${checksum}-v1-640.avif"`)
+    expect(variantTag).toBe(`"${checksum}-v2-640.avif"`)
     expect(variantTag).not.toBe(entityTag)
     expect(
       new Set([

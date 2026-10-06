@@ -251,6 +251,7 @@ export const mediaAssets = pgTable(
   'media_assets',
   {
     alt: text('alt').notNull(),
+    animated: boolean('animated'),
     bytes: bigint('bytes', { mode: 'number' }).notNull(),
     caption: text('caption').notNull().default(''),
     contentType: text('content_type').notNull(),

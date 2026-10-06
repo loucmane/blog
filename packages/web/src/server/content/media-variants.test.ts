@@ -6,11 +6,11 @@ import { describe, expect, it, vi } from 'vitest'
 import type { MediaAsset } from './domain'
 import { InvalidContentTransitionError } from './errors'
 import { InMemoryOriginalObjectStore, originalObjectKey, sha256Bytes } from './media'
-import type { MediaVariant } from './media-variant-rules'
+import { MAX_MEDIA_VARIANT_INPUT_PIXELS, type MediaVariant } from './media-variant-rules'
 import {
   InMemoryMediaVariantStore,
   isMediaVariantUnavailable,
-  MAX_MEDIA_VARIANT_INPUT_PIXELS,
+  measureMediaOriginal,
   MediaVariantService,
   MediaVariantUnavailableError,
   mediaVariantObjectKey,
@@ -26,12 +26,33 @@ const undecodablePng = Buffer.from(
   'base64',
 )
 
+const svg = new TextEncoder().encode(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>',
+)
+
 async function png(width: number, height: number): Promise<Uint8Array> {
   return new Uint8Array(
     await sharp({ create: { background: '#c87828', channels: 3, height, width } })
       .png()
       .toBuffer(),
   )
+}
+
+/** Two 64 × 48 frames, 100 ms each: an animated image in the given format. */
+async function animated(format: 'gif' | 'webp'): Promise<Uint8Array> {
+  const frames = await Promise.all(
+    ['#c87828', '#2878c8'].map((background) =>
+      sharp({ create: { background, channels: 3, height: 48, width: 64 } })
+        .png()
+        .toBuffer(),
+    ),
+  )
+  const joined = sharp(frames, { join: { animated: true } })
+  const encoded =
+    format === 'gif'
+      ? joined.gif({ delay: [100, 100] })
+      : joined.webp({ delay: [100, 100], loop: 0 })
+  return new Uint8Array(await encoded.toBuffer())
 }
 
 function pngChunk(type: string, data: Uint8Array): Buffer {
@@ -41,6 +62,58 @@ function pngChunk(type: string, data: Uint8Array): Buffer {
   typeAndData.copy(chunk, 4)
   chunk.writeUInt32BE(crc32(typeAndData), typeAndData.length + 4)
   return chunk
+}
+
+/**
+ * An animated PNG of two 16 × 12 frames. libpng reads it as a still image of its first frame, and
+ * sharp reports no pages for it, so only its animation control chunk shows that it is animated.
+ */
+function animatedPng(): Uint8Array {
+  const [width, height] = [16, 12]
+  const header = Buffer.alloc(13)
+  header.writeUInt32BE(width, 0)
+  header.writeUInt32BE(height, 4)
+  header[8] = 8
+  header[9] = 2
+  const frame = (rgb: readonly number[]) => {
+    const row = Buffer.from([0, ...Array.from({ length: width }, () => rgb).flat()])
+    return deflateSync(Buffer.concat(Array.from({ length: height }, () => row)))
+  }
+  const frameControl = (sequence: number) => {
+    const control = Buffer.alloc(26)
+    control.writeUInt32BE(sequence, 0)
+    control.writeUInt32BE(width, 4)
+    control.writeUInt32BE(height, 8)
+    control.writeUInt16BE(1, 20)
+    control.writeUInt16BE(10, 22)
+    return pngChunk('fcTL', control)
+  }
+  const animationControl = Buffer.alloc(8)
+  animationControl.writeUInt32BE(2, 0)
+  const secondFrame = Buffer.alloc(4)
+  secondFrame.writeUInt32BE(2, 0)
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk('IHDR', header),
+    pngChunk('acTL', animationControl),
+    frameControl(0),
+    pngChunk('IDAT', frame([200, 120, 40])),
+    frameControl(1),
+    pngChunk('fdAT', Buffer.concat([secondFrame, frame([40, 120, 200])])),
+    pngChunk('IEND', new Uint8Array()),
+  ])
+}
+
+/**
+ * The file type box an animated AVIF starts with, which names it an image sequence (`avis`), as
+ * its major brand or a compatible one. sharp cannot write one, and the brand alone shows that the
+ * file is animated.
+ */
+function avifSequence(majorBrand: 'avif' | 'avis' = 'avis'): Uint8Array {
+  const brands = Buffer.from(`${majorBrand}\0\0\0\0avifavismsf1miaf`, 'latin1')
+  const size = Buffer.alloc(4)
+  size.writeUInt32BE(8 + brands.length, 0)
+  return Buffer.concat([size, Buffer.from('ftyp', 'latin1'), brands, new Uint8Array(32)])
 }
 
 /**
@@ -73,6 +146,7 @@ async function storedAsset(
   await objects.putOriginal({ body, contentType, key, sha256 })
   return {
     alt: 'A test image',
+    animated: null,
     bytes: body.byteLength,
     caption: '',
     contentType,
@@ -203,9 +277,6 @@ describe('media variant rendering', () => {
   })
 
   it('rejects bytes that are not the image type the asset claims', async () => {
-    const svg = new TextEncoder().encode(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>',
-    )
     const jpeg = new Uint8Array(
       await sharp({ create: { background: '#000', channels: 3, height: 10, width: 10 } })
         .jpeg()
@@ -255,6 +326,34 @@ describe('media variant rendering', () => {
         ),
       ).toBe('unreadable')
     }
+    // An AVIF cut off right after the start of its file type box.
+    const truncatedAvif = Buffer.concat([Uint8Array.of(0, 0, 0, 12), Buffer.from('ftypavif')])
+    expect(
+      await unavailableReason(
+        renderMediaVariant({
+          contentType: 'image/avif',
+          original: truncatedAvif,
+          variant: { format: 'webp', width: 320 },
+        }),
+      ),
+    ).toBe('unreadable')
+  })
+
+  it('refuses an animated original before decoding it, since a variant would keep only its first frame', async () => {
+    for (const [label, contentType, original] of [
+      ['animated WebP', 'image/webp', await animated('webp')],
+      ['animated GIF', 'image/gif', await animated('gif')],
+      ['animated PNG', 'image/png', animatedPng()],
+      ['AVIF image sequence', 'image/avif', avifSequence()],
+      ['AVIF image sequence by a compatible brand', 'image/avif', avifSequence('avif')],
+    ] as const) {
+      expect(
+        await unavailableReason(
+          renderMediaVariant({ contentType, original, variant: { format: 'webp', width: 320 } }),
+        ),
+        label,
+      ).toBe('animated')
+    }
   })
 
   it('recognizes an original that cannot be resized by its error code, whichever copy of this module said so', async () => {
@@ -280,8 +379,90 @@ describe('media variant rendering', () => {
   })
 })
 
+describe('media original measurement', () => {
+  it('records the size readers see and a single frame for a still image', async () => {
+    expect(await measureMediaOriginal('image/png', await png(800, 600))).toEqual({
+      animated: false,
+      height: 600,
+      width: 800,
+    })
+    const rotated = new Uint8Array(
+      await sharp({ create: { background: '#336699', channels: 3, height: 200, width: 300 } })
+        .jpeg()
+        .withMetadata({ orientation: 6 })
+        .toBuffer(),
+    )
+    expect(await measureMediaOriginal('image/jpeg', rotated)).toEqual({
+      animated: false,
+      height: 300,
+      width: 200,
+    })
+    // Only the header is read, so an original whose pixels cannot be decoded is measured too.
+    expect(await measureMediaOriginal('image/png', new Uint8Array(undecodablePng))).toEqual({
+      animated: false,
+      height: 1,
+      width: 1,
+    })
+  })
+
+  it('records an animated original as animated, with the size of one frame', async () => {
+    const webp = await animated('webp')
+    expect((await sharp(webp).metadata()).pages).toBe(2)
+
+    expect(await measureMediaOriginal('image/webp', webp)).toEqual({
+      animated: true,
+      height: 48,
+      width: 64,
+    })
+    expect(await measureMediaOriginal('image/gif', await animated('gif'))).toEqual({
+      animated: true,
+      height: 48,
+      width: 64,
+    })
+    expect(await measureMediaOriginal('image/png', animatedPng())).toEqual({
+      animated: true,
+      height: 12,
+      width: 16,
+    })
+    // sharp cannot read a bare file type box, but its brand already says that it is a sequence.
+    expect(await measureMediaOriginal('image/avif', avifSequence())).toEqual({
+      animated: true,
+      height: null,
+      width: null,
+    })
+  })
+
+  it('records nothing about bytes that are not the declared type or have no readable header', async () => {
+    for (const [label, contentType, original] of [
+      ['SVG declared as PNG', 'image/png', svg],
+      ['SVG, which uploads refuse and nothing decodes', 'image/svg+xml', svg],
+      ['PNG declared as WebP', 'image/webp', await png(10, 10)],
+      ['PNG declared as GIF', 'image/gif', await png(10, 10)],
+      [
+        'a PNG signature and nothing else',
+        'image/png',
+        Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10),
+      ],
+    ] as const) {
+      expect(await measureMediaOriginal(contentType, original), label).toEqual({
+        animated: null,
+        height: null,
+        width: null,
+      })
+    }
+  })
+
+  it('measures a decompression bomb from its header, without decoding it', async () => {
+    expect(await measureMediaOriginal('image/png', decompressionBomb())).toEqual({
+      animated: false,
+      height: 20_000,
+      width: 20_000,
+    })
+  })
+})
+
 describe('media variant storage', () => {
-  it('keys a variant by the media id, the original checksum, the width, and the format', () => {
+  it('keys a variant by the media id, the original checksum, the revision, the width, and the format', () => {
     const checksum = 'a'.repeat(64)
 
     expect(
@@ -289,7 +470,7 @@ describe('media variant storage', () => {
         { id: 'media-a', originalSha256: checksum },
         { format: 'avif', width: 640 },
       ),
-    ).toBe(`variants/media-a/${checksum}/v1/640.avif`)
+    ).toBe(`variants/media-a/${checksum}/v2/640.avif`)
     for (const [id, originalSha256] of [
       ['../media-a', checksum],
       ['media-a', 'A'.repeat(64)],
