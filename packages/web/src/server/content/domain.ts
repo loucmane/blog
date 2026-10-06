@@ -138,6 +138,11 @@ export interface AuthorProfile {
 
 export interface MediaAsset {
   readonly alt: string
+  /**
+   * Whether the original has more than one frame, as measured when it was stored. Animated
+   * originals get no resized variants, since a variant keeps one frame. Null when not measured.
+   */
+  readonly animated: boolean | null
   readonly bytes: number
   readonly caption: string
   readonly contentType: string

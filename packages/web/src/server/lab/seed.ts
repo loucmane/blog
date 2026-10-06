@@ -135,6 +135,7 @@ export async function seedLabContent(target: LabSeedTarget): Promise<LabSeedRepo
       }
       await media.store({
         alt: image.alt,
+        animated: false,
         body: illustrationBytes(image),
         caption: image.caption,
         contentType: 'image/png',

@@ -114,6 +114,7 @@ interface AuditRow extends QueryResultRow {
 
 interface MediaAssetRow extends QueryResultRow {
   alt: string
+  animated: boolean | null
   bytes: number | string
   caption: string
   content_type: string
@@ -256,6 +257,7 @@ function mapOutbox(row: OutboxRow): OutboxEvent {
 function mapMediaAsset(row: MediaAssetRow): MediaAsset {
   return {
     alt: row.alt,
+    animated: row.animated,
     bytes: Number(row.bytes),
     caption: row.caption,
     contentType: row.content_type,
@@ -712,8 +714,8 @@ class PostgresContentTransaction implements ContentTransaction {
     const result = await this.client.query(
       `INSERT INTO media_assets (
         id, original_key, original_sha256, bytes, content_type, width, height,
-        alt, caption, credit_name, credit_url, focal_x, focal_y, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        alt, caption, credit_name, credit_url, focal_x, focal_y, created_at, updated_at, animated
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       ON CONFLICT (id) DO UPDATE SET
         alt = EXCLUDED.alt, caption = EXCLUDED.caption, credit_name = EXCLUDED.credit_name,
         credit_url = EXCLUDED.credit_url, focal_x = EXCLUDED.focal_x,
@@ -738,6 +740,7 @@ class PostgresContentTransaction implements ContentTransaction {
         asset.focalY,
         asset.createdAt,
         asset.updatedAt,
+        asset.animated,
       ],
     )
     if (result.rowCount === 0) throw new Error(`Media original ${asset.id} is immutable.`)

@@ -107,6 +107,16 @@ export interface OriginalObjectStore {
   verifyOriginal(key: string, expectedSha256: string): Promise<boolean>
 }
 
+/**
+ * Stores resized media variants. They are derived copies, never the only copy of anything:
+ * deleting some or all of them is safe, because they are made again on demand.
+ */
+export interface MediaVariantStore {
+  /** The stored variant, or null when there is none. */
+  getVariant(key: string): Promise<Uint8Array | null>
+  putVariant(input: { body: Uint8Array; contentType: string; key: string }): Promise<void>
+}
+
 export interface SearchProjection {
   removeArticle(articleId: string): Promise<void>
   upsertPublishedArticle(input: {

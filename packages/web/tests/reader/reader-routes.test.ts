@@ -407,14 +407,18 @@ describe('public reader routes', () => {
     }
   })
 
-  it('renders reader images from the revocable media route, not the image optimizer', async () => {
+  it('renders reader images as revocable media variants, not through the image optimizer', async () => {
     await publishStoryWithImage()
 
     for (const markup of [
       await render(HomePage()),
       await render(StoryPage(slugParams(winterLight.slug))),
     ]) {
-      expect(markup).toContain('src="/api/media/media-public"')
+      // The stored original is 1 pixel wide, so one candidate covers it, described at its width.
+      expect(markup).toContain('/api/media/media-public?w=320&amp;fm=avif 1w')
+      expect(markup).toContain('/api/media/media-public?w=320&amp;fm=webp 1w')
+      expect(markup).toMatch(/<img[^>]+src="\/api\/media\/media-public\?w=320&amp;fm=png"/)
+      expect(markup).not.toContain('src="/api/media/media-public"')
       expect(markup).not.toContain('/_next/image')
     }
   })

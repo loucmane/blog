@@ -38,6 +38,30 @@ describe('media original ownership', () => {
     })
   })
 
+  it('records what was measured about an original, and null for what was not', async () => {
+    const service = new MediaOriginalService(
+      new InMemoryContentRepository(),
+      new InMemoryOriginalObjectStore(),
+      clock,
+      identifiers,
+    )
+    const original = {
+      alt: 'A two-frame loop',
+      body: new TextEncoder().encode('synthetic animation bytes'),
+      contentType: 'image/webp',
+      creditName: 'Magazine owner',
+    }
+
+    await expect(
+      service.store({ ...original, animated: true, height: 48, id: 'media-measured', width: 64 }),
+    ).resolves.toMatchObject({ animated: true, height: 48, width: 64 })
+    await expect(service.store({ ...original, id: 'media-unmeasured' })).resolves.toMatchObject({
+      animated: null,
+      height: null,
+      width: null,
+    })
+  })
+
   it('rejects active or unsupported media and invalid integrity metadata', async () => {
     const service = new MediaOriginalService(
       new InMemoryContentRepository(),

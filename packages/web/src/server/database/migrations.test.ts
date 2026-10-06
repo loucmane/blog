@@ -9,6 +9,7 @@ import {
   contentPublicationState,
   contentTableNames,
   contentTables,
+  mediaAssets,
   ownerAuthTableNames,
   ownerAuthTables,
 } from './schema'
@@ -49,10 +50,10 @@ describe('content database migrations', () => {
       'packages/web/migrations/0001_content_foundation.sql',
     )
     const sql = await readFile(migrationPath, 'utf8')
-    const followUpSql = await readFile(
-      path.join(process.cwd(), 'packages/web/migrations/0002_owner_auth.sql'),
-      'utf8',
-    )
+    const followUpSql = (await readContentMigrations())
+      .filter(({ id }) => id !== '0001_content_foundation')
+      .map((migration) => migration.sql)
+      .join('\n')
     const createdTables = [...sql.matchAll(/CREATE TABLE ([a-z_]+)/g)]
       .map((match) => match[1])
       .sort()
@@ -132,6 +133,26 @@ describe('content database migrations', () => {
     )
   })
 
+  it('adds what was measured about media originals as a nullable column', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0004_media_asset_animation.sql'),
+      'utf8',
+    )
+    const column = getTableColumns(mediaAssets).animated
+
+    expect(column.name).toBe('animated')
+    expect(column.notNull).toBe(false)
+    expect(sql.trim()).toBe('ALTER TABLE media_assets ADD COLUMN animated boolean;')
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0004_media_asset_animation.down.sql'),
+      'utf8',
+    )
+    expect(downSql).toContain('ALTER TABLE media_assets DROP COLUMN IF EXISTS animated;')
+    expect(downSql).toContain(
+      "DELETE FROM content_schema_migrations WHERE id = '0004_media_asset_animation'",
+    )
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
@@ -139,7 +160,12 @@ describe('content database migrations', () => {
     await expect(
       applyContentMigrations({ connect: async () => first }, migrations),
     ).resolves.toEqual({
-      applied: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
+      applied: [
+        '0001_content_foundation',
+        '0002_owner_auth',
+        '0003_publication_version',
+        '0004_media_asset_animation',
+      ],
       skipped: [],
     })
     expect(first.queries.at(0)?.text).toBe('BEGIN')
@@ -152,7 +178,12 @@ describe('content database migrations', () => {
       applyContentMigrations({ connect: async () => second }, migrations),
     ).resolves.toEqual({
       applied: [],
-      skipped: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
+      skipped: [
+        '0001_content_foundation',
+        '0002_owner_auth',
+        '0003_publication_version',
+        '0004_media_asset_animation',
+      ],
     })
   })
 

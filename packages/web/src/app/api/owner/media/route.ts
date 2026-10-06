@@ -1,4 +1,5 @@
 import { MAX_MEDIA_ORIGINAL_BYTES } from '@/server/content/media'
+import { measureMediaOriginal } from '@/server/content/media-variants'
 import { InvalidContentTransitionError } from '@/server/content/errors'
 import { assertOwnerMutationRequest, ownerErrorResponse, withOwner } from '@/server/owner/api'
 import { ownerMediaMetadataSchema } from '@/server/owner/contracts'
@@ -40,9 +41,13 @@ export async function POST(request: Request) {
       if (!mediaService) {
         throw new InvalidContentTransitionError('Image storage is not configured yet.')
       }
+      const body = new Uint8Array(await file.arrayBuffer())
+      // The browser sends no dimensions, so they are read from the image itself, with whether it
+      // is animated. Readers' variants and width descriptors depend on both.
       const asset = await mediaService.store({
         ...metadata,
-        body: new Uint8Array(await file.arrayBuffer()),
+        ...(await measureMediaOriginal(file.type, body)),
+        body,
         contentType: file.type,
         creditUrl: metadata.creditUrl || null,
       })

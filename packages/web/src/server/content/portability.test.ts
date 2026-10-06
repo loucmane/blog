@@ -246,6 +246,55 @@ describe('portable content ownership', () => {
     })
   })
 
+  it('keeps what was measured about media through export and import, and reads older media as unmeasured', async () => {
+    const repository = new InMemoryContentRepository()
+    const media = new MediaOriginalService(
+      repository,
+      new InMemoryOriginalObjectStore(),
+      clock,
+      new Identifiers(),
+    )
+    await media.store({
+      alt: 'A two-frame loop',
+      animated: true,
+      body: new TextEncoder().encode('portable animation bytes'),
+      contentType: 'image/webp',
+      creditName: 'Magazine owner',
+      height: 48,
+      id: 'media-loop',
+      width: 64,
+    })
+    const current = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
+    expect(current.data.mediaAssets).toEqual([
+      expect.objectContaining({ animated: true, height: 48, width: 64 }),
+    ])
+    const restored = new InMemoryContentRepository()
+    await importPortableContentBundle(restored, current)
+    await expect(
+      restored.transaction((transaction) => transaction.getMediaAsset('media-loop')),
+    ).resolves.toMatchObject({ animated: true, height: 48, width: 64 })
+
+    // Bundles exported before animation was recorded have no such field.
+    const { digest: _discarded, ...currentUnsigned } = current
+    const unsigned = {
+      ...currentUnsigned,
+      data: {
+        ...current.data,
+        mediaAssets: current.data.mediaAssets.map(({ animated: _animated, ...asset }) => asset),
+      },
+    }
+    const legacy = {
+      ...unsigned,
+      digest: createHash('sha256').update(canonicalJson(unsigned)).digest('hex'),
+    }
+    expect(inspectPortableContentBundle(legacy)).toMatchObject({ status: 'valid' })
+    const fromLegacy = new InMemoryContentRepository()
+    await importPortableContentBundle(fromLegacy, legacy)
+    await expect(
+      fromLegacy.transaction((transaction) => transaction.getMediaAsset('media-loop')),
+    ).resolves.toMatchObject({ animated: null, height: 48, width: 64 })
+  })
+
   it('fails closed on tampering, extra fields, invalid documents, and media drift', async () => {
     const { objects, repository } = await populatedRepository()
     const bundle = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
