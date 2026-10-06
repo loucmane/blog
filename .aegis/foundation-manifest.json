@@ -205,18 +205,19 @@
     },
     {
       "adapter": "codex",
-      "enforcement": "mechanical",
+      "enforcement": "policy",
       "hook_event": "PreToolUse",
       "hook_matcher": "^(Bash|apply_patch|mcp__.*)$",
       "id": "codex.pretooluse",
       "path": ".claude/scripts/pretooluse-gate.sh",
-      "required": true,
+      "required": false,
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
+      "unsupported_reason": "Retired with operator approval (2026-10-06, blog-mw7r): Gas City Codex workers run without the legacy Aegis pre-tool and stop gates, so .codex/hooks.json no longer registers them.",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook pretooluse",
-        "failure_mode": "fail",
-        "method": "settings_hook"
+        "expected": null,
+        "failure_mode": "unsupported",
+        "method": "manual"
       }
     },
     {
@@ -269,33 +270,35 @@
     },
     {
       "adapter": "codex",
-      "enforcement": "mechanical",
+      "enforcement": "policy",
       "hook_event": "Stop",
       "id": "codex.stop_tracking",
       "path": ".claude/scripts/tracking-stop-gate.sh",
-      "required": true,
+      "required": false,
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
+      "unsupported_reason": "Retired with operator approval (2026-10-06, blog-mw7r): Gas City Codex workers run without the legacy Aegis pre-tool and stop gates, so .codex/hooks.json no longer registers them.",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook stop",
-        "failure_mode": "fail",
-        "method": "settings_hook"
+        "expected": null,
+        "failure_mode": "unsupported",
+        "method": "manual"
       }
     },
     {
       "adapter": "codex",
-      "enforcement": "mechanical",
+      "enforcement": "policy",
       "hook_event": "PreToolUse",
       "hook_matcher": "^(Bash|apply_patch|mcp__.*)$",
       "id": "codex.apply_patch",
       "path": ".claude/scripts/gate_lib.py",
-      "required": true,
+      "required": false,
       "scope": "adapter",
       "settings_path": ".codex/hooks.json",
+      "unsupported_reason": "Retired with operator approval (2026-10-06, blog-mw7r): Gas City Codex workers run without the legacy Aegis pre-tool and stop gates, so .codex/hooks.json no longer registers them.",
       "verification": {
-        "expected": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook pretooluse",
-        "failure_mode": "fail",
-        "method": "settings_hook"
+        "expected": null,
+        "failure_mode": "unsupported",
+        "method": "manual"
       }
     },
     {

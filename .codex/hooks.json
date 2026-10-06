@@ -19,17 +19,15 @@
         "matcher": "^(Bash|apply_patch|mcp__.*)$"
       }
     ],
-    "PreToolUse": [
+    "PreCompact": [
       {
         "hooks": [
           {
-            "command": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook pretooluse",
-            "statusMessage": "Evaluating Aegis policy",
-            "timeout": 30,
+            "command": "'/home/loucmane/gascity/bin/gc' --city '/home/loucmane/gascity/city' handoff --auto --hook-format codex \"context cycle\"",
             "type": "command"
           }
         ],
-        "matcher": "^(Bash|apply_patch|mcp__.*)$"
+        "matcher": ""
       }
     ],
     "SessionStart": [
@@ -43,18 +41,15 @@
           }
         ],
         "matcher": "startup|resume|clear|compact"
-      }
-    ],
-    "Stop": [
+      },
       {
         "hooks": [
           {
-            "command": "AEGIS_INVOKING_AGENT=codex \"$(git rev-parse --show-toplevel)/.aegis/bin/aegis\" hook stop",
-            "statusMessage": "Checking Aegis completion evidence",
-            "timeout": 30,
+            "command": "GC_MANAGED_SESSION_HOOK=1 GC_HOOK_EVENT_NAME=SessionStart '/home/loucmane/gascity/bin/gc' --city '/home/loucmane/gascity/city' prime --hook --hook-format codex",
             "type": "command"
           }
-        ]
+        ],
+        "matcher": "startup"
       }
     ],
     "SubagentStart": [
@@ -81,6 +76,21 @@
           }
         ],
         "matcher": ".*"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "'/home/loucmane/gascity/bin/gc' --city '/home/loucmane/gascity/city' hook run --timeout 15s --timeout-exit-code 0 -- nudge drain --inject --hook-format codex",
+            "type": "command"
+          },
+          {
+            "command": "'/home/loucmane/gascity/bin/gc' --city '/home/loucmane/gascity/city' hook run --timeout 15s --timeout-exit-code 0 -- mail check --inject --hook-format codex",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
       }
     ]
   }
