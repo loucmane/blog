@@ -325,4 +325,32 @@ describe('Next and React migration contract', () => {
   it('keeps public media out of the image optimizer, whose cache outlives an unpublish', () => {
     expect(nextConfig.images?.localPatterns).toEqual([{ pathname: '/images/**', search: '' }])
   })
+
+  it('checks public media visibility before reading the query, storage, or a variant', () => {
+    const routeSource = fs.readFileSync(
+      path.join(process.cwd(), 'packages/web/src/app/api/media/[id]/route.ts'),
+      'utf8',
+    )
+    const handlerStart = routeSource.indexOf('export async function GET(')
+    const handler = routeSource.slice(handlerStart)
+    const visibility = handler.indexOf('await loadPublicMediaIds()')
+
+    expect(handlerStart).toBeGreaterThan(-1)
+    expect(visibility).toBeGreaterThan(-1)
+    for (const step of ['getMediaAsset(', 'searchParams', 'getOriginal(', '.load(']) {
+      expect(handler.slice(0, visibility), step).not.toContain(step)
+    }
+    for (const step of [
+      'getMediaAsset(',
+      'parseMediaRequest(',
+      'serveOriginal(',
+      'serveVariant(',
+    ]) {
+      expect(handler.indexOf(step), step).toBeGreaterThan(visibility)
+    }
+    // Storage is read only in the two serve helpers, and the handler is their only caller.
+    for (const helper of ['serveOriginal(', 'serveVariant(']) {
+      expect(routeSource.split(helper).length - 1, helper).toBe(2)
+    }
+  })
 })

@@ -19,13 +19,18 @@ export function sha256Bytes(value: Uint8Array): string {
   return createHash('sha256').update(value).digest('hex')
 }
 
-export function originalObjectKey(mediaId: string, sha256: string): string {
+/** Checks the media id and checksum that every media storage key is built from. */
+export function assertMediaKeyParts(mediaId: string, sha256: string): void {
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(mediaId)) {
     throw new InvalidContentTransitionError('Media identity contains unsupported characters.')
   }
   if (!/^[0-9a-f]{64}$/.test(sha256)) {
     throw new InvalidContentTransitionError('Media checksum must be lowercase SHA-256.')
   }
+}
+
+export function originalObjectKey(mediaId: string, sha256: string): string {
+  assertMediaKeyParts(mediaId, sha256)
   return `originals/${mediaId}/${sha256}`
 }
 

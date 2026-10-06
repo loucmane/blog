@@ -79,6 +79,7 @@ export function resolveImage(attrs: unknown, media: ReaderMediaLookup): ReaderIm
   return {
     alt: text(attrs.alt) || asset.alt,
     caption: text(attrs.caption) || null,
+    contentType: asset.contentType,
     credit: creditName
       ? { name: creditName, url: safeHref(credit?.url) }
       : asset.creditName

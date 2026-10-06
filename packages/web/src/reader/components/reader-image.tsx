@@ -1,53 +1,72 @@
-import Image from 'next/image'
-
+import { readerImageSources } from '../media-variants'
 import type { ReaderImage } from '../views'
 
 interface ReaderImageProps {
   readonly className?: string
   readonly image: ReaderImage
+  /** Marks the page's lead image: it loads at once, at high priority, instead of lazily. */
   readonly preload?: boolean
   readonly sizes: string
 }
 
 /**
- * Renders a stored image with its stored dimensions. Originals saved without dimensions fill a
- * 3:2 frame cropped around the focal point, so the layout never shifts while they load.
+ * Renders a stored image as resized variants over the allowlisted widths: AVIF and WebP sources
+ * for browsers that decode them, and a fallback in the original's type. Images with stored
+ * dimensions keep them. Originals saved without dimensions fill a 3:2 frame cropped around the
+ * focal point, so the layout never shifts while they load. A GIF loads as its original, since it
+ * may be animated.
  *
- * Images load straight from the public media route (`unoptimized`), which checks on every
- * request that a visible story still uses them. The Next image optimizer would keep serving its
- * cached copies after an unpublish.
+ * Every variant loads from the public media route, which checks on every request that a visible
+ * story still uses the image. The Next image optimizer would keep serving its cached copies after
+ * an unpublish.
+ *
+ * A lead image is not preloaded with a `<link>`: from a server component, `preload()` only reaches
+ * the RSC payload, and Next 16.3.8 does not write it into the HTML. The image is in the initial
+ * HTML, eager and at high priority, so the browser finds and fetches it first anyway.
  */
 export function ReaderImageView({ className, image, preload = false, sizes }: ReaderImageProps) {
-  if (image.width !== null && image.height !== null) {
-    return (
-      <Image
+  const variants = readerImageSources(image)
+  const dimensions =
+    image.width !== null && image.height !== null
+      ? { height: image.height, width: image.width }
+      : null
+  const picture = (
+    // `contents` keeps the picture out of layout, so the image is laid out as before.
+    <picture className="contents">
+      {variants?.sources.map((source) => (
+        <source key={source.type} sizes={sizes} srcSet={source.srcSet} type={source.type} />
+      ))}
+      <img
         alt={image.alt}
-        className={['h-auto w-full bg-muted', className].filter(Boolean).join(' ')}
-        height={image.height}
-        preload={preload}
-        sizes={sizes}
-        src={image.src}
-        unoptimized
-        width={image.width}
+        className={
+          dimensions
+            ? ['h-auto w-full bg-muted', className].filter(Boolean).join(' ')
+            : 'absolute inset-0 h-full w-full object-cover'
+        }
+        decoding="async"
+        fetchPriority={preload ? 'high' : undefined}
+        height={dimensions?.height}
+        loading={preload ? undefined : 'lazy'}
+        sizes={variants ? sizes : undefined}
+        src={variants?.fallback.src ?? image.src}
+        srcSet={variants?.fallback.srcSet}
+        style={
+          dimensions
+            ? undefined
+            : { objectPosition: `${image.focalPoint.x * 100}% ${image.focalPoint.y * 100}%` }
+        }
+        width={dimensions?.width}
       />
-    )
-  }
+    </picture>
+  )
+  if (dimensions) return picture
   return (
     <div
       className={['relative aspect-[3/2] w-full overflow-hidden bg-muted', className]
         .filter(Boolean)
         .join(' ')}
     >
-      <Image
-        alt={image.alt}
-        className="object-cover"
-        fill
-        preload={preload}
-        sizes={sizes}
-        src={image.src}
-        style={{ objectPosition: `${image.focalPoint.x * 100}% ${image.focalPoint.y * 100}%` }}
-        unoptimized
-      />
+      {picture}
     </div>
   )
 }

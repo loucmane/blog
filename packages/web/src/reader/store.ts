@@ -1,3 +1,4 @@
+import type { MediaVariantService } from '@/server/content/media-variants'
 import type { OriginalObjectStore } from '@/server/content/ports'
 import { OwnerConfigurationError } from '@/server/owner/config'
 import { getOwnerRuntime } from '@/server/owner/runtime'
@@ -6,6 +7,7 @@ import type { ReaderSource } from './read-model'
 
 export interface ReaderStore extends ReaderSource {
   readonly objects: OriginalObjectStore | null
+  readonly variants: MediaVariantService | null
 }
 
 function isConfigurationError(error: unknown): boolean {
@@ -30,6 +32,7 @@ export function resolveReaderStore(): ReaderStore | null {
       mediaAvailable: runtime.objects !== null,
       objects: runtime.objects,
       repository: runtime.repository,
+      variants: runtime.variants,
     }
   } catch (error) {
     if (isConfigurationError(error)) return null

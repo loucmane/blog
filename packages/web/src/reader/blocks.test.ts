@@ -199,6 +199,7 @@ describe('reader document blocks', () => {
       image: {
         alt: 'Alt for media-a',
         caption: 'A caption',
+        contentType: 'image/png',
         credit: { name: 'Studio', url: 'https://example.test/studio' },
         focalPoint: { x: 0.4, y: 0.6 },
         height: 800,

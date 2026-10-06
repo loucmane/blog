@@ -1,4 +1,5 @@
 import type { MediaAsset } from '@/server/content/domain'
+import { mediaVariantRevision, type MediaVariant } from '@/server/content/media-variant-rules'
 
 /*
  * Public media must stop being served on the next request after an unpublish, for example when
@@ -18,6 +19,20 @@ const entityTagPattern = /(?:W\/)?("[^"]*")/g
  */
 export function mediaEntityTag(asset: Pick<MediaAsset, 'originalSha256'>): string | null {
   return sha256Pattern.test(asset.originalSha256) ? `"${asset.originalSha256}"` : null
+}
+
+/**
+ * The strong entity tag of a variant, derived from what determines its bytes: the original's
+ * checksum, the encoding revision, the width, and the format. Because it is known without reading
+ * the variant, a 304 needs no storage access at all.
+ */
+export function mediaVariantEntityTag(
+  asset: Pick<MediaAsset, 'originalSha256'>,
+  variant: MediaVariant,
+): string | null {
+  return sha256Pattern.test(asset.originalSha256)
+    ? `"${asset.originalSha256}-v${mediaVariantRevision}-${variant.width}.${variant.format}"`
+    : null
 }
 
 /**
