@@ -5,17 +5,18 @@ import { formatPublishedDate, formatReadingTime } from '@/reader/format'
 import type { ArticleDirectionProps } from '../contract'
 import { MonographShell, SectionLabel } from './shell'
 
+const heroSizes = '(min-width: 1044px) 60rem, (min-width: 500px) 92vw, calc(100vw - 2.5rem)'
+
 export function MonographArticle({ view }: ArticleDirectionProps) {
   return (
-    <MonographShell navigation={view.navigation}>
+    <MonographShell
+      leadImage={view.hero ? { image: view.hero, sizes: heroSizes } : null}
+      navigation={view.navigation}
+    >
       <article className={`qm-article${view.hero ? '' : ' qm-article-text'}`}>
         {view.hero ? (
           <div className="qm-hero">
-            <ReaderFigure
-              image={view.hero}
-              preload
-              sizes="(min-width: 1044px) 60rem, (min-width: 500px) 92vw, calc(100vw - 2.5rem)"
-            />
+            <ReaderFigure image={view.hero} preload sizes={heroSizes} />
           </div>
         ) : null}
         <header className="qm-article-header">

@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 import { siteName } from '@/reader/components/site-header'
 import type { ReaderNavigation, SectionLink } from '@/reader/views'
 
+import { MonographImagePreload, type MonographLeadImage } from './image-preload'
+
 export function SectionLabel({ section }: { readonly section: SectionLink | null }) {
   return section ? (
     <p className="qm-label">
@@ -17,15 +19,18 @@ export function MonographShell({
   isHome = false,
   navigation,
   currentSection,
+  leadImage,
 }: {
   readonly children: ReactNode
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
   readonly currentSection?: string
+  readonly leadImage?: MonographLeadImage | null
 }) {
   const Brand = isHome ? 'h1' : 'p'
   return (
     <div className="qm-page">
+      {leadImage ? <MonographImagePreload {...leadImage} /> : null}
       <a className="qm-skip" href="#qm-main">
         Skip to stories
       </a>
