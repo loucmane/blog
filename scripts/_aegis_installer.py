@@ -188,6 +188,11 @@ CODEX_HOOK_TRUST_UNSUPPORTED_REASON = (
     "Codex records trust outside the project against the exact hook-definition hash; "
     "review the generated definitions with /hooks after reconnecting."
 )
+CODEX_RETIRED_GATE_REASON = (
+    "Retired with operator approval (2026-10-06, blog-mw7r): Gas City Codex workers run "
+    "without the legacy Aegis pre-tool and stop gates, so .codex/hooks.json no longer "
+    "registers them."
+)
 CODEX_SESSION_START_MATCHER = "startup|resume|clear|compact"
 CODEX_HOOK_MATCHER = "^(Bash|apply_patch|mcp__.*)$"
 CODEX_POSTTOOLUSE_MATCHER = CODEX_HOOK_MATCHER
@@ -1701,17 +1706,18 @@ def _gates(enabled_agents: Sequence[str]) -> list[dict[str, Any]]:
                 ),
                 _gate(
                     "codex.pretooluse",
-                    required=True,
-                    enforcement="mechanical",
+                    required=False,
+                    enforcement="policy",
                     scope="adapter",
                     adapter="codex",
                     path=".claude/scripts/pretooluse-gate.sh",
                     settings_path=CODEX_HOOKS_REL,
                     hook_event="PreToolUse",
                     hook_matcher=CODEX_HOOK_MATCHER,
-                    method="settings_hook",
-                    failure_mode="fail",
-                    expected=CODEX_PRETOOLUSE_COMMAND,
+                    unsupported_reason=CODEX_RETIRED_GATE_REASON,
+                    method="manual",
+                    failure_mode="unsupported",
+                    expected=None,
                 ),
                 _gate(
                     "codex.posttooluse_tracking",
@@ -1757,30 +1763,32 @@ def _gates(enabled_agents: Sequence[str]) -> list[dict[str, Any]]:
                 ),
                 _gate(
                     "codex.stop_tracking",
-                    required=True,
-                    enforcement="mechanical",
+                    required=False,
+                    enforcement="policy",
                     scope="adapter",
                     adapter="codex",
                     path=".claude/scripts/tracking-stop-gate.sh",
                     settings_path=CODEX_HOOKS_REL,
                     hook_event="Stop",
-                    method="settings_hook",
-                    failure_mode="fail",
-                    expected=CODEX_STOP_TRACKING_COMMAND,
+                    unsupported_reason=CODEX_RETIRED_GATE_REASON,
+                    method="manual",
+                    failure_mode="unsupported",
+                    expected=None,
                 ),
                 _gate(
                     "codex.apply_patch",
-                    required=True,
-                    enforcement="mechanical",
+                    required=False,
+                    enforcement="policy",
                     scope="adapter",
                     adapter="codex",
                     path=".claude/scripts/gate_lib.py",
                     settings_path=CODEX_HOOKS_REL,
                     hook_event="PreToolUse",
                     hook_matcher=CODEX_HOOK_MATCHER,
-                    method="settings_hook",
-                    failure_mode="fail",
-                    expected=CODEX_PRETOOLUSE_COMMAND,
+                    unsupported_reason=CODEX_RETIRED_GATE_REASON,
+                    method="manual",
+                    failure_mode="unsupported",
+                    expected=None,
                 ),
                 _gate(
                     "codex.hook_trust",
