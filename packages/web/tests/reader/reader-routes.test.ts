@@ -29,6 +29,8 @@ vi.mock('next/server', async (importOriginal) => ({
   connection: vi.fn(async () => undefined),
 }))
 
+vi.mock('next/headers', async () => (await import('../support/request-scope')).nextHeaders)
+
 const siteOrigin = 'http://127.0.0.1:3100'
 const labSeedToken = 'reader-lab-seed-token-with-more-than-32-bytes'
 const revalidationSecret = 'reader-revalidation-secret-with-more-than-32-bytes'

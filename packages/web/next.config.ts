@@ -89,6 +89,24 @@ export function createOwnerPrivacyHeaders() {
   ]
 }
 
+/** The Reader Lab cookie (`src/reader-lab/cookie.ts`), repeated here because config loads alone. */
+const readerLabCookieName = 'reader_lab_direction'
+const readerRoutes = ['/', '/stories/:slug', '/sections/:slug']
+
+/**
+ * Reader responses to a request that carries the Reader Lab cookie may show an owner's lab
+ * direction, so none of them may be cached or indexed. The rule matches on the cookie alone, before
+ * the page checks the owner session, so it also covers a visitor who sends a stale or forged
+ * cookie: that visitor gets the default direction with the same private headers.
+ */
+function createReaderLabHeaderRules() {
+  return readerRoutes.map((source) => ({
+    has: [{ key: readerLabCookieName, type: 'cookie' as const }],
+    headers: createOwnerPrivacyHeaders(),
+    source,
+  }))
+}
+
 const nextConfig: NextConfig = {
   compress: true,
   images: {
@@ -127,6 +145,7 @@ const nextConfig: NextConfig = {
         headers: createOwnerPrivacyHeaders(),
         source: '/api/owner/:path*',
       },
+      ...createReaderLabHeaderRules(),
     ]
   },
   async redirects() {

@@ -7,13 +7,16 @@ import { GET as getMedia } from '@/app/api/media/[id]/route'
 import { POST as applyStoryAction } from '@/app/api/owner/stories/[id]/actions/route'
 import { POST as revalidate } from '@/app/api/revalidate/route'
 import HomePage from '@/app/page'
+import SectionPage from '@/app/sections/[slug]/page'
 import StoryPage from '@/app/stories/[slug]/page'
 import { CURRENT_CONTENT_DOCUMENT_VERSION } from '@/server/content/document'
 import type { ContentRepository, ContentTransaction } from '@/server/content/ports'
+import { SectionService } from '@/server/content/sections'
 import { createOwnerRuntime, type OwnerRuntime } from '@/server/owner/runtime'
 import { createOwnerFixtureSession, ownerFixtureCookieName } from '@/server/owner/session'
 
 import { dataCache } from '../support/data-cache'
+import { requestScope } from '../support/request-scope'
 
 vi.mock('next/cache', async () => {
   const { dataCache: standIn } = await import('../support/data-cache')
@@ -28,6 +31,38 @@ vi.mock('next/server', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   connection: vi.fn(async () => undefined),
 }))
+
+// Reader pages read the Reader Lab cookie, so every render runs in a request: a visitor's, with no
+// cookies, unless a test sets some.
+vi.mock('next/headers', async () => (await import('../support/request-scope')).nextHeaders)
+
+/* The real registry holds only baseline for now, so a second direction stands in for an override. */
+vi.mock('@/reader-directions/registry', async () => {
+  const { createElement } = await import('react')
+  const { createReaderDirectionRegistry, defineReaderDirection } =
+    await import('@/reader-directions/contract')
+  const { baselineDirection } = await import('@/reader-directions/baseline')
+  const view = (name: string) =>
+    function NightEditionView() {
+      return createElement('main', { 'data-night-edition': name }, `Night Edition ${name}`)
+    }
+  return {
+    readerDirections: createReaderDirectionRegistry({
+      defaultId: 'baseline',
+      directions: [
+        baselineDirection,
+        defineReaderDirection({
+          Article: view('article'),
+          Home: view('home'),
+          id: 'night-edition',
+          name: 'Night Edition',
+          Section: view('section'),
+          thesis: 'A stand-in direction that only a signed-in owner may see.',
+        }),
+      ],
+    }),
+  }
+})
 
 const siteOrigin = 'http://127.0.0.1:3100'
 const revalidationSecret = 'reader-revalidation-secret-with-more-than-32-bytes'
@@ -106,10 +141,12 @@ beforeEach(() => {
   vi.stubEnv('MAGAZINE_OWNER_TEST_TOKEN', 'reader-route-test-token-with-more-than-32-bytes')
   vi.stubEnv('MAGAZINE_RUNTIME_SITE_URL', siteOrigin)
   dataCache.reset()
+  requestScope.reset()
 })
 
 afterEach(() => {
   delete (globalThis as { [runtimeKey]?: unknown })[runtimeKey]
+  requestScope.reset()
   vi.unstubAllEnvs()
 })
 
@@ -358,5 +395,110 @@ describe('reader freshness after a publication change', () => {
       transactions: 1,
       versionReads: 3,
     })
+  })
+})
+
+const labCookie = 'reader_lab_direction'
+
+async function publishedStoryInSection(runtime: OwnerRuntime) {
+  const draft = await draftStoryWithImage(runtime)
+  const sections = new SectionService(runtime.repository)
+  const section = await sections.ensureSection({ name: 'Interiors', slug: 'interiors' })
+  await sections.assignSection({ articleId, sectionId: section.id })
+  await runtime.content.publish({
+    articleId,
+    expectedVersion: draft.article.version,
+    idempotencyKey: 'publish-winter-light',
+    revisionId: draft.revision.id,
+  })
+}
+
+/** Renders the home, story, and section pages for the request `requestScope` describes. */
+async function renderReaderPages(): Promise<Record<'article' | 'home' | 'section', string>> {
+  const render = async (page: Promise<ReactElement>) => renderToStaticMarkup(await page)
+  return {
+    article: await render(storyPage()),
+    home: await render(HomePage()),
+    section: await render(SectionPage({ params: Promise.resolve({ slug: 'interiors' }) })),
+  }
+}
+
+/** Each cache write stamps its view with a new generation, so equal generations mean one entry. */
+function cacheGenerations(pages: Readonly<Record<string, string>>) {
+  return Object.fromEntries(
+    Object.entries(pages).map(([page, markup]) => [
+      page,
+      /data-reader-cache-generation="([^"]+)"/.exec(markup)?.[1],
+    ]),
+  )
+}
+
+function expectLabDirection(pages: Readonly<Record<string, string>>) {
+  for (const [page, markup] of Object.entries(pages)) {
+    expect(markup, page).toContain('data-reader-direction="night-edition"')
+    expect(markup, page).toContain(`data-night-edition="${page}"`)
+    expect(markup, page).toContain('data-reader-lab-bar')
+  }
+}
+
+function expectDefaultWithoutLabBar(pages: Readonly<Record<string, string>>, label: string) {
+  for (const [page, markup] of Object.entries(pages)) {
+    const context = `${page} page, ${label}`
+    expect(markup, context).toContain('data-reader-direction="baseline"')
+    expect(markup, context).toContain(story.title)
+    expect(markup, context).not.toContain('night-edition')
+    expect(markup, context).not.toContain('Night Edition')
+    expect(markup, context).not.toContain('data-reader-lab')
+  }
+}
+
+function enterTheLabAsOwner() {
+  requestScope.setCookies({
+    [labCookie]: 'night-edition',
+    [ownerFixtureCookieName]: createOwnerFixtureSession(),
+  })
+}
+
+describe('Reader Lab overrides and the shared reader cache', () => {
+  it('serves visitors the default direction from the views an owner in the lab cached', async () => {
+    const { reads, runtime } = install()
+    await publishedStoryInSection(runtime)
+
+    enterTheLabAsOwner()
+    const owner = await renderReaderPages()
+    expectLabDirection(owner)
+    const generations = cacheGenerations(owner)
+    for (const generation of Object.values(generations)) {
+      expect(generation).toMatch(/^[0-9a-f-]{36}$/)
+    }
+    reads.transactions = 0
+
+    for (const [label, cookies] of [
+      ['a visitor', {}],
+      ['a visitor who sends the lab cookie', { [labCookie]: 'night-edition' }],
+    ] as const) {
+      requestScope.reset()
+      requestScope.setCookies(cookies)
+      const visitor = await renderReaderPages()
+      // The visitor gets the very entries the owner's request cached, and they hold no direction.
+      expect(cacheGenerations(visitor), label).toEqual(generations)
+      expectDefaultWithoutLabBar(visitor, label)
+    }
+    expect(reads.transactions, 'store reads after the owner filled the cache').toBe(0)
+  })
+
+  it('shows the owner the lab direction from the views a visitor cached', async () => {
+    const { reads, runtime } = install()
+    await publishedStoryInSection(runtime)
+
+    const visitor = await renderReaderPages()
+    expectDefaultWithoutLabBar(visitor, 'a visitor')
+    reads.transactions = 0
+
+    enterTheLabAsOwner()
+    const owner = await renderReaderPages()
+    expect(cacheGenerations(owner)).toEqual(cacheGenerations(visitor))
+    expectLabDirection(owner)
+    expect(reads.transactions, 'store reads after the visitor filled the cache').toBe(0)
   })
 })
