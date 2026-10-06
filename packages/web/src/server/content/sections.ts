@@ -58,6 +58,7 @@ export class SectionService {
         updatedAt: now,
       }
       await transaction.saveTaxonomyTerm(section)
+      transaction.recordPublicationChange()
       return section
     })
   }
@@ -82,6 +83,7 @@ export class SectionService {
       }
       const now = this.clock.now().toISOString()
       await transaction.saveArticleTaxonomy(link)
+      transaction.recordPublicationChange()
       await transaction.saveAuditEvent({
         action: 'article.section-assigned',
         actorId: input.actorId ?? null,

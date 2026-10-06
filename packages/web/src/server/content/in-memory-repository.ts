@@ -32,6 +32,7 @@ interface RepositoryState {
   outboxEvents: Map<string, OutboxEvent>
   publicationJobs: Map<string, PublicationJob>
   publicationSettings: Map<string, PublicationSettings>
+  publicationVersion: number
   redirects: Map<string, SlugRedirect>
   reusableBlockRevisions: Map<string, ReusableBlockRevision>
   reusableBlocks: Map<string, ReusableBlock>
@@ -52,6 +53,7 @@ function createState(): RepositoryState {
     outboxEvents: new Map(),
     publicationJobs: new Map(),
     publicationSettings: new Map(),
+    publicationVersion: 0,
     redirects: new Map(),
     reusableBlockRevisions: new Map(),
     reusableBlocks: new Map(),
@@ -73,6 +75,8 @@ function values<T>(map: ReadonlyMap<string, T>): readonly T[] {
 }
 
 class InMemoryContentTransaction implements ContentTransaction {
+  publicationChanged = false
+
   constructor(private readonly state: RepositoryState) {}
 
   async claimDuePublicationJob({
@@ -226,6 +230,10 @@ class InMemoryContentTransaction implements ContentTransaction {
     return values(this.state.taxonomyTerms)
   }
 
+  recordPublicationChange(): void {
+    this.publicationChanged = true
+  }
+
   async saveArticle(article: Article, expectedVersion: number | null): Promise<void> {
     const current = this.state.articles.get(article.id)
     const duplicateSlug = [...this.state.articles.values()].find(
@@ -331,11 +339,20 @@ export class InMemoryContentRepository implements ContentRepository {
     }
   }
 
+  /** Like PostgreSQL, a read returns the last committed version, never one still in progress. */
+  async readPublicationVersion(): Promise<number> {
+    return this.state.publicationVersion
+  }
+
   async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
     return this.runExclusive(async () => {
       const original = cloneState(this.state)
       try {
-        return await work(new InMemoryContentTransaction(this.state))
+        const transaction = new InMemoryContentTransaction(this.state)
+        const result = await work(transaction)
+        // The last step of the transaction, so a rolled-back change never advances the version.
+        if (transaction.publicationChanged) this.state.publicationVersion += 1
+        return result
       } catch (error) {
         this.state = original
         throw error

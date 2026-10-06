@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3'
 import { Pool } from 'pg'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   readArticleView,
@@ -97,12 +97,12 @@ describe('PostgreSQL and media persistence integration', () => {
     const pool = new Pool({ connectionString: databaseUrl, max: 4 })
     const migrations = await readContentMigrations()
     expect(await applyContentMigrations(pool, migrations)).toEqual({
-      applied: ['0001_content_foundation', '0002_owner_auth'],
+      applied: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
       skipped: [],
     })
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: [],
-      skipped: ['0001_content_foundation', '0002_owner_auth'],
+      skipped: ['0001_content_foundation', '0002_owner_auth', '0003_publication_version'],
     })
 
     const repository = new PostgresContentRepository(pool)
@@ -400,7 +400,7 @@ describe('PostgreSQL and media persistence integration', () => {
     await restoredPool.query('COMMIT')
     await expect(applyContentMigrations(restoredPool, migrations)).resolves.toEqual({
       applied: ['0002_owner_auth'],
-      skipped: ['0001_content_foundation'],
+      skipped: ['0001_content_foundation', '0003_publication_version'],
     })
 
     await restoredPool.end()
@@ -481,6 +481,53 @@ describe('PostgreSQL and media persistence integration', () => {
     expect(reseeded.images.created).toEqual([])
 
     mediaClient.destroy()
+    await pool.end()
+  }, 120_000)
+
+  it('advances the publication version in the commit of each publication change', async () => {
+    const pool = new Pool({ connectionString: databaseUrl, max: 2 })
+    const repository = new PostgresContentRepository(pool)
+    const service = new ContentService(repository, clock)
+    const before = await repository.readPublicationVersion()
+
+    const created = await service.createArticle({
+      dek: 'Publication version proof',
+      document: document('article-publication-version'),
+      id: 'article-publication-version',
+      idempotencyKey: 'create-publication-version',
+      slug: 'publication-version-proof',
+      title: 'Publication version proof',
+    })
+    expect(await repository.readPublicationVersion()).toBe(before)
+    const published = await service.publish({
+      articleId: created.article.id,
+      expectedVersion: created.article.version,
+      idempotencyKey: 'publish-publication-version',
+      revisionId: created.revision.id,
+    })
+    expect(await repository.readPublicationVersion()).toBe(before + 1)
+    await expect(
+      repository.transaction(async (transaction) => {
+        transaction.recordPublicationChange()
+        throw new Error('synthetic publication rollback')
+      }),
+    ).rejects.toThrow(/synthetic publication rollback/)
+    expect(await repository.readPublicationVersion()).toBe(before + 1)
+    await service.unpublish({
+      articleId: created.article.id,
+      expectedVersion: published.article.version,
+      idempotencyKey: 'unpublish-publication-version',
+      reason: 'Integration check',
+    })
+    expect(await repository.readPublicationVersion()).toBe(before + 2)
+
+    // A version read is one statement on the pool, outside any transaction.
+    const query = vi.spyOn(pool, 'query')
+    await repository.readPublicationVersion()
+    expect(query.mock.calls).toEqual([
+      ['SELECT version FROM content_publication_state WHERE id = 1'],
+    ])
+
     await pool.end()
   }, 120_000)
 })

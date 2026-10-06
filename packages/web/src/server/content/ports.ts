@@ -56,6 +56,11 @@ export interface ContentTransaction {
   listReusableBlocks(): Promise<readonly ReusableBlock[]>
   listRevisions(articleId?: string): Promise<readonly ArticleRevision[]>
   listTaxonomyTerms(): Promise<readonly TaxonomyTerm[]>
+  /**
+   * Records that this transaction changes what readers may see. The publication version advances
+   * once, in the same commit, however often this is called.
+   */
+  recordPublicationChange(): void
   saveArticle(article: Article, expectedVersion: number | null): Promise<void>
   saveArticleTaxonomy(link: ArticleTaxonomy): Promise<void>
   saveAuditEvent(event: AuditEvent): Promise<void>
@@ -75,6 +80,11 @@ export interface ContentTransaction {
 }
 
 export interface ContentRepository {
+  /**
+   * The publication version: a counter that advances in the commit of every change to what
+   * readers may see. It returns the last committed value with one query, outside any transaction.
+   */
+  readPublicationVersion(): Promise<number>
   transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T>
 }
 

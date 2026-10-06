@@ -40,6 +40,7 @@ export default defineConfig({
         'packages/web/src/lib/request-security.ts',
         'packages/web/src/lib/site-url.ts',
         'packages/web/src/reader/blocks.ts',
+        'packages/web/src/reader/cache.ts',
         'packages/web/src/reader/media.ts',
         'packages/web/src/reader/read-model.ts',
         'packages/web/src/reader/slug.ts',
