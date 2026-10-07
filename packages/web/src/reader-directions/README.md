@@ -63,6 +63,14 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
   Source `style` accepts only `normal` or `italic`, defaults to `normal`, and is emitted as the
   face's `font-style`. Use genuine italic files when the direction uses italic text. Omitting
   `style` preserves the original normal-face output byte for byte.
+  Variable sources may use `weight: [min, max]` (integers 1–1000, ordered) and
+  `stretch: ['min%', 'max%']` (percentages 25–200, ordered). These emit CSS ranges
+  such as `font-weight: 100 900; font-stretch: 62% 125%`. Use only the axes the
+  actual file provides. Arrays are copied and frozen. Omitting `stretch` and using
+  a numeric weight preserves existing static font CSS byte for byte. Body text
+  can retain normal width while display titles select a condensed `font-stretch`.
+  Optional display still prevents a late font swap, including for condensed titles;
+  validate actual CLS on the host, for both cold and warm font loads.
   Document their source and reproduction command. The contract validates and freezes the data.
 - **Local, licensed subsets.** Put WOFF2 files in `public/reader-directions/<id>/fonts/`, with
   their full licence text and source URLs/hashes. `file` is a lowercase filename, not a URL or

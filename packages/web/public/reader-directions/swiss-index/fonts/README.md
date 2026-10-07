@@ -43,6 +43,7 @@ node packages/web/src/reader-directions/swiss-index/font-metrics.mjs
 
 These are Next's family-level adjusted Arial metrics (also for Plex Mono), not
 measurements against a local monospace face. A cold optional fallback may persist
-for that navigation. Capture tests warm fonts and reload before saving screenshots.
+for that navigation. The shared `capture-fonts.ts` helper gates first layout on font
+readiness and verifies the rendered faces before saving screenshots.
 The maintenance script is never imported by runtime code. The host browser checks
 must still measure CLS; metric overrides alone are not proof of zero shift.

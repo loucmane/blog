@@ -9,6 +9,53 @@ import { readerDirections } from './registry'
 
 afterEach(cleanup)
 
+it('emits variable axes only for the active root and removes them on a switch', () => {
+  const cinematic = readerDirections.find('cinematic-feature')!
+  const { container, rerender } = render(
+    <ReaderDirectionRoot direction={cinematic}>Cinematic</ReaderDirectionRoot>,
+  )
+  const style = container.querySelector('[data-reader-direction-fonts]')!
+  expect(style.textContent).toContain('font-weight:100 900;font-stretch:62% 125%;')
+  expect(style.textContent).toContain('font-display:optional;')
+  expect(style.textContent).not.toContain('/swiss-index/')
+  expect(style).not.toHaveAttribute('href')
+  expect(document.head.querySelector('[data-reader-direction-fonts]')).toBeNull()
+  expect(container.querySelector('link[as="font"]')).toBeNull()
+  rerender(
+    <ReaderDirectionRoot direction={readerDirections.find('swiss-index')!}>
+      Swiss
+    </ReaderDirectionRoot>,
+  )
+  expect(container.querySelector('[data-reader-direction-fonts]')!.textContent).not.toMatch(
+    /cinematic-feature|font-stretch/,
+  )
+  rerender(
+    <ReaderDirectionRoot direction={readerDirections.defaultDirection}>
+      Baseline
+    </ReaderDirectionRoot>,
+  )
+  expect(container.querySelector('[data-reader-direction-fonts]')).toBeNull()
+})
+
+it('rejects unsafe variable descriptors before the root emits CSS', () => {
+  const cinematic = readerDirections.find('cinematic-feature')!
+  const font = cinematic.fonts[0]!
+  for (const patch of [{ weight: [900, 100] }, { stretch: ['62%', '125%;color:red'] }]) {
+    expect(() =>
+      renderToStaticMarkup(
+        <ReaderDirectionRoot
+          direction={defineReaderDirection({
+            ...cinematic,
+            fonts: [{ ...font, sources: [{ ...font.sources[0]!, ...patch } as never] }],
+          })}
+        >
+          Invalid
+        </ReaderDirectionRoot>,
+      ),
+    ).toThrow(/weight|stretch/)
+  }
+})
+
 it('emits the selected italic faces and removes them when switching to a normal-only direction', () => {
   const literary = readerDirections.find('literary-longread')!
   const quiet = readerDirections.find('quiet-monograph')!
