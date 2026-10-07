@@ -170,6 +170,54 @@ for (const width of [390, 1440]) {
         expect(result.violations, `${path} at ${width} in ${theme}`).toEqual([])
       }
     })
+
+    test(`keeps the longest article accessible over a white hero at ${width}px in ${theme} mode`, async ({
+      page,
+    }) => {
+      test.setTimeout(120_000)
+      await page.setViewportSize({ width, height: 900 })
+      const longest = labStories.reduce((first, second) =>
+        first.title.length >= second.title.length ? first : second,
+      )
+      const heroId = longest.blocks.find(({ type }) => type === 'mediaImage')?.attrs?.mediaId
+      expect(longest.title.length).toBeGreaterThan(100)
+      if (typeof heroId !== 'string') throw new Error('The longest seeded story needs a hero')
+      // Only this browser case substitutes the image response; published copy stays intact.
+      await page.route(`**/api/media/${heroId}*`, (route) =>
+        route.fulfill({
+          contentType: 'image/svg+xml',
+          body: '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="white"/></svg>',
+        }),
+      )
+      const fontGate = await prepareFontCapture(page, root, {
+        '--font-cf-sans': 'Archivo',
+        '--font-cf-mono': 'Martian Mono',
+      })
+      await fontGate.goto(`/stories/${normalizeSlug(longest.title)}`)
+      await fontGate.assertFonts()
+      await page.evaluate(
+        (dark) => document.documentElement.classList.toggle('dark', dark),
+        theme === 'dark',
+      )
+      await waitForThemeToSettle(page)
+      await expect(page.locator('.cf-article-heading h1')).toHaveText(longest.title)
+      await expect(page.getByRole('region', { name: 'Reader Lab', exact: true })).toBeVisible()
+      // Prove the selected responsive source decoded as white, not the original dark fixture.
+      const pixel = await page.locator('.cf-hero img').evaluate(async (element) => {
+        const image = element as HTMLImageElement
+        await image.decode()
+        const canvas = document.createElement('canvas')
+        canvas.width = canvas.height = 1
+        const context = canvas.getContext('2d')!
+        context.drawImage(image, 0, 0, 1, 1)
+        return [...context.getImageData(0, 0, 1, 1).data]
+      })
+      expect(pixel).toEqual([255, 255, 255, 255])
+      const result = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze()
+      expect(result.violations, `long title over white at ${width} in ${theme}`).toEqual([])
+    })
   }
 }
 

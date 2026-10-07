@@ -66,7 +66,8 @@ export const styles = `
   & .cf-hero, & .cf-hero figure { display: contents; object-position: inherit; }
   & .cf-hero picture, & .cf-hero figure > div { display: block; position: relative; grid-row: 1; grid-column: 1; object-position: inherit; height: 100%; }
   & .cf-hero img { position: absolute; inset: 0; height: 100%; width: 100%; object-fit: cover; object-position: inherit; }
-  & .cf-hero figure::after { content: ''; grid-row: 1; grid-column: 1; z-index: 1; pointer-events: none; background: linear-gradient(0deg, var(--cf-ground), rgb(11 12 12 / 82%) 65%, rgb(11 12 12 / 35%)); }
+  /* Reach the contrast floor before any heading text: mobile padding is 14rem, desktop at least 15rem. */
+  & .cf-hero figure::after { content: ''; grid-row: 1; grid-column: 1; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgb(11 12 12 / 35%), rgb(11 12 12 / 75%) 14rem, var(--cf-ground)); }
   & .cf-hero figcaption { grid-row: 2; padding: 1.5rem var(--cf-gutter); border-bottom: 1px solid var(--cf-slate); }
   & .cf-article-heading { grid-row: 1; grid-column: 1; align-self: end; position: relative; z-index: 2; width: min(100%, 80rem); padding: clamp(15rem, 36vh, 26rem) var(--cf-gutter) 3rem; }
   & .cf-article-hero.cf-hero-text .cf-article-heading { padding-top: var(--cf-space); }
