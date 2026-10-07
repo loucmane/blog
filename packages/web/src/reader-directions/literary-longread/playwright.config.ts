@@ -13,6 +13,28 @@ const webServers = Array.isArray(shared.webServer)
 // Keep the direction's browser tests in its lane. Uses the same production server and fixtures.
 export default defineConfig({
   ...shared,
+  reporter: [
+    ['list'],
+    [
+      'json',
+      {
+        outputFile: path.resolve(
+          __dirname,
+          '../../../../../ci-artifacts/literary-longread-results.json',
+        ),
+      },
+    ],
+    [
+      'html',
+      {
+        open: 'never',
+        outputFolder: path.resolve(
+          __dirname,
+          '../../../../../ci-artifacts/literary-longread-report',
+        ),
+      },
+    ],
+  ],
   outputDir: path.resolve(__dirname, '../../../../../ci-artifacts/literary-longread-results'),
   testDir: '.',
   testMatch: '*.e2e.ts',

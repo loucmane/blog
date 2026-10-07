@@ -2,7 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { normalizeSlug } from '../../server/content/domain'
 import { labStories } from '../../server/lab/north-house'
@@ -11,7 +11,12 @@ import { prepareFontCapture } from '../capture-fonts'
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
 const sectionPath = '/sections/interiors'
-const root = '[data-reader-direction="quiet-monograph"]'
+const root = '[data-reader-direction="swiss-index"]'
+
+async function waitForThemeToSettle(page: Page) {
+  // The shared lab bar transitions its colours; assertions need the settled theme.
+  await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0)
+}
 
 test.beforeEach(async ({ context, page, request }) => {
   const seed = await request.post('/api/internal/lab-seed', {
@@ -24,14 +29,14 @@ test.beforeEach(async ({ context, page, request }) => {
   expect(session.status()).toBe(200)
   await page.goto('/owner/reader-lab')
   await page
-    .locator('[data-reader-direction-card="quiet-monograph"]')
+    .locator('[data-reader-direction-card="swiss-index"]')
     .getByRole('button', { name: /^View the site in this direction/ })
     .click()
   await expect(page).toHaveURL('/')
   await expect(page.locator(root)).toBeVisible()
 })
 
-test('opens Quiet Monograph from the lab and renders published titles on all three pages', async ({
+test('opens Swiss Index from the lab and renders published titles on all three pages', async ({
   page,
 }) => {
   await expect(
@@ -46,7 +51,7 @@ test('opens Quiet Monograph from the lab and renders published titles on all thr
   ).toBeVisible()
 })
 
-test('has no overflow at every required width and an operable touch-sized menu', async ({
+test('has no overflow at every required width and operable touch-sized navigation', async ({
   page,
 }) => {
   test.setTimeout(120_000)
@@ -58,11 +63,9 @@ test('has no overflow at every required width and an operable touch-sized menu',
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
         `${path} at ${width}`,
       ).toBe(true)
-      const menu = page.locator(`${root} summary`)
-      await menu.click()
       const sections = page.locator(root).getByRole('navigation', { name: 'Sections' })
       await expect(sections).toBeVisible()
-      for (const control of [menu, ...(await sections.getByRole('link').all())]) {
+      for (const control of await sections.getByRole('link').all()) {
         const box = await control.boundingBox()
         expect(box?.width).toBeGreaterThanOrEqual(44)
         expect(box?.height).toBeGreaterThanOrEqual(44)
@@ -97,62 +100,120 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
         `${story.id} at ${width}px`,
       ).toBe(true)
-      if (story.id === 'article-lab-chair') await expect(page.locator('.qm-hero')).toHaveCount(0)
+      if (story.id === 'article-lab-chair') await expect(page.locator('.si-hero')).toHaveCount(0)
     }
   }
 })
 
-test('uses visible keyboard focus, a keyboard-operable disclosure, and paper in dark mode', async ({
-  page,
-}) => {
+test('uses visible keyboard focus and a true black reading ground', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  const menu = page.locator(`${root} summary`)
-  // Reach the menu through the real tab order, including the lab controls and skip link.
+  const skip = page.getByRole('link', { name: 'Skip to stories' })
   for (
     let tabs = 0;
-    tabs < 12 && !(await menu.evaluate((element) => element === document.activeElement));
+    tabs < 12 && !(await skip.evaluate((element) => element === document.activeElement));
     tabs++
   ) {
     await page.keyboard.press('Tab')
   }
-  await expect(menu).toBeFocused()
-  expect(await menu.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid')
+  await expect(skip).toBeFocused()
+  expect(await skip.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid')
   await page.keyboard.press('Enter')
-  await expect(page.locator(root).getByRole('navigation', { name: 'Sections' })).toBeVisible()
-  await page.keyboard.press('Tab')
-  await expect(
-    page.locator(root).getByRole('navigation').getByRole('link', { name: 'All stories' }),
-  ).toBeFocused()
+  await expect(page.locator('#si-main')).toBeFocused()
+  await page.goto('/')
+  const interiors = page
+    .locator(root)
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Interiors' })
+  for (
+    let tabs = 0;
+    tabs < 20 && !(await interiors.evaluate((element) => element === document.activeElement));
+    tabs++
+  ) {
+    await page.keyboard.press('Tab')
+  }
+  await expect(interiors).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(sectionPath)
   await page.evaluate(() => document.documentElement.classList.add('dark'))
+  await waitForThemeToSettle(page)
   expect(
     await page.locator(root).evaluate((element) => getComputedStyle(element).backgroundColor),
-  ).toBe('rgb(246, 245, 241)')
+  ).toBe('rgb(0, 0, 0)')
 })
 
 for (const width of [390, 1440]) {
-  test(`passes axe with the lab bar at ${width}px`, async ({ page }) => {
-    test.setTimeout(120_000)
-    await page.setViewportSize({ width, height: 900 })
-    for (const path of ['/', storyPath, sectionPath]) {
-      await page.goto(path)
-      await page.evaluate(async () => {
-        await document.fonts.ready
-      })
-      await expect(page.getByRole('region', { name: 'Reader Lab', exact: true })).toBeVisible()
-      const result = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .analyze()
-      expect(result.violations, `${path} at ${width}`).toEqual([])
+  for (const theme of ['light', 'dark']) {
+    test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
+      test.setTimeout(120_000)
+      await page.setViewportSize({ width, height: 900 })
+      for (const path of ['/', storyPath, sectionPath]) {
+        await page.goto(path)
+        await page.evaluate(async () => {
+          await document.fonts.ready
+        })
+        await page.evaluate(
+          (dark) => document.documentElement.classList.toggle('dark', dark),
+          theme === 'dark',
+        )
+        await waitForThemeToSettle(page)
+        await expect(page.getByRole('region', { name: 'Reader Lab', exact: true })).toBeVisible()
+        const result = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+          .analyze()
+        expect(result.violations, `${path} at ${width} in ${theme}`).toEqual([])
+      }
+    })
+  }
+}
+
+test('uses a 65-character reading measure with reduced motion respected', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(storyPath)
+  await page.evaluate(async () => {
+    await document.fonts.ready
+  })
+  const body = page.locator('.si-body')
+  const metrics = await body.evaluate((element) => {
+    const style = getComputedStyle(element)
+    // Measure the CSS ch unit in the same active face, including a retained optional fallback.
+    const probe = document.createElement('span')
+    probe.style.cssText = 'display:block;width:65ch;position:absolute;visibility:hidden'
+    element.append(probe)
+    const measure = probe.getBoundingClientRect().width
+    probe.remove()
+    return {
+      width: element.getBoundingClientRect().width,
+      measure,
+      fontSize: style.fontSize,
+      lineHeight: style.lineHeight,
     }
   })
-}
+  expect(metrics.fontSize).toBe('20px')
+  expect(metrics.lineHeight).toBe('33px')
+  expect(Math.abs(metrics.width - metrics.measure)).toBeLessThan(1)
+  expect(await body.evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
+})
+
+test('removes Swiss Index font declarations when the owner switches back to baseline', async ({
+  page,
+}) => {
+  await expect(page.locator('[data-reader-direction-fonts="swiss-index"]')).toHaveCount(1)
+  await page.goto('/owner/reader-lab')
+  await page
+    .locator('[data-reader-direction-card="baseline"]')
+    .getByRole('button', { name: /^View the site in this direction/ })
+    .click()
+  await expect(page.locator('[data-reader-direction="baseline"]')).toBeVisible()
+  await expect(page.locator('[data-reader-direction-fonts]')).toHaveCount(0)
+})
 
 test('keeps a visitor on baseline even with the direction cookie', async ({ browser }) => {
   const visitor = await browser.newContext()
   try {
     await visitor.addCookies([
-      { name: 'reader_lab_direction', value: 'quiet-monograph', url: 'http://localhost:3100' },
+      { name: 'reader_lab_direction', value: 'swiss-index', url: 'http://localhost:3100' },
     ])
     const page = await visitor.newPage()
     const fonts: string[] = []
@@ -177,10 +238,10 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
 test('captures twelve seeded screenshots for review', async ({ page }) => {
   test.setTimeout(180_000)
   const captureFonts = await prepareFontCapture(page, root, {
-    '--font-qm-display': 'Cormorant Garamond',
-    '--font-qm-text': 'Jost',
+    '--font-si-sans': 'Schibsted Grotesk',
+    '--font-si-mono': 'IBM Plex Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.3')
+  const destination = path.resolve('docs/worklog/blog-0044.5')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })

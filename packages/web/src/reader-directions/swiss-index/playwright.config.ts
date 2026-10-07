@@ -18,24 +18,21 @@ export default defineConfig({
     [
       'json',
       {
-        outputFile: path.resolve(
-          __dirname,
-          '../../../../../ci-artifacts/quiet-monograph-results.json',
-        ),
+        outputFile: path.resolve(__dirname, '../../../../../ci-artifacts/swiss-index-results.json'),
       },
     ],
     [
       'html',
       {
         open: 'never',
-        outputFolder: path.resolve(__dirname, '../../../../../ci-artifacts/quiet-monograph-report'),
+        outputFolder: path.resolve(__dirname, '../../../../../ci-artifacts/swiss-index-report'),
       },
     ],
   ],
-  outputDir: path.resolve(__dirname, '../../../../../ci-artifacts/quiet-monograph-results'),
+  outputDir: path.resolve(__dirname, '../../../../../ci-artifacts/swiss-index-results'),
   testDir: '.',
   testMatch: '*.e2e.ts',
-  projects: [{ name: 'quiet-monograph', use: { browserName: 'chromium' } }],
+  projects: [{ name: 'swiss-index', use: { browserName: 'chromium' } }],
   webServer: webServers.map((server) => ({
     ...server,
     cwd: path.resolve(__dirname, '../../../../../'),
