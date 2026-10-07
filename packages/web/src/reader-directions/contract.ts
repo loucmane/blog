@@ -44,7 +44,10 @@ export interface ReaderDirectionFont {
     readonly file: string
     /** Omitted styles retain the original normal-face output. */
     readonly style?: 'normal' | 'italic'
-    readonly weight: number
+    /** Static weight or inclusive variable axis range. */
+    readonly weight: number | readonly [number, number]
+    /** Optional inclusive variable width axis range, expressed as percentages. */
+    readonly stretch?: readonly [`${number}%`, `${number}%`]
   }[]
   /** Custom property applied only to this direction's root; family names are generated. */
   readonly variable: `--${string}`
@@ -175,8 +178,39 @@ function requireFonts(id: string, fonts: readonly ReaderDirectionFont[] | undefi
           `the font ${font.variable} needs a WOFF2 filename inside its own direction folder.`,
         )
       }
-      if (!Number.isInteger(source.weight) || source.weight < 1 || source.weight > 1000) {
-        fail(id, `the font ${font.variable} needs a weight from 1 to 1000.`)
+      const validWeight = (value: unknown): value is number =>
+        typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 1000
+      if (!(
+        validWeight(source.weight) ||
+        (Array.isArray(source.weight) &&
+          source.weight.length === 2 &&
+          source.weight.every(validWeight) &&
+          source.weight[0] <= source.weight[1])
+      )) {
+        fail(
+          id,
+          `the font ${font.variable} needs a weight from 1 to 1000 or an ordered pair of those integers.`,
+        )
+      }
+      if (
+        source.stretch !== undefined &&
+        !(
+          Array.isArray(source.stretch) &&
+          source.stretch.length === 2 &&
+          source.stretch.every(
+            (value: unknown) =>
+              typeof value === 'string' &&
+              /^\d+(?:\.\d+)?%$/.test(value) &&
+              parseFloat(value) >= 25 &&
+              parseFloat(value) <= 200,
+          ) &&
+          parseFloat(source.stretch[0]) <= parseFloat(source.stretch[1])
+        )
+      ) {
+        fail(
+          id,
+          `the font ${font.variable} needs a stretch range of two ordered percentages from 25% to 200%.`,
+        )
       }
       if (source.style !== undefined && source.style !== 'normal' && source.style !== 'italic') {
         fail(id, `the font ${font.variable} style must be normal or italic.`)
@@ -190,7 +224,20 @@ function requireFonts(id: string, fonts: readonly ReaderDirectionFont[] | undefi
       Object.freeze({
         ...font,
         fallback: Object.freeze({ ...font.fallback }),
-        sources: Object.freeze(font.sources.map((source) => Object.freeze({ ...source }))),
+        sources: Object.freeze(
+          font.sources.map((source) =>
+            Object.freeze({
+              ...source,
+              weight:
+                typeof source.weight === 'number'
+                  ? source.weight
+                  : Object.freeze([source.weight[0], source.weight[1]] as const),
+              ...(source.stretch === undefined
+                ? {}
+                : { stretch: Object.freeze([source.stretch[0], source.stretch[1]] as const) }),
+            }),
+          ),
+        ),
       }),
     ),
   )
@@ -400,8 +447,8 @@ export function readerDirectionFontCss(direction: ReaderDirection): string | nul
       return (
         font.sources
           .map(
-            ({ file, weight, style = 'normal' }) =>
-              `@font-face{font-family:"${family}";font-style:${style};font-weight:${weight};font-display:optional;src:url("/reader-directions/${direction.id}/fonts/${file}") format("woff2");}`,
+            ({ file, weight, stretch, style = 'normal' }) =>
+              `@font-face{font-family:"${family}";font-style:${style};font-weight:${typeof weight === 'number' ? weight : weight.join(' ')};${stretch ? `font-stretch:${stretch.join(' ')};` : ''}font-display:optional;src:url("/reader-directions/${direction.id}/fonts/${file}") format("woff2");}`,
           )
           .join('') +
         `@font-face{font-family:"${fallback}";src:local("${metrics.family}");ascent-override:${metrics.ascentOverride};descent-override:${metrics.descentOverride};line-gap-override:${metrics.lineGapOverride};size-adjust:${metrics.sizeAdjust};}` +

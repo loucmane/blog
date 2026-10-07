@@ -1,0 +1,57 @@
+[
+  {
+    "file": "archivo-latin-wdth-normal.woff2",
+    "package": "@fontsource-variable/archivo",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-HogK8FJelrD1o7TlZlkIVtHgc20bO5PZRWE7mUeUTdMN055alznQV6/00J00IBeu8FQAH4s3zW9UJNvKExXf+g==",
+    "packagePath": "files/archivo-latin-wdth-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource-variable/archivo/-/archivo-5.3.0.tgz",
+    "upstream": "https://github.com/Omnibus-Type/Archivo",
+    "bytes": 90104,
+    "sha256": "e3a28eade21a900c7155a247757f4b2834c07bb7ef07ad7efa55cebaac1e8f5e"
+  },
+  {
+    "file": "Archivo-OFL.txt",
+    "package": "@fontsource-variable/archivo",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-HogK8FJelrD1o7TlZlkIVtHgc20bO5PZRWE7mUeUTdMN055alznQV6/00J00IBeu8FQAH4s3zW9UJNvKExXf+g==",
+    "packagePath": "LICENSE",
+    "url": "https://registry.npmjs.org/@fontsource-variable/archivo/-/archivo-5.3.0.tgz",
+    "upstream": "https://github.com/Omnibus-Type/Archivo",
+    "bytes": 4503,
+    "sha256": "c3c8402eec0e31dc9a76851235b1c02a0bb821488b2db8e35bcc2ab60ca8fc2b"
+  },
+  {
+    "file": "martian-mono-latin-400-normal.woff2",
+    "package": "@fontsource/martian-mono",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-0iTnU6SZi6j5z4ymwlZGep6akvp/xWm+r+WyZO9hMfDJWX+dsFLipQp9zO02S0lkUQ+zAahcZNy3XLiNP+gVqQ==",
+    "packagePath": "files/martian-mono-latin-400-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/martian-mono/-/martian-mono-5.3.0.tgz",
+    "upstream": "https://github.com/evilmartians/mono",
+    "bytes": 10352,
+    "sha256": "bb677c9c5cf5b384b5e4a1fd86755a47e0cbafe6bc70a9ba458b5e13e1d7a5c0"
+  },
+  {
+    "file": "martian-mono-latin-500-normal.woff2",
+    "package": "@fontsource/martian-mono",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-0iTnU6SZi6j5z4ymwlZGep6akvp/xWm+r+WyZO9hMfDJWX+dsFLipQp9zO02S0lkUQ+zAahcZNy3XLiNP+gVqQ==",
+    "packagePath": "files/martian-mono-latin-500-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/martian-mono/-/martian-mono-5.3.0.tgz",
+    "upstream": "https://github.com/evilmartians/mono",
+    "bytes": 10644,
+    "sha256": "98f9af6b1f769d57e58f6fd4e53d813be82106c7d24d84213a74836548e44071"
+  },
+  {
+    "file": "Martian-Mono-OFL.txt",
+    "package": "@fontsource/martian-mono",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-0iTnU6SZi6j5z4ymwlZGep6akvp/xWm+r+WyZO9hMfDJWX+dsFLipQp9zO02S0lkUQ+zAahcZNy3XLiNP+gVqQ==",
+    "packagePath": "LICENSE",
+    "url": "https://registry.npmjs.org/@fontsource/martian-mono/-/martian-mono-5.3.0.tgz",
+    "upstream": "https://github.com/evilmartians/mono",
+    "bytes": 4389,
+    "sha256": "bd7d799f6a67b704f9546422ee83d69b4dc5e4ae289d5eabc22581251dd7150a"
+  }
+]

@@ -40,6 +40,79 @@ const displayFont = {
 } as const
 const textFont = { ...displayFont, variable: '--font-text' } as const
 
+describe('variable font descriptors', () => {
+  function variable(source: Record<string, unknown>) {
+    return defineReaderDirection(
+      definition({
+        fonts: [
+          {
+            ...displayFont,
+            sources: [{ file: 'variable.woff2', weight: [100, 900], ...source } as never],
+          },
+        ],
+      }),
+    )
+  }
+
+  it('emits weight and width ranges and freezes independent copies', () => {
+    const weight = [100, 900]
+    const stretch = ['62.5%', '125%']
+    const direction = variable({ weight, stretch })
+    expect(readerDirectionFontCss(direction)).toContain(
+      'font-weight:100 900;font-stretch:62.5% 125%;font-display:optional;',
+    )
+    weight[0] = 400
+    stretch[0] = '100%'
+    expect(direction.fonts[0]!.sources[0]!.weight).toEqual([100, 900])
+    expect(direction.fonts[0]!.sources[0]!.stretch).toEqual(['62.5%', '125%'])
+    expect(Object.isFrozen(direction.fonts[0]!.sources[0]!.weight)).toBe(true)
+    expect(Object.isFrozen(direction.fonts[0]!.sources[0]!.stretch)).toBe(true)
+  })
+
+  it.each([
+    [],
+    [400],
+    [100, 400, 900],
+    [900, 100],
+    [0, 1000],
+    [100, 1001],
+    [100.5, 900],
+    ['100', 900],
+    [NaN, 900],
+    [100, Infinity],
+    '100 900',
+    null,
+  ])('rejects invalid weight %j', (weight) => {
+    expect(() => variable({ weight })).toThrow(/weight/)
+  })
+
+  it.each([
+    [],
+    ['100%'],
+    ['50%', '100%', '150%'],
+    ['100%', '50%'],
+    ['24%', '100%'],
+    ['100%', '201%'],
+    [25, 200],
+    ['25% ; color:red', '100%'],
+    ['25%', '200%}'],
+    ['NaN%', '100%'],
+    '100%',
+    null,
+  ])('rejects invalid stretch %j', (stretch) => {
+    expect(() => variable({ stretch })).toThrow(/stretch/)
+  })
+
+  it('accepts inclusive bounds and single-value ranges', () => {
+    expect(
+      readerDirectionFontCss(variable({ weight: [1, 1000], stretch: ['25%', '200%'] })),
+    ).toContain('font-weight:1 1000;font-stretch:25% 200%;')
+    expect(
+      readerDirectionFontCss(variable({ weight: [400, 400], stretch: ['100%', '100%'] })),
+    ).toContain('font-weight:400 400;font-stretch:100% 100%;')
+  })
+})
+
 describe('reader direction contract', () => {
   it('accepts a complete direction and freezes it', () => {
     const direction = defineReaderDirection(

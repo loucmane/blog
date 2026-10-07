@@ -120,6 +120,7 @@ export const styles = `
     & .si-rail a { align-items: flex-start; }
   }
   @media (max-width: 599px) {
+    & .si-article-header h1 { letter-spacing: -0.04em; }
     & .si-grid { grid-template-columns: 1fr; }
     & .si-card-wide { grid-column: auto; }
     & .si-masthead { padding-top: 1.5rem; }

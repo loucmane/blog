@@ -1,4 +1,5 @@
 import { baselineDirection } from './baseline'
+import { cinematicFeatureDirection } from './cinematic-feature'
 import { createReaderDirectionRegistry } from './contract'
 import { literaryLongreadDirection } from './literary-longread'
 import { quietMonographDirection } from './quiet-monograph'
@@ -15,5 +16,6 @@ export const readerDirections = createReaderDirectionRegistry({
     quietMonographDirection,
     literaryLongreadDirection,
     swissIndexDirection,
+    cinematicFeatureDirection,
   ],
 })

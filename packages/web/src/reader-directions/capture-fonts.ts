@@ -73,7 +73,10 @@ export async function prepareFontCapture(
             )
             if (!faces.length) throw new Error(`Missing capture font family: ${family}`)
             for (const face of faces) {
-              const spec = `${face.style} ${face.weight} 16px "${family}"`
+              // FontFace descriptors can contain a variable range; the check() shorthand
+              // accepts a single instance, not e.g. "100 900 16px". Check its lower bound.
+              const weight = face.weight.split(/\s+/)[0]
+              const spec = `${face.style} ${weight} 16px "${family}"`
               if (face.status !== 'loaded' || !document.fonts.check(spec)) {
                 throw new Error(`Capture font is not loaded: ${spec}`)
               }
@@ -103,7 +106,7 @@ export async function prepareFontCapture(
               }
               continue // The lab bar and intentionally generic code fonts are outside this check.
             }
-            const spec = `${family} ${computed.fontWeight} ${computed.fontStyle}`
+            const spec = `${family} ${computed.fontWeight} ${computed.fontStyle} ${computed.fontStretch}`
             if (probes.has(spec)) continue
             const id = String(probes.size)
             node.setAttribute('data-capture-font-probe', id)
