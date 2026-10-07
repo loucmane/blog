@@ -142,6 +142,43 @@ describe('reader direction contract', () => {
     )
   })
 
+  it('emits genuine italic faces while keeping omitted and explicit normal styles identical', () => {
+    const normal = defineReaderDirection(definition({ fonts: [displayFont] }))
+    const explicit = defineReaderDirection(
+      definition({
+        fonts: [{ ...displayFont, sources: [{ ...displayFont.sources[0], style: 'normal' }] }],
+      }),
+    )
+    expect(readerDirectionFontCss(explicit)).toBe(readerDirectionFontCss(normal))
+    const italic = defineReaderDirection(
+      definition({
+        fonts: [
+          {
+            ...displayFont,
+            sources: [{ file: 'display-italic.woff2', weight: 400, style: 'italic' }],
+          },
+        ],
+      }),
+    )
+    expect(readerDirectionFontCss(italic)).toContain('font-style:italic;font-weight:400;')
+    expect(Object.isFrozen(italic.fonts[0]?.sources[0])).toBe(true)
+  })
+
+  it.each(['oblique', 'Italic', '', null, 0, 'italic;}</style>'])(
+    'rejects invalid font style %j',
+    (style) => {
+      expect(() =>
+        defineReaderDirection(
+          definition({
+            fonts: [
+              { ...displayFont, sources: [{ file: 'display.woff2', weight: 400, style } as never] },
+            ],
+          }),
+        ),
+      ).toThrow(/style.*normal.*italic/)
+    },
+  )
+
   it('rejects malformed or unsafe tokens', () => {
     const invalidTokenSets = [
       { ink: '#111111' },

@@ -28,7 +28,7 @@ export interface SectionDirectionProps {
   readonly view: SectionView
 }
 
-/** Local normal-style font faces, emitted only when this direction renders. */
+/** Local font faces, emitted only when this direction renders. */
 export interface ReaderDirectionFont {
   /** Metric overrides, reproduced and documented alongside the direction's font assets. */
   readonly fallback: {
@@ -42,6 +42,8 @@ export interface ReaderDirectionFont {
   readonly sources: readonly {
     /** Filename under public/reader-directions/<id>/fonts/, with its licence alongside. */
     readonly file: string
+    /** Omitted styles retain the original normal-face output. */
+    readonly style?: 'normal' | 'italic'
     readonly weight: number
   }[]
   /** Custom property applied only to this direction's root; family names are generated. */
@@ -175,6 +177,9 @@ function requireFonts(id: string, fonts: readonly ReaderDirectionFont[] | undefi
       }
       if (!Number.isInteger(source.weight) || source.weight < 1 || source.weight > 1000) {
         fail(id, `the font ${font.variable} needs a weight from 1 to 1000.`)
+      }
+      if (source.style !== undefined && source.style !== 'normal' && source.style !== 'italic') {
+        fail(id, `the font ${font.variable} style must be normal or italic.`)
       }
     }
     if (variables.has(font.variable)) fail(id, `the font "${font.variable}" is listed twice.`)
@@ -395,8 +400,8 @@ export function readerDirectionFontCss(direction: ReaderDirection): string | nul
       return (
         font.sources
           .map(
-            ({ file, weight }) =>
-              `@font-face{font-family:"${family}";font-style:normal;font-weight:${weight};font-display:optional;src:url("/reader-directions/${direction.id}/fonts/${file}") format("woff2");}`,
+            ({ file, weight, style = 'normal' }) =>
+              `@font-face{font-family:"${family}";font-style:${style};font-weight:${weight};font-display:optional;src:url("/reader-directions/${direction.id}/fonts/${file}") format("woff2");}`,
           )
           .join('') +
         `@font-face{font-family:"${fallback}";src:local("${metrics.family}");ascent-override:${metrics.ascentOverride};descent-override:${metrics.descentOverride};line-gap-override:${metrics.lineGapOverride};size-adjust:${metrics.sizeAdjust};}` +

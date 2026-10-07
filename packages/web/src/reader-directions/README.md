@@ -57,9 +57,12 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
 
 - **Fonts are data.** Declare `fonts` in the direction's own `fonts.ts`, following
   [Quiet Monograph](quiet-monograph/fonts.ts). Each declaration provides a `variable` CSS custom
-  property, a `genericFamily` (`serif`, `sans-serif` or `monospace`), `sources` of `{ file, weight }`
-  for the normal weights used, and a `fallback` with `family`, `ascentOverride`, `descentOverride`,
+  property, a `genericFamily` (`serif`, `sans-serif` or `monospace`), `sources` of `{ file, weight, style? }`
+  for the weights used, and a `fallback` with `family`, `ascentOverride`, `descentOverride`,
   `lineGapOverride` and `sizeAdjust`. Metrics are nonnegative percentages; size adjustment is positive.
+  Source `style` accepts only `normal` or `italic`, defaults to `normal`, and is emitted as the
+  face's `font-style`. Use genuine italic files when the direction uses italic text. Omitting
+  `style` preserves the original normal-face output byte for byte.
   Document their source and reproduction command. The contract validates and freezes the data.
 - **Local, licensed subsets.** Put WOFF2 files in `public/reader-directions/<id>/fonts/`, with
   their full licence text and source URLs/hashes. `file` is a lowercase filename, not a URL or
