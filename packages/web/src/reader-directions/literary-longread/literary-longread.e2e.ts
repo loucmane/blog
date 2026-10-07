@@ -6,6 +6,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { normalizeSlug } from '../../server/content/domain'
 import { labStories } from '../../server/lab/north-house'
+import { prepareFontCapture } from '../capture-fonts'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
@@ -247,6 +248,10 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
 
 test('captures twelve seeded screenshots for review', async ({ page }) => {
   test.setTimeout(180_000)
+  const captureFonts = await prepareFontCapture(page, root, {
+    '--font-ll-serif': 'Newsreader',
+    '--font-ll-sans': 'Libre Franklin',
+  })
   const destination = path.resolve('docs/worklog/blog-0044.4')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 1440]) {
@@ -256,10 +261,7 @@ test('captures twelve seeded screenshots for review', async ({ page }) => {
       ['article', storyPath],
       ['section', sectionPath],
     ]) {
-      await page.goto(route!)
-      await page.evaluate(async () => {
-        await document.fonts.ready
-      })
+      await captureFonts.goto(route!)
       // Load lazy images before the full-page capture, then return to the cover.
       await page.evaluate(async () => {
         for (const image of document.images) image.loading = 'eager'
@@ -275,6 +277,7 @@ test('captures twelve seeded screenshots for review', async ({ page }) => {
         `${name} images loaded`,
       ).toBe(true)
       for (const fullPage of [false, true]) {
+        await captureFonts.assertFonts()
         await page.screenshot({
           path: path.join(destination, `${name}-${width}-${fullPage ? 'full' : 'viewport'}.png`),
           fullPage,

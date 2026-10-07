@@ -125,6 +125,21 @@ describe('registered reader directions', () => {
     expect(globalCss).not.toMatch(/@font-face|reader-directions\//)
   })
 
+  it.each(readerDirections.directions.filter(({ id }) => id !== 'baseline'))(
+    '$id explicitly assigns its own font to every heading level',
+    (direction) => {
+      // Inheriting the page font is insufficient: globals.css sets a serif on h1–h3.
+      const headingRule = direction.styles?.match(
+        /:is\(h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6\)\s*\{([^}]+)\}/,
+      )?.[1]
+      const family = headingRule?.match(/font-family:\s*var\((--[a-z-]+)\)/)?.[1]
+      expect(family, `${direction.id} needs an explicit heading font-family`).toBeDefined()
+      const stack = direction.tokens?.light[family as `--${string}`] ?? `var(${family})`
+      const font = stack.match(/^var\((--[a-z-]+)\)/)?.[1]
+      expect(direction.fonts.map(({ variable }) => variable)).toContain(font)
+    },
+  )
+
   it('keeps the theme colors that baseline and the lab bar use at WCAG AA in light and dark', () => {
     const light = themeTokens(':root')
     const dark = new Map([...light, ...themeTokens('.dark')])
