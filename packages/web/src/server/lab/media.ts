@@ -2,6 +2,7 @@ import { originalObjectKey, sha256Bytes } from '@/server/content/media'
 import type { ContentRepository, OriginalObjectStore } from '@/server/content/ports'
 
 import { labPreparedAt, type LabImage } from './north-house'
+import type { LabSeedLimits } from './limits'
 
 /** Seed-only creation. Normal owner uploads retain MediaOriginalService.store semantics. */
 export async function createLabMediaIfAbsent({
@@ -10,17 +11,20 @@ export async function createLabMediaIfAbsent({
   image,
   body,
   afterCheck,
+  limits,
 }: {
   repository: ContentRepository
   objects: OriginalObjectStore
   image: LabImage
   body: () => Uint8Array
   afterCheck?: (id: string) => Promise<void>
+  limits: LabSeedLimits
 }): Promise<boolean> {
   const existing = await repository.transaction((transaction) =>
     transaction.getMediaAsset(image.id),
   )
-  await afterCheck?.(image.id)
+  if (afterCheck) await limits.wait(() => afterCheck(image.id))
+  limits.check()
   if (existing) return false
 
   const bytes = body()
@@ -49,18 +53,23 @@ export async function createLabMediaIfAbsent({
     })
     if (!created) return false
 
-    const stored = await objects.putOriginal({
-      body: bytes,
-      contentType: 'image/png',
-      key,
-      sha256: checksum,
-    })
+    const stored = await limits.storage((signal) =>
+      objects.putOriginal(
+        {
+          body: bytes,
+          contentType: 'image/png',
+          key,
+          sha256: checksum,
+        },
+        signal,
+      ),
+    )
     if (
       stored.bytes !== bytes.byteLength ||
       stored.contentType !== 'image/png' ||
       stored.key !== key ||
       stored.sha256 !== checksum ||
-      !(await objects.verifyOriginal(key, checksum))
+      !(await limits.storage((signal) => objects.verifyOriginal(key, checksum, signal)))
     ) {
       throw new Error('Stored lab media original failed verification.')
     }

@@ -55,11 +55,23 @@ names and media metadata/originals untouched. A conflicting story slug is skippe
 The report's `existing` story slugs are sample identifiers, not proof that an owner
 has kept that story published or retained its original slug.
 
-A 409 means another seed is already running; try again shortly. The server refuses
+A 409 means another seed is already running: wait and retry shortly. The server refuses
 overlapping runs before doing seed work, across hosted instances as well as local
 fixtures. Existing media is skipped without changing metadata or uploading its
 original again. A missing media row is reserved before upload, so an owner creation
 that wins the race is also kept untouched.
+
+Budget about 30 seconds for a fresh seed; this is an estimate and varies with database
+and storage latency. The seed continues while holding its lock if the caller
+disconnects or the command times out. Wait before retrying; an overlapping request
+gets 409 even if the original caller has gone away.
+
+The server allows at most 30 seconds for each original PUT and each verification
+(including its HEAD, GET and response-body read). A five-minute run deadline stops
+new seed work and shortens storage waits to the remaining time. On timeout, the
+current media transaction rolls back before the seed lock is released. Completed
+items remain; an uploaded but unverified original may remain for an idempotent retry.
+These server limits are independent of the caller's connection.
 
 A 404 means seeding is unavailable or the token is rejected; check the server's
 deployment declaration, provider signals and token. A 503 indicates missing or
@@ -78,7 +90,9 @@ The existing `pnpm test:content:integration` Docker runner includes hosted seed
 refusals and a real PostgreSQL/S3 run with original-byte checks, repeated seeding,
 owner edits, unpublishing, section removal and a colliding owner slug. Concurrent
 cases pause one seed while another instance is refused, then verify owner media
-edits survive resumption and replay without any duplicate original uploads.
+edits survive resumption and replay without any duplicate original uploads. A stalled
+verification after a real S3 upload also proves timeout rollback and lock release
+for a retry from another PostgreSQL session.
 
 ## Prepare the hosted database
 

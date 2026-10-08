@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { ArticleBlock } from '@/reader/views'
 import { readArticleView, readHomeView, readSectionView } from '@/reader/read-model'
@@ -10,6 +10,7 @@ import { ContentService } from '@/server/content/service'
 import { labSeedBarrier } from '../../../tests/support/lab-seed-barrier'
 
 import { labImages, labStories } from './north-house'
+import type * as Illustrations from './illustrations'
 import { renderIllustration } from './illustrations'
 import {
   LabSeedBusyError,
@@ -18,6 +19,18 @@ import {
   seedLabContent,
   type LabSeedReport,
 } from './seed'
+
+// These tests prove seed/locking behavior, not image rendering. Tiny real PNGs
+// avoid nine full-size renders per worker; illustrations.test.ts and the real
+// PostgreSQL/S3 integration suite retain full-size image coverage.
+vi.mock('./illustrations', async (importOriginal) => {
+  const actual = await importOriginal<typeof Illustrations>()
+  return {
+    ...actual,
+    renderIllustration: (spec: Illustrations.IllustrationSpec) =>
+      actual.renderIllustration({ ...spec, width: 4, height: 4 }),
+  }
+})
 
 describe('seed concurrency and media preservation', () => {
   it.each([false, true])(
@@ -101,6 +114,109 @@ describe('seed concurrency and media preservation', () => {
       expect(report.images.created).toHaveLength(labImages.length)
     },
   )
+})
+
+describe('seed time limits', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it.each(['putOriginal', 'verifyOriginal'] as const)(
+    'times out a never-settling %s, rolls back, releases the lock and permits retry',
+    async (operation) => {
+      vi.useFakeTimers()
+      const repository = new InMemoryContentRepository()
+      const objects = new InMemoryOriginalObjectStore()
+      const started = labSeedBarrier()
+      let signal: AbortSignal | undefined
+      const hang = (ioSignal?: AbortSignal): Promise<never> => {
+        signal = ioSignal
+        started.resolve()
+        return new Promise(() => {})
+      }
+      if (operation === 'putOriginal')
+        vi.spyOn(objects, operation).mockImplementationOnce((_input, signal) => hang(signal))
+      else vi.spyOn(objects, operation).mockImplementationOnce((_key, _sha, signal) => hang(signal))
+      const run = seedLabContent({ repository, objects })
+      const failed = expect(run).rejects.toThrow('Lab seed storage timed out')
+      await started.promise
+      await expect(seedLabContent({ repository, objects })).rejects.toBeInstanceOf(LabSeedBusyError)
+      await vi.advanceTimersByTimeAsync(29_999)
+      expect(signal?.aborted).toBe(false)
+      await vi.advanceTimersByTimeAsync(1)
+      await failed
+      expect(signal?.aborted).toBe(true)
+      expect(vi.getTimerCount()).toBe(0)
+      await repository.inspect(async (transaction) => {
+        expect(await transaction.listMediaAssets()).toEqual([])
+        expect(await transaction.listArticles()).toEqual([])
+      })
+      const retry = await seedLabContent({ repository, objects })
+      expect(retry.images.created).toHaveLength(labImages.length)
+      expect(retry.stories.created).toHaveLength(labStories.length)
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
+
+  it('caps an active storage wait at the overall run deadline', async () => {
+    vi.useFakeTimers()
+    const repository = new InMemoryContentRepository()
+    const objects = new InMemoryOriginalObjectStore()
+    const started = labSeedBarrier()
+    let signal: AbortSignal | undefined
+    vi.spyOn(objects, 'putOriginal').mockImplementationOnce((_input, ioSignal) => {
+      signal = ioSignal
+      started.resolve()
+      return new Promise(() => {})
+    })
+    const run = seedLabContent({ repository, objects }, { runTimeoutMs: 50, storageTimeoutMs: 100 })
+    const failed = expect(run).rejects.toThrow('run deadline')
+    await started.promise
+    await vi.advanceTimersByTimeAsync(50)
+    await failed
+    expect(signal?.aborted).toBe(true)
+    expect(await repository.transaction((transaction) => transaction.listMediaAssets())).toEqual([])
+    expect((await seedLabContent({ repository, objects })).images.created).toHaveLength(
+      labImages.length,
+    )
+  })
+
+  it('stops before new media work after the deadline and releases the lock', async () => {
+    vi.useFakeTimers()
+    const repository = new InMemoryContentRepository()
+    const objects = new InMemoryOriginalObjectStore()
+    const put = vi.spyOn(objects, 'putOriginal')
+    await expect(
+      seedLabContent(
+        { repository, objects },
+        {
+          afterMediaCheck: async () => {
+            vi.advanceTimersByTime(300_000)
+          },
+        },
+      ),
+    ).rejects.toThrow('run deadline')
+    expect(put).not.toHaveBeenCalled()
+    expect(await repository.transaction((transaction) => transaction.listArticles())).toEqual([])
+    expect((await seedLabContent({ repository, objects })).images.created).toHaveLength(
+      labImages.length,
+    )
+  })
+
+  it('checks the deadline at transaction boundaries even without media storage', async () => {
+    vi.useFakeTimers()
+    const repository = new InMemoryContentRepository()
+    const transaction = repository.transaction.bind(repository)
+    vi.spyOn(repository, 'transaction').mockImplementationOnce((work) =>
+      transaction(async (tx) => {
+        vi.advanceTimersByTime(300_000)
+        return work(tx)
+      }),
+    )
+    await expect(seedLabContent({ repository, objects: null })).rejects.toThrow('run deadline')
+    expect(await repository.transaction((tx) => tx.listTaxonomyTerms())).toEqual([])
+    expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(
+      labStories.length,
+    )
+  })
 })
 
 const documentNodeTypes = [

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 
 import { POST } from '@/app/api/internal/lab-seed/route'
 import { expirePublicReader } from '@/reader/cache'
+import type * as Illustrations from '@/server/lab/illustrations'
 import { OwnerConfigurationError } from '@/server/owner/config'
 import * as runtime from '@/server/owner/runtime'
 
@@ -12,6 +13,15 @@ import {
 } from '../support/lab-seed-environments'
 
 vi.mock('@/reader/cache', () => ({ expirePublicReader: vi.fn() }))
+// Admission, disconnect and locking checks need valid bytes, not full-size paintings.
+vi.mock('@/server/lab/illustrations', async (importOriginal) => {
+  const actual = await importOriginal<typeof Illustrations>()
+  return {
+    ...actual,
+    renderIllustration: (spec: Illustrations.IllustrationSpec) =>
+      actual.renderIllustration({ ...spec, width: 4, height: 4 }),
+  }
+})
 
 const token = 'fixture-lab-seed-'.padEnd(48, 'x')
 const origin = 'https://preview.example.invalid'
@@ -127,7 +137,7 @@ describe('hosted lab seed admission', () => {
     expect(expirePublicReader).not.toHaveBeenCalled()
   })
 
-  it('refuses an overlapping local fixture seed with 409 before doing work', async () => {
+  it('continues after caller disconnect and refuses overlapping seeds with 409', async () => {
     const owner = memoryRuntime()
     runtimeSpy.mockReturnValue(owner)
     const reached = labSeedBarrier()
@@ -138,9 +148,11 @@ describe('hosted lab seed admission', () => {
       await resume.promise
       return store(input)
     })
-    const first = POST(request())
+    const caller = new AbortController()
+    const first = POST(new Request(request(), { signal: caller.signal }))
     try {
       await reached.promise
+      caller.abort()
       const response = await POST(request())
       expect(response.status).toBe(409)
       expect(response.headers.get('cache-control')).toBe('private, no-store')

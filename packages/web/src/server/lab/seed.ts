@@ -7,6 +7,7 @@ import { ContentService } from '@/server/content/service'
 
 import { renderIllustration } from './illustrations'
 import { createLabMediaIfAbsent } from './media'
+import { LabSeedLimits, type LabSeedTimeouts } from './limits'
 import {
   labImages,
   labPreparedAt,
@@ -49,7 +50,7 @@ export class LabSeedBusyError extends Error {
   }
 }
 
-export interface LabSeedHooks {
+export interface LabSeedHooks extends LabSeedTimeouts {
   /** An optional instrumentation barrier after reading an asset, while holding the seed lock. */
   readonly afterMediaCheck?: (id: string) => Promise<void>
 }
@@ -123,8 +124,9 @@ export async function seedLabContent(
   target: LabSeedTarget,
   hooks: LabSeedHooks = {},
 ): Promise<LabSeedReport> {
+  const limits = new LabSeedLimits(hooks)
   const result = await target.repository.tryExclusive(seedLockKey, (repository) =>
-    seedLockedContent({ ...target, repository }, hooks),
+    seedLockedContent({ ...target, repository: limits.repository(repository) }, hooks, limits),
   )
   if (!result.acquired) throw new LabSeedBusyError()
   return result.value
@@ -133,17 +135,21 @@ export async function seedLabContent(
 async function seedLockedContent(
   target: LabSeedTarget,
   hooks: LabSeedHooks,
+  limits: LabSeedLimits,
 ): Promise<LabSeedReport> {
   const sections = new SectionService(target.repository, fixedClock(labPreparedAt))
   const sectionIds = new Map<string, string>()
   for (const section of labSections) {
+    limits.check()
     sectionIds.set(section.slug, (await sections.ensureSection(section)).id)
   }
 
   const images = { created: [] as string[], existing: [] as string[] }
   if (target.objects) {
     for (const image of labImages) {
+      limits.check()
       const created = await createLabMediaIfAbsent({
+        limits,
         repository: target.repository,
         objects: target.objects,
         image,
@@ -156,6 +162,7 @@ async function seedLockedContent(
 
   const stories = { created: [] as string[], existing: [] as string[], slugInUse: [] as string[] }
   for (const story of labStories) {
+    limits.check()
     const sectionId = sectionIds.get(story.section)
     if (!sectionId) throw new Error(`Lab story ${story.id} names an unknown section.`)
     const outcome = await seedStory(target, story, sectionId)
@@ -165,6 +172,7 @@ async function seedLockedContent(
     else stories.slugInUse.push(slug)
   }
 
+  limits.check()
   return {
     images: {
       ...images,

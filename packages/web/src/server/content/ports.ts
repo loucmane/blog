@@ -107,14 +107,17 @@ export interface StoredOriginalObject {
 
 export interface OriginalObjectStore {
   deleteOriginal(key: string): Promise<void>
-  getOriginal(key: string): Promise<Uint8Array>
-  putOriginal(input: {
-    body: Uint8Array
-    contentType: string
-    key: string
-    sha256: string
-  }): Promise<StoredOriginalObject>
-  verifyOriginal(key: string, expectedSha256: string): Promise<boolean>
+  getOriginal(key: string, signal?: AbortSignal): Promise<Uint8Array>
+  putOriginal(
+    input: {
+      body: Uint8Array
+      contentType: string
+      key: string
+      sha256: string
+    },
+    signal?: AbortSignal,
+  ): Promise<StoredOriginalObject>
+  verifyOriginal(key: string, expectedSha256: string, signal?: AbortSignal): Promise<boolean>
 }
 
 /**

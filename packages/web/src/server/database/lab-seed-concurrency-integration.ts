@@ -194,5 +194,40 @@ export function labSeedConcurrencyIntegrationTests({
         expect((await response.json()).images.created).toHaveLength(labImages.length)
       },
     )
+
+    it(
+      'times out verification after a real S3 PUT, rolls back and releases the PostgreSQL lock for retry',
+      { timeout: 30_000 },
+      async () => {
+        let signal: AbortSignal | undefined
+        let originalKey: string | undefined
+        // Keep the real PUT and database transaction; simulate a verification service
+        // that never responds, even to cancellation. The unit suite covers stalled
+        // HEAD/GET/body transport independently with a fake clock.
+        vi.spyOn(first.objects!, 'verifyOriginal').mockImplementationOnce((key, _sha, ioSignal) => {
+          originalKey = key
+          signal = ioSignal
+          return new Promise(() => {})
+        })
+        await expect(seedLabContent(first, { storageTimeoutMs: 1_000 })).rejects.toThrow(
+          'Lab seed storage timed out',
+        )
+        expect(signal?.aborted).toBe(true)
+        expect(originalKey).toBeDefined()
+        // The uploaded original is retained; only the unverified row rolls back.
+        const original = await second.objects!.getOriginal(originalKey!)
+        expect(original.byteLength).toBeGreaterThan(0)
+        expect(
+          await second.repository.transaction((transaction) => transaction.listMediaAssets()),
+        ).toEqual([])
+        const response = await POST(request())
+        expect(response.status).toBe(200)
+        expect((await response.json()).images.created).toHaveLength(labImages.length)
+        expect(await second.objects!.getOriginal(originalKey!)).toEqual(original)
+        const put = vi.spyOn(second.objects!, 'putOriginal')
+        expect((await POST(request())).status).toBe(200)
+        expect(put).not.toHaveBeenCalled()
+      },
+    )
   })
 }
