@@ -1,4 +1,4 @@
-import type { Pool, PoolClient, QueryResultRow } from 'pg'
+import type { Pool, QueryResultRow } from 'pg'
 
 import type {
   Article,
@@ -20,7 +20,8 @@ import type {
 } from '../content/domain'
 import { parseMigratedContentDocument } from '../content/document'
 import { ContentConflictError, DuplicateSlugError } from '../content/errors'
-import type { ContentRepository, ContentTransaction } from '../content/ports'
+import type { ContentRepository, ContentTransaction, ExclusiveWorkLimits } from '../content/ports'
+import { ExclusivePostgresSession, type PostgresQueries } from './exclusive-postgres-session'
 
 function iso(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString()
@@ -298,7 +299,7 @@ function postgresCode(error: unknown): string | null {
 class PostgresContentTransaction implements ContentTransaction {
   publicationChanged = false
 
-  constructor(private readonly client: PoolClient) {}
+  constructor(private readonly client: PostgresQueries) {}
 
   async claimDuePublicationJob(input: {
     leaseUntil: string
@@ -935,26 +936,21 @@ const missingPublicationVersion =
   'The publication version is missing. Apply the content migrations.'
 
 export class PostgresContentRepository implements ContentRepository {
-  private lockedClient: PoolClient | undefined
+  private lockedClient: ExclusivePostgresSession | undefined
 
   constructor(private readonly pool: Pool) {}
 
   async tryExclusive<T>(
     key: string,
     work: (repository: ContentRepository) => Promise<T>,
+    limits?: ExclusiveWorkLimits,
   ): Promise<{ acquired: false } | { acquired: true; value: T }> {
     // Never re-enter a session lock: PostgreSQL would grant it twice on the same session.
     if (this.lockedClient) throw new Error('Exclusive repository work cannot be nested.')
-    const client = await this.pool.connect()
-    // The session can fail while the callback is awaiting object storage, with no
-    // SQL query in flight to receive the error. Observe it until the session closes.
-    let connectionError: Error | undefined
-    const onError = (error: Error) => {
-      connectionError = error
-    }
-    client.on('error', onError)
+    const client = await ExclusivePostgresSession.checkout(this.pool, limits)
     let acquired = false
     try {
+      await client.configure()
       const result = await client.query<{ acquired: boolean }>(
         'SELECT pg_try_advisory_lock(hashtextextended($1, 0)) AS acquired',
         [key],
@@ -964,33 +960,37 @@ export class PostgresContentRepository implements ContentRepository {
       const repository = new PostgresContentRepository(this.pool)
       repository.lockedClient = client
       const value = await work(repository)
-      if (connectionError) throw connectionError
+      client.check()
       return { acquired: true, value }
     } finally {
       try {
         if (acquired) {
-          await client.query('SELECT pg_advisory_unlock(hashtextextended($1, 0))', [key])
+          await client.cleanup('SELECT pg_advisory_unlock(hashtextextended($1, 0))', [key])
         }
       } finally {
         // Discard this dedicated session even if unlocking fails. All seed SQL uses
         // the same session, so connection loss cannot continue on a new connection.
-        client.release(true)
+        client.destroy()
       }
     }
   }
 
   async readPublicationVersion(): Promise<number> {
-    const result = await (this.lockedClient ?? this.pool).query<
-      QueryResultRow & { version: string }
-    >('SELECT version FROM content_publication_state WHERE id = 1')
+    const client: PostgresQueries = this.lockedClient ?? this.pool
+    const result = await client.query<QueryResultRow & { version: string }>(
+      'SELECT version FROM content_publication_state WHERE id = 1',
+    )
     const version = Number(result.rows[0]?.version)
     if (!Number.isSafeInteger(version) || version < 0) throw new Error(missingPublicationVersion)
     return version
   }
 
   async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
-    const client = this.lockedClient ?? (await this.pool.connect())
+    const pooledClient = this.lockedClient ? undefined : await this.pool.connect()
+    const client: PostgresQueries = this.lockedClient ?? pooledClient!
     try {
+      // Refresh server-side limits against the remaining run time before each transaction.
+      await this.lockedClient?.configure()
       await client.query('BEGIN')
       await client.query('SET CONSTRAINTS ALL DEFERRED')
       const transaction = new PostgresContentTransaction(client)
@@ -1003,13 +1003,16 @@ export class PostgresContentRepository implements ContentRepository {
         )
         if (advanced.rowCount !== 1) throw new Error(missingPublicationVersion)
       }
+      // Publication bookkeeping can wait on a row lock AFTER the callback's deadline check.
+      this.lockedClient?.check()
       await client.query('COMMIT')
       return result
     } catch (error) {
-      await client.query('ROLLBACK')
+      if (this.lockedClient) await this.lockedClient.cleanup('ROLLBACK')
+      else await client.query('ROLLBACK')
       throw error
     } finally {
-      if (!this.lockedClient) client.release()
+      pooledClient?.release()
     }
   }
 }

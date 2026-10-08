@@ -1,10 +1,14 @@
 import { abortable } from '@/server/content/abort'
-import type { ContentRepository } from '@/server/content/ports'
+import type { ContentRepository, ExclusiveWorkLimits } from '@/server/content/ports'
 
 export interface LabSeedTimeouts {
   /** Server-owned limits; shorter values allow deterministic timeout tests. */
   readonly storageTimeoutMs?: number
   readonly runTimeoutMs?: number
+  readonly statementTimeoutMs?: number
+  readonly lockTimeoutMs?: number
+  readonly idleTransactionTimeoutMs?: number
+  readonly cleanupTimeoutMs?: number
 }
 
 export class LabSeedTimeoutError extends Error {
@@ -21,25 +25,50 @@ export class LabSeedTimeoutError extends Error {
 export class LabSeedLimits {
   private readonly deadline: number
   private readonly storageTimeoutMs: number
+  readonly database: ExclusiveWorkLimits
 
-  constructor({ storageTimeoutMs = 30_000, runTimeoutMs = 300_000 }: LabSeedTimeouts) {
-    for (const timeout of [storageTimeoutMs, runTimeoutMs]) {
+  constructor({
+    storageTimeoutMs = 30_000,
+    runTimeoutMs = 300_000,
+    statementTimeoutMs = 30_000,
+    lockTimeoutMs = 30_000,
+    idleTransactionTimeoutMs = 30_000,
+    cleanupTimeoutMs = 5_000,
+  }: LabSeedTimeouts) {
+    for (const timeout of [
+      storageTimeoutMs,
+      runTimeoutMs,
+      statementTimeoutMs,
+      lockTimeoutMs,
+      idleTransactionTimeoutMs,
+      cleanupTimeoutMs,
+    ]) {
       if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 2_147_483_647) {
         throw new Error('Lab seed timeouts must be positive timer durations.')
       }
     }
     this.storageTimeoutMs = storageTimeoutMs
     this.deadline = performance.now() + runTimeoutMs
+    this.database = {
+      remainingMs: () => {
+        this.check()
+        return Math.max(1, Math.ceil(this.deadline - performance.now()))
+      },
+      statementTimeoutMs,
+      lockTimeoutMs,
+      idleTransactionTimeoutMs,
+      cleanupTimeoutMs,
+    }
   }
 
   check(): void {
     if (performance.now() >= this.deadline) throw new LabSeedTimeoutError('run')
   }
 
-  /** Check before each transaction and before commit; never abandon live SQL work. */
+  /** Check callback work too; the database adapter checks again immediately before COMMIT. */
   repository(repository: ContentRepository): ContentRepository {
     return {
-      tryExclusive: (key, work) => repository.tryExclusive(key, work),
+      tryExclusive: (key, work, limits) => repository.tryExclusive(key, work, limits),
       readPublicationVersion: () => repository.readPublicationVersion(),
       transaction: (work) => {
         this.check()

@@ -81,6 +81,16 @@ export interface ContentTransaction {
   saveTaxonomyTerm(term: TaxonomyTerm): Promise<void>
 }
 
+/** Server-owned bounds for a dedicated exclusive session, never normal owner queries. */
+export interface ExclusiveWorkLimits {
+  /** Checks the monotonic run deadline and returns its positive remaining duration. */
+  remainingMs(): number
+  readonly statementTimeoutMs: number
+  readonly lockTimeoutMs: number
+  readonly idleTransactionTimeoutMs: number
+  readonly cleanupTimeoutMs: number
+}
+
 export interface ContentRepository {
   /**
    * Try a repository-wide lock without waiting. Work must use the supplied repository
@@ -89,6 +99,7 @@ export interface ContentRepository {
   tryExclusive<T>(
     key: string,
     work: (repository: ContentRepository) => Promise<T>,
+    limits?: ExclusiveWorkLimits,
   ): Promise<{ acquired: false } | { acquired: true; value: T }>
   /**
    * The publication version: a counter that advances in the commit of every change to what

@@ -125,8 +125,11 @@ export async function seedLabContent(
   hooks: LabSeedHooks = {},
 ): Promise<LabSeedReport> {
   const limits = new LabSeedLimits(hooks)
-  const result = await target.repository.tryExclusive(seedLockKey, (repository) =>
-    seedLockedContent({ ...target, repository: limits.repository(repository) }, hooks, limits),
+  const result = await target.repository.tryExclusive(
+    seedLockKey,
+    (repository) =>
+      seedLockedContent({ ...target, repository: limits.repository(repository) }, hooks, limits),
+    limits.database,
   )
   if (!result.acquired) throw new LabSeedBusyError()
   return result.value

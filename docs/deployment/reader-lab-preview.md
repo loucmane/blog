@@ -71,7 +71,15 @@ The server allows at most 30 seconds for each original PUT and each verification
 new seed work and shortens storage waits to the remaining time. On timeout, the
 current media transaction rolls back before the seed lock is released. Completed
 items remain; an uploaded but unverified original may remain for an idempotent retry.
-These server limits are independent of the caller's connection.
+The seed's dedicated PostgreSQL session also caps each statement, lock wait and
+idle transaction at 30 seconds, shortened to the remaining run time when a
+transaction starts. Database response waits cannot exceed the run deadline, and
+the deadline is checked again immediately before committing, after publication
+bookkeeping. Rollback and advisory unlock each have a five-second cleanup bound;
+if cleanup stalls or fails, the connection is destroyed so PostgreSQL rolls back
+any open transaction and releases its session lock. The seed session is always
+discarded, so these settings never affect normal pooled owner connections. These
+server limits are independent of the caller's connection.
 
 A 404 means seeding is unavailable or the token is rejected; check the server's
 deployment declaration, provider signals and token. A 503 indicates missing or
@@ -93,6 +101,8 @@ cases pause one seed while another instance is refused, then verify owner media
 edits survive resumption and replay without any duplicate original uploads. A stalled
 verification after a real S3 upload also proves timeout rollback and lock release
 for a retry from another PostgreSQL session.
+Database cases also cover table-lock contention, a slow statement, deadline expiry
+during publication bookkeeping, and connection destruction after a stalled unlock.
 
 ## Prepare the hosted database
 
