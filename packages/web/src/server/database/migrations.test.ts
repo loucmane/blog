@@ -187,6 +187,45 @@ describe('content database migrations', () => {
     })
   })
 
+  it('runs optional history validation on the locked client before writes and rolls refusals back', async () => {
+    const migrations = await readContentMigrations()
+    const client = new FakeMigrationClient()
+    const refusal = new Error('synthetic incompatible history')
+
+    await expect(
+      applyContentMigrations({ connect: async () => client }, migrations, async (lockedClient) => {
+        expect(lockedClient).toBe(client)
+        expect(client.queries.map(({ text }) => text)).toEqual([
+          'BEGIN',
+          "SELECT pg_advisory_xact_lock(hashtext('magazine-content-migrations'))",
+        ])
+        throw refusal
+      }),
+    ).rejects.toBe(refusal)
+    expect(client.queries.map(({ text }) => text)).toEqual([
+      'BEGIN',
+      "SELECT pg_advisory_xact_lock(hashtext('magazine-content-migrations'))",
+      'ROLLBACK',
+    ])
+    expect(client.released).toBe(true)
+  })
+
+  it('preserves partial-list callers without command-level history validation', async () => {
+    const migrations = await readContentMigrations()
+    const client = new FakeMigrationClient()
+    client.existing.set('9999_synthetic_other_release', '0'.repeat(64))
+    client.existing.set(migrations[2]!.id, migrations[2]!.checksum)
+
+    await expect(
+      applyContentMigrations({ connect: async () => client }, migrations.slice(0, 2)),
+    ).resolves.toEqual({
+      applied: migrations.slice(0, 2).map(({ id }) => id),
+      skipped: [],
+    })
+    expect(client.queries.at(-1)?.text).toBe('COMMIT')
+    expect(client.released).toBe(true)
+  })
+
   it('fails closed on checksum drift and rolls interrupted migrations back', async () => {
     const migrations = await readContentMigrations()
     const drift = new FakeMigrationClient()

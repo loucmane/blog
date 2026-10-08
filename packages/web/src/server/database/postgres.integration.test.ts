@@ -37,10 +37,16 @@ import { PostgresSearchProjection } from './postgres-search-projection'
 import { S3MediaVariantStore } from './s3-media-variant-store'
 import { S3OriginalObjectStore } from './s3-original-object-store'
 import { ownerSetupIntegrationTests } from './owner-setup-integration'
+import { migrateCommandIntegrationTests } from './migrate-command-integration'
 
 ownerSetupIntegrationTests({
   databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
   schema: `owner_setup_${randomUUID().replaceAll('-', '')}`,
+})
+
+migrateCommandIntegrationTests({
+  databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
+  schema: `migrate_command_${randomUUID().replaceAll('-', '')}`,
 })
 
 function requiredEnvironment(name: string): string {

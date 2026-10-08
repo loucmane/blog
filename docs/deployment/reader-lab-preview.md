@@ -1,5 +1,68 @@
 # Reader Lab preview
 
+## Prepare the hosted database
+
+For the person preparing the preview: run migrations deliberately from the reviewed
+repository checkout, before first sign-in. Use the repository's pinned Node 24 and
+installed dependencies. The command reads the existing reviewed SQL files; it does
+not generate migrations or run automatically during application startup or builds.
+
+Have your secret manager or hosting environment supply `DATABASE_URL` to the shell
+running the command. Use the isolated Preview database, with the provider's required
+TLS connection settings. The script reads the process environment; it does not load
+`.env` files. Do not paste the connection URL into a command argument, log, screenshot
+or this document. No package script or package change is needed.
+
+From the repository root, first inspect the target and pending migrations:
+
+```sh
+node packages/web/scripts/migrate.mjs
+```
+
+This is a dry run. It prints the effective host, port and database with credentials
+redacted, then lists pending migration IDs in order. It uses a read-only transaction
+and leaves even an empty database unchanged. Check the printed target against the
+intended database before applying:
+
+```sh
+node packages/web/scripts/migrate.mjs --apply --environment preview
+```
+
+Every apply requires both flags. For an operator-approved production migration, use
+the production database's environment and type the production confirmation:
+
+```sh
+node packages/web/scripts/migrate.mjs --apply --environment production
+```
+
+`--environment production` alone still performs a dry run. A production value in
+`NODE_ENV`, `VERCEL_ENV` or `VERCEL_TARGET_ENV` refuses a Preview apply. A URL cannot
+identify whether a database is production: `--environment` is your explicit
+declaration and does not select or change `DATABASE_URL`. A Preview deployment
+running with `NODE_ENV=production` therefore also requires the production confirmation.
+The command can also run from `packages/web` as `node scripts/migrate.mjs` with the
+same flags; SQL paths resolve from the script, independently of the working directory.
+
+Applies reuse the existing transaction, advisory lock and checksum ledger. Concurrent
+applies serialize; re-running skips migrations whose recorded checksums match, without
+changing their timestamps. The pending list is a snapshot: the apply rechecks the
+ledger under the lock. The command refuses unknown migration IDs, ordering gaps and
+changed checksums. Do not edit previously applied SQL or the migration ledger to
+force a match.
+
+On failure the command exits non-zero and prints a safe diagnostic without raw
+database errors or connection strings. Check connection/TLS settings and permissions,
+or investigate a mismatched release/history as indicated. Failed SQL rolls the apply
+transaction back. A dropped connection during commit can leave the outcome uncertain;
+rerun the dry run to inspect the ledger before retrying. After a successful apply,
+another dry run should show `Pending migrations (0)`. The first-sign-in setup below
+can then use the prepared tables.
+
+The command's real PostgreSQL checks run through the existing
+`pnpm test:content:integration` Docker setup, including dry-run preservation, partial
+history, production confirmation, concurrent applies, lock contention, idempotence,
+checksum refusal, read-only connections and failure rollback.
+
 ## First sign-in
 
 The person helping you set up the magazine will send you a private setup link. Open it on the device where you want to try your magazine. The page checks your link, then shows **Create your password** and your email address. Your email is hidden until the link has been checked.
