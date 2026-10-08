@@ -17,8 +17,8 @@ const headers = { 'cache-control': 'private, no-store' }
 
 /**
  * Seeds the Reader Lab sample magazine into the store this server uses, through the content
- * services. It exists only outside production and only for a caller holding
- * MAGAZINE_LAB_SEED_TOKEN; `pnpm --filter web lab:seed` calls it.
+ * services. Hosted servers require explicit Preview configuration and a caller holding
+ * MAGAZINE_LAB_SEED_TOKEN; `pnpm --filter web lab:seed` calls it. Local labs also use it.
  */
 export async function POST(request: Request) {
   const token = process.env.MAGAZINE_LAB_SEED_TOKEN
@@ -41,6 +41,13 @@ export async function POST(request: Request) {
       )
     }
     throw error
+  }
+
+  if (process.env.MAGAZINE_DEPLOYMENT_ENVIRONMENT === 'preview' && !ownerRuntime.objects) {
+    return NextResponse.json(
+      { error: 'Media storage is required for the Preview lab seed.' },
+      { headers, status: 503 },
+    )
   }
 
   const report = await seedLabContent({

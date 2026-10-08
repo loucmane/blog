@@ -38,12 +38,7 @@ export interface LabSeedReport {
   }
 }
 
-type SeedEnvironment = Readonly<Record<string, string | undefined>>
-
-/** The seed is for local labs and tests only; it never runs in a production runtime. */
-export function labSeedAllowed(environment: SeedEnvironment = process.env): boolean {
-  return environment.NODE_ENV !== 'production'
-}
+export { labSeedAllowed } from './environment.mjs'
 
 function fixedClock(isoTimestamp: string): Clock {
   return { now: () => new Date(isoTimestamp) }
@@ -73,7 +68,6 @@ async function seedStory(
     transaction.getArticle(story.id),
   )
   if (existing) {
-    await sections.assignSection({ articleId: story.id, sectionId })
     return 'existing'
   }
   const content = new ContentService(target.repository, fixedClock(story.publishedAt))

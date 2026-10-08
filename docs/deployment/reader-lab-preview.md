@@ -1,5 +1,75 @@
 # Reader Lab preview
 
+## Load the North House sample
+
+After preparing the database below, the deployer can seed the private hosted
+Preview once. Use an isolated Preview PostgreSQL database and media bucket;
+the environment declaration does not select or verify those resources. Keep the
+Preview behind the hosting provider's private access controls.
+
+Configure these **only in the Preview deployment**, then deploy that configuration:
+
+- `MAGAZINE_DEPLOYMENT_ENVIRONMENT=preview` (exact, lowercase value).
+- `MAGAZINE_LAB_SEED_TOKEN`: a separate random secret, 32–512 bytes without
+  whitespace. Inject it from your secret manager into the server and command
+  environment; do not put it in a URL, command argument, source file or log.
+- The existing `DATABASE_URL`, pointing to the migrated Preview database.
+- The existing S3-compatible media settings: `MAGAZINE_MEDIA_BUCKET`,
+  `MAGAZINE_MEDIA_REGION` (`auto` for R2), `MAGAZINE_MEDIA_ENDPOINT` (the R2 S3
+  endpoint), and the paired `MAGAZINE_MEDIA_ACCESS_KEY_ID` and
+  `MAGAZINE_MEDIA_SECRET_ACCESS_KEY` for that Preview bucket.
+
+Hosted Preview runs with `NODE_ENV=production`; leave it that way. The exact
+Preview declaration and matching bearer token are both required. Unset, blank,
+`production` or any other declaration refuses hosted seeding. If `VERCEL_ENV` or
+`VERCEL_TARGET_ENV` is present, it must also be `preview`; a production value
+vetoes the explicit Preview declaration. Never set `MAGAZINE_OWNER_TEST_MODE` on
+a hosted deployment: its production refusal remains active. No in-memory
+fixture is used, and Preview without media storage refuses before content writes.
+
+With the token already injected into the deployer's shell, run from the repository
+root using the installed dependencies and pinned Node runtime:
+
+```sh
+MAGAZINE_DEPLOYMENT_ENVIRONMENT=preview \
+MAGAZINE_LAB_SEED_URL=https://YOUR-PREVIEW-HOST \
+node packages/web/scripts/lab-seed.mjs
+```
+
+The existing `pnpm --filter web lab:seed` command also accepts these environment
+variables. The command reads process environment, not `.env` files. Remote targets
+require HTTPS and the explicit Preview declaration even when called from a local
+shell. Use a plain origin without credentials, path, query or fragment. It sends
+one authenticated POST to `/api/internal/lab-seed`, refuses redirects, and prints
+the seed report. It does not run migrations or create an owner account. If hosting
+protection intercepts the request, use an operator-approved way to reach the private
+Preview directly; the command does not bypass protection or follow sign-in redirects.
+
+The report lists created and existing stories/images, and story slugs already used
+by another article. A fresh database receives eight published stories in three
+sections and nine PNG originals in the configured bucket. Re-running keeps existing
+article IDs (including owner edits, unpublished status and section choices), section
+names and media metadata/originals untouched. A conflicting story slug is skipped.
+The report's `existing` story slugs are sample identifiers, not proof that an owner
+has kept that story published or retained its original slug.
+
+A 404 means seeding is unavailable or the token is rejected; check the server's
+deployment declaration, provider signals and token. A 503 indicates missing or
+invalid content/media configuration, including forbidden owner fixture mode. Other
+failures or a timeout may leave a partial seed: inspect the Preview and report
+before retrying, since seeding is incremental, not one transaction. Existing IDs
+are left untouched on retry; it does not republish or repair an existing draft.
+After verifying the sample, remove `MAGAZINE_LAB_SEED_TOKEN` from the Preview
+environment and redeploy to disable the endpoint. Do not enable seeding in production.
+
+Local development/test labs retain their existing token-protected flow without a
+deployment declaration when no hosted deployment signals are present. This does
+not loosen the separate owner fixture guard.
+
+The existing `pnpm test:content:integration` Docker runner includes hosted seed
+refusals and a real PostgreSQL/S3 run with original-byte checks, repeated seeding,
+owner edits, unpublishing, section removal and a colliding owner slug.
+
 ## Prepare the hosted database
 
 For the person preparing the preview: run migrations deliberately from the reviewed

@@ -200,9 +200,43 @@ describe('Reader Lab seed', () => {
     expect(report.stories.created).toHaveLength(7)
   })
 
-  it('never runs in a production runtime', () => {
+  it('requires explicit Preview intent in a production runtime while preserving local labs', () => {
     expect(labSeedAllowed({ NODE_ENV: 'production' })).toBe(false)
+    expect(
+      labSeedAllowed({ NODE_ENV: 'production', MAGAZINE_DEPLOYMENT_ENVIRONMENT: 'preview' }),
+    ).toBe(true)
+    expect(
+      labSeedAllowed({ NODE_ENV: 'test', MAGAZINE_DEPLOYMENT_ENVIRONMENT: 'production' }),
+    ).toBe(false)
     expect(labSeedAllowed({ NODE_ENV: 'development' })).toBe(true)
     expect(labSeedAllowed({ NODE_ENV: 'test' })).toBe(true)
+  })
+
+  it('does not publish, edit or assign sections to an existing owner article with a sample ID', async () => {
+    const occupied = new InMemoryContentRepository()
+    const id = 'article-lab-winter-light'
+    const owner = await new ContentService(occupied).createArticle({
+      id,
+      title: 'Owner draft',
+      slug: 'owner-draft',
+      dek: 'Keep my words.',
+      idempotencyKey: 'fixture-owner-draft',
+      document: {
+        articleId: id,
+        document: { type: 'doc', content: [{ type: 'paragraph' }] },
+        migrationProvenance: [],
+        schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
+        title: 'Owner draft',
+      },
+    })
+    const report = await seedLabContent({ objects: null, repository: occupied })
+    expect(report.stories.existing).toContain(storySlug(id))
+    await occupied.inspect(async (transaction) => {
+      expect(await transaction.getArticle(id)).toEqual(owner.article)
+      expect(await transaction.listRevisions(id)).toEqual([owner.revision])
+      expect(
+        (await transaction.listArticleTaxonomies()).filter((link) => link.articleId === id),
+      ).toEqual([])
+    })
   })
 })
