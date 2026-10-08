@@ -14,6 +14,8 @@ Configure these **only in the Preview deployment**, then deploy that configurati
   whitespace. Inject it from your secret manager into the server and command
   environment; do not put it in a URL, command argument, source file or log.
 - The existing `DATABASE_URL`, pointing to the migrated Preview database.
+  Use a direct PostgreSQL connection or session pooling: the seed holds a
+  session advisory lock for its whole run; transaction pooling is incompatible.
 - The existing S3-compatible media settings: `MAGAZINE_MEDIA_BUCKET`,
   `MAGAZINE_MEDIA_REGION` (`auto` for R2), `MAGAZINE_MEDIA_ENDPOINT` (the R2 S3
   endpoint), and the paired `MAGAZINE_MEDIA_ACCESS_KEY_ID` and
@@ -53,6 +55,12 @@ names and media metadata/originals untouched. A conflicting story slug is skippe
 The report's `existing` story slugs are sample identifiers, not proof that an owner
 has kept that story published or retained its original slug.
 
+A 409 means another seed is already running; try again shortly. The server refuses
+overlapping runs before doing seed work, across hosted instances as well as local
+fixtures. Existing media is skipped without changing metadata or uploading its
+original again. A missing media row is reserved before upload, so an owner creation
+that wins the race is also kept untouched.
+
 A 404 means seeding is unavailable or the token is rejected; check the server's
 deployment declaration, provider signals and token. A 503 indicates missing or
 invalid content/media configuration, including forbidden owner fixture mode. Other
@@ -68,7 +76,9 @@ not loosen the separate owner fixture guard.
 
 The existing `pnpm test:content:integration` Docker runner includes hosted seed
 refusals and a real PostgreSQL/S3 run with original-byte checks, repeated seeding,
-owner edits, unpublishing, section removal and a colliding owner slug.
+owner edits, unpublishing, section removal and a colliding owner slug. Concurrent
+cases pause one seed while another instance is refused, then verify owner media
+edits survive resumption and replay without any duplicate original uploads.
 
 ## Prepare the hosted database
 

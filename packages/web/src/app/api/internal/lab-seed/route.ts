@@ -6,7 +6,7 @@ import {
   secureTokenMatches,
 } from '@/lib/request-security'
 import { expirePublicReader } from '@/reader/cache'
-import { labSeedAllowed, seedLabContent } from '@/server/lab/seed'
+import { LabSeedBusyError, labSeedAllowed, seedLabContent } from '@/server/lab/seed'
 import { OwnerConfigurationError } from '@/server/owner/config'
 import { getOwnerRuntime, type OwnerRuntime } from '@/server/owner/runtime'
 
@@ -50,10 +50,17 @@ export async function POST(request: Request) {
     )
   }
 
-  const report = await seedLabContent({
-    objects: ownerRuntime.objects,
-    repository: ownerRuntime.repository,
-  })
-  expirePublicReader()
-  return NextResponse.json(report, { headers })
+  try {
+    const report = await seedLabContent({
+      objects: ownerRuntime.objects,
+      repository: ownerRuntime.repository,
+    })
+    expirePublicReader()
+    return NextResponse.json(report, { headers })
+  } catch (error) {
+    if (error instanceof LabSeedBusyError) {
+      return NextResponse.json({ error: error.message }, { headers, status: 409 })
+    }
+    throw error
+  }
 }

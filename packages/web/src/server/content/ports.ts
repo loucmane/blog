@@ -26,6 +26,8 @@ export interface IdentifierSource {
 }
 
 export interface ContentTransaction {
+  /** Reserve a new media identity without changing an existing asset. */
+  createMediaAssetIfAbsent(asset: MediaAsset): Promise<boolean>
   claimDuePublicationJob(input: {
     leaseUntil: string
     now: string
@@ -80,6 +82,14 @@ export interface ContentTransaction {
 }
 
 export interface ContentRepository {
+  /**
+   * Try a repository-wide lock without waiting. Work must use the supplied repository
+   * sequentially; it remains tied to the lock's connection for the whole callback.
+   */
+  tryExclusive<T>(
+    key: string,
+    work: (repository: ContentRepository) => Promise<T>,
+  ): Promise<{ acquired: false } | { acquired: true; value: T }>
   /**
    * The publication version: a counter that advances in the commit of every change to what
    * readers may see. It returns the last committed value with one query, outside any transaction.

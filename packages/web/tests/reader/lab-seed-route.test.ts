@@ -5,6 +5,7 @@ import { expirePublicReader } from '@/reader/cache'
 import { OwnerConfigurationError } from '@/server/owner/config'
 import * as runtime from '@/server/owner/runtime'
 
+import { labSeedBarrier } from '../support/lab-seed-barrier'
 import {
   labSeedEnvironmentKeys,
   refusedLabSeedEnvironments,
@@ -124,6 +125,38 @@ describe('hosted lab seed admission', () => {
     )
     expect((await POST(request())).status).toBe(503)
     expect(expirePublicReader).not.toHaveBeenCalled()
+  })
+
+  it('refuses an overlapping local fixture seed with 409 before doing work', async () => {
+    const owner = memoryRuntime()
+    runtimeSpy.mockReturnValue(owner)
+    const reached = labSeedBarrier()
+    const resume = labSeedBarrier()
+    const store = owner.objects!.putOriginal.bind(owner.objects)
+    const put = vi.spyOn(owner.objects!, 'putOriginal').mockImplementationOnce(async (input) => {
+      reached.resolve()
+      await resume.promise
+      return store(input)
+    })
+    const first = POST(request())
+    try {
+      await reached.promise
+      const response = await POST(request())
+      expect(response.status).toBe(409)
+      expect(response.headers.get('cache-control')).toBe('private, no-store')
+      expect(await response.json()).toEqual({
+        error: 'The lab seed is already running. Try again shortly.',
+      })
+      expect(put).toHaveBeenCalledOnce()
+      expect(expirePublicReader).not.toHaveBeenCalled()
+    } finally {
+      resume.resolve()
+      await first
+    }
+    expect((await first).status).toBe(200)
+    expect(expirePublicReader).toHaveBeenCalledOnce()
+    expect((await POST(request())).status).toBe(200)
+    expect(put).toHaveBeenCalledTimes(9)
   })
 
   it(

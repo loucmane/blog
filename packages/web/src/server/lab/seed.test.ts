@@ -1,14 +1,107 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { ArticleBlock } from '@/reader/views'
 import { readArticleView, readHomeView, readSectionView } from '@/reader/read-model'
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/content/document'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
-import { InMemoryOriginalObjectStore } from '@/server/content/media'
+import { InMemoryOriginalObjectStore, MediaOriginalService } from '@/server/content/media'
 import { ContentService } from '@/server/content/service'
 
+import { labSeedBarrier } from '../../../tests/support/lab-seed-barrier'
+
 import { labImages, labStories } from './north-house'
-import { labSeedAllowed, labStorySlug, seedLabContent, type LabSeedReport } from './seed'
+import { renderIllustration } from './illustrations'
+import {
+  LabSeedBusyError,
+  labSeedAllowed,
+  labStorySlug,
+  seedLabContent,
+  type LabSeedReport,
+} from './seed'
+
+describe('seed concurrency and media preservation', () => {
+  it.each([false, true])(
+    'preserves owner media when present at the first check: %s',
+    async (present) => {
+      const repository = new InMemoryContentRepository()
+      const objects = new InMemoryOriginalObjectStore()
+      const media = new MediaOriginalService(repository, objects)
+      const image = labImages[0]!
+      const put = vi.spyOn(objects, 'putOriginal')
+      const createOwnerMedia = () =>
+        media.store({
+          ...image,
+          body: renderIllustration(image.illustration),
+          contentType: 'image/png',
+        })
+      if (present) await createOwnerMedia()
+      const checked = labSeedBarrier()
+      const resume = labSeedBarrier()
+      const run = seedLabContent(
+        { repository, objects },
+        {
+          afterMediaCheck: async (id) => {
+            if (id !== image.id) return
+            checked.resolve()
+            await resume.promise
+          },
+        },
+      )
+      try {
+        await checked.promise
+        const putsBefore = put.mock.calls.length
+        await expect(seedLabContent({ repository, objects })).rejects.toBeInstanceOf(
+          LabSeedBusyError,
+        )
+        expect(put).toHaveBeenCalledTimes(putsBefore)
+        if (!present) await createOwnerMedia()
+        await repository.transaction(async (transaction) => {
+          const asset = await transaction.getMediaAsset(image.id)
+          await transaction.saveMediaAsset({
+            ...asset!,
+            alt: 'Owner alt',
+            caption: 'Owner caption',
+          })
+        })
+      } finally {
+        resume.resolve()
+        await run
+      }
+      expect((await run).images.created).toHaveLength(labImages.length - 1)
+      expect(put).toHaveBeenCalledTimes(labImages.length)
+      const beforeReplay = await repository.transaction((transaction) =>
+        transaction.listMediaAssets(),
+      )
+      expect(beforeReplay.find(({ id }) => id === image.id)).toMatchObject({
+        alt: 'Owner alt',
+        caption: 'Owner caption',
+      })
+      const replay = await seedLabContent({ repository, objects })
+      expect(replay.images.created).toEqual([])
+      expect(put).toHaveBeenCalledTimes(labImages.length)
+      expect(await repository.transaction((transaction) => transaction.listMediaAssets())).toEqual(
+        beforeReplay,
+      )
+    },
+  )
+
+  it.each(['upload', 'verification'])(
+    'releases the seed lock and rolls back a failed %s',
+    async (failure) => {
+      const repository = new InMemoryContentRepository()
+      const objects = new InMemoryOriginalObjectStore()
+      if (failure === 'upload')
+        vi.spyOn(objects, 'putOriginal').mockRejectedValueOnce(new Error('Fixture upload failure'))
+      else vi.spyOn(objects, 'verifyOriginal').mockResolvedValueOnce(false)
+      await expect(seedLabContent({ repository, objects })).rejects.toThrow()
+      expect(await repository.transaction((transaction) => transaction.listMediaAssets())).toEqual(
+        [],
+      )
+      const report = await seedLabContent({ repository, objects })
+      expect(report.images.created).toHaveLength(labImages.length)
+    },
+  )
+})
 
 const documentNodeTypes = [
   'blockquote',

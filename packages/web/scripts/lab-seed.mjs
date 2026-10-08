@@ -64,6 +64,9 @@ export async function runLabSeed({ environment = process.env, fetcher = fetch } 
       'Could not complete the lab seed request. Check the URL, server availability and deployment protection; redirects are refused. Inspect the Preview before retrying.',
     )
   }
+  if (response.status === 409) {
+    throw new Error('The lab seed is already running. Try again shortly.')
+  }
   if (!response.ok) {
     throw new Error(
       `The server refused the lab seed (HTTP ${response.status}). Check the server's Preview declaration, seed token and PostgreSQL/media configuration.`,

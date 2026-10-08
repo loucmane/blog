@@ -12,6 +12,13 @@ const preview = {
 }
 
 describe('one-shot lab seed command', () => {
+  it('reports a busy seed without retrying or echoing the response body', async () => {
+    const fetcher = vi.fn(async () => new Response(token, { status: 409 }))
+    await expect(runLabSeed({ environment: preview, fetcher })).rejects.toThrow(
+      'The lab seed is already running. Try again shortly.',
+    )
+    expect(fetcher).toHaveBeenCalledOnce()
+  })
   it('posts once to the hosted URL with a bearer token, bounded timeout and no redirects', async () => {
     const report = { stories: { created: ['fixture-story'] } }
     const fetcher = vi.fn(async () => Response.json(report))

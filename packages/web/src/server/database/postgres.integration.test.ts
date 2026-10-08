@@ -39,6 +39,12 @@ import { S3OriginalObjectStore } from './s3-original-object-store'
 import { ownerSetupIntegrationTests } from './owner-setup-integration'
 import { migrateCommandIntegrationTests } from './migrate-command-integration'
 import { labSeedIntegrationTests } from './lab-seed-integration'
+import { labSeedConcurrencyIntegrationTests } from './lab-seed-concurrency-integration'
+
+labSeedConcurrencyIntegrationTests({
+  databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
+  s3Endpoint: requiredEnvironment('TASK42_S3_PRIMARY'),
+})
 
 ownerSetupIntegrationTests({
   databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),

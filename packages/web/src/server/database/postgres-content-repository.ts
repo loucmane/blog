@@ -746,6 +746,35 @@ class PostgresContentTransaction implements ContentTransaction {
     if (result.rowCount === 0) throw new Error(`Media original ${asset.id} is immutable.`)
   }
 
+  async createMediaAssetIfAbsent(asset: MediaAsset): Promise<boolean> {
+    const result = await this.client.query(
+      `INSERT INTO media_assets (
+        id, original_key, original_sha256, bytes, content_type, width, height,
+        alt, caption, credit_name, credit_url, focal_x, focal_y, created_at, updated_at, animated
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ON CONFLICT (id) DO NOTHING`,
+      [
+        asset.id,
+        asset.originalKey,
+        asset.originalSha256,
+        asset.bytes,
+        asset.contentType,
+        asset.width,
+        asset.height,
+        asset.alt,
+        asset.caption,
+        asset.creditName,
+        asset.creditUrl,
+        asset.focalX,
+        asset.focalY,
+        asset.createdAt,
+        asset.updatedAt,
+        asset.animated,
+      ],
+    )
+    return result.rowCount === 1
+  }
+
   async saveMediaRendition(rendition: MediaRendition): Promise<void> {
     await this.client.query(
       `INSERT INTO media_renditions
@@ -906,19 +935,61 @@ const missingPublicationVersion =
   'The publication version is missing. Apply the content migrations.'
 
 export class PostgresContentRepository implements ContentRepository {
+  private lockedClient: PoolClient | undefined
+
   constructor(private readonly pool: Pool) {}
 
+  async tryExclusive<T>(
+    key: string,
+    work: (repository: ContentRepository) => Promise<T>,
+  ): Promise<{ acquired: false } | { acquired: true; value: T }> {
+    // Never re-enter a session lock: PostgreSQL would grant it twice on the same session.
+    if (this.lockedClient) throw new Error('Exclusive repository work cannot be nested.')
+    const client = await this.pool.connect()
+    // The session can fail while the callback is awaiting object storage, with no
+    // SQL query in flight to receive the error. Observe it until the session closes.
+    let connectionError: Error | undefined
+    const onError = (error: Error) => {
+      connectionError = error
+    }
+    client.on('error', onError)
+    let acquired = false
+    try {
+      const result = await client.query<{ acquired: boolean }>(
+        'SELECT pg_try_advisory_lock(hashtextextended($1, 0)) AS acquired',
+        [key],
+      )
+      if (!result.rows[0]?.acquired) return { acquired: false }
+      acquired = true
+      const repository = new PostgresContentRepository(this.pool)
+      repository.lockedClient = client
+      const value = await work(repository)
+      if (connectionError) throw connectionError
+      return { acquired: true, value }
+    } finally {
+      try {
+        if (acquired) {
+          await client.query('SELECT pg_advisory_unlock(hashtextextended($1, 0))', [key])
+        }
+      } finally {
+        // Discard this dedicated session even if unlocking fails. All seed SQL uses
+        // the same session, so connection loss cannot continue on a new connection.
+        client.release(true)
+      }
+    }
+  }
+
   async readPublicationVersion(): Promise<number> {
-    const result = await this.pool.query<QueryResultRow & { version: string }>(
-      'SELECT version FROM content_publication_state WHERE id = 1',
-    )
+    const result = await (this.lockedClient ?? this.pool).query<
+      QueryResultRow & { version: string }
+    >('SELECT version FROM content_publication_state WHERE id = 1')
     const version = Number(result.rows[0]?.version)
     if (!Number.isSafeInteger(version) || version < 0) throw new Error(missingPublicationVersion)
     return version
   }
 
   async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect()
+    const client = this.lockedClient ?? (await this.pool.connect())
     try {
       await client.query('BEGIN')
       await client.query('SET CONSTRAINTS ALL DEFERRED')
@@ -938,7 +1009,7 @@ export class PostgresContentRepository implements ContentRepository {
       await client.query('ROLLBACK')
       throw error
     } finally {
-      client.release()
+      if (!this.lockedClient) client.release()
     }
   }
 }
