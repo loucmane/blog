@@ -53,8 +53,13 @@ beforeEach(() => {
     return process
   })
   vi.spyOn(process, 'kill').mockImplementation((pid, signal) => {
-    const child = children.find((entry) => entry.pid === Math.abs(pid))
-    if (child && !(ignoreTerm && signal === 'SIGTERM'))
+    const child = children.find((entry) => -entry.pid === pid)
+    const leaderAlive = child?.exitCode === null && child?.signalCode === null
+    if (!leaderAlive && !child?.descendantAlive)
+      throw Object.assign(new Error('No such process group'), { code: 'ESRCH' })
+    if (signal === 0) return true
+    if (signal === 'SIGKILL' && child.descendantExitOnKill) child.descendantAlive = false
+    if (leaderAlive && !(ignoreTerm && signal === 'SIGTERM'))
       queueMicrotask(() => finish(child, null, signal))
     return true
   })
@@ -68,6 +73,8 @@ beforeEach(() => {
       pid: 10_000 + children.length,
       exitCode: null,
       signalCode: null,
+      descendantAlive: false,
+      descendantExitOnKill: true,
       args,
       options,
     })
@@ -133,9 +140,66 @@ describe('local launcher process ownership', () => {
     const running = runLocalLab({})
     await vi.waitFor(() => expect(children).toHaveLength(1))
     handlers.get('SIGINT')()
-    await vi.advanceTimersByTimeAsync(5000)
+    await vi.advanceTimersByTimeAsync(5100)
     await running
     expect(children[0].signalCode).toBe('SIGKILL')
     expect(children).toHaveLength(1)
+  })
+
+  it.each(['stops', 'crashes'])(
+    'waits for a resistant descendant after its leader %s',
+    async (event) => {
+      vi.useFakeTimers()
+      let returned = false
+      const result = runLocalLab({}).then(
+        () => {
+          returned = true
+        },
+        (error) => {
+          returned = true
+          return error
+        },
+      )
+      await vi.waitFor(() =>
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Open http://')),
+      )
+      const server = children[1]
+      server.descendantAlive = true
+      server.descendantExitOnKill = false
+      if (event === 'crashes') finish(server, 1)
+      else handlers.get('SIGINT')()
+
+      await vi.advanceTimersByTimeAsync(0)
+      expect(server.exitCode !== null || server.signalCode !== null).toBe(true)
+      expect(returned).toBe(false)
+      expect(process.kill).toHaveBeenCalledWith(-server.pid, 'SIGTERM')
+      await vi.advanceTimersByTimeAsync(5000)
+      expect(process.kill).toHaveBeenCalledWith(-server.pid, 'SIGKILL')
+      expect(returned).toBe(false)
+
+      // Delivery of SIGKILL is not proof of exit. Wait until the whole group is gone.
+      server.descendantAlive = false
+      await vi.advanceTimersByTimeAsync(50)
+      const outcome = await result
+      expect(returned).toBe(true)
+      if (event === 'crashes') expect(outcome.message).toContain('Local server failed')
+      else expect(outcome).toBeUndefined()
+    },
+  )
+
+  it('never signals a completed group ID again after the OS could reuse it', async () => {
+    const running = runLocalLab({})
+    await vi.waitFor(() =>
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Open http://')),
+    )
+    const build = children[0]
+    // The old build group is gone; this models an unrelated new group using that ID.
+    build.descendantAlive = true
+    vi.mocked(process.kill).mockClear()
+    handlers.get('SIGINT')()
+    await running
+    expect(process.kill.mock.calls.some(([pid]) => pid === -build.pid)).toBe(false)
+    expect(build.descendantAlive).toBe(true)
+    expect(process.kill.mock.calls.every(([pid]) => pid === -children[1].pid)).toBe(true)
   })
 })

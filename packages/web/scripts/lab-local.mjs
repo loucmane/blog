@@ -150,14 +150,49 @@ export async function waitForLocalServer(
   throw new Error('The local server did not become ready within one minute.')
 }
 
-function signalChild(child, signal) {
-  if (child.exitCode !== null || child.signalCode !== null || !child.pid) return
+function processStillAlive(managed) {
+  if (managed.retired || !managed.child.pid) return false
+  if (process.platform === 'win32') {
+    return managed.child.exitCode === null && managed.child.signalCode === null
+  }
   try {
-    if (process.platform === 'win32') child.kill(signal)
-    else process.kill(-child.pid, signal)
+    // A detached child's PID is our process-group ID, even after that child exits.
+    process.kill(-managed.child.pid, 0)
+    return true
   } catch (error) {
     if (error.code !== 'ESRCH') throw error
+    // Once gone, never probe or signal this ID again: the OS may reuse it.
+    managed.retired = true
+    return false
   }
+}
+
+function signalChild(managed, signal) {
+  if (!processStillAlive(managed)) return
+  try {
+    if (process.platform === 'win32') managed.child.kill(signal)
+    else process.kill(-managed.child.pid, signal)
+  } catch (error) {
+    if (error.code !== 'ESRCH') throw error
+    managed.retired = true
+  }
+}
+
+function stopChild(managed) {
+  managed.cleanup ??= (async () => {
+    signalChild(managed, 'SIGTERM')
+    const deadline = Date.now() + 5_000
+    let escalated = false
+    while (processStillAlive(managed)) {
+      if (!escalated && Date.now() >= deadline) {
+        signalChild(managed, 'SIGKILL')
+        escalated = true
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+    await managed.result
+  })()
+  return managed.cleanup
 }
 
 /** Own every process from build through seed; Ctrl+C also stops Next's worker children. */
@@ -165,13 +200,11 @@ export async function runLocalLab(environment = process.env) {
   const configuration = localLabConfiguration(environment)
   const abort = new AbortController()
   const children = new Set()
-  let stopTimer
   const stop = () => {
     abort.abort()
-    for (const process of children) signalChild(process.child, 'SIGTERM')
-    stopTimer ??= setTimeout(() => {
-      for (const process of children) signalChild(process.child, 'SIGKILL')
-    }, 5_000)
+    // Start escalation even if checked() is still waiting for an unresponsive leader.
+    // The same cleanup promises are awaited (and errors surfaced) in finally.
+    for (const managed of children) void stopChild(managed).catch(() => {})
   }
   process.once('SIGINT', stop)
   process.once('SIGTERM', stop)
@@ -187,12 +220,21 @@ export async function runLocalLab(environment = process.env) {
       child.once('error', (error) => resolve({ error }))
       child.once('exit', (code, signal) => resolve({ code, signal }))
     })
-    const managed = { child, result }
+    const managed = { child, result, retired: false }
     children.add(managed)
+    managed.finished = result.then(async (outcome) => {
+      // Retire completed build/seed groups promptly, before their IDs can be reused.
+      // Also clean up a crashed server's descendants while readiness/seed is pending.
+      await stopChild(managed)
+      children.delete(managed)
+      return outcome
+    })
+    // checked() or finally handles errors, including a server that exits before seeding ends.
+    void managed.finished.catch(() => {})
     return managed
   }
   const checked = async (managed, name) => {
-    const result = await managed.result
+    const result = await managed.finished
     abort.signal.throwIfAborted()
     if (result.error || result.code !== 0)
       throw new Error(`${name} failed. See the output above.`, { cause: result.error })
@@ -231,15 +273,9 @@ export async function runLocalLab(environment = process.env) {
   } catch (error) {
     if (!abort.signal.aborted) throw error
   } finally {
-    for (const { child } of children) signalChild(child, 'SIGTERM')
-    const killTimer = setTimeout(() => {
-      for (const { child } of children) signalChild(child, 'SIGKILL')
-    }, 5_000)
     try {
-      await Promise.all([...children].map(({ result }) => result))
+      await Promise.all([...children].map(stopChild))
     } finally {
-      clearTimeout(killTimer)
-      clearTimeout(stopTimer)
       process.removeListener('SIGINT', stop)
       process.removeListener('SIGTERM', stop)
     }

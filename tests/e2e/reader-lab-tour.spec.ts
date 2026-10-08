@@ -130,10 +130,36 @@ test('visitors never receive tour or bar help, even with a direction cookie', as
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
-test('omits local sign-in outside fixture mode, including a production runtime with the test flag set', async ({
+test('omits local sign-in and refuses direct action POSTs outside fixture mode, including production with the test flag set', async ({
   page,
+  request,
 }) => {
   test.setTimeout(90_000)
+  // Obtain the real compiled action ID and prove this POST can invoke it in fixture mode.
+  // Otherwise a stale/invalid ID could produce a misleading 404 in the refusal checks.
+  const fixturePage = await request.get('/owner/sign-in')
+  expect(fixturePage.status()).toBe(200)
+  const actionId = (await fixturePage.text()).match(/name="\$ACTION_ID_([a-f0-9]+)"/)?.[1]
+  if (!actionId) throw new Error('The fixture sign-in form has no server action ID')
+  const actionHeaders = {
+    'content-type': 'text/plain;charset=UTF-8',
+    'next-action': actionId,
+    'sec-fetch-site': 'same-origin',
+  }
+  const accepted = await request.post('/owner/sign-in', {
+    data: '[]',
+    headers: { ...actionHeaders, origin: new URL(fixturePage.url()).origin },
+    maxRedirects: 0,
+  })
+  // Fetch actions use a successful RSC response and x-action-redirect; form posts use 303.
+  expect(accepted.ok() || accepted.status() === 303).toBe(true)
+  const acceptedRedirect =
+    accepted.status() === 303
+      ? accepted.headers().location
+      : accepted.headers()['x-action-redirect']?.split(';')[0]
+  expect(acceptedRedirect).toBe('/owner/reader-lab')
+  expect(accepted.headers()['set-cookie']).toContain('magazine-owner-test-session=')
+
   for (const environment of [
     { NODE_ENV: 'test', MAGAZINE_OWNER_TEST_MODE: '' },
     { NODE_ENV: 'production', MAGAZINE_OWNER_TEST_MODE: '1' },
@@ -203,6 +229,14 @@ test('omits local sign-in outside fixture mode, including a production runtime w
       await page.goto(`${origin}/owner/sign-in`)
       await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Sign in as the local owner' })).toHaveCount(0)
+      const refused = await request.post(`${origin}/owner/sign-in`, {
+        data: '[]',
+        headers: { ...actionHeaders, origin },
+        maxRedirects: 0,
+      })
+      expect(refused.status()).toBe(404)
+      expect(refused.headers()['set-cookie'] ?? '').not.toContain('magazine-owner-test-session=')
+      expect(refused.headers()['x-action-redirect']).toBeUndefined()
     } finally {
       child.kill('SIGTERM')
       await Promise.race([ended, delay(3000)])
