@@ -22,13 +22,15 @@ const { signUpEmail, runtime } = vi.hoisted(() => ({ signUpEmail: vi.fn(), runti
 vi.mock('better-auth', () => ({ betterAuth: vi.fn(() => ({ api: { signUpEmail } })) }))
 vi.mock('./runtime', () => ({ getOwnerRuntime: runtime }))
 
+const fixtureToken = (label: string) => `fixture-${label}-`.padEnd(48, 'x')
+
 const environment = {
   BETTER_AUTH_SECRET: 'auth-secret-only-for-this-unit-test-32-bytes',
   BETTER_AUTH_URL: 'https://preview.example.com',
   DATABASE_URL: 'postgresql://localhost/unit',
   MAGAZINE_OWNER_EMAIL: 'Owner@example.com',
   MAGAZINE_OWNER_NAME: 'Test owner',
-  MAGAZINE_OWNER_SETUP_TOKEN: 'setup-secret-only-for-this-unit-test-32-bytes',
+  MAGAZINE_OWNER_SETUP_TOKEN: fixtureToken('setup-secret'),
   NODE_ENV: 'test',
 }
 const password = 'a long test password'
@@ -205,7 +207,7 @@ describe('hosted owner setup', () => {
     for (const configured of [
       environment.MAGAZINE_OWNER_SETUP_TOKEN,
       environment.MAGAZINE_OWNER_SETUP_TOKEN,
-      'rotated-setup-token-with-at-least-32-bytes',
+      fixtureToken('rotated-setup'),
     ]) {
       const db = database({ attempts: 5 })
       const response = await handleOwnerSetup(

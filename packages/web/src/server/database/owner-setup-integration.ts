@@ -12,6 +12,8 @@ import { handleOwnerSetup, ownerSetupPageState } from '../owner/setup'
 import { applyContentMigrations, readContentMigrations } from './migrations'
 import { ownerAuthSchema } from './schema'
 
+const fixtureToken = (label: string) => `fixture-${label}-`.padEnd(48, 'x')
+
 export function ownerSetupIntegrationTests({
   databaseUrl,
   schema,
@@ -32,7 +34,7 @@ export function ownerSetupIntegrationTests({
       BETTER_AUTH_SECRET: 'integration-auth-secret-at-least-32-bytes',
       MAGAZINE_OWNER_EMAIL: 'owner@example.com',
       MAGAZINE_OWNER_NAME: 'Preview owner',
-      MAGAZINE_OWNER_SETUP_TOKEN: 'integration-setup-secret-at-least-32-bytes',
+      MAGAZINE_OWNER_SETUP_TOKEN: fixtureToken('initial-setup'),
       NODE_ENV: 'test',
     }
     const password = 'four unrelated words for integration'
@@ -112,7 +114,7 @@ export function ownerSetupIntegrationTests({
       const changed = {
         ...environment,
         MAGAZINE_OWNER_EMAIL: 'new@example.com',
-        MAGAZINE_OWNER_SETUP_TOKEN: 'changed-secret-with-at-least-32-bytes',
+        MAGAZINE_OWNER_SETUP_TOKEN: fixtureToken('changed-owner'),
       }
       expect(
         (await handleOwnerSetup(request(changed.MAGAZINE_OWNER_SETUP_TOKEN), changed, pool)).status,
@@ -173,7 +175,7 @@ export function ownerSetupIntegrationTests({
         expect((await pool.query('SELECT * FROM owner_users')).rows).toHaveLength(0)
         const rotated = {
           ...environment,
-          MAGAZINE_OWNER_SETUP_TOKEN: 'rotated-integration-secret-with-at-least-32-bytes',
+          MAGAZINE_OWNER_SETUP_TOKEN: fixtureToken('rotated-setup'),
         }
         expect((await handleOwnerSetup(request(), rotated, otherPool)).status).toBe(403)
         const verified = await handleOwnerSetup(
@@ -314,7 +316,7 @@ export function ownerSetupIntegrationTests({
         const changed = {
           ...environment,
           MAGAZINE_OWNER_EMAIL: 'changed@example.com',
-          MAGAZINE_OWNER_SETUP_TOKEN: 'changed-setup-secret-with-at-least-32-bytes',
+          MAGAZINE_OWNER_SETUP_TOKEN: fixtureToken('changed-identity'),
         }
         expect(
           (await handleOwnerSetup(request(changed.MAGAZINE_OWNER_SETUP_TOKEN), changed, pool))
