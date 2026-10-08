@@ -38,6 +38,18 @@ import { S3MediaVariantStore } from './s3-media-variant-store'
 import { S3OriginalObjectStore } from './s3-original-object-store'
 import { ownerSetupIntegrationTests } from './owner-setup-integration'
 import { migrateCommandIntegrationTests } from './migrate-command-integration'
+import { labSeedIntegrationTests } from './lab-seed-integration'
+import { labSeedConcurrencyIntegrationTests } from './lab-seed-concurrency-integration'
+import { labSeedDatabaseIntegrationTests } from './lab-seed-database-integration'
+
+labSeedDatabaseIntegrationTests({
+  databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
+})
+
+labSeedConcurrencyIntegrationTests({
+  databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
+  s3Endpoint: requiredEnvironment('TASK42_S3_PRIMARY'),
+})
 
 ownerSetupIntegrationTests({
   databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
@@ -47,6 +59,12 @@ ownerSetupIntegrationTests({
 migrateCommandIntegrationTests({
   databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
   schema: `migrate_command_${randomUUID().replaceAll('-', '')}`,
+})
+
+labSeedIntegrationTests({
+  databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
+  schema: `lab_seed_${randomUUID().replaceAll('-', '')}`,
+  s3Endpoint: requiredEnvironment('TASK42_S3_PRIMARY'),
 })
 
 function requiredEnvironment(name: string): string {

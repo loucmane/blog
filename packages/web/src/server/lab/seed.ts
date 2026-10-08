@@ -1,12 +1,13 @@
 import { normalizeSlug } from '@/server/content/domain'
 import { CURRENT_CONTENT_DOCUMENT_VERSION } from '@/server/content/document'
 import { contentErrorCode } from '@/server/content/errors'
-import { MediaOriginalService } from '@/server/content/media'
 import type { Clock, ContentRepository, OriginalObjectStore } from '@/server/content/ports'
 import { SectionService } from '@/server/content/sections'
 import { ContentService } from '@/server/content/service'
 
 import { renderIllustration } from './illustrations'
+import { createLabMediaIfAbsent } from './media'
+import { LabSeedLimits, type LabSeedTimeouts } from './limits'
 import {
   labImages,
   labPreparedAt,
@@ -38,11 +39,20 @@ export interface LabSeedReport {
   }
 }
 
-type SeedEnvironment = Readonly<Record<string, string | undefined>>
+export { labSeedAllowed } from './environment.mjs'
 
-/** The seed is for local labs and tests only; it never runs in a production runtime. */
-export function labSeedAllowed(environment: SeedEnvironment = process.env): boolean {
-  return environment.NODE_ENV !== 'production'
+const seedLockKey = 'magazine:lab-seed:north-house:v1'
+
+export class LabSeedBusyError extends Error {
+  constructor() {
+    super('The lab seed is already running. Try again shortly.')
+    this.name = 'LabSeedBusyError'
+  }
+}
+
+export interface LabSeedHooks extends LabSeedTimeouts {
+  /** An optional instrumentation barrier after reading an asset, while holding the seed lock. */
+  readonly afterMediaCheck?: (id: string) => Promise<void>
 }
 
 function fixedClock(isoTimestamp: string): Clock {
@@ -73,7 +83,6 @@ async function seedStory(
     transaction.getArticle(story.id),
   )
   if (existing) {
-    await sections.assignSection({ articleId: story.id, sectionId })
     return 'existing'
   }
   const content = new ContentService(target.repository, fixedClock(story.publishedAt))
@@ -111,46 +120,52 @@ async function seedStory(
  * Seeds the North House sample magazine through the content services. It is idempotent: sections,
  * images, and stories that already exist are kept as they are, including any owner edits.
  */
-export async function seedLabContent(target: LabSeedTarget): Promise<LabSeedReport> {
+export async function seedLabContent(
+  target: LabSeedTarget,
+  hooks: LabSeedHooks = {},
+): Promise<LabSeedReport> {
+  const limits = new LabSeedLimits(hooks)
+  const result = await target.repository.tryExclusive(
+    seedLockKey,
+    (repository) =>
+      seedLockedContent({ ...target, repository: limits.repository(repository) }, hooks, limits),
+    limits.database,
+  )
+  if (!result.acquired) throw new LabSeedBusyError()
+  return result.value
+}
+
+async function seedLockedContent(
+  target: LabSeedTarget,
+  hooks: LabSeedHooks,
+  limits: LabSeedLimits,
+): Promise<LabSeedReport> {
   const sections = new SectionService(target.repository, fixedClock(labPreparedAt))
   const sectionIds = new Map<string, string>()
   for (const section of labSections) {
+    limits.check()
     sectionIds.set(section.slug, (await sections.ensureSection(section)).id)
   }
 
   const images = { created: [] as string[], existing: [] as string[] }
   if (target.objects) {
-    const media = new MediaOriginalService(
-      target.repository,
-      target.objects,
-      fixedClock(labPreparedAt),
-    )
     for (const image of labImages) {
-      const existing = await target.repository.transaction((transaction) =>
-        transaction.getMediaAsset(image.id),
-      )
-      if (existing) {
-        images.existing.push(image.id)
-        continue
-      }
-      await media.store({
-        alt: image.alt,
-        animated: false,
-        body: illustrationBytes(image),
-        caption: image.caption,
-        contentType: 'image/png',
-        creditName: image.creditName,
-        focalPoint: image.focalPoint,
-        height: image.illustration.height,
-        id: image.id,
-        width: image.illustration.width,
+      limits.check()
+      const created = await createLabMediaIfAbsent({
+        limits,
+        repository: target.repository,
+        objects: target.objects,
+        image,
+        body: () => illustrationBytes(image),
+        ...(hooks.afterMediaCheck ? { afterCheck: hooks.afterMediaCheck } : {}),
       })
-      images.created.push(image.id)
+      images[created ? 'created' : 'existing'].push(image.id)
     }
   }
 
   const stories = { created: [] as string[], existing: [] as string[], slugInUse: [] as string[] }
   for (const story of labStories) {
+    limits.check()
     const sectionId = sectionIds.get(story.section)
     if (!sectionId) throw new Error(`Lab story ${story.id} names an unknown section.`)
     const outcome = await seedStory(target, story, sectionId)
@@ -160,6 +175,7 @@ export async function seedLabContent(target: LabSeedTarget): Promise<LabSeedRepo
     else stories.slugInUse.push(slug)
   }
 
+  limits.check()
   return {
     images: {
       ...images,

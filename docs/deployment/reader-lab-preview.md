@@ -1,5 +1,114 @@
 # Reader Lab preview
 
+## Load the North House sample
+
+After preparing the database below, the deployer can seed the private hosted
+Preview once. Use an isolated Preview PostgreSQL database and media bucket;
+the environment declaration does not select or verify those resources. Keep the
+Preview behind the hosting provider's private access controls.
+
+Configure these **only in the Preview deployment**, then deploy that configuration:
+
+- `MAGAZINE_DEPLOYMENT_ENVIRONMENT=preview` (exact, lowercase value).
+- `MAGAZINE_LAB_SEED_TOKEN`: a separate random secret, 32–512 bytes without
+  whitespace. Inject it from your secret manager into the server and command
+  environment; do not put it in a URL, command argument, source file or log.
+- The existing `DATABASE_URL`, pointing to the migrated Preview database.
+  Use a direct PostgreSQL connection or session pooling: the seed holds a
+  session advisory lock for its whole run; transaction pooling is incompatible.
+- The existing S3-compatible media settings: `MAGAZINE_MEDIA_BUCKET`,
+  `MAGAZINE_MEDIA_REGION` (`auto` for R2), `MAGAZINE_MEDIA_ENDPOINT` (the R2 S3
+  endpoint), and the paired `MAGAZINE_MEDIA_ACCESS_KEY_ID` and
+  `MAGAZINE_MEDIA_SECRET_ACCESS_KEY` for that Preview bucket.
+
+Hosted Preview runs with `NODE_ENV=production`; leave it that way. The exact
+Preview declaration and matching bearer token are both required. Unset, blank,
+`production` or any other declaration refuses hosted seeding. If `VERCEL_ENV` or
+`VERCEL_TARGET_ENV` is present, it must also be `preview`; a production value
+vetoes the explicit Preview declaration. Never set `MAGAZINE_OWNER_TEST_MODE` on
+a hosted deployment: its production refusal remains active. No in-memory
+fixture is used, and Preview without media storage refuses before content writes.
+
+With the token already injected into the deployer's shell, run from the repository
+root using the installed dependencies and pinned Node runtime:
+
+```sh
+MAGAZINE_DEPLOYMENT_ENVIRONMENT=preview \
+MAGAZINE_LAB_SEED_URL=https://YOUR-PREVIEW-HOST \
+node packages/web/scripts/lab-seed.mjs
+```
+
+The existing `pnpm --filter web lab:seed` command also accepts these environment
+variables. The command reads process environment, not `.env` files. Remote targets
+require HTTPS and the explicit Preview declaration even when called from a local
+shell. Use a plain origin without credentials, path, query or fragment. It sends
+one authenticated POST to `/api/internal/lab-seed`, refuses redirects, and prints
+the seed report. It does not run migrations or create an owner account. If hosting
+protection intercepts the request, use an operator-approved way to reach the private
+Preview directly; the command does not bypass protection or follow sign-in redirects.
+
+The report lists created and existing stories/images, and story slugs already used
+by another article. A fresh database receives eight published stories in three
+sections and nine PNG originals in the configured bucket. Re-running keeps existing
+article IDs (including owner edits, unpublished status and section choices), section
+names and media metadata/originals untouched. A conflicting story slug is skipped.
+The report's `existing` story slugs are sample identifiers, not proof that an owner
+has kept that story published or retained its original slug.
+
+A 409 means another seed is already running: wait and retry shortly. The server refuses
+overlapping runs before doing seed work, across hosted instances as well as local
+fixtures. Existing media is skipped without changing metadata or uploading its
+original again. A missing media row is reserved before upload, so an owner creation
+that wins the race is also kept untouched.
+
+Budget about 30 seconds for a fresh seed; this is an estimate and varies with database
+and storage latency. The seed continues while holding its lock if the caller
+disconnects or the command times out. Wait before retrying; an overlapping request
+gets 409 even if the original caller has gone away.
+
+The server allows at most 30 seconds for each original PUT and each verification
+(including its HEAD, GET and response-body read). A five-minute run deadline stops
+new seed work and shortens storage waits to the remaining time. On timeout, the
+current media transaction rolls back before the seed lock is released. Completed
+items remain; an uploaded but unverified original may remain for an idempotent retry.
+Each seed run opens a standalone PostgreSQL client with the same connection
+configuration as the owner runtime; it never borrows from the owner pool. Startup
+has a ten-second driver timeout, shortened to the remaining run time, which
+destroys a stalled connection without occupying an owner pool slot.
+The seed's dedicated PostgreSQL session also caps each statement, lock wait and
+idle transaction at 30 seconds, shortened to the remaining run time when a
+transaction starts. Database response waits cannot exceed the run deadline, and
+the deadline is checked again immediately before committing, after publication
+bookkeeping. Rollback and advisory unlock each have a five-second cleanup bound;
+if cleanup stalls or fails, the connection is destroyed so PostgreSQL rolls back
+any open transaction and releases its session lock. The standalone client is always
+ended; shutdown also has a five-second bound and destroys the transport if it stalls
+or fails. These settings never affect normal pooled owner connections. These
+server limits are independent of the caller's connection.
+
+A 404 means seeding is unavailable or the token is rejected; check the server's
+deployment declaration, provider signals and token. A 503 indicates missing or
+invalid content/media configuration, including forbidden owner fixture mode. Other
+failures or a timeout may leave a partial seed: inspect the Preview and report
+before retrying, since seeding is incremental, not one transaction. Existing IDs
+are left untouched on retry; it does not republish or repair an existing draft.
+After verifying the sample, remove `MAGAZINE_LAB_SEED_TOKEN` from the Preview
+environment and redeploy to disable the endpoint. Do not enable seeding in production.
+
+Local development/test labs retain their existing token-protected flow without a
+deployment declaration when no hosted deployment signals are present. This does
+not loosen the separate owner fixture guard.
+
+The existing `pnpm test:content:integration` Docker runner includes hosted seed
+refusals and a real PostgreSQL/S3 run with original-byte checks, repeated seeding,
+owner edits, unpublishing, section removal and a colliding owner slug. Concurrent
+cases pause one seed while another instance is refused, then verify owner media
+edits survive resumption and replay without any duplicate original uploads. A stalled
+verification after a real S3 upload also proves timeout rollback and lock release
+for a retry from another PostgreSQL session.
+Database cases also cover table-lock contention, a slow statement, deadline expiry
+during publication bookkeeping, and connection destruction after a stalled unlock.
+
 ## Prepare the hosted database
 
 For the person preparing the preview: run migrations deliberately from the reviewed

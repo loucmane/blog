@@ -26,6 +26,8 @@ export interface IdentifierSource {
 }
 
 export interface ContentTransaction {
+  /** Reserve a new media identity without changing an existing asset. */
+  createMediaAssetIfAbsent(asset: MediaAsset): Promise<boolean>
   claimDuePublicationJob(input: {
     leaseUntil: string
     now: string
@@ -79,7 +81,26 @@ export interface ContentTransaction {
   saveTaxonomyTerm(term: TaxonomyTerm): Promise<void>
 }
 
+/** Server-owned bounds for a dedicated exclusive session, never normal owner queries. */
+export interface ExclusiveWorkLimits {
+  /** Checks the monotonic run deadline and returns its positive remaining duration. */
+  remainingMs(): number
+  readonly statementTimeoutMs: number
+  readonly lockTimeoutMs: number
+  readonly idleTransactionTimeoutMs: number
+  readonly cleanupTimeoutMs: number
+}
+
 export interface ContentRepository {
+  /**
+   * Try a repository-wide lock without waiting. Work must use the supplied repository
+   * sequentially; it remains tied to the lock's connection for the whole callback.
+   */
+  tryExclusive<T>(
+    key: string,
+    work: (repository: ContentRepository) => Promise<T>,
+    limits?: ExclusiveWorkLimits,
+  ): Promise<{ acquired: false } | { acquired: true; value: T }>
   /**
    * The publication version: a counter that advances in the commit of every change to what
    * readers may see. It returns the last committed value with one query, outside any transaction.
@@ -97,14 +118,17 @@ export interface StoredOriginalObject {
 
 export interface OriginalObjectStore {
   deleteOriginal(key: string): Promise<void>
-  getOriginal(key: string): Promise<Uint8Array>
-  putOriginal(input: {
-    body: Uint8Array
-    contentType: string
-    key: string
-    sha256: string
-  }): Promise<StoredOriginalObject>
-  verifyOriginal(key: string, expectedSha256: string): Promise<boolean>
+  getOriginal(key: string, signal?: AbortSignal): Promise<Uint8Array>
+  putOriginal(
+    input: {
+      body: Uint8Array
+      contentType: string
+      key: string
+      sha256: string
+    },
+    signal?: AbortSignal,
+  ): Promise<StoredOriginalObject>
+  verifyOriginal(key: string, expectedSha256: string, signal?: AbortSignal): Promise<boolean>
 }
 
 /**

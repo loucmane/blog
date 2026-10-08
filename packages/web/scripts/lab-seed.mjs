@@ -1,49 +1,92 @@
-// Seeds the Reader Lab sample magazine (North House) into the content store of a running web
-// server, through the server's content services. Start the server first, with the same
-// MAGAZINE_LAB_SEED_TOKEN in its environment, then run `pnpm --filter web lab:seed`.
+// One-shot seed for a running local lab or explicitly configured hosted Preview.
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const environment = process.env
-const minimumTokenBytes = 32
+import { labSeedAllowed } from '../src/server/lab/environment.mjs'
 
-async function main() {
-  if (environment.NODE_ENV === 'production') {
-    throw new Error('lab:seed refuses to run when NODE_ENV=production.')
-  }
-  const token = environment.MAGAZINE_LAB_SEED_TOKEN
-  if (!token || Buffer.byteLength(token, 'utf8') < minimumTokenBytes) {
+export async function runLabSeed({ environment = process.env, fetcher = fetch } = {}) {
+  if (!labSeedAllowed(environment)) {
     throw new Error(
-      `Set MAGAZINE_LAB_SEED_TOKEN (at least ${minimumTokenBytes} bytes) for both the web server and this command.`,
+      'lab:seed requires MAGAZINE_DEPLOYMENT_ENVIRONMENT=preview for hosted runtimes and refuses production deployment signals.',
     )
   }
-  const origin =
-    environment.MAGAZINE_LAB_SEED_URL ??
-    environment.MAGAZINE_RUNTIME_SITE_URL ??
-    'http://localhost:3000'
-  const endpoint = new URL('/api/internal/lab-seed', origin)
+  const token = environment.MAGAZINE_LAB_SEED_TOKEN
+  if (
+    !token ||
+    !/^\S+$/.test(token) ||
+    Buffer.byteLength(token, 'utf8') < 32 ||
+    Buffer.byteLength(token, 'utf8') > 512
+  ) {
+    throw new Error(
+      'Set MAGAZINE_LAB_SEED_TOKEN (32–512 bytes, no whitespace) for both the server and this command.',
+    )
+  }
+  let origin
+  try {
+    origin = new URL(
+      environment.MAGAZINE_LAB_SEED_URL ??
+        environment.MAGAZINE_RUNTIME_SITE_URL ??
+        'http://localhost:3000',
+    )
+  } catch {
+    throw new Error('MAGAZINE_LAB_SEED_URL must be a plain HTTP or HTTPS origin.')
+  }
+  if (
+    !['http:', 'https:'].includes(origin.protocol) ||
+    origin.username ||
+    origin.password ||
+    origin.search ||
+    origin.hash ||
+    origin.pathname !== '/'
+  ) {
+    throw new Error(
+      'MAGAZINE_LAB_SEED_URL must be a plain HTTP or HTTPS origin without credentials, path, query or fragment.',
+    )
+  }
+  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(origin.hostname)
+  if (
+    !loopback &&
+    (origin.protocol !== 'https:' || environment.MAGAZINE_DEPLOYMENT_ENVIRONMENT !== 'preview')
+  ) {
+    throw new Error('A remote lab seed requires HTTPS and MAGAZINE_DEPLOYMENT_ENVIRONMENT=preview.')
+  }
 
   let response
   try {
-    response = await fetch(endpoint, {
+    response = await fetcher(new URL('/api/internal/lab-seed', origin), {
       headers: { authorization: `Bearer ${token}` },
       method: 'POST',
+      redirect: 'error',
+      signal: AbortSignal.timeout(120_000),
     })
-  } catch (error) {
+  } catch {
     throw new Error(
-      `Could not reach the web server at ${endpoint.origin}. Start it first (pnpm --filter web dev). ${error.message}`,
-      { cause: error },
+      'Could not complete the lab seed request. Check the URL, server availability and deployment protection; redirects are refused. Inspect the Preview before retrying.',
     )
   }
-  const body = await response.json().catch(() => null)
+  if (response.status === 409) {
+    throw new Error('The lab seed is already running. Try again shortly.')
+  }
   if (!response.ok) {
     throw new Error(
-      `The server refused the lab seed (HTTP ${response.status}): ${body?.error ?? 'no details'}. ` +
-        'Check that the server runs outside production with the same MAGAZINE_LAB_SEED_TOKEN.',
+      `The server refused the lab seed (HTTP ${response.status}). Check the server's Preview declaration, seed token and PostgreSQL/media configuration.`,
     )
   }
-  console.log(JSON.stringify(body, null, 2))
+  try {
+    return await response.json()
+  } catch {
+    throw new Error(
+      'The server did not return a lab seed report. Inspect the Preview before retrying.',
+    )
+  }
 }
 
-main().catch((error) => {
-  console.error(error.message)
-  process.exitCode = 1
-})
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runLabSeed().then(
+    (report) => console.log(JSON.stringify(report, null, 2)),
+    (error) => {
+      console.error(error.message)
+      process.exitCode = 1
+    },
+  )
+}
