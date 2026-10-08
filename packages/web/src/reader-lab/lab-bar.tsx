@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react'
 import Link from 'next/link'
 
 import { exitReaderLab, switchReaderDirection } from './actions'
+import { ReaderLabBarHelp } from './lab-bar-help'
 import type { ReaderLabState } from './presentation'
 
 const control =
@@ -21,6 +22,7 @@ export function ReaderLabBar({ lab }: { readonly lab: ReaderLabState }) {
       className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-2xl rounded-2xl border border-transparent bg-foreground text-background shadow-lg print:size-0 print:overflow-hidden print:border-0 print:shadow-none"
       data-reader-lab-bar=""
     >
+      <ReaderLabBarHelp />
       <div className="flex items-center gap-1 p-1.5">
         <form action={switchReaderDirection}>
           <input name="direction" type="hidden" value={lab.previous.id} />

@@ -4,6 +4,7 @@ import path from 'node:path'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
+import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
 import { normalizeSlug } from '../../server/content/domain'
 import { labStories } from '../../server/lab/north-house'
 import { prepareFontCapture } from '../capture-fonts'
@@ -20,6 +21,7 @@ async function waitForThemeToSettle(page: Page) {
 }
 
 test.beforeEach(async ({ context, page, request }) => {
+  await dismissReaderLabIntroductions(context)
   const seed = await request.post('/api/internal/lab-seed', {
     headers: { authorization: 'Bearer task44-lab-seed-token-with-more-than-32-bytes' },
   })
