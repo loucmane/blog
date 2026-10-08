@@ -180,25 +180,52 @@ function signalChild(managed, signal) {
 
 function stopChild(managed) {
   managed.cleanup ??= (async () => {
-    signalChild(managed, 'SIGTERM')
-    const deadline = Date.now() + 5_000
-    let escalated = false
-    while (processStillAlive(managed)) {
-      if (!escalated && Date.now() >= deadline) {
-        signalChild(managed, 'SIGKILL')
-        escalated = true
+    try {
+      signalChild(managed, 'SIGTERM')
+      const termDeadline = Date.now() + 5_000
+      let killDeadline
+      while (processStillAlive(managed)) {
+        if (killDeadline !== undefined && Date.now() >= killDeadline) {
+          throw new Error('group still present 5 seconds after SIGKILL')
+        }
+        if (killDeadline === undefined && Date.now() >= termDeadline) {
+          signalChild(managed, 'SIGKILL')
+          killDeadline = Date.now() + 5_000
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50))
       }
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      await managed.result
+    } catch (error) {
+      // A child we cannot stop must not keep the launcher alive after reporting failure.
+      const { child } = managed
+      child.unref()
+      const leaderState =
+        child.exitCode === null && child.signalCode === null
+          ? 'leader has not exited'
+          : `leader exitCode=${child.exitCode}, signal=${child.signalCode}`
+      const detail = error.code ? `${error.code}: ${error.message}` : error.message
+      throw new Error(
+        `Could not stop local Reader Lab process group ${child.pid}: ${detail}; ${leaderState}.`,
+        { cause: error },
+      )
     }
-    await managed.result
   })()
   return managed.cleanup
+}
+
+async function stopChildren(children) {
+  const outcomes = await Promise.allSettled([...children].map(stopChild))
+  const failure = outcomes.find((outcome) => outcome.status === 'rejected')
+  if (failure) throw failure.reason
 }
 
 /** Own every process from build through seed; Ctrl+C also stops Next's worker children. */
 export async function runLocalLab(environment = process.env) {
   const configuration = localLabConfiguration(environment)
   const abort = new AbortController()
+  const stopped = new Promise((resolve) => {
+    abort.signal.addEventListener('abort', () => resolve(), { once: true })
+  })
   const children = new Set()
   const stop = () => {
     abort.abort()
@@ -229,12 +256,13 @@ export async function runLocalLab(environment = process.env) {
       children.delete(managed)
       return outcome
     })
-    // checked() or finally handles errors, including a server that exits before seeding ends.
-    void managed.finished.catch(() => {})
+    // Interrupt readiness or another child too; finally reports the cleanup failure.
+    void managed.finished.catch((error) => abort.abort(error))
     return managed
   }
   const checked = async (managed, name) => {
-    const result = await managed.finished
+    // Cancellation must reach finally even if a child never emits its exit event.
+    const result = await Promise.race([managed.finished, stopped])
     abort.signal.throwIfAborted()
     if (result.error || result.code !== 0)
       throw new Error(`${name} failed. See the output above.`, { cause: result.error })
@@ -274,7 +302,7 @@ export async function runLocalLab(environment = process.env) {
     if (!abort.signal.aborted) throw error
   } finally {
     try {
-      await Promise.all([...children].map(stopChild))
+      await stopChildren(children)
     } finally {
       process.removeListener('SIGINT', stop)
       process.removeListener('SIGTERM', stop)

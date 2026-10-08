@@ -59,7 +59,11 @@ beforeEach(() => {
       throw Object.assign(new Error('No such process group'), { code: 'ESRCH' })
     if (signal === 0) return true
     if (signal === 'SIGKILL' && child.descendantExitOnKill) child.descendantAlive = false
-    if (leaderAlive && !(ignoreTerm && signal === 'SIGTERM'))
+    if (
+      leaderAlive &&
+      !(ignoreTerm && signal === 'SIGTERM') &&
+      !(signal === 'SIGKILL' && !child.leaderExitOnKill)
+    )
       queueMicrotask(() => finish(child, null, signal))
     return true
   })
@@ -73,8 +77,10 @@ beforeEach(() => {
       pid: 10_000 + children.length,
       exitCode: null,
       signalCode: null,
+      leaderExitOnKill: true,
       descendantAlive: false,
       descendantExitOnKill: true,
+      unref: vi.fn(),
       args,
       options,
     })
@@ -184,6 +190,85 @@ describe('local launcher process ownership', () => {
       expect(returned).toBe(true)
       if (event === 'crashes') expect(outcome.message).toContain('Local server failed')
       else expect(outcome).toBeUndefined()
+    },
+  )
+
+  it.each(['exited', 'running'])(
+    'reports a persistent group within the shutdown bound with its leader %s',
+    async (leaderState) => {
+      vi.useFakeTimers()
+      holdBuild = true
+      ignoreTerm = leaderState === 'running'
+      const rejected = vi.fn()
+      const running = runLocalLab({}).catch(rejected)
+      await vi.waitFor(() => expect(children).toHaveLength(1))
+      const build = children[0]
+      build.leaderExitOnKill = false
+      build.descendantAlive = true
+      build.descendantExitOnKill = false
+
+      handlers.get('SIGINT')()
+      await vi.advanceTimersByTimeAsync(9999)
+      expect(rejected).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(1)
+      expect(rejected).toHaveBeenCalledOnce()
+      await running
+      const error = rejected.mock.calls[0][0]
+      expect(error.message).toContain(`process group ${build.pid}`)
+      expect(error.message).toContain('still present 5 seconds after SIGKILL')
+      expect(error.message).toContain(
+        leaderState === 'running'
+          ? 'leader has not exited'
+          : 'leader exitCode=null, signal=SIGTERM',
+      )
+      expect(process.kill).toHaveBeenCalledWith(-build.pid, 'SIGTERM')
+      expect(process.kill).toHaveBeenCalledWith(-build.pid, 'SIGKILL')
+      expect(build.descendantAlive).toBe(true)
+      expect(build.unref).toHaveBeenCalledOnce()
+      expect(children).toHaveLength(1)
+      expect(fakes.writeFile).not.toHaveBeenCalled()
+      expect(vi.getTimerCount()).toBe(0)
+      const calls = process.kill.mock.calls.length
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(process.kill).toHaveBeenCalledTimes(calls)
+    },
+  )
+
+  it.each([
+    { signal: 'SIGTERM', code: 'EPERM' },
+    { signal: 'SIGKILL', code: 'EIO' },
+    { signal: 0, code: 'EPERM' },
+  ])(
+    'reports $signal failure ($code) without waiting for leader exit',
+    async ({ signal, code }) => {
+      vi.useFakeTimers()
+      holdBuild = true
+      ignoreTerm = true
+      const rejected = vi.fn()
+      const running = runLocalLab({}).catch(rejected)
+      await vi.waitFor(() => expect(children).toHaveLength(1))
+      const build = children[0]
+      const kill = vi.mocked(process.kill).getMockImplementation()
+      const failure = Object.assign(new Error(`kill ${code}`), { code })
+      vi.mocked(process.kill).mockImplementation((pid, requestedSignal) => {
+        if (pid === -build.pid && requestedSignal === signal) throw failure
+        return kill(pid, requestedSignal)
+      })
+
+      handlers.get('SIGINT')()
+      await vi.advanceTimersByTimeAsync(signal === 'SIGKILL' ? 5000 : 0)
+      expect(rejected).toHaveBeenCalledOnce()
+      await running
+      const error = rejected.mock.calls[0][0]
+      expect(error.message).toContain(`process group ${build.pid}`)
+      expect(error.message).toContain(code)
+      expect(error.message).toContain('leader has not exited')
+      expect(error.cause).toBe(failure)
+      expect(build.exitCode).toBeNull()
+      expect(build.signalCode).toBeNull()
+      expect(build.unref).toHaveBeenCalledOnce()
+      expect(children).toHaveLength(1)
+      expect(vi.getTimerCount()).toBe(0)
     },
   )
 
