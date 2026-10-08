@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -35,6 +36,12 @@ import { PostgresContentRepository } from './postgres-content-repository'
 import { PostgresSearchProjection } from './postgres-search-projection'
 import { S3MediaVariantStore } from './s3-media-variant-store'
 import { S3OriginalObjectStore } from './s3-original-object-store'
+import { ownerSetupIntegrationTests } from './owner-setup-integration'
+
+ownerSetupIntegrationTests({
+  databaseUrl: requiredEnvironment('TASK42_DATABASE_URL'),
+  schema: `owner_setup_${randomUUID().replaceAll('-', '')}`,
+})
 
 function requiredEnvironment(name: string): string {
   const value = process.env[name]
