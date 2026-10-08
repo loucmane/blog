@@ -1,12 +1,16 @@
 import { passkey } from '@better-auth/passkey'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter'
-import { betterAuth } from 'better-auth'
+import { betterAuth, type BetterAuthOptions } from 'better-auth'
 import { nextCookies } from 'better-auth/next-js'
 
 import { createContentDatabase } from '@/server/database/client'
 import { ownerAuthSchema } from '@/server/database/schema'
 
-import { OwnerConfigurationError, resolveOwnerAuthConfiguration } from './config'
+import {
+  OwnerConfigurationError,
+  resolveOwnerAuthConfiguration,
+  type OwnerAuthConfiguration,
+} from './config'
 import { getOwnerRuntime } from './runtime'
 
 async function deliverRecoveryLink(input: {
@@ -34,22 +38,17 @@ async function deliverRecoveryLink(input: {
   if (!response.ok) throw new Error('The recovery message could not be delivered.')
 }
 
-function createOwnerAuth() {
-  const configuration = resolveOwnerAuthConfiguration()
-  const pool = getOwnerRuntime().pool
-  if (!pool) throw new OwnerConfigurationError('Fixture content cannot back production auth.')
-  const database = createContentDatabase(pool)
-  return betterAuth({
+export function ownerAuthOptions(
+  configuration: OwnerAuthConfiguration,
+  database: ReturnType<typeof drizzleAdapter>,
+) {
+  return {
     advanced: {
       cookiePrefix: 'magazine-owner',
       useSecureCookies: configuration.baseUrl.protocol === 'https:',
     },
     baseURL: configuration.baseUrl.toString(),
-    database: drizzleAdapter(database, {
-      provider: 'pg',
-      schema: ownerAuthSchema,
-      transaction: true,
-    }),
+    database,
     emailAndPassword: {
       disableSignUp: true,
       enabled: true,
@@ -75,7 +74,23 @@ function createOwnerAuth() {
       updateAge: 60 * 60 * 12,
     },
     trustedOrigins: [configuration.baseUrl.origin],
-  })
+  } satisfies BetterAuthOptions
+}
+
+function createOwnerAuth() {
+  const configuration = resolveOwnerAuthConfiguration()
+  const pool = getOwnerRuntime().pool
+  if (!pool) throw new OwnerConfigurationError('Fixture content cannot back production auth.')
+  return betterAuth(
+    ownerAuthOptions(
+      configuration,
+      drizzleAdapter(createContentDatabase(pool), {
+        provider: 'pg',
+        schema: ownerAuthSchema,
+        transaction: true,
+      }),
+    ),
+  )
 }
 
 export type OwnerAuth = ReturnType<typeof createOwnerAuth>
