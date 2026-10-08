@@ -3,7 +3,7 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import { betterAuth } from 'better-auth'
 import { verifyPassword } from 'better-auth/crypto'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
+import { Pool, type QueryResult } from 'pg'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { ownerAuthOptions } from '../owner/auth'
@@ -46,11 +46,11 @@ export function ownerSetupIntegrationTests({
     )
     const auth = betterAuth({ ...options, plugins: [], logger: { disabled: true } })
 
-    function request(token = environment.MAGAZINE_OWNER_SETUP_TOKEN) {
+    function request(token = environment.MAGAZINE_OWNER_SETUP_TOKEN, action = 'create') {
       return new Request(`${environment.BETTER_AUTH_URL}/api/owner/setup`, {
         method: 'POST',
         headers: { origin: environment.BETTER_AUTH_URL, 'content-type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, action }),
       })
     }
 
@@ -73,7 +73,6 @@ export function ownerSetupIntegrationTests({
 
     it('creates one configured owner, a Better Auth password and a usable signed-in session', async () => {
       expect(await ownerSetupPageState(environment, pool)).toEqual({
-        email: environment.MAGAZINE_OWNER_EMAIL,
         ready: false,
       })
       const response = await handleOwnerSetup(request(), environment, pool)
@@ -93,6 +92,7 @@ export function ownerSetupIntegrationTests({
       const cookies = response.headers.getSetCookie()
       expect(cookies.join(';')).toMatch(/HttpOnly/i)
       expect(cookies.join(';')).toMatch(/Secure/i)
+      expect(cookies.join(';')).toMatch(/SameSite=Lax/i)
       const session = await auth.api.getSession({
         headers: new Headers({ cookie: cookies.map((cookie) => cookie.split(';')[0]).join('; ') }),
       })
@@ -104,7 +104,6 @@ export function ownerSetupIntegrationTests({
       expect(publicSignUp.ok).toBe(false)
       expect(await response.text()).not.toContain(environment.MAGAZINE_OWNER_SETUP_TOKEN)
       expect(await ownerSetupPageState(environment, pool)).toEqual({
-        email: environment.MAGAZINE_OWNER_EMAIL,
         ready: true,
       })
       expect((await handleOwnerSetup(request(), environment, pool)).status).toBe(404)
@@ -120,26 +119,42 @@ export function ownerSetupIntegrationTests({
       ).toBe(404)
     })
 
-    it('rejects bad tokens and shares a persistent limit with a second application pool', async () => {
-      for (let i = 0; i < 5; i += 1)
-        expect((await handleOwnerSetup(request(`wrong-${i}`), environment, pool)).status).toBe(403)
+    it('shares invalid-token limits across pools while allowing the valid owner link through', async () => {
       const otherPool = new Pool({
         connectionString: databaseUrl,
         options: `-c search_path=${schema}`,
         max: 1,
       })
       try {
-        const limited = await handleOwnerSetup(request(), environment, otherPool)
+        for (let i = 0; i < 5; i += 1)
+          expect(
+            (await handleOwnerSetup(request(`wrong-${i}`), environment, i % 2 ? otherPool : pool))
+              .status,
+          ).toBe(403)
+        const limited = await handleOwnerSetup(request('wrong'), environment, otherPool)
         expect(limited.status).toBe(429)
         expect(limited.headers.get('retry-after')).toBe('900')
         expect((await pool.query('SELECT * FROM owner_users')).rows).toHaveLength(0)
-        await pool.query(
-          "UPDATE idempotency_records SET created_at = now() - interval '16 minutes' WHERE operation = 'owner-setup'",
-        )
+        const verified = await handleOwnerSetup(request(undefined, 'verify'), environment, pool)
+        expect(verified.status).toBe(200)
+        expect(await verified.json()).toMatchObject({ email: environment.MAGAZINE_OWNER_EMAIL })
+        expect(verified.headers.has('set-cookie')).toBe(false)
         expect((await handleOwnerSetup(request(), environment, otherPool)).status).toBe(200)
       } finally {
         await otherPool.end()
       }
+    })
+
+    it('expires the invalid-token window without overwriting a permanent completion marker', async () => {
+      for (let i = 0; i < 6; i += 1) await handleOwnerSetup(request('wrong'), environment, pool)
+      await pool.query(
+        "UPDATE idempotency_records SET created_at = now() - interval '16 minutes' WHERE operation = 'owner-setup' AND key = 'invalid-attempts'",
+      )
+      expect((await handleOwnerSetup(request('wrong'), environment, pool)).status).toBe(403)
+      expect((await handleOwnerSetup(request(), environment, pool)).status).toBe(200)
+      await pool.query('DELETE FROM owner_users')
+      expect((await handleOwnerSetup(request('wrong'), environment, pool)).status).toBe(404)
+      expect((await handleOwnerSetup(request(), environment, pool)).status).toBe(404)
     })
 
     it('allows exactly one of two simultaneous attempts', async () => {
@@ -148,7 +163,7 @@ export function ownerSetupIntegrationTests({
         handleOwnerSetup(request(), environment, pool),
       ])
       expect(responses.filter((response) => response.status === 200)).toHaveLength(1)
-      expect(responses.filter((response) => [404, 429].includes(response.status))).toHaveLength(1)
+      expect(responses.filter((response) => [404, 503].includes(response.status))).toHaveLength(1)
       for (const table of ['owner_users', 'owner_accounts', 'owner_sessions'])
         expect((await pool.query(`SELECT * FROM ${table}`)).rows).toHaveLength(1)
     })
@@ -174,13 +189,134 @@ export function ownerSetupIntegrationTests({
       expect((await handleOwnerSetup(request(), environment, pool)).status).toBe(200)
     })
 
-    it('disables setup for a preexisting owner even with a different configured email', async () => {
+    it.each(['page', 'verify', 'create'])(
+      'permanently latches a partial external user observed by %s',
+      async (mode) => {
+        await pool.query(
+          "INSERT INTO owner_users (id, email, name) VALUES ('preexisting', 'earlier@example.com', 'Earlier owner')",
+        )
+        if (mode === 'page') {
+          expect(await ownerSetupPageState(environment, pool)).toEqual({ ready: true })
+        } else {
+          expect((await handleOwnerSetup(request(undefined, mode), environment, pool)).status).toBe(
+            404,
+          )
+        }
+        expect((await pool.query('SELECT * FROM owner_users')).rows).toHaveLength(1)
+        expect(
+          (
+            await pool.query(
+              "SELECT result FROM idempotency_records WHERE operation = 'owner-setup' AND key = 'singleton'",
+            )
+          ).rows[0].result,
+        ).toEqual({ completed: true, reason: 'existing-auth-state' })
+        await pool.query('DELETE FROM owner_users')
+        expect((await handleOwnerSetup(request(), environment, pool)).status).toBe(404)
+        const changed = {
+          ...environment,
+          MAGAZINE_OWNER_EMAIL: 'changed@example.com',
+          MAGAZINE_OWNER_SETUP_TOKEN: 'changed-setup-secret-with-at-least-32-bytes',
+        }
+        expect(
+          (await handleOwnerSetup(request(changed.MAGAZINE_OWNER_SETUP_TOKEN), changed, pool))
+            .status,
+        ).toBe(404)
+        expect(await ownerSetupPageState(changed, pool)).toEqual({ ready: true })
+      },
+    )
+
+    it('holds the user table lock through creation and makes an independent insert wait', async () => {
+      // A real database barrier pauses Better Auth at INSERT, after the emptiness check.
+      // The independent writer never takes the setup lock or uses the setup API.
+      await pool.query(`CREATE FUNCTION pause_setup_insert() RETURNS trigger LANGUAGE plpgsql AS $$
+        BEGIN
+          IF NEW.email = 'owner@example.com' THEN
+            PERFORM pg_advisory_xact_lock(hashtext(TG_TABLE_SCHEMA), 1602);
+          END IF;
+          RETURN NEW;
+        END $$`)
       await pool.query(
-        "INSERT INTO owner_users (id, email, name) VALUES ('preexisting', 'earlier@example.com', 'Earlier owner')",
+        'CREATE TRIGGER pause_setup_insert BEFORE INSERT ON owner_users FOR EACH ROW EXECUTE FUNCTION pause_setup_insert()',
       )
-      expect((await ownerSetupPageState(environment, pool))?.ready).toBe(true)
-      expect((await handleOwnerSetup(request(), environment, pool)).status).toBe(404)
-      expect((await pool.query('SELECT * FROM owner_users')).rows).toHaveLength(1)
+      const barrier = await pool.connect()
+      const writer = await pool.connect()
+      let setup: Promise<Response> | undefined
+      let insert: Promise<QueryResult> | undefined
+      try {
+        await barrier.query('BEGIN')
+        await barrier.query('SELECT pg_advisory_xact_lock(hashtext($1), 1602)', [schema])
+        const barrierPid = (await barrier.query('SELECT pg_backend_pid() AS pid')).rows[0]
+          .pid as number
+        setup = handleOwnerSetup(request(), environment, pool)
+        let setupPid = 0
+        await expect
+          .poll(
+            async () => {
+              const waiting = await pool.query(
+                'SELECT pid FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid))',
+                [barrierPid],
+              )
+              setupPid = waiting.rows[0]?.pid ?? 0
+              return setupPid
+            },
+            { timeout: 1500 },
+          )
+          .toBeGreaterThan(0)
+        await writer.query('BEGIN')
+        await writer.query("SET LOCAL statement_timeout = '5s'")
+        const writerPid = (await writer.query('SELECT pg_backend_pid() AS pid')).rows[0]
+          .pid as number
+        insert = writer.query(
+          "INSERT INTO owner_users (id, email, name) VALUES ('concurrent', 'other@example.com', 'External owner')",
+        )
+        await expect
+          .poll(
+            async () => {
+              const result = await pool.query('SELECT pg_blocking_pids($1) AS blockers', [
+                writerPid,
+              ])
+              return result.rows[0].blockers
+            },
+            { timeout: 1000 },
+          )
+          .toContain(setupPid)
+        await barrier.query('COMMIT')
+        expect((await setup).status).toBe(200)
+        await insert
+        // The external insert can finish only after setup commits; roll it back in cleanup.
+        expect((await pool.query('SELECT email FROM owner_users')).rows).toEqual([
+          { email: environment.MAGAZINE_OWNER_EMAIL },
+        ])
+      } finally {
+        await barrier.query('ROLLBACK')
+        await Promise.allSettled([setup, insert])
+        await writer.query('ROLLBACK')
+        barrier.release()
+        writer.release()
+        await pool.query('DROP TRIGGER pause_setup_insert ON owner_users')
+        await pool.query('DROP FUNCTION pause_setup_insert()')
+      }
+    }, 15_000)
+
+    it('refuses creation while an independent insert is uncommitted, then latches that user', async () => {
+      const writer = await pool.connect()
+      try {
+        await writer.query('BEGIN')
+        await writer.query(
+          "INSERT INTO owner_users (id, email, name) VALUES ('concurrent', 'other@example.com', 'External owner')",
+        )
+        const response = await handleOwnerSetup(request(), environment, pool)
+        expect(response.status).toBe(503)
+        expect(response.headers.has('set-cookie')).toBe(false)
+        await writer.query('COMMIT')
+        expect((await handleOwnerSetup(request(), environment, pool)).status).toBe(404)
+        expect((await pool.query('SELECT email FROM owner_users')).rows).toEqual([
+          { email: 'other@example.com' },
+        ])
+      } finally {
+        await writer.query('ROLLBACK')
+        writer.release()
+      }
     })
   })
 }

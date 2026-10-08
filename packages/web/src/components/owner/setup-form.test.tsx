@@ -22,7 +22,13 @@ const axe = loadAxe('axe-core') as {
 
 beforeEach(() => {
   window.history.replaceState({}, '', `/owner/setup#${token}`)
-  fetchMock.mockReset().mockResolvedValue(new Response('{}'))
+  fetchMock
+    .mockReset()
+    .mockImplementation(async (_url, init) =>
+      JSON.parse(init.body).action === 'verify'
+        ? Response.json({ email: 'owner@example.com' })
+        : new Response('{}'),
+    )
   vi.stubGlobal('fetch', fetchMock)
 })
 afterEach(() => {
@@ -32,16 +38,18 @@ afterEach(() => {
 
 describe('owner setup form', () => {
   it('passes axe structural accessibility checks before and after a field error', async () => {
-    fetchMock.mockResolvedValue(new Response('{}', { status: 400 }))
+    fetchMock
+      .mockResolvedValueOnce(Response.json({ email: 'owner@example.com' }))
+      .mockResolvedValueOnce(new Response('{}', { status: 400 }))
     render(
       <main>
-        <OwnerSetupForm email="owner@example.com" />
+        <OwnerSetupForm />
       </main>,
     )
     // jsdom has no layout or computed color rendering; browser contrast remains a host check.
     const options = { rules: { 'color-contrast': { enabled: false } } }
+    const input = await screen.findByLabelText('Password', { exact: true })
     expect((await axe.run(document.body, options)).violations).toEqual([])
-    const input = screen.getByLabelText('Password', { exact: true })
     fireEvent.change(input, { target: { value: 'four unrelated words here' } })
     fireEvent.submit(input.closest('form')!)
     await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'))
@@ -52,12 +60,12 @@ describe('owner setup form', () => {
     const user = userEvent.setup()
     render(
       <StrictMode>
-        <OwnerSetupForm email="owner@example.com" />
+        <OwnerSetupForm />
       </StrictMode>,
     )
     expect(window.location.hash).toBe('')
     expect(document.body.innerHTML).not.toContain(token)
-    const input = screen.getByLabelText('Password', { exact: true })
+    const input = await screen.findByLabelText('Password', { exact: true })
     expect(input).toHaveAttribute('minlength', '14')
     expect(input).toHaveAttribute('maxlength', '128')
     expect(input).toHaveAccessibleDescription(/14–128 characters.*several unrelated words/)
@@ -73,7 +81,17 @@ describe('owner setup form', () => {
     await user.tab()
     await user.keyboard('{Enter}')
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/owner/reader-lab'))
-    expect(fetchMock).toHaveBeenCalledExactlyOnceWith('/api/owner/setup', {
+    // StrictMode replays verification; cleanup aborts the first request and retains the fragment.
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/owner/setup', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
+      referrerPolicy: 'no-referrer',
+      signal: expect.any(AbortSignal),
+      body: JSON.stringify({ action: 'verify', token }),
+    })
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/owner/setup', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       credentials: 'same-origin',
@@ -86,19 +104,22 @@ describe('owner setup form', () => {
 
   it('does not use a query token or submit without the full fragment link', async () => {
     window.history.replaceState({}, '', `/owner/setup?token=${token}`)
-    render(<OwnerSetupForm email="owner@example.com" />)
-    expect(screen.getByRole('button', { name: 'Create account' })).toBeDisabled()
-    expect(screen.getByText(/Open the full setup link/)).toBeVisible()
+    render(<OwnerSetupForm />)
+    expect(screen.queryByRole('button', { name: 'Create account' })).not.toBeInTheDocument()
+    expect(screen.getByText(/Open the setup link from your invitation/)).toBeVisible()
+    expect(document.body.innerHTML).not.toContain('owner@example.com')
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it.each([400, 403, 404, 429, 503])(
     'announces a safe, actionable error for status %s',
     async (status) => {
-      fetchMock.mockResolvedValue(new Response(token, { status }))
+      fetchMock
+        .mockResolvedValueOnce(Response.json({ email: 'owner@example.com' }))
+        .mockResolvedValueOnce(new Response(token, { status }))
       const user = userEvent.setup()
-      render(<OwnerSetupForm email="owner@example.com" />)
-      const input = screen.getByLabelText('Password', { exact: true })
+      render(<OwnerSetupForm />)
+      const input = await screen.findByLabelText('Password', { exact: true })
       await user.type(input, 'four unrelated words here')
       await user.click(screen.getByRole('button', { name: 'Create account' }))
       expect(screen.getByRole('status')).not.toHaveTextContent('Creating your account')
@@ -110,15 +131,17 @@ describe('owner setup form', () => {
         expect(input).toHaveAccessibleDescription(/then try again/)
       }
       if (status === 404)
-        expect(screen.getByRole('button', { name: 'Create account' })).toBeDisabled()
+        expect(screen.queryByRole('button', { name: 'Create account' })).not.toBeInTheDocument()
       expect(navigation.replace).not.toHaveBeenCalled()
     },
   )
 
   it('keeps the password on connection failure so the owner can retry', async () => {
-    fetchMock.mockRejectedValue(new Error('offline'))
-    render(<OwnerSetupForm email="owner@example.com" />)
-    const input = screen.getByLabelText('Password', { exact: true })
+    fetchMock
+      .mockResolvedValueOnce(Response.json({ email: 'owner@example.com' }))
+      .mockRejectedValueOnce(new Error('offline'))
+    render(<OwnerSetupForm />)
+    const input = await screen.findByLabelText('Password', { exact: true })
     fireEvent.change(input, { target: { value: 'four unrelated words here' } })
     fireEvent.submit(input.closest('form')!)
     await waitFor(() =>
@@ -127,4 +150,33 @@ describe('owner setup form', () => {
     expect(input).toHaveValue('four unrelated words here')
     expect(screen.getByRole('button', { name: 'Create account' })).toBeEnabled()
   })
+
+  it('shows neither identity nor password entry until the server verifies the fragment', async () => {
+    let complete!: (response: Response) => void
+    fetchMock.mockReturnValueOnce(
+      new Promise<Response>((resolve) => {
+        complete = resolve
+      }),
+    )
+    render(<OwnerSetupForm />)
+    expect(window.location.hash).toBe('')
+    expect(document.body.innerHTML).not.toContain('owner@example.com')
+    expect(screen.queryByLabelText('Password', { exact: true })).not.toBeInTheDocument()
+    complete(Response.json({ email: 'owner@example.com' }))
+    expect(await screen.findByText('For owner@example.com')).toBeVisible()
+    expect(await screen.findByLabelText('Password', { exact: true })).toBeEnabled()
+  })
+
+  it.each([403, 404, 429, 503])(
+    'keeps the shell private on verification failure %s',
+    async (status) => {
+      fetchMock.mockResolvedValueOnce(new Response(`${token} owner@example.com`, { status }))
+      render(<OwnerSetupForm />)
+      await waitFor(() => expect(screen.getByRole('status')).not.toHaveTextContent('Checking'))
+      expect(document.body.innerHTML).not.toContain(token)
+      expect(document.body.innerHTML).not.toContain('owner@example.com')
+      expect(screen.queryByLabelText('Password', { exact: true })).not.toBeInTheDocument()
+      expect(fetchMock).toHaveBeenCalledOnce()
+    },
+  )
 })

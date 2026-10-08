@@ -9,7 +9,6 @@ import {
   configuredSecretIsStrong,
   readBoundedJson,
   requestOriginMatches,
-  type BoundedJsonResult,
 } from '@/lib/request-security'
 import { ownerAuthSchema } from '@/server/database/schema'
 
@@ -53,9 +52,9 @@ export function ownerSetupTokenMatches(provided: string, expected: string): bool
   )
 }
 
-async function setupComplete(database: Pick<Pool, 'query'> | Pick<PoolClient, 'query'>) {
-  const result = await database.query<{ complete: boolean }>(`
-    SELECT EXISTS (SELECT 1 FROM owner_users) OR EXISTS (
+async function completionRecorded(client: PoolClient) {
+  const result = await client.query<{ complete: boolean }>(`
+    SELECT EXISTS (
       SELECT 1 FROM idempotency_records
       WHERE operation = 'owner-setup' AND key = 'singleton'
         AND result->>'completed' = 'true'
@@ -64,20 +63,70 @@ async function setupComplete(database: Pick<Pool, 'query'> | Pick<PoolClient, 'q
   return result.rows[0]?.complete !== false
 }
 
+async function recordCompletion(client: PoolClient, reason: 'existing-auth-state' | 'created') {
+  await client.query(
+    `INSERT INTO idempotency_records (operation, key, result, created_at)
+     VALUES ('owner-setup', 'singleton', jsonb_build_object('completed', true, 'reason', $1::text), now())
+     ON CONFLICT (operation, key) DO UPDATE SET result = EXCLUDED.result`,
+    [reason],
+  )
+}
+
+async function setupComplete(client: PoolClient, protectCreation = false) {
+  if (await completionRecorded(client)) return true
+  if (protectCreation) {
+    // These are Better Auth's real user/credential tables. Unlike an advisory lock, this
+    // also excludes writers outside this endpoint. NOWAIT avoids lock-upgrade deadlocks.
+    await client.query('LOCK TABLE owner_users, owner_accounts IN SHARE ROW EXCLUSIVE MODE NOWAIT')
+    if (await completionRecorded(client)) return true
+  }
+  const result = await client.query<{ occupied: boolean }>(`
+    SELECT EXISTS (SELECT 1 FROM owner_users) OR
+      EXISTS (SELECT 1 FROM owner_accounts) AS occupied
+  `)
+  if (result.rows[0]?.occupied !== false) {
+    // Persist an observation even if the external provisioner later removes a partial user.
+    await recordCompletion(client, 'existing-auth-state')
+    return true
+  }
+  return false
+}
+
+async function setupTransaction<T>(pool: Pool, work: (client: PoolClient) => Promise<T>) {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN ISOLATION LEVEL READ COMMITTED')
+    // Bound marker contention as well as table-lock contention; failures release all locks.
+    await client.query("SET LOCAL lock_timeout = '3s'")
+    const result = await work(client)
+    await client.query('COMMIT')
+    return result
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally {
+    client.release()
+  }
+}
+
 export async function ownerSetupPageState(
   environment: OwnerEnvironment = process.env,
   pool?: Pool,
-): Promise<{ readonly email: string; readonly ready: boolean } | null> {
+): Promise<{ readonly ready: boolean } | null> {
   const configuration = resolveOwnerSetupConfiguration(environment)
   if (!configuration) return null
   const database = pool ?? getOwnerRuntime().pool
   if (!database) return null
-  return { email: configuration.ownerEmail, ready: await setupComplete(database) }
+  return setupTransaction(database, async (client) => ({ ready: await setupComplete(client) }))
 }
 
-function reply(status: number, message: string, field?: 'password') {
+function reply(
+  status: number,
+  message: string,
+  fields: { field?: 'password'; email?: string } = {},
+) {
   return Response.json(
-    { message, ...(field ? { field } : {}) },
+    { message, ...fields },
     {
       status,
       headers: {
@@ -122,22 +171,12 @@ async function createOwner(
   })
 }
 
-async function attemptSetup(
-  client: PoolClient,
-  body: BoundedJsonResult,
-  configuration: SetupConfiguration,
-) {
-  const lock = await client.query<{ locked: boolean }>(
-    'SELECT pg_try_advisory_xact_lock(170224, 16) AS locked',
-  )
-  if (!lock.rows[0]?.locked) return reply(429, 'Setup is busy. Please try again in 15 minutes.')
-  if (await setupComplete(client)) return unavailable()
-
+async function invalidAttempt(client: PoolClient) {
   // A single global bucket works across serverless instances, restarts and changing proxy IPs.
   // The fixed key bounds storage and the database clock controls the window.
   const attempts = await client.query<{ attempts: number }>(`
     INSERT INTO idempotency_records (operation, key, result, created_at)
-    VALUES ('owner-setup', 'singleton', '{"attempts":1}', now())
+    VALUES ('owner-setup', 'invalid-attempts', '{"attempts":1}', now())
     ON CONFLICT (operation, key) DO UPDATE SET
       result = CASE WHEN idempotency_records.created_at <= now() - interval '15 minutes'
         THEN '{"attempts":1}'::jsonb
@@ -150,26 +189,33 @@ async function attemptSetup(
     return reply(429, 'Too many attempts. Please wait 15 minutes, then open your setup link again.')
   }
 
-  if (!body.ok || !body.value || typeof body.value !== 'object') {
-    return reply(400, 'We could not read the form. Open your setup link and try again.')
+  return reply(403, 'This setup link did not work. Ask the person helping you for a new link.')
+}
+
+async function attemptSetup(
+  client: PoolClient,
+  input: Record<string, unknown>,
+  validToken: boolean,
+  configuration: SetupConfiguration,
+) {
+  // Invalid traffic never takes the creation lock or consumes the valid link's allowance.
+  if (await setupComplete(client, validToken)) return unavailable()
+  if (!validToken) return invalidAttempt(client)
+  if (input.action === 'verify') {
+    return reply(200, 'Choose your password.', { email: configuration.ownerEmail })
   }
-  const input = body.value as Record<string, unknown>
-  const token = typeof input.token === 'string' ? input.token : ''
-  if (!ownerSetupTokenMatches(token, configuration.setupToken)) {
-    return reply(403, 'This setup link did not work. Ask the person helping you for a new link.')
+  if (input.action !== undefined && input.action !== 'create') {
+    return reply(400, 'We could not read the form. Open your setup link and try again.')
   }
   const password = input.password
   if (typeof password !== 'string' || password.length < 14 || password.length > 128) {
-    return reply(400, 'Use between 14 and 128 characters for your password.', 'password')
+    return reply(400, 'Use between 14 and 128 characters for your password.', { field: 'password' })
   }
   const result = await createOwner(client, configuration, password)
   if (!result.ok || result.headers.getSetCookie().length === 0) {
     throw new Error('Account setup did not complete.')
   }
-  await client.query(`
-    UPDATE idempotency_records SET result = '{"completed":true}'
-    WHERE operation = 'owner-setup' AND key = 'singleton'
-  `)
+  await recordCompletion(client, 'created')
   const response = reply(200, 'Your account is ready.')
   for (const cookie of result.headers.getSetCookie()) response.headers.append('set-cookie', cookie)
   return response
@@ -191,28 +237,30 @@ export async function handleOwnerSetup(
   ) {
     return reply(403, 'Open your setup link in this browser and try again.')
   }
-  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
+  if (
+    request.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() !== 'application/json'
+  ) {
     return reply(415, 'We could not read the form. Open your setup link and try again.')
   }
-  let client: PoolClient | undefined
   try {
     // Read the bounded body before acquiring the database lock, so a slow upload cannot hold it.
     const body = await readBoundedJson(request, 4096)
+    if (!body.ok || !body.value || typeof body.value !== 'object' || Array.isArray(body.value)) {
+      return reply(400, 'We could not read the form. Open your setup link and try again.')
+    }
+    const input = body.value as Record<string, unknown>
+    const token = typeof input.token === 'string' ? input.token : ''
+    const validToken = ownerSetupTokenMatches(token, configuration.setupToken)
     const database = pool ?? getOwnerRuntime().pool
     if (!database) return unavailable()
-    client = await database.connect()
-    await client.query('BEGIN')
-    const response = await attemptSetup(client, body, configuration)
-    await client.query('COMMIT')
-    return response
+    return await setupTransaction(database, (client) =>
+      attemptSetup(client, input, validToken, configuration),
+    )
   } catch {
-    await client?.query('ROLLBACK').catch(() => undefined)
     // Never serialize or log a thrown dependency error: it can include request data.
     return reply(
       503,
       'We could not finish setup. Try again shortly. If your account was created, you can sign in.',
     )
-  } finally {
-    client?.release()
   }
 }

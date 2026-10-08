@@ -48,10 +48,11 @@ function request(
   })
 }
 
-function database({ complete = false, attempts = 1, locked = true } = {}) {
+function database({ complete = false, occupied = false, attempts = 1, locked = true } = {}) {
   const query = vi.fn(async (sql: string) => {
-    if (sql.includes('pg_try_advisory')) return { rows: [{ locked }] }
+    if (sql.startsWith('LOCK TABLE') && !locked) throw new Error('lock unavailable')
     if (sql.includes('AS complete')) return { rows: [{ complete }] }
+    if (sql.includes('AS occupied')) return { rows: [{ occupied }] }
     if (sql.includes('RETURNING')) return { rows: [{ attempts }] }
     return { rows: [] }
   })
@@ -94,13 +95,11 @@ describe('hosted owner setup', () => {
     expect(db.query).not.toHaveBeenCalled()
   })
 
-  it('enables the page only before an owner exists and never serializes the secret', async () => {
+  it('returns only availability to the page, never the identity or secret', async () => {
     expect(await ownerSetupPageState(environment, database().pool)).toEqual({
-      email: 'owner@example.com',
       ready: false,
     })
     expect(await ownerSetupPageState(environment, database({ complete: true }).pool)).toEqual({
-      email: 'owner@example.com',
       ready: true,
     })
     expect(
@@ -150,23 +149,71 @@ describe('hosted owner setup', () => {
     for (const log of logs) expect(log).not.toHaveBeenCalled()
   })
 
-  it.each([{ attempts: 6 }, { locked: false }])(
-    'rate limits before expensive auth %j',
-    async (state) => {
-      const db = database(state)
-      const response = await handleOwnerSetup(request(), environment, db.pool)
-      expect(response.status).toBe(429)
-      expect(response.headers.get('retry-after')).toBe('900')
+  it('limits invalid tokens without locking the user tables or blocking the valid token', async () => {
+    const db = database({ attempts: 6 })
+    const limited = await handleOwnerSetup(request({ token: 'wrong' }), environment, db.pool)
+    expect(limited.status).toBe(429)
+    expect(limited.headers.get('retry-after')).toBe('900')
+    expect(signUpEmail).not.toHaveBeenCalled()
+    expect(db.query.mock.calls.some(([sql]) => sql.startsWith('LOCK TABLE'))).toBe(false)
+    db.query.mockClear()
+    expect((await handleOwnerSetup(request(), environment, db.pool)).status).toBe(200)
+    expect(db.query.mock.calls.some(([sql]) => sql.includes('invalid-attempts'))).toBe(false)
+  })
+
+  it('fails safely and releases the transaction when another writer holds a table lock', async () => {
+    const db = database({ locked: false })
+    const response = await handleOwnerSetup(request(), environment, db.pool)
+    expect(response.status).toBe(503)
+    expect(response.headers.has('set-cookie')).toBe(false)
+    expect(signUpEmail).not.toHaveBeenCalled()
+    expect(db.query).toHaveBeenLastCalledWith('ROLLBACK')
+    expect(db.release).toHaveBeenCalledOnce()
+  })
+
+  it.each(['page', 'verify', 'create', 'invalid'])(
+    'latches observed auth state through %s',
+    async (mode) => {
+      const db = database({ occupied: true })
+      if (mode === 'page') {
+        expect(await ownerSetupPageState(environment, db.pool)).toEqual({ ready: true })
+      } else {
+        const body =
+          mode === 'invalid'
+            ? { token: 'wrong' }
+            : {
+                token: environment.MAGAZINE_OWNER_SETUP_TOKEN,
+                ...(mode === 'verify' ? { action: 'verify' } : { password }),
+              }
+        expect((await handleOwnerSetup(request(body), environment, db.pool)).status).toBe(404)
+      }
+      expect(db.query).toHaveBeenCalledWith(expect.stringContaining('jsonb_build_object'), [
+        'existing-auth-state',
+      ])
+      expect(db.query).toHaveBeenLastCalledWith('COMMIT')
       expect(signUpEmail).not.toHaveBeenCalled()
     },
   )
 
-  it.each([{}, { token: '' }, { password }, ['invalid']])(
-    'rejects a missing token %j',
-    async (body) => {
-      expect((await handleOwnerSetup(request(body), environment, database().pool)).status).toBe(403)
-    },
-  )
+  it('reveals the configured email only after verification without creating an account or cookies', async () => {
+    for (const token of ['wrong', environment.MAGAZINE_OWNER_SETUP_TOKEN]) {
+      const response = await handleOwnerSetup(
+        request({ action: 'verify', token }),
+        environment,
+        database().pool,
+      )
+      expect(response.status).toBe(token === 'wrong' ? 403 : 200)
+      const text = await response.text()
+      expect(text.includes('owner@example.com')).toBe(token !== 'wrong')
+      expect(text).not.toContain(environment.MAGAZINE_OWNER_SETUP_TOKEN)
+      expect(response.headers.has('set-cookie')).toBe(false)
+    }
+    expect(signUpEmail).not.toHaveBeenCalled()
+  })
+
+  it.each([{}, { token: '' }, { password }])('rejects a missing token %j', async (body) => {
+    expect((await handleOwnerSetup(request(body), environment, database().pool)).status).toBe(403)
+  })
 
   it.each(['x'.repeat(13), 'x'.repeat(129)])(
     'enforces the existing password policy',
@@ -207,6 +254,8 @@ describe('hosted owner setup', () => {
     expect(
       (await handleOwnerSetup(request({ token: 'x'.repeat(5000) }), environment, db.pool)).status,
     ).toBe(400)
+    expect((await handleOwnerSetup(request(['invalid']), environment, db.pool)).status).toBe(400)
+    expect(db.connect).not.toHaveBeenCalled()
     expect(signUpEmail).not.toHaveBeenCalled()
   })
 
@@ -236,12 +285,18 @@ describe('hosted owner setup', () => {
     expect(await response.text()).not.toMatch(/session-secret|setup-secret|test password/)
     expect(db.query).toHaveBeenLastCalledWith('COMMIT')
     expect(db.release).toHaveBeenCalledOnce()
+    const sql = db.query.mock.calls.map(([statement]) => statement)
+    const tableLock = sql.findIndex((statement) => statement.startsWith('LOCK TABLE'))
+    expect(tableLock).toBeGreaterThan(0)
+    expect(tableLock).toBeLessThan(sql.findIndex((statement) => statement.includes('AS occupied')))
   })
 
   it('disables POST once any owner or permanent completion marker exists, regardless of token', async () => {
-    expect(
-      (await handleOwnerSetup(request(), environment, database({ complete: true }).pool)).status,
-    ).toBe(404)
+    const db = database({ complete: true })
+    expect((await handleOwnerSetup(request(), environment, db.pool)).status).toBe(404)
+    expect(db.query.mock.calls.some(([sql]) => /LOCK TABLE|AS occupied|INSERT/.test(sql))).toBe(
+      false,
+    )
     expect(signUpEmail).not.toHaveBeenCalled()
   })
 

@@ -24,7 +24,7 @@ export default async function OwnerSetupPage() {
           </Link>
         </section>
       ) : (
-        <OwnerSetupForm email={state.email} />
+        <OwnerSetupForm />
       )}
     </main>
   )
