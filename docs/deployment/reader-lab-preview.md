@@ -466,9 +466,14 @@ edits are exported:**
    available during export.
 2. Verify required database/media backups outside these disposable resources.
    Record resource names without credentials.
-3. In Vercel, disconnect the lab Git integration or remove the dedicated lab
-   project/deployments/aliases so a future push cannot revive it. Verify lab URLs
-   stop serving the app.
+3. In Vercel, delete the dedicated lab project, or delete every lab deployment
+   and alias. Disconnecting the Git integration alone is **not** enough: it only
+   stops new Git-triggered deployments, and existing deployments keep serving.
+   If you keep the project, also disconnect its Git integration so a future push
+   cannot revive it. Then open every lab URL from a browser without a Vercel
+   session and confirm none of them serves the app. **Do not continue until this
+   check passes**, because the next step removes the storage a live deployment
+   would still use.
 4. Revoke the bucket-scoped R2 token; empty/delete only the Preview bucket after
    verifying exports. In Neon, delete only the isolated lab project or deliberately
    selected disposable branch/database.
