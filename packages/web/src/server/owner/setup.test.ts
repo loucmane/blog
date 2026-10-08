@@ -48,13 +48,19 @@ function request(
   })
 }
 
-function database({ complete = false, occupied = false, attempts = 1, locked = true } = {}) {
-  const query = vi.fn(async (sql: string) => {
+function database({
+  complete = false,
+  occupied = false,
+  attempts = 0,
+  locked = true,
+  completionUpdated = true,
+} = {}) {
+  const query = vi.fn(async (sql: string, _values?: unknown[]) => {
     if (sql.startsWith('LOCK TABLE') && !locked) throw new Error('lock unavailable')
     if (sql.includes('AS complete')) return { rows: [{ complete }] }
     if (sql.includes('AS occupied')) return { rows: [{ occupied }] }
-    if (sql.includes('RETURNING')) return { rows: [{ attempts }] }
-    return { rows: [] }
+    if (sql.includes('AS limited')) return { rows: [{ limited: attempts >= 5 }] }
+    return { rows: [], rowCount: completionUpdated ? 1 : 0 }
   })
   const release = vi.fn()
   const connect = vi.fn(async () => ({ query, release }))
@@ -149,16 +155,87 @@ describe('hosted owner setup', () => {
     for (const log of logs) expect(log).not.toHaveBeenCalled()
   })
 
-  it('limits invalid tokens without locking the user tables or blocking the valid token', async () => {
-    const db = database({ attempts: 6 })
-    const limited = await handleOwnerSetup(request({ token: 'wrong' }), environment, db.pool)
-    expect(limited.status).toBe(429)
-    expect(limited.headers.get('retry-after')).toBe('900')
+  it('returns identical exhausted responses with one bounded read, no comparison, writes or locks', async () => {
+    const bodies = []
+    for (const action of ['verify', 'create']) {
+      for (const token of ['wrong', environment.MAGAZINE_OWNER_SETUP_TOKEN]) {
+        const db = database({ attempts: 5 })
+        const response = await handleOwnerSetup(
+          request({ action, token, password }),
+          environment,
+          db.pool,
+        )
+        expect(response.status).toBe(429)
+        expect(response.headers.get('retry-after')).toBe('900')
+        expect(response.headers.has('set-cookie')).toBe(false)
+        bodies.push(await response.text())
+        const statements = db.query.mock.calls.map(([sql]) => sql)
+        expect(statements.filter((sql) => /SELECT/.test(sql))).toHaveLength(1)
+        expect(statements.some((sql) => /INSERT|UPDATE|DELETE|LOCK TABLE/.test(sql))).toBe(false)
+        expect(db.query).toHaveBeenCalledWith("SET LOCAL statement_timeout = '3s'")
+        expect(db.query).toHaveBeenLastCalledWith('COMMIT')
+        expect(db.release).toHaveBeenCalledOnce()
+      }
+    }
+    expect(new Set(bodies).size).toBe(1)
+    expect(timingSafeEqual).not.toHaveBeenCalled()
+    expect(signUpEmail).not.toHaveBeenCalled()
+  })
+
+  it('rechecks admission after waiting for the singleton without comparing a now-limited candidate', async () => {
+    const db = database()
+    const base = db.query.getMockImplementation()!
+    let reads = 0
+    db.query.mockImplementation(async (sql, values) => {
+      if (sql.includes('AS limited')) return { rows: [{ limited: ++reads > 1 }] }
+      return base(sql, values)
+    })
+    const response = await handleOwnerSetup(request(), environment, db.pool)
+    expect(response.status).toBe(429)
+    expect(reads).toBe(2)
+    expect(timingSafeEqual).not.toHaveBeenCalled()
     expect(signUpEmail).not.toHaveBeenCalled()
     expect(db.query.mock.calls.some(([sql]) => sql.startsWith('LOCK TABLE'))).toBe(false)
-    db.query.mockClear()
-    expect((await handleOwnerSetup(request(), environment, db.pool)).status).toBe(200)
-    expect(db.query.mock.calls.some(([sql]) => sql.includes('invalid-attempts'))).toBe(false)
+    expect(db.query.mock.calls.some(([sql]) => sql.includes('LEAST(5'))).toBe(false)
+    expect(db.query).toHaveBeenLastCalledWith('COMMIT')
+  })
+
+  it('keys admission by configured token generation, independent of the candidate and forwarded IP', async () => {
+    const keys = []
+    for (const configured of [
+      environment.MAGAZINE_OWNER_SETUP_TOKEN,
+      environment.MAGAZINE_OWNER_SETUP_TOKEN,
+      'rotated-setup-token-with-at-least-32-bytes',
+    ]) {
+      const db = database({ attempts: 5 })
+      const response = await handleOwnerSetup(
+        request({ token: `wrong-${keys.length}` }, { 'x-forwarded-for': `192.0.2.${keys.length}` }),
+        { ...environment, MAGAZINE_OWNER_SETUP_TOKEN: configured },
+        db.pool,
+      )
+      expect(response.status).toBe(429)
+      const key = db.query.mock.calls.find(([sql]) => sql.includes('AS limited'))?.[1]?.[0]
+      expect(key).toMatch(/^attempts:[a-f0-9]{64}$/)
+      expect(key).not.toContain(configured)
+      keys.push(key)
+    }
+    expect(keys[0]).toBe(keys[1])
+    expect(keys[2]).not.toBe(keys[0])
+  })
+
+  it('rolls back a singleton-lock timeout without comparing the token or accessing auth state', async () => {
+    const db = database()
+    const base = db.query.getMockImplementation()!
+    db.query.mockImplementation(async (sql, values) => {
+      if (sql.includes('FOR UPDATE')) throw new Error('lock timeout')
+      return base(sql, values)
+    })
+    expect((await handleOwnerSetup(request(), environment, db.pool)).status).toBe(503)
+    expect(timingSafeEqual).not.toHaveBeenCalled()
+    expect(signUpEmail).not.toHaveBeenCalled()
+    expect(db.query.mock.calls.some(([sql]) => sql.includes('AS occupied'))).toBe(false)
+    expect(db.query).toHaveBeenLastCalledWith('ROLLBACK')
+    expect(db.release).toHaveBeenCalledOnce()
   })
 
   it('fails safely and releases the transaction when another writer holds a table lock', async () => {
@@ -192,6 +269,10 @@ describe('hosted owner setup', () => {
       ])
       expect(db.query).toHaveBeenLastCalledWith('COMMIT')
       expect(signUpEmail).not.toHaveBeenCalled()
+      const statements = db.query.mock.calls.map(([sql]) => sql)
+      const markerLock = statements.findIndex((sql) => sql.includes('FOR UPDATE'))
+      expect(markerLock).toBeGreaterThan(statements.findIndex((sql) => sql.includes('DO NOTHING')))
+      expect(markerLock).toBeLessThan(statements.findIndex((sql) => sql.includes('AS occupied')))
     },
   )
 
@@ -287,17 +368,34 @@ describe('hosted owner setup', () => {
     expect(db.release).toHaveBeenCalledOnce()
     const sql = db.query.mock.calls.map(([statement]) => statement)
     const tableLock = sql.findIndex((statement) => statement.startsWith('LOCK TABLE'))
-    expect(tableLock).toBeGreaterThan(0)
+    expect(tableLock).toBeGreaterThan(
+      sql.findIndex((statement) => statement.includes('FOR UPDATE')),
+    )
     expect(tableLock).toBeLessThan(sql.findIndex((statement) => statement.includes('AS occupied')))
   })
 
   it('disables POST once any owner or permanent completion marker exists, regardless of token', async () => {
     const db = database({ complete: true })
     expect((await handleOwnerSetup(request(), environment, db.pool)).status).toBe(404)
-    expect(db.query.mock.calls.some(([sql]) => /LOCK TABLE|AS occupied|INSERT/.test(sql))).toBe(
-      false,
-    )
+    expect(
+      db.query.mock.calls.some(([sql]) => /LOCK TABLE|AS occupied|jsonb_build_object/.test(sql)),
+    ).toBe(false)
+    expect(timingSafeEqual).not.toHaveBeenCalled()
     expect(signUpEmail).not.toHaveBeenCalled()
+  })
+
+  it('rolls back all auth writes and withholds cookies when the completion guard fails', async () => {
+    const db = database({ completionUpdated: false })
+    const response = await handleOwnerSetup(request(), environment, db.pool)
+    expect(signUpEmail).toHaveBeenCalledOnce()
+    expect(response.status).toBe(503)
+    expect(response.headers.has('set-cookie')).toBe(false)
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining("AND result->>'completed' = 'false'"),
+      ['created'],
+    )
+    expect(db.query).toHaveBeenLastCalledWith('ROLLBACK')
+    expect(db.release).toHaveBeenCalledOnce()
   })
 
   it('rolls back auth failures without leaking dependency errors or cookies', async () => {
