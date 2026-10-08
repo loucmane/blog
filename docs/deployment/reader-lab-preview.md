@@ -71,14 +71,19 @@ The server allows at most 30 seconds for each original PUT and each verification
 new seed work and shortens storage waits to the remaining time. On timeout, the
 current media transaction rolls back before the seed lock is released. Completed
 items remain; an uploaded but unverified original may remain for an idempotent retry.
+Each seed run opens a standalone PostgreSQL client with the same connection
+configuration as the owner runtime; it never borrows from the owner pool. Startup
+has a ten-second driver timeout, shortened to the remaining run time, which
+destroys a stalled connection without occupying an owner pool slot.
 The seed's dedicated PostgreSQL session also caps each statement, lock wait and
 idle transaction at 30 seconds, shortened to the remaining run time when a
 transaction starts. Database response waits cannot exceed the run deadline, and
 the deadline is checked again immediately before committing, after publication
 bookkeeping. Rollback and advisory unlock each have a five-second cleanup bound;
 if cleanup stalls or fails, the connection is destroyed so PostgreSQL rolls back
-any open transaction and releases its session lock. The seed session is always
-discarded, so these settings never affect normal pooled owner connections. These
+any open transaction and releases its session lock. The standalone client is always
+ended; shutdown also has a five-second bound and destroys the transport if it stalls
+or fails. These settings never affect normal pooled owner connections. These
 server limits are independent of the caller's connection.
 
 A 404 means seeding is unavailable or the token is rejected; check the server's

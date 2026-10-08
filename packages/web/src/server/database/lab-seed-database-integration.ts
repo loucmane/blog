@@ -1,8 +1,8 @@
 // Registered in the coordinator-owned Docker PostgreSQL suite.
 import { randomUUID } from 'node:crypto'
 
-import { Pool, type PoolClient } from 'pg'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Client, Pool } from 'pg'
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 
 import { seedLabContent } from '../lab/seed'
 import { applyContentMigrations, readContentMigrations } from './migrations'
@@ -16,7 +16,10 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
     let admin: Pool
     let pool: Pool
     let independent: Pool
-    let client: PoolClient
+    let client: Client
+    let queries: MockInstance<Client['query']>
+    let end: MockInstance<Client['end']>
+    let probe: (client: Client, query: Client['query']) => void
     let repository: PostgresContentRepository
 
     beforeEach(async () => {
@@ -28,10 +31,17 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
       pool = new Pool({ connectionString: target.href, max: 1 })
       independent = new Pool({ connectionString: target.href, max: 2 })
       await applyContentMigrations(pool, await readContentMigrations())
-      repository = new PostgresContentRepository(pool)
-      // max: 1 makes the next seed checkout use this real session, permitting transport probes.
-      client = await pool.connect()
-      client.release()
+      vi.spyOn(pool, 'connect')
+      probe = () => {}
+      repository = new PostgresContentRepository(pool, (configuration) => {
+        client = new Client(configuration)
+        // Capture the real method before spying: a forwarding spy has no mock implementation.
+        const query = client.query.bind(client)
+        queries = vi.spyOn(client, 'query')
+        end = vi.spyOn(client, 'end')
+        probe(client, query)
+        return client
+      })
     })
 
     afterEach(async () => {
@@ -41,6 +51,12 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
       await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
       await admin.end()
     })
+
+    async function assertSeedConnectionClosed() {
+      expect(pool.connect).not.toHaveBeenCalled()
+      expect(end).toHaveBeenCalledExactlyOnceWith()
+      await expect.poll(() => client.connection.stream.destroyed).toBe(true)
+    }
 
     async function assertLockAvailable() {
       const observer = await independent.connect()
@@ -74,7 +90,6 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
 
     it('cancels a blocked seed through lock_timeout, rolls back, releases its lock and retries', async () => {
       const blocker = await independent.connect()
-      const queries = vi.spyOn(client, 'query')
       try {
         await blocker.query('BEGIN')
         await blocker.query('LOCK TABLE taxonomies IN ACCESS EXCLUSIVE MODE')
@@ -89,7 +104,7 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
           ),
         ).rejects.toMatchObject({ code: '55P03' })
         expect(queries.mock.calls.some(([text]) => text === 'ROLLBACK')).toBe(true)
-        expect(pool.totalCount).toBe(0)
+        await assertSeedConnectionClosed()
         await assertLockAvailable()
       } finally {
         await blocker.query('ROLLBACK')
@@ -107,7 +122,6 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
         CREATE TRIGGER delay_seed_insert BEFORE INSERT ON taxonomies
         FOR EACH ROW EXECUTE FUNCTION delay_seed_insert();
       `)
-      const queries = vi.spyOn(client, 'query')
       await expect(
         seedLabContent(
           { repository, objects: null },
@@ -118,7 +132,7 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
         ),
       ).rejects.toMatchObject({ code: '57014' })
       expect(queries.mock.calls.some(([text]) => text === 'ROLLBACK')).toBe(true)
-      expect(pool.totalCount).toBe(0)
+      await assertSeedConnectionClosed()
       await assertLockAvailable()
       await assertEmpty()
       await independent.query('DROP TRIGGER delay_seed_insert ON taxonomies')
@@ -127,7 +141,6 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
 
     it('expires the run while publication bookkeeping is blocked and rolls back on disconnect', async () => {
       const blocker = await independent.connect()
-      const queries = vi.spyOn(client, 'query')
       try {
         await blocker.query('BEGIN')
         await blocker.query('SELECT version FROM content_publication_state WHERE id = 1 FOR UPDATE')
@@ -148,7 +161,7 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
           ),
         ).toBe(true)
         expect(queries.mock.calls.some(([text]) => text === 'COMMIT')).toBe(false)
-        expect(pool.totalCount).toBe(0)
+        await assertSeedConnectionClosed()
         await assertLockAvailable()
       } finally {
         await blocker.query('ROLLBACK')
@@ -159,20 +172,18 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
     })
 
     it('rolls back real publication bookkeeping if the deadline has passed before COMMIT', async () => {
-      const query = client.query.bind(client)
       const now = performance.now.bind(performance)
       let elapsed = 0
-      vi.spyOn(performance, 'now').mockImplementation(() => now() + elapsed)
-      const queries = vi.spyOn(client, 'query').mockImplementation((async (
-        text: string,
-        values?: unknown[],
-      ) => {
-        const result = await query(text, values)
-        // Advance the monotonic clock on delivery of the real UPDATE result. This exercises
-        // the pre-COMMIT check deterministically, even if the deadline timer has not fired.
-        if (text.startsWith('UPDATE content_publication_state')) elapsed = 10_000
-        return result
-      }) as typeof client.query)
+      const clock = vi.spyOn(performance, 'now').mockImplementation(() => now() + elapsed)
+      probe = (client, query) => {
+        queries.mockImplementation((async (text: string, values?: unknown[]) => {
+          const result = await query(text, values)
+          // Advance the monotonic clock on delivery of the real UPDATE result. This exercises
+          // the pre-COMMIT check deterministically, even if the deadline timer has not fired.
+          if (text.startsWith('UPDATE content_publication_state')) elapsed = 10_000
+          return result
+        }) as typeof client.query)
+      }
       await expect(
         seedLabContent(
           { repository, objects: null },
@@ -189,44 +200,53 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
       ).toBe(true)
       expect(queries.mock.calls.some(([text]) => text === 'COMMIT')).toBe(false)
       expect(queries.mock.calls.some(([text]) => text === 'ROLLBACK')).toBe(true)
-      expect(pool.totalCount).toBe(0)
-      vi.restoreAllMocks()
+      await assertSeedConnectionClosed()
+      clock.mockRestore()
+      probe = () => {}
       await assertEmpty()
       await assertLockAvailable()
       expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(8)
+      await assertSeedConnectionClosed()
     })
 
     it('destroys a connection whose unlock never completes and frees its real advisory lock', async () => {
-      const query = client.query.bind(client)
-      const removed = vi.fn()
-      pool.on('remove', removed)
-      vi.spyOn(client, 'query').mockImplementation((async (text: string, values?: unknown[]) => {
-        if (text.includes('pg_advisory_unlock')) {
-          // Deliberately withhold the unlock query: only destroying the session can free it.
-          return new Promise(() => {})
-        }
-        const result = await query(text, values)
-        if (text.includes('pg_try_advisory_lock')) {
-          // Prove ownership before starting the short cleanup timer, so a slow CI
-          // connection cannot race the assertion against that timer.
-          const before = await independent.query<{ acquired: boolean }>(
-            'SELECT pg_try_advisory_lock(hashtextextended($1, 0)) AS acquired',
-            [seedLockKey],
-          )
-          expect(before.rows[0]?.acquired).toBe(false)
-        }
-        return result
-      }) as typeof client.query)
+      const ended = vi.fn()
+      probe = (client, query) => {
+        client.once('end', ended)
+        queries.mockImplementation((async (text: string, values?: unknown[]) => {
+          if (text.includes('pg_advisory_unlock')) {
+            // Deliberately withhold the unlock query: only destroying the session can free it.
+            return new Promise(() => {})
+          }
+          const result = await query(text, values)
+          if (text.includes('pg_try_advisory_lock')) {
+            // Prove ownership before starting the short cleanup timer, so a slow CI
+            // connection cannot race the assertion against that timer.
+            const before = await independent.query<{ acquired: boolean }>(
+              'SELECT pg_try_advisory_lock(hashtextextended($1, 0)) AS acquired',
+              [seedLockKey],
+            )
+            expect(before.rows[0]?.acquired).toBe(false)
+          }
+          return result
+        }) as typeof client.query)
+      }
       await expect(
         seedLabContent({ repository, objects: null }, { cleanupTimeoutMs: 500 }),
       ).rejects.toThrow('database operation timed out')
-      expect(pool.totalCount).toBe(0)
+      expect(queries.mock.calls.some(([text]) => text === 'COMMIT')).toBe(true)
+      expect(
+        queries.mock.calls.some(
+          ([text]) => typeof text === 'string' && text.includes('pg_advisory_unlock'),
+        ),
+      ).toBe(true)
+      await assertSeedConnectionClosed()
       await assertLockAvailable()
-      // Socket close notification can arrive after the independent query. Compare only
-      // identity booleans so a failure never serializes a client's connection credentials.
-      await expect.poll(() => removed.mock.calls.some(([entry]) => entry === client)).toBe(true)
+      await expect.poll(() => ended.mock.calls.length).toBe(1)
       // Work committed before cleanup remains idempotent on a fresh session.
+      probe = () => {}
       expect((await seedLabContent({ repository, objects: null })).stories.created).toEqual([])
+      await assertSeedConnectionClosed()
       const owner = await pool.connect()
       try {
         for (const name of [

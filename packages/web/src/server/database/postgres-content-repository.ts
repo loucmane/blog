@@ -1,4 +1,4 @@
-import type { Pool, QueryResultRow } from 'pg'
+import type { Client, ClientConfig, Pool, QueryResultRow } from 'pg'
 
 import type {
   Article,
@@ -938,7 +938,10 @@ const missingPublicationVersion =
 export class PostgresContentRepository implements ContentRepository {
   private lockedClient: ExclusivePostgresSession | undefined
 
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly pool: Pool,
+    private readonly createExclusiveClient?: (configuration: ClientConfig) => Client,
+  ) {}
 
   async tryExclusive<T>(
     key: string,
@@ -947,7 +950,11 @@ export class PostgresContentRepository implements ContentRepository {
   ): Promise<{ acquired: false } | { acquired: true; value: T }> {
     // Never re-enter a session lock: PostgreSQL would grant it twice on the same session.
     if (this.lockedClient) throw new Error('Exclusive repository work cannot be nested.')
-    const client = await ExclusivePostgresSession.checkout(this.pool, limits)
+    const client = await ExclusivePostgresSession.connect(
+      this.pool.options,
+      limits,
+      this.createExclusiveClient,
+    )
     let acquired = false
     try {
       await client.configure()
@@ -968,9 +975,9 @@ export class PostgresContentRepository implements ContentRepository {
           await client.cleanup('SELECT pg_advisory_unlock(hashtextextended($1, 0))', [key])
         }
       } finally {
-        // Discard this dedicated session even if unlocking fails. All seed SQL uses
+        // End this standalone client even if unlocking fails. All seed SQL uses
         // the same session, so connection loss cannot continue on a new connection.
-        client.destroy()
+        await client.close()
       }
     }
   }

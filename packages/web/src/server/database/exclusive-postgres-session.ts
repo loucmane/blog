@@ -1,4 +1,4 @@
-import type { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg'
+import { Client, type ClientConfig, type QueryResult, type QueryResultRow } from 'pg'
 
 import type { ExclusiveWorkLimits } from '../content/ports'
 
@@ -30,13 +30,13 @@ async function bounded<T>(
   }
 }
 
-/** A disposable connection: a timed-out query must never continue on a pooled session. */
+/** One standalone client per run; seed startup and SQL never occupy the owner pool. */
 export class ExclusivePostgresSession implements PostgresQueries {
   private destroyed = false
   private connectionError: Error | undefined
 
   private constructor(
-    private readonly client: PoolClient,
+    private readonly client: Client,
     private readonly limits?: ExclusiveWorkLimits,
   ) {
     // Idle-in-transaction expiry can arrive while awaiting storage, with no SQL in flight.
@@ -45,23 +45,29 @@ export class ExclusivePostgresSession implements PostgresQueries {
     })
   }
 
-  static async checkout(
-    pool: Pool,
+  static async connect(
+    configuration: ClientConfig,
     limits?: ExclusiveWorkLimits,
+    createClient: (configuration: ClientConfig) => Client = (configuration) =>
+      new Client(configuration),
   ): Promise<ExclusivePostgresSession> {
-    let expired = false
-    const connect = async () => {
-      const client = await pool.connect()
-      // Pool checkout itself is not cancellable. Discard any connection arriving after expiry.
-      if (expired) client.release(true)
-      return client
+    const client = createClient({
+      ...configuration,
+      // pg-pool hides explicit passwords as non-enumerable properties.
+      password: configuration.password,
+      // Let the driver destroy stalled startup, rather than abandoning a checkout promise.
+      connectionTimeoutMillis: Math.min(10_000, limits?.remainingMs() ?? 10_000),
+    })
+    const session = new ExclusivePostgresSession(client, limits)
+    try {
+      await client.connect()
+      session.check()
+      return session
+    } catch (error) {
+      session.destroy()
+      await session.close()
+      throw error
     }
-    const client = limits
-      ? await bounded(connect, Math.min(limits.remainingMs(), limits.statementTimeoutMs), () => {
-          expired = true
-        })
-      : await connect()
-    return new ExclusivePostgresSession(client, limits)
   }
 
   check(): void {
@@ -123,8 +129,22 @@ export class ExclusivePostgresSession implements PostgresQueries {
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
-    // pg-pool removes this client; pg force-closes the socket if a query is still active.
-    // Never await another SQL command, or return a possibly locked connection to the pool.
-    this.client.release(true)
+    // Closing the transport also rolls back and frees session locks if SQL is stalled.
+    this.client.connection.stream.destroy()
+  }
+
+  async close(): Promise<void> {
+    try {
+      await bounded(
+        () => this.client.end(),
+        this.limits?.cleanupTimeoutMs ?? 5_000,
+        () => this.destroy(),
+      )
+    } catch (error) {
+      this.destroy()
+      throw error
+    } finally {
+      this.destroyed = true
+    }
   }
 }

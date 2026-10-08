@@ -1,11 +1,18 @@
 import { EventEmitter } from 'node:events'
+import { Duplex } from 'node:stream'
 
-import type { Pool, PoolClient, QueryResult } from 'pg'
+import { Client, Pool, type ClientConfig, type QueryResult } from 'pg'
+import type * as Pg from 'pg'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { labSeedBarrier } from '../../../tests/support/lab-seed-barrier'
 import { LabSeedLimits } from '../lab/limits'
 import { PostgresContentRepository } from './postgres-content-repository'
+
+vi.mock('pg', async (importOriginal) => {
+  const actual = await importOriginal<typeof Pg>()
+  return { ...actual, Client: vi.fn() }
+})
 
 function fixture() {
   const query = vi.fn<(text: string, values?: unknown[]) => Promise<QueryResult>>(async (text) => ({
@@ -15,18 +22,27 @@ function fixture() {
     fields: [],
     rows: text.includes('pg_try_advisory_lock') ? [{ acquired: true }] : [],
   }))
-  const client = Object.assign(new EventEmitter(), { query, release: vi.fn() })
-  const connect = vi.fn(async () => client as unknown as PoolClient)
-  const pool = { connect } as unknown as Pool
-  return { client, connect, query, repository: new PostgresContentRepository(pool) }
+  const client = Object.assign(new EventEmitter(), {
+    query,
+    connect: vi.fn(async () => {}),
+    end: vi.fn(async () => {}),
+    connection: { stream: { destroy: vi.fn() } },
+  })
+  vi.mocked(Client).mockImplementation(function () {
+    return client as unknown as Client
+  })
+  const owner = { query: vi.fn(query.getMockImplementation()!), release: vi.fn() }
+  const connect = vi.fn(async () => owner)
+  const pool = { connect, options: {} } as unknown as Pool
+  return { client, connect, owner, pool, query, repository: new PostgresContentRepository(pool) }
 }
 
 describe('bounded exclusive PostgreSQL sessions', () => {
   afterEach(() => vi.useRealTimers())
 
-  it('sets server bounds only on the dedicated session and discards it after unlocking', async () => {
+  it('sets server bounds only on the standalone client and ends it after unlocking', async () => {
     vi.useFakeTimers()
-    const { repository, query, client } = fixture()
+    const { repository, query, client, connect, owner } = fixture()
     const limits = new LabSeedLimits({ runTimeoutMs: 1_000 })
     await repository.tryExclusive(
       'fixture-lock',
@@ -42,16 +58,18 @@ describe('bounded exclusive PostgreSQL sessions', () => {
       ['900ms', '900ms', '900ms'],
     ])
     expect(query.mock.calls.at(-1)?.[0]).toContain('pg_advisory_unlock')
-    expect(client.release).toHaveBeenCalledExactlyOnceWith(true)
+    expect(client.end).toHaveBeenCalledExactlyOnceWith()
+    expect(connect).not.toHaveBeenCalled()
     query.mockClear()
-    client.release.mockClear()
     await repository.transaction(async () => 'owner work')
-    expect(query.mock.calls.map(([text]) => text)).toEqual([
+    expect(query).not.toHaveBeenCalled()
+    expect(owner.query.mock.calls.map(([text]) => text)).toEqual([
       'BEGIN',
       'SET CONSTRAINTS ALL DEFERRED',
       'COMMIT',
     ])
-    expect(client.release).toHaveBeenCalledExactlyOnceWith()
+    expect(connect).toHaveBeenCalledOnce()
+    expect(owner.release).toHaveBeenCalledExactlyOnceWith()
     expect(vi.getTimerCount()).toBe(0)
   })
 
@@ -75,7 +93,7 @@ describe('bounded exclusive PostgreSQL sessions', () => {
       ),
     ).rejects.toThrow()
     expect(query.mock.calls.some(([text]) => text === 'COMMIT')).toBe(false)
-    expect(client.release).toHaveBeenCalledExactlyOnceWith(true)
+    expect(client.end).toHaveBeenCalledOnce()
   })
 
   it('uses a fresh deadline check even if timers have not fired after bookkeeping', async () => {
@@ -131,7 +149,8 @@ describe('bounded exclusive PostgreSQL sessions', () => {
       await vi.advanceTimersByTimeAsync(50)
       await failed
       expect(query).toHaveBeenCalledTimes(calls)
-      expect(client.release).toHaveBeenCalledExactlyOnceWith(true)
+      expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
+      expect(client.end).toHaveBeenCalledOnce()
       expect(vi.getTimerCount()).toBe(0)
     },
   )
@@ -156,7 +175,8 @@ describe('bounded exclusive PostgreSQL sessions', () => {
           new LabSeedLimits({}).database,
         ),
       ).rejects.toThrow('Fixture cleanup failure')
-      expect(client.release).toHaveBeenCalledExactlyOnceWith(true)
+      expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
+      expect(client.end).toHaveBeenCalledOnce()
     },
   )
 
@@ -181,31 +201,161 @@ describe('bounded exclusive PostgreSQL sessions', () => {
     await entered.promise
     await vi.advanceTimersByTimeAsync(50)
     await failed
-    expect(client.release).toHaveBeenCalledExactlyOnceWith(true)
+    expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
+    expect(client.end).toHaveBeenCalledOnce()
     expect(query.mock.calls.some(([text]) => text === 'COMMIT')).toBe(false)
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('bounds checkout and destroys a connection that arrives after expiry', async () => {
+  it.each([false, true])(
+    'the real driver destroys stalled startup (TCP connected: %s) without using the owner pool',
+    async (tcpConnected) => {
+      vi.useFakeTimers()
+      const { repository, connect, owner, query } = fixture()
+      const { Client: RealClient } = await vi.importActual<typeof Pg>('pg')
+      // An inert socket transport exercises pg's actual startup timer without network access.
+      const startup = labSeedBarrier()
+      const socket = Object.assign(
+        new Duplex({
+          read() {},
+          write(_chunk, _encoding, callback) {
+            startup.resolve()
+            callback()
+          },
+        }),
+        {
+          connect() {
+            if (tcpConnected) queueMicrotask(() => socket.emit('connect'))
+          },
+          setNoDelay() {},
+        },
+      )
+      let seedClient!: Client
+      vi.mocked(Client).mockImplementationOnce(function (configuration) {
+        seedClient = new RealClient({
+          ...(configuration as ClientConfig),
+          host: 'fixture.invalid',
+          user: 'USER',
+          database: 'DB',
+          password: 'PASSWORD',
+          ssl: false,
+          stream: () => socket,
+        })
+        return seedClient
+      })
+      const work = vi.fn(async () => 'done')
+      const run = repository.tryExclusive(
+        'fixture-lock',
+        work,
+        new LabSeedLimits({ runTimeoutMs: 50 }).database,
+      )
+      const failed = expect(run).rejects.toThrow('timeout expired')
+      if (tcpConnected) await startup.promise
+      const end = vi.spyOn(seedClient, 'end')
+      expect(connect).not.toHaveBeenCalled()
+      // No clock advancement or seed completion is needed for ordinary owner work.
+      await repository.transaction(async () => 'owner work')
+      expect(owner.release).toHaveBeenCalledExactlyOnceWith()
+      await vi.advanceTimersByTimeAsync(50)
+      await failed
+      expect(socket.destroyed).toBe(true)
+      expect(end).toHaveBeenCalledOnce()
+      expect(work).not.toHaveBeenCalled()
+      expect(query).not.toHaveBeenCalled()
+      expect(connect).toHaveBeenCalledOnce()
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
+
+  it('copies connection options including a hidden password, without changing owner pool settings', async () => {
+    const { client } = fixture()
+    const password = () => 'PASSWORD'
+    const ssl = { rejectUnauthorized: true }
+    const pool = new Pool({
+      host: 'fixture.invalid',
+      database: 'DB',
+      user: 'USER',
+      password,
+      ssl,
+      options: '-c search_path=fixture',
+      max: 8,
+    })
+    try {
+      await new PostgresContentRepository(pool).tryExclusive('fixture-lock', async () => 'done')
+      expect(Client).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          host: 'fixture.invalid',
+          database: 'DB',
+          user: 'USER',
+          password,
+          ssl,
+          options: '-c search_path=fixture',
+          connectionTimeoutMillis: 10_000,
+        }),
+      )
+      expect(pool.options.connectionTimeoutMillis).toBeUndefined()
+      expect(pool.options.max).toBe(8)
+      expect(pool.totalCount).toBe(0)
+      expect(client.end).toHaveBeenCalledOnce()
+    } finally {
+      await pool.end()
+    }
+  })
+
+  it('ends a refused concurrent run without calling its work', async () => {
+    const { repository, client, query, connect } = fixture()
+    query.mockResolvedValue({ command: 'SELECT', rowCount: 1, oid: 0, fields: [], rows: [] })
+    const work = vi.fn(async () => 'done')
+    await expect(repository.tryExclusive('fixture-lock', work)).resolves.toEqual({
+      acquired: false,
+    })
+    expect(work).not.toHaveBeenCalled()
+    expect(client.end).toHaveBeenCalledOnce()
+    expect(connect).not.toHaveBeenCalled()
+  })
+
+  it.each(['startup', 'configuration'])(
+    'ends the standalone client on %s failure',
+    async (step) => {
+      const { repository, client, query, connect } = fixture()
+      if (step === 'startup') client.connect.mockRejectedValueOnce(new Error('Fixture failure'))
+      else query.mockRejectedValueOnce(new Error('Fixture failure'))
+      await expect(
+        repository.tryExclusive('fixture-lock', async () => 'done', new LabSeedLimits({}).database),
+      ).rejects.toThrow('Fixture failure')
+      expect(client.end).toHaveBeenCalledOnce()
+      expect(connect).not.toHaveBeenCalled()
+    },
+  )
+
+  it('destroys the transport if client.end stalls past its cleanup bound', async () => {
     vi.useFakeTimers()
-    const { repository, connect, query, client } = fixture()
-    const arrived = labSeedBarrier()
-    connect.mockImplementationOnce(async () => {
-      await arrived.promise
-      return client as unknown as PoolClient
+    const { repository, client } = fixture()
+    const ending = labSeedBarrier()
+    client.end.mockImplementationOnce(() => {
+      ending.resolve()
+      return new Promise(() => {})
     })
     const run = repository.tryExclusive(
       'fixture-lock',
       async () => 'done',
-      new LabSeedLimits({ runTimeoutMs: 50 }).database,
+      new LabSeedLimits({ cleanupTimeoutMs: 50 }).database,
     )
     const failed = expect(run).rejects.toThrow('database operation timed out')
+    await ending.promise
     await vi.advanceTimersByTimeAsync(50)
     await failed
-    arrived.resolve()
-    await vi.advanceTimersByTimeAsync(0)
-    expect(client.release).toHaveBeenCalledExactlyOnceWith(true)
-    expect(query).not.toHaveBeenCalled()
+    expect(client.end).toHaveBeenCalledOnce()
+    expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
     expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('destroys the transport if client.end fails', async () => {
+    const { repository, client } = fixture()
+    client.end.mockRejectedValueOnce(new Error('Fixture shutdown failure'))
+    await expect(repository.tryExclusive('fixture-lock', async () => 'done')).rejects.toThrow(
+      'Fixture shutdown failure',
+    )
+    expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
   })
 })
