@@ -72,6 +72,21 @@ export function migrateCommandIntegrationTests({
       ).rows
     }
 
+    async function waitForMigrationLock() {
+      await expect
+        .poll(
+          async () => {
+            const result = await admin.query(
+              "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE application_name = $1 AND wait_event = 'advisory') AS waiting",
+              [schema],
+            )
+            return result.rows[0].waiting
+          },
+          { timeout: 10_000 },
+        )
+        .toBe(true)
+    }
+
     beforeEach(async () => {
       await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
       await admin.query(`CREATE SCHEMA "${schema}"`)
@@ -159,18 +174,7 @@ export function migrateCommandIntegrationTests({
         await locker.query('BEGIN')
         await locker.query("SELECT pg_advisory_xact_lock(hashtext('magazine-content-migrations'))")
         running = run(apply)
-        await expect
-          .poll(
-            async () => {
-              const result = await admin.query(
-                "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE application_name = $1 AND wait_event = 'advisory') AS waiting",
-                [schema],
-              )
-              return result.rows[0].waiting
-            },
-            { timeout: 10_000 },
-          )
-          .toBe(true)
+        await waitForMigrationLock()
         expect(await tables()).toEqual([])
       } finally {
         await locker.query('ROLLBACK')
@@ -178,6 +182,63 @@ export function migrateCommandIntegrationTests({
         if (running) expect((await running).status).toBe(0)
       }
     }, 20_000)
+
+    it.each([
+      ['unknown', 'unknown migration'],
+      ['gap', 'ordering gap'],
+      ['checksum', 'checksum differs'],
+    ])(
+      'rejects %s history committed while the command waits for the advisory lock',
+      async (kind, refusal) => {
+        const migrations = await readContentMigrations()
+        await applyContentMigrations(pool, migrations.slice(0, 1))
+        const beforeTables = await tables()
+        const locker = await pool.connect()
+        let running: ReturnType<typeof run> | undefined
+        try {
+          await locker.query('BEGIN')
+          await locker.query(
+            "SELECT pg_advisory_xact_lock(hashtext('magazine-content-migrations'))",
+          )
+          running = run(apply)
+          // Observe the actual subprocess past preflight, blocked on our lock.
+          await waitForMigrationLock()
+          if (kind === 'checksum') {
+            await locker.query('UPDATE content_schema_migrations SET checksum = $1', [
+              '0'.repeat(64),
+            ])
+          } else {
+            const entry =
+              kind === 'unknown'
+                ? { id: '9999_synthetic_other_release', checksum: '0'.repeat(64) }
+                : migrations[2]!
+            await locker.query(
+              'INSERT INTO content_schema_migrations (id, checksum) VALUES ($1, $2)',
+              [entry.id, entry.checksum],
+            )
+          }
+          const changedLedger = (
+            await locker.query(
+              'SELECT id, checksum, applied_at FROM content_schema_migrations ORDER BY id',
+            )
+          ).rows
+          // Commit the incompatible history and release the transaction lock together.
+          await locker.query('COMMIT')
+          const result = await running
+          expect(result.status).toBe(1)
+          expect(result.output).toContain(refusal)
+          expect(result.output).not.toContain('Migration apply complete')
+          expect(result.output).not.toContain('Applied:')
+          expect(await ledger()).toEqual(changedLedger)
+          expect(await tables()).toEqual(beforeTables)
+        } finally {
+          await locker.query('ROLLBACK')
+          locker.release()
+          if (running) await running
+        }
+      },
+      20_000,
+    )
 
     it('rejects checksum drift without applying pending SQL or exposing database error text', async () => {
       await applyContentMigrations(pool, (await readContentMigrations()).slice(0, 1))

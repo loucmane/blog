@@ -58,6 +58,7 @@ export async function readContentMigrations(
 export async function applyContentMigrations(
   pool: MigrationPool,
   migrations: readonly ContentMigration[],
+  validateHistory?: (client: MigrationClient) => Promise<void>,
 ): Promise<MigrationReport> {
   const client = await pool.connect()
   const applied: string[] = []
@@ -65,6 +66,8 @@ export async function applyContentMigrations(
   try {
     await client.query('BEGIN')
     await client.query("SELECT pg_advisory_xact_lock(hashtext('magazine-content-migrations'))")
+    // Commands may enforce full-ledger compatibility within this locked transaction.
+    await validateHistory?.(client)
     await client.query(`CREATE TABLE IF NOT EXISTS content_schema_migrations (
       id text PRIMARY KEY,
       checksum text NOT NULL CHECK (checksum ~ '^[0-9a-f]{64}$'),

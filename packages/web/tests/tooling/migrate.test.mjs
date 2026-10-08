@@ -8,7 +8,7 @@ import { readContentMigrations } from '../../src/server/database/migrations'
 // Deliberately synthetic placeholders, never usable hosted credentials.
 const fixtureUrl = 'postgres://USER:PASSWORD@HOST/DB'
 
-function harness({ recorded = [], ledger = false, rejectQuery, idleError = false } = {}) {
+function harness({ recorded = [], ledger = false, rejectQuery, idleError = false, onLock } = {}) {
   const queries = []
   const pool = new EventEmitter()
   const release = vi.fn()
@@ -17,6 +17,7 @@ function harness({ recorded = [], ledger = false, rejectQuery, idleError = false
     query: async (sql, values) => {
       queries.push({ sql, values })
       if (rejectQuery?.(sql)) throw new Error(fixtureUrl)
+      if (sql.includes('pg_advisory_xact_lock')) onLock?.()
       if (sql.startsWith('SELECT to_regclass'))
         return { rows: [{ ledger: ledger ? 'content_schema_migrations' : null }] }
       if (sql === 'SELECT id, checksum FROM content_schema_migrations') return { rows: recorded }
@@ -161,6 +162,38 @@ describe('deliberate migration command', () => {
       ).toEqual(migrations.map(({ id, checksum }) => [id, checksum]))
       expect(test.output()).toContain(`Applied: ${migrations.length}; already applied: 0.`)
       expect(test.release).toHaveBeenCalledTimes(2)
+    },
+  )
+
+  it.each([
+    ['unknown', 'unknown migration'],
+    ['checksum', 'checksum differs'],
+    ['gap', 'ordering gap'],
+  ])(
+    'revalidates %s history after the apply lock and rolls back before writes',
+    async (kind, refusal) => {
+      const migrations = await readContentMigrations()
+      const recorded = [migrations[0]]
+      const test = harness({
+        ledger: true,
+        recorded,
+        onLock: () => {
+          if (kind === 'checksum') recorded[0] = { ...migrations[0], checksum: '0'.repeat(64) }
+          else
+            recorded.push(
+              kind === 'unknown' ? { id: fixtureUrl, checksum: '0'.repeat(64) } : migrations[2],
+            )
+        },
+      })
+      expect(await test.run(['--apply', '--environment', 'preview'])).toBe(1)
+      expect(test.pool.connect).toHaveBeenCalledTimes(2)
+      expect(test.queries.at(-1).sql).toBe('ROLLBACK')
+      expect(test.queries.some(({ sql }) => /^(CREATE|INSERT|ALTER)/.test(sql))).toBe(false)
+      expect(test.output()).toContain(refusal)
+      expect(test.output()).not.toContain('Migration apply complete')
+      expect(test.output()).not.toContain(fixtureUrl)
+      expect(test.release).toHaveBeenCalledTimes(2)
+      expect(test.pool.end).toHaveBeenCalledOnce()
     },
   )
 

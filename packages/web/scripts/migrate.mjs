@@ -86,36 +86,41 @@ function targetDescription(configuration) {
   return `Target: host=${redact(client.host)} port=${redact(client.port)} database=${redact(client.database)} (credentials redacted)`
 }
 
-async function pendingMigrations(pool, migrations) {
-  const client = await pool.connect()
-  try {
-    // Do not create even the migration ledger on a dry run of an empty database.
-    await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
-    const table = await client.query("SELECT to_regclass('content_schema_migrations') AS ledger")
-    const recorded = table.rows[0]?.ledger
-      ? (await client.query('SELECT id, checksum FROM content_schema_migrations')).rows
-      : []
-    const reviewed = new Map(migrations.map((migration) => [migration.id, migration.checksum]))
-    for (const entry of recorded) {
-      if (!reviewed.has(entry.id)) {
-        throw new CommandError(
-          'The database contains an unknown migration. Use the matching reviewed release before applying.',
-        )
-      }
-      if (reviewed.get(entry.id) !== entry.checksum) {
-        throw new CommandError(
-          'An applied migration checksum differs from the reviewed SQL. Stop and investigate; do not edit the ledger.',
-        )
-      }
-    }
-    const applied = new Set(recorded.map((entry) => entry.id))
-    if (migrations.slice(0, applied.size).some((migration) => !applied.has(migration.id))) {
+async function pendingMigrations(client, migrations) {
+  // Do not create even the migration ledger on a dry run of an empty database.
+  const table = await client.query("SELECT to_regclass('content_schema_migrations') AS ledger")
+  const recorded = table.rows[0]?.ledger
+    ? (await client.query('SELECT id, checksum FROM content_schema_migrations')).rows
+    : []
+  const reviewed = new Map(migrations.map((migration) => [migration.id, migration.checksum]))
+  for (const entry of recorded) {
+    if (!reviewed.has(entry.id)) {
       throw new CommandError(
-        'The migration history has an ordering gap. Stop and investigate before applying.',
+        'The database contains an unknown migration. Use the matching reviewed release before applying.',
       )
     }
+    if (reviewed.get(entry.id) !== entry.checksum) {
+      throw new CommandError(
+        'An applied migration checksum differs from the reviewed SQL. Stop and investigate; do not edit the ledger.',
+      )
+    }
+  }
+  const applied = new Set(recorded.map((entry) => entry.id))
+  if (migrations.slice(0, applied.size).some((migration) => !applied.has(migration.id))) {
+    throw new CommandError(
+      'The migration history has an ordering gap. Stop and investigate before applying.',
+    )
+  }
+  return migrations.filter((migration) => !applied.has(migration.id))
+}
+
+async function previewMigrations(pool, migrations) {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
+    const pending = await pendingMigrations(client, migrations)
     await client.query('COMMIT')
-    return migrations.filter((migration) => !applied.has(migration.id))
+    return pending
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {})
     throw error
@@ -160,7 +165,7 @@ export async function runMigrations({
     pool.on('error', () => {
       poolError = true
     })
-    const pending = await pendingMigrations(pool, migrations)
+    const pending = await previewMigrations(pool, migrations)
     log(`Pending migrations (${pending.length}):`)
     for (const migration of pending) log(`  ${migration.id}`)
     if (pending.length === 0) log('  (none)')
@@ -172,7 +177,10 @@ export async function runMigrations({
     } else {
       failure =
         'Migration apply failed. Check database connectivity, write permissions and migration history. Re-run the dry run before retrying; no success is assumed.'
-      const report = await applyContentMigrations(pool, migrations)
+      const report = await applyContentMigrations(pool, migrations, async (client) => {
+        // The preflight may be stale after waiting for another release to finish.
+        await pendingMigrations(client, migrations)
+      })
       if (poolError) throw new Error('Database connection failed')
       log(`Applied: ${report.applied.length}; already applied: ${report.skipped.length}.`)
       log('Migration apply complete.')
