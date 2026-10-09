@@ -35,13 +35,13 @@ replay it any time with **Take the tour**.
 
 The Reader Lab shows the same magazine in five designs:
 
-| Design | In a sentence |
-| --- | --- |
-| Quiet Monograph | A calm gallery catalogue with lots of white space. |
-| Literary Long-read | Elegant serif type made for long reading. |
-| Swiss Index | A precise, structured grid with bold type. |
-| Cinematic Feature | Big images and dramatic, film-like headlines. |
-| Expressive Colour | Soft letters and a colour for every story. |
+| Design             | In a sentence                                      |
+| ------------------ | -------------------------------------------------- |
+| Quiet Monograph    | A calm gallery catalogue with lots of white space. |
+| Literary Long-read | Elegant serif type made for long reading.          |
+| Swiss Index        | A precise, structured grid with bold type.         |
+| Cinematic Feature  | Big images and dramatic, film-like headlines.      |
+| Expressive Colour  | Soft letters and a colour for every story.         |
 
 On each design you can choose **View the site in this direction** (the front page)
 or **Open latest story** (an article).
@@ -77,7 +77,7 @@ Look at each design and ask yourself:
 - Is it comfortable to read a long story?
 - Do the pictures look good?
 - Does it work on your phone?
-- Does it feel like *your* magazine?
+- Does it feel like _your_ magazine?
 
 Then send us your favourite (and a second choice, if you have one), with a few
 words on why. Notes on what you did not like help just as much.
