@@ -54,7 +54,7 @@ Stopping keeps your stories, uploads and account. To permanently delete **all of
 node packages/web/scripts/lab-trial.mjs reset --yes-delete-trial-data
 ```
 
-The trial uses its own `blog-reader-lab-trial` Docker Compose project and named volumes, with loopback-only ports **3200, 55444 and 57044**. The integration-test stack uses different ports and volumes. If a port is busy, stop the other service before starting the trial. Only one trial launcher can run at a time, including across checkouts sharing these ports.
+The trial uses its own `blog-reader-lab-trial` Docker Compose project and named volumes, with loopback-only ports **3200, 55444 and 57044**. The integration-test stack uses different ports and volumes. If a port is busy, stop the other service before starting the trial. Run the trial from one checkout only: a second launcher in the same checkout is refused, but launchers in different checkouts are not coordinated with each other.
 
 Generated credentials are saved privately (file mode 0600) in **`ci-artifacts/lab-trial/state.json`**, using the repository's existing Git ignore. Keep that file with the Docker volumes: deleting it separately loses the credentials for your saved data. Do not run artifact-cleanup commands over `ci-artifacts/` while keeping a trial. The launcher checks the ignore rule, does not print credentials except the requested first-account setup link, and suppresses child-process output. It uses its own local configuration, ignoring inherited application/database credentials and disabling fixture mode. Do not set `NODE_ENV=production` or run it in a hosted deployment.
 
