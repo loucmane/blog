@@ -103,10 +103,10 @@ export async function sourceFingerprint(root = webRoot) {
   return hash.digest('hex')
 }
 
-export async function canReuseBuild(fingerprint, root = webRoot) {
+export async function canReuseBuild(fingerprint, root = webRoot, stampName = 'lab-local.json') {
   try {
     const buildId = await readFile(path.join(root, '.next/BUILD_ID'), 'utf8')
-    const stamp = JSON.parse(await readFile(path.join(root, '.next/lab-local.json'), 'utf8'))
+    const stamp = JSON.parse(await readFile(path.join(root, '.next', stampName), 'utf8'))
     return Boolean(buildId.trim()) && stamp.buildId === buildId && stamp.fingerprint === fingerprint
   } catch {
     return false
@@ -178,7 +178,7 @@ function signalChild(managed, signal) {
   }
 }
 
-function stopChild(managed) {
+export function stopChild(managed) {
   managed.cleanup ??= (async () => {
     try {
       signalChild(managed, 'SIGTERM')
@@ -213,7 +213,7 @@ function stopChild(managed) {
   return managed.cleanup
 }
 
-async function stopChildren(children) {
+export async function stopChildren(children) {
   const outcomes = await Promise.allSettled([...children].map(stopChild))
   const failure = outcomes.find((outcome) => outcome.status === 'rejected')
   if (failure) throw failure.reason
