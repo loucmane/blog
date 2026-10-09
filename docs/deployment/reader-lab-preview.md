@@ -413,8 +413,8 @@ Quiet Monograph, Literary Long-read, Swiss Index, Cinematic Feature and Expressi
 Colour. The owner can compare them, read stories and try the publishing workspace.
 Provider access and magazine sign-in are separate steps. Send the
 [Reader Lab owner guide](../reader-lab-owner-guide.md) alongside the invitation.
-**Coordinator handoff:** that companion guide is to be written at this path;
-verify it exists before sending its link to the owner.
+It is written for a non-technical owner. Before sending it, fill in how they get
+past the access gate (if any) and the sign-in page address for later visits.
 
 ## Costs
 
