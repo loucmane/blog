@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import type { StoreMediaOriginalInput } from '@/server/content/media'
+
 const safeId = z
   .string()
   .trim()
@@ -60,13 +62,37 @@ export const ownerStoryActionSchema = z.discriminatedUnion('action', [
   versionedAction.extend({ action: z.literal('restore-revision'), revisionId: safeId }).strict(),
 ])
 
+const focalPointMessage = 'The focal point must be a number from 0 to 1.'
+
+/** One focal point coordinate, sent by the upload form as text; the centre when it is missing. */
+const focalCoordinate = z
+  .string({ error: focalPointMessage })
+  .trim()
+  // A blank field would otherwise be read as 0, the edge of the image.
+  .min(1, focalPointMessage)
+  .pipe(
+    z.coerce
+      .number<string>({ error: focalPointMessage })
+      .min(0, focalPointMessage)
+      .max(1, focalPointMessage),
+  )
+  .default(0.5)
+
 export const ownerMediaMetadataSchema = z
   .object({
     alt: z.string().trim().min(1, 'Describe the image for readers who cannot see it.').max(1_000),
     caption: z.string().trim().max(2_000).default(''),
     creditName: z.string().trim().min(1, 'Add the image credit.').max(300),
     creditUrl: z.union([z.literal(''), z.string().url().max(2_000)]).default(''),
-    focalX: z.coerce.number().min(0).max(1).default(0.5),
-    focalY: z.coerce.number().min(0).max(1).default(0.5),
+    focalX: focalCoordinate,
+    focalY: focalCoordinate,
   })
   .strict()
+  // The form sends the focal point as two fields; the media store takes it as one point.
+  .transform(
+    ({ focalX, focalY, ...metadata }) =>
+      ({
+        ...metadata,
+        focalPoint: { x: focalX, y: focalY },
+      }) satisfies Partial<StoreMediaOriginalInput>,
+  )

@@ -5,7 +5,7 @@ import sharp from 'sharp'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { GET as getMedia } from '@/app/api/media/[id]/route'
-import { POST as uploadMedia } from '@/app/api/owner/media/route'
+import { GET as listOwnerMedia, POST as uploadMedia } from '@/app/api/owner/media/route'
 import StoryPage from '@/app/stories/[slug]/page'
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/content/document'
 import type { MediaAsset } from '@/server/content/domain'
@@ -300,20 +300,25 @@ function imageTag(markup: string, mediaId: string): string {
   return markup.match(new RegExp(`<img[^>]*src="/api/media/${mediaId}[?"][^>]*>`))?.[0] ?? ''
 }
 
-/** Uploads an image the way the owner workspace does, which never sends its dimensions. */
-async function upload(file: {
+interface Upload {
   readonly alt: string
   readonly body: Uint8Array
   readonly contentType: string
+  /** Further form fields, such as a focal point, sent as they are given. */
+  readonly fields?: Readonly<Record<string, string>>
   readonly name: string
-}): Promise<MediaAsset> {
+}
+
+/** Sends an image the way the owner workspace does, which never sends its dimensions. */
+async function postUpload(file: Upload): Promise<Response> {
   const form = new FormData()
   form.set('alt', file.alt)
   form.set('creditName', 'Studio')
   form.set('file', new File([Buffer.from(file.body)], file.name, { type: file.contentType }))
+  for (const [name, value] of Object.entries(file.fields ?? {})) form.set(name, value)
   const encoded = new Response(form)
   const body = new Uint8Array(await encoded.arrayBuffer())
-  const response = await uploadMedia(
+  return uploadMedia(
     new Request(`${siteOrigin}/api/owner/media`, {
       body,
       headers: {
@@ -325,8 +330,23 @@ async function upload(file: {
       method: 'POST',
     }),
   )
+}
+
+async function upload(file: Upload): Promise<MediaAsset> {
+  const response = await postUpload(file)
   expect(response.status).toBe(200)
   return ((await response.json()) as { readonly asset: MediaAsset }).asset
+}
+
+/** The media library, as the owner workspace lists it. */
+async function ownerMedia(): Promise<readonly MediaAsset[]> {
+  const response = await listOwnerMedia(
+    new Request(`${siteOrigin}/api/owner/media`, {
+      headers: { cookie: `${ownerFixtureCookieName}=${createOwnerFixtureSession()}` },
+    }),
+  )
+  expect(response.status).toBe(200)
+  return ((await response.json()) as { readonly media: readonly MediaAsset[] }).media
 }
 
 /** Publishes a story that shows the given images, in order. */
@@ -789,5 +809,57 @@ describe('owner uploads', () => {
     const variant = await requestMedia(loop.id, 'w=320&fm=webp')
     expect(variant.status).toBe(307)
     expect(variant.headers.get('location')).toBe(`/api/media/${loop.id}`)
+  })
+
+  it('keeps the focal point an image was uploaded with, and the centre when none was sent', async () => {
+    const body = new Uint8Array(await solid(800, 600).png().toBuffer())
+
+    const placed = await upload({
+      alt: 'A doorway low on the left',
+      body,
+      contentType: 'image/png',
+      fields: { focalX: '0.2', focalY: '0.8' },
+      name: 'doorway.png',
+    })
+    const centred = await upload({
+      alt: 'The same doorway, with no focal point chosen',
+      body,
+      contentType: 'image/png',
+      name: 'doorway.png',
+    })
+
+    expect(placed).toMatchObject({ focalX: 0.2, focalY: 0.8 })
+    expect(centred).toMatchObject({ focalX: 0.5, focalY: 0.5 })
+    // Read back from the media library, not only from the upload response.
+    const library = new Map((await ownerMedia()).map((asset) => [asset.id, asset]))
+    expect(library.get(placed.id)).toMatchObject({ focalX: 0.2, focalY: 0.8 })
+    expect(library.get(centred.id)).toMatchObject({ focalX: 0.5, focalY: 0.5 })
+  })
+
+  it('refuses a focal point outside the image or that is not a number, and stores nothing', async () => {
+    const body = new Uint8Array(await solid(800, 600).png().toBuffer())
+
+    for (const fields of [
+      { focalX: '1.5', focalY: '0.5' },
+      { focalX: '0.5', focalY: '-0.1' },
+      { focalX: 'left', focalY: '0.5' },
+      { focalX: '', focalY: '0.5' },
+      { focalX: '0.5', focalY: ' ' },
+    ]) {
+      const label = JSON.stringify(fields)
+      const response = await postUpload({
+        alt: 'A doorway',
+        body,
+        contentType: 'image/png',
+        fields,
+        name: 'doorway.png',
+      })
+
+      expect(response.status, label).toBe(422)
+      await expect(response.json(), label).resolves.toEqual({
+        error: 'The focal point must be a number from 0 to 1.',
+      })
+    }
+    expect(await ownerMedia()).toEqual([])
   })
 })
