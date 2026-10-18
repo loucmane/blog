@@ -1,7 +1,8 @@
 {
-  "backend": "dolt",
   "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "proxied-server",
   "dolt_database": "blog",
-  "dolt_mode": "server",
+  "dolt_data_dir": "../../../gascity/city/.beads/dolt",
   "project_id": "1ab6863c-804f-412c-a267-c28d8772935c"
 }
