@@ -110,7 +110,7 @@ All lifecycle methods live in `ContentService` (`packages/web/src/server/content
 | `schedulePublication` (`article.schedule`) | any, not deleted | `scheduled` | expected version; current draft revision; future `runAt` | keeps `previousStatus` (from the active job when rescheduling), cancels earlier jobs, inserts a pending job, publication version, audit `article.scheduled` |
 | `cancelScheduledPublication` (`article.cancel-schedule`) | `scheduled` | the job's `previousStatus` | exactly one active job matching `scheduledRevisionId` and `scheduledAt` | cancels jobs, publication version, audit `article.schedule-cancelled` |
 | `claimDuePublication` | job `pending`, or `claimed` with an expired lease | job `claimed` | `run_at` due; lease of at least one second | `attempt` + 1, `claimed_by`, `lease_until` |
-| `completeScheduledPublication` | `scheduled` with a claimed job | `published`, job `completed` | caller owns the lease; completion inside the lease window; one active job; schedule still matches | publication version, the same outbox events as `publish`, audit `article.scheduled-publish-completed`; otherwise the job becomes `superseded` and the call reports a duplicate |
+| `completeScheduledPublication` | `scheduled` with a claimed job | `published`, job `completed` | caller owns the lease; completion inside the lease window; one active job; schedule still matches | publication version, the same outbox events as `publish`, audit `article.scheduled-publish-completed`. Other outcomes stay separate. Already `completed`: the job is returned unchanged with `duplicate: true`. Job not `claimed` by the caller, or a completion time that is invalid or outside the lease window: `InvalidContentTransitionError`, nothing is written, and the job keeps its status, so a claimed job is retryable once its lease expires (the runner reports it in `retryJobIds`); this path never supersedes. Only stale state supersedes, after the lease checks pass: when the job's article changed between the first read and the lock, the article is missing, it lacks exactly this one active job (then every active job is superseded), it is no longer `scheduled` at the job's revision and time, or that revision is missing or belongs to another article, the job becomes `superseded`, the publication version advances, and the call reports `duplicate: true` without publishing |
 | `unpublish` (`article.unpublish`) | `published` or `scheduled` | `unpublished` | expected version; reason of 1 to 1,000 characters | cancels jobs, publication version, outbox `article.unpublished`, audit with the reason |
 | `changeSlug` (`article.change-slug`) | any, not deleted | unchanged | expected version; new valid slug that differs | redirect row, publication version, audit `article.slug-changed` |
 | `softDelete` (`article.soft-delete`) | any; already deleted returns unchanged | `draft` stays `draft`, others become `unpublished`, `deleted_at` set | expected version | keeps `pre_delete_status`, cancels jobs, publication version, outbox `article.deleted`, audit |
@@ -160,10 +160,20 @@ Owner boundary (`packages/web/src/app/api/owner/stories/route.ts`,
 - every story mutation carries an `idempotencyKey` of 8 to 200 characters and, once the story
   exists, an `expectedVersion`; media upload takes neither, so each upload creates a new media
   identity;
-- `ownerErrorResponse` maps stable error codes to fixed messages: 401 access, 404 not found,
-  409 conflict with both versions, 422 validation and transition errors, 503 unconfigured,
-  500 otherwise; raw exceptions never reach the owner, and every response is
-  `private, no-store`;
+- `ownerErrorResponse` picks the status from the error's class or stable `code`, and every
+  response is `private, no-store`:
+  - fixed fallback messages, which never echo the error: 404 for a missing item, 503 when the
+    owner workspace is not configured, and 500 for anything unclassified, whose message points
+    the owner to the local recovery copy; driver, SQL, and connection text therefore never
+    reaches the owner;
+  - forwarded expected-error messages: 401 sends the `OwnerAccessError` message (one sign-in
+    prompt today); 409 sends the `ContentConflictError` message with `conflict.article` and
+    `conflict.currentRevision`, the server's current state only; 422 sends the message of a
+    transition, document-validation, duplicate-slug, or Zod error through `errorMessage`,
+    which falls back to a fixed message only when the error has no string message;
+  - the attempted content is held by the client, not returned by the server: the response
+    never includes the error's `attemptedDocument`, and the editor keeps the owner's copy in
+    `localStorage` (`packages/web/src/components/owner/story-editor.tsx`);
 - lifecycle actions call `expirePublicReader()` (`packages/web/src/reader/cache.ts`) after any
   change readers may see.
 
@@ -191,7 +201,8 @@ Boundary checklist:
 
 - business rules live in services; handlers stay thin and never run SQL or object-store calls;
 - new inputs get a strict contract and byte limits before parsing;
-- errors expose stable codes and fixed messages, never driver, SQL, or connection text;
+- errors expose stable codes; unexpected failures use fixed messages, forwarded expected-error
+  messages stay owner-safe, and driver, SQL, or connection text never reaches the owner;
 - cache headers and reader-cache expiry match the visibility change;
 - access, origin, token, and secret checks are verified to exist and fail closed; their design
   is handed off to the security skill.

@@ -328,3 +328,43 @@ test("keeps backend review advisory and implementation-neutral", () => {
     );
   }
 });
+
+test("states publication completion and owner error outcomes as the code does", () => {
+  const backendMap = readText(`${skillRoot}/references/backend-map.md`);
+  const completionRow =
+    backendMap
+      .split(/\r?\n/)
+      .find((line) => line.startsWith("| `completeScheduledPublication` |")) ?? "";
+  const ownerErrorBullet =
+    backendMap.match(/\n(- `ownerErrorResponse`[\s\S]*?)\n(?:- |\n)/)?.[1] ?? "";
+  const missing = (text, phrases) =>
+    phrases.filter((phrase) => !normalize(text).includes(phrase));
+
+  // A lease failure stays retryable work, and a 409 returns only the server's current state.
+  assert.deepEqual(
+    {
+      staleClaims: [
+        "otherwise the job becomes `superseded`",
+        "maps stable error codes to fixed messages",
+        "with both versions",
+        "raw exceptions never reach the owner",
+      ].filter((claim) => skillContract().includes(claim)),
+      completionRow: missing(completionRow, [
+        "`duplicate: true`",
+        "`invalidcontenttransitionerror`",
+        "retryable",
+        "never supersedes",
+        "only stale state supersedes",
+      ]),
+      ownerErrorBullet: missing(ownerErrorBullet, [
+        "fixed fallback messages",
+        "forwarded expected-error messages",
+        "`conflict.article` and `conflict.currentrevision`",
+        "current state only",
+        "held by the client, not returned by the server",
+        "`private, no-store`",
+      ]),
+    },
+    { staleClaims: [], completionRow: [], ownerErrorBullet: [] },
+  );
+});

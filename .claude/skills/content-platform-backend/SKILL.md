@@ -116,9 +116,10 @@ in `references/backend-map.md`.
    audit event, advances the publication version when readers are affected, and never silently
    overwrites newer work; a conflict preserves both sides.
 3. **APIs and server boundaries** — thin route handlers, owner helpers that fail closed, an API
-   contract with byte limits for every action, stable error codes mapped to fixed owner-safe
-   messages, services as the only writers, and adapters behind ports. The framework fixture
-   never activates implicitly.
+   contract with byte limits for every action, stable error codes with fixed fallback messages
+   for unexpected failures and owner-safe forwarded messages for expected errors, services as
+   the only writers, and adapters behind ports. The framework fixture never activates
+   implicitly.
 4. **Database schema and reversible migrations** — reviewed SQL is the migration authority;
    every forward migration ships with a paired down migration (`NNNN_name.down.sql`); never
    edit an applied migration; keep the Drizzle projection and portable bundle aligned; prefer
