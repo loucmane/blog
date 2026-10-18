@@ -95,6 +95,26 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "content-platform-backend",
+      "match": [
+        "packages/web/src/server/**",
+        "packages/web/migrations/**",
+        "packages/web/scripts/migrate.mjs",
+        "docs/architecture/content-persistence-foundation.md",
+        "docs/deployment/backup-restore.md"
+      ],
+      "skills": [
+        "content-platform-backend"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }
