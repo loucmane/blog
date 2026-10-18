@@ -1,0 +1,101 @@
+[
+  {
+    "file": "newsreader-latin-400-normal.woff2",
+    "package": "@fontsource/newsreader",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-AFR6ZKY89GNL+9qBI2P2+66NhD5bhOj/v6fsLnFYLM4E0JnMB1yKb+Ro8cA64i1hwAWoBfTq5CHJGWH1toLDkw==",
+    "packagePath": "files/newsreader-latin-400-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/newsreader/-/newsreader-5.3.0.tgz",
+    "upstream": "https://github.com/productiontype/Newsreader",
+    "bytes": 22480,
+    "sha256": "e66067814f1c672d33a457e4f4d102c818b481420e2234cf685ebdbf2f443904"
+  },
+  {
+    "file": "newsreader-latin-500-normal.woff2",
+    "package": "@fontsource/newsreader",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-AFR6ZKY89GNL+9qBI2P2+66NhD5bhOj/v6fsLnFYLM4E0JnMB1yKb+Ro8cA64i1hwAWoBfTq5CHJGWH1toLDkw==",
+    "packagePath": "files/newsreader-latin-500-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/newsreader/-/newsreader-5.3.0.tgz",
+    "upstream": "https://github.com/productiontype/Newsreader",
+    "bytes": 23624,
+    "sha256": "5613e2fc8377392c02e8ac9d55014689fb5320a5f2a7be55e8088a314728ac2c"
+  },
+  {
+    "file": "newsreader-latin-600-normal.woff2",
+    "package": "@fontsource/newsreader",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-AFR6ZKY89GNL+9qBI2P2+66NhD5bhOj/v6fsLnFYLM4E0JnMB1yKb+Ro8cA64i1hwAWoBfTq5CHJGWH1toLDkw==",
+    "packagePath": "files/newsreader-latin-600-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/newsreader/-/newsreader-5.3.0.tgz",
+    "upstream": "https://github.com/productiontype/Newsreader",
+    "bytes": 23876,
+    "sha256": "05c91a26d19a61eafe7ce8e0b77eff3fd279ce994dc89f432f4cd06784935e84"
+  },
+  {
+    "file": "newsreader-latin-400-italic.woff2",
+    "package": "@fontsource/newsreader",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-AFR6ZKY89GNL+9qBI2P2+66NhD5bhOj/v6fsLnFYLM4E0JnMB1yKb+Ro8cA64i1hwAWoBfTq5CHJGWH1toLDkw==",
+    "packagePath": "files/newsreader-latin-400-italic.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/newsreader/-/newsreader-5.3.0.tgz",
+    "upstream": "https://github.com/productiontype/Newsreader",
+    "bytes": 24340,
+    "sha256": "fa9b900403949d9a723106752a5c8ad2797012a0c9057427b1da2db72d552148"
+  },
+  {
+    "file": "newsreader-latin-600-italic.woff2",
+    "package": "@fontsource/newsreader",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-AFR6ZKY89GNL+9qBI2P2+66NhD5bhOj/v6fsLnFYLM4E0JnMB1yKb+Ro8cA64i1hwAWoBfTq5CHJGWH1toLDkw==",
+    "packagePath": "files/newsreader-latin-600-italic.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/newsreader/-/newsreader-5.3.0.tgz",
+    "upstream": "https://github.com/productiontype/Newsreader",
+    "bytes": 25796,
+    "sha256": "63ff324ab27c27c3ad19c6c61b2fbee3b74931ad9909dd051e8be7340133ceaa"
+  },
+  {
+    "file": "Newsreader-OFL.txt",
+    "package": "@fontsource/newsreader",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-AFR6ZKY89GNL+9qBI2P2+66NhD5bhOj/v6fsLnFYLM4E0JnMB1yKb+Ro8cA64i1hwAWoBfTq5CHJGWH1toLDkw==",
+    "packagePath": "LICENSE",
+    "url": "https://registry.npmjs.org/@fontsource/newsreader/-/newsreader-5.3.0.tgz",
+    "upstream": "https://github.com/productiontype/Newsreader",
+    "bytes": 4520,
+    "sha256": "26028ec4e13b650065fa525a09532176f8a668b76ff849ea01c564a7480f91e7"
+  },
+  {
+    "file": "libre-franklin-latin-400-normal.woff2",
+    "package": "@fontsource/libre-franklin",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-owd+HDvD4hnGHG1jO3rHtg0BiNT0DJbZMaSqJ7g4r0646G5Q91MjTFWxZbpwg8njLu4BSH3EBqwkVSMLud6brg==",
+    "packagePath": "files/libre-franklin-latin-400-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/libre-franklin/-/libre-franklin-5.3.0.tgz",
+    "upstream": "https://github.com/googlefonts/Libre-Franklin",
+    "bytes": 15900,
+    "sha256": "50a24a85106ad722ab9d1353977c1f7b3b3d18465a807c0d6f1551b57a705f41"
+  },
+  {
+    "file": "libre-franklin-latin-600-normal.woff2",
+    "package": "@fontsource/libre-franklin",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-owd+HDvD4hnGHG1jO3rHtg0BiNT0DJbZMaSqJ7g4r0646G5Q91MjTFWxZbpwg8njLu4BSH3EBqwkVSMLud6brg==",
+    "packagePath": "files/libre-franklin-latin-600-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/libre-franklin/-/libre-franklin-5.3.0.tgz",
+    "upstream": "https://github.com/googlefonts/Libre-Franklin",
+    "bytes": 15980,
+    "sha256": "aaa877781157fd03a54d6b0f27283e5b153a6d1b44a20c2d80c695f5e07d242b"
+  },
+  {
+    "file": "Libre-Franklin-OFL.txt",
+    "package": "@fontsource/libre-franklin",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-owd+HDvD4hnGHG1jO3rHtg0BiNT0DJbZMaSqJ7g4r0646G5Q91MjTFWxZbpwg8njLu4BSH3EBqwkVSMLud6brg==",
+    "packagePath": "LICENSE",
+    "url": "https://registry.npmjs.org/@fontsource/libre-franklin/-/libre-franklin-5.3.0.tgz",
+    "upstream": "https://github.com/googlefonts/Libre-Franklin",
+    "bytes": 4530,
+    "sha256": "7e982e27dc99e50b47daf19c27bb32419bee58ddc371f073520dc823e7882940"
+  }
+]

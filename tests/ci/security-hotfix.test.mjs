@@ -391,8 +391,9 @@ test('security-patched direct and transitive versions remain pinned', () => {
   assert.equal(rootPackage.devDependencies['@vitest/coverage-v8'], '4.1.11')
   assert.equal(rootPackage.devDependencies.vitest, '4.1.11')
   assert.equal(webPackage.dependencies.next, '16.3.8')
+  assert.equal(webPackage.dependencies.sharp, '0.35.5')
   assert.equal(webPackage.devDependencies.postcss, '8.5.23')
-  assert.match(workspace, /'sharp@0\.35\.4': true/)
+  assert.match(workspace, /'sharp@0\.35\.5': true/)
   assert.match(workspace, /'baseline-browser-mapping@>=2\.0\.0 <2\.11\.0': 2\.11\.0/)
   // One floor per major line: the highest patched version across GHSA-q2hr-2g5m-vwhr,
   // GHSA-qhr7-859c-m2p7, and GHSA-6j4f-fj2g-mc7p.
@@ -405,7 +406,7 @@ test('security-patched direct and transitive versions remain pinned', () => {
   assert.match(workspace, /'browserslist@>=4\.0\.0 <4\.28\.7': 4\.28\.7/)
   assert.match(workspace, /'nanoid@>=3\.0\.0 <3\.3\.18': 3\.3\.18/)
   assert.match(workspace, /'next@16\.3\.8>postcss': 8\.5\.23/)
-  assert.match(workspace, /'next@16\.3\.8>sharp': 0\.35\.4/)
+  assert.match(workspace, /'next@16\.3\.8>sharp': 0\.35\.5/)
   // GHSA-rj75-hqrm-r3gf has no patched 6.x release, so the only copy (6.0.10, under
   // @tailwindcss/typography) moves across the major line to 7.1.6.
   assert.deepEqual(workspace.match(/^ {2}'postcss-selector-parser@.+$/gm), [

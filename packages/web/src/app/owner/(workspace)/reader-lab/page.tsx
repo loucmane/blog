@@ -6,6 +6,7 @@ import { loadHomeView } from '@/reader/cache'
 import { readerDirections } from '@/reader-directions/registry'
 import { exitReaderLab, openReaderDirection } from '@/reader-lab/actions'
 import { readerLabCookieName } from '@/reader-lab/cookie'
+import { ReaderLabTour } from '@/reader-lab/lab-tour'
 import { requireOwnerPageSession } from '@/server/owner/session'
 
 export const dynamic = 'force-dynamic'
@@ -42,6 +43,7 @@ export default async function ReaderLabPage() {
           </p>
         </div>
         <nav aria-label="Reader Lab shortcuts" className="flex flex-wrap gap-3">
+          <ReaderLabTour />
           <Link className={secondaryAction} href="/owner/stories/new">
             Write a new post
           </Link>

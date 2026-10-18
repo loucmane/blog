@@ -1,14 +1,223 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { ArticleBlock } from '@/reader/views'
 import { readArticleView, readHomeView, readSectionView } from '@/reader/read-model'
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/content/document'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
-import { InMemoryOriginalObjectStore } from '@/server/content/media'
+import { InMemoryOriginalObjectStore, MediaOriginalService } from '@/server/content/media'
 import { ContentService } from '@/server/content/service'
 
+import { labSeedBarrier } from '../../../tests/support/lab-seed-barrier'
+
 import { labImages, labStories } from './north-house'
-import { labSeedAllowed, labStorySlug, seedLabContent, type LabSeedReport } from './seed'
+import type * as Illustrations from './illustrations'
+import { renderIllustration } from './illustrations'
+import {
+  LabSeedBusyError,
+  labSeedAllowed,
+  labStorySlug,
+  seedLabContent,
+  type LabSeedReport,
+} from './seed'
+
+// These tests prove seed/locking behavior, not image rendering. Tiny real PNGs
+// avoid nine full-size renders per worker; illustrations.test.ts and the real
+// PostgreSQL/S3 integration suite retain full-size image coverage.
+vi.mock('./illustrations', async (importOriginal) => {
+  const actual = await importOriginal<typeof Illustrations>()
+  return {
+    ...actual,
+    renderIllustration: (spec: Illustrations.IllustrationSpec) =>
+      actual.renderIllustration({ ...spec, width: 4, height: 4 }),
+  }
+})
+
+describe('seed concurrency and media preservation', () => {
+  it.each([false, true])(
+    'preserves owner media when present at the first check: %s',
+    async (present) => {
+      const repository = new InMemoryContentRepository()
+      const objects = new InMemoryOriginalObjectStore()
+      const media = new MediaOriginalService(repository, objects)
+      const image = labImages[0]!
+      const put = vi.spyOn(objects, 'putOriginal')
+      const createOwnerMedia = () =>
+        media.store({
+          ...image,
+          body: renderIllustration(image.illustration),
+          contentType: 'image/png',
+        })
+      if (present) await createOwnerMedia()
+      const checked = labSeedBarrier()
+      const resume = labSeedBarrier()
+      const run = seedLabContent(
+        { repository, objects },
+        {
+          afterMediaCheck: async (id) => {
+            if (id !== image.id) return
+            checked.resolve()
+            await resume.promise
+          },
+        },
+      )
+      try {
+        await checked.promise
+        const putsBefore = put.mock.calls.length
+        await expect(seedLabContent({ repository, objects })).rejects.toBeInstanceOf(
+          LabSeedBusyError,
+        )
+        expect(put).toHaveBeenCalledTimes(putsBefore)
+        if (!present) await createOwnerMedia()
+        await repository.transaction(async (transaction) => {
+          const asset = await transaction.getMediaAsset(image.id)
+          await transaction.saveMediaAsset({
+            ...asset!,
+            alt: 'Owner alt',
+            caption: 'Owner caption',
+          })
+        })
+      } finally {
+        resume.resolve()
+        await run
+      }
+      expect((await run).images.created).toHaveLength(labImages.length - 1)
+      expect(put).toHaveBeenCalledTimes(labImages.length)
+      const beforeReplay = await repository.transaction((transaction) =>
+        transaction.listMediaAssets(),
+      )
+      expect(beforeReplay.find(({ id }) => id === image.id)).toMatchObject({
+        alt: 'Owner alt',
+        caption: 'Owner caption',
+      })
+      const replay = await seedLabContent({ repository, objects })
+      expect(replay.images.created).toEqual([])
+      expect(put).toHaveBeenCalledTimes(labImages.length)
+      expect(await repository.transaction((transaction) => transaction.listMediaAssets())).toEqual(
+        beforeReplay,
+      )
+    },
+  )
+
+  it.each(['upload', 'verification'])(
+    'releases the seed lock and rolls back a failed %s',
+    async (failure) => {
+      const repository = new InMemoryContentRepository()
+      const objects = new InMemoryOriginalObjectStore()
+      if (failure === 'upload')
+        vi.spyOn(objects, 'putOriginal').mockRejectedValueOnce(new Error('Fixture upload failure'))
+      else vi.spyOn(objects, 'verifyOriginal').mockResolvedValueOnce(false)
+      await expect(seedLabContent({ repository, objects })).rejects.toThrow()
+      expect(await repository.transaction((transaction) => transaction.listMediaAssets())).toEqual(
+        [],
+      )
+      const report = await seedLabContent({ repository, objects })
+      expect(report.images.created).toHaveLength(labImages.length)
+    },
+  )
+})
+
+describe('seed time limits', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it.each(['putOriginal', 'verifyOriginal'] as const)(
+    'times out a never-settling %s, rolls back, releases the lock and permits retry',
+    async (operation) => {
+      vi.useFakeTimers()
+      const repository = new InMemoryContentRepository()
+      const objects = new InMemoryOriginalObjectStore()
+      const started = labSeedBarrier()
+      let signal: AbortSignal | undefined
+      const hang = (ioSignal?: AbortSignal): Promise<never> => {
+        signal = ioSignal
+        started.resolve()
+        return new Promise(() => {})
+      }
+      if (operation === 'putOriginal')
+        vi.spyOn(objects, operation).mockImplementationOnce((_input, signal) => hang(signal))
+      else vi.spyOn(objects, operation).mockImplementationOnce((_key, _sha, signal) => hang(signal))
+      const run = seedLabContent({ repository, objects })
+      const failed = expect(run).rejects.toThrow('Lab seed storage timed out')
+      await started.promise
+      await expect(seedLabContent({ repository, objects })).rejects.toBeInstanceOf(LabSeedBusyError)
+      await vi.advanceTimersByTimeAsync(29_999)
+      expect(signal?.aborted).toBe(false)
+      await vi.advanceTimersByTimeAsync(1)
+      await failed
+      expect(signal?.aborted).toBe(true)
+      expect(vi.getTimerCount()).toBe(0)
+      await repository.inspect(async (transaction) => {
+        expect(await transaction.listMediaAssets()).toEqual([])
+        expect(await transaction.listArticles()).toEqual([])
+      })
+      const retry = await seedLabContent({ repository, objects })
+      expect(retry.images.created).toHaveLength(labImages.length)
+      expect(retry.stories.created).toHaveLength(labStories.length)
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
+
+  it('caps an active storage wait at the overall run deadline', async () => {
+    vi.useFakeTimers()
+    const repository = new InMemoryContentRepository()
+    const objects = new InMemoryOriginalObjectStore()
+    const started = labSeedBarrier()
+    let signal: AbortSignal | undefined
+    vi.spyOn(objects, 'putOriginal').mockImplementationOnce((_input, ioSignal) => {
+      signal = ioSignal
+      started.resolve()
+      return new Promise(() => {})
+    })
+    const run = seedLabContent({ repository, objects }, { runTimeoutMs: 50, storageTimeoutMs: 100 })
+    const failed = expect(run).rejects.toThrow('run deadline')
+    await started.promise
+    await vi.advanceTimersByTimeAsync(50)
+    await failed
+    expect(signal?.aborted).toBe(true)
+    expect(await repository.transaction((transaction) => transaction.listMediaAssets())).toEqual([])
+    expect((await seedLabContent({ repository, objects })).images.created).toHaveLength(
+      labImages.length,
+    )
+  })
+
+  it('stops before new media work after the deadline and releases the lock', async () => {
+    vi.useFakeTimers()
+    const repository = new InMemoryContentRepository()
+    const objects = new InMemoryOriginalObjectStore()
+    const put = vi.spyOn(objects, 'putOriginal')
+    await expect(
+      seedLabContent(
+        { repository, objects },
+        {
+          afterMediaCheck: async () => {
+            vi.advanceTimersByTime(300_000)
+          },
+        },
+      ),
+    ).rejects.toThrow('run deadline')
+    expect(put).not.toHaveBeenCalled()
+    expect(await repository.transaction((transaction) => transaction.listArticles())).toEqual([])
+    expect((await seedLabContent({ repository, objects })).images.created).toHaveLength(
+      labImages.length,
+    )
+  })
+
+  it('checks the deadline at transaction boundaries even without media storage', async () => {
+    vi.useFakeTimers()
+    const repository = new InMemoryContentRepository()
+    const transaction = repository.transaction.bind(repository)
+    vi.spyOn(repository, 'transaction').mockImplementationOnce((work) =>
+      transaction(async (tx) => {
+        vi.advanceTimersByTime(300_000)
+        return work(tx)
+      }),
+    )
+    await expect(seedLabContent({ repository, objects: null })).rejects.toThrow('run deadline')
+    expect(await repository.transaction((tx) => tx.listTaxonomyTerms())).toEqual([])
+    expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(
+      labStories.length,
+    )
+  })
+})
 
 const documentNodeTypes = [
   'blockquote',
@@ -200,9 +409,43 @@ describe('Reader Lab seed', () => {
     expect(report.stories.created).toHaveLength(7)
   })
 
-  it('never runs in a production runtime', () => {
+  it('requires explicit Preview intent in a production runtime while preserving local labs', () => {
     expect(labSeedAllowed({ NODE_ENV: 'production' })).toBe(false)
+    expect(
+      labSeedAllowed({ NODE_ENV: 'production', MAGAZINE_DEPLOYMENT_ENVIRONMENT: 'preview' }),
+    ).toBe(true)
+    expect(
+      labSeedAllowed({ NODE_ENV: 'test', MAGAZINE_DEPLOYMENT_ENVIRONMENT: 'production' }),
+    ).toBe(false)
     expect(labSeedAllowed({ NODE_ENV: 'development' })).toBe(true)
     expect(labSeedAllowed({ NODE_ENV: 'test' })).toBe(true)
+  })
+
+  it('does not publish, edit or assign sections to an existing owner article with a sample ID', async () => {
+    const occupied = new InMemoryContentRepository()
+    const id = 'article-lab-winter-light'
+    const owner = await new ContentService(occupied).createArticle({
+      id,
+      title: 'Owner draft',
+      slug: 'owner-draft',
+      dek: 'Keep my words.',
+      idempotencyKey: 'fixture-owner-draft',
+      document: {
+        articleId: id,
+        document: { type: 'doc', content: [{ type: 'paragraph' }] },
+        migrationProvenance: [],
+        schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
+        title: 'Owner draft',
+      },
+    })
+    const report = await seedLabContent({ objects: null, repository: occupied })
+    expect(report.stories.existing).toContain(storySlug(id))
+    await occupied.inspect(async (transaction) => {
+      expect(await transaction.getArticle(id)).toEqual(owner.article)
+      expect(await transaction.listRevisions(id)).toEqual([owner.revision])
+      expect(
+        (await transaction.listArticleTaxonomies()).filter((link) => link.articleId === id),
+      ).toEqual([])
+    })
   })
 })

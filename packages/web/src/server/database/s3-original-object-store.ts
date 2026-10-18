@@ -9,15 +9,27 @@ import {
 } from '@aws-sdk/client-s3'
 
 import type { OriginalObjectStore, StoredOriginalObject } from '../content/ports'
+import { abortable } from '../content/abort'
 
-export async function bodyBytes(body: unknown): Promise<Uint8Array> {
+export async function bodyBytes(body: unknown, signal?: AbortSignal): Promise<Uint8Array> {
   if (
     typeof body === 'object' &&
     body !== null &&
     'transformToByteArray' in body &&
     typeof body.transformToByteArray === 'function'
   ) {
-    return body.transformToByteArray() as Promise<Uint8Array>
+    const read = body.transformToByteArray.bind(body)
+    // GET resolves at headers; abort the Node response stream if body consumption stalls.
+    const destroy = () => {
+      if ('destroy' in body && typeof body.destroy === 'function') body.destroy()
+    }
+    signal?.addEventListener('abort', destroy, { once: true })
+    try {
+      if (signal?.aborted) destroy()
+      return await abortable(signal, () => read() as Promise<Uint8Array>)
+    } finally {
+      signal?.removeEventListener('abort', destroy)
+    }
   }
   throw new Error('S3 response did not provide a readable byte stream.')
 }
@@ -36,30 +48,36 @@ export class S3OriginalObjectStore implements OriginalObjectStore {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }))
   }
 
-  async getOriginal(key: string): Promise<Uint8Array> {
-    const result = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }))
-    return bodyBytes(result.Body)
+  async getOriginal(key: string, signal?: AbortSignal): Promise<Uint8Array> {
+    const result = await abortable(signal, () =>
+      this.client.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+        signal ? { abortSignal: signal } : undefined,
+      ),
+    )
+    return bodyBytes(result.Body, signal)
   }
 
-  async putOriginal(input: {
-    body: Uint8Array
-    contentType: string
-    key: string
-    sha256: string
-  }): Promise<StoredOriginalObject> {
+  async putOriginal(
+    input: { body: Uint8Array; contentType: string; key: string; sha256: string },
+    signal?: AbortSignal,
+  ): Promise<StoredOriginalObject> {
     if (sha256(input.body) !== input.sha256) {
       throw new Error('Original checksum does not match its bytes.')
     }
-    await this.client.send(
-      new PutObjectCommand({
-        Body: input.body,
-        Bucket: this.bucket,
-        ChecksumAlgorithm: 'SHA256',
-        ChecksumSHA256: Buffer.from(input.sha256, 'hex').toString('base64'),
-        ContentType: input.contentType,
-        Key: input.key,
-        Metadata: { 'application-sha256': input.sha256 },
-      }),
+    await abortable(signal, () =>
+      this.client.send(
+        new PutObjectCommand({
+          Body: input.body,
+          Bucket: this.bucket,
+          ChecksumAlgorithm: 'SHA256',
+          ChecksumSHA256: Buffer.from(input.sha256, 'hex').toString('base64'),
+          ContentType: input.contentType,
+          Key: input.key,
+          Metadata: { 'application-sha256': input.sha256 },
+        }),
+        signal ? { abortSignal: signal } : undefined,
+      ),
     )
     return {
       bytes: input.body.byteLength,
@@ -69,10 +87,20 @@ export class S3OriginalObjectStore implements OriginalObjectStore {
     }
   }
 
-  async verifyOriginal(key: string, expectedSha256: string): Promise<boolean> {
-    const head = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }))
+  async verifyOriginal(
+    key: string,
+    expectedSha256: string,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
+    const head = await abortable(signal, () =>
+      this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
+        signal ? { abortSignal: signal } : undefined,
+      ),
+    )
+    signal?.throwIfAborted()
     if (head.Metadata?.['application-sha256'] !== expectedSha256) return false
-    const body = await this.getOriginal(key)
+    const body = await this.getOriginal(key, signal)
     return sha256(body) === expectedSha256
   }
 }

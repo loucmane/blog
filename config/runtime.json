@@ -26,7 +26,7 @@
     "mode": "bundled-local-only"
   },
   "allowedBuilds": {
-    "sharp": "0.35.4"
+    "sharp": "0.35.5"
   },
   "securityOverrides": {
     "@tiptap/core": "3.31.4",
@@ -73,7 +73,7 @@
     "minimatch@>=9.0.0 <9.0.7": "9.0.7",
     "nanoid@>=3.0.0 <3.3.18": "3.3.18",
     "next@16.3.8>postcss": "8.5.23",
-    "next@16.3.8>sharp": "0.35.4",
+    "next@16.3.8>sharp": "0.35.5",
     "path-to-regexp@>=0.1.0 <0.1.13": "0.1.13",
     "picomatch@>=2.0.0 <2.3.2": "2.3.2",
     "picomatch@>=4.0.0 <4.0.4": "4.0.4",
@@ -112,8 +112,8 @@
       "scripts/ci/post-merge-context.mjs": "bb2521d74c0319cd6308a0cdcce23062a8d2ce93d4a4a0e5bcdfe16047b2235b",
       "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "2186a655bc706f191189c21dc0919c12584714719239209304f19879e78f3170",
-      "tests/ci/runtime-contract.test.mjs": "930d7f111b321d323bab5a48bb4672a220249eae867320fc62f6a5098c8c80d4",
-      "tests/ci/security-hotfix.test.mjs": "45a1ded235259d46e49357d19df13e348562d70c186b5abbc4017e746fdeb1d6",
+      "tests/ci/runtime-contract.test.mjs": "a4e83110d0d6f17c30ab16a97c30a0d61137049e0bcff6c7fedfc0f5b0702be1",
+      "tests/ci/security-hotfix.test.mjs": "6bcb4d18cc16a5521748f2f49fd92c3fa9e140a93ca65f8fdb313a1c5191dcb5",
       "tests/ci/test-capability.test.mjs": "d15f5278ba272de4fe73175102a54de15608277f3b97f72a2cba3dc2b0e361c9",
       "tests/ci/test-results.test.mjs": "0edea1509359b9914a9b553d4ed61eedd5f1eca96456c631aa31f39307ef4fbe"
     },
@@ -299,10 +299,10 @@
   },
   "rootScriptsSha256": "311611205ea7a62b52d7f75fa9d3660785b32bcc38bc7e7c8c3ecceb524b48de",
   "packageScriptsSha256": "c741c04c9d8b9f59a8ff06cee5dd1ea9e091744ca8c3c957303848d36623b217",
-  "dependencyDeclarationsSha256": "efb30f4881296dda07dbe1e60dc1560eda4c108e03dd0e8ce0718ca4ef5fe4ec",
-  "packageManifestSemanticsSha256": "e5e22adbdea81bc7cd878d54480753a1d904bd8192e99b31cc959458f862a2d4",
-  "lockfileSha256": "f14ff08abab1d1cac4bf765706bc534c0ceb84171c785d1397e4001b707373f2",
-  "workspaceFileSha256": "cd12286b3f0777b8fd70096b6dc84a12719cb16db4437f725e08cad87a347301",
+  "dependencyDeclarationsSha256": "8b236fb939e6026b87f1b8d9118ab1a99ab43b1d0267bedaa0d958a8a3d49aa4",
+  "packageManifestSemanticsSha256": "f560f6388a90cca719848630ef3d7333e94516fc81feb54a0ebf78760cd25b20",
+  "lockfileSha256": "4f066528389df90c90a6737b02c8a55d9724e701b3db97fc54bfc70eb9160d60",
+  "workspaceFileSha256": "4d9ef9cf04fc9a6dc06bb0c773dfd9bf2db138e914104603b3bf6864dc2a1989",
   "actions": {
     "actions/checkout": {
       "release": "v7.0.0",

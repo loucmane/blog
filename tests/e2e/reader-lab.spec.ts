@@ -8,6 +8,8 @@ import {
   type Page,
 } from '@playwright/test'
 
+import { dismissReaderLabIntroductions } from './support/reader-lab'
+
 const labSeedToken = 'task44-lab-seed-token-with-more-than-32-bytes'
 const ownerTestToken = 'task43-owner-test-token-with-more-than-thirty-two-bytes'
 const labCookie = 'reader_lab_direction'
@@ -31,6 +33,7 @@ async function seedReaderLab(request: APIRequestContext) {
 }
 
 async function authenticate(context: BrowserContext) {
+  await dismissReaderLabIntroductions(context)
   const response = await context.request.post('/api/owner/fixture-session', {
     headers: { authorization: `Bearer ${ownerTestToken}` },
   })
@@ -174,6 +177,7 @@ test('never shows an override or the lab bar without an owner session', async ({
         await expect(page.locator('[data-reader-direction="baseline"]'), label).toHaveCount(1)
         await expect(page.locator('[data-reader-lab-bar]'), label).toHaveCount(0)
         await expect(page.getByText('Reader Lab'), label).toHaveCount(0)
+        await expect(page.getByRole('dialog')).toHaveCount(0)
         expect(response?.headers()['cache-control'], label).toBe('private, no-store')
         expect(response?.headers()['x-robots-tag'], label).toContain('noindex')
       }

@@ -25,7 +25,7 @@ vi.mock('next/server', async (importOriginal) => ({
 
 vi.mock('next/headers', async () => (await import('../support/request-scope')).nextHeaders)
 
-/* The real registry holds only baseline for now, so a second direction stands in for an override. */
+/* A small font-bearing direction exercises the real authorization and page rendering boundary. */
 vi.mock('@/reader-directions/registry', async () => {
   const { createElement } = await import('react')
   const { createReaderDirectionRegistry, defineReaderDirection } =
@@ -43,6 +43,20 @@ vi.mock('@/reader-directions/registry', async () => {
         defineReaderDirection({
           Article: view('article'),
           Home: view('home'),
+          fonts: [
+            {
+              variable: '--font-night',
+              genericFamily: 'serif',
+              fallback: {
+                family: 'Times New Roman',
+                ascentOverride: '95.27%',
+                descentOverride: '29.59%',
+                lineGapOverride: '0.00%',
+                sizeAdjust: '96.98%',
+              },
+              sources: [{ file: 'night-latin-400.woff2', weight: 400 }],
+            },
+          ],
           id: 'night-edition',
           name: 'Night Edition',
           Section: view('section'),
@@ -138,10 +152,25 @@ function expectDefaultWithoutLabBar(pages: Record<string, string>, label: string
     expect(markup, context).not.toContain('Night Edition')
     expect(markup, context).not.toContain('data-reader-lab')
     expect(markup, context).not.toContain('Reader Lab')
+    expect(markup, context).not.toMatch(/@font-face|woff2|reader-direction-fonts/)
   }
 }
 
 describe('Reader Lab overrides', () => {
+  it('ships no direction font rules for a visitor or an owner without an active direction', async () => {
+    await publishStoryInSection()
+    expectDefaultWithoutLabBar(await renderReaderPages(), 'visitor without a cookie')
+    requestScope.setCookies({ [ownerFixtureCookieName]: createOwnerFixtureSession() })
+    expectDefaultWithoutLabBar(await renderReaderPages(), 'owner without a lab cookie')
+    requestScope.setCookies({
+      [labCookie]: 'baseline',
+      [ownerFixtureCookieName]: createOwnerFixtureSession(),
+    })
+    for (const markup of Object.values(await renderReaderPages())) {
+      expect(markup).not.toMatch(/@font-face|woff2|reader-direction-fonts/)
+    }
+  })
+
   it('renders the default direction without the lab bar for a visitor who sends the lab cookie', async () => {
     await publishStoryInSection()
     requestScope.setCookies({ [labCookie]: 'night-edition' })
@@ -206,6 +235,8 @@ describe('Reader Lab overrides', () => {
     expect(pages.section).toContain('data-night-edition="section"')
     for (const [page, markup] of Object.entries(pages)) {
       expect(markup, page).toContain('data-reader-direction="night-edition"')
+      expect(markup, page).toContain('@font-face')
+      expect(markup, page).toContain('/reader-directions/night-edition/fonts/night-latin-400.woff2')
       expect(markup, page).toContain('data-reader-lab-bar')
       expect(markup, page).toContain('aria-label="Reader Lab"')
       expect(markup, page).not.toContain('data-reader-direction="baseline"')

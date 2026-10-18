@@ -1,0 +1,92 @@
+[
+  {
+    "file": "fraunces-latin-reader-normal.woff2",
+    "package": "@fontsource-variable/fraunces",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-9BYGySn4AHEJdgp9Z28tQ3X+laJMEOITXkQarZXeloWQZDq5oOvXJ3kDA8c7MGIfpogIaZfjrQBqmda8POOCKA==",
+    "packagePath": "files/fraunces-latin-soft-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource-variable/fraunces/-/fraunces-5.3.0.tgz",
+    "upstream": "https://github.com/undercasetype/Fraunces",
+    "bytes": 56036,
+    "sha256": "d577218299e0c251101fd2bf2e06b9bcb973948b46bec68a87285182694f9b12",
+    "originalBytes": 62432,
+    "originalSha256": "9fc3a8586b9152f25ffb3627789e5b1b4a9437b2bf67fb1bee275833bf05fcaa",
+    "processing": {
+      "fontTools": "4.63.0",
+      "brotli": "1.1.0",
+      "axes": {
+        "wght": [400, 400, 900],
+        "SOFT": [30, 30, 100]
+      },
+      "characters": 222,
+      "maxGeometryErrorFontUnits": 2.546447
+    }
+  },
+  {
+    "file": "fraunces-latin-reader-italic.woff2",
+    "package": "@fontsource-variable/fraunces",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-9BYGySn4AHEJdgp9Z28tQ3X+laJMEOITXkQarZXeloWQZDq5oOvXJ3kDA8c7MGIfpogIaZfjrQBqmda8POOCKA==",
+    "packagePath": "files/fraunces-latin-soft-italic.woff2",
+    "url": "https://registry.npmjs.org/@fontsource-variable/fraunces/-/fraunces-5.3.0.tgz",
+    "upstream": "https://github.com/undercasetype/Fraunces",
+    "bytes": 70336,
+    "sha256": "aacf7a6dcabddcb2e90adfd32eb32e03660ef0ed2c665bcb8fec18be8fc28c94",
+    "originalBytes": 77776,
+    "originalSha256": "cc851a4d63e3e55661ec36cdb62d8b07b07b2341ba01484a222ff367934f1959",
+    "processing": {
+      "fontTools": "4.63.0",
+      "brotli": "1.1.0",
+      "axes": {
+        "wght": [400, 400, 900],
+        "SOFT": [30, 30, 100]
+      },
+      "characters": 223,
+      "maxGeometryErrorFontUnits": 2.290405
+    }
+  },
+  {
+    "file": "Fraunces-OFL.txt",
+    "package": "@fontsource-variable/fraunces",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-9BYGySn4AHEJdgp9Z28tQ3X+laJMEOITXkQarZXeloWQZDq5oOvXJ3kDA8c7MGIfpogIaZfjrQBqmda8POOCKA==",
+    "packagePath": "LICENSE",
+    "url": "https://registry.npmjs.org/@fontsource-variable/fraunces/-/fraunces-5.3.0.tgz",
+    "upstream": "https://github.com/undercasetype/Fraunces",
+    "bytes": 4504,
+    "sha256": "cd3384cafac6f2bddc3955273958a2e029f97027c8037ac539ef5744a77b579e"
+  },
+  {
+    "file": "martian-mono-latin-400-normal.woff2",
+    "package": "@fontsource/martian-mono",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-0iTnU6SZi6j5z4ymwlZGep6akvp/xWm+r+WyZO9hMfDJWX+dsFLipQp9zO02S0lkUQ+zAahcZNy3XLiNP+gVqQ==",
+    "packagePath": "files/martian-mono-latin-400-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/martian-mono/-/martian-mono-5.3.0.tgz",
+    "upstream": "https://github.com/evilmartians/mono",
+    "bytes": 10352,
+    "sha256": "bb677c9c5cf5b384b5e4a1fd86755a47e0cbafe6bc70a9ba458b5e13e1d7a5c0"
+  },
+  {
+    "file": "martian-mono-latin-500-normal.woff2",
+    "package": "@fontsource/martian-mono",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-0iTnU6SZi6j5z4ymwlZGep6akvp/xWm+r+WyZO9hMfDJWX+dsFLipQp9zO02S0lkUQ+zAahcZNy3XLiNP+gVqQ==",
+    "packagePath": "files/martian-mono-latin-500-normal.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/martian-mono/-/martian-mono-5.3.0.tgz",
+    "upstream": "https://github.com/evilmartians/mono",
+    "bytes": 10644,
+    "sha256": "98f9af6b1f769d57e58f6fd4e53d813be82106c7d24d84213a74836548e44071"
+  },
+  {
+    "file": "Martian-Mono-OFL.txt",
+    "package": "@fontsource/martian-mono",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-0iTnU6SZi6j5z4ymwlZGep6akvp/xWm+r+WyZO9hMfDJWX+dsFLipQp9zO02S0lkUQ+zAahcZNy3XLiNP+gVqQ==",
+    "packagePath": "LICENSE",
+    "url": "https://registry.npmjs.org/@fontsource/martian-mono/-/martian-mono-5.3.0.tgz",
+    "upstream": "https://github.com/evilmartians/mono",
+    "bytes": 4389,
+    "sha256": "bd7d799f6a67b704f9546422ee83d69b4dc5e4ae289d5eabc22581251dd7150a"
+  }
+]

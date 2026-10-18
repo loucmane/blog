@@ -1,4 +1,4 @@
-import type { Pool, PoolClient, QueryResultRow } from 'pg'
+import type { Client, ClientConfig, Pool, QueryResultRow } from 'pg'
 
 import type {
   Article,
@@ -20,7 +20,8 @@ import type {
 } from '../content/domain'
 import { parseMigratedContentDocument } from '../content/document'
 import { ContentConflictError, DuplicateSlugError } from '../content/errors'
-import type { ContentRepository, ContentTransaction } from '../content/ports'
+import type { ContentRepository, ContentTransaction, ExclusiveWorkLimits } from '../content/ports'
+import { ExclusivePostgresSession, type PostgresQueries } from './exclusive-postgres-session'
 
 function iso(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString()
@@ -298,7 +299,7 @@ function postgresCode(error: unknown): string | null {
 class PostgresContentTransaction implements ContentTransaction {
   publicationChanged = false
 
-  constructor(private readonly client: PoolClient) {}
+  constructor(private readonly client: PostgresQueries) {}
 
   async claimDuePublicationJob(input: {
     leaseUntil: string
@@ -746,6 +747,35 @@ class PostgresContentTransaction implements ContentTransaction {
     if (result.rowCount === 0) throw new Error(`Media original ${asset.id} is immutable.`)
   }
 
+  async createMediaAssetIfAbsent(asset: MediaAsset): Promise<boolean> {
+    const result = await this.client.query(
+      `INSERT INTO media_assets (
+        id, original_key, original_sha256, bytes, content_type, width, height,
+        alt, caption, credit_name, credit_url, focal_x, focal_y, created_at, updated_at, animated
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ON CONFLICT (id) DO NOTHING`,
+      [
+        asset.id,
+        asset.originalKey,
+        asset.originalSha256,
+        asset.bytes,
+        asset.contentType,
+        asset.width,
+        asset.height,
+        asset.alt,
+        asset.caption,
+        asset.creditName,
+        asset.creditUrl,
+        asset.focalX,
+        asset.focalY,
+        asset.createdAt,
+        asset.updatedAt,
+        asset.animated,
+      ],
+    )
+    return result.rowCount === 1
+  }
+
   async saveMediaRendition(rendition: MediaRendition): Promise<void> {
     await this.client.query(
       `INSERT INTO media_renditions
@@ -906,10 +936,55 @@ const missingPublicationVersion =
   'The publication version is missing. Apply the content migrations.'
 
 export class PostgresContentRepository implements ContentRepository {
-  constructor(private readonly pool: Pool) {}
+  private lockedClient: ExclusivePostgresSession | undefined
+
+  constructor(
+    private readonly pool: Pool,
+    private readonly createExclusiveClient?: (configuration: ClientConfig) => Client,
+  ) {}
+
+  async tryExclusive<T>(
+    key: string,
+    work: (repository: ContentRepository) => Promise<T>,
+    limits?: ExclusiveWorkLimits,
+  ): Promise<{ acquired: false } | { acquired: true; value: T }> {
+    // Never re-enter a session lock: PostgreSQL would grant it twice on the same session.
+    if (this.lockedClient) throw new Error('Exclusive repository work cannot be nested.')
+    const client = await ExclusivePostgresSession.connect(
+      this.pool.options,
+      limits,
+      this.createExclusiveClient,
+    )
+    let acquired = false
+    try {
+      await client.configure()
+      const result = await client.query<{ acquired: boolean }>(
+        'SELECT pg_try_advisory_lock(hashtextextended($1, 0)) AS acquired',
+        [key],
+      )
+      if (!result.rows[0]?.acquired) return { acquired: false }
+      acquired = true
+      const repository = new PostgresContentRepository(this.pool)
+      repository.lockedClient = client
+      const value = await work(repository)
+      client.check()
+      return { acquired: true, value }
+    } finally {
+      try {
+        if (acquired) {
+          await client.cleanup('SELECT pg_advisory_unlock(hashtextextended($1, 0))', [key])
+        }
+      } finally {
+        // End this standalone client even if unlocking fails. All seed SQL uses
+        // the same session, so connection loss cannot continue on a new connection.
+        await client.close()
+      }
+    }
+  }
 
   async readPublicationVersion(): Promise<number> {
-    const result = await this.pool.query<QueryResultRow & { version: string }>(
+    const client: PostgresQueries = this.lockedClient ?? this.pool
+    const result = await client.query<QueryResultRow & { version: string }>(
       'SELECT version FROM content_publication_state WHERE id = 1',
     )
     const version = Number(result.rows[0]?.version)
@@ -918,8 +993,11 @@ export class PostgresContentRepository implements ContentRepository {
   }
 
   async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect()
+    const pooledClient = this.lockedClient ? undefined : await this.pool.connect()
+    const client: PostgresQueries = this.lockedClient ?? pooledClient!
     try {
+      // Refresh server-side limits against the remaining run time before each transaction.
+      await this.lockedClient?.configure()
       await client.query('BEGIN')
       await client.query('SET CONSTRAINTS ALL DEFERRED')
       const transaction = new PostgresContentTransaction(client)
@@ -932,13 +1010,16 @@ export class PostgresContentRepository implements ContentRepository {
         )
         if (advanced.rowCount !== 1) throw new Error(missingPublicationVersion)
       }
+      // Publication bookkeeping can wait on a row lock AFTER the callback's deadline check.
+      this.lockedClient?.check()
       await client.query('COMMIT')
       return result
     } catch (error) {
-      await client.query('ROLLBACK')
+      if (this.lockedClient) await this.lockedClient.cleanup('ROLLBACK')
+      else await client.query('ROLLBACK')
       throw error
     } finally {
-      client.release()
+      pooledClient?.release()
     }
   }
 }

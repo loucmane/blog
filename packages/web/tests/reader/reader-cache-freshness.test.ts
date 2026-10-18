@@ -94,6 +94,10 @@ class HeldReads implements ContentRepository {
 
   constructor(private readonly store: ContentRepository) {}
 
+  tryExclusive<T>(key: string, work: (repository: ContentRepository) => Promise<T>) {
+    return this.store.tryExclusive(key, work)
+  }
+
   /** Holds the next `count` reads that finish until `release()`; `arrived` waits for all of them. */
   holdNext(count: number) {
     let arrive!: () => void

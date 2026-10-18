@@ -156,13 +156,18 @@ export class InMemoryOriginalObjectStore implements OriginalObjectStore {
     this.objects.delete(key)
   }
 
-  async getOriginal(key: string): Promise<Uint8Array> {
+  async getOriginal(key: string, signal?: AbortSignal): Promise<Uint8Array> {
+    signal?.throwIfAborted()
     const object = this.objects.get(key)
     if (!object) throw new Error(`Original ${key} was not found.`)
     return new Uint8Array(object.body)
   }
 
-  async putOriginal(input: { body: Uint8Array; contentType: string; key: string; sha256: string }) {
+  async putOriginal(
+    input: { body: Uint8Array; contentType: string; key: string; sha256: string },
+    signal?: AbortSignal,
+  ) {
+    signal?.throwIfAborted()
     const actual = sha256Bytes(input.body)
     if (actual !== input.sha256) throw new Error('Original checksum does not match its bytes.')
     const existing = this.objects.get(input.key)
@@ -182,7 +187,12 @@ export class InMemoryOriginalObjectStore implements OriginalObjectStore {
     }
   }
 
-  async verifyOriginal(key: string, expectedSha256: string): Promise<boolean> {
+  async verifyOriginal(
+    key: string,
+    expectedSha256: string,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
+    signal?.throwIfAborted()
     const object = this.objects.get(key)
     return object !== undefined && sha256Bytes(object.body) === expectedSha256
   }

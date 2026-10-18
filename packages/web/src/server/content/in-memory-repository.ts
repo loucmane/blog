@@ -273,6 +273,12 @@ class InMemoryContentTransaction implements ContentTransaction {
     this.state.mediaAssets.set(asset.id, clone(asset))
   }
 
+  async createMediaAssetIfAbsent(asset: MediaAsset): Promise<boolean> {
+    if (this.state.mediaAssets.has(asset.id)) return false
+    this.state.mediaAssets.set(asset.id, clone(asset))
+    return true
+  }
+
   async saveMediaRendition(rendition: MediaRendition): Promise<void> {
     this.state.mediaRenditions.set(rendition.id, clone(rendition))
   }
@@ -324,6 +330,20 @@ class InMemoryContentTransaction implements ContentTransaction {
 export class InMemoryContentRepository implements ContentRepository {
   private state = createState()
   private transactionBarrier: Promise<void> = Promise.resolve()
+  private readonly exclusiveKeys = new Set<string>()
+
+  async tryExclusive<T>(
+    key: string,
+    work: (repository: ContentRepository) => Promise<T>,
+  ): Promise<{ acquired: false } | { acquired: true; value: T }> {
+    if (this.exclusiveKeys.has(key)) return { acquired: false }
+    this.exclusiveKeys.add(key)
+    try {
+      return { acquired: true, value: await work(this) }
+    } finally {
+      this.exclusiveKeys.delete(key)
+    }
+  }
 
   private async runExclusive<T>(work: () => Promise<T>): Promise<T> {
     const previous = this.transactionBarrier

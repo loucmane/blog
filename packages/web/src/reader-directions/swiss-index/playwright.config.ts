@@ -1,0 +1,40 @@
+import path from 'node:path'
+
+import { defineConfig } from '@playwright/test'
+
+import shared from '../../../../../playwright.config'
+
+const webServers = Array.isArray(shared.webServer)
+  ? shared.webServer
+  : shared.webServer
+    ? [shared.webServer]
+    : []
+
+// Keep the direction's browser tests in its lane. Uses the same production server and fixtures.
+export default defineConfig({
+  ...shared,
+  reporter: [
+    ['list'],
+    [
+      'json',
+      {
+        outputFile: path.resolve(__dirname, '../../../../../ci-artifacts/swiss-index-results.json'),
+      },
+    ],
+    [
+      'html',
+      {
+        open: 'never',
+        outputFolder: path.resolve(__dirname, '../../../../../ci-artifacts/swiss-index-report'),
+      },
+    ],
+  ],
+  outputDir: path.resolve(__dirname, '../../../../../ci-artifacts/swiss-index-results'),
+  testDir: '.',
+  testMatch: '*.e2e.ts',
+  projects: [{ name: 'swiss-index', use: { browserName: 'chromium' } }],
+  webServer: webServers.map((server) => ({
+    ...server,
+    cwd: path.resolve(__dirname, '../../../../../'),
+  })),
+})

@@ -1,5 +1,10 @@
 import { baselineDirection } from './baseline'
+import { cinematicFeatureDirection } from './cinematic-feature'
 import { createReaderDirectionRegistry } from './contract'
+import { expressiveColourDirection } from './expressive-colour'
+import { literaryLongreadDirection } from './literary-longread'
+import { quietMonographDirection } from './quiet-monograph'
+import { swissIndexDirection } from './swiss-index'
 
 /**
  * The reader directions, in Reader Lab order. To add one, import it and add it to `directions`;
@@ -7,5 +12,12 @@ import { createReaderDirectionRegistry } from './contract'
  */
 export const readerDirections = createReaderDirectionRegistry({
   defaultId: baselineDirection.id,
-  directions: [baselineDirection],
+  directions: [
+    baselineDirection,
+    quietMonographDirection,
+    literaryLongreadDirection,
+    swissIndexDirection,
+    cinematicFeatureDirection,
+    expressiveColourDirection,
+  ],
 })
