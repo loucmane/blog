@@ -13,11 +13,20 @@ import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/con
 import type { AuthorProfile, TaxonomyTerm } from '@/server/content/domain'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { InMemoryOriginalObjectStore, MediaOriginalService } from '@/server/content/media'
+import type { ContentTransaction } from '@/server/content/ports'
+import { SectionService } from '@/server/content/sections'
 import { ContentService } from '@/server/content/service'
 
 import { labSeedBarrier } from '../../../tests/support/lab-seed-barrier'
 
-import { labAuthors, labImages, labSections, labStories, labTopics } from './north-house'
+import {
+  labAuthors,
+  labImages,
+  labSections,
+  labStories,
+  labTopics,
+  type LabStory,
+} from './north-house'
 import type * as Illustrations from './illustrations'
 import { renderIllustration } from './illustrations'
 import {
@@ -407,6 +416,7 @@ describe('Reader Lab seed', () => {
     expect(secondRun.stories).toEqual({
       created: [],
       existing: firstRun.stories.created,
+      resumed: [],
       slugInUse: [],
     })
     expect(secondRun.images).toEqual({
@@ -672,4 +682,265 @@ describe('Reader Lab seed', () => {
       )
     })
   })
+})
+
+describe('seed recovery after an interrupted run', () => {
+  const failure = new Error('Injected failure')
+  const story = labStories[0]!
+  const slugs = labStories.map(labStorySlug)
+
+  afterEach(() => vi.restoreAllMocks())
+
+  /** The prototype every in-memory transaction shares, so a test can make one of its writes fail. */
+  function transactionPrototype(
+    repository: InMemoryContentRepository,
+  ): Promise<ContentTransaction> {
+    return repository.inspect(async (transaction) => Object.getPrototypeOf(transaction))
+  }
+
+  /** Everything stored about one story. */
+  function storyState(repository: InMemoryContentRepository, id: string) {
+    return repository.inspect(async (transaction) => ({
+      article: await transaction.getArticle(id),
+      audits: await transaction.listAuditEvents(id),
+      autosaves: await transaction.listAutosaves(id),
+      bylines: await transaction.listArticleAuthors(id),
+      links: (await transaction.listArticleTaxonomies()).filter(
+        ({ articleId }) => articleId === id,
+      ),
+      revisions: await transaction.listRevisions(id),
+    }))
+  }
+
+  /** Readers see the story, in its section, with its bylines and topics in order. */
+  async function expectFinished(repository: InMemoryContentRepository, finished: LabStory) {
+    const view = await readArticleView(
+      { mediaAvailable: false, repository },
+      labStorySlug(finished),
+    )
+    expect(view?.section?.slug).toBe(finished.section)
+    expect(view?.authorLinks).toEqual(
+      finished.authors.map((slug) => ({ href: authorPath(slug), name: labAuthorName(slug) })),
+    )
+    expect(view?.topics).toEqual(
+      finished.topics.map((slug) => ({ href: topicPath(slug), name: labTopicName(slug) })),
+    )
+  }
+
+  async function expectReplayWritesNothing(repository: InMemoryContentRepository) {
+    const before = await snapshot(repository)
+    const replay = await seedLabContent({ objects: null, repository })
+    expect(replay.stories).toEqual({ created: [], existing: slugs, resumed: [], slugInUse: [] })
+    expect(await snapshot(repository)).toEqual(before)
+  }
+
+  /**
+   * Before this fix, creating a story and assigning its section committed one at a time, so a run
+   * that failed before publishing left a draft behind. This recreates what such a run left: the seed
+   * stops at its first story, which is then created, and optionally filed under its section, the
+   * way the earlier seed did it.
+   */
+  async function interruptedEarlierRun(
+    repository: InMemoryContentRepository,
+    { sectioned }: { sectioned: boolean },
+  ) {
+    vi.spyOn(ContentService.prototype, 'createArticle').mockRejectedValueOnce(failure)
+    await expect(seedLabContent({ objects: null, repository })).rejects.toThrow(failure)
+    vi.restoreAllMocks()
+    const clock = { now: () => new Date(story.publishedAt) }
+    await new ContentService(repository, clock).createArticle({
+      dek: story.dek,
+      document: {
+        articleId: story.id,
+        document: { content: story.blocks, type: 'doc' },
+        migrationProvenance: [],
+        schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
+        title: story.title,
+      },
+      id: story.id,
+      idempotencyKey: `lab-seed:create:${story.id}`,
+      slug: labStorySlug(story),
+      title: story.title,
+    })
+    if (sectioned) {
+      await new SectionService(repository, clock).assignSection({
+        articleId: story.id,
+        sectionId: labSections.find(({ slug }) => slug === story.section)!.id,
+      })
+    }
+  }
+
+  const interruptions: readonly (readonly [
+    string,
+    (repository: InMemoryContentRepository) => Promise<unknown>,
+  ])[] = [
+    [
+      'assigning its section',
+      async () =>
+        vi.spyOn(SectionService.prototype, 'assignSection').mockRejectedValueOnce(failure),
+    ],
+    [
+      'crediting its authors',
+      async (repository) =>
+        vi
+          .spyOn(await transactionPrototype(repository), 'setArticleAuthors')
+          .mockRejectedValueOnce(failure),
+    ],
+    [
+      'filing it under a topic',
+      async (repository) => {
+        const prototype = await transactionPrototype(repository)
+        const save = prototype.saveArticleTaxonomy
+        const topic = labTopics.find(({ slug }) => slug === story.topics[0])!
+        return vi.spyOn(prototype, 'saveArticleTaxonomy').mockImplementation(function (
+          this: ContentTransaction,
+          link,
+        ) {
+          return link.taxonomyId === topic.id ? Promise.reject(failure) : save.call(this, link)
+        })
+      },
+    ],
+    [
+      'publishing it',
+      async () => vi.spyOn(ContentService.prototype, 'publish').mockRejectedValueOnce(failure),
+    ],
+  ]
+
+  it.each(interruptions)(
+    'stores nothing of a story when %s fails, and creates all of it on the retry',
+    async (_step, interrupt) => {
+      const repository = new InMemoryContentRepository()
+      await interrupt(repository)
+
+      await expect(seedLabContent({ objects: null, repository })).rejects.toThrow(failure)
+      vi.restoreAllMocks()
+
+      expect(await storyState(repository, story.id)).toEqual({
+        article: null,
+        audits: [],
+        autosaves: [],
+        bylines: [],
+        links: [],
+        revisions: [],
+      })
+      const retry = await seedLabContent({ objects: null, repository })
+      expect(retry.stories).toEqual({ created: slugs, existing: [], resumed: [], slugInUse: [] })
+      await expectFinished(repository, story)
+      await expectReplayWritesNothing(repository)
+    },
+  )
+
+  it.each([false, true])(
+    'finishes the draft an earlier interrupted run left (filed under its section: %s)',
+    async (sectioned) => {
+      const repository = new InMemoryContentRepository()
+      await interruptedEarlierRun(repository, { sectioned })
+      const [draft] = (await storyState(repository, story.id)).revisions
+
+      const report = await seedLabContent({ objects: null, repository })
+
+      expect(report.stories).toEqual({
+        created: slugs.slice(1),
+        existing: [],
+        resumed: [labStorySlug(story)],
+        slugInUse: [],
+      })
+      await expectFinished(repository, story)
+      // It publishes the seed's own first draft, on the story's date.
+      const finished = await storyState(repository, story.id)
+      expect(finished.revisions).toEqual([draft])
+      expect(finished.article).toMatchObject({
+        publishedAt: story.publishedAt,
+        publishedRevisionId: draft?.id,
+        status: 'published',
+        version: 2,
+      })
+      await expectReplayWritesNothing(repository)
+    },
+  )
+
+  const ownerChanges: readonly (readonly [
+    string,
+    (repository: InMemoryContentRepository) => Promise<unknown>,
+  ])[] = [
+    [
+      'saves a new revision',
+      (repository) =>
+        new ContentService(repository).saveDraft({
+          articleId: story.id,
+          document: {
+            articleId: story.id,
+            document: {
+              content: [{ content: [{ text: 'Keep my words.', type: 'text' }], type: 'paragraph' }],
+              type: 'doc',
+            },
+            migrationProvenance: [],
+            schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
+            title: story.title,
+          },
+          expectedVersion: 1,
+          idempotencyKey: 'owner-edit',
+        }),
+    ],
+    // A byline or topic makes the draft the owner's, even one the seed would also have added.
+    [
+      'credits its author',
+      (repository) =>
+        repository.transaction((transaction) =>
+          transaction.setArticleAuthors(story.id, [
+            labAuthors.find(({ slug }) => slug === story.authors[0])!.id,
+          ]),
+        ),
+    ],
+    [
+      'files it under its topic',
+      (repository) =>
+        repository.transaction((transaction) =>
+          transaction.saveArticleTaxonomy({
+            articleId: story.id,
+            position: 0,
+            taxonomyId: labTopics.find(({ slug }) => slug === story.topics[0])!.id,
+          }),
+        ),
+    ],
+    // The in-memory store cannot remove a link, so this builds what removing the section the seed
+    // assigned leaves behind: the assignment in the audit trail, and no link.
+    [
+      'removes its section',
+      (repository) =>
+        repository.transaction((transaction) =>
+          transaction.saveAuditEvent({
+            action: 'article.section-assigned',
+            actorId: null,
+            articleId: story.id,
+            createdAt: story.publishedAt,
+            id: 'audit-section-assigned',
+            metadata: {
+              sectionId: labSections.find(({ slug }) => slug === story.section)!.id,
+              sectionSlug: story.section,
+            },
+          }),
+        ),
+    ],
+  ]
+
+  it.each(ownerChanges)(
+    'leaves that draft exactly as it is once the owner %s',
+    async (_change, change) => {
+      const repository = new InMemoryContentRepository()
+      await interruptedEarlierRun(repository, { sectioned: false })
+      await change(repository)
+      const owned = await storyState(repository, story.id)
+
+      const report = await seedLabContent({ objects: null, repository })
+
+      expect(report.stories).toEqual({
+        created: slugs.slice(1),
+        existing: [labStorySlug(story)],
+        resumed: [],
+        slugInUse: [],
+      })
+      expect(await storyState(repository, story.id)).toEqual(owned)
+    },
+  )
 })
