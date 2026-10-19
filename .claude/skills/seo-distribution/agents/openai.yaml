@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO and Distribution"
+  short_description: "Review magazine discoverability and distribution"
+  default_prompt: "Use $seo-distribution to review canonical URLs and distribution surfaces against published content."

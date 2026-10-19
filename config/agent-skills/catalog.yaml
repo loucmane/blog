@@ -186,6 +186,41 @@
         "advisory-editorial-review"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "seo-distribution",
+      "status": "active",
+      "entrypoint": ".claude/skills/seo-distribution/SKILL.md",
+      "codexLink": ".agents/skills/seo-distribution",
+      "provenance": {
+        "type": "project-authored",
+        "task": "54"
+      },
+      "capabilities": [
+        "canonical-url-review",
+        "structured-data-review",
+        "feed-index-hygiene",
+        "distribution-integration-review",
+        "advisory-seo-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "release-witness",
+      "status": "active",
+      "entrypoint": ".claude/skills/release-witness/SKILL.md",
+      "codexLink": ".agents/skills/release-witness",
+      "provenance": {
+        "type": "project-authored",
+        "task": "54"
+      },
+      "capabilities": [
+        "verification-evidence-review",
+        "security-accessibility-signals",
+        "rollback-readiness",
+        "advisory-release-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }
