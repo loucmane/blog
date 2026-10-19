@@ -274,7 +274,7 @@ describe('author pages', () => {
   it('return not found for unknown, empty, malformed, and oversized slugs', async () => {
     await publishStory({ ...winterLight, authors: [alpha] })
 
-    for (const slug of ['unknown-author', '', ' ', '../alpha', 'Alpha', 'a'.repeat(181)]) {
+    for (const slug of ['unknown-author', '', ' ', '../alpha', 'Alpha', 'a'.repeat(201)]) {
       await expectNotFound(AuthorPage(slugParams(slug)))
       expect(await authorMetadata(slugParams(slug)), JSON.stringify(slug)).toEqual({})
     }
@@ -326,6 +326,76 @@ describe('topic pages', () => {
 
     for (const slug of ['unknown-topic', 'interiors', '', '../light', 'Light']) {
       await expectNotFound(TopicPage(slugParams(slug)))
+      expect(await topicMetadata(slugParams(slug)), JSON.stringify(slug)).toEqual({})
+    }
+  })
+})
+
+/*
+ * Import takes author and taxonomy slugs of 1 to 200 characters and the tables check only the
+ * kebab-case shape, so these routes accept that rule rather than the story and section one
+ * (2 to 180 characters).
+ */
+describe('author and topic slugs', () => {
+  it('resolve at one character and at 200 characters, from the story’s own links', async () => {
+    const shortest = 'c'
+    const longest = 'a'.repeat(200)
+    await publishStory({
+      ...winterLight,
+      authors: [
+        authorProfile(shortest, 'Short Writer', ''),
+        authorProfile(longest, 'Long Writer', ''),
+      ],
+      topics: [
+        { kind: 'tag', name: 'Short', slug: shortest },
+        { kind: 'category', name: 'Long', slug: longest },
+      ],
+    })
+
+    const article = await render(StoryPage(slugParams(winterLight.slug)))
+
+    for (const [slug, writer, topic] of [
+      [shortest, 'Short Writer', 'Short'],
+      [longest, 'Long Writer', 'Long'],
+    ] as const) {
+      expect(article).toContain(`href="/authors/${slug}"`)
+      expect(article).toContain(`href="/topics/${slug}"`)
+      const authorPage = await render(AuthorPage(slugParams(slug)))
+      const topicPage = await render(TopicPage(slugParams(slug)))
+      expect(headings(authorPage)).toEqual([writer])
+      expect(headings(topicPage)).toEqual([topic])
+      expect(authorPage).toContain(`href="/stories/${winterLight.slug}"`)
+      expect(topicPage).toContain(`href="/stories/${winterLight.slug}"`)
+      expect(await authorMetadata(slugParams(slug))).toMatchObject({
+        alternates: { canonical: `/authors/${slug}` },
+        title: writer,
+      })
+      expect(await topicMetadata(slugParams(slug))).toMatchObject({
+        alternates: { canonical: `/topics/${slug}` },
+        title: topic,
+      })
+    }
+  })
+
+  it('return not found for empty, 201-character, and malformed slugs, even when one is stored', async () => {
+    const rejected = ['', 'a'.repeat(201), 'C', '-c', 'c-', 'c--d', 'c d', ' c', '../c', 'c/d']
+    await publishStory({
+      ...winterLight,
+      authors: rejected.map((slug, index) => authorProfile(slug, `Writer ${index}`, '')),
+      topics: rejected.map((slug, index) => ({ kind: 'tag', name: `Topic ${index}`, slug })),
+    })
+    // The in-memory store does not check slugs, so only the routes' slug rule turns these away.
+    const stored = await getOwnerRuntime().repository.transaction(async (transaction) => ({
+      authors: (await transaction.listAuthors()).map(({ slug }) => slug),
+      topics: (await transaction.listTaxonomyTerms()).map(({ slug }) => slug),
+    }))
+    expect(stored.authors).toEqual(expect.arrayContaining(rejected))
+    expect(stored.topics).toEqual(expect.arrayContaining(rejected))
+
+    for (const slug of rejected) {
+      await expectNotFound(AuthorPage(slugParams(slug)))
+      await expectNotFound(TopicPage(slugParams(slug)))
+      expect(await authorMetadata(slugParams(slug)), JSON.stringify(slug)).toEqual({})
       expect(await topicMetadata(slugParams(slug)), JSON.stringify(slug)).toEqual({})
     }
   })

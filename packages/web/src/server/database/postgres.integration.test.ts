@@ -8,6 +8,7 @@ import { Pool } from 'pg'
 import sharp from 'sharp'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { normalizeAuthorOrTopicSlug } from '../../reader/paths'
 import {
   readArticleView,
   readAuthorView,
@@ -1190,5 +1191,39 @@ describe('author, topic and related-story reads on real PostgreSQL', () => {
       topics: [],
     })
     for (const state of hiddenStates) expect(await readArticleView(postgres, state)).toBeNull()
+  }, 30_000)
+
+  it('links a one-character author and topic, and the routes resolve both pages', async () => {
+    // Import takes author and taxonomy slugs of 1 to 200 characters and the tables check only the
+    // kebab-case shape, so one character is a real slug here, unlike for stories and sections.
+    const jay = profile('j', 'J', 'J writes short pieces.')
+    const c: Topic = { kind: 'tag', name: 'C', slug: 'c' }
+    await inBothStores(async (store) => {
+      await saveAuthors(store, jay)
+      await addStory(store, { authors: [jay], day: 1, slug: 'brief', topics: [c] })
+    })
+    // What a route does with a link: Next decodes the last path segment, the route checks it.
+    const routeSlug = (href = '') =>
+      normalizeAuthorOrTopicSlug(decodeURIComponent(href.split('/').at(-1) ?? ''))
+
+    const article = await readArticleView(postgres, 'brief')
+
+    expect(article).toMatchObject({
+      authorLinks: [{ href: '/authors/j', name: 'J' }],
+      authors: ['J'],
+      topics: [{ href: '/topics/c', name: 'C' }],
+    })
+    const authorSlug = routeSlug(article?.authorLinks[0]?.href)
+    const topicSlug = routeSlug(article?.topics[0]?.href)
+    expect([authorSlug, topicSlug]).toEqual(['j', 'c'])
+    const author = await readAuthorView(postgres, authorSlug ?? '')
+    const topic = await readTopicView(postgres, topicSlug ?? '')
+    expect(author).toMatchObject({ bio: 'J writes short pieces.', href: '/authors/j', name: 'J' })
+    expect(topic).toMatchObject({ href: '/topics/c', name: 'C', slug: 'c' })
+    expect(author?.stories.map(({ slug }) => slug)).toEqual(['brief'])
+    expect(topic?.stories.map(({ slug }) => slug)).toEqual(['brief'])
+    expect(article).toEqual(await readArticleView(memory, 'brief'))
+    expect(author).toEqual(await readAuthorView(memory, 'j'))
+    expect(topic).toEqual(await readTopicView(memory, 'c'))
   }, 30_000)
 })

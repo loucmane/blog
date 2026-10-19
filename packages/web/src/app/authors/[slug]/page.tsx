@@ -4,7 +4,7 @@ import { connection } from 'next/server'
 
 import { resolveCanonicalSiteUrl } from '@/lib/site-url'
 import { loadAuthorView } from '@/reader/cache'
-import { normalizeReaderSlug } from '@/reader/slug'
+import { normalizeAuthorOrTopicSlug } from '@/reader/paths'
 import { resolveReaderPresentation } from '@/reader-lab/presentation'
 import { ReaderPage } from '@/reader-lab/reader-page'
 
@@ -14,7 +14,7 @@ interface AuthorPageProps {
 
 async function loadAuthor(params: AuthorPageProps['params']) {
   await connection()
-  const slug = normalizeReaderSlug((await params).slug)
+  const slug = normalizeAuthorOrTopicSlug((await params).slug)
   if (!slug) return null
   const result = await loadAuthorView(slug)
   return result.status === 'ready' && result.view ? { ...result, view: result.view } : null
