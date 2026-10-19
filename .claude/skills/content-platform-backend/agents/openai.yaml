@@ -1,0 +1,4 @@
+interface:
+  display_name: "Content Platform and Backend"
+  short_description: "Design and review the magazine's content backend"
+  default_prompt: "Use $content-platform-backend to design or review the magazine's app-owned content platform and backend."
