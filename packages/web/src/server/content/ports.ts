@@ -84,9 +84,11 @@ export interface ContentTransaction {
   saveRevision(revision: ArticleRevision): Promise<void>
   saveTaxonomyTerm(term: TaxonomyTerm): Promise<void>
   /**
-   * Replaces the authors credited on an article, in byline order. The article and each author
-   * must exist, an author appears once, and an empty list removes every credit. Like the other
-   * writes, it does not record a publication change.
+   * Replaces the authors credited on an article, in byline order. For a non-empty list the
+   * article and each author must exist and an author appears once; an empty list removes every
+   * credit and is accepted even for an unknown article. Like the other writes, it does not record
+   * a publication change. Callers hold the article's row lock (getArticleForUpdate) so two
+   * concurrent replacements cannot collide.
    */
   setArticleAuthors(articleId: string, authorIds: readonly string[]): Promise<void>
 }
