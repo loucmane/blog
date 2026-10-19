@@ -118,6 +118,13 @@ export interface ArticleTaxonomy {
   readonly taxonomyId: string
 }
 
+/** One author credited on an article. A byline lists them by position, lowest first. */
+export interface ArticleAuthor {
+  readonly articleId: string
+  readonly authorId: string
+  readonly position: number
+}
+
 export interface PublicationSettings {
   readonly createdAt: string
   readonly defaultLocale: string

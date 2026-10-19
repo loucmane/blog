@@ -44,9 +44,13 @@ export interface ContentTransaction {
   getPublicationSettings(): Promise<PublicationSettings | null>
   getRevision(id: string): Promise<ArticleRevision | null>
   lockIdempotency(operation: string, key: string): Promise<void>
+  /** The authors credited on an article, in byline order. */
+  listArticleAuthors(articleId: string): Promise<readonly AuthorProfile[]>
   listArticles(): Promise<readonly Article[]>
   listArticleTaxonomies(): Promise<readonly ArticleTaxonomy[]>
   listAuditEvents(articleId?: string): Promise<readonly AuditEvent[]>
+  /** Every article that credits this author, whatever its status, in article id order. */
+  listAuthorArticles(authorId: string): Promise<readonly Article[]>
   listAuthors(): Promise<readonly AuthorProfile[]>
   listAutosaves(articleId: string): Promise<readonly DraftAutosave[]>
   listMediaAssets(): Promise<readonly MediaAsset[]>
@@ -79,6 +83,14 @@ export interface ContentTransaction {
   saveReusableBlockRevision(revision: ReusableBlockRevision): Promise<void>
   saveRevision(revision: ArticleRevision): Promise<void>
   saveTaxonomyTerm(term: TaxonomyTerm): Promise<void>
+  /**
+   * Replaces the authors credited on an article, in byline order. For a non-empty list the
+   * article and each author must exist and an author appears once; an empty list removes every
+   * credit and is accepted even for an unknown article. Like the other writes, it does not record
+   * a publication change. Callers hold the article's row lock (getArticleForUpdate) so two
+   * concurrent replacements cannot collide.
+   */
+  setArticleAuthors(articleId: string, authorIds: readonly string[]): Promise<void>
 }
 
 /** Server-owned bounds for a dedicated exclusive session, never normal owner queries. */
