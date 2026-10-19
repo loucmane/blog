@@ -115,6 +115,39 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "security-identity-privacy",
+      "match": [
+        "packages/web/src/server/owner/**",
+        "packages/web/src/app/api/owner/**",
+        "packages/web/src/app/api/auth/**",
+        "packages/web/src/app/api/media/**",
+        "packages/web/src/lib/request-security.ts",
+        "packages/web/next.config.ts",
+        "packages/web/src/lib/security-headers.test.ts",
+        "packages/web/src/server/content/document.ts",
+        "packages/web/src/server/content/media.ts",
+        "packages/web/src/server/content/media-variants.ts",
+        "packages/web/src/server/content/media-variant-rules.ts",
+        "packages/web/migrations/0002_owner_auth*.sql",
+        "scripts/ci/check-dependency-security.mjs",
+        "tests/ci/security-hotfix.test.mjs",
+        ".gitleaksignore",
+        ".github/workflows/**",
+        "package.json",
+        "packages/web/package.json",
+        "pnpm-lock.yaml",
+        "config/runtime.json"
+      ],
+      "skills": ["security-identity-privacy"],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }

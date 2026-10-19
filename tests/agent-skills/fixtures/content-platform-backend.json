@@ -140,6 +140,9 @@
       ".claude/skills/content-platform-backend/SKILL.md"
     ],
     "intendedOverlaps": {
+      "packages/web/src/server/owner/publication-worker.ts": [
+        "security-identity-privacy"
+      ],
       "docs/architecture/content-persistence-foundation.md": [
         "stack-research-adr"
       ]

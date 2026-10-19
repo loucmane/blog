@@ -128,6 +128,29 @@
         "advisory-backend-review"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "security-identity-privacy",
+      "status": "active",
+      "entrypoint": ".claude/skills/security-identity-privacy/SKILL.md",
+      "codexLink": ".agents/skills/security-identity-privacy",
+      "provenance": {
+        "type": "project-authored",
+        "task": "59"
+      },
+      "capabilities": [
+        "owner-authentication-recovery",
+        "authorization-role-boundaries",
+        "session-credential-secret-review",
+        "rich-content-sanitization",
+        "upload-media-security",
+        "abuse-rate-limit-review",
+        "privacy-retention-review",
+        "dependency-supply-chain-review",
+        "structured-threat-model",
+        "advisory-security-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }
