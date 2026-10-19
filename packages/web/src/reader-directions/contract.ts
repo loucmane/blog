@@ -1,14 +1,17 @@
 import type { FunctionComponent } from 'react'
 
-import type { ArticleView, HomeView, SectionView } from '@/reader/views'
+import type { ArticleView, AuthorView, HomeView, SectionView, TopicView } from '@/reader/views'
 
+import { BaselineAuthor } from './baseline/author'
+import { BaselineTopic } from './baseline/topic'
 import { contrastRatio, wcagTextContrast } from './contrast'
 
 /*
  * The reader direction contract. A direction is one complete presentation of the public site: its
- * Home, Article, and Section server components receive the direction-neutral view models and render
- * the whole page below the root layout. Directions never fetch data, read cookies, or know about
- * the Reader Lab.
+ * Home, Article, Section, Author, and Topic server components receive the direction-neutral view
+ * models and render the whole page below the root layout. Author and Topic are optional: a
+ * direction that leaves them out renders baseline's. Directions never fetch data, read cookies, or
+ * know about the Reader Lab.
  *
  * A direction's assets load only while it is the active direction: the page applies its font
  * faces, variables, tokens, and styles only when it renders that direction. Fonts are local WOFF2
@@ -26,6 +29,14 @@ export interface ArticleDirectionProps {
 
 export interface SectionDirectionProps {
   readonly view: SectionView
+}
+
+export interface AuthorDirectionProps {
+  readonly view: AuthorView
+}
+
+export interface TopicDirectionProps {
+  readonly view: TopicView
 }
 
 /** Local font faces, emitted only when this direction renders. */
@@ -71,6 +82,8 @@ export interface ReaderDirectionTokens {
 
 export interface ReaderDirectionDefinition {
   readonly Article: FunctionComponent<ArticleDirectionProps>
+  /** The author page. Leave it out to render baseline's. */
+  readonly Author?: FunctionComponent<AuthorDirectionProps>
   /** Self-hosted faces with adjusted fallbacks; always optional display, never preloaded. */
   readonly fonts?: readonly ReaderDirectionFont[]
   readonly Home: FunctionComponent<HomeDirectionProps>
@@ -84,10 +97,15 @@ export interface ReaderDirectionDefinition {
   /** The direction's idea, in one line. */
   readonly thesis: string
   readonly tokens?: ReaderDirectionTokens
+  /** The topic page. Leave it out to render baseline's. */
+  readonly Topic?: FunctionComponent<TopicDirectionProps>
 }
 
+/** A validated direction. Its author and topic pages are its own or baseline's. */
 export interface ReaderDirection extends ReaderDirectionDefinition {
+  readonly Author: FunctionComponent<AuthorDirectionProps>
   readonly fonts: readonly ReaderDirectionFont[]
+  readonly Topic: FunctionComponent<TopicDirectionProps>
 }
 
 export interface ReaderDirectionNeighbours {
@@ -123,6 +141,7 @@ const tokenNamePattern = /^--[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const fontFilePattern = /^[a-z0-9][a-z0-9_-]*\.woff2$/
 const fontMetricPattern = /^\d+(?:\.\d+)?%$/
 const views = ['Home', 'Article', 'Section'] as const
+const optionalViews = ['Author', 'Topic'] as const
 
 function fail(id: string, problem: string): never {
   throw new ReaderDirectionError(`Reader direction "${id}": ${problem}`)
@@ -335,6 +354,11 @@ export function defineReaderDirection(definition: ReaderDirectionDefinition): Re
       fail(id, `the direction must provide a ${view} view component.`)
     }
   }
+  for (const view of optionalViews) {
+    if (definition[view] !== undefined && typeof definition[view] !== 'function') {
+      fail(id, `the ${view} view must be a component, or left out to render baseline's.`)
+    }
+  }
   const name = requireText(id, 'name', definition.name, maxNameLength)
   const thesis = requireText(id, 'thesis', definition.thesis, maxThesisLength)
   const fonts = requireFonts(id, definition.fonts)
@@ -343,6 +367,7 @@ export function defineReaderDirection(definition: ReaderDirectionDefinition): Re
 
   return Object.freeze({
     Article: definition.Article,
+    Author: definition.Author ?? BaselineAuthor,
     fonts,
     Home: definition.Home,
     id,
@@ -351,6 +376,7 @@ export function defineReaderDirection(definition: ReaderDirectionDefinition): Re
     ...(styles === undefined ? {} : { styles }),
     thesis,
     ...(tokens === undefined ? {} : { tokens }),
+    Topic: definition.Topic ?? BaselineTopic,
   })
 }
 

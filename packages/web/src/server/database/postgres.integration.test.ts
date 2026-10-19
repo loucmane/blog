@@ -6,13 +6,17 @@ import path from 'node:path'
 import { CreateBucketCommand, DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { Pool } from 'pg'
 import sharp from 'sharp'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   readArticleView,
+  readAuthorView,
   readHomeView,
   readPublicMediaIds,
   readSectionView,
+  readTopicView,
+  relatedStoryLimit,
+  type ReaderSource,
 } from '../../reader/read-model'
 import { verifyRestoredContent } from '../content/backup'
 import {
@@ -20,12 +24,13 @@ import {
   extractContentText,
   type ContentDocument,
 } from '../content/document'
-import type { AuthorProfile, MediaAsset } from '../content/domain'
+import type { AuthorProfile, MediaAsset, TaxonomyTerm } from '../content/domain'
+import { InMemoryContentRepository } from '../content/in-memory-repository'
 import { MediaOriginalService, originalObjectKey, sha256Bytes } from '../content/media'
 import { MediaVariantService, mediaVariantObjectKey } from '../content/media-variants'
 import { ContentConflictError } from '../content/errors'
 import { createPortableContentBundle, verifyPortableMedia } from '../content/portability'
-import type { Clock, IdentifierSource } from '../content/ports'
+import type { Clock, ContentRepository, IdentifierSource } from '../content/ports'
 import { SectionService } from '../content/sections'
 import { ContentService } from '../content/service'
 import { renderIllustration } from '../lab/illustrations'
@@ -816,4 +821,374 @@ describe('PostgreSQL and media persistence integration', () => {
 
     await pool.end()
   }, 120_000)
+})
+
+describe('author, topic and related-story reads on real PostgreSQL', () => {
+  // Each case gets a new schema with every content migration applied, so it sees only its own
+  // stories. The same stories also go into an in-memory repository, and each PostgreSQL view must
+  // equal the in-memory one field for field.
+  type StoryState = 'deleted' | 'draft' | 'published' | 'rescheduled' | 'scheduled' | 'withdrawn'
+
+  interface Topic {
+    readonly kind: Exclude<TaxonomyTerm['kind'], 'section'>
+    readonly name: string
+    readonly slug: string
+  }
+
+  interface Story {
+    /** The byline, in order. */
+    readonly authors?: readonly AuthorProfile[]
+    /** The day in June 2026 the story is written, and published if it is. */
+    readonly day: number
+    /** Section slugs, primary section first. */
+    readonly sections?: readonly string[]
+    readonly slug: string
+    /**
+     * Readers see `published` stories and `rescheduled` ones: published, with a newer revision
+     * scheduled. A `scheduled` story waits for its first publication, so readers cannot see it.
+     */
+    readonly state?: StoryState
+    /** Categories and tags, filed after the sections, in this order. */
+    readonly topics?: readonly Topic[]
+  }
+
+  const termTime = '2026-06-01T00:00:00.000Z'
+  const scheduledRunAt = '2026-12-01T09:00:00.000Z'
+  // Stories readers never see: withdrawn, deleted, never published, and waiting for a first
+  // scheduled publication.
+  const hiddenStates = ['withdrawn', 'deleted', 'draft', 'scheduled'] as const
+  const profile = (slug: string, displayName: string, bio: string): AuthorProfile => ({
+    bio,
+    createdAt: termTime,
+    displayName,
+    id: `author-${slug}`,
+    slug,
+    updatedAt: termTime,
+  })
+  const alpha = profile('alpha', 'Alpha Writer', 'Alpha Writer writes about rooms.')
+  const bravo = profile('bravo', 'Bravo Writer', '   ')
+  const lightCategory: Topic = { kind: 'category', name: 'Light', slug: 'light' }
+  const lightTag: Topic = { kind: 'tag', name: 'light', slug: 'light' }
+  const winterTag: Topic = { kind: 'tag', name: 'Winter', slug: 'winter' }
+  const interiors = { href: '/sections/interiors', name: 'interiors', slug: 'interiors' }
+
+  let schema: string
+  let admin: Pool
+  let pool: Pool
+  let memory: ReaderSource
+  let postgres: ReaderSource
+
+  beforeEach(async () => {
+    schema = `reader_pages_${randomUUID().replaceAll('-', '')}`
+    admin = new Pool({ connectionString: databaseUrl, max: 1 })
+    await admin.query(`CREATE SCHEMA "${schema}"`)
+    pool = new Pool({ connectionString: databaseUrl, max: 2, options: `-c search_path=${schema}` })
+    await applyContentMigrations(pool, await readContentMigrations())
+    memory = { mediaAvailable: true, repository: new InMemoryContentRepository() }
+    postgres = { mediaAvailable: true, repository: new PostgresContentRepository(pool) }
+  })
+
+  afterEach(async () => {
+    await pool.end()
+    await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
+    await admin.end()
+  })
+
+  /** Makes the same writes in the in-memory repository, then in PostgreSQL. */
+  async function inBothStores(write: (store: ContentRepository) => Promise<void>) {
+    await write(memory.repository)
+    await write(postgres.repository)
+  }
+
+  async function saveAuthors(store: ContentRepository, ...authors: AuthorProfile[]) {
+    await store.transaction(async (transaction) => {
+      for (const author of authors) await transaction.saveAuthor(author)
+    })
+  }
+
+  /** Files an article under a category or tag, after its existing taxonomy links. */
+  async function fileUnder(store: ContentRepository, articleId: string, topic: Topic) {
+    await store.transaction(async (transaction) => {
+      const id = `${topic.kind}-${topic.slug}`
+      if (!(await transaction.listTaxonomyTerms()).some((term) => term.id === id)) {
+        await transaction.saveTaxonomyTerm({
+          ...topic,
+          createdAt: termTime,
+          id,
+          updatedAt: termTime,
+        })
+      }
+      const positions = (await transaction.listArticleTaxonomies())
+        .filter((link) => link.articleId === articleId)
+        .map(({ position }) => position)
+      await transaction.saveArticleTaxonomy({
+        articleId,
+        position: Math.max(-1, ...positions) + 1,
+        taxonomyId: id,
+      })
+      transaction.recordPublicationChange()
+    })
+  }
+
+  /** Adds a story with its byline, sections and topics, then takes it to its state. */
+  async function addStory(store: ContentRepository, story: Story) {
+    const { day, slug, state = 'published' } = story
+    const clock: Clock = { now: () => new Date(Date.UTC(2026, 5, day, 7)) }
+    const service = new ContentService(store, clock)
+    const sections = new SectionService(store, clock)
+    const articleId = `article-${slug}`
+    const created = await service.createArticle({
+      dek: `Summary of ${slug}`,
+      document: { ...document(articleId), title: `Title of ${slug}` },
+      id: articleId,
+      idempotencyKey: `create-${slug}`,
+      slug,
+      title: `Title of ${slug}`,
+    })
+    const authorIds = (story.authors ?? []).map(({ id }) => id)
+    if (authorIds.length > 0) {
+      await store.transaction(async (transaction) => {
+        await transaction.setArticleAuthors(articleId, authorIds)
+        transaction.recordPublicationChange()
+      })
+    }
+    for (const sectionSlug of story.sections ?? []) {
+      const section = await sections.ensureSection({
+        id: `section-${sectionSlug}`,
+        name: sectionSlug,
+        slug: sectionSlug,
+      })
+      await sections.assignSection({ articleId, sectionId: section.id })
+    }
+    for (const topic of story.topics ?? []) await fileUnder(store, articleId, topic)
+
+    if (state === 'draft') return
+    const schedule = (expectedVersion: number, revisionId: string) =>
+      service.schedulePublication({
+        articleId,
+        expectedVersion,
+        idempotencyKey: `schedule-${slug}`,
+        revisionId,
+        runAt: scheduledRunAt,
+        timeZone: 'Europe/Stockholm',
+      })
+    if (state === 'scheduled') {
+      await schedule(created.article.version, created.revision.id)
+      return
+    }
+    const { article } = await service.publish({
+      articleId,
+      expectedVersion: created.article.version,
+      idempotencyKey: `publish-${slug}`,
+      revisionId: created.revision.id,
+    })
+    if (state === 'withdrawn') {
+      await service.unpublish({
+        articleId,
+        expectedVersion: article.version,
+        idempotencyKey: `unpublish-${slug}`,
+        reason: 'Integration check',
+      })
+    } else if (state === 'deleted') {
+      await service.softDelete({
+        articleId,
+        expectedVersion: article.version,
+        idempotencyKey: `delete-${slug}`,
+      })
+    } else if (state === 'rescheduled') {
+      const update = await service.saveDraft({
+        articleId,
+        document: { ...document(articleId), title: `Next title of ${slug}` },
+        expectedVersion: article.version,
+        idempotencyKey: `save-${slug}`,
+        title: `Next title of ${slug}`,
+      })
+      await schedule(update.article.version, update.revision.id)
+    }
+  }
+
+  it('finds an author by slug, and nobody by an unknown slug or an author id', async () => {
+    await inBothStores((store) => saveAuthors(store, alpha, bravo))
+    const bySlug = (source: ReaderSource, slug: string) =>
+      source.repository.transaction((transaction) => transaction.getAuthorBySlug(slug))
+
+    expect(await bySlug(postgres, 'alpha')).toEqual(alpha)
+    expect(await bySlug(postgres, 'bravo')).toEqual(bravo)
+    expect(await bySlug(postgres, 'unknown')).toBeNull()
+    expect(await bySlug(postgres, alpha.id)).toBeNull()
+    for (const slug of ['alpha', 'bravo', 'unknown', alpha.id]) {
+      expect(await bySlug(postgres, slug)).toEqual(await bySlug(memory, slug))
+    }
+  }, 30_000)
+
+  it('lists only the visible stories that credit an author, newest first', async () => {
+    await inBothStores(async (store) => {
+      await saveAuthors(store, alpha, bravo)
+      await addStory(store, { authors: [alpha], day: 1, sections: ['interiors'], slug: 'first' })
+      await addStory(store, { authors: [bravo, alpha], day: 2, slug: 'second' })
+      await addStory(store, { authors: [bravo], day: 3, slug: 'theirs' })
+      await addStory(store, { authors: [alpha], day: 4, slug: 'rescheduled', state: 'rescheduled' })
+      for (const state of hiddenStates) {
+        await addStory(store, { authors: [alpha], day: 5, slug: state, state })
+      }
+    })
+
+    const page = await readAuthorView(postgres, 'alpha')
+
+    expect(page).toMatchObject({
+      bio: 'Alpha Writer writes about rooms.',
+      href: '/authors/alpha',
+      name: 'Alpha Writer',
+      navigation: { sections: [interiors] },
+      slug: 'alpha',
+    })
+    expect(page?.stories.map(({ slug }) => slug)).toEqual(['rescheduled', 'second', 'first'])
+    // A story with a newer revision scheduled shows the revision readers see now.
+    expect(page?.stories[0]).toMatchObject({
+      publishedAt: '2026-06-04T07:00:00.000Z',
+      title: 'Title of rescheduled',
+    })
+    expect(page?.stories[2]?.section).toEqual(interiors)
+    expect(page).toEqual(await readAuthorView(memory, 'alpha'))
+  }, 30_000)
+
+  it('lists only the visible stories filed under a topic, newest first, and no topic for other slugs', async () => {
+    await inBothStores(async (store) => {
+      await addStory(store, { day: 1, sections: ['interiors'], slug: 'lamp', topics: [lightTag] })
+      await addStory(store, { day: 2, sections: ['craft'], slug: 'window', topics: [lightTag] })
+      await addStory(store, { day: 3, slug: 'candle', topics: [lightCategory] })
+      await addStory(store, {
+        day: 4,
+        slug: 'rescheduled',
+        state: 'rescheduled',
+        topics: [lightTag],
+      })
+      for (const state of hiddenStates) {
+        await addStory(store, { day: 5, slug: state, state, topics: [lightTag, lightCategory] })
+      }
+      // A section is never part of a topic, even one with the same slug.
+      await addStory(store, { day: 6, sections: ['light'], slug: 'only-in-a-section' })
+    })
+
+    const topic = await readTopicView(postgres, 'light')
+
+    expect(topic).toMatchObject({
+      description: null,
+      href: '/topics/light',
+      // The category names the topic before the tag that shares its slug.
+      name: 'Light',
+      slug: 'light',
+    })
+    expect(topic?.stories.map(({ slug }) => slug)).toEqual([
+      'rescheduled',
+      'candle',
+      'window',
+      'lamp',
+    ])
+    expect(topic?.stories.map(({ section }) => section?.slug ?? null)).toEqual([
+      null,
+      null,
+      'craft',
+      'interiors',
+    ])
+    expect(topic?.navigation.sections.map(({ slug }) => slug)).toEqual([
+      'craft',
+      'interiors',
+      'light',
+    ])
+    expect(topic).toEqual(await readTopicView(memory, 'light'))
+    expect(await readTopicView(postgres, 'unknown')).toBeNull()
+    expect(await readTopicView(postgres, 'interiors')).toBeNull()
+  }, 30_000)
+
+  it('gives an unknown author or topic no page, and one without a visible story an empty page', async () => {
+    const unseen: Topic = { kind: 'tag', name: 'Unseen', slug: 'unseen' }
+    await inBothStores(async (store) => {
+      await saveAuthors(store, alpha, bravo)
+      await addStory(store, { authors: [alpha], day: 1, sections: ['interiors'], slug: 'room' })
+      for (const state of hiddenStates) {
+        await addStory(store, { authors: [bravo], day: 2, slug: state, state, topics: [unseen] })
+      }
+    })
+
+    // The routes answer an unknown slug with 404 and these with an empty page.
+    expect(await readAuthorView(postgres, 'unknown')).toBeNull()
+    expect(await readTopicView(postgres, 'unknown')).toBeNull()
+    expect(await readAuthorView(postgres, 'bravo')).toEqual({
+      bio: null,
+      href: '/authors/bravo',
+      name: 'Bravo Writer',
+      navigation: { sections: [interiors] },
+      slug: 'bravo',
+      stories: [],
+    })
+    expect(await readTopicView(postgres, 'unseen')).toEqual({
+      description: null,
+      href: '/topics/unseen',
+      name: 'Unseen',
+      navigation: { sections: [interiors] },
+      slug: 'unseen',
+      stories: [],
+    })
+    expect(await readAuthorView(postgres, 'bravo')).toEqual(await readAuthorView(memory, 'bravo'))
+    expect(await readTopicView(postgres, 'unseen')).toEqual(await readTopicView(memory, 'unseen'))
+  }, 30_000)
+
+  it('credits, files and relates an article as the in-memory repository does', async () => {
+    const rooms = Array.from({ length: relatedStoryLimit + 1 }, (_, index) => `room-${index + 1}`)
+    // Every other story is newer than the rooms.
+    const after = (days: number) => rooms.length + days
+    await inBothStores(async (store) => {
+      await saveAuthors(store, alpha, bravo)
+      for (const [index, slug] of rooms.entries()) {
+        await addStory(store, { day: index + 1, sections: ['interiors'], slug })
+      }
+      await addStory(store, { day: after(1), sections: ['craft'], slug: 'chair' })
+      for (const state of hiddenStates) {
+        await addStory(store, { day: after(2), sections: ['interiors'], slug: state, state })
+      }
+      // Filed under interiors as its second section, so it is related too.
+      await addStory(store, { day: after(3), sections: ['craft', 'interiors'], slug: 'stool' })
+      await addStory(store, {
+        authors: [bravo, alpha],
+        day: after(4),
+        sections: ['interiors'],
+        slug: 'feature',
+        topics: [winterTag, lightCategory, lightTag],
+      })
+      await addStory(store, { day: after(5), slug: 'loose' })
+    })
+
+    const article = await readArticleView(postgres, 'feature')
+
+    expect(article).toMatchObject({
+      authorLinks: [
+        { href: '/authors/bravo', name: 'Bravo Writer' },
+        { href: '/authors/alpha', name: 'Alpha Writer' },
+      ],
+      authors: ['Bravo Writer', 'Alpha Writer'],
+      section: interiors,
+      // Each topic once, at its first link; the section is not a topic.
+      topics: [
+        { href: '/topics/winter', name: 'Winter' },
+        { href: '/topics/light', name: 'Light' },
+      ],
+    })
+    // The newest other visible stories under its primary section, at most the limit.
+    expect(article?.related.map(({ slug }) => slug)).toEqual(
+      ['stool', ...[...rooms].reverse()].slice(0, relatedStoryLimit),
+    )
+    expect(article?.related[0]).toMatchObject({
+      href: '/stories/stool',
+      section: { slug: 'craft' },
+      title: 'Title of stool',
+    })
+    expect(article).toEqual(await readArticleView(memory, 'feature'))
+    expect(await readArticleView(postgres, 'loose')).toMatchObject({
+      authorLinks: [],
+      related: [],
+      topics: [],
+    })
+    for (const state of hiddenStates) expect(await readArticleView(postgres, state)).toBeNull()
+  }, 30_000)
 })

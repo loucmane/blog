@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/content/document'
+import type { AuthorProfile, TaxonomyTerm } from '@/server/content/domain'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { InMemoryOriginalObjectStore, MediaOriginalService } from '@/server/content/media'
 import type { Clock } from '@/server/content/ports'
@@ -10,9 +11,12 @@ import { ContentService } from '@/server/content/service'
 import {
   homeRecentStoryLimit,
   readArticleView,
+  readAuthorView,
   readHomeView,
   readPublicMediaIds,
   readSectionView,
+  readTopicView,
+  relatedStoryLimit,
   type ReaderSource,
 } from './read-model'
 
@@ -93,6 +97,76 @@ async function publish(input: {
     revisionId: created.revision.id,
   })
   return { ...published, service }
+}
+
+const termTime = '2026-09-01T00:00:00.000Z'
+
+async function createDraft(slug: string) {
+  const articleId = `article-${slug}`
+  await new ContentService(repository, clockAt(termTime)).createArticle({
+    dek: `Summary for ${slug}`,
+    document: documentFor(articleId, `Title for ${slug}`, [paragraph(`Body of ${slug}`)]),
+    id: articleId,
+    idempotencyKey: `create-${slug}`,
+    slug,
+    title: `Title for ${slug}`,
+  })
+  return articleId
+}
+
+function authorProfile(slug: string, displayName: string, bio: string): AuthorProfile {
+  return { bio, createdAt: termTime, displayName, id: `author-${slug}`, slug, updatedAt: termTime }
+}
+
+const alpha = authorProfile('alpha', 'Alpha Writer', 'Alpha Writer writes about rooms.')
+const bravo = authorProfile('bravo', 'Bravo Writer', '   ')
+
+async function saveAuthors(...profiles: AuthorProfile[]) {
+  await repository.transaction(async (transaction) => {
+    for (const profile of profiles) await transaction.saveAuthor(profile)
+  })
+}
+
+/** Sets an article's byline, in order, as an owner-facing byline change would. */
+async function credit(articleId: string, ...profiles: AuthorProfile[]) {
+  await repository.transaction(async (transaction) => {
+    await transaction.setArticleAuthors(
+      articleId,
+      profiles.map(({ id }) => id),
+    )
+    transaction.recordPublicationChange()
+  })
+}
+
+/** Files an article under a category or tag, after the article's existing taxonomy links. */
+async function fileUnder(
+  articleId: string,
+  kind: Exclude<TaxonomyTerm['kind'], 'section'>,
+  slug: string,
+  name: string = slug,
+) {
+  await repository.transaction(async (transaction) => {
+    const id = `${kind}-${slug}`
+    if (!(await transaction.listTaxonomyTerms()).some((term) => term.id === id)) {
+      await transaction.saveTaxonomyTerm({
+        createdAt: termTime,
+        id,
+        kind,
+        name,
+        slug,
+        updatedAt: termTime,
+      })
+    }
+    const positions = (await transaction.listArticleTaxonomies())
+      .filter((link) => link.articleId === articleId)
+      .map(({ position }) => position)
+    await transaction.saveArticleTaxonomy({
+      articleId,
+      position: Math.max(-1, ...positions) + 1,
+      taxonomyId: id,
+    })
+    transaction.recordPublicationChange()
+  })
 }
 
 beforeEach(() => {
@@ -308,5 +382,197 @@ describe('reader read model', () => {
     expect((await readSectionView(source, 'craft'))?.stories.map(({ slug }) => slug)).toEqual([
       'two-sections',
     ])
+  })
+})
+
+describe('author pages and bylines', () => {
+  it('lists an author’s publicly visible stories, newest first', async () => {
+    await saveAuthors(alpha, bravo)
+    await publish({ section: 'interiors', slug: 'first' })
+    await publish({ slug: 'second' })
+    await publish({ slug: 'theirs' })
+    const withdrawn = await publish({ slug: 'withdrawn' })
+    const deleted = await publish({ slug: 'deleted' })
+    await credit('article-first', alpha)
+    await credit('article-second', bravo, alpha)
+    await credit('article-theirs', bravo)
+    await credit(withdrawn.article.id, alpha)
+    await credit(deleted.article.id, alpha)
+    await credit(await createDraft('draft'), alpha)
+    await withdrawn.service.unpublish({
+      articleId: withdrawn.article.id,
+      expectedVersion: withdrawn.article.version,
+      idempotencyKey: 'unpublish-withdrawn',
+      reason: 'Corrections pending',
+    })
+    await deleted.service.softDelete({
+      articleId: deleted.article.id,
+      expectedVersion: deleted.article.version,
+      idempotencyKey: 'delete-deleted',
+    })
+
+    const page = await readAuthorView(source, 'alpha')
+
+    expect(page).toMatchObject({
+      bio: 'Alpha Writer writes about rooms.',
+      href: '/authors/alpha',
+      name: 'Alpha Writer',
+      navigation: { sections: [{ slug: 'interiors' }] },
+      slug: 'alpha',
+    })
+    expect(page?.stories.map(({ slug }) => slug)).toEqual(['second', 'first'])
+    expect(page?.stories[1]).toMatchObject({
+      href: '/stories/first',
+      section: { href: '/sections/interiors', name: 'interiors', slug: 'interiors' },
+      title: 'Title for first',
+    })
+  })
+
+  it('returns null for an unknown author and an empty page for one with no visible stories', async () => {
+    await saveAuthors(alpha, bravo)
+    await publish({ slug: 'published' })
+    await credit(await createDraft('draft'), bravo)
+
+    expect(await readAuthorView(source, 'unknown')).toBeNull()
+    expect(await readAuthorView(source, 'bravo')).toEqual({
+      bio: null,
+      href: '/authors/bravo',
+      name: 'Bravo Writer',
+      navigation: { sections: [] },
+      slug: 'bravo',
+      stories: [],
+    })
+  })
+
+  it('credits an article’s authors in byline order and links their pages', async () => {
+    await saveAuthors(alpha, bravo)
+    await publish({ slug: 'credited' })
+    await publish({ slug: 'uncredited' })
+    await credit('article-credited', bravo, alpha)
+
+    expect(await readArticleView(source, 'credited')).toMatchObject({
+      authorLinks: [
+        { href: '/authors/bravo', name: 'Bravo Writer' },
+        { href: '/authors/alpha', name: 'Alpha Writer' },
+      ],
+      authors: ['Bravo Writer', 'Alpha Writer'],
+    })
+    expect(await readArticleView(source, 'uncredited')).toMatchObject({
+      authorLinks: [],
+      authors: [],
+    })
+  })
+})
+
+describe('topic pages and article topics', () => {
+  it('lists the visible stories filed under the tags and categories that share a topic’s slug', async () => {
+    await publish({ section: 'interiors', slug: 'lamp' })
+    await publish({ section: 'craft', slug: 'window' })
+    await publish({ slug: 'candle' })
+    const hidden = await publish({ slug: 'hidden' })
+    await publish({ section: 'light', slug: 'only-in-a-section' })
+    await fileUnder('article-lamp', 'tag', 'light')
+    await fileUnder('article-window', 'tag', 'light')
+    await fileUnder('article-candle', 'category', 'light', 'Light')
+    await fileUnder(hidden.article.id, 'tag', 'light')
+    await hidden.service.unpublish({
+      articleId: hidden.article.id,
+      expectedVersion: hidden.article.version,
+      idempotencyKey: 'unpublish-hidden',
+      reason: 'Not ready',
+    })
+
+    const topic = await readTopicView(source, 'light')
+
+    expect(topic).toMatchObject({
+      description: null,
+      href: '/topics/light',
+      // The category names the topic before the tag that shares its slug.
+      name: 'Light',
+      slug: 'light',
+    })
+    expect(topic?.stories.map(({ slug }) => slug)).toEqual(['candle', 'window', 'lamp'])
+    expect(topic?.stories.map(({ section }) => section?.slug ?? null)).toEqual([
+      null,
+      'craft',
+      'interiors',
+    ])
+    expect(topic?.navigation.sections.map(({ slug }) => slug)).toEqual([
+      'craft',
+      'interiors',
+      'light',
+    ])
+  })
+
+  it('returns null for unknown topics and for sections, and an empty page for a topic with no visible stories', async () => {
+    await publish({ section: 'interiors', slug: 'room' })
+    await fileUnder(await createDraft('draft'), 'tag', 'unseen', 'Unseen')
+
+    expect(await readTopicView(source, 'unknown')).toBeNull()
+    expect(await readTopicView(source, 'interiors')).toBeNull()
+    expect(await readTopicView(source, 'unseen')).toEqual({
+      description: null,
+      href: '/topics/unseen',
+      name: 'Unseen',
+      navigation: {
+        sections: [{ href: '/sections/interiors', name: 'interiors', slug: 'interiors' }],
+      },
+      slug: 'unseen',
+      stories: [],
+    })
+  })
+
+  it('links an article’s topics by link position, each slug once, and never its sections', async () => {
+    await publish({ section: 'interiors', slug: 'tagged' })
+    await fileUnder('article-tagged', 'tag', 'winter', 'Winter')
+    await fileUnder('article-tagged', 'category', 'light', 'Light')
+    await fileUnder('article-tagged', 'tag', 'light')
+    await publish({ slug: 'untagged' })
+
+    const article = await readArticleView(source, 'tagged')
+
+    expect(article?.topics).toEqual([
+      { href: '/topics/winter', name: 'Winter' },
+      { href: '/topics/light', name: 'Light' },
+    ])
+    expect(article?.section?.slug).toBe('interiors')
+    expect((await readArticleView(source, 'untagged'))?.topics).toEqual([])
+  })
+})
+
+describe('related stories', () => {
+  it('relates the newest other visible stories filed under the article’s primary section', async () => {
+    const rooms = Array.from({ length: relatedStoryLimit + 2 }, (_, index) => `room-${index + 1}`)
+    for (const slug of rooms) await publish({ section: 'interiors', slug })
+    await publish({ section: 'craft', slug: 'chair' })
+    const hidden = await publish({ section: 'interiors', slug: 'hidden-room' })
+    await hidden.service.unpublish({
+      articleId: hidden.article.id,
+      expectedVersion: hidden.article.version,
+      idempotencyKey: 'unpublish-hidden-room',
+      reason: 'Not ready',
+    })
+    // A story filed under interiors as its second section is related too.
+    await publish({ section: 'craft', slug: 'stool' })
+    const interiors = await sections.ensureSection({ name: 'interiors', slug: 'interiors' })
+    await sections.assignSection({ articleId: 'article-stool', sectionId: interiors.id })
+
+    const related = (await readArticleView(source, 'room-2'))?.related
+
+    const newestFirst = ['stool', ...[...rooms].reverse()].filter((slug) => slug !== 'room-2')
+    expect(related?.map(({ slug }) => slug)).toEqual(newestFirst.slice(0, relatedStoryLimit))
+    expect(related?.[0]).toMatchObject({
+      href: '/stories/stool',
+      section: { slug: 'craft' },
+      title: 'Title for stool',
+    })
+  })
+
+  it('relates nothing to a story without a section or alone in its section', async () => {
+    await publish({ section: 'interiors', slug: 'room' })
+    await publish({ slug: 'loose' })
+
+    expect((await readArticleView(source, 'loose'))?.related).toEqual([])
+    expect((await readArticleView(source, 'room'))?.related).toEqual([])
   })
 })

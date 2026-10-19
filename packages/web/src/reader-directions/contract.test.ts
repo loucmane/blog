@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { BaselineAuthor } from './baseline/author'
+import { BaselineTopic } from './baseline/topic'
 import {
   createReaderDirectionRegistry,
   defineReaderDirection,
@@ -162,6 +164,39 @@ describe('reader direction contract', () => {
       /Home view/,
     )
   })
+
+  it('falls back to baseline’s author and topic views when a direction leaves them out', () => {
+    const direction = defineReaderDirection(definition())
+
+    expect(direction.Author).toBe(BaselineAuthor)
+    expect(direction.Topic).toBe(BaselineTopic)
+    expect(Object.isFrozen(direction)).toBe(true)
+  })
+
+  it('keeps a direction’s own author and topic views', () => {
+    function OwnAuthor() {
+      return null
+    }
+    function OwnTopic() {
+      return null
+    }
+
+    const direction = defineReaderDirection(definition({ Author: OwnAuthor, Topic: OwnTopic }))
+
+    expect(direction.Author).toBe(OwnAuthor)
+    expect(direction.Topic).toBe(OwnTopic)
+  })
+
+  it.each(['Author', 'Topic'] as const)(
+    'rejects an optional %s view that is not a component',
+    (view) => {
+      for (const value of ['<main />', null, {}]) {
+        expect(() => defineReaderDirection(definition({ [view]: value as never }))).toThrow(
+          new RegExp(`${view} view`),
+        )
+      }
+    },
+  )
 
   it.each([
     ['name', ''],
@@ -467,6 +502,16 @@ describe('reader direction registry', () => {
     expect(() =>
       createReaderDirectionRegistry({ defaultId: 'missing', directions: [baseline] }),
     ).toThrow(/default direction "missing" is not registered/)
+  })
+
+  it('registers a direction without author and topic views, which shows baseline’s', () => {
+    const registry = createReaderDirectionRegistry({
+      defaultId: 'baseline',
+      directions: [baseline, quiet],
+    })
+
+    expect(registry.find('quiet-monograph')?.Author).toBe(BaselineAuthor)
+    expect(registry.find('quiet-monograph')?.Topic).toBe(BaselineTopic)
   })
 
   it('validates every definition as it registers it', () => {
