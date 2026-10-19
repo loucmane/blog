@@ -1,0 +1,241 @@
+{
+  "capabilities": [
+    "reader-typography-layout",
+    "reader-accessibility",
+    "reader-performance",
+    "reader-media-semantics",
+    "advisory-reader-review"
+  ],
+  "handoffs": [
+    "editorial-blocks",
+    "content-platform-backend",
+    "security-identity-privacy",
+    "owner-publishing-ux",
+    "stack-research-adr"
+  ],
+  "coverage": [
+    "premium typography",
+    "art-directed responsive layouts",
+    "visual integrity",
+    "wcag 2.2 aa",
+    "core web vitals",
+    "performance budgets",
+    "responsive images",
+    "focal points",
+    "alt text",
+    "captions",
+    "credits",
+    "keyboard",
+    "reduced motion",
+    "light and dark",
+    "lcp",
+    "cls",
+    "inp"
+  ],
+  "triggerSignals": {
+    "include": ["premium typography", "responsive images", "core web vitals", "visual hierarchy"],
+    "exclude": [
+      "persisted node",
+      "database persistence",
+      "url sanitization",
+      "owner editing ux",
+      "frontend framework"
+    ]
+  },
+  "requests": [
+    {
+      "prompt": "Review premium typography and reading comfort on the public story page.",
+      "signal": "premium typography",
+      "action": "use"
+    },
+    {
+      "prompt": "Check responsive images and focal points in the cinematic reader direction.",
+      "signal": "responsive images",
+      "action": "use"
+    },
+    {
+      "prompt": "Review WCAG 2.2 AA and Core Web Vitals evidence for reader pages.",
+      "signal": "core web vitals",
+      "action": "use"
+    },
+    {
+      "prompt": "Define a new editorial block and its persisted node attributes.",
+      "signal": "node and mark types",
+      "action": "handoff",
+      "to": "editorial-blocks"
+    },
+    {
+      "prompt": "Review database persistence for newly published reader content.",
+      "signal": "backend data",
+      "action": "handoff",
+      "to": "content-platform-backend"
+    },
+    {
+      "prompt": "Audit URL sanitization and owner authorization for private images.",
+      "signal": "sanitization",
+      "action": "handoff",
+      "to": "security-identity-privacy"
+    },
+    {
+      "prompt": "Design owner editing UX for inserting images into drafts.",
+      "signal": "owner editing ux",
+      "action": "handoff",
+      "to": "owner-publishing-ux"
+    },
+    {
+      "prompt": "Choose a new frontend framework and font loading library.",
+      "signal": "stack choices",
+      "action": "handoff",
+      "to": "stack-research-adr"
+    },
+    {
+      "prompt": "Review a pull quote's visual hierarchy and change its document node contract.",
+      "signal": "mixed requests",
+      "action": "mixed",
+      "to": "editorial-blocks"
+    }
+  ],
+  "routePatterns": [
+    "packages/web/src/app/page.tsx",
+    "packages/web/src/app/layout.tsx",
+    "packages/web/src/app/globals.css",
+    "packages/web/src/app/stories/**",
+    "packages/web/src/app/sections/**",
+    "packages/web/src/app/not-found.tsx",
+    "packages/web/src/app/error.tsx",
+    "packages/web/src/reader/**",
+    "packages/web/src/reader-directions/**",
+    "packages/web/public/reader-directions/**",
+    "packages/web/src/app/api/media/**",
+    "scripts/lab-lighthouse.mjs",
+    "tests/e2e/homepage.spec.ts",
+    "tests/e2e/reader.spec.ts"
+  ],
+  "paths": {
+    "positive": [
+      { "file": "packages/web/src/app/page.tsx" },
+      { "file": "packages/web/src/app/layout.tsx" },
+      { "file": "packages/web/src/app/globals.css" },
+      { "file": "packages/web/src/app/stories/[slug]/page.tsx" },
+      { "file": "packages/web/src/app/sections/[slug]/page.tsx" },
+      { "file": "packages/web/src/app/not-found.tsx" },
+      { "file": "packages/web/src/app/error.tsx" },
+      { "file": "packages/web/src/reader/components/reader-image.tsx" },
+      { "file": "packages/web/src/reader/components/story-card.tsx" },
+      { "file": "packages/web/src/reader/blocks.ts", "also": ["editorial-blocks"] },
+      { "file": "packages/web/src/reader/views.ts", "also": ["editorial-blocks"] },
+      {
+        "file": "packages/web/src/reader/components/article-body.tsx",
+        "also": ["editorial-blocks"]
+      },
+      { "file": "packages/web/src/reader-directions/contract.ts", "also": ["editorial-blocks"] },
+      { "file": "packages/web/src/reader-directions/registry.ts", "also": ["editorial-blocks"] },
+      { "file": "packages/web/src/reader-directions/quiet-monograph/styles.ts" },
+      { "file": "packages/web/src/reader-directions/literary-longread/fonts.ts" },
+      {
+        "file": "packages/web/public/reader-directions/quiet-monograph/fonts/jost-latin-400-normal.woff2"
+      },
+      {
+        "file": "packages/web/src/app/api/media/[id]/route.ts",
+        "also": ["security-identity-privacy"]
+      },
+      { "file": "scripts/lab-lighthouse.mjs" },
+      { "file": "tests/e2e/homepage.spec.ts" },
+      { "file": "tests/e2e/reader.spec.ts" }
+    ],
+    "negative": [
+      "packages/web/src/app/owner/(workspace)/page.tsx",
+      "packages/web/src/app/api/owner/media/route.ts",
+      "packages/web/src/app/preview/stories/[slug]/page.tsx",
+      "packages/web/src/server/content/document.ts",
+      "packages/web/src/server/content/service.ts",
+      "packages/web/src/app/stories-archive/old.tsx",
+      "packages/web/src/reader-lab/presentation.ts",
+      "packages/web/src/reader-directions-old/contract.ts",
+      "packages/web/public/reader-directions-old/fonts/a.woff2",
+      "package.json",
+      ".claude/skills/reader-frontend/SKILL.md"
+    ]
+  },
+  "groundingPaths": [
+    "packages/web/src/reader/views.ts",
+    "packages/web/src/reader/read-model.ts",
+    "packages/web/src/reader/cache.ts",
+    "packages/web/src/reader/media.ts",
+    "packages/web/src/reader/media-variants.ts",
+    "packages/web/src/reader/components/reader-image.tsx",
+    "packages/web/src/app/api/media/[id]/route.ts",
+    "packages/web/src/reader-directions/contrast.ts",
+    "packages/web/src/reader-directions/contract.ts",
+    "packages/web/src/reader-directions/direction-root.tsx",
+    "packages/web/src/reader-directions/capture-fonts.ts",
+    "scripts/lab-lighthouse.mjs",
+    "scripts/ci/check-accessibility-baseline.mjs",
+    "playwright.config.ts",
+    "tests/e2e/homepage.spec.ts",
+    "docs/reader-lab-local.md",
+    "docs/reader-lab-owner-guide.md",
+    "docs/design/modern-blog-mockup-brief.md"
+  ],
+  "guards": [
+    "scores are measurements, not enforced budgets",
+    "tbt is not inp",
+    "screenshot-only",
+    "no complete wcag conformance claim",
+    "caption is not a substitute for alt text"
+  ],
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "task53-reader-fixture",
+    "skill": "reader-frontend",
+    "mode": "advisory",
+    "verdict": "warn",
+    "summary": "Synthetic review example: reading measure needs a visual review; no browser or performance audit ran.",
+    "generatedAt": "2026-10-19T15:00:00Z",
+    "headSha": "3aed4c266adce4d0a0e9e9113c99d12e73bdd771",
+    "findings": [
+      {
+        "id": "reading-measure",
+        "severity": "warning",
+        "category": "typography-layout",
+        "message": "Compare long titles and body measure on a narrow screen before choosing this visual direction.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["packages/web/src/reader-directions/literary-longread/styles.ts"]
+      }
+    ],
+    "evidence": [
+      { "kind": "file", "path": "packages/web/src/reader-directions/literary-longread/styles.ts" }
+    ]
+  },
+  "deterministicExamples": [
+    {
+      "command": "corepack pnpm exec vitest run packages/web/src/reader-directions/contrast.test.ts packages/web/src/reader-directions/contract.test.ts",
+      "finding": {
+        "id": "synthetic-contrast-failure",
+        "severity": "error",
+        "category": "contrast",
+        "message": "Synthetic failure example only: a declared body-text pair computes below the contract's 4.5:1 threshold.",
+        "subjective": false,
+        "blocking": true,
+        "evidence": [
+          "command: corepack pnpm exec vitest run packages/web/src/reader-directions/contrast.test.ts packages/web/src/reader-directions/contract.test.ts"
+        ]
+      }
+    },
+    {
+      "command": "corepack pnpm exec playwright test tests/e2e/homepage.spec.ts --project=mobile-chromium",
+      "finding": {
+        "id": "synthetic-axe-failure",
+        "severity": "error",
+        "category": "accessibility",
+        "message": "Synthetic failure example only: the accessibility baseline assertion detects a new serious violation.",
+        "subjective": false,
+        "blocking": true,
+        "evidence": [
+          "command: corepack pnpm exec playwright test tests/e2e/homepage.spec.ts --project=mobile-chromium"
+        ]
+      }
+    }
+  ]
+}
