@@ -116,13 +116,13 @@ Ratios below were computed with the repository's `packages/web/src/reader-direct
 | ----------------------- | ----- | ----- | ---------------------------------------------- |
 | ink / paper             | 17.38 | 15.46 | ≥4.5:1; body, headings, ordinary links/buttons |
 | secondary / paper       | 8.36  | 9.56  | ≥4.5:1; metadata, captions, biography          |
-| accent / paper          | 7.10  | 7.81  | ≥4.5:1; labels, hover, focus                   |
+| accent / paper          | 7.10  | 7.82  | ≥4.5:1; labels, hover, focus                   |
 | ink / surface           | 15.68 | 14.10 | ≥4.5:1; inset body, code, labels               |
 | secondary / surface     | 7.54  | 8.72  | ≥4.5:1; inset captions/metadata                |
 | accent / surface        | 6.40  | 7.13  | ≥4.5:1; inset links/hover/focus                |
 | panel-ink / panel       | 18.42 | 18.42 | ≥4.5:1; all cover copy and CTA                 |
 | gold / panel            | 8.15  | 8.15  | ≥4.5:1; cover labels, hover/focus              |
-| border / paper          | 3.69  | 5.31  | ≥3:1; functional boundaries, not text          |
+| border / paper          | 3.68  | 5.31  | ≥3:1; functional boundaries, not text          |
 | border / surface        | 3.32  | 4.84  | ≥3:1; inset functional boundaries, not text    |
 
 This is the allowed pairing inventory, including nested blocks and interactive states. Buttons retain their paper/surface background and ink text; hover changes text to accent and adds underline. Cover controls stay on panel and use gold for hover/focus. Visited links keep the ordinary link colour and underline. Selection uses paper text on accent, or panel text on gold inside the cover (the reciprocal pair has the same ratio). Do not apply gold on paper or global accent hover to panel text. Decorative rules never communicate a required state alone. Forced-colours mode uses system text/background and Highlight focus; review the browser result separately.
@@ -220,7 +220,7 @@ Canonical field targets are p75 LCP ≤2.5s, CLS ≤0.1, INP ≤200ms (`docs/pro
 | Other images                  | ≤80KB per card; initial viewport images together ≤350KB mobile / ≤600KB desktop | ≤150KB per body/gallery item; initial viewport images together ≤300KB mobile / ≤450KB desktop | Network log, viewport and DPR recorded; below-fold media remain lazy.                                                                                                                        |
 | Fonts                         | ≤155,000 bytes all declared faces                                               | Same                                                                                          | Preserve the current 151,996-byte asset ceiling; page requests only faces actually used.                                                                                                     |
 | LL-specific client JavaScript | 0 added bytes                                                                   | 0 added bytes                                                                                 | Server components; shared lab/theme cost reported separately.                                                                                                                                |
-| LL generated CSS              | ≤16KB uncompressed                                                              | Same                                                                                          | Token, font and style output combined; measure after build.                                                                                                                                  |
+| LL generated CSS              | ≤22,000 B uncompressed (today 16,345 B)                                         | Same                                                                                          | Token, font and style output combined; measure after build.                                                                                                                                  |
 | Reader HTML                   | <150,000 bytes                                                                  | <150,000 bytes                                                                                | Home is a proposed budget; current anonymous article assertion is in `tests/e2e/homepage.spec.ts`. No editor bundles on either.                                                              |
 
 If a retained original (animation, unknown dimensions, or ineligible variant) exceeds the image budget, report the actual transfer and the responsible media prerequisite; do not hide the image or call the budget passed. No unlimited eager gallery. Record request counts and server latency with these measurements so regressions can be attributed, without inventing a server budget in a direction spec.
