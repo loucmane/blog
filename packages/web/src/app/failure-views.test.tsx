@@ -144,6 +144,30 @@ it.each([own, fallback])('upgrades not-found to the authorized $id view', async 
   )
 })
 
+it('follows a Lab switch or exit when the server sends a new not-found tree', async () => {
+  const baseline = () => (
+    <div data-reader-direction="baseline">
+      <main>
+        <h1>Page not found</h1>
+      </main>
+    </div>
+  )
+  const { container, rerender } = render(
+    <ReaderFailureBoundary kind="not-found">{baseline()}</ReaderFailureBoundary>,
+  )
+  await waitFor(() =>
+    expect(container.querySelector('[data-reader-direction="custom"] h1')).not.toBeNull(),
+  )
+  // Exit lab: the cookie is cleared and the page re-renders with fresh server children.
+  lookup.resolve.mockResolvedValue({ directionId: 'baseline', lab: false })
+  rerender(<ReaderFailureBoundary kind="not-found">{baseline()}</ReaderFailureBoundary>)
+  await waitFor(() =>
+    expect(container.querySelector('[data-reader-direction="baseline"] h1')).not.toBeNull(),
+  )
+  expect(container.querySelector('[data-reader-direction="custom"]')).toBeNull()
+  expect(screen.queryByRole('complementary', { name: 'Reader Lab' })).toBeNull()
+})
+
 it('keeps baseline not-found when lookup fails', async () => {
   lookup.resolve.mockRejectedValue(new Error('Private lookup error'))
   const { container } = render(<NotFound />)
