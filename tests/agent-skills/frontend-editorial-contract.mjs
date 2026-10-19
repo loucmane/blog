@@ -23,7 +23,7 @@ function matches(pattern, file) {
   return new RegExp(`^${expression}$`).test(file)
 }
 
-export function registerSkillContract(skillId) {
+export function registerSkillContract(skillId, { task = '53' } = {}) {
   const fixture = json(`tests/agent-skills/fixtures/${skillId}.json`)
   const skillRoot = `.claude/skills/${skillId}`
   const skill = () => read(`${skillRoot}/SKILL.md`)
@@ -38,7 +38,7 @@ export function registerSkillContract(skillId) {
     assert.equal(entry.status, 'active')
     assert.equal(entry.entrypoint, `${skillRoot}/SKILL.md`)
     assert.equal(entry.codexLink, `.agents/skills/${skillId}`)
-    assert.deepEqual(entry.provenance, { type: 'project-authored', task: '53' })
+    assert.deepEqual(entry.provenance, { type: 'project-authored', task })
     assert.equal(entry.resultSchema, 'agent-skill-review-result-v1')
     for (const capability of fixture.capabilities)
       assert.ok(entry.capabilities.includes(capability))
@@ -116,7 +116,13 @@ export function registerSkillContract(skillId) {
       )
     }
     for (const { file, also = [] } of fixture.paths.positive) {
-      assert.ok(fs.existsSync(path.join(root, file)), `missing path: ${file}`)
+      const planned = fixture.plannedPaths?.find((item) => item.file === file)
+      if (planned) {
+        const row = documents().split('\n').find((line) => line.includes(`\`${file}\``))
+        assert.ok(row?.includes('Planned') && row.includes(planned.bead), `unlabelled plan: ${file}`)
+      } else {
+        assert.ok(fs.existsSync(path.join(root, file)), `missing path: ${file}`)
+      }
       const actual = routes
         .filter((candidate) => candidate.match.some((pattern) => matches(pattern, file)))
         .map(({ id }) => id)
@@ -142,8 +148,9 @@ export function registerSkillContract(skillId) {
       assert.ok(fs.existsSync(path.join(root, file)), `missing source: ${file}`)
     }
     for (const [, file] of text.matchAll(
-      /`((?:packages|docs|scripts|tests|schemas|config)\/[^`\s*]+)`/g,
+      /`((?:packages|docs|scripts|tests|schemas|config|\.github)\/[^`\s*]+)`/g,
     )) {
+      if (fixture.plannedPaths?.some((item) => item.file === file)) continue
       assert.ok(fs.existsSync(path.join(root, file)), `invalid citation: ${file}`)
     }
   })

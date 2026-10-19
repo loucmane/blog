@@ -194,6 +194,47 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "seo-distribution",
+      "match": [
+        "packages/web/src/lib/site-url.ts",
+        "packages/web/public/robots.txt",
+        "packages/web/src/app/layout.tsx",
+        "packages/web/src/app/page.tsx",
+        "packages/web/src/app/stories/*/page.tsx",
+        "packages/web/src/app/sections/*/page.tsx",
+        "packages/web/src/app/feed.xml/**",
+        "packages/web/src/app/sitemap.xml/**",
+        "packages/web/src/app/sitemaps/**",
+        "packages/web/src/app/robots.txt/**",
+        "packages/web/src/server/distribution/**"
+      ],
+      "skills": ["seo-distribution"],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
+    },
+    {
+      "id": "release-witness",
+      "match": [
+        ".github/workflows/**",
+        "scripts/ci/**",
+        "tests/ci/**",
+        "docs/deployment/**"
+      ],
+      "skills": ["release-witness"],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }
