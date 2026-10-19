@@ -1,9 +1,13 @@
+import type { Pool } from 'pg'
 import { describe, expect, it } from 'vitest'
 
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { CURRENT_CONTENT_DOCUMENT_VERSION } from '@/server/content/document'
 import { ContentConflictError } from '@/server/content/errors'
+import { InMemoryOriginalObjectStore, MediaOriginalService } from '@/server/content/media'
+import type { ContentRepository } from '@/server/content/ports'
 import { ContentService } from '@/server/content/service'
+import { PostgresContentRepository } from '@/server/database/postgres-content-repository'
 
 import { ownerErrorResponse } from './api'
 import {
@@ -12,6 +16,7 @@ import {
   resolveOwnerFixtureConfiguration,
   type OwnerEnvironment,
 } from './config'
+import { ownerMediaMetadataSchema } from './contracts'
 import { createOwnerContentDocument, emptyEditorDocument, publicationReadiness } from './document'
 import {
   ownerRecoveryKey,
@@ -493,5 +498,54 @@ describe('owner workspace composition', () => {
     expect(await runtime.workspace.listStories()).toHaveLength(1)
     expect(runtime.media).not.toBeNull()
     expect(runtime.pool).toBeNull()
+  })
+})
+
+/**
+ * A pool whose connections keep `media_assets` rows in memory, written and read through the
+ * repository's own SQL, so a PostgreSQL round trip can be checked without a database.
+ */
+function mediaAssetsPool(): Pool {
+  const rows = new Map<unknown, Record<string, unknown>>()
+  async function query(text: string, values: readonly unknown[] = []) {
+    const columns = /^INSERT INTO media_assets \(([^)]*)\)/.exec(text.trim())?.[1]
+    if (columns) {
+      const row = Object.fromEntries(
+        columns.split(',').map((column, index) => [column.trim(), values[index]]),
+      )
+      rows.set(row.id, row)
+      return { rowCount: 1, rows: [] }
+    }
+    const row =
+      text === 'SELECT * FROM media_assets WHERE id = $1' ? rows.get(values[0]) : undefined
+    return { rowCount: row ? 1 : 0, rows: row ? [row] : [] }
+  }
+  return { connect: async () => ({ query, release: () => undefined }) } as unknown as Pool
+}
+
+describe('owner media uploads', () => {
+  it.each<[string, () => ContentRepository]>([
+    ['in memory', () => new InMemoryContentRepository()],
+    ['in PostgreSQL', () => new PostgresContentRepository(mediaAssetsPool())],
+  ])('stores the focal point an upload was sent with, %s', async (_where, repositoryFor) => {
+    const repository = repositoryFor()
+    const media = new MediaOriginalService(repository, new InMemoryOriginalObjectStore())
+    // The upload form sends each coordinate as text.
+    const metadata = ownerMediaMetadataSchema.parse({
+      alt: 'A doorway low on the left',
+      creditName: 'Studio',
+      focalX: '0.2',
+      focalY: '0.8',
+    })
+
+    const asset = await media.store({
+      ...metadata,
+      body: new TextEncoder().encode('synthetic owner upload'),
+      contentType: 'image/png',
+    })
+
+    await expect(
+      repository.transaction((transaction) => transaction.getMediaAsset(asset.id)),
+    ).resolves.toMatchObject({ focalX: 0.2, focalY: 0.8 })
   })
 })
