@@ -151,6 +151,41 @@
         "advisory-security-review"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "reader-frontend",
+      "status": "active",
+      "entrypoint": ".claude/skills/reader-frontend/SKILL.md",
+      "codexLink": ".agents/skills/reader-frontend",
+      "provenance": {
+        "type": "project-authored",
+        "task": "53"
+      },
+      "capabilities": [
+        "reader-typography-layout",
+        "reader-accessibility",
+        "reader-performance",
+        "reader-media-semantics",
+        "advisory-reader-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "editorial-blocks",
+      "status": "active",
+      "entrypoint": ".claude/skills/editorial-blocks/SKILL.md",
+      "codexLink": ".agents/skills/editorial-blocks",
+      "provenance": {
+        "type": "project-authored",
+        "task": "53"
+      },
+      "capabilities": [
+        "structured-document-contract",
+        "editorial-block-rendering",
+        "reader-direction-contract",
+        "advisory-editorial-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }
