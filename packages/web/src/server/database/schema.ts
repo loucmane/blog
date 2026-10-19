@@ -434,3 +434,18 @@ export const contentPublicationState = pgTable('content_publication_state', {
   id: smallint('id').primaryKey(),
   version: bigint('version', { mode: 'number' }).notNull(),
 })
+
+/** Each article's credited authors. A byline lists them by position, lowest first. */
+export const articleAuthors = pgTable(
+  'article_authors',
+  {
+    articleId: text('article_id').notNull(),
+    authorId: text('author_id').notNull(),
+    position: integer('position').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.articleId, table.authorId] }),
+    uniqueIndex('article_authors_article_position_key').on(table.articleId, table.position),
+    index('article_authors_author_id_idx').on(table.authorId),
+  ],
+)

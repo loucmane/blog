@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import { applyContentMigrations, readContentMigrations, type MigrationClient } from './migrations'
 import {
+  articleAuthors,
   contentPublicationState,
   contentTableNames,
   contentTables,
@@ -153,6 +154,37 @@ describe('content database migrations', () => {
     )
   })
 
+  it('keeps the article author migration aligned with its projection and reversible', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0005_article_authors.sql'),
+      'utf8',
+    )
+    const tableName = getTableName(articleAuthors)
+
+    expect([...sql.matchAll(/CREATE TABLE ([a-z_]+)/g)].map((match) => match[1])).toEqual([
+      tableName,
+    ])
+    const block = sql.match(new RegExp(`CREATE TABLE ${tableName} \\(([\\s\\S]*?)\\n\\);`))?.[1]
+    for (const column of Object.values(getTableColumns(articleAuthors))) {
+      expect(block, `${tableName}.${column.name}`).toMatch(
+        new RegExp(`^\\s+${column.name}\\s`, 'm'),
+      )
+    }
+    expect(block).toContain('REFERENCES articles(id) ON DELETE CASCADE')
+    expect(block).toContain('REFERENCES authors(id) ON DELETE RESTRICT')
+    expect(block).toContain('PRIMARY KEY (article_id, author_id)')
+    expect(block).toContain('UNIQUE (article_id, position)')
+    expect(sql).toContain(`ON ${tableName} (author_id);`)
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0005_article_authors.down.sql'),
+      'utf8',
+    )
+    expect(downSql).toContain(`DROP TABLE IF EXISTS ${tableName};`)
+    expect(downSql).toContain(
+      "DELETE FROM content_schema_migrations WHERE id = '0005_article_authors'",
+    )
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
@@ -165,6 +197,7 @@ describe('content database migrations', () => {
         '0002_owner_auth',
         '0003_publication_version',
         '0004_media_asset_animation',
+        '0005_article_authors',
       ],
       skipped: [],
     })
@@ -183,6 +216,7 @@ describe('content database migrations', () => {
         '0002_owner_auth',
         '0003_publication_version',
         '0004_media_asset_animation',
+        '0005_article_authors',
       ],
     })
   })
