@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security, Identity, and Privacy"
+  short_description: "Review magazine security, identity, and privacy"
+  default_prompt: "Use $security-identity-privacy to design or review the magazine security, owner identity, privacy, and supply-chain controls."
