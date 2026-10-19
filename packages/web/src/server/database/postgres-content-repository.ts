@@ -365,6 +365,13 @@ class PostgresContentTransaction implements ContentTransaction {
     return result.rows[0] ? mapArticle(result.rows[0]) : null
   }
 
+  async getAuthorBySlug(slug: string): Promise<AuthorProfile | null> {
+    const result = await this.client.query<AuthorRow>('SELECT * FROM authors WHERE slug = $1', [
+      slug,
+    ])
+    return result.rows[0] ? mapAuthor(result.rows[0]) : null
+  }
+
   async getIdempotency(operation: string, key: string): Promise<IdempotencyRecord | null> {
     const result = await this.client.query<
       QueryResultRow & {

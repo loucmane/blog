@@ -5,13 +5,22 @@ import { cache } from 'react'
 
 import {
   readArticleView,
+  readAuthorView,
   readHomeView,
   readPublicMediaIds,
   readSectionView,
+  readTopicView,
   type ReaderSource,
 } from './read-model'
 import { resolveReaderStore } from './store'
-import type { ArticleView, HomeView, ReaderResult, SectionView } from './views'
+import type {
+  ArticleView,
+  AuthorView,
+  HomeView,
+  ReaderResult,
+  SectionView,
+  TopicView,
+} from './views'
 
 /*
  * Reader views are cached through `unstable_cache` under keys that include the publication
@@ -36,6 +45,14 @@ export function storyCacheTag(slug: string): string {
 
 export function sectionCacheTag(slug: string): string {
   return `section:${slug}`
+}
+
+export function authorCacheTag(slug: string): string {
+  return `author:${slug}`
+}
+
+export function topicCacheTag(slug: string): string {
+  return `topic:${slug}`
 }
 
 const cacheScopeKey = Symbol.for('magazine.reader-cache-scope')
@@ -83,13 +100,22 @@ export const loadSectionView = cache((slug: string): Promise<ReaderResult<Sectio
   cachedRead(['section', slug], [sectionCacheTag(slug)], (source) => readSectionView(source, slug)),
 )
 
+export const loadAuthorView = cache((slug: string): Promise<ReaderResult<AuthorView | null>> =>
+  cachedRead(['author', slug], [authorCacheTag(slug)], (source) => readAuthorView(source, slug)),
+)
+
+export const loadTopicView = cache((slug: string): Promise<ReaderResult<TopicView | null>> =>
+  cachedRead(['topic', slug], [topicCacheTag(slug)], (source) => readTopicView(source, slug)),
+)
+
 export const loadPublicMediaIds = cache((): Promise<ReaderResult<readonly string[]>> =>
   cachedRead(['public-media'], [], readPublicMediaIds),
 )
 
 /**
  * Expires every cached reader view. Call it after any change to what readers may see: publish,
- * schedule, unpublish, delete, restore, a completed scheduled publication, or a section change.
+ * schedule, unpublish, delete, restore, a completed scheduled publication, a section change, or a
+ * change to an author, a byline, or a topic.
  */
 export function expirePublicReader(slug?: string): void {
   if (slug) revalidateTag(storyCacheTag(slug), { expire: 0 })
