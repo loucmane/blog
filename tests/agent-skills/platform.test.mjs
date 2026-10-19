@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -77,6 +78,79 @@ function editJson(root, relativePath, mutate) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+function addUnregisteredSkill(root) {
+  const canonical = path.join(root, ".claude/skills/unregistered-skill");
+  fs.mkdirSync(canonical, { recursive: true });
+  fs.writeFileSync(
+    path.join(canonical, "SKILL.md"),
+    "---\nname: unregistered-skill\ndescription: This skill is intentionally absent from the catalog fixture.\n---\n",
+  );
+  fs.symlinkSync(
+    "../../.claude/skills/unregistered-skill",
+    path.join(root, ".agents/skills/unregistered-skill"),
+  );
+}
+
+// Without the caller's GIT_* variables (a hook can export GIT_DIR), fixture
+// commands can only ever touch the fixture repository.
+const fixtureGitEnvironment = Object.fromEntries(
+  Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_")),
+);
+
+function git(root, ...args) {
+  execFileSync("git", args, {
+    cwd: root,
+    env: fixtureGitEnvironment,
+    stdio: "pipe",
+  });
+}
+
+function initRepository(root) {
+  git(root, "init", "--quiet");
+  // The fixture's .gitignore alone decides, never a global excludes file.
+  git(root, "config", "core.excludesFile", "/dev/null");
+  git(root, "add", "--all");
+}
+
+const gasCityRuntimeSkills = ["core.gc-agents", "gascity.mayor"];
+
+// What gc installs in every checkout: absolute symlinks into its own skill
+// cache plus an ownership file, in both skill roots.
+function installGasCityRuntimeSkills(root) {
+  for (const skillRoot of [".claude/skills", ".agents/skills"]) {
+    for (const name of gasCityRuntimeSkills) {
+      const target = path.join(root, ".gc/cache/skills", name);
+      fs.mkdirSync(target, { recursive: true });
+      fs.symlinkSync(target, path.join(root, skillRoot, name));
+    }
+    fs.writeFileSync(
+      path.join(root, skillRoot, ".gc-skill-ownership.json"),
+      '{"targets":{}}\n',
+    );
+  }
+}
+
+const gasCityRuntimeErrors = [
+  ...gasCityRuntimeSkills,
+  ".gc-skill-ownership.json",
+].flatMap((name) => [
+  `unregistered canonical skill directory: ${name}`,
+  `unregistered Codex skill link: ${name}`,
+]);
+
+function assertFailedClosed(report, reason) {
+  const unavailable = report.errors.filter((error) =>
+    error.startsWith("skill roots cannot be checked against git ignore rules"),
+  );
+  assert.equal(unavailable.length, 1);
+  assert.match(unavailable[0], reason);
+  assert.deepEqual(
+    report.errors.filter((error) => error !== unavailable[0]).sort(),
+    [...gasCityRuntimeErrors].sort(),
+  );
+  assert.equal(report.passed, false);
+}
+
 test("validates the repository cross-agent platform", () => {
   const report = validatePlatform({ root: repositoryRoot });
   assert.deepEqual(report.errors, []);
@@ -123,16 +197,7 @@ test("rejects unknown review-map skills", (t) => {
 test("rejects unregistered canonical skills and Codex links", (t) => {
   const root = copyFixture();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const canonical = path.join(root, ".claude/skills/unregistered-skill");
-  fs.mkdirSync(canonical, { recursive: true });
-  fs.writeFileSync(
-    path.join(canonical, "SKILL.md"),
-    "---\nname: unregistered-skill\ndescription: This skill is intentionally absent from the catalog fixture.\n---\n",
-  );
-  fs.symlinkSync(
-    "../../.claude/skills/unregistered-skill",
-    path.join(root, ".agents/skills/unregistered-skill"),
-  );
+  addUnregisteredSkill(root);
 
   const report = validatePlatform({ root });
   assert.ok(
@@ -143,6 +208,75 @@ test("rejects unregistered canonical skills and Codex links", (t) => {
   assert.ok(
     report.errors.includes("unregistered Codex skill link: unregistered-skill"),
   );
+});
+
+test("skips Gas City runtime skills that git ignores", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  initRepository(root);
+  installGasCityRuntimeSkills(root);
+
+  const report = validatePlatform({ root });
+  assert.deepEqual(report.errors, []);
+  assert.equal(report.passed, true);
+});
+
+test("still rejects unregistered skills that git does not ignore", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  initRepository(root);
+  installGasCityRuntimeSkills(root);
+  addUnregisteredSkill(root);
+
+  const report = validatePlatform({ root });
+  assert.deepEqual([...report.errors].sort(), [
+    "unregistered Codex skill link: unregistered-skill",
+    "unregistered canonical skill directory: unregistered-skill",
+  ]);
+});
+
+test("still rejects tracked skills that match an ignore pattern", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  initRepository(root);
+  installGasCityRuntimeSkills(root);
+  const tracked = path.join(root, ".claude/skills/gascity.custom");
+  fs.mkdirSync(tracked);
+  fs.writeFileSync(
+    path.join(tracked, "SKILL.md"),
+    "---\nname: gascity.custom\ndescription: This skill is force-added past the Gas City ignore pattern.\n---\n",
+  );
+  git(root, "add", "--force", ".claude/skills/gascity.custom");
+
+  const report = validatePlatform({ root });
+  assert.deepEqual(report.errors, [
+    "unregistered canonical skill directory: gascity.custom",
+  ]);
+});
+
+test("fails closed when the root is not a git work tree", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  installGasCityRuntimeSkills(root);
+
+  assertFailedClosed(validatePlatform({ root }), /\(.+\)$/);
+});
+
+test("fails closed when git is unavailable", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  initRepository(root);
+  installGasCityRuntimeSkills(root);
+
+  const searchPath = process.env.PATH;
+  process.env.PATH = path.join(root, "no-git-here");
+  let report;
+  try {
+    report = validatePlatform({ root });
+  } finally {
+    process.env.PATH = searchPath;
+  }
+  assertFailedClosed(report, /\(spawnSync git ENOENT\)$/);
 });
 
 test("rejects enforced subjective review mode", (t) => {

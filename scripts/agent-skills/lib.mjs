@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -81,6 +82,40 @@ function directoryEntryNames(directory, label, errors) {
     errors.push(`${label} cannot be enumerated (${error.message})`);
     return [];
   }
+}
+
+// Asks root's own repository, in one `git check-ignore` call, which of the
+// repository-relative paths it ignores; tracked paths never count as ignored.
+// When git cannot answer, nothing is excused and the reason becomes an error.
+function gitIgnoredPaths(root, relativePaths, errors) {
+  if (relativePaths.length === 0) return new Set();
+  const workTree = path.resolve(root);
+  const result = spawnSync(
+    "git",
+    [
+      `--git-dir=${path.join(workTree, ".git")}`,
+      `--work-tree=${workTree}`,
+      "check-ignore",
+      "--stdin",
+      "-z",
+    ],
+    {
+      cwd: workTree,
+      encoding: "utf8",
+      input: relativePaths.map((relativePath) => `${relativePath}\0`).join(""),
+    },
+  );
+  // Exit status 1 means that none of the paths are ignored.
+  if (result.error || (result.status !== 0 && result.status !== 1)) {
+    const reason =
+      result.error?.message ??
+      (result.stderr.trim().split("\n")[0] || `git exited ${result.status}`);
+    errors.push(
+      `skill roots cannot be checked against git ignore rules (${reason})`,
+    );
+    return new Set();
+  }
+  return new Set(result.stdout.split("\0").filter(Boolean));
 }
 
 export function validateReviewResult(result) {
@@ -354,13 +389,17 @@ export function validatePlatform({ root = process.cwd() } = {}) {
     }
   }
 
+  const unregistered = [];
   for (const skillId of directoryEntryNames(
     path.join(root, catalog.canonicalRoot),
     "canonical skill root",
     errors,
   )) {
     if (!skillIds.has(skillId)) {
-      errors.push(`unregistered canonical skill directory: ${skillId}`);
+      unregistered.push({
+        relativePath: `${catalog.canonicalRoot}/${skillId}`,
+        error: `unregistered canonical skill directory: ${skillId}`,
+      });
     }
   }
   for (const skillId of directoryEntryNames(
@@ -369,8 +408,21 @@ export function validatePlatform({ root = process.cwd() } = {}) {
     errors,
   )) {
     if (!skillIds.has(skillId)) {
-      errors.push(`unregistered Codex skill link: ${skillId}`);
+      unregistered.push({
+        relativePath: `${catalog.codexRoot}/${skillId}`,
+        error: `unregistered Codex skill link: ${skillId}`,
+      });
     }
+  }
+  // Gas City installs its own skills into both roots on every machine, and
+  // .gitignore keeps them out of the repository, so they need no registration.
+  const ignored = gitIgnoredPaths(
+    root,
+    unregistered.map((entry) => entry.relativePath),
+    errors,
+  );
+  for (const entry of unregistered) {
+    if (!ignored.has(entry.relativePath)) errors.push(entry.error);
   }
 
   if (reviewMap.schemaVersion !== 1)
