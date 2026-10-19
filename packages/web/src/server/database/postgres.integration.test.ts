@@ -337,14 +337,16 @@ describe('PostgreSQL and media persistence integration', () => {
       body: new TextEncoder().encode('task42 synthetic media original'),
       contentType: 'image/png',
       creditName: 'Task 42 integration',
+      focalPoint: { x: 0.2, y: 0.8 },
       height: 48,
       id: 'media-integration',
       width: 64,
     })
-    // What was measured about the original when it was stored comes back from PostgreSQL.
+    // What was measured about the original when it was stored, and its focal point, come back
+    // from PostgreSQL.
     await expect(
       repository.transaction((transaction) => transaction.getMediaAsset('media-integration')),
-    ).resolves.toMatchObject({ animated: true, height: 48, width: 64 })
+    ).resolves.toMatchObject({ animated: true, focalX: 0.2, focalY: 0.8, height: 48, width: 64 })
 
     const projection = new PostgresSearchProjection(pool)
     await projection.upsertPublishedArticle({

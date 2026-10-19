@@ -29,14 +29,20 @@ export async function POST(request: Request) {
       if (file.size < 1 || file.size > MAX_MEDIA_ORIGINAL_BYTES) {
         throw new InvalidContentTransitionError('This image upload is too large or incomplete.')
       }
-      const metadata = ownerMediaMetadataSchema.parse({
+      const parsed = ownerMediaMetadataSchema.safeParse({
         alt: form.get('alt'),
         caption: form.get('caption') ?? '',
         creditName: form.get('creditName'),
         creditUrl: form.get('creditUrl') ?? '',
-        focalX: form.get('focalX') ?? 0.5,
-        focalY: form.get('focalY') ?? 0.5,
+        focalX: form.get('focalX') ?? undefined,
+        focalY: form.get('focalY') ?? undefined,
       })
+      if (!parsed.success) {
+        throw new InvalidContentTransitionError(
+          parsed.error.issues[0]?.message ?? 'Check the form.',
+        )
+      }
+      const metadata = parsed.data
       const mediaService = getOwnerRuntime().media
       if (!mediaService) {
         throw new InvalidContentTransitionError('Image storage is not configured yet.')
