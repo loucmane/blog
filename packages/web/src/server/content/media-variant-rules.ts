@@ -87,3 +87,13 @@ export function mediaVariantsRuledOut(facts: MediaOriginalFacts): boolean {
     facts.width * facts.height > MAX_MEDIA_VARIANT_INPUT_PIXELS
   )
 }
+
+/**
+ * Whether what was measured about an original rules variants in: it was measured as a single
+ * frame, within the pixel limit. Then a cache can be told that its copy of a variant is still
+ * current without the variant being read or made first. An original that was never measured may be
+ * animated, which only its own bytes can show.
+ */
+export function mediaVariantsRuledIn(facts: MediaOriginalFacts): boolean {
+  return facts.animated === false && !mediaVariantsRuledOut(facts)
+}

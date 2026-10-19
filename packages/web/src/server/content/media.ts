@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto'
 
+import { safeHref } from '@/lib/safe-url'
+
 import type { MediaAsset } from './domain'
 import { InvalidContentTransitionError } from './errors'
 import type { Clock, ContentRepository, IdentifierSource, OriginalObjectStore } from './ports'
@@ -60,6 +62,12 @@ function validateMediaInput(input: StoreMediaOriginalInput) {
   }
   if (input.alt.trim().length === 0 || input.creditName.trim().length === 0) {
     throw new InvalidContentTransitionError('Media alt text and credit are required.')
+  }
+  // Readers can follow a credit link, so it may only open a web page or an email.
+  if (input.creditUrl && safeHref(input.creditUrl) === null) {
+    throw new InvalidContentTransitionError(
+      'Media credit links must be absolute http, https or mailto URLs.',
+    )
   }
   for (const dimension of [input.width, input.height]) {
     if (

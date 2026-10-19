@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 
 import { z } from 'zod'
 
+import { safeHref } from '@/lib/safe-url'
+
 import {
   articleStatuses,
   outboxStatuses,
@@ -214,7 +216,15 @@ const mediaAssetSchema = z
     contentType: id,
     createdAt: timestamp,
     creditName: z.string().min(1),
-    creditUrl: z.string().url().nullable(),
+    // Readers can follow a credit link, so it may only open a web page or an email.
+    creditUrl: z
+      .string()
+      .trim()
+      .refine(
+        (value) => safeHref(value) !== null,
+        'credit URL must be an absolute http, https or mailto URL',
+      )
+      .nullable(),
     focalX: z.number().min(0).max(1),
     focalY: z.number().min(0).max(1),
     height: z.number().int().positive().nullable(),

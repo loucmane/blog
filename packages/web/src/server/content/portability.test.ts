@@ -295,6 +295,58 @@ describe('portable content ownership', () => {
     ).resolves.toMatchObject({ animated: null, height: 48, width: 64 })
   })
 
+  it('keeps a web credit link through export and import, and refuses one that could run script', async () => {
+    const repository = new InMemoryContentRepository()
+    const media = new MediaOriginalService(
+      repository,
+      new InMemoryOriginalObjectStore(),
+      clock,
+      new Identifiers(),
+    )
+    await media.store({
+      alt: 'A credited photograph',
+      body: new TextEncoder().encode('portable credited bytes'),
+      contentType: 'image/png',
+      creditName: 'Studio',
+      creditUrl: 'https://studio.example/credits',
+      id: 'media-credited',
+    })
+    const current = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
+    expect(inspectPortableContentBundle(current)).toMatchObject({ status: 'valid' })
+    const restored = new InMemoryContentRepository()
+    await importPortableContentBundle(restored, current)
+    await expect(
+      restored.transaction((transaction) => transaction.getMediaAsset('media-credited')),
+    ).resolves.toMatchObject({ creditUrl: 'https://studio.example/credits' })
+
+    const { digest: _discarded, ...currentUnsigned } = current
+    for (const creditUrl of ['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>']) {
+      const unsigned = {
+        ...currentUnsigned,
+        data: {
+          ...current.data,
+          mediaAssets: current.data.mediaAssets.map((asset) => ({ ...asset, creditUrl })),
+        },
+      }
+      const unsafe = {
+        ...unsigned,
+        digest: createHash('sha256').update(canonicalJson(unsigned)).digest('hex'),
+      }
+      const issue =
+        'data.mediaAssets.0.creditUrl: credit URL must be an absolute http, https or mailto URL'
+
+      expect(inspectPortableContentBundle(unsafe), creditUrl).toMatchObject({
+        issues: [issue],
+        status: 'invalid',
+      })
+      const target = new InMemoryContentRepository()
+      await expect(importPortableContentBundle(target, unsafe), creditUrl).rejects.toThrow(issue)
+      await expect(
+        target.transaction((transaction) => transaction.listMediaAssets()),
+      ).resolves.toEqual([])
+    }
+  })
+
   it('fails closed on tampering, extra fields, invalid documents, and media drift', async () => {
     const { objects, repository } = await populatedRepository()
     const bundle = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
