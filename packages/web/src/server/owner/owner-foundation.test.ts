@@ -548,4 +548,37 @@ describe('owner media uploads', () => {
       repository.transaction((transaction) => transaction.getMediaAsset(asset.id)),
     ).resolves.toMatchObject({ focalX: 0.2, focalY: 0.8 })
   })
+
+  it('refuses a credit link that is not a web or email address, and keeps one that is', () => {
+    const upload = { alt: 'A doorway low on the left', creditName: 'Studio' }
+
+    for (const creditUrl of [
+      'javascript:alert(1)',
+      'JavaScript:alert(document.cookie)',
+      'data:text/html,<script>alert(1)</script>',
+      'not a link',
+    ]) {
+      const parsed = ownerMediaMetadataSchema.safeParse({ ...upload, creditUrl })
+
+      expect(parsed.success, creditUrl).toBe(false)
+      expect(
+        parsed.error?.issues.map(({ message }) => message),
+        creditUrl,
+      ).toEqual([
+        'The credit link must be a full address that starts with https://, http:// or mailto:.',
+      ])
+    }
+    for (const creditUrl of [
+      'https://studio.example/credits',
+      'http://studio.example/',
+      'mailto:pictures@studio.example',
+      '',
+    ]) {
+      expect(ownerMediaMetadataSchema.parse({ ...upload, creditUrl }), creditUrl).toMatchObject({
+        creditUrl,
+      })
+    }
+    // The form may leave the optional link out.
+    expect(ownerMediaMetadataSchema.parse(upload)).toMatchObject({ creditUrl: '' })
+  })
 })

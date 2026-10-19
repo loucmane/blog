@@ -349,14 +349,28 @@ async function ownerMedia(): Promise<readonly MediaAsset[]> {
   return ((await response.json()) as { readonly media: readonly MediaAsset[] }).media
 }
 
-/** Publishes a story that shows the given images, in order. */
-async function publishStoryWith(slug: string, mediaIds: readonly string[]) {
+/** An image as the editor inserts it from the media library, with the image's own credit. */
+function libraryImageNode(asset: MediaAsset): ContentNode {
+  return {
+    attrs: {
+      alt: asset.alt,
+      caption: asset.caption,
+      credit: { name: asset.creditName, url: asset.creditUrl },
+      focalPoint: { x: asset.focalX, y: asset.focalY },
+      mediaId: asset.id,
+    },
+    type: 'mediaImage',
+  }
+}
+
+/** Publishes a story that shows the given images, by media id or as image nodes, in order. */
+async function publishStoryWith(slug: string, images: readonly (string | ContentNode)[]) {
   const runtime = getOwnerRuntime()
   const articleId = `article-${slug}`
   const created = await runtime.content.createArticle({
     dek: 'How a north-facing room learns to hold the low sun of December.',
     document: storyDocument(articleId, [
-      ...mediaIds.map(imageNode),
+      ...images.map((image) => (typeof image === 'string' ? imageNode(image) : image)),
       paragraph('By three in the afternoon the light is already leaving.'),
     ]),
     id: articleId,
@@ -861,5 +875,45 @@ describe('owner uploads', () => {
       })
     }
     expect(await ownerMedia()).toEqual([])
+  })
+
+  it('refuses a credit link that could run script, and stores nothing', async () => {
+    const body = new Uint8Array(await solid(800, 600).png().toBuffer())
+
+    for (const creditUrl of ['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>']) {
+      const response = await postUpload({
+        alt: 'A doorway',
+        body,
+        contentType: 'image/png',
+        fields: { creditUrl },
+        name: 'doorway.png',
+      })
+
+      expect(response.status, creditUrl).toBe(422)
+      await expect(response.json(), creditUrl).resolves.toEqual({
+        error:
+          'The credit link must be a full address that starts with https://, http:// or mailto:.',
+      })
+    }
+    expect(await ownerMedia()).toEqual([])
+  })
+
+  it('keeps a web credit link from the upload to the story page', async () => {
+    const photo = await upload({
+      alt: 'A doorway low on the left',
+      body: new Uint8Array(await solid(800, 600).png().toBuffer()),
+      contentType: 'image/png',
+      fields: { creditUrl: 'https://studio.example/credits' },
+      name: 'doorway.png',
+    })
+    expect(photo).toMatchObject({
+      creditName: 'Studio',
+      creditUrl: 'https://studio.example/credits',
+    })
+    await publishStoryWith('a-credited-photograph', [libraryImageNode(photo)])
+
+    const markup = await renderStory('a-credited-photograph')
+
+    expect(markup).toContain('href="https://studio.example/credits"')
   })
 })

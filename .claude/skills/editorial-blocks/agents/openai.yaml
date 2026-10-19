@@ -1,0 +1,4 @@
+interface:
+  display_name: "Editorial Blocks"
+  short_description: "Review editorial blocks and reader direction contracts"
+  default_prompt: "Use $editorial-blocks to trace a document block from validation through the shared reader renderer and Reader Lab directions."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reader Frontend"
+  short_description: "Review reader design, accessibility, and performance"
+  default_prompt: "Use $reader-frontend to review the magazine reader experience with code and browser evidence."
