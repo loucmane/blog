@@ -13,18 +13,20 @@ real site, with real published stories, in any registered direction.
 | `id`                         | Short lowercase kebab-case, such as `quiet-monograph`.                                              |
 | `name`, `thesis`             | What the owner sees in the lab: a name of up to 48 characters and a one-line idea.                  |
 | `Home`, `Article`, `Section` | Server components that receive `{ view }` (`HomeView`, `ArticleView`, `SectionView`).               |
+| `Author`, `Topic` (optional) | Server components that receive `{ view }` (`AuthorView`, `TopicView`); baseline's if left out.      |
 | `fonts` (optional)           | Local WOFF2 faces, a CSS variable, and metric-adjusted fallback data (see below).                   |
 | `tokens` (optional)          | CSS custom properties for `light` and `dark`, plus the `textPairs` that must reach WCAG AA (4.5:1). |
 | `styles` (optional)          | CSS that is nested under the direction's root element, so it reaches only this direction.           |
 
-Registration fails fast, with a `ReaderDirectionError`, on an invalid id, a missing view, empty
-or overlong metadata, a malformed font, a token with an unsafe value, a text pair below 4.5:1, or a
-duplicate id or name.
+Registration fails fast, with a `ReaderDirectionError`, on an invalid id, a missing view, an author
+or topic view that is not a component, empty or overlong metadata, a malformed font, a token with
+an unsafe value, a text pair below 4.5:1, or a duplicate id or name.
 
 ## Add a direction
 
-1. Create a folder, for example `quiet-monograph/`, with the three views and an `index.ts` that
-   exports `defineReaderDirection({ ... })`.
+1. Create a folder, for example `quiet-monograph/`, with the Home, Article, and Section views
+   (and, if the direction has its own, the Author and Topic views) and an `index.ts` that exports
+   `defineReaderDirection({ ... })`.
 2. In `registry.ts`, import it and add it to `directions`.
 3. Run the contract and registry tests, and then the browser checks (see [Checks](#checks)).
 
@@ -34,10 +36,16 @@ registry.
 ## What a view renders
 
 - **The whole page below the root layout.** That includes the site header, `main`, and any
-  footer. Render exactly one `h1`: the site name on home, the story title on an article, and the
-  section name on a section page.
+  footer. Render exactly one `h1`: the site name on home, the story title on an article, the
+  section name on a section page, the author's name on an author page, and the topic's name on a
+  topic page.
 - **Only what the view provides.** Never fetch data or read cookies, and never hard-code copy that
   belongs to content. Use `siteName` from `@/reader/components/site-header` for the magazine's name.
+- **Every page type.** An article view carries the byline as `authorLinks` (`authors` keeps the
+  plain names), its categories and tags as `topics`, and a few `related` stories; each list may be
+  empty. Author and topic pages list only visible stories and may have none, so give them an empty
+  state. A direction without its own `Author` or `Topic` renders baseline's inside its own root,
+  with its tokens and styles.
 - **The shared renderers.** Use `ArticleBody` for story bodies, and `ReaderImageView` or
   `ReaderFigure` for images, so blocks and image privacy rules stay in one place. Style their
   semantic HTML and `data-block` attributes rather than reimplementing them.
@@ -99,6 +107,9 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
 ## Checks
 
 - `vitest run packages/web/src/reader-directions` runs the contract, contrast, and registry tests.
+  The registry test renders every direction's author and topic pages and expects one `h1` each.
+- `packages/web/tests/reader/author-topic-routes.test.ts` covers the author and topic routes, in
+  the lab too.
 - `tests/e2e/reader-lab.spec.ts` opens every registered direction from the lab and runs axe on
   home, an article, and a section at 390 and 1440 pixels, with the lab bar showing.
 - The [signed-in Lighthouse harness](../../../../scripts/lab-lighthouse.md) measures home,

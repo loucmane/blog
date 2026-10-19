@@ -1,4 +1,4 @@
-import type { PublicMediaPath, SectionPath, StoryPath } from './paths'
+import type { AuthorPath, PublicMediaPath, SectionPath, StoryPath, TopicPath } from './paths'
 
 /*
  * Direction-neutral reader view models. Every field a public design needs comes from these
@@ -27,6 +27,18 @@ export interface SectionLink {
   readonly href: SectionPath
   readonly name: string
   readonly slug: string
+}
+
+/** A credited author and their author page. */
+export interface AuthorLink {
+  readonly href: AuthorPath
+  readonly name: string
+}
+
+/** A topic a story is filed under, and its topic page. */
+export interface TopicLink {
+  readonly href: TopicPath
+  readonly name: string
 }
 
 export interface ReaderNavigation {
@@ -65,8 +77,36 @@ export interface SectionView {
   readonly stories: readonly StoryCard[]
 }
 
+/**
+ * A topic page: the visible stories filed under a category or tag. A category and a tag that share
+ * a slug are one topic.
+ */
+export interface TopicView {
+  /** Topics have no stored description yet, so this is null until the taxonomy model has one. */
+  readonly description: string | null
+  readonly href: TopicPath
+  readonly name: string
+  readonly navigation: ReaderNavigation
+  readonly slug: string
+  /** The visible stories filed under this topic, newest first. */
+  readonly stories: readonly StoryCard[]
+}
+
+export interface AuthorView {
+  /** The stored biography, or null when the author has none. */
+  readonly bio: string | null
+  readonly href: AuthorPath
+  readonly name: string
+  readonly navigation: ReaderNavigation
+  readonly slug: string
+  /** The visible stories that credit this author, newest first. */
+  readonly stories: readonly StoryCard[]
+}
+
 export interface ArticleView {
-  /** Author display names. Authors are not linked to articles yet, so this is empty for now. */
+  /** The credited authors in byline order, each with their author page. */
+  readonly authorLinks: readonly AuthorLink[]
+  /** The same authors' display names, kept for views that print a plain byline. */
   readonly authors: readonly string[]
   /** The published document's blocks, without the lead image when it is shown as `hero`. */
   readonly body: readonly ArticleBlock[]
@@ -78,9 +118,13 @@ export interface ArticleView {
   /** ISO 8601 timestamp of the visible publication. */
   readonly publishedAt: string
   readonly readingMinutes: number
+  /** A few other visible stories to read next, most relevant first; empty when there are none. */
+  readonly related: readonly StoryCard[]
   readonly section: SectionLink | null
   readonly slug: string
   readonly title: string
+  /** The categories and tags the story is filed under, by their order on the story. */
+  readonly topics: readonly TopicLink[]
 }
 
 export type InlineMark =

@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: StoryPageProps): Promise<Meta
     alternates: {
       canonical: view.href,
     },
-    authors: view.authors.map((name) => ({ name })),
+    authors: view.authorLinks.map(({ href, name }) => ({ name, url: href })),
     description: view.dek,
     openGraph: {
       description: view.dek,

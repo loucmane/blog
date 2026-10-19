@@ -1,8 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
+
+import type { AuthorView, StoryCard, TopicView } from '@/reader/views'
 
 import { contrastRatio, wcagTextContrast } from './contrast'
 import { readerDirections } from './registry'
@@ -56,6 +60,42 @@ function forbiddenAssetImports(source: string, file: string): string[] {
   }
   visit(parse(source, file))
   return violations
+}
+
+const interiors = { href: '/sections/interiors', name: 'Interiors', slug: 'interiors' } as const
+const navigation = { sections: [interiors] }
+const card: StoryCard = {
+  dek: 'How a north-facing room learns to hold the low sun of December.',
+  href: '/stories/quiet-architecture-of-winter-light',
+  image: null,
+  publishedAt: '2026-10-02T07:00:00.000Z',
+  readingMinutes: 4,
+  section: interiors,
+  slug: 'quiet-architecture-of-winter-light',
+  title: 'The quiet architecture of winter light',
+}
+const authorView: AuthorView = {
+  bio: 'Alpha Writer writes about rooms.',
+  href: '/authors/alpha',
+  name: 'Alpha Writer',
+  navigation,
+  slug: 'alpha',
+  stories: [card],
+}
+const topicView: TopicView = {
+  description: null,
+  href: '/topics/light',
+  name: 'Light',
+  navigation,
+  slug: 'light',
+  stories: [card],
+}
+
+/** The text of every `h1` in the markup, without its inner tags. */
+function topLevelHeadings(markup: string): string[] {
+  return [...markup.matchAll(/<h1[\s>][\s\S]*?<\/h1>/g)].map(([heading]) =>
+    heading.replace(/<[^>]+>/g, '').trim(),
+  )
 }
 
 function themeTokens(selector: ':root' | '.dark'): Map<string, string> {
@@ -124,6 +164,19 @@ describe('registered reader directions', () => {
     )
     expect(globalCss).not.toMatch(/@font-face|reader-directions\//)
   })
+
+  it.each(readerDirections.directions)(
+    '$id renders author and topic pages, its own or baseline’s, with one h1 naming the page',
+    (direction) => {
+      const author = renderToStaticMarkup(createElement(direction.Author, { view: authorView }))
+      const topic = renderToStaticMarkup(createElement(direction.Topic, { view: topicView }))
+
+      expect(topLevelHeadings(author)).toEqual(['Alpha Writer'])
+      expect(author).toContain('href="/stories/quiet-architecture-of-winter-light"')
+      expect(topLevelHeadings(topic)).toEqual(['Light'])
+      expect(topic).toContain('href="/stories/quiet-architecture-of-winter-light"')
+    },
+  )
 
   it.each(readerDirections.directions.filter(({ id }) => id !== 'baseline'))(
     '$id explicitly assigns its own font to every heading level',
