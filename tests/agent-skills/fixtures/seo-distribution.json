@@ -1,0 +1,202 @@
+{
+  "capabilities": [
+    "canonical-url-review",
+    "structured-data-review",
+    "feed-index-hygiene",
+    "distribution-integration-review",
+    "advisory-seo-review"
+  ],
+  "handoffs": [
+    "release-witness",
+    "reader-frontend",
+    "editorial-blocks",
+    "content-platform-backend",
+    "security-identity-privacy"
+  ],
+  "coverage": [
+    "canonical urls",
+    "slug redirects",
+    "schema.org",
+    "json-ld",
+    "social cards",
+    "rss",
+    "atom",
+    "sitemap",
+    "robots",
+    "index hygiene",
+    "search",
+    "newsletter"
+  ],
+  "triggerSignals": {
+    "include": ["canonical urls", "rss", "social cards", "structured data"],
+    "exclude": [
+      "release evidence only",
+      "reader layout only",
+      "block contract only",
+      "backend data only",
+      "security audit only"
+    ]
+  },
+  "requests": [
+    {
+      "prompt": "Review canonical URLs and slug redirects for published stories.",
+      "signal": "canonical urls",
+      "action": "use"
+    },
+    {
+      "prompt": "Plan RSS and Atom discovery links without claiming feeds already exist.",
+      "signal": "rss",
+      "action": "use"
+    },
+    {
+      "prompt": "Review social cards and structured data plus their rendered presentation.",
+      "signal": "mixed requests",
+      "action": "mixed",
+      "to": "reader-frontend"
+    },
+    {
+      "prompt": "Check release evidence only and reconcile CI counts with host results.",
+      "signal": "release evidence",
+      "action": "handoff",
+      "to": "release-witness"
+    },
+    {
+      "prompt": "Review reader layout only, including Core Web Vitals.",
+      "signal": "reader layout",
+      "action": "handoff",
+      "to": "reader-frontend"
+    },
+    {
+      "prompt": "Review the block contract only for a new gallery node.",
+      "signal": "block contract",
+      "action": "handoff",
+      "to": "editorial-blocks"
+    },
+    {
+      "prompt": "Review backend data only for publication jobs and migrations.",
+      "signal": "backend data",
+      "action": "handoff",
+      "to": "content-platform-backend"
+    },
+    {
+      "prompt": "Perform a security audit only of URL sanitization and subscriber consent.",
+      "signal": "security",
+      "action": "handoff",
+      "to": "security-identity-privacy"
+    }
+  ],
+  "routePatterns": [
+    "packages/web/src/lib/site-url.ts",
+    "packages/web/public/robots.txt",
+    "packages/web/src/app/layout.tsx",
+    "packages/web/src/app/page.tsx",
+    "packages/web/src/app/stories/*/page.tsx",
+    "packages/web/src/app/sections/*/page.tsx",
+    "packages/web/src/app/feed.xml/**",
+    "packages/web/src/app/sitemap.xml/**",
+    "packages/web/src/app/sitemaps/**",
+    "packages/web/src/app/robots.txt/**",
+    "packages/web/src/server/distribution/**"
+  ],
+  "paths": {
+    "positive": [
+      { "file": "packages/web/src/lib/site-url.ts" },
+      { "file": "packages/web/public/robots.txt" },
+      { "file": "packages/web/src/app/layout.tsx", "also": ["reader-frontend"] },
+      { "file": "packages/web/src/app/page.tsx", "also": ["reader-frontend"] },
+      { "file": "packages/web/src/app/stories/[slug]/page.tsx", "also": ["reader-frontend"] },
+      { "file": "packages/web/src/app/sections/[slug]/page.tsx", "also": ["reader-frontend"] },
+      { "file": "packages/web/src/app/feed.xml/route.ts" },
+      { "file": "packages/web/src/app/sitemap.xml/route.ts" },
+      { "file": "packages/web/src/app/sitemaps/[page]/route.ts" },
+      { "file": "packages/web/src/app/robots.txt/route.ts" },
+      {
+        "file": "packages/web/src/server/distribution/canonical.ts",
+        "also": ["content-platform-backend"]
+      }
+    ],
+    "negative": [
+      "packages/web/src/lib/site-url.ts.bak",
+      "packages/web/public/robots.txt.old",
+      "packages/web/src/app/owner/(workspace)/page.tsx",
+      "packages/web/src/app/preview/stories/[slug]/page.tsx",
+      "packages/web/src/app/stories-archive/[slug]/page.tsx",
+      "packages/web/src/app/stories/[slug]/error.tsx",
+      "packages/web/src/app/feed.xml-old/route.ts",
+      "packages/web/src/app/sitemaps-old/route.ts",
+      "packages/web/src/server/distribution-old/feed.ts",
+      "packages/web/src/server/content/service.ts",
+      "packages/web/src/reader-directions/contract.ts",
+      "scripts/ci/web-production-smoke.mjs",
+      ".claude/skills/seo-distribution/SKILL.md"
+    ]
+  },
+  "plannedPaths": [
+    { "file": "packages/web/src/app/feed.xml/route.ts", "bead": "blog-0045.5" },
+    { "file": "packages/web/src/app/sitemap.xml/route.ts", "bead": "blog-0045.5" },
+    { "file": "packages/web/src/app/sitemaps/[page]/route.ts", "bead": "blog-0045.5" },
+    { "file": "packages/web/src/app/robots.txt/route.ts", "bead": "blog-0045.5" },
+    { "file": "packages/web/src/server/distribution/canonical.ts", "bead": "blog-0045.3" }
+  ],
+  "groundingPaths": [
+    "packages/web/src/lib/site-url.ts",
+    "packages/web/src/lib/site-url.test.ts",
+    "packages/web/public/robots.txt",
+    "packages/web/src/app/layout.tsx",
+    "packages/web/src/app/stories/[slug]/page.tsx",
+    "packages/web/src/app/sections/[slug]/page.tsx",
+    "packages/web/src/reader/read-model.ts",
+    "packages/web/src/server/content/service.ts",
+    "docs/planning/phase-5/decomposition-r2.md"
+  ],
+  "guards": [
+    "stored redirects do not prove public redirect resolution",
+    "robots is not access control",
+    "metadata is not a generated social card",
+    "blog-0045.1",
+    "blog-0045.2",
+    "blog-0045.3",
+    "blog-0045.5",
+    "blog-0045.6",
+    "blog-0045.8",
+    "blog-0045.9",
+    "blog-0045.10",
+    "do not invent authors"
+  ],
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "task54-seo-fixture",
+    "skill": "seo-distribution",
+    "mode": "advisory",
+    "verdict": "warn",
+    "summary": "Synthetic example: feed discovery placement needs an editorial decision; no feed check ran.",
+    "generatedAt": "2026-10-19T17:05:00Z",
+    "headSha": "efd9166e3e73c485991df47c5ca02693f4d3246e",
+    "findings": [
+      {
+        "id": "discovery-placement",
+        "severity": "warning",
+        "category": "distribution-design",
+        "message": "Choose where feed discovery belongs in the reader navigation before implementation.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["docs/planning/phase-5/decomposition-r2.md"]
+      }
+    ],
+    "evidence": [{ "kind": "file", "path": "docs/planning/phase-5/decomposition-r2.md" }]
+  },
+  "deterministicExamples": [
+    {
+      "command": "corepack pnpm exec vitest run packages/web/src/lib/site-url.test.ts",
+      "finding": {
+        "id": "synthetic-origin-failure",
+        "severity": "error",
+        "category": "canonical-url",
+        "message": "Synthetic failure example only: canonical origin isolation assertion fails.",
+        "subjective": false,
+        "blocking": true,
+        "evidence": ["command: corepack pnpm exec vitest run packages/web/src/lib/site-url.test.ts"]
+      }
+    }
+  ]
+}

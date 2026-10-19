@@ -1,0 +1,177 @@
+{
+  "capabilities": [
+    "verification-evidence-review",
+    "security-accessibility-signals",
+    "rollback-readiness",
+    "advisory-release-review"
+  ],
+  "handoffs": [
+    "seo-distribution",
+    "reader-frontend",
+    "editorial-blocks",
+    "content-platform-backend",
+    "security-identity-privacy"
+  ],
+  "coverage": [
+    "exact commands",
+    "counts",
+    "checks not run",
+    "security",
+    "accessibility",
+    "rollback readiness",
+    "ci",
+    "host",
+    "pr evidence",
+    "exit status",
+    "skipped",
+    "flaky",
+    "revision"
+  ],
+  "triggerSignals": {
+    "include": ["release evidence", "rollback readiness", "verification report"],
+    "exclude": [
+      "seo design only",
+      "reader layout only",
+      "block contract only",
+      "backend data only",
+      "security audit only"
+    ]
+  },
+  "requests": [
+    {
+      "prompt": "Review release evidence and compare the CI results with the tested revision.",
+      "signal": "release evidence",
+      "action": "use"
+    },
+    {
+      "prompt": "Review rollback readiness for a release that includes migrations.",
+      "signal": "rollback readiness",
+      "action": "use"
+    },
+    {
+      "prompt": "Review the verification report and assess a failing accessibility assertion.",
+      "signal": "mixed requests",
+      "action": "mixed",
+      "to": "reader-frontend"
+    },
+    {
+      "prompt": "Review SEO design only for canonical URLs and RSS distribution.",
+      "signal": "seo design",
+      "action": "handoff",
+      "to": "seo-distribution"
+    },
+    {
+      "prompt": "Review reader layout only and Core Web Vitals budgets.",
+      "signal": "reader layout",
+      "action": "handoff",
+      "to": "reader-frontend"
+    },
+    {
+      "prompt": "Review the block contract only for a new Reader Lab direction.",
+      "signal": "block contract",
+      "action": "handoff",
+      "to": "editorial-blocks"
+    },
+    {
+      "prompt": "Review backend data only and implement a migration rollback.",
+      "signal": "backend data",
+      "action": "handoff",
+      "to": "content-platform-backend"
+    },
+    {
+      "prompt": "Perform a security audit only of authorization and session storage.",
+      "signal": "security",
+      "action": "handoff",
+      "to": "security-identity-privacy"
+    }
+  ],
+  "routePatterns": [".github/workflows/**", "scripts/ci/**", "tests/ci/**", "docs/deployment/**"],
+  "paths": {
+    "positive": [
+      { "file": ".github/workflows/ci.yml", "also": ["security-identity-privacy"] },
+      { "file": ".github/workflows/auto-merge.yml", "also": ["security-identity-privacy"] },
+      { "file": "scripts/ci/check-test-results.mjs" },
+      { "file": "scripts/ci/check-test-capability.mjs" },
+      { "file": "scripts/ci/check-accessibility-baseline.mjs" },
+      { "file": "scripts/ci/check-dependency-security.mjs", "also": ["security-identity-privacy"] },
+      { "file": "scripts/ci/web-production-smoke.mjs" },
+      { "file": "tests/ci/test-results.test.mjs" },
+      { "file": "tests/ci/security-hotfix.test.mjs", "also": ["security-identity-privacy"] },
+      { "file": "docs/deployment/target-platform.md" },
+      { "file": "docs/deployment/backup-restore.md", "also": ["content-platform-backend"] }
+    ],
+    "negative": [
+      ".github/workflows-old/ci.yml",
+      "scripts/ci-old/check-test-results.mjs",
+      "tests/ci-old/test-results.test.mjs",
+      "docs/deployment-old/target-platform.md",
+      "packages/web/src/lib/site-url.ts",
+      "packages/web/src/app/page.tsx",
+      "packages/web/src/server/content/service.ts",
+      "packages/web/src/reader-directions/contract.ts",
+      "docs/product/content-workflow.md",
+      "package.json",
+      ".claude/skills/release-witness/SKILL.md"
+    ]
+  },
+  "groundingPaths": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/auto-merge.yml",
+    "scripts/ci/check-test-results.mjs",
+    "scripts/ci/check-test-capability.mjs",
+    "scripts/ci/check-accessibility-baseline.mjs",
+    "scripts/ci/check-dependency-security.mjs",
+    "scripts/ci/web-production-smoke.mjs",
+    "tests/ci/test-results.test.mjs",
+    "tests/ci/auto-merge-policy.test.mjs",
+    "docs/deployment/target-platform.md",
+    "docs/deployment/backup-restore.md"
+  ],
+  "guards": [
+    "configured is not executed",
+    "local success is not ci success",
+    "absence of output is not a pass",
+    "no complete wcag conformance claim",
+    "a green report is not merge or deployment permission",
+    "application rollback is not data rollback",
+    "provisional"
+  ],
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "task54-release-fixture",
+    "skill": "release-witness",
+    "mode": "advisory",
+    "verdict": "warn",
+    "summary": "Synthetic example: rollback rehearsal evidence is not supplied; no deployment check ran.",
+    "generatedAt": "2026-10-19T17:05:00Z",
+    "headSha": "efd9166e3e73c485991df47c5ca02693f4d3246e",
+    "findings": [
+      {
+        "id": "rollback-evidence-gap",
+        "severity": "warning",
+        "category": "evidence-gap",
+        "message": "Obtain a rehearsal record before claiming production recovery readiness.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["docs/deployment/backup-restore.md"]
+      }
+    ],
+    "evidence": [{ "kind": "file", "path": "docs/deployment/backup-restore.md" }]
+  },
+  "deterministicExamples": [
+    {
+      "command": "node scripts/ci/check-test-results.mjs unit ci-artifacts/vitest-results.json",
+      "finding": {
+        "id": "synthetic-result-failure",
+        "severity": "error",
+        "category": "test-results",
+        "message": "Synthetic failure example only: the result validator reports skipped tests despite a claim that all executed.",
+        "subjective": false,
+        "blocking": true,
+        "evidence": [
+          "command: node scripts/ci/check-test-results.mjs unit ci-artifacts/vitest-results.json"
+        ]
+      }
+    }
+  ]
+}

@@ -194,10 +194,10 @@
         "file": "packages/web/migrations/0002_owner_auth.down.sql",
         "also": ["content-platform-backend"]
       },
-      { "file": "scripts/ci/check-dependency-security.mjs" },
-      { "file": "tests/ci/security-hotfix.test.mjs" },
+      { "file": "scripts/ci/check-dependency-security.mjs", "also": ["release-witness"] },
+      { "file": "tests/ci/security-hotfix.test.mjs", "also": ["release-witness"] },
       { "file": ".gitleaksignore" },
-      { "file": ".github/workflows/ci.yml" },
+      { "file": ".github/workflows/ci.yml", "also": ["release-witness"] },
       { "file": "package.json" },
       { "file": "packages/web/package.json" },
       { "file": "pnpm-lock.yaml" },

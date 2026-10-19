@@ -140,6 +140,9 @@
       ".claude/skills/content-platform-backend/SKILL.md"
     ],
     "intendedOverlaps": {
+      "docs/deployment/backup-restore.md": [
+        "release-witness"
+      ],
       "packages/web/src/server/owner/publication-worker.ts": [
         "security-identity-privacy"
       ],

@@ -113,11 +113,11 @@
   ],
   "paths": {
     "positive": [
-      { "file": "packages/web/src/app/page.tsx" },
-      { "file": "packages/web/src/app/layout.tsx" },
+      { "file": "packages/web/src/app/page.tsx", "also": ["seo-distribution"] },
+      { "file": "packages/web/src/app/layout.tsx", "also": ["seo-distribution"] },
       { "file": "packages/web/src/app/globals.css" },
-      { "file": "packages/web/src/app/stories/[slug]/page.tsx" },
-      { "file": "packages/web/src/app/sections/[slug]/page.tsx" },
+      { "file": "packages/web/src/app/stories/[slug]/page.tsx", "also": ["seo-distribution"] },
+      { "file": "packages/web/src/app/sections/[slug]/page.tsx", "also": ["seo-distribution"] },
       { "file": "packages/web/src/app/not-found.tsx" },
       { "file": "packages/web/src/app/error.tsx" },
       { "file": "packages/web/src/reader/components/reader-image.tsx" },

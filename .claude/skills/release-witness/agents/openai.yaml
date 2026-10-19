@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Witness"
+  short_description: "Review release evidence and rollback readiness"
+  default_prompt: "Use $release-witness to reconcile verification claims with exact revision, command and result evidence."
