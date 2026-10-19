@@ -253,6 +253,7 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
           'statement_timeout',
           'lock_timeout',
           'idle_in_transaction_session_timeout',
+          'idle_session_timeout',
         ]) {
           const actual = await owner.query(`SHOW ${name}`)
           const baseline = await independent.query(`SHOW ${name}`)
