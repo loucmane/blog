@@ -148,6 +148,52 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "reader-frontend",
+      "match": [
+        "packages/web/src/app/page.tsx",
+        "packages/web/src/app/layout.tsx",
+        "packages/web/src/app/globals.css",
+        "packages/web/src/app/stories/**",
+        "packages/web/src/app/sections/**",
+        "packages/web/src/app/not-found.tsx",
+        "packages/web/src/app/error.tsx",
+        "packages/web/src/reader/**",
+        "packages/web/src/reader-directions/**",
+        "packages/web/public/reader-directions/**",
+        "packages/web/src/app/api/media/**",
+        "scripts/lab-lighthouse.mjs",
+        "tests/e2e/homepage.spec.ts",
+        "tests/e2e/reader.spec.ts"
+      ],
+      "skills": ["reader-frontend"],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
+    },
+    {
+      "id": "editorial-blocks",
+      "match": [
+        "packages/web/src/server/content/document.ts",
+        "packages/web/src/reader/blocks.ts",
+        "packages/web/src/reader/views.ts",
+        "packages/web/src/reader/components/article-body.tsx",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader-directions/registry.ts"
+      ],
+      "skills": ["editorial-blocks"],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }

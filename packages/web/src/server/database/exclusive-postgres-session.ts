@@ -39,9 +39,11 @@ export class ExclusivePostgresSession implements PostgresQueries {
     private readonly client: Client,
     private readonly limits?: ExclusiveWorkLimits,
   ) {
-    // Idle-in-transaction expiry can arrive while awaiting storage, with no SQL in flight.
+    // Either idle timeout can expire while the worker is paused, with no SQL in flight.
     client.on('error', (error: Error) => {
-      this.connectionError = error
+      // pg can follow a server termination with a generic disconnect error.
+      // Keep the original cause for subsequent work and cleanup checks.
+      this.connectionError ??= error
     })
   }
 
@@ -80,16 +82,28 @@ export class ExclusivePostgresSession implements PostgresQueries {
     if (!this.limits) return
     const remaining = this.limits.remainingMs()
     const duration = (cap: number) => `${Math.min(cap, remaining)}ms`
-    await this.query(
-      `SELECT set_config('statement_timeout', $1, false),
-              set_config('lock_timeout', $2, false),
-              set_config('idle_in_transaction_session_timeout', $3, false)`,
-      [
-        duration(this.limits.statementTimeoutMs),
-        duration(this.limits.lockTimeoutMs),
-        duration(this.limits.idleTransactionTimeoutMs),
-      ],
-    )
+    try {
+      await this.query(
+        `SELECT set_config('statement_timeout', $1, false),
+                set_config('lock_timeout', $2, false),
+                set_config('idle_in_transaction_session_timeout', $3, false),
+                set_config('idle_session_timeout', $4, false)`,
+        [
+          duration(this.limits.statementTimeoutMs),
+          duration(this.limits.lockTimeoutMs),
+          duration(this.limits.idleTransactionTimeoutMs),
+          // Recover a lock even if a suspended worker cannot close its transport.
+          // Allow the entire remaining run budget between transactions, not just
+          // the shorter statement budget. Only this standalone session is affected.
+          `${remaining}ms`,
+        ],
+      )
+    } catch (error) {
+      // Unsupported or forbidden settings must not fall back to an unbounded lock.
+      // configure() runs before lock acquisition and before each transaction.
+      this.destroy()
+      throw error
+    }
   }
 
   async query<Row extends QueryResultRow = QueryResultRow>(
@@ -112,7 +126,7 @@ export class ExclusivePostgresSession implements PostgresQueries {
   }
 
   async cleanup(text: string, values?: unknown[]): Promise<void> {
-    if (this.destroyed) return // Closing the connection rolls back and releases session locks.
+    if (this.destroyed) return // Server-side limits also bound a stalled disconnect.
     try {
       if (this.connectionError) throw this.connectionError
       await bounded(
@@ -129,7 +143,8 @@ export class ExclusivePostgresSession implements PostgresQueries {
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
-    // Closing the transport also rolls back and frees session locks if SQL is stalled.
+    // Normally disconnecting rolls back and frees session locks. Server-side idle
+    // limits also end the session if a partition prevents it noticing the disconnect.
     this.client.connection.stream.destroy()
   }
 

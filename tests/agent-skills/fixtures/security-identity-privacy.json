@@ -163,13 +163,16 @@
       },
       { "file": "packages/web/src/app/api/owner/media/route.ts" },
       { "file": "packages/web/src/app/api/auth/[...all]/route.ts" },
-      { "file": "packages/web/src/app/api/media/[id]/route.ts" },
+      {
+        "file": "packages/web/src/app/api/media/[id]/route.ts",
+        "also": ["reader-frontend"]
+      },
       { "file": "packages/web/src/lib/request-security.ts" },
       { "file": "packages/web/next.config.ts" },
       { "file": "packages/web/src/lib/security-headers.test.ts" },
       {
         "file": "packages/web/src/server/content/document.ts",
-        "also": ["content-platform-backend"]
+        "also": ["content-platform-backend", "editorial-blocks"]
       },
       {
         "file": "packages/web/src/server/content/media.ts",
