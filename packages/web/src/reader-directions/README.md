@@ -67,20 +67,28 @@ registry.
 failure model does not load stories, so a missing content store cannot break the recovery page.
 Use the supplied site name and navigation and render exactly one `h1`, a `main`, and a way home.
 
-The not-found boundary and home unavailable state resolve the same presentation as normal pages.
-They render inside `ReaderPage`, including the active direction's tokens/fonts and the owner's
-lab controls. The root error boundary is a client component and has no surviving `ReaderPage`
-ancestor. It first shows a usable baseline error view, then calls `resolveErrorPresentation` to
-confirm the owner selection on the server. Only an authorized lab selection loads the direction
-registry on the client. A failed lookup keeps baseline and its working retry button. No browser
-cookie or DOM attribute authorizes a lab direction.
+The home unavailable state resolves presentation on the server and renders inside `ReaderPage`,
+including the active direction's tokens/fonts and the owner's lab controls. Root not-found is
+a server component with no request APIs. It passes the static Baseline view and root as children
+to a small client upgrader, so its markup and header travel in the server payload rather than
+the upgrader's JavaScript. The required client error boundary imports only `baseline/error`
+and its static header/frame, keeping the other failure views out of its eager graph. Both use
+the same upgrader, which imports no fallback presentation, contract, registry, or lab controls.
 
-An `Error` view must be synchronous and client-compatible (no server-only imports). Its `reset`
+Once mounted, each boundary calls `resolveErrorPresentation` to confirm the owner selection on
+the server. Only an authorized, still-current lab selection loads the registry and `ReaderPage`
+on the client. The selected failure view then renders inside its direction root with lab controls.
+A failed or stale lookup keeps Baseline and its working home/retry links. No browser cookie or
+DOM attribute authorizes a lab direction. Client presentation upgrades do not redirect or change
+the HTTP not-found status.
+
+`NotFound` and `Error` views must be synchronous and client-compatible (no server-only imports).
+The error view's `reset`
 callback is Next's retry action; attach it to a button with `type="button"`. The error object,
 message, stack, and digest are never passed to the view. The root boundary does not catch errors
 in the root layout itself. Check actual server and client failures in a production browser;
 component tests cannot prove Next boundary recovery or hydration behavior.
-The error-only dynamic import includes the registry's direction modules, so keep that module
+The failure-only dynamic import includes the registry's direction modules, so keep that module
 graph client-compatible too. Normal article bodies still render as server components; this
 hook does not turn them into client components on successful reader pages.
 
@@ -109,6 +117,8 @@ defineReaderDirection({
 ```
 
 Registration copies and freezes the map and supplies it to Article via a component wrapper.
+Directions without a map retain their Article component; registering an already defined direction
+reuses its frozen definition without adding another wrapper.
 The map accepts only `body` and `gallery`, with nonempty string values and no markup,
 declaration delimiters, or line breaks. It does not parse the full HTML `sizes` grammar;
 verify that the browser selects candidates matching the actual layout. Omitted entries keep

@@ -19,7 +19,7 @@ import { contrastRatio, wcagTextContrast } from './contrast'
  * The reader direction contract. A direction is one complete presentation of the public site: its
  * Home, Article, Section, Author, and Topic server components receive the direction-neutral view
  * models and render the whole page below the root layout. Author, Topic, NotFound, Error, and
- * Unavailable are optional: a direction that leaves them out renders baseline's. Error runs in
+ * Unavailable are optional: a direction that leaves them out renders baseline's. Error/NotFound run in
  * the client boundary. Directions never fetch data, read cookies, or know about the Reader Lab.
  *
  * A direction's assets load only while it is the active direction: the page applies its font
@@ -192,13 +192,15 @@ function requireImageSizes(
   if (typeof sizes !== 'object' || sizes === null || Array.isArray(sizes)) {
     fail(id, 'imageSizes must be an object with body and/or gallery sizes.')
   }
+  const validated = { ...defaultReaderImageSizes }
   for (const [key, value] of Object.entries(sizes)) {
     if (key !== 'body' && key !== 'gallery') fail(id, `unknown imageSizes key "${key}".`)
     if (typeof value !== 'string' || !value.trim() || /[;{}<>\\\r\n]/.test(value)) {
       fail(id, `imageSizes.${key} must be a nonempty sizes string without markup or line breaks.`)
     }
+    validated[key] = value
   }
-  return Object.freeze({ ...defaultReaderImageSizes, ...sizes })
+  return Object.freeze(validated)
 }
 
 function fail(id: string, problem: string): never {
@@ -399,8 +401,13 @@ function requireStyles(id: string, styles: string | undefined) {
   return styles.trim()
 }
 
+// Only frozen outputs enter this map. Mutable caller definitions are always validated afresh.
+const validatedDirections = new WeakMap<ReaderDirectionDefinition, ReaderDirection>()
+
 /** Validates a direction and freezes it. Throws a `ReaderDirectionError` on the first problem. */
 export function defineReaderDirection(definition: ReaderDirectionDefinition): ReaderDirection {
+  const validated = validatedDirections.get(definition)
+  if (validated) return validated
   const { id } = definition
   if (typeof id !== 'string' || id.length > maxIdLength || !directionIdPattern.test(id)) {
     throw new ReaderDirectionError(
@@ -422,12 +429,13 @@ export function defineReaderDirection(definition: ReaderDirectionDefinition): Re
   const fonts = requireFonts(id, definition.fonts)
   const tokens = requireTokens(id, definition.tokens)
   const styles = requireStyles(id, definition.styles)
-  const imageSizes = requireImageSizes(id, definition.imageSizes)
+  const suppliedImageSizes = definition.imageSizes
+  const imageSizes = requireImageSizes(id, suppliedImageSizes)
   // Forward plain props, keeping the body renderer a server component. Directions opt in by
   // passing imageSizes on to ArticleBody; existing views keep their current output.
   const ArticleView = definition.Article
   const Article =
-    definition.imageSizes === undefined
+    suppliedImageSizes === undefined
       ? ArticleView
       : function SizedArticle(props: ArticleDirectionProps) {
           return createElement(ArticleView, {
@@ -436,7 +444,7 @@ export function defineReaderDirection(definition: ReaderDirectionDefinition): Re
           })
         }
 
-  return Object.freeze({
+  const direction = Object.freeze({
     Article,
     Author: definition.Author ?? BaselineAuthor,
     Error: definition.Error ?? BaselineError,
@@ -453,6 +461,8 @@ export function defineReaderDirection(definition: ReaderDirectionDefinition): Re
     Topic: definition.Topic ?? BaselineTopic,
     Unavailable: definition.Unavailable ?? BaselineUnavailable,
   })
+  validatedDirections.set(direction, direction)
+  return direction
 }
 
 /**

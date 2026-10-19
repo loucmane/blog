@@ -1,3 +1,4 @@
+import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
@@ -35,8 +36,8 @@ it.each([undefined, 'v1.forged-signature'])(
       ...(session ? { [ownerFixtureCookieName]: session } : {}),
     })
     expect(await resolveErrorPresentation()).toEqual({ directionId: 'baseline', lab: false })
-    for (const page of [NotFound, HomePage]) {
-      const markup = renderToStaticMarkup(await page())
+    for (const element of [createElement(NotFound), await HomePage()]) {
+      const markup = renderToStaticMarkup(element)
       expect(markup).toContain('data-reader-direction="baseline"')
       expect(markup).not.toMatch(/data-reader-lab-bar|@font-face|woff2/)
     }
@@ -49,7 +50,11 @@ it('resolves the owner selection for all failure surfaces without returning priv
     [ownerFixtureCookieName]: createOwnerFixtureSession(),
   })
   expect(await resolveErrorPresentation()).toEqual({ directionId: 'quiet-monograph', lab: true })
-  for (const page of [NotFound, HomePage]) {
+  // Even owners receive a static baseline 404 until the client action authorizes an upgrade.
+  const notFound = renderToStaticMarkup(createElement(NotFound))
+  expect(notFound).toContain('data-reader-direction="baseline"')
+  expect(notFound).not.toMatch(/data-reader-lab-bar|@font-face|woff2/)
+  for (const page of [HomePage]) {
     const markup = renderToStaticMarkup(await page())
     expect(markup).toContain('data-reader-direction="quiet-monograph"')
     expect(markup).toContain('data-reader-lab-bar')

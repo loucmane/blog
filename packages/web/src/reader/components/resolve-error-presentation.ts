@@ -3,7 +3,7 @@
 import { resolveReaderPresentation } from '@/reader-lab/presentation'
 
 /**
- * The root client error boundary has no ReaderPage ancestor. Resolve its direction with the same
+ * Root client failure boundaries have no ReaderPage ancestor. Resolve their direction with the same
  * owner authorization as a normal page, and return only serializable presentation identifiers.
  * No input, mutation, content-store access, session details, or error details cross this action.
  */

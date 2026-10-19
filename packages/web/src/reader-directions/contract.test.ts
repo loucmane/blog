@@ -167,6 +167,37 @@ describe('reader direction contract', () => {
     })
   })
 
+  it('keeps the validated sizes values without reading getters again', () => {
+    let reads = 0
+    const direction = defineReaderDirection(
+      definition({
+        imageSizes: {
+          get body() {
+            reads += 1
+            return reads === 1 ? '80vw' : '<invalid>'
+          },
+        },
+      }),
+    )
+    expect(reads).toBe(1)
+    expect(direction.imageSizes.body).toBe('80vw')
+    expect(Object.isFrozen(direction.imageSizes)).toBe(true)
+  })
+
+  it.each([undefined, { body: '80vw' }])(
+    'does not wrap an already defined Article again during registration (%j)',
+    (imageSizes) => {
+      const direction = defineReaderDirection(definition(imageSizes ? { imageSizes } : {}))
+      const registry = createReaderDirectionRegistry({
+        defaultId: direction.id,
+        directions: [direction],
+      })
+      expect(registry.defaultDirection.Article).toBe(direction.Article)
+      expect(defineReaderDirection(direction).Article).toBe(direction.Article)
+      if (!imageSizes) expect(registry.defaultDirection.Article).toBe(TestView)
+    },
+  )
+
   it.each(
     [
       null,
