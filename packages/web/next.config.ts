@@ -91,7 +91,7 @@ export function createOwnerPrivacyHeaders() {
 
 /** The Reader Lab cookie (`src/reader-lab/cookie.ts`), repeated here because config loads alone. */
 const readerLabCookieName = 'reader_lab_direction'
-const readerRoutes = ['/', '/stories/:slug', '/sections/:slug']
+const readerRoutes = ['/', '/stories/:slug', '/sections/:slug', '/authors/:slug', '/topics/:slug']
 
 /**
  * Reader responses to a request that carries the Reader Lab cookie may show an owner's lab

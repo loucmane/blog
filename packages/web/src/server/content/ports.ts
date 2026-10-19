@@ -36,6 +36,8 @@ export interface ContentTransaction {
   getArticle(id: string): Promise<Article | null>
   getArticleForUpdate(id: string): Promise<Article | null>
   getArticleBySlug(slug: string): Promise<Article | null>
+  /** The author whose page has this slug, or null. Author slugs are unique. */
+  getAuthorBySlug(slug: string): Promise<AuthorProfile | null>
   getIdempotency(operation: string, key: string): Promise<IdempotencyRecord | null>
   getMediaAsset(id: string): Promise<MediaAsset | null>
   getOutboxEvent(id: string): Promise<OutboxEvent | null>

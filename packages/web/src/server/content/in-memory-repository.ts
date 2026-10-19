@@ -128,6 +128,13 @@ class InMemoryContentTransaction implements ContentTransaction {
     return clone(article ?? null)
   }
 
+  async getAuthorBySlug(slug: string): Promise<AuthorProfile | null> {
+    const author = [...this.state.authors.values()].find(
+      ({ slug: candidate }) => candidate === slug,
+    )
+    return clone(author ?? null)
+  }
+
   async getIdempotency(operation: string, key: string): Promise<IdempotencyRecord | null> {
     return clone(this.state.idempotency.get(`${operation}:${key}`) ?? null)
   }
