@@ -36,6 +36,12 @@ function copyFixture() {
     ".claude/skills/editorial-blocks/SKILL.md",
     ".claude/skills/editorial-blocks/agents/openai.yaml",
     ".claude/skills/editorial-blocks/references/output-contract.md",
+    ".claude/skills/seo-distribution/SKILL.md",
+    ".claude/skills/seo-distribution/agents/openai.yaml",
+    ".claude/skills/seo-distribution/references/output-contract.md",
+    ".claude/skills/release-witness/SKILL.md",
+    ".claude/skills/release-witness/agents/openai.yaml",
+    ".claude/skills/release-witness/references/output-contract.md",
     ".claude/skills/cross-agent-skill-platform/SKILL.md",
     ".claude/skills/cross-agent-skill-platform/agents/openai.yaml",
     ".claude/skills/gas-city-coordinator/SKILL.md",
@@ -88,6 +94,14 @@ function copyFixture() {
   fs.symlinkSync(
     "../../.claude/skills/editorial-blocks",
     path.join(root, ".agents/skills/editorial-blocks"),
+  );
+  fs.symlinkSync(
+    "../../.claude/skills/seo-distribution",
+    path.join(root, ".agents/skills/seo-distribution"),
+  );
+  fs.symlinkSync(
+    "../../.claude/skills/release-witness",
+    path.join(root, ".agents/skills/release-witness"),
   );
   return root;
 }
@@ -177,8 +191,8 @@ test("validates the repository cross-agent platform", () => {
   assert.deepEqual(report.errors, []);
   assert.equal(report.passed, true);
   assert.deepEqual(report.summary, {
-    skills: 9,
-    routes: 9,
+    skills: 11,
+    routes: 11,
     upstreamEntries: 0,
   });
 });

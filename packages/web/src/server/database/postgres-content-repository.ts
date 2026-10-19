@@ -255,6 +255,17 @@ function mapOutbox(row: OutboxRow): OutboxEvent {
   }
 }
 
+function mapAuthor(row: AuthorRow): AuthorProfile {
+  return {
+    bio: row.bio,
+    createdAt: iso(row.created_at),
+    displayName: row.display_name,
+    id: row.id,
+    slug: row.slug,
+    updatedAt: iso(row.updated_at),
+  }
+}
+
 function mapMediaAsset(row: MediaAssetRow): MediaAsset {
   return {
     alt: row.alt,
@@ -444,6 +455,18 @@ class PostgresContentTransaction implements ContentTransaction {
     return result.rows[0] ? mapRevision(result.rows[0]) : null
   }
 
+  async listArticleAuthors(articleId: string): Promise<readonly AuthorProfile[]> {
+    return (
+      await this.client.query<AuthorRow>(
+        `SELECT authors.* FROM article_authors
+         INNER JOIN authors ON authors.id = article_authors.author_id
+         WHERE article_authors.article_id = $1
+         ORDER BY article_authors.position`,
+        [articleId],
+      )
+    ).rows.map(mapAuthor)
+  }
+
   async listArticles(): Promise<readonly Article[]> {
     return (await this.client.query<ArticleRow>('SELECT * FROM articles ORDER BY id')).rows.map(
       mapArticle,
@@ -479,16 +502,21 @@ class PostgresContentTransaction implements ContentTransaction {
     }))
   }
 
+  async listAuthorArticles(authorId: string): Promise<readonly Article[]> {
+    return (
+      await this.client.query<ArticleRow>(
+        `SELECT articles.* FROM article_authors
+         INNER JOIN articles ON articles.id = article_authors.article_id
+         WHERE article_authors.author_id = $1
+         ORDER BY articles.id`,
+        [authorId],
+      )
+    ).rows.map(mapArticle)
+  }
+
   async listAuthors(): Promise<readonly AuthorProfile[]> {
     return (await this.client.query<AuthorRow>('SELECT * FROM authors ORDER BY id')).rows.map(
-      (row) => ({
-        bio: row.bio,
-        createdAt: iso(row.created_at),
-        displayName: row.display_name,
-        id: row.id,
-        slug: row.slug,
-        updatedAt: iso(row.updated_at),
-      }),
+      mapAuthor,
     )
   }
 
@@ -929,6 +957,16 @@ class PostgresContentTransaction implements ContentTransaction {
       'INSERT INTO taxonomies (id, kind, slug, name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)',
       [term.id, term.kind, term.slug, term.name, term.createdAt, term.updatedAt],
     )
+  }
+
+  async setArticleAuthors(articleId: string, authorIds: readonly string[]): Promise<void> {
+    await this.client.query('DELETE FROM article_authors WHERE article_id = $1', [articleId])
+    for (const [position, authorId] of authorIds.entries()) {
+      await this.client.query(
+        'INSERT INTO article_authors (article_id, author_id, position) VALUES ($1, $2, $3)',
+        [articleId, authorId, position],
+      )
+    }
   }
 }
 

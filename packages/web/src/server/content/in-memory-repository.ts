@@ -1,5 +1,6 @@
 import type {
   Article,
+  ArticleAuthor,
   ArticleRevision,
   ArticleTaxonomy,
   AuditEvent,
@@ -22,6 +23,8 @@ import type { ContentRepository, ContentTransaction } from './ports'
 
 interface RepositoryState {
   articles: Map<string, Article>
+  /** Each article's credited authors, keyed by article id. */
+  articleAuthors: Map<string, readonly ArticleAuthor[]>
   articleTaxonomies: Map<string, ArticleTaxonomy>
   auditEvents: Map<string, AuditEvent>
   authors: Map<string, AuthorProfile>
@@ -43,6 +46,7 @@ interface RepositoryState {
 function createState(): RepositoryState {
   return {
     articles: new Map(),
+    articleAuthors: new Map(),
     articleTaxonomies: new Map(),
     auditEvents: new Map(),
     authors: new Map(),
@@ -157,6 +161,15 @@ class InMemoryContentTransaction implements ContentTransaction {
 
   async lockIdempotency(_operation: string, _key: string): Promise<void> {}
 
+  async listArticleAuthors(articleId: string): Promise<readonly AuthorProfile[]> {
+    return [...(this.state.articleAuthors.get(articleId) ?? [])]
+      .sort((left, right) => left.position - right.position)
+      .flatMap(({ authorId }) => {
+        const author = this.state.authors.get(authorId)
+        return author ? [clone(author)] : []
+      })
+  }
+
   async listArticles(): Promise<readonly Article[]> {
     return values(this.state.articles)
   }
@@ -169,6 +182,14 @@ class InMemoryContentTransaction implements ContentTransaction {
     return values(this.state.auditEvents).filter(
       (event) => articleId === undefined || event.articleId === articleId,
     )
+  }
+
+  async listAuthorArticles(authorId: string): Promise<readonly Article[]> {
+    return values(this.state.articles)
+      .filter(({ id }) =>
+        (this.state.articleAuthors.get(id) ?? []).some((link) => link.authorId === authorId),
+      )
+      .sort((left, right) => left.id.localeCompare(right.id))
   }
 
   async listAuthors(): Promise<readonly AuthorProfile[]> {
@@ -324,6 +345,22 @@ class InMemoryContentTransaction implements ContentTransaction {
 
   async saveTaxonomyTerm(term: TaxonomyTerm): Promise<void> {
     this.state.taxonomyTerms.set(term.id, clone(term))
+  }
+
+  async setArticleAuthors(articleId: string, authorIds: readonly string[]): Promise<void> {
+    // Refuse what the PostgreSQL keys refuse, so both repositories accept the same bylines.
+    if (new Set(authorIds).size !== authorIds.length) {
+      throw new Error(`Article ${articleId} credits an author more than once.`)
+    }
+    if (authorIds.length > 0 && !this.state.articles.has(articleId)) {
+      throw new Error(`Article ${articleId} does not exist.`)
+    }
+    const missing = authorIds.find((authorId) => !this.state.authors.has(authorId))
+    if (missing !== undefined) throw new Error(`Author ${missing} does not exist.`)
+    this.state.articleAuthors.set(
+      articleId,
+      authorIds.map((authorId, position) => ({ articleId, authorId, position })),
+    )
   }
 }
 

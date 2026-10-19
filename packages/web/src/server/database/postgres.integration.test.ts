@@ -20,7 +20,7 @@ import {
   extractContentText,
   type ContentDocument,
 } from '../content/document'
-import type { MediaAsset } from '../content/domain'
+import type { AuthorProfile, MediaAsset } from '../content/domain'
 import { MediaOriginalService, originalObjectKey, sha256Bytes } from '../content/media'
 import { MediaVariantService, mediaVariantObjectKey } from '../content/media-variants'
 import { ContentConflictError } from '../content/errors'
@@ -137,6 +137,7 @@ describe('PostgreSQL and media persistence integration', () => {
       '0002_owner_auth',
       '0003_publication_version',
       '0004_media_asset_animation',
+      '0005_article_authors',
     ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: migrationIds,
@@ -455,6 +456,7 @@ describe('PostgreSQL and media persistence integration', () => {
         '0001_content_foundation',
         '0003_publication_version',
         '0004_media_asset_animation',
+        '0005_article_authors',
       ],
     })
 
@@ -647,5 +649,171 @@ describe('PostgreSQL and media persistence integration', () => {
     expect(await originals.verifyOriginal(originalKey, checksum)).toBe(true)
 
     client.destroy()
+  }, 120_000)
+
+  it('credits authors in byline order under the keys of migration 0005, which reverses', async () => {
+    const pool = new Pool({ connectionString: databaseUrl, max: 2 })
+    const repository = new PostgresContentRepository(pool)
+    const service = new ContentService(repository, clock)
+    const migrations = await readContentMigrations()
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0005_article_authors.down.sql'),
+      'utf8',
+    )
+    const table = async () =>
+      (await pool.query("SELECT to_regclass('article_authors')::text AS name")).rows[0]?.name
+    const reapply = async () =>
+      expect(await applyContentMigrations(pool, migrations)).toEqual({
+        applied: ['0005_article_authors'],
+        skipped: migrations.map(({ id }) => id).filter((id) => id !== '0005_article_authors'),
+      })
+    const credited = (articleId: string) =>
+      repository.transaction((transaction) => transaction.listArticleAuthors(articleId))
+    const creditedIn = (authorId: string) =>
+      repository.transaction((transaction) => transaction.listAuthorArticles(authorId))
+    const setCredits = (articleId: string, authorIds: readonly string[]) =>
+      repository.transaction((transaction) => transaction.setArticleAuthors(articleId, authorIds))
+
+    // Up (the first test applied it), down on an empty table, and up again.
+    expect(await table()).toBe('article_authors')
+    await pool.query(downSql)
+    expect(await table()).toBeNull()
+    await reapply()
+
+    const now = clock.now().toISOString()
+    const author = (id: string, displayName: string): AuthorProfile => ({
+      bio: `${displayName} writes about rooms.`,
+      createdAt: now,
+      displayName,
+      id,
+      slug: id,
+      updatedAt: now,
+    })
+    const first = author('author-byline-first', 'First Byline')
+    const second = author('author-byline-second', 'Second Byline')
+    await repository.transaction(async (transaction) => {
+      await transaction.saveAuthor(first)
+      await transaction.saveAuthor(second)
+    })
+    const create = (id: string) =>
+      service.createArticle({
+        dek: 'Byline proof',
+        document: document(id),
+        id,
+        idempotencyKey: `create-${id}`,
+        slug: id.replace('article-', ''),
+        title: 'Byline proof',
+      })
+    // Created out of id order, so id order and creation order differ.
+    const zeta = await create('article-byline-zeta')
+    const alpha = await create('article-byline-alpha')
+    await service.publish({
+      articleId: zeta.article.id,
+      expectedVersion: zeta.article.version,
+      idempotencyKey: 'publish-article-byline-zeta',
+      revisionId: zeta.revision.id,
+    })
+
+    // A byline keeps the order it was set in; an author's articles come in id order, any status.
+    expect(await credited(zeta.article.id)).toEqual([])
+    await setCredits(zeta.article.id, [second.id, first.id])
+    await setCredits(alpha.article.id, [first.id])
+    expect(await credited(zeta.article.id)).toEqual([second, first])
+    expect((await creditedIn(first.id)).map(({ id, status }) => ({ id, status }))).toEqual([
+      { id: alpha.article.id, status: 'draft' },
+      { id: zeta.article.id, status: 'published' },
+    ])
+
+    // Setting replaces the whole byline.
+    await setCredits(zeta.article.id, [first.id])
+    expect(await credited(zeta.article.id)).toEqual([first])
+    expect(await creditedIn(second.id)).toEqual([])
+
+    // The keys refuse a repeated or unknown author, an unknown article and a shared position.
+    await expect(setCredits(zeta.article.id, [second.id, second.id])).rejects.toMatchObject({
+      code: '23505',
+    })
+    await expect(
+      setCredits(zeta.article.id, [second.id, 'author-byline-missing']),
+    ).rejects.toMatchObject({ code: '23503' })
+    await expect(setCredits('article-byline-missing', [first.id])).rejects.toMatchObject({
+      code: '23503',
+    })
+    await expect(
+      pool.query(
+        'INSERT INTO article_authors (article_id, author_id, position) VALUES ($1, $2, 0)',
+        [zeta.article.id, second.id],
+      ),
+    ).rejects.toMatchObject({ code: '23505' })
+    expect(await credited(zeta.article.id)).toEqual([first])
+
+    // A credited author cannot be deleted; deleting an article deletes its credits.
+    await expect(pool.query('DELETE FROM authors WHERE id = $1', [first.id])).rejects.toMatchObject(
+      { code: '23001' }, // restrict_violation: ON DELETE RESTRICT, not NO ACTION (23503)
+    )
+    const bare = 'article-byline-bare'
+    await repository.transaction(async (transaction) => {
+      await transaction.saveRevision({
+        articleId: bare,
+        createdAt: now,
+        document: document(bare),
+        id: `${bare}-revision`,
+        revisionNumber: 1,
+      })
+      await transaction.saveArticle(
+        {
+          createdAt: now,
+          currentDraftRevisionId: `${bare}-revision`,
+          deletedAt: null,
+          dek: '',
+          id: bare,
+          preDeleteStatus: null,
+          publishedAt: null,
+          publishedRevisionId: null,
+          scheduledAt: null,
+          scheduledRevisionId: null,
+          slug: 'byline-bare',
+          status: 'draft',
+          title: 'Byline bare',
+          updatedAt: now,
+          version: 1,
+        },
+        null,
+      )
+      await transaction.setArticleAuthors(bare, [second.id])
+    })
+    expect((await creditedIn(second.id)).map(({ id }) => id)).toEqual([bare])
+    // One simple query runs as one transaction, so the deferred revision keys hold at its commit.
+    await pool.query(`
+      DELETE FROM article_revisions WHERE article_id = '${bare}';
+      DELETE FROM articles WHERE id = '${bare}';
+    `)
+    // Count the rows themselves: the reads join articles, so they would hide a dangling credit.
+    expect(
+      (
+        await pool.query(
+          'SELECT count(*)::int AS count FROM article_authors WHERE article_id = $1',
+          [bare],
+        )
+      ).rows[0]?.count,
+    ).toBe(0)
+    expect(await creditedIn(second.id)).toEqual([])
+
+    // Down with credits present drops only the credits; up again starts with none.
+    const counts = async () =>
+      (
+        await pool.query(
+          'SELECT (SELECT count(*) FROM articles)::int AS articles, (SELECT count(*) FROM authors)::int AS authors',
+        )
+      ).rows[0]
+    const before = await counts()
+    await pool.query(downSql)
+    expect(await table()).toBeNull()
+    expect(await counts()).toEqual(before)
+    await reapply()
+    expect(await credited(zeta.article.id)).toEqual([])
+    expect(await creditedIn(first.id)).toEqual([])
+
+    await pool.end()
   }, 120_000)
 })
