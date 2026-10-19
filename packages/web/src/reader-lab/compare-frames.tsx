@@ -166,7 +166,7 @@ export function CompareFrames({ items }: { readonly items: readonly CompareFrame
       <div
         aria-describedby="comparison-scroll-help"
         aria-label="Preview panels"
-        className="mt-4 overflow-x-auto rounded-xl border border-border focus-visible:outline-2 focus-visible:outline-ring"
+        className="relative mt-4 overflow-x-auto rounded-xl border border-border focus-visible:outline-2 focus-visible:outline-ring"
         role="region"
         // eslint-disable-next-line jsx-a11y-x/no-noninteractive-tabindex -- Keyboard users need a focus target to scroll the preview region.
         tabIndex={0}

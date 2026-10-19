@@ -207,8 +207,17 @@ describe('owner comparison boundary', () => {
     '/owner',
     '/stories/../owner',
     '/stories/ok?preview=1',
+    '/stories/%2e%2e',
+    '/stories/a%2Fb',
+    '/\\example.test',
+    '/stories/UPPER',
+    '/stories/ok/',
+    '/stories/ok#fragment',
   ])('rejects arbitrary destinations: %s', async (path) => {
     expect(await loadComparePage(path)).toMatchObject({ status: 'invalid' })
+  })
+  it('rejects a repeated page value', async () => {
+    expect(await loadComparePage(['/', '/sections/ok'])).toMatchObject({ status: 'invalid' })
   })
   it('opens the exact selected published page using the existing lab cookie', async () => {
     signIn()
@@ -231,6 +240,10 @@ describe('owner comparison boundary', () => {
     data.set('page', '/')
     data.set('direction', readerDirections.defaultDirection.id)
     await expect(openComparedDirection(data)).rejects.toThrow('Sign in')
+    requestScope.setHeader('origin', origin)
+    await expect(openComparedDirection(data)).rejects.toMatchObject({
+      digest: expect.stringContaining(';/owner/sign-in;'),
+    })
     signIn()
     requestScope.setHeader('origin', 'https://example.test')
     await expect(openComparedDirection(data)).rejects.toThrow('Sign in')
