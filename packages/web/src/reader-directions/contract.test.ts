@@ -131,6 +131,60 @@ describe('reader direction contract', () => {
     expect(defineReaderDirection(definition()).fonts).toEqual([])
   })
 
+  it('supplies baseline failure views and preserves supplied views', () => {
+    const baseline = defineReaderDirection(definition({ id: 'baseline' }))
+    const fallback = defineReaderDirection(definition())
+    for (const view of ['NotFound', 'Error', 'Unavailable'] as const) {
+      expect(typeof fallback[view]).toBe('function')
+      expect(fallback[view]).toBe(baseline[view])
+      expect(defineReaderDirection(definition({ [view]: TestView }))[view]).toBe(TestView)
+    }
+  })
+
+  it.each(['NotFound', 'Error', 'Unavailable'] as const)(
+    'rejects an invalid optional %s failure view',
+    (view) => {
+      for (const value of [null, 'main', {}, 42]) {
+        expect(() => defineReaderDirection(definition({ [view]: value as never }))).toThrow(
+          new RegExp(`${view} view`),
+        )
+      }
+    },
+  )
+
+  it('copies, defaults, and freezes direction image sizes', () => {
+    const sizes = { body: '(min-width: 60rem) 48rem, 100vw' }
+    const direction = defineReaderDirection(definition({ imageSizes: sizes }))
+    sizes.body = '1px'
+    expect(direction.imageSizes).toEqual({
+      body: '(min-width: 60rem) 48rem, 100vw',
+      gallery: '(min-width: 768px) 42rem, 100vw',
+    })
+    expect(Object.isFrozen(direction.imageSizes)).toBe(true)
+    expect(defineReaderDirection(definition()).imageSizes).toEqual({
+      body: '(min-width: 768px) 42rem, 100vw',
+      gallery: '(min-width: 768px) 42rem, 100vw',
+    })
+  })
+
+  it.each(
+    [
+      null,
+      [],
+      '100vw',
+      { typo: '100vw' },
+      { body: '' },
+      { gallery: 42 },
+      { body: '100vw\n' },
+      { gallery: '100vw; color:red' },
+      { body: '<img>' },
+    ].map((value) => [value]),
+  )('rejects malformed image sizes %j', (imageSizes) => {
+    expect(() => defineReaderDirection(definition({ imageSizes: imageSizes as never }))).toThrow(
+      /imageSizes/,
+    )
+  })
+
   it.each([
     'Quiet',
     'quiet_monograph',

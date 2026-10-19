@@ -10,19 +10,24 @@ interface SiteHeaderProps {
   /** On the home page the site name is the page's only top-level heading. */
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
+  readonly siteName?: string
 }
 
-export function SiteHeader({ isHome = false, navigation }: SiteHeaderProps) {
+export function SiteHeader({
+  isHome = false,
+  navigation,
+  siteName: name = siteName,
+}: SiteHeaderProps) {
   const siteNameClassName = 'font-serif text-2xl font-semibold'
   return (
     <header className="border-b border-border">
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4">
         {isHome ? (
-          <h1 className={siteNameClassName}>{siteName}</h1>
+          <h1 className={siteNameClassName}>{name}</h1>
         ) : (
           <p className={siteNameClassName}>
             <Link className="underline-offset-4 hover:underline" href="/">
-              {siteName}
+              {name}
             </Link>
           </p>
         )}

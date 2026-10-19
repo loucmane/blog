@@ -1,0 +1,9 @@
+import type { ReaderFailureView } from '@/reader-directions/contract'
+
+import { siteName } from './site-header'
+
+/** No content-store read: failure pages must remain usable when stories cannot be loaded. */
+export const readerFailureView: ReaderFailureView = {
+  navigation: { sections: [] },
+  siteName,
+}

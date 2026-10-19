@@ -1,17 +1,26 @@
-import type { FunctionComponent } from 'react'
+import { createElement, type FunctionComponent } from 'react'
 
-import type { ArticleView, AuthorView, HomeView, SectionView, TopicView } from '@/reader/views'
+import { defaultReaderImageSizes, type ReaderImageSizes } from '@/reader/components/image-sizes'
+import type {
+  ArticleView,
+  AuthorView,
+  HomeView,
+  ReaderNavigation,
+  SectionView,
+  TopicView,
+} from '@/reader/views'
 
 import { BaselineAuthor } from './baseline/author'
+import { BaselineError, BaselineNotFound, BaselineUnavailable } from './baseline/failure'
 import { BaselineTopic } from './baseline/topic'
 import { contrastRatio, wcagTextContrast } from './contrast'
 
 /*
  * The reader direction contract. A direction is one complete presentation of the public site: its
  * Home, Article, Section, Author, and Topic server components receive the direction-neutral view
- * models and render the whole page below the root layout. Author and Topic are optional: a
- * direction that leaves them out renders baseline's. Directions never fetch data, read cookies, or
- * know about the Reader Lab.
+ * models and render the whole page below the root layout. Author, Topic, NotFound, Error, and
+ * Unavailable are optional: a direction that leaves them out renders baseline's. Error runs in
+ * the client boundary. Directions never fetch data, read cookies, or know about the Reader Lab.
  *
  * A direction's assets load only while it is the active direction: the page applies its font
  * faces, variables, tokens, and styles only when it renders that direction. Fonts are local WOFF2
@@ -24,6 +33,8 @@ export interface HomeDirectionProps {
 }
 
 export interface ArticleDirectionProps {
+  /** Forward to ArticleBody. A registered direction supplies its configured map. */
+  readonly imageSizes?: Readonly<Partial<ReaderImageSizes>> | undefined
   readonly view: ArticleView
 }
 
@@ -37,6 +48,26 @@ export interface AuthorDirectionProps {
 
 export interface TopicDirectionProps {
   readonly view: TopicView
+}
+
+/** Failure pages never need the content store or private error details. */
+export interface ReaderFailureView {
+  readonly navigation: ReaderNavigation
+  readonly siteName: string
+}
+
+export interface NotFoundDirectionProps {
+  readonly view: ReaderFailureView
+}
+
+export interface UnavailableDirectionProps {
+  readonly view: ReaderFailureView
+}
+
+/** This view runs in the client error boundary. Keep its imports client-compatible. */
+export interface ErrorDirectionProps {
+  readonly reset: () => void
+  readonly view: ReaderFailureView
 }
 
 /** Local font faces, emitted only when this direction renders. */
@@ -84,13 +115,18 @@ export interface ReaderDirectionDefinition {
   readonly Article: FunctionComponent<ArticleDirectionProps>
   /** The author page. Leave it out to render baseline's. */
   readonly Author?: FunctionComponent<AuthorDirectionProps>
+  /** Client-compatible failure view; receives a reset callback, never an error object. */
+  readonly Error?: FunctionComponent<ErrorDirectionProps>
   /** Self-hosted faces with adjusted fallbacks; always optional display, never preloaded. */
   readonly fonts?: readonly ReaderDirectionFont[]
   readonly Home: FunctionComponent<HomeDirectionProps>
   /** Short lowercase kebab-case, such as `quiet-monograph`. */
   readonly id: string
+  /** Sizes passed to Article as imageSizes; omitted entries keep the shared defaults. */
+  readonly imageSizes?: Readonly<Partial<ReaderImageSizes>>
   /** The name the owner sees in the Reader Lab. */
   readonly name: string
+  readonly NotFound?: FunctionComponent<NotFoundDirectionProps>
   readonly Section: FunctionComponent<SectionDirectionProps>
   /** CSS nested under the direction's root element, so its selectors reach only this direction. */
   readonly styles?: string
@@ -99,13 +135,18 @@ export interface ReaderDirectionDefinition {
   readonly tokens?: ReaderDirectionTokens
   /** The topic page. Leave it out to render baseline's. */
   readonly Topic?: FunctionComponent<TopicDirectionProps>
+  readonly Unavailable?: FunctionComponent<UnavailableDirectionProps>
 }
 
-/** A validated direction. Its author and topic pages are its own or baseline's. */
+/** A validated direction. Its optional pages are its own or baseline's. */
 export interface ReaderDirection extends ReaderDirectionDefinition {
   readonly Author: FunctionComponent<AuthorDirectionProps>
+  readonly Error: FunctionComponent<ErrorDirectionProps>
   readonly fonts: readonly ReaderDirectionFont[]
+  readonly imageSizes: ReaderImageSizes
+  readonly NotFound: FunctionComponent<NotFoundDirectionProps>
   readonly Topic: FunctionComponent<TopicDirectionProps>
+  readonly Unavailable: FunctionComponent<UnavailableDirectionProps>
 }
 
 export interface ReaderDirectionNeighbours {
@@ -141,7 +182,24 @@ const tokenNamePattern = /^--[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const fontFilePattern = /^[a-z0-9][a-z0-9_-]*\.woff2$/
 const fontMetricPattern = /^\d+(?:\.\d+)?%$/
 const views = ['Home', 'Article', 'Section'] as const
-const optionalViews = ['Author', 'Topic'] as const
+const optionalViews = ['Author', 'Topic', 'NotFound', 'Error', 'Unavailable'] as const
+
+function requireImageSizes(
+  id: string,
+  sizes: ReaderDirectionDefinition['imageSizes'],
+): ReaderImageSizes {
+  if (sizes === undefined) return defaultReaderImageSizes
+  if (typeof sizes !== 'object' || sizes === null || Array.isArray(sizes)) {
+    fail(id, 'imageSizes must be an object with body and/or gallery sizes.')
+  }
+  for (const [key, value] of Object.entries(sizes)) {
+    if (key !== 'body' && key !== 'gallery') fail(id, `unknown imageSizes key "${key}".`)
+    if (typeof value !== 'string' || !value.trim() || /[;{}<>\\\r\n]/.test(value)) {
+      fail(id, `imageSizes.${key} must be a nonempty sizes string without markup or line breaks.`)
+    }
+  }
+  return Object.freeze({ ...defaultReaderImageSizes, ...sizes })
+}
 
 function fail(id: string, problem: string): never {
   throw new ReaderDirectionError(`Reader direction "${id}": ${problem}`)
@@ -364,19 +422,36 @@ export function defineReaderDirection(definition: ReaderDirectionDefinition): Re
   const fonts = requireFonts(id, definition.fonts)
   const tokens = requireTokens(id, definition.tokens)
   const styles = requireStyles(id, definition.styles)
+  const imageSizes = requireImageSizes(id, definition.imageSizes)
+  // Forward plain props, keeping the body renderer a server component. Directions opt in by
+  // passing imageSizes on to ArticleBody; existing views keep their current output.
+  const ArticleView = definition.Article
+  const Article =
+    definition.imageSizes === undefined
+      ? ArticleView
+      : function SizedArticle(props: ArticleDirectionProps) {
+          return createElement(ArticleView, {
+            ...props,
+            imageSizes: props.imageSizes ?? imageSizes,
+          })
+        }
 
   return Object.freeze({
-    Article: definition.Article,
+    Article,
     Author: definition.Author ?? BaselineAuthor,
+    Error: definition.Error ?? BaselineError,
     fonts,
     Home: definition.Home,
     id,
+    imageSizes,
     name,
+    NotFound: definition.NotFound ?? BaselineNotFound,
     Section: definition.Section,
     ...(styles === undefined ? {} : { styles }),
     thesis,
     ...(tokens === undefined ? {} : { tokens }),
     Topic: definition.Topic ?? BaselineTopic,
+    Unavailable: definition.Unavailable ?? BaselineUnavailable,
   })
 }
 

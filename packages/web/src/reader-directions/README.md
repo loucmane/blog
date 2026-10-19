@@ -8,19 +8,22 @@ real site, with real published stories, in any registered direction.
 
 `defineReaderDirection()` in `contract.ts` takes:
 
-| Field                        | What it is                                                                                          |
-| ---------------------------- | --------------------------------------------------------------------------------------------------- |
-| `id`                         | Short lowercase kebab-case, such as `quiet-monograph`.                                              |
-| `name`, `thesis`             | What the owner sees in the lab: a name of up to 48 characters and a one-line idea.                  |
-| `Home`, `Article`, `Section` | Server components that receive `{ view }` (`HomeView`, `ArticleView`, `SectionView`).               |
-| `Author`, `Topic` (optional) | Server components that receive `{ view }` (`AuthorView`, `TopicView`); baseline's if left out.      |
-| `fonts` (optional)           | Local WOFF2 faces, a CSS variable, and metric-adjusted fallback data (see below).                   |
-| `tokens` (optional)          | CSS custom properties for `light` and `dark`, plus the `textPairs` that must reach WCAG AA (4.5:1). |
-| `styles` (optional)          | CSS that is nested under the direction's root element, so it reaches only this direction.           |
+| Field                                | What it is                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `id`                                 | Short lowercase kebab-case, such as `quiet-monograph`.                                                  |
+| `name`, `thesis`                     | What the owner sees in the lab: a name of up to 48 characters and a one-line idea.                      |
+| `Home`, `Article`, `Section`         | Server components that receive `{ view }` (`HomeView`, `ArticleView`, `SectionView`).                   |
+| `Author`, `Topic` (optional)         | Server components that receive `{ view }` (`AuthorView`, `TopicView`); baseline's if left out.          |
+| `NotFound`, `Unavailable` (optional) | Failure pages receiving `{ view: ReaderFailureView }`; baseline's if left out.                          |
+| `Error` (optional)                   | Client-compatible failure page receiving `{ view: ReaderFailureView, reset }`; baseline's if left out.  |
+| `imageSizes` (optional)              | Partial `{ body, gallery }` sizes map, passed to the Article component for forwarding to `ArticleBody`. |
+| `fonts` (optional)                   | Local WOFF2 faces, a CSS variable, and metric-adjusted fallback data (see below).                       |
+| `tokens` (optional)                  | CSS custom properties for `light` and `dark`, plus the `textPairs` that must reach WCAG AA (4.5:1).     |
+| `styles` (optional)                  | CSS that is nested under the direction's root element, so it reaches only this direction.               |
 
-Registration fails fast, with a `ReaderDirectionError`, on an invalid id, a missing view, an author
-or topic view that is not a component, empty or overlong metadata, a malformed font, a token with
-an unsafe value, a text pair below 4.5:1, or a duplicate id or name.
+Registration fails fast, with a `ReaderDirectionError`, on an invalid id, a missing view, an optional
+view that is not a component, malformed image sizes, empty or overlong metadata, a malformed font,
+a token with an unsafe value, a text pair below 4.5:1, or a duplicate id or name.
 
 ## Add a direction
 
@@ -38,7 +41,8 @@ registry.
 - **The whole page below the root layout.** That includes the site header, `main`, and any
   footer. Render exactly one `h1`: the site name on home, the story title on an article, the
   section name on a section page, the author's name on an author page, and the topic's name on a
-  topic page.
+  topic page. Failure pages also have exactly one `h1`, naming the failure; their site name is a
+  link, not another heading.
 - **Only what the view provides.** Never fetch data or read cookies, and never hard-code copy that
   belongs to content. Use `siteName` from `@/reader/components/site-header` for the magazine's name.
 - **Every page type.** An article view carries the byline as `authorLinks` (`authors` keeps the
@@ -55,6 +59,66 @@ registry.
   descendant selector such as `figure img`, never a child selector such as `figure > img`. Pass a
   `sizes` value that matches the width the image is laid out at, and set `preload` only on the
   page's lead image.
+
+## Failure pages
+
+`NotFound`, `Error`, and `Unavailable` each fall back independently to baseline's view. Their
+`ReaderFailureView` contains `siteName` and `navigation`; navigation may be empty. The shared
+failure model does not load stories, so a missing content store cannot break the recovery page.
+Use the supplied site name and navigation and render exactly one `h1`, a `main`, and a way home.
+
+The not-found boundary and home unavailable state resolve the same presentation as normal pages.
+They render inside `ReaderPage`, including the active direction's tokens/fonts and the owner's
+lab controls. The root error boundary is a client component and has no surviving `ReaderPage`
+ancestor. It first shows a usable baseline error view, then calls `resolveErrorPresentation` to
+confirm the owner selection on the server. Only an authorized lab selection loads the direction
+registry on the client. A failed lookup keeps baseline and its working retry button. No browser
+cookie or DOM attribute authorizes a lab direction.
+
+An `Error` view must be synchronous and client-compatible (no server-only imports). Its `reset`
+callback is Next's retry action; attach it to a button with `type="button"`. The error object,
+message, stack, and digest are never passed to the view. The root boundary does not catch errors
+in the root layout itself. Check actual server and client failures in a production browser;
+component tests cannot prove Next boundary recovery or hydration behavior.
+The error-only dynamic import includes the registry's direction modules, so keep that module
+graph client-compatible too. Normal article bodies still render as server components; this
+hook does not turn them into client components on successful reader pages.
+
+## Body and gallery image sizes
+
+Set `imageSizes` on a direction, and forward the Article prop to the shared renderer:
+
+```tsx
+function Article({ view, imageSizes }: ArticleDirectionProps) {
+  return (
+    <main>
+      <h1>{view.title}</h1>
+      <ArticleBody blocks={view.body} imageSizes={imageSizes} />
+    </main>
+  )
+}
+
+defineReaderDirection({
+  // ...id, name, thesis, Home, Section...
+  Article,
+  imageSizes: {
+    body: '(min-width: 60rem) 48rem, 100vw',
+    gallery: '(min-width: 60rem) 24rem, 50vw',
+  },
+})
+```
+
+Registration copies and freezes the map and supplies it to Article via a component wrapper.
+The map accepts only `body` and `gallery`, with nonempty string values and no markup,
+declaration delimiters, or line breaks. It does not parse the full HTML `sizes` grammar;
+verify that the browser selects candidates matching the actual layout. Omitted entries keep
+`(min-width: 768px) 42rem, 100vw`. Existing directions need no changes until they opt in.
+
+`ArticleBody` also accepts an explicit partial `imageSizes` map. It forwards both values through
+nested quotes, lists, checklists, and editorial blocks to `ReaderFigure`/`ReaderImageView`, including
+every responsive `<source>` and `<img>`. Hero and story-card hints remain separate. Responsive
+sources, alt text, captions, credits, dimensions, and media authorization stay in the shared
+renderer; do not replace it to customize sizes.
 
 ## Assets load only for the active direction
 
@@ -110,6 +174,14 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
   The registry test renders every direction's author and topic pages and expects one `h1` each.
 - `packages/web/tests/reader/author-topic-routes.test.ts` covers the author and topic routes, in
   the lab too.
+- `packages/web/src/app/failure-views.test.tsx` covers custom/fallback failure views and reset;
+  `packages/web/tests/reader/failure-views.test.ts` checks real owner selection on failure surfaces.
+- `packages/web/src/reader/components/article-body.test.tsx` checks default and supplied sizes
+  through nested figures/galleries. The registry test renders all registered failure views.
+- Browser handoff: visit missing routes, trigger a server/client error, and simulate unavailable
+  stories in each direction. At 390 and 1440 pixels, check one h1, axe, keyboard retry/home/lab
+  controls, theme contrast, and active-only fonts. Also check initial error fallback, selection
+  after hydration, failed selection lookup, and successful retry.
 - `tests/e2e/reader-lab.spec.ts` opens every registered direction from the lab and runs axe on
   home, an article, and a section at 390 and 1440 pixels, with the lab bar showing.
 - The [signed-in Lighthouse harness](../../../../scripts/lab-lighthouse.md) measures home,

@@ -1,13 +1,13 @@
-import Link from 'next/link'
+import { readerFailureView } from '@/reader/components/failure-view'
+import { resolveReaderPresentation } from '@/reader-lab/presentation'
+import { ReaderPage } from '@/reader-lab/reader-page'
 
-export default function NotFound() {
+export default async function NotFound() {
+  const presentation = await resolveReaderPresentation()
+  const { NotFound: View } = presentation.direction
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">Page Not Found</h2>
-      <p className="text-gray-600 mb-4">Could not find the requested resource.</p>
-      <Link href="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-        Return Home
-      </Link>
-    </div>
+    <ReaderPage presentation={presentation}>
+      <View view={readerFailureView} />
+    </ReaderPage>
   )
 }
