@@ -54,9 +54,14 @@ describe('bounded exclusive PostgreSQL sessions', () => {
     )
     const settings = query.mock.calls.filter(([text]) => text.includes('set_config'))
     expect(settings.map(([, values]) => values)).toEqual([
-      ['1000ms', '1000ms', '1000ms'],
-      ['900ms', '900ms', '900ms'],
+      ['1000ms', '1000ms', '1000ms', '1000ms'],
+      ['900ms', '900ms', '900ms', '900ms'],
     ])
+    expect(
+      settings.every(([text]) => text.includes("set_config('idle_session_timeout', $4, false)")),
+    ).toBe(true)
+    expect(query.mock.calls[0]?.[0]).toContain('idle_session_timeout')
+    expect(query.mock.calls[1]?.[0]).toContain('pg_try_advisory_lock')
     expect(query.mock.calls.at(-1)?.[0]).toContain('pg_advisory_unlock')
     expect(client.end).toHaveBeenCalledExactlyOnceWith()
     expect(connect).not.toHaveBeenCalled()
@@ -72,6 +77,123 @@ describe('bounded exclusive PostgreSQL sessions', () => {
     expect(owner.release).toHaveBeenCalledExactlyOnceWith()
     expect(vi.getTimerCount()).toBe(0)
   })
+
+  it('allows the full remaining run budget between transactions, beyond the statement limit', async () => {
+    vi.useFakeTimers()
+    const { repository, query } = fixture()
+    await repository.tryExclusive(
+      'fixture-lock',
+      async (locked) => {
+        await vi.advanceTimersByTimeAsync(90_000)
+        await locked.transaction(async () => 'done')
+      },
+      new LabSeedLimits({}).database,
+    )
+    expect(
+      query.mock.calls.filter(([text]) => text.includes('set_config')).map(([, values]) => values),
+    ).toEqual([
+      ['30000ms', '30000ms', '30000ms', '300000ms'],
+      ['30000ms', '30000ms', '30000ms', '210000ms'],
+    ])
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it.each(['42501', '42704', '0A000'])(
+    'fails closed before acquiring a lock if the provider refuses idle timeout configuration (%s)',
+    async (code) => {
+      const { repository, query, client, connect } = fixture()
+      const refused = Object.assign(new Error('Fixture provider refusal'), { code })
+      const original = query.getMockImplementation()!
+      query.mockImplementation((text, values) =>
+        text.includes("set_config('idle_session_timeout'")
+          ? Promise.reject(refused)
+          : original(text, values),
+      )
+      const work = vi.fn(async () => 'done')
+      await expect(
+        repository.tryExclusive('fixture-lock', work, new LabSeedLimits({}).database),
+      ).rejects.toBe(refused)
+      expect(work).not.toHaveBeenCalled()
+      expect(query).toHaveBeenCalledOnce()
+      expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
+      expect(client.end).toHaveBeenCalledOnce()
+      expect(connect).not.toHaveBeenCalled()
+    },
+  )
+
+  it('destroys the session if the provider refuses to refresh recovery limits while locked', async () => {
+    const { repository, query, client, connect } = fixture()
+    const refused = Object.assign(new Error('Fixture provider refusal'), { code: '42501' })
+    const original = query.getMockImplementation()!
+    let configurations = 0
+    query.mockImplementation((text, values) => {
+      if (text.includes("set_config('idle_session_timeout'") && ++configurations === 2) {
+        return Promise.reject(refused)
+      }
+      return original(text, values)
+    })
+    const work = vi.fn(async () => 'done')
+    await expect(
+      repository.tryExclusive(
+        'fixture-lock',
+        (locked) => locked.transaction(work),
+        new LabSeedLimits({}).database,
+      ),
+    ).rejects.toBe(refused)
+    expect(work).not.toHaveBeenCalled()
+    expect(query).toHaveBeenCalledTimes(3)
+    expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
+    expect(client.end).toHaveBeenCalledOnce()
+    expect(connect).not.toHaveBeenCalled()
+  })
+
+  it.each(['query', 'transaction', 'return'] as const)(
+    'preserves the server termination error after disconnect when suspended work resumes with %s',
+    async (operation) => {
+      vi.useFakeTimers()
+      const { repository, query, client, connect } = fixture()
+      const held = labSeedBarrier()
+      const resume = labSeedBarrier()
+      const expired = Object.assign(new Error('Fixture idle session timeout'), { code: '57P05' })
+      const disconnected = new Error('Connection terminated unexpectedly')
+      const resumed = vi.fn(async () => 'done')
+      const observed = vi.fn()
+      const run = repository.tryExclusive(
+        'fixture-lock',
+        async (locked) => {
+          held.resolve()
+          await resume.promise
+          if (operation === 'return') return
+          try {
+            if (operation === 'query') await locked.readPublicationVersion()
+            else await locked.transaction(resumed)
+          } catch (error) {
+            observed(error)
+            throw error
+          }
+        },
+        new LabSeedLimits({ runTimeoutMs: 50 }).database,
+      )
+      const failed = expect(run).rejects.toBe(expired)
+      await held.promise
+      client.emit('error', expired)
+      // pg emits another error when the server's terminated connection ends.
+      client.emit('error', disconnected)
+      query.mockRejectedValue(disconnected)
+      await vi.advanceTimersByTimeAsync(50)
+      expect(client.end).not.toHaveBeenCalled()
+      expect(client.connection.stream.destroy).not.toHaveBeenCalled()
+      resume.resolve()
+      await failed
+      if (operation !== 'return') expect(observed).toHaveBeenCalledExactlyOnceWith(expired)
+      expect(query).toHaveBeenCalledTimes(2)
+      expect(resumed).not.toHaveBeenCalled()
+      expect(client.connection.stream.destroy).toHaveBeenCalledOnce()
+      expect(client.end).toHaveBeenCalledOnce()
+      expect(connect).not.toHaveBeenCalled()
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
 
   it('checks the deadline after publication bookkeeping and rolls back instead of committing', async () => {
     vi.useFakeTimers()

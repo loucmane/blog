@@ -2,16 +2,18 @@
 import { randomUUID } from 'node:crypto'
 
 import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3'
-import { Pool } from 'pg'
+import { Client, Pool } from 'pg'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { POST } from '../../app/api/internal/lab-seed/route'
 import { sha256Bytes } from '../content/media'
 import { renderIllustration } from '../lab/illustrations'
+import { LabSeedLimits } from '../lab/limits'
 import { labImages } from '../lab/north-house'
 import { seedLabContent } from '../lab/seed'
 import { createOwnerRuntime, type OwnerRuntime } from '../owner/runtime'
 import { applyContentMigrations, readContentMigrations } from './migrations'
+import { PostgresContentRepository } from './postgres-content-repository'
 import { labSeedBarrier } from '../../../tests/support/lab-seed-barrier'
 
 export function labSeedConcurrencyIntegrationTests({
@@ -175,6 +177,66 @@ export function labSeedConcurrencyIntegrationTests({
             originals.get(asset.id),
           )
         }
+      },
+    )
+
+    it(
+      'expires a suspended idle lock holder on the server and lets another seed finish before it resumes',
+      { timeout: 30_000 },
+      async () => {
+        const held = vi.fn()
+        const resume = labSeedBarrier()
+        const expired = vi.fn()
+        const end = vi.fn()
+        const resumed = vi.fn()
+        const stale = new PostgresContentRepository(first.pool!, (configuration) => {
+          const client = new Client(configuration)
+          client.on('error', expired)
+          const realEnd = client.end.bind(client)
+          vi.spyOn(client, 'end').mockImplementation(async () => {
+            end()
+            await realEnd()
+          })
+          return client
+        })
+        // Use the actual seed lock and production session configuration. A callback
+        // suspended outside a transaction has no local timer or transport cleanup.
+        // Only PostgreSQL can release this holder while the callback stays parked.
+        const run = stale.tryExclusive(
+          'magazine:lab-seed:north-house:v1',
+          async (locked) => {
+            held()
+            await resume.promise
+            await locked.transaction(async () => resumed())
+          },
+          new LabSeedLimits({ runTimeoutMs: 5_000 }).database,
+        )
+        // Observe failures immediately, but keep cleanup in finally even on assertion failure.
+        const outcome = run.then(
+          (value) => ({ value, error: undefined }),
+          (error: unknown) => ({ value: undefined, error }),
+        )
+        try {
+          await expect.poll(() => held.mock.calls.length, { timeout: 5_000 }).toBe(1)
+          expect((await POST(request())).status).toBe(409)
+          await expect
+            .poll(() => expired.mock.calls.map(([error]) => (error as { code?: string }).code), {
+              timeout: 10_000,
+            })
+            .toContain('57P05') // PostgreSQL idle_session_timeout, not a client-side timer.
+          expect(end).not.toHaveBeenCalled()
+          expect(resumed).not.toHaveBeenCalled()
+          const response = await POST(request())
+          expect(response.status).toBe(200)
+          expect((await response.json()).images.created).toHaveLength(labImages.length)
+          expect(end).not.toHaveBeenCalled()
+        } finally {
+          resume.resolve()
+          await outcome
+        }
+        expect((await outcome).error).toMatchObject({ code: '57P05' })
+        expect(resumed).not.toHaveBeenCalled()
+        expect(end).toHaveBeenCalledOnce()
       },
     )
 

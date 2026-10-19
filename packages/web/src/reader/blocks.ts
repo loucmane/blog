@@ -1,3 +1,4 @@
+import { safeHref } from '@/lib/safe-url'
 import type { ContentMark, ContentNode } from '@/server/content/document'
 import type { MediaAsset } from '@/server/content/domain'
 
@@ -36,16 +37,6 @@ function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback
   return allowed.find((candidate) => candidate === value) ?? fallback
 }
 
-function safeHref(value: unknown): string | null {
-  if (typeof value !== 'string') return null
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? value : null
-  } catch {
-    return null
-  }
-}
-
 function inlineMark(mark: ContentMark): InlineMark | null {
   if (mark.type !== 'link') return { kind: mark.type }
   const href = safeHref(mark.attrs?.href)
@@ -81,10 +72,11 @@ export function resolveImage(attrs: unknown, media: ReaderMediaLookup): ReaderIm
     animated: asset.animated,
     caption: text(attrs.caption) || null,
     contentType: asset.contentType,
+    // An image's stored credit link may predate the upload and import checks, so it is checked too.
     credit: creditName
       ? { name: creditName, url: safeHref(credit?.url) }
       : asset.creditName
-        ? { name: asset.creditName, url: asset.creditUrl }
+        ? { name: asset.creditName, url: safeHref(asset.creditUrl) }
         : null,
     focalPoint: {
       x: typeof focalPoint?.x === 'number' ? focalPoint.x : asset.focalX,

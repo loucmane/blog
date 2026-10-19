@@ -117,4 +117,37 @@ describe('media original ownership', () => {
       }),
     ).rejects.toThrow(/does not match/)
   })
+
+  it('refuses a credit link that could run script, and keeps a web or email link', async () => {
+    const repository = new InMemoryContentRepository()
+    const objects = new InMemoryOriginalObjectStore()
+    const service = new MediaOriginalService(repository, objects, clock, identifiers)
+    const original = {
+      alt: 'A credited photograph',
+      body: new TextEncoder().encode('synthetic credited bytes'),
+      contentType: 'image/png',
+      creditName: 'Studio',
+    }
+
+    for (const creditUrl of ['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>']) {
+      await expect(service.store({ ...original, creditUrl }), creditUrl).rejects.toThrow(
+        'Media credit links must be absolute http, https or mailto URLs.',
+      )
+    }
+    await repository.inspect(async (transaction) => {
+      expect(await transaction.listMediaAssets()).toEqual([])
+    })
+    await expect(
+      objects.getOriginal(originalObjectKey('media-owner-original', sha256Bytes(original.body))),
+    ).rejects.toThrow(/was not found/)
+
+    for (const [id, creditUrl] of [
+      ['media-web-credit', 'https://studio.example/credits'],
+      ['media-email-credit', 'mailto:pictures@studio.example'],
+    ] as const) {
+      await expect(service.store({ ...original, creditUrl, id }), creditUrl).resolves.toMatchObject(
+        { creditUrl },
+      )
+    }
+  })
 })

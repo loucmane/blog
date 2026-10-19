@@ -1,3 +1,5 @@
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import type { ContentNode } from '@/server/content/document'
@@ -14,7 +16,8 @@ import {
   wordsPerMinute,
   type ReaderMediaLookup,
 } from './blocks'
-import type { ArticleBlock } from './views'
+import { ReaderImageCredit } from './components/reader-image'
+import type { ArticleBlock, ReaderImage } from './views'
 
 function asset(
   id: string,
@@ -239,6 +242,34 @@ describe('reader document blocks', () => {
       credit: { name: 'Stored credit', url: null },
       focalPoint: { x: 0.25, y: 0.75 },
     })
+  })
+
+  it('links an image credit only to a web or email address', () => {
+    const storedCredit = (creditUrl: string): ReaderMediaLookup =>
+      new Map([['media-a', { ...asset('media-a', { height: 800, width: 1200 }), creditUrl }]])
+    const creditMarkup = (image: ReaderImage | null) =>
+      image ? renderToStaticMarkup(createElement(ReaderImageCredit, { image })) : ''
+
+    // Without a credit in the document, readers see the image's own credit.
+    const web = resolveImage({ mediaId: 'media-a' }, storedCredit('https://studio.example/credits'))
+    expect(web?.credit).toEqual({ name: 'Stored credit', url: 'https://studio.example/credits' })
+    expect(creditMarkup(web)).toContain('href="https://studio.example/credits"')
+
+    // A link stored before credit links were checked is shown as plain text.
+    for (const creditUrl of ['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>']) {
+      const stored = resolveImage({ mediaId: 'media-a' }, storedCredit(creditUrl))
+
+      expect(stored?.credit, creditUrl).toEqual({ name: 'Stored credit', url: null })
+      expect(creditMarkup(stored), creditUrl).toContain('Stored credit')
+      expect(creditMarkup(stored), creditUrl).not.toContain('<a')
+    }
+    // The document's own credit link is held to the same rule.
+    expect(
+      resolveImage(
+        { credit: { name: 'Studio', url: 'javascript:alert(1)' }, mediaId: 'media-a' },
+        media,
+      )?.credit,
+    ).toEqual({ name: 'Studio', url: null })
   })
 
   it('gives readers what was recorded about each original: its animation and its size', () => {
