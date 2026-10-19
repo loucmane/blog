@@ -105,6 +105,29 @@
         "acceptance-and-review-routing"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "content-platform-backend",
+      "status": "active",
+      "entrypoint": ".claude/skills/content-platform-backend/SKILL.md",
+      "codexLink": ".agents/skills/content-platform-backend",
+      "provenance": {
+        "type": "project-authored",
+        "task": "58"
+      },
+      "capabilities": [
+        "content-domain-model",
+        "publishing-state-machines",
+        "server-boundary-review",
+        "schema-migration-review",
+        "media-pipeline-review",
+        "background-jobs-scheduling",
+        "search-indexing",
+        "portability-backup-recovery",
+        "data-integrity-review",
+        "advisory-backend-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }
