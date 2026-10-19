@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { safeHref } from '@/lib/safe-url'
 import type { StoreMediaOriginalInput } from '@/server/content/media'
 
 const safeId = z
@@ -78,12 +79,22 @@ const focalCoordinate = z
   )
   .default(0.5)
 
+const creditUrlMessage =
+  'The credit link must be a full address that starts with https://, http:// or mailto:.'
+
 export const ownerMediaMetadataSchema = z
   .object({
     alt: z.string().trim().min(1, 'Describe the image for readers who cannot see it.').max(1_000),
     caption: z.string().trim().max(2_000).default(''),
     creditName: z.string().trim().min(1, 'Add the image credit.').max(300),
-    creditUrl: z.union([z.literal(''), z.string().url().max(2_000)]).default(''),
+    // Readers can follow the credit link, so it may only open a web page or an email. An empty
+    // field means the credit has no link.
+    creditUrl: z
+      .string({ error: creditUrlMessage })
+      .trim()
+      .max(2_000)
+      .refine((value) => value === '' || safeHref(value) !== null, creditUrlMessage)
+      .default(''),
     focalX: focalCoordinate,
     focalY: focalCoordinate,
   })
