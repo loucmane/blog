@@ -1,0 +1,210 @@
+{
+  "capabilities": [
+    "structured-document-contract",
+    "editorial-block-rendering",
+    "reader-direction-contract",
+    "advisory-editorial-review"
+  ],
+  "handoffs": [
+    "reader-frontend",
+    "content-platform-backend",
+    "security-identity-privacy",
+    "owner-publishing-ux",
+    "stack-research-adr"
+  ],
+  "coverage": [
+    "node and mark types",
+    "validation",
+    "quarantine",
+    "shared renderer",
+    "reader lab",
+    "direction contract",
+    "responsive images",
+    "alt text",
+    "captions",
+    "credits",
+    "blockquote",
+    "pullquote",
+    "editorialblock",
+    "tasklist",
+    "gallery",
+    "embed",
+    "migration"
+  ],
+  "triggerSignals": {
+    "include": ["node and mark types", "gallery", "direction contract", "block contract"],
+    "exclude": [
+      "premium typography",
+      "backend data",
+      "sanitization",
+      "owner editing ux",
+      "stack choices"
+    ]
+  },
+  "requests": [
+    {
+      "prompt": "Review the node and mark types used by the public editorial block renderer.",
+      "signal": "node and mark types",
+      "action": "use"
+    },
+    {
+      "prompt": "Trace gallery and embed nodes from validation to semantic HTML.",
+      "signal": "shared renderer",
+      "action": "use"
+    },
+    {
+      "prompt": "Review how a Reader Lab direction plugs into the direction contract.",
+      "signal": "direction contract",
+      "action": "use"
+    },
+    {
+      "prompt": "Choose premium typography and art direction for the magazine home page.",
+      "signal": "typography",
+      "action": "handoff",
+      "to": "reader-frontend"
+    },
+    {
+      "prompt": "Review backend data persistence and publication transactions.",
+      "signal": "backend data",
+      "action": "handoff",
+      "to": "content-platform-backend"
+    },
+    {
+      "prompt": "Audit rich-content sanitization and allowed URL protocols.",
+      "signal": "sanitization",
+      "action": "handoff",
+      "to": "security-identity-privacy"
+    },
+    {
+      "prompt": "Design owner editing UX for inserting and recovering blocks.",
+      "signal": "owner editing ux",
+      "action": "handoff",
+      "to": "owner-publishing-ux"
+    },
+    {
+      "prompt": "Evaluate stack choices for replacing the editor framework.",
+      "signal": "stack choices",
+      "action": "handoff",
+      "to": "stack-research-adr"
+    },
+    {
+      "prompt": "Add a reusable block contract and judge its mobile visual hierarchy.",
+      "signal": "mixed requests",
+      "action": "mixed",
+      "to": "reader-frontend"
+    }
+  ],
+  "routePatterns": [
+    "packages/web/src/server/content/document.ts",
+    "packages/web/src/reader/blocks.ts",
+    "packages/web/src/reader/views.ts",
+    "packages/web/src/reader/components/article-body.tsx",
+    "packages/web/src/reader-directions/contract.ts",
+    "packages/web/src/reader-directions/registry.ts"
+  ],
+  "paths": {
+    "positive": [
+      {
+        "file": "packages/web/src/server/content/document.ts",
+        "also": ["content-platform-backend", "security-identity-privacy"]
+      },
+      { "file": "packages/web/src/reader/blocks.ts", "also": ["reader-frontend"] },
+      { "file": "packages/web/src/reader/views.ts", "also": ["reader-frontend"] },
+      {
+        "file": "packages/web/src/reader/components/article-body.tsx",
+        "also": ["reader-frontend"]
+      },
+      { "file": "packages/web/src/reader-directions/contract.ts", "also": ["reader-frontend"] },
+      { "file": "packages/web/src/reader-directions/registry.ts", "also": ["reader-frontend"] }
+    ],
+    "negative": [
+      "packages/web/src/server/content/service.ts",
+      "packages/web/src/server/content/document.ts.bak",
+      "packages/web/src/reader/blocks.tsx",
+      "packages/web/src/reader/components/reader-image.tsx",
+      "packages/web/src/reader-directions/quiet-monograph/styles.ts",
+      "packages/web/src/app/stories/[slug]/page.tsx",
+      "packages/web/src/app/api/owner/media/route.ts",
+      "packages/web/src/app/owner/(workspace)/page.tsx",
+      "packages/web/migrations/0001_content_foundation.sql",
+      "package.json",
+      ".claude/skills/editorial-blocks/SKILL.md"
+    ]
+  },
+  "groundingPaths": [
+    "packages/web/src/server/content/document.ts",
+    "packages/web/src/reader/blocks.ts",
+    "packages/web/src/reader/views.ts",
+    "packages/web/src/reader/read-model.ts",
+    "packages/web/src/reader/components/article-body.tsx",
+    "packages/web/src/reader/components/reader-image.tsx",
+    "packages/web/src/reader-directions/README.md",
+    "packages/web/src/reader-directions/contract.ts",
+    "packages/web/src/reader-directions/registry.ts",
+    "packages/web/src/reader-directions/direction-root.tsx",
+    "packages/web/src/reader/blocks.test.ts",
+    "packages/web/src/reader-directions/contract.test.ts",
+    "packages/web/src/reader-directions/registry.test.ts"
+  ],
+  "guards": [
+    "a carousel is a layout value",
+    "no iframe",
+    "blockquote accepts inline children",
+    "converter tolerance does not widen the document schema",
+    "do not drop unknown nodes to repair a document",
+    "authors are currently empty",
+    "section descriptions are currently null"
+  ],
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "task53-editorial-fixture",
+    "skill": "editorial-blocks",
+    "mode": "advisory",
+    "verdict": "warn",
+    "summary": "Synthetic review example: confirm the proposed block meaning with editorial stakeholders; no implementation check ran.",
+    "generatedAt": "2026-10-19T15:00:00Z",
+    "headSha": "3aed4c266adce4d0a0e9e9113c99d12e73bdd771",
+    "findings": [
+      {
+        "id": "block-meaning",
+        "severity": "warning",
+        "category": "editorial-semantics",
+        "message": "Decide whether this proposed reusable panel represents a fact box or methodology before changing its contract.",
+        "subjective": true,
+        "blocking": false,
+        "evidence": ["packages/web/src/reader/components/article-body.tsx"]
+      }
+    ],
+    "evidence": [{ "kind": "file", "path": "packages/web/src/reader/components/article-body.tsx" }]
+  },
+  "deterministicExamples": [
+    {
+      "command": "corepack pnpm exec vitest run packages/web/src/reader/blocks.test.ts",
+      "finding": {
+        "id": "synthetic-block-failure",
+        "severity": "error",
+        "category": "block-projection",
+        "message": "Synthetic failure example only: the block conversion test loses ordered-list numbering.",
+        "subjective": false,
+        "blocking": true,
+        "evidence": [
+          "command: corepack pnpm exec vitest run packages/web/src/reader/blocks.test.ts"
+        ]
+      }
+    },
+    {
+      "command": "corepack pnpm exec vitest run packages/web/src/reader-directions/contract.test.ts packages/web/src/reader-directions/registry.test.ts",
+      "finding": {
+        "id": "synthetic-direction-failure",
+        "severity": "error",
+        "category": "direction-contract",
+        "message": "Synthetic failure example only: a duplicate direction id fails the registry contract.",
+        "subjective": false,
+        "blocking": true,
+        "evidence": [
+          "command: corepack pnpm exec vitest run packages/web/src/reader-directions/contract.test.ts packages/web/src/reader-directions/registry.test.ts"
+        ]
+      }
+    }
+  ]
+}
