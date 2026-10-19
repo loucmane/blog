@@ -149,6 +149,8 @@ describe('Next and React migration contract', () => {
       '/',
       '/stories/:slug',
       '/sections/:slug',
+      '/authors/:slug',
+      '/topics/:slug',
     ])
     const ownerHeaders = headers?.filter(({ source }) => source.includes('owner')) ?? []
     expect(ownerHeaders).toHaveLength(2)
@@ -165,7 +167,13 @@ describe('Next and React migration contract', () => {
 
   it('keeps every response that could carry a Reader Lab override private and unindexed', async () => {
     const headers = await nextConfig.headers?.()
-    const readerRoutes = ['/', '/stories/:slug', '/sections/:slug']
+    const readerRoutes = [
+      '/',
+      '/stories/:slug',
+      '/sections/:slug',
+      '/authors/:slug',
+      '/topics/:slug',
+    ]
     const labRules = headers?.filter(({ has }) => has !== undefined) ?? []
 
     expect(labRules.map(({ source }) => source)).toEqual(readerRoutes)
