@@ -1,10 +1,5 @@
-import { isDeepStrictEqual } from 'node:util'
-
-import { normalizeSlug, type Article } from '@/server/content/domain'
-import {
-  CURRENT_CONTENT_DOCUMENT_VERSION,
-  parseMigratedContentDocument,
-} from '@/server/content/document'
+import { normalizeSlug } from '@/server/content/domain'
+import { CURRENT_CONTENT_DOCUMENT_VERSION } from '@/server/content/document'
 import { contentErrorCode } from '@/server/content/errors'
 import type {
   Clock,
@@ -52,8 +47,6 @@ export interface LabSeedReport {
   readonly stories: {
     readonly created: readonly string[]
     readonly existing: readonly string[]
-    /** Stories an earlier run created but stopped before publishing; this run finished them. */
-    readonly resumed: readonly string[]
     /** Stories whose slug already belongs to another article; they were left untouched. */
     readonly slugInUse: readonly string[]
   }
@@ -238,55 +231,7 @@ function joinTransaction(transaction: ContentTransaction): ContentRepository {
   }
 }
 
-/**
- * Whether an existing sample article is a story an earlier run created and then stopped before
- * publishing, untouched since. The seed used to commit each step on its own, so such a run left
- * the seed's own first draft, filed under its section at most. Any other article, or any change to
- * that draft, is the owner's.
- */
-async function isUnfinishedLabStory(
-  transaction: ContentTransaction,
-  article: Article,
-  draft: CreateArticleInput,
-  filing: StoryFiling,
-): Promise<boolean> {
-  // Every change to an article raises its version, so at version 1 it is as it was created.
-  if (
-    article.version !== 1 ||
-    article.status !== 'draft' ||
-    article.publishedAt !== null ||
-    article.slug !== draft.slug ||
-    !(await transaction.getIdempotency('article.create', draft.idempotencyKey))
-  ) {
-    return false
-  }
-  const revisions = await transaction.listRevisions(article.id)
-  const [revision] = revisions
-  if (
-    revisions.length !== 1 ||
-    revision?.id !== article.currentDraftRevisionId ||
-    revision.title !== draft.title ||
-    revision.dek !== draft.dek ||
-    !isDeepStrictEqual(revision.document, parseMigratedContentDocument(draft.document)) ||
-    (await transaction.listAutosaves(article.id)).length > 0
-  ) {
-    return false
-  }
-  // No byline or topic, and no section but the seed's, which its audit trail shows it assigned.
-  const links = (await transaction.listArticleTaxonomies()).filter(
-    ({ articleId }) => articleId === article.id,
-  )
-  const assignments = (await transaction.listAuditEvents(article.id)).filter(
-    ({ action }) => action === 'article.section-assigned',
-  )
-  return (
-    links.every(({ taxonomyId }) => taxonomyId === filing.sectionId) &&
-    links.length === assignments.length &&
-    (await transaction.listArticleAuthors(article.id)).length === 0
-  )
-}
-
-/** Credits a story and files it under its topics, after its section. */
+/** Credits a story the seed has just created and files it under its topics, after its section. */
 async function creditAndFileStory(
   transaction: ContentTransaction,
   articleId: string,
@@ -310,26 +255,22 @@ async function creditAndFileStory(
 
 /**
  * Creates, files, credits and publishes a story in one transaction, so a run that fails at any
- * step leaves nothing of it behind. An existing article is left as it is, unless it is a story an
- * earlier run left unfinished: that one gets its remaining steps.
+ * step leaves nothing of it behind. An article that already exists is left exactly as it is,
+ * whatever its state. That includes a draft left unfinished by an older seed, which committed each
+ * step on its own: nothing tells such a draft apart from one the owner has changed since.
  */
 async function seedStory(
   repository: ContentRepository,
   story: LabStory,
   filing: StoryFiling,
-): Promise<'created' | 'existing' | 'resumed' | 'slug-in-use'> {
-  const draft = labStoryDraft(story)
+): Promise<'created' | 'existing' | 'slug-in-use'> {
   try {
     return await repository.transaction(async (transaction) => {
-      const existing = await transaction.getArticle(story.id)
-      if (existing && !(await isUnfinishedLabStory(transaction, existing, draft, filing))) {
-        return 'existing'
-      }
+      if (await transaction.getArticle(story.id)) return 'existing'
       const joined = joinTransaction(transaction)
       const clock = fixedClock(story.publishedAt)
       const content = new ContentService(joined, clock)
-      // For an unfinished story, this replays its creation and writes nothing.
-      const created = await content.createArticle(draft)
+      const created = await content.createArticle(labStoryDraft(story))
       await new SectionService(joined, clock).assignSection({
         articleId: story.id,
         sectionId: filing.sectionId,
@@ -341,7 +282,7 @@ async function seedStory(
         idempotencyKey: `lab-seed:publish:${story.id}`,
         revisionId: created.revision.id,
       })
-      return existing ? 'resumed' : 'created'
+      return 'created'
     })
   } catch (error) {
     // Only creation can collide, and the whole transaction has rolled back.
@@ -354,8 +295,7 @@ async function seedStory(
  * Seeds the North House sample magazine through the content services. It is idempotent: sections,
  * topics, authors, images, and stories that already exist are kept as they are, including any
  * owner edits. Each story is created, filed, credited and published in one transaction, so a failed
- * run leaves no half-made story. A story an earlier seed left unfinished is finished, but only
- * while it is still exactly as that run left it.
+ * run leaves no half-made story.
  */
 export async function seedLabContent(
   target: LabSeedTarget,
@@ -404,12 +344,7 @@ async function seedLockedContent(
     }
   }
 
-  const stories = {
-    created: [] as string[],
-    existing: [] as string[],
-    resumed: [] as string[],
-    slugInUse: [] as string[],
-  }
+  const stories = { created: [] as string[], existing: [] as string[], slugInUse: [] as string[] }
   for (const story of labStories) {
     limits.check()
     const filing = storyFiling(story, {
@@ -421,7 +356,6 @@ async function seedLockedContent(
     const slug = labStorySlug(story)
     if (outcome === 'created') stories.created.push(slug)
     else if (outcome === 'existing') stories.existing.push(slug)
-    else if (outcome === 'resumed') stories.resumed.push(slug)
     else stories.slugInUse.push(slug)
   }
 

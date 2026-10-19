@@ -416,7 +416,6 @@ describe('Reader Lab seed', () => {
     expect(secondRun.stories).toEqual({
       created: [],
       existing: firstRun.stories.created,
-      resumed: [],
       slugInUse: [],
     })
     expect(secondRun.images).toEqual({
@@ -687,6 +686,7 @@ describe('Reader Lab seed', () => {
 describe('seed recovery after an interrupted run', () => {
   const failure = new Error('Injected failure')
   const story = labStories[0]!
+  const sectionId = labSections.find(({ slug }) => slug === story.section)!.id
   const slugs = labStories.map(labStorySlug)
 
   afterEach(() => vi.restoreAllMocks())
@@ -730,15 +730,15 @@ describe('seed recovery after an interrupted run', () => {
   async function expectReplayWritesNothing(repository: InMemoryContentRepository) {
     const before = await snapshot(repository)
     const replay = await seedLabContent({ objects: null, repository })
-    expect(replay.stories).toEqual({ created: [], existing: slugs, resumed: [], slugInUse: [] })
+    expect(replay.stories).toEqual({ created: [], existing: slugs, slugInUse: [] })
     expect(await snapshot(repository)).toEqual(before)
   }
 
   /**
-   * Before this fix, creating a story and assigning its section committed one at a time, so a run
-   * that failed before publishing left a draft behind. This recreates what such a run left: the seed
-   * stops at its first story, which is then created, and optionally filed under its section, the
-   * way the earlier seed did it.
+   * The seed used to commit creating a story and assigning its section one at a time, so a run
+   * that failed before publishing could leave a draft behind. This recreates what such a run left:
+   * the seed stops at its first story, which is then created, and optionally filed under its
+   * section, the way that seed did it.
    */
   async function interruptedEarlierRun(
     repository: InMemoryContentRepository,
@@ -765,7 +765,7 @@ describe('seed recovery after an interrupted run', () => {
     if (sectioned) {
       await new SectionService(repository, clock).assignSection({
         articleId: story.id,
-        sectionId: labSections.find(({ slug }) => slug === story.section)!.id,
+        sectionId,
       })
     }
   }
@@ -824,123 +824,73 @@ describe('seed recovery after an interrupted run', () => {
         revisions: [],
       })
       const retry = await seedLabContent({ objects: null, repository })
-      expect(retry.stories).toEqual({ created: slugs, existing: [], resumed: [], slugInUse: [] })
+      expect(retry.stories).toEqual({ created: slugs, existing: [], slugInUse: [] })
       await expectFinished(repository, story)
       await expectReplayWritesNothing(repository)
     },
   )
 
-  it.each([false, true])(
-    'finishes the draft an earlier interrupted run left (filed under its section: %s)',
-    async (sectioned) => {
-      const repository = new InMemoryContentRepository()
-      await interruptedEarlierRun(repository, { sectioned })
-      const [draft] = (await storyState(repository, story.id)).revisions
-
-      const report = await seedLabContent({ objects: null, repository })
-
-      expect(report.stories).toEqual({
-        created: slugs.slice(1),
-        existing: [],
-        resumed: [labStorySlug(story)],
-        slugInUse: [],
-      })
-      await expectFinished(repository, story)
-      // It publishes the seed's own first draft, on the story's date.
-      const finished = await storyState(repository, story.id)
-      expect(finished.revisions).toEqual([draft])
-      expect(finished.article).toMatchObject({
-        publishedAt: story.publishedAt,
-        publishedRevisionId: draft?.id,
-        status: 'published',
-        version: 2,
-      })
-      await expectReplayWritesNothing(repository)
-    },
-  )
-
-  const ownerChanges: readonly (readonly [
+  // The seed cannot tell a draft an earlier seed left from one the owner has changed since:
+  // replacing a byline changes neither the article's version nor its audit trail, and the owner
+  // can file the draft under the seed's own section. So any existing article stays as it is.
+  const leftDrafts: readonly (readonly [
     string,
     (repository: InMemoryContentRepository) => Promise<unknown>,
   ])[] = [
     [
-      'saves a new revision',
-      (repository) =>
-        new ContentService(repository).saveDraft({
+      'an earlier seed left it with no authors',
+      (repository) => interruptedEarlierRun(repository, { sectioned: false }),
+    ],
+    [
+      'an earlier seed left it filed under its section, with no authors',
+      (repository) => interruptedEarlierRun(repository, { sectioned: true }),
+    ],
+    [
+      'the owner credited an author and then removed the byline',
+      async (repository) => {
+        await interruptedEarlierRun(repository, { sectioned: true })
+        const author = labAuthors.find(({ slug }) => slug === story.authors[0])!
+        for (const authorIds of [[author.id], []]) {
+          await repository.transaction(async (transaction) => {
+            await transaction.getArticleForUpdate(story.id)
+            await transaction.setArticleAuthors(story.id, authorIds)
+          })
+        }
+      },
+    ],
+    [
+      'the owner filed it under its section',
+      async (repository) => {
+        await interruptedEarlierRun(repository, { sectioned: false })
+        await new SectionService(repository).assignSection({
+          actorId: 'owner',
           articleId: story.id,
-          document: {
-            articleId: story.id,
-            document: {
-              content: [{ content: [{ text: 'Keep my words.', type: 'text' }], type: 'paragraph' }],
-              type: 'doc',
-            },
-            migrationProvenance: [],
-            schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
-            title: story.title,
-          },
-          expectedVersion: 1,
-          idempotencyKey: 'owner-edit',
-        }),
-    ],
-    // A byline or topic makes the draft the owner's, even one the seed would also have added.
-    [
-      'credits its author',
-      (repository) =>
-        repository.transaction((transaction) =>
-          transaction.setArticleAuthors(story.id, [
-            labAuthors.find(({ slug }) => slug === story.authors[0])!.id,
-          ]),
-        ),
-    ],
-    [
-      'files it under its topic',
-      (repository) =>
-        repository.transaction((transaction) =>
-          transaction.saveArticleTaxonomy({
-            articleId: story.id,
-            position: 0,
-            taxonomyId: labTopics.find(({ slug }) => slug === story.topics[0])!.id,
-          }),
-        ),
-    ],
-    // The in-memory store cannot remove a link, so this builds what removing the section the seed
-    // assigned leaves behind: the assignment in the audit trail, and no link.
-    [
-      'removes its section',
-      (repository) =>
-        repository.transaction((transaction) =>
-          transaction.saveAuditEvent({
-            action: 'article.section-assigned',
-            actorId: null,
-            articleId: story.id,
-            createdAt: story.publishedAt,
-            id: 'audit-section-assigned',
-            metadata: {
-              sectionId: labSections.find(({ slug }) => slug === story.section)!.id,
-              sectionSlug: story.section,
-            },
-          }),
-        ),
+          sectionId,
+        })
+      },
     ],
   ]
 
-  it.each(ownerChanges)(
-    'leaves that draft exactly as it is once the owner %s',
-    async (_change, change) => {
+  it.each(leftDrafts)(
+    'leaves a draft exactly as it is, unpublished, when %s',
+    async (_draft, leaveDraft) => {
       const repository = new InMemoryContentRepository()
-      await interruptedEarlierRun(repository, { sectioned: false })
-      await change(repository)
-      const owned = await storyState(repository, story.id)
+      await leaveDraft(repository)
+      const left = await storyState(repository, story.id)
+      expect(left.article).toMatchObject({ publishedAt: null, status: 'draft' })
 
-      const report = await seedLabContent({ objects: null, repository })
+      const retry = await seedLabContent({ objects: null, repository })
 
-      expect(report.stories).toEqual({
+      expect(retry.stories).toEqual({
         created: slugs.slice(1),
         existing: [labStorySlug(story)],
-        resumed: [],
         slugInUse: [],
       })
-      expect(await storyState(repository, story.id)).toEqual(owned)
+      expect(await storyState(repository, story.id)).toEqual(left)
+      expect(
+        await readArticleView({ mediaAvailable: false, repository }, labStorySlug(story)),
+      ).toBeNull()
+      await expectReplayWritesNothing(repository)
     },
   )
 })
