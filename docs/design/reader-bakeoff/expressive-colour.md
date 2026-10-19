@@ -9,9 +9,9 @@ chooses between the five developed directions at `blog-0044.30`.
   commit and cites the file.
 - **Depends on:** K0 `blog-0044.32` (article-author linkage), K1 `blog-0044.22` (optional `Author`
   and `Topic` views; `ArticleView.authorLinks`, `topics` and `related`), K3 `blog-0044.29` (authors,
-  topics and more stories in the North House sample) and K4 `blog-0044.34` (optional `NotFound` and
-  `Error` views, and a direction hook for body and gallery image `sizes`). None is merged at
-  `cb6d081`. Names follow those beads' plans; builders use the names that land.
+  topics and more stories in the North House sample) and K4 `blog-0044.34` (optional `NotFound`,
+  `Error` and `Unavailable` views, and a direction hook for body and gallery image `sizes`). None is
+  merged at `cb6d081`. Names follow those beads' plans; builders use the names that land.
 - **Paths:** `ec/` is `packages/web/src/reader-directions/expressive-colour/`, `rd/` is
   `packages/web/src/reader-directions/` and `reader/` is `packages/web/src/reader/`. Other paths are
   repository-relative.
@@ -178,12 +178,15 @@ K1 plans name, slug, href, description or `null`, stories and navigation.
 
 ### 2.7 Not found, error and unavailable
 
-Today the story and section routes call `notFound()` before the direction is resolved
-(`packages/web/src/app/stories/[slug]/page.tsx:57-61`,
+Today none of the three renders inside a direction. The story and section routes call `notFound()`
+before the direction is resolved (`packages/web/src/app/stories/[slug]/page.tsx:57-61`,
 `packages/web/src/app/sections/[slug]/page.tsx:43-47`), so the global
 `packages/web/src/app/not-found.tsx` and `packages/web/src/app/error.tsx` render outside any
-direction. "Unavailable" is the shared `ReaderUnavailable` (`reader/components/reader-unavailable.tsx:7-23`).
-K4 plans optional per-direction `NotFound` and `Error` views. When it lands (b3):
+direction. The home route hardwires the shared `ReaderUnavailable` when no content store is
+configured (`packages/web/src/app/page.tsx:19`), the same in every direction
+(`reader/components/reader-unavailable.tsx:3-23`). All three therefore map to the shared kit K4
+(`blog-0044.34`), which plans optional per-direction `NotFound`, `Error` and `Unavailable` views
+with baseline fallbacks; E cannot restyle any of them from its own folder. When K4 lands (b3):
 
 - E's shell, with section pills when the hook supplies navigation and "All stories" otherwise. The
   error view is a client component (Next error boundaries are), so it uses only `siteName`,
@@ -194,7 +197,8 @@ K4 plans optional per-direction `NotFound` and `Error` views. When it lands (b3)
 - Unavailable keeps the wordmark as `h1` and uses the `h2` "Stories are unavailable" with the
   shared sentence.
 - Desktop puts the motif in the right 5/12; tablet and mobile put an 8rem motif above the text.
-- If K4 has not merged by b3, b3 records the gap.
+- If K4 has not merged by b3, or lands without one of the three views, b3 records the gap for each
+  missing view.
 
 ### 2.8 Page header and spine strip
 
@@ -319,7 +323,7 @@ the single source of colour truth (`ec/tokens.ts:4-9`).
 | ---------------------------------- | --------------------- | ------------------ | --------------------------------------------------- |
 | `--ec-scheme`                      | `light`               | `dark`             | `color-scheme` of the root                          |
 | `--ec-paper`                       | `#FBF4EA`             | `#17141F`          | Page ground; paper-surface cards                    |
-| `--ec-paper-2`                     | `#F2E8D8`             | `#231F2D`          | Code, inline code, fact boxes, notes                |
+| `--ec-paper-2`                     | `#F2E8D8`             | `#231F2D`          | Fact boxes, notes; code on paper surfaces (7.5)     |
 | `--ec-ink`                         | `#1D1A2B`             | `#F1E8DA`          | Text, rules, outlines, focus rings on the ground    |
 | `--ec-ink-soft`                    | `#514B63`             | `#C4BBCB`          | Captions, dates and meta on the ground, methodology |
 | `--ec-cobalt` / `--ec-on-cobalt`   | `#2F45D6` / `#FBF4EA` | unchanged          | Story surface / its text                            |
@@ -353,7 +357,10 @@ filled current pill is ink with paper text. Swatch edges against the ground are 
 no ratio (light: saffron 1.83, lilac 2.09, rose 2.79; dark: cobalt 2.55, forest 2.62, brick 2.87);
 a card is identified by its text and its focus ring, not by its edge. The contract checks declared
 pairs only; the browser test also paints every swatch behind a real title and compares the computed
-colours (`ec/expressive-colour.e2e.ts:195-273`), and b1 runs it in both themes.
+colours (`ec/expressive-colour.e2e.ts:195-273`), and b1 runs it in both themes. Nested content
+(inline code in pull quotes, tips and key points, and panels nested in key points) never creates a
+new pair: the surface rule in 7.5 keeps it to the pairs above and lists their values for all six
+swatches in both themes.
 
 **Assignment (kept):** FNV-1a over the slug, in today's palette order (`ec/colours.ts:30-47`),
 pinned by `ec/colours.test.tsx:12-25` and `ec/views.test.tsx:242-243`. The owner-colour seam
@@ -484,9 +491,9 @@ E only styles the markup and its `data-block`, `data-variant` and `data-layout` 
 | `heading` → heading 2–6                          | `h2`–`h6`                                                                                  | `h2` `--ec-heading` with a 0.4em story-colour dot before it (decorative pseudo-element); `h3` `--ec-h3`; `h4`–`h6` as in 3; 3rem above, 1rem below                                                                                             |
 | `blockquote` → quote                             | `blockquote`                                                                               | 0.4rem story-colour bar on the left, italic, 1.25rem inset (kept, `ec/styles.ts:82`)                                                                                                                                                           |
 | `pullQuote` → pull-quote                         | `figure[data-block=pull-quote]`, `blockquote`, `figcaption`                                | Filled story surface, 1.5rem radius, quote at `--ec-heading` 700 `SOFT` 100 (kept, `ec/styles.ts:83-85`), an oversized opening quote mark in Fraunces 900 as decoration; attribution in mono after an em dash; 56rem feature column on desktop |
-| `bulletList` → bulleted-list                     | `ul > li`                                                                                  | Disc markers in ink, items 0.5rem apart, nested blocks 1rem apart (kept, `ec/styles.ts:73-81`)                                                                                                                                                 |
+| `bulletList` → bulleted-list                     | `ul > li`                                                                                  | Disc markers in `currentColor`, items 0.5rem apart, nested blocks 1rem apart (kept, `ec/styles.ts:73-81`)                                                                                                                                      |
 | `orderedList` → numbered-list                    | `ol[start][type]`                                                                          | Marker type from `type` (1, a, A, i, I; kept, `ec/styles.ts:75-79`); markers in Martian Mono 500                                                                                                                                               |
-| `taskList` → checklist                           | `ul[data-block=checklist]`, glyph `span[aria-hidden]`, visually hidden "Done:"/"Not done:" | Glyph hung in a 1.75rem indent (kept, `ec/styles.ts:90-93`), in ink; no strike-through                                                                                                                                                         |
+| `taskList` → checklist                           | `ul[data-block=checklist]`, glyph `span[aria-hidden]`, visually hidden "Done:"/"Not done:" | Glyph hung in a 1.75rem indent (kept, `ec/styles.ts:90-93`), in `currentColor`; no strike-through                                                                                                                                              |
 | `mediaImage` → image                             | `figure > picture > img` + `figcaption`                                                    | Measure width, natural ratio, 0.75rem radius (`ec/styles.ts:89`); caption and credit as 6                                                                                                                                                      |
 | `gallery` → gallery (`grid`)                     | `ul[data-block=gallery][data-layout=grid] > li > figure`                                   | Wide column; three per row on desktop, two on tablet, one on mobile; 1.5rem gap                                                                                                                                                                |
 | `gallery` → gallery (`diptych`)                  | `data-layout=diptych`                                                                      | Wide column; two per row from tablet, one on mobile                                                                                                                                                                                            |
@@ -494,7 +501,7 @@ E only styles the markup and its `data-block`, `data-variant` and `data-layout` 
 | `callout` → callout (`tip`)                      | `div[data-block=callout][data-variant=tip][role=note]`, label in `strong`                  | Filled story surface (today every callout is, `ec/styles.ts:95`); label in mono capitals                                                                                                                                                       |
 | `callout` → callout (`note`)                     | `data-variant=note`                                                                        | `--ec-paper-2`, 2px `currentColor` border, 0.75rem radius                                                                                                                                                                                      |
 | `callout` → callout (`warning`)                  | `data-variant=warning`                                                                     | Inverse: `--ec-ink` ground with `--ec-paper` text, an "!" mark before the label (decorative)                                                                                                                                                   |
-| `codeBlock` → code                               | `pre > code[data-language]`                                                                | `--ec-paper-2`, 1px border, 0.75rem radius, Martian Mono 0.875rem/1.7, wrapped (`ec/styles.ts:100`); no syntax colours                                                                                                                         |
+| `codeBlock` → code                               | `pre > code[data-language]`                                                                | Its surface's code ground (`--ec-paper-2` on the page; below), 1px `currentColor` border, 0.75rem radius, Martian Mono 0.875rem/1.7, wrapped (`ec/styles.ts:100`); no syntax colours                                                           |
 | `horizontalRule` → divider                       | `hr`                                                                                       | Today's 4rem by 0.4rem story-colour bar with 3rem above and below (`ec/styles.ts:101`), now centred and fully rounded                                                                                                                          |
 | `embed` → embed                                  | `figure[data-block=embed][data-provider] > p > a` + `figcaption`                           | `--ec-paper` block with a 2px `currentColor` border and a play mark before the link (decorative); link `--ec-copy` 700, underlined, at least 44px tall (`ec/styles.ts:98`); fallback in soft ink                                               |
 | `editorialBlock` → editorial (`fact-box`)        | `section[data-block=editorial][data-variant=fact-box][aria-label]`                         | `--ec-paper-2` panel, 0.75rem radius                                                                                                                                                                                                           |
@@ -509,10 +516,71 @@ E only styles the markup and its `data-block`, `data-variant` and `data-layout` 
   declaration and show no label.
 - **Inline marks:** bold 700; italic in the real italic face; links underlined at 1px with a 0.2em
   offset, 2px on hover (`ec/styles.ts:72`); underline (`u`) as a wavy 1px underline so it never
-  looks like a link; strike as a line-through; inline `code` in Martian Mono 0.85em on
-  `--ec-paper-2` with a 0.25rem radius; line breaks as `br`.
-- **Inside a story surface** (pull quote, tip, key points, cover band) text, links, markers and
-  focus rings all use the on-colour.
+  looks like a link; strike as a line-through; inline `code` in Martian Mono 0.85em with a 0.25rem
+  radius on its surface's code ground (below); line breaks as `br`.
+
+**Surfaces and nesting.** The document allows inline code wherever there is text, pull quotes and
+callouts included, and lets editorial blocks, list items and checklist items hold any block, to any
+depth (`packages/web/src/server/content/document.ts:28,338-372`); the renderer keeps both
+(`reader/components/article-body.tsx:26-27,79-121,134-144,164-173`). Pull quotes and callouts hold
+inline content only, so panels nest only inside key points and the other editorial blocks, and
+inside lists. Colour is therefore set per surface, never per block: every element that paints a
+background sets its text colour with it, from one declared pair, and sets two companion properties
+in `ec/styles.ts`, as `--ec-story` is set today (`ec/styles.ts:6`).
+
+| Surface                                                                    | Background / text              | `--ec-text-soft` | `--ec-code-bg` |
+| -------------------------------------------------------------------------- | ------------------------------ | ---------------- | -------------- |
+| Paper: page ground, paper cards, embed, related stories                    | `--ec-paper` / `--ec-ink`      | `--ec-ink-soft`  | `--ec-paper-2` |
+| Paper-2: fact box, note                                                    | `--ec-paper-2` / `--ec-ink`    | `--ec-ink-soft`  | `--ec-paper`   |
+| Story: pull quote, tip, key points, cover band, filled cards, compact chip | `--ec-story` / `--ec-on-story` | `--ec-on-story`  | `transparent`  |
+| Inverse: warning (and the current pill and skip link)                      | `--ec-ink` / `--ec-paper`      | `--ec-paper`     | `transparent`  |
+
+- **Inheritance:** content takes its colours from the nearest surface, never from an outer one.
+  Code never sets a colour: inline code and code blocks paint `--ec-code-bg` and inherit their
+  text, so their ground always pairs with the surface's text. Captions, credits, methodology text
+  and the embed fallback use `--ec-text-soft`; list markers, checklist glyphs, rules, outlines and
+  focus rings use `currentColor`. A link's focus ring, 4px outside it, stays inside its surface's
+  padding (at least 1rem, `ec/styles.ts:55,83,94`).
+- **Where the code ground is transparent** (story and inverse surfaces), inline code keeps its chip
+  shape as a 1px `currentColor` inset box shadow (no layout change), and code blocks keep their 1px
+  `currentColor` border (`ec/styles.ts:100`).
+- **Story-colour decorations** (the `h2` dot, the quote bar, the divider) use `currentColor` on a
+  story surface, where the story colour would vanish; they stay decorative.
+- **Never** leave text in an outer surface's colour on a new background: the on-colour on
+  `--ec-paper-2` is 1.11:1 in light (cobalt, forest, brick) and 1.06:1 in dark (saffron, rose,
+  lilac), and warning text on it is 1.11:1 in light and 1.13:1 in dark. `--ec-ink` or
+  `--ec-ink-soft` on a swatch fails the same way (down to 1.65:1 and 1.08:1, both on saffron in
+  dark), which is why markers use `currentColor` and soft text uses `--ec-text-soft`.
+
+**Resulting pairs** (`contrastRatio`, `rd/contrast.ts:104-118`; at least 4.5:1 for text, 3:1 for
+focus rings). On the swatch itself sit text, inline code, code blocks, markers, glyphs, captions,
+credits, methodology, links and focus rings. Swatches and on-colours do not change with the theme
+(5):
+
+| Story colour | Text on the swatch     | Light | Dark |
+| ------------ | ---------------------- | ----- | ---- |
+| cobalt       | `#FBF4EA` on `#2F45D6` | 6.53  | 6.53 |
+| saffron      | `#1D1A2B` on `#F2A93B` | 8.51  | 8.51 |
+| rose         | `#1D1A2B` on `#E86A8E` | 5.57  | 5.57 |
+| forest       | `#FBF4EA` on `#276451` | 6.35  | 6.35 |
+| lilac        | `#1D1A2B` on `#B8A1DF` | 7.45  | 7.45 |
+| brick        | `#FBF4EA` on `#AD352C` | 5.79  | 5.79 |
+
+A panel nested in a story surface sets its own pair, so its values are the same inside all six
+swatches; a nested tip, key points or pull quote is the story surface again, with the values above.
+
+| Nested panel           | Text                                                                            | Light | Dark  |
+| ---------------------- | ------------------------------------------------------------------------------- | ----- | ----- |
+| Fact box, note         | Text and links: `--ec-ink` on `--ec-paper-2`                                    | 14.02 | 13.25 |
+|                        | Captions, credits, methodology (fact box): `--ec-ink-soft` on `--ec-paper-2`    | 6.82  | 8.67  |
+|                        | Code: `--ec-ink` on `--ec-paper`                                                | 15.57 | 14.96 |
+| Embed, related stories | Text and links: `--ec-ink` on `--ec-paper`                                      | 15.57 | 14.96 |
+|                        | Captions, credits, methodology, embed fallback: `--ec-ink-soft` on `--ec-paper` | 7.58  | 9.79  |
+|                        | Code (related stories): `--ec-ink` on `--ec-paper-2`                            | 14.02 | 13.25 |
+| Warning                | Text, links and code: `--ec-paper` on `--ec-ink`                                | 15.57 | 14.96 |
+
+Every value is a declared pair from 5, so the contract checks each one in both themes; the
+nested-surface sweep (9) checks in the browser that nothing else is painted.
 
 ## 8. Motion and interaction
 
@@ -576,6 +644,18 @@ E only styles the markup and its `data-block`, `data-variant` and `data-layout` 
     control type; keyboard paths through skip link, Theme and pills; reduced motion leaves no
     transition; forced colours and print emulation each pass axe and get one screenshot; the shared
     sweep in `tests/e2e/reader-lab.spec.ts:193` stays green.
+  - Nested-surface sweep (browser, b3): a browser-only fixture, like the long-title one
+    (`ec/expressive-colour.e2e.ts:217-226`), appends the renderer's own markup
+    (`reader/components/article-body.tsx:57-175`, rendered in the test or copied from it) to the
+    long-table article's `.ec-body`: a pull quote, a tip and a warning, each with inline code and a
+    link, and a key points holding inline code, a link, a code block, a bulleted list, a checklist,
+    a captioned image, a methodology block and a nested fact box, note, warning, embed, related
+    stories and key points, each with a link and (except the embed) inline code. For each of the
+    six swatches, set as `data-story-colour` on the article, in light and dark (12 runs), it
+    asserts that the computed colour of every visible text node and `::marker` against the
+    background of its nearest painted ancestor is at least 4.5:1 by `contrastRatio`
+    (`rd/contrast.ts:104-118`), that each link's focus ring is at least 3:1 against the same
+    background, and that axe reports no violation.
   - Manual (b3 worklog): a VoiceOver or NVDA pass of home and the long-table article (landmarks,
     headings and links lists), 200% browser zoom, and Windows forced colours.
 
@@ -668,7 +748,7 @@ the 11px label (`ec/tokens.ts:19`); one wordmark size on every page (`ec/styles.
    steps, hero placement by orientation with its `sizes`, motif for image-free stories, end mark,
    "Filed under", Read next, `aria-current="true"`.
 2. `ec/tokens.ts` `--ec-measure: 45rem`, `--ec-feature: 56rem`, `--ec-wide: 72rem`; `ec/styles.ts`:
-   the body grid and every block style in 7.5.
+   the body grid, the surface rule and every block style in 7.5.
 3. New `ec/author.tsx` and `ec/topic.tsx` on `ec/page-header.tsx` and `ec/story-list.tsx`;
    `ec/index.ts` registers them as `Author` and `Topic`.
 4. Tests: views for author links, topics, related (0, 1 and 3 items), `null` bio and description
@@ -681,15 +761,17 @@ the 11px label (`ec/tokens.ts:19`); one wordmark size on every page (`ec/styles.
 
 ### b3: media, accessibility and Core Web Vitals pass (after K4 for its items)
 
-1. K4: `NotFound` and `Error` views (2.7) and the body and gallery `sizes` (6); otherwise the gap is
-   recorded.
+1. K4: the `NotFound`, `Error` and `Unavailable` views (2.7) and the body and gallery `sizes` (6);
+   the gap is recorded for each one K4 does not provide.
 2. Media audit at 390, 768, 1024 and 1440px: chosen candidates against laid-out widths for every
    `sizes` row, focal-point crops for the 3:2, 16:9, 1:1 and 4:5 sample images, one preload per
    page, lazy everywhere else, and the image transfer budgets.
 3. Lighthouse twice per page type with baseline in the same session, Event Timing for the Theme menu
    and a card, CLS cold and warm on every page type, the HTML and inline-CSS byte counts, and a
    warm-font check on the hosted Preview when it is available.
-4. The full accessibility matrix in 9, forced colours and print, and the manual notes.
+4. The full accessibility matrix in 9, including the nested-surface sweep (inline code in pull
+   quotes, tips and warnings; code blocks and panels nested in key points; all six swatches in light
+   and dark), forced colours and print, and the manual notes.
 5. The screenshot test writes to the b3 bead's worklog folder instead of `docs/worklog/blog-0044.7`
    (`ec/expressive-colour.e2e.ts:345-385`) and adds author, topic and not-found pages.
 
