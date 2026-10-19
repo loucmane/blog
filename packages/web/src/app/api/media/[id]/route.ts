@@ -14,6 +14,7 @@ import type { MediaAsset } from '@/server/content/domain'
 import {
   mediaVariantContentType,
   mediaVariantFormatsFor,
+  mediaVariantsRuledIn,
   mediaVariantsRuledOut,
   type MediaVariant,
 } from '@/server/content/media-variant-rules'
@@ -114,7 +115,15 @@ async function serveVariant(
   if (mediaVariantsRuledOut(asset)) return originalRedirectResponse(asset.id)
   const entityTag = mediaVariantEntityTag(asset, variant)
   const headers = revalidatedHeaders(entityTag)
-  if (isNotModified(request, entityTag)) return new Response(null, { headers, status: 304 })
+  const notModified = isNotModified(request, entityTag)
+  // A 304 tells a cache that the variant it holds is still served, so it goes out at once only when
+  // that is known without reading anything: the original was measured as a still image, or this
+  // process has loaded the variant before. An original that was never measured may be animated, so
+  // its variant is loaded first: one that cannot be made sends the reader to the original, whatever
+  // the request's conditions.
+  if (notModified && (mediaVariantsRuledIn(asset) || variants.hasLoaded(asset, variant))) {
+    return new Response(null, { headers, status: 304 })
+  }
   let body: Uint8Array
   try {
     body = await variants.load(asset, variant)
@@ -124,6 +133,7 @@ async function serveVariant(
     // before variants existed.
     return originalRedirectResponse(asset.id)
   }
+  if (notModified) return new Response(null, { headers, status: 304 })
   return new Response(Uint8Array.from(body).buffer, {
     headers: { ...headers, 'content-type': mediaVariantContentType(variant.format) },
   })
@@ -136,8 +146,9 @@ async function serveVariant(
  * read fresh for each request, and runs before anything else about the request is considered.
  * Caches must revalidate every use, so an unpublished image is gone on the next request, even when
  * variants of it are stored. A conditional request gets its 304 only after the same visibility
- * check as a full response. A visible image that has no variants, such as an animated one, or that
- * cannot be resized is redirected to its original, and one whose bytes cannot be read is a logged
+ * check as a full response, and never for a variant that would not be served. A visible image that
+ * has no variants, such as an animated one, or that cannot be resized is redirected to its
+ * original, whatever the request's conditions, and one whose bytes cannot be read is a logged
  * server error, never a not-found.
  */
 export async function GET(request: Request, context: RouteContext): Promise<Response> {

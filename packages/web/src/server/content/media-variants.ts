@@ -23,6 +23,12 @@ import type { MediaVariantStore, OriginalObjectStore } from './ports'
 /** How many variants one server process makes at once. Further requests wait their turn. */
 export const MEDIA_VARIANT_CONCURRENCY = 2
 
+/**
+ * How many loaded variants one server process remembers, so that it can confirm them to caches
+ * without reading them again. Confirming a forgotten one costs one read of storage.
+ */
+const maxRememberedVariants = 10_000
+
 /** How long making one variant may take before it is abandoned. */
 const renderTimeoutSeconds = 20
 
@@ -263,6 +269,8 @@ class ConcurrencyLimit {
 export interface MediaVariantServiceOptions {
   readonly concurrency?: number
   readonly maxInputPixels?: number
+  /** How many loaded variants to remember. */
+  readonly maxRemembered?: number
   readonly render?: (input: RenderMediaVariantInput) => Promise<Uint8Array>
 }
 
@@ -270,12 +278,16 @@ export interface MediaVariantServiceOptions {
  * Serves variants from storage and makes each missing one once. Requests for a variant that is
  * being made share that work, and at most `concurrency` variants are made at a time, so a burst of
  * requests holds only a few originals in memory. Storage is treated as a cache: a failed read
- * makes the variant again, and a failed write still serves it.
+ * makes the variant again, and a failed write still serves it. The service remembers the variants
+ * it has loaded, up to `maxRemembered`, so that they are known to exist without reading anything.
  */
 export class MediaVariantService {
   private readonly limit: ConcurrencyLimit
   private readonly making = new Map<string, Promise<Uint8Array>>()
   private readonly maxInputPixels: number
+  private readonly maxRemembered: number
+  /** The keys of the variants this process has loaded, the least recently loaded first. */
+  private readonly remembered = new Set<string>()
   private readonly render: (input: RenderMediaVariantInput) => Promise<Uint8Array>
 
   constructor(
@@ -284,12 +296,22 @@ export class MediaVariantService {
     {
       concurrency = MEDIA_VARIANT_CONCURRENCY,
       maxInputPixels = MAX_MEDIA_VARIANT_INPUT_PIXELS,
+      maxRemembered = maxRememberedVariants,
       render = renderMediaVariant,
     }: MediaVariantServiceOptions = {},
   ) {
     this.limit = new ConcurrencyLimit(concurrency)
     this.maxInputPixels = maxInputPixels
+    this.maxRemembered = maxRemembered
     this.render = render
+  }
+
+  /**
+   * Whether this process has loaded the variant, from storage or by making it, so that it is known
+   * to exist without reading anything. Only the most recently loaded variants are remembered.
+   */
+  hasLoaded(asset: MediaAsset, variant: MediaVariant): boolean {
+    return this.remembered.has(mediaVariantObjectKey(asset, variant))
   }
 
   /**
@@ -299,7 +321,10 @@ export class MediaVariantService {
   async load(asset: MediaAsset, variant: MediaVariant): Promise<Uint8Array> {
     const key = mediaVariantObjectKey(asset, variant)
     const stored = await this.store.getVariant(key).catch(() => null)
-    if (stored) return stored
+    if (stored) {
+      this.remember(key)
+      return stored
+    }
     const inProgress = this.making.get(key)
     if (inProgress) return inProgress
     const made = this.make(asset, variant, key).finally(() => this.making.delete(key))
@@ -316,10 +341,20 @@ export class MediaVariantService {
         variant,
       }),
     )
+    this.remember(key)
     await this.store
       .putVariant({ body, contentType: mediaVariantContentType(variant.format), key })
       .catch(() => undefined)
     return body
+  }
+
+  /** Remembers a loaded variant, and forgets the least recently loaded one beyond the limit. */
+  private remember(key: string): void {
+    this.remembered.delete(key)
+    this.remembered.add(key)
+    if (this.remembered.size <= this.maxRemembered) return
+    const oldest = this.remembered.values().next()
+    if (!oldest.done) this.remembered.delete(oldest.value)
   }
 }
 
