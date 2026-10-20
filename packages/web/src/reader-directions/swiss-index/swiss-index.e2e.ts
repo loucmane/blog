@@ -2,7 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
 import { normalizeSlug } from '../../server/content/domain'
@@ -17,6 +17,28 @@ const root = '[data-reader-direction="swiss-index"]'
 async function waitForThemeToSettle(page: Page) {
   // The shared lab bar transitions its colours; assertions need the settled theme.
   await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0)
+}
+
+/** Tabs until `target` has focus; the lab bar comes first in the tab order. */
+async function tabTo(page: Page, target: Locator, limit = 20) {
+  for (
+    let tabs = 0;
+    tabs < limit && !(await target.evaluate((element) => element === document.activeElement));
+    tabs++
+  ) {
+    await page.keyboard.press('Tab')
+  }
+  await expect(target).toBeFocused()
+}
+
+/** Every link and button in `scope` is at least 44 by 44 pixels. */
+async function expectTouchTargets(scope: Locator, label: string) {
+  for (const control of await scope.locator('a, button').all()) {
+    const box = await control.boundingBox()
+    const name = `${label}: ${(await control.textContent())?.trim()}`
+    expect(box?.width, name).toBeGreaterThanOrEqual(44)
+    expect(box?.height, name).toBeGreaterThanOrEqual(44)
+  }
 }
 
 test.beforeEach(async ({ context, page, request }) => {
@@ -78,6 +100,126 @@ test('has no overflow at every required width and operable touch-sized navigatio
   }
 })
 
+test('keeps home and section free of overflow from 320 pixels, with touch-sized controls throughout', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const path of ['/', sectionPath]) {
+      await page.goto(path)
+      await page.evaluate(async () => {
+        await document.fonts.ready
+      })
+      const label = `${path} at ${width}`
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        label,
+      ).toBe(true)
+      await expect(
+        page.locator(root).getByRole('button', { name: 'Choose color theme' }),
+      ).toBeEnabled()
+      for (const part of ['.si-masthead', 'main', '.si-footer']) {
+        await expectTouchTargets(page.locator(root).locator(part), `${label} ${part}`)
+      }
+    }
+  }
+})
+
+test('sets the cover and the earlier stories as numbered lists and makes each plate one link', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const cover = page.locator(root).getByRole('list', { name: 'Latest stories' })
+  await expect(cover.getByRole('listitem')).toHaveCount(3)
+  await expect(cover.locator('.si-number')).toHaveText(['01', '02', '03'])
+  const earlier = page.locator(root).getByRole('region', { name: 'Earlier stories' })
+  await expect(earlier.getByRole('list')).toHaveAttribute('start', '4')
+  await expect(earlier.getByRole('heading', { level: 3, name: storyTitle })).toBeVisible()
+  // A click on the lead image follows the title link; the section link keeps its own target.
+  const lead = cover.getByRole('listitem').first()
+  const image = await lead.locator('.si-plate-image').boundingBox()
+  await page.mouse.click(image!.x + image!.width / 2, image!.y + image!.height / 2)
+  await expect(page).toHaveURL(/\/stories\/[a-z0-9-]+$/)
+  await page.goBack()
+  await lead.locator('.si-plate-meta').getByRole('link').click()
+  await expect(page).toHaveURL(/\/sections\/[a-z0-9-]+$/)
+})
+
+test('walks the keyboard from the skip link through the masthead to the footer and back to top', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(sectionPath)
+  const swiss = page.locator(root)
+  const theme = swiss.getByRole('button', { name: 'Choose color theme' })
+  await expect(theme).toBeEnabled()
+  const skip = page.getByRole('link', { name: 'Skip to content' })
+  await tabTo(page, skip, 12)
+  expect(await skip.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid')
+  await page.keyboard.press('Tab')
+  await expect(swiss.locator('.si-wordmark a')).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(theme).toBeFocused()
+  const sections = swiss.getByRole('navigation', { name: 'Sections' })
+  await page.keyboard.press('Tab')
+  await expect(sections.getByRole('link', { name: 'Front page' })).toBeFocused()
+  const current = sections.getByRole('link', { name: 'Interiors', exact: true })
+  await expect(current).toHaveAttribute('aria-current', 'page')
+  const cell = await current.evaluate((element) => {
+    const style = getComputedStyle(element.closest('li')!)
+    return { color: style.borderLeftColor, width: style.borderLeftWidth }
+  })
+  expect(cell).toEqual({ color: 'rgb(255, 79, 31)', width: '4px' })
+  expect(await current.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe(
+    'underline',
+  )
+  const top = swiss.getByRole('contentinfo').getByRole('link', { name: 'Back to top' })
+  await tabTo(page, top, 60)
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/#si-top$/)
+  await expect
+    .poll(() => page.evaluate(() => document.getElementById('si-top')!.getBoundingClientRect().top))
+    .toBeGreaterThanOrEqual(0)
+  await page.goto(sectionPath)
+  await tabTo(page, skip, 12)
+  await page.keyboard.press('Enter')
+  await expect(page.locator('#si-main')).toBeFocused()
+})
+
+test('switches to the true black theme with the square Theme control from the keyboard', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  const theme = page.locator(root).getByRole('button', { name: 'Choose color theme' })
+  await expect(theme).toBeEnabled()
+  const style = await theme.evaluate((element) => {
+    const computed = getComputedStyle(element)
+    return {
+      height: element.getBoundingClientRect().height,
+      radius: computed.borderTopLeftRadius,
+      transition: computed.transitionDuration,
+    }
+  })
+  expect(style.height).toBeGreaterThanOrEqual(44)
+  expect(style.radius).toBe('0px')
+  expect(style.transition).toBe('0s')
+  await theme.focus()
+  await page.keyboard.press('Enter')
+  const dark = page.getByRole('menuitemradio', { name: 'Dark theme' })
+  await expect(dark).toBeVisible()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ArrowDown')
+  await expect(dark).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('html')).toHaveClass(/\bdark\b/)
+  await waitForThemeToSettle(page)
+  expect(
+    await page.locator(root).evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).toBe('rgb(0, 0, 0)')
+})
+
 test('keeps the seeded long-title, image-free, short and long-read stories readable at every width', async ({
   page,
 }) => {
@@ -110,31 +252,17 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
 test('uses visible keyboard focus and a true black reading ground', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  const skip = page.getByRole('link', { name: 'Skip to stories' })
-  for (
-    let tabs = 0;
-    tabs < 12 && !(await skip.evaluate((element) => element === document.activeElement));
-    tabs++
-  ) {
-    await page.keyboard.press('Tab')
-  }
-  await expect(skip).toBeFocused()
+  const skip = page.getByRole('link', { name: 'Skip to content' })
+  await tabTo(page, skip, 12)
   expect(await skip.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid')
   await page.keyboard.press('Enter')
   await expect(page.locator('#si-main')).toBeFocused()
   await page.goto('/')
   const interiors = page
     .locator(root)
-    .getByRole('navigation')
+    .getByRole('navigation', { name: 'Sections' })
     .getByRole('link', { name: 'Interiors' })
-  for (
-    let tabs = 0;
-    tabs < 20 && !(await interiors.evaluate((element) => element === document.activeElement));
-    tabs++
-  ) {
-    await page.keyboard.press('Tab')
-  }
-  await expect(interiors).toBeFocused()
+  await tabTo(page, interiors)
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(sectionPath)
   await page.evaluate(() => document.documentElement.classList.add('dark'))
@@ -237,43 +365,58 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures twelve seeded screenshots for review', async ({ page }) => {
-  test.setTimeout(180_000)
+test('captures home and Interiors at 390, 768 and 1440 pixels in both themes for review', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-si-sans': 'Schibsted Grotesk',
     '--font-si-mono': 'IBM Plex Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.5')
+  const destination = path.resolve('docs/worklog/blog-0044.46')
   await mkdir(destination, { recursive: true })
-  for (const width of [390, 1440]) {
-    await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
-    for (const [name, route] of [
-      ['home', '/'],
-      ['article', storyPath],
-      ['section', sectionPath],
-    ]) {
-      await captureFonts.goto(route!)
-      // Load lazy images before the full-page capture, then return to the cover.
-      await page.evaluate(async () => {
-        for (const image of document.images) image.loading = 'eager'
-        await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
-        window.scrollTo(0, 0)
-      })
-      expect(
-        await page
-          .locator(`${root} img`)
-          .evaluateAll((images) =>
-            images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
-          ),
-        `${name} images loaded`,
-      ).toBe(true)
-      for (const fullPage of [false, true]) {
-        await captureFonts.assertFonts()
-        await page.screenshot({
-          path: path.join(destination, `${name}-${width}-${fullPage ? 'full' : 'viewport'}.png`),
-          fullPage,
-          animations: 'disabled',
+  for (const theme of ['light', 'dark']) {
+    for (const [width, height] of [
+      [390, 844],
+      [768, 1024],
+      [1440, 1000],
+    ] as const) {
+      await page.setViewportSize({ width, height })
+      for (const [name, route] of [
+        ['home', '/'],
+        ['interiors', sectionPath],
+      ] as const) {
+        await captureFonts.goto(route)
+        await page.evaluate(
+          (dark) => document.documentElement.classList.toggle('dark', dark),
+          theme === 'dark',
+        )
+        await waitForThemeToSettle(page)
+        // Load lazy images before the full-page capture, then return to the cover.
+        await page.evaluate(async () => {
+          for (const image of document.images) image.loading = 'eager'
+          await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
+          window.scrollTo(0, 0)
         })
+        expect(
+          await page
+            .locator(`${root} img`)
+            .evaluateAll((images) =>
+              images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
+            ),
+          `${name} images loaded`,
+        ).toBe(true)
+        for (const fullPage of [false, true]) {
+          await captureFonts.assertFonts()
+          await page.screenshot({
+            path: path.join(
+              destination,
+              `${name}-${width}-${theme}-${fullPage ? 'full' : 'viewport'}.png`,
+            ),
+            fullPage,
+            animations: 'disabled',
+          })
+        }
       }
     }
   }
