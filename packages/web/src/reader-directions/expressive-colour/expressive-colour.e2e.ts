@@ -11,6 +11,14 @@ import { prepareFontCapture } from '../capture-fonts'
 import { contrastRatio } from '../contrast'
 import { blockFixtureDocument } from './block-fixture'
 import { storyColour, storyColours } from './colours'
+import {
+  bodyImageSizes,
+  cardSizes,
+  coverSizes,
+  heroSizes,
+  leadSizes,
+  secondarySizes,
+} from './sizes'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
@@ -22,6 +30,7 @@ const topic = labTopics.find(({ slug }) => labStories.some((story) => story.topi
 const authorPath = `/authors/${author.slug}`
 const topicPath = `/topics/${topic.slug}`
 const pagePaths = ['/', storyPath, sectionPath, authorPath, topicPath]
+const notFoundPath = '/expressive-colour-missing-page'
 const root = '[data-reader-direction="expressive-colour"]'
 
 interface FixtureStory {
@@ -199,6 +208,7 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
 test('uses visible keyboard focus and the night-print reading ground in dark theme', async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   const skip = page.getByRole('link', { name: 'Skip to content' })
@@ -211,6 +221,7 @@ test('uses visible keyboard focus and the night-print reading ground in dark the
   }
   await expect(skip).toBeFocused()
   expect(await skip.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid')
+  await expect(skip).toHaveCSS('outline-offset', '-5px')
   expect(await skip.evaluate((element) => getComputedStyle(element).color)).toBe(
     'rgb(251, 244, 234)',
   )
@@ -300,8 +311,9 @@ for (const width of [390, 1440]) {
     test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
       test.setTimeout(120_000)
       await page.setViewportSize({ width, height: 900 })
-      for (const path of pagePaths) {
+      for (const path of [...pagePaths, notFoundPath]) {
         await page.goto(path)
+        await expect(page.locator(root)).toBeVisible()
         await page.evaluate(async () => {
           await document.fonts.ready
         })
@@ -486,7 +498,7 @@ test('keeps article, author and topic previews scoped inside the comparison fram
   page,
 }) => {
   test.setTimeout(240_000)
-  for (const route of [storyPath, authorPath, topicPath]) {
+  for (const route of pagePaths) {
     await page.goto(`/owner/reader-lab/compare?page=${encodeURIComponent(route)}`)
     const frame = page.frameLocator('[data-compare-direction="expressive-colour"] iframe')
     for (const width of [390, 1440]) {
@@ -748,40 +760,71 @@ for (const width of [390, 1440]) {
                   ? background(node.parentElement)
                   : 'rgb(255, 255, 255)'
             }
-            return Array.from(
-              element.querySelectorAll(
-                'p, h2, h3, h4, h5, h6, a, code, figcaption, figcaption > span, li > span[aria-hidden]',
-              ),
-            ).map((node) => ({
-              text: node.tagName,
-              foreground: getComputedStyle(node).color,
-              background: background(node),
-            }))
+            const pairs: { text: string; foreground: string; background: string }[] = []
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+            while (walker.nextNode()) {
+              const node = walker.currentNode.parentElement
+              if (
+                !node ||
+                !walker.currentNode.textContent?.trim() ||
+                node.closest('.sr-only') ||
+                !node.getClientRects().length ||
+                getComputedStyle(node).visibility === 'hidden'
+              )
+                continue
+              pairs.push({
+                text: node.tagName,
+                foreground: getComputedStyle(node).color,
+                background: background(node),
+              })
+            }
+            for (const item of element.querySelectorAll('li')) {
+              if (getComputedStyle(item).listStyleType === 'none') continue
+              pairs.push({
+                text: '::marker',
+                foreground: getComputedStyle(item, '::marker').color,
+                background: background(item),
+              })
+            }
+            return pairs
           })
           for (const pair of pairs)
             expect(
               contrastRatio(pair.foreground, pair.background),
               `${colour.name}, dark=${dark}, ${pair.text}`,
             ).toBeGreaterThanOrEqual(4.5)
-          const link = page.locator('.ec-body > [data-variant="key-points"] > p a').first()
           await page.keyboard.press('Tab')
-          await link.focus()
-          const focus = await link.evaluate((element) => {
-            const style = getComputedStyle(element)
-            return {
-              colour: style.outlineColor,
-              style: style.outlineStyle,
-              width: style.outlineWidth,
+          const rings = await page.locator('.ec-body').evaluate((element) => {
+            function background(node: Element): string {
+              const colour = getComputedStyle(node).backgroundColor
+              return colour !== 'rgba(0, 0, 0, 0)' && colour !== 'transparent'
+                ? colour
+                : background(node.parentElement!)
             }
+            return Array.from(element.querySelectorAll('a'), (link) => {
+              link.focus()
+              const style = getComputedStyle(link)
+              return {
+                colour: style.outlineColor,
+                style: style.outlineStyle,
+                width: style.outlineWidth,
+                background: background(link),
+                visible: link.matches(':focus-visible'),
+              }
+            })
           })
-          expect(focus.style).toBe('solid')
-          expect(focus.width).toBe('3px')
-          expect(contrastRatio(focus.colour, colour.background)).toBeGreaterThanOrEqual(3)
+          expect(rings.length).toBeGreaterThan(0)
+          for (const focus of rings) {
+            expect(focus.visible).toBe(true)
+            expect(focus.style).toBe('solid')
+            expect(focus.width).toBe('3px')
+            expect(contrastRatio(focus.colour, focus.background)).toBeGreaterThanOrEqual(3)
+          }
+          const axe = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+            .analyze()
+          expect(axe.violations, `${colour.name}, dark=${dark}`).toEqual([])
         }
-        const axe = await new AxeBuilder({ page })
-          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-          .analyze()
-        expect(axe.violations).toEqual([])
       }
     },
   )
@@ -826,13 +869,240 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
+for (const width of [390, 1440]) {
+  test(`renders the real not-found boundary with recovery and computed layout at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    expect((await page.goto(notFoundPath))?.status()).toBe(404)
+    await expect(page.locator(root)).toBeVisible()
+    await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText('Page not found')
+    for (const role of ['banner', 'main', 'contentinfo'] as const)
+      await expect(page.locator(root).getByRole(role)).toHaveCount(1)
+    await expect(page.locator('.ec-failure')).toHaveCSS('border-top-width', '3px')
+    await expect(page.locator('.ec-failure-motif:visible')).toHaveCount(1)
+    const parts = await page.locator('.ec-failure').evaluate((element) =>
+      Array.from(element.children)
+        .filter((child) => getComputedStyle(child).display !== 'none')
+        .map((child) => ({
+          copy: child.classList.contains('ec-failure-copy'),
+          order: getComputedStyle(child).order,
+          x: child.getBoundingClientRect().x,
+          y: child.getBoundingClientRect().y,
+          width: child.getBoundingClientRect().width,
+        })),
+    )
+    expect(parts.map(({ copy }) => copy)).toEqual(width < 1024 ? [false, true] : [true, false])
+    expect(parts.every(({ order }) => order === '0')).toBe(true)
+    if (width < 1024) {
+      expect(parts[0]!.width).toBe(128)
+      expect(parts[0]!.y).toBeLessThan(parts[1]!.y)
+    } else expect(parts[0]!.x).toBeLessThan(parts[1]!.x)
+    await expect(page.locator(`${root} img, link[as="image"][href]`)).toHaveCount(0)
+    const home = page.locator('.ec-failure-actions').getByRole('link', { name: 'All stories' })
+    const box = await home.boundingBox()
+    expect(box!.width).toBeGreaterThanOrEqual(44)
+    expect(box!.height).toBeGreaterThanOrEqual(44)
+    await page.keyboard.press('Tab')
+    await home.focus()
+    await expect(home).toHaveCSS('outline-width', '3px')
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL('/')
+    await expect(page.locator(root)).toBeVisible()
+  })
+
+  for (const medium of ['forced-colors', 'print'] as const) {
+    blockTest(
+      `keeps nested content readable in ${medium} at ${width}px`,
+      async ({ page, blockStoryPath }, testInfo) => {
+        test.setTimeout(120_000)
+        await page.setViewportSize({ width, height: 900 })
+        await page.goto(blockStoryPath)
+        await page.emulateMedia(
+          medium === 'print'
+            ? { media: 'print', reducedMotion: 'reduce' }
+            : { forcedColors: 'active', reducedMotion: 'reduce' },
+        )
+        for (const dark of [false, true]) {
+          await page.evaluate(
+            (value) => document.documentElement.classList.toggle('dark', value),
+            dark,
+          )
+          await waitForThemeToSettle(page)
+          await expect(
+            page.locator(
+              '.ec-spine-strip:visible, .ec-footer-stripe:visible, .ec-author-mark:visible',
+            ),
+          ).toHaveCount(0)
+          if (medium === 'print') {
+            await expect(page.locator('.ec-page')).toHaveCSS(
+              'background-color',
+              'rgb(255, 255, 255)',
+            )
+            await expect(page.locator('.ec-page')).toHaveCSS('color', 'rgb(0, 0, 0)')
+            await expect(
+              page.locator(
+                '.ec-related:visible, .ec-page [data-slot="theme-menu-trigger"]:visible',
+              ),
+            ).toHaveCount(0)
+            for (const panel of await page
+              .locator('.ec-body [data-block="callout"], .ec-body [data-block="editorial"]')
+              .all()) {
+              await expect(panel).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+              await expect(panel).toHaveCSS('color', 'rgb(0, 0, 0)')
+            }
+          } else {
+            const link = page.locator('.ec-body a').first()
+            await page.keyboard.press('Tab')
+            await link.focus()
+            await expect(link).toHaveCSS('outline-style', 'solid')
+            await expect(link).toHaveCSS('outline-width', '3px')
+          }
+          const axe = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+            .analyze()
+          expect(axe.violations).toEqual([])
+          await testInfo.attach(`${medium}-${width}-${dark ? 'dark' : 'light'}`, {
+            body: await page.screenshot({ fullPage: true, animations: 'disabled' }),
+            contentType: 'image/png',
+          })
+        }
+      },
+    )
+  }
+}
+
+for (const width of [390, 768, 1024, 1440]) {
+  blockTest(
+    `audits image slots, crops and priority at ${width}px`,
+    async ({ page, blockStoryPath }, testInfo) => {
+      test.setTimeout(180_000)
+      await page.setViewportSize({ width, height: 900 })
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      const routes = [
+        ...pagePaths,
+        ...['article-lab-shelf', 'article-lab-door-handle', 'article-lab-chair'].map(
+          (id) => `/stories/${normalizeSlug(labStories.find((story) => story.id === id)!.title)}`,
+        ),
+        blockStoryPath,
+      ]
+      for (const route of routes) {
+        await page.goto(route)
+        await expect(page.locator(root)).toBeVisible()
+        const lead = page.locator('.ec-hero img:visible, .ec-card-lead img:visible')
+        const hasLead = (await lead.count()) > 0
+        const preload = page.locator('link[rel="preload"][as="image"][href]')
+        await expect(preload).toHaveCount(hasLead ? 1 : 0)
+        if (hasLead) {
+          await expect(lead).toHaveAttribute('fetchpriority', 'high')
+          await expect(preload).toHaveAttribute('imagesizes', (await lead.getAttribute('sizes'))!)
+          const source = lead.locator('xpath=..').locator('source').first()
+          await expect(preload).toHaveAttribute(
+            'imagesrcset',
+            (await source.getAttribute('srcset'))!,
+          )
+        }
+        for (const image of await page.locator(`${root} img:visible`).all()) {
+          const slot = await image.evaluate((element) => {
+            const card = element.closest('.ec-card')
+            const gallery = element.closest('[data-block="gallery"]')
+            const frame = element.closest<HTMLElement>('.ec-card-visual, .ec-hero')
+            return {
+              gallery: gallery?.getAttribute('data-layout'),
+              body: Boolean(element.closest('.ec-body')),
+              cover: Boolean(element.closest('.ec-hero-cover')),
+              hero: Boolean(element.closest('.ec-hero')),
+              variant: card?.getAttribute('data-variant'),
+              solo: Boolean(card?.classList.contains('ec-card-secondary-solo')),
+              focal: frame?.style.objectPosition,
+              paintedFocal: getComputedStyle(element).objectPosition,
+              frameRatio: frame?.classList.contains('ec-card-visual')
+                ? getComputedStyle(frame).aspectRatio
+                : null,
+            }
+          })
+          const expectedSizes = slot.gallery
+            ? bodyImageSizes.gallery
+            : slot.body
+              ? bodyImageSizes.body
+              : slot.hero
+                ? slot.cover
+                  ? coverSizes
+                  : heroSizes
+                : slot.variant === 'lead' || slot.solo
+                  ? leadSizes
+                  : slot.variant === 'secondary'
+                    ? secondarySizes
+                    : cardSizes
+          await expect(image).toHaveAttribute('sizes', expectedSizes)
+          for (const source of await image.locator('xpath=..').locator('source').all())
+            await expect(source).toHaveAttribute('sizes', expectedSizes)
+          if (!slot.hero && slot.variant !== 'lead') {
+            await expect(image).toHaveAttribute('loading', 'lazy')
+            await expect(image).not.toHaveAttribute('fetchpriority')
+          }
+          if (slot.focal) expect(slot.paintedFocal).toBe(slot.focal)
+          if (slot.frameRatio) {
+            const ratio =
+              slot.variant === 'lead' || slot.solo
+                ? width >= 1024
+                  ? '4 / 3'
+                  : '3 / 2'
+                : slot.variant === 'secondary'
+                  ? '3 / 2'
+                  : '4 / 3'
+            expect(slot.frameRatio).toBe(ratio)
+          }
+        }
+        // Audit only: eager loading here deliberately excludes this test from transfer/CLS evidence.
+        await page.evaluate(async () => {
+          for (const image of document.images) image.loading = 'eager'
+          await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
+        })
+        const candidates = await page.locator(`${root} img:visible`).evaluateAll((images) =>
+          images.map((element) => {
+            const image = element as HTMLImageElement
+            const url = new URL(image.currentSrc)
+            return {
+              source: url.pathname + url.search,
+              slotWidth: image.getBoundingClientRect().width,
+              candidateWidth: Number(url.searchParams.get('w')),
+              originalWidth: Number(image.getAttribute('width')),
+              sizes: image.sizes,
+              dpr: window.devicePixelRatio,
+              gallery: image.closest('[data-block="gallery"]')?.getAttribute('data-layout') ?? null,
+              decoded: image.naturalWidth > 0,
+            }
+          }),
+        )
+        expect(candidates.every(({ decoded }) => decoded)).toBe(true)
+        await testInfo.attach(`media-${width}-${route.replaceAll('/', '_')}`, {
+          body: JSON.stringify(
+            {
+              route,
+              width,
+              candidates,
+              limitation:
+                'Gallery hints share the grid slot; diptych/carousel need a shared contract extension. Candidate-to-slot comparisons are advisory.',
+            },
+            null,
+            2,
+          ),
+          contentType: 'application/json',
+        })
+      }
+    },
+  )
+}
+
 test('captures the developed pages in both themes at the three review widths', async ({ page }) => {
   test.setTimeout(300_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-ec-serif': 'Fraunces',
     '--font-ec-mono': 'Martian Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.53')
+  const destination = path.resolve('docs/worklog/blog-0044.54')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
@@ -854,6 +1124,7 @@ test('captures the developed pages in both themes at the three review widths', a
       ],
       ['author', authorPath],
       ['topic', topicPath],
+      ['not-found', notFoundPath],
     ]) {
       await captureFonts.goto(route!)
       // Load lazy images before the full-page capture, then return to the cover.
@@ -906,7 +1177,7 @@ test('captures the developed pages in both themes at the three review widths', a
   }
 })
 
-test('keeps home, section and article stable on cold and warm loads without the capture gate', async ({
+test('keeps all five content page types stable on cold and warm loads without the capture gate', async ({
   page,
 }) => {
   test.setTimeout(180_000)

@@ -36,6 +36,14 @@ optional`, so an unavailable face cannot cause a late swap. Metrics alone do
 not prove zero CLS; the direction browser suite measures cold and warm loads
 without its separate screenshot font gate.
 
+Cold optional-font visits retain weight/style synthesis (`font-synthesis: weight
+style`). The shared contract currently emits one normal `local()` fallback face;
+disabling synthesis there suppresses bold and italic when that face is retained.
+This follows the b3 coordinator correction (blog-0044.63) to the original spec.
+Warm Fraunces still selects the shipped genuine italic and variable weights.
+Confirm cold/warm painted faces with CDP on the host before tightening synthesis;
+the unit check establishes the policy, not the actual painted font.
+
 For exact reproduction, retrieve the archives at the `sources.json` URLs and
 verify their `npmIntegrity`. Copy the two Martian Mono files and licences from
 their recorded `package/<packagePath>` members. For Fraunces, install the offline

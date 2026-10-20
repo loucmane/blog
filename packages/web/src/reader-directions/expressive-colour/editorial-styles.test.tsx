@@ -48,6 +48,17 @@ it('keeps heading and divider spacing from adding adjacent grid margins', () => 
 
 it('leaves ordered-list numbering to the shared renderer without per-type CSS overrides', () => {
   expect(styles).not.toMatch(/ol\[type=/)
+  expect(styles).toContain(':where(ul,ol:not([type]))')
+  expect(styles).toContain('.ec-body ol:not([type]){list-style-type:decimal}')
+})
+
+it('allows cold fallback emphasis until the contract supplies styled local fallback faces', () => {
+  const sheet = document.createElement('style')
+  sheet.textContent = styles.replaceAll('&', '.ec-test')
+  document.body.innerHTML =
+    '<div class="ec-test"><div class="ec-page"><strong>Bold</strong><em>Italic</em></div></div>'
+  document.body.append(sheet)
+  expect(getComputedStyle(document.querySelector('.ec-page')!).fontSynthesis).toBe('weight style')
 })
 
 it('publishes the browser document with all five exact list types and nested media', async () => {
