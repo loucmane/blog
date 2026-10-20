@@ -504,12 +504,13 @@ test('boxes only a checklist’s own items: a numbered list inside a task keeps 
   await page.goto(storyPath)
   const checklist = page.locator(root).locator('.si-body > [data-block="checklist"]')
   await expect(checklist).toHaveCount(1)
-  // The sample's tasks hold one paragraph; nest a numbered list in the first, as the renderer would.
+  // The sample's tasks hold one paragraph; nest a numbered list in the first exactly as the shared
+  // renderer emits it, with its inline list-style-type (a bare type hint loses to Tailwind's reset).
   const styles = await checklist.evaluate((list) => {
     const task = list.querySelector(':scope > li')!
     task.insertAdjacentHTML(
       'beforeend',
-      '<ol start="1" type="1"><li><p>Plates</p></li><li><p>Glasses</p></li></ol>',
+      '<ol start="1" type="1" style="list-style-type: decimal"><li><p>Plates</p></li><li><p>Glasses</p></li></ol>',
     )
     const read = (item: Element) => {
       const own = getComputedStyle(item)
@@ -1909,6 +1910,9 @@ for (const width of [390, 1440]) {
         }),
         name,
       ).toEqual(['solid', '2px'])
+      // The focused skip link overlays the masthead only while focused; axe would count that
+      // transient overlap as obscured targets, so audit the page at rest.
+      await skip.blur()
       // In forced colours the user's palette sets contrast, and axe pairs authored text colours
       // with forced backgrounds: contrast is checked in the normal themes, and the screenshots
       // are the evidence here.
@@ -1922,17 +1926,22 @@ for (const width of [390, 1440]) {
         contentType: 'image/png',
       })
     }
-    // A done task's box stays filled, in the system text colour.
+    // A done task's box stays filled, in the system text colour. Chromium reports the authored
+    // ink as an element's computed color under forced colours, so resolve CanvasText directly.
     await page.goto(storyPath)
-    const [fill, text] = await page
+    const [fill, canvasText] = await page
       .locator(root)
       .locator('[data-block="checklist"] > li[data-checked="true"]')
       .first()
-      .evaluate((item) => [
-        getComputedStyle(item, '::before').backgroundColor,
-        getComputedStyle(item).color,
-      ])
-    expect(fill).toBe(text)
+      .evaluate((item) => {
+        const probe = document.createElement('span')
+        probe.style.color = 'CanvasText'
+        item.append(probe)
+        const resolved = getComputedStyle(probe).color
+        probe.remove()
+        return [getComputedStyle(item, '::before').backgroundColor, resolved]
+      })
+    expect(fill).toBe(canvasText)
   })
 }
 
