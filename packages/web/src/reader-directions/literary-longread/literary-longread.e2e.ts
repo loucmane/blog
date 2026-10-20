@@ -911,10 +911,12 @@ for (const width of [390, 1440]) {
               await Promise.all(Array.from(document.images, (img) => img.decode()))
             })
             // Literary Long-read has no Theme control (its spec defines none), so the measured
-            // interactions are keyboard steps and a non-navigating click on the page heading.
+            // interactions are keyboard steps and a click on plain text (on home the h1 is a link).
             await tab.keyboard.press('Tab')
             await tab.keyboard.press('Tab')
-            await tab.locator(`${root} h1`).first().click()
+            const urlBefore = tab.url()
+            await tab.locator(`${root} main p:not(:has(a))`).first().click()
+            expect(tab.url()).toBe(urlBefore)
             await tab.waitForTimeout(500)
             const result = await tab.evaluate(() => ({
               ...(window as unknown as MeasuredWindow).llMeasurements,
