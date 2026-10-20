@@ -21,7 +21,7 @@ export const styles = `
   & .cf-masthead ul { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
   & .cf-masthead nav a { display: flex; align-items: center; min-height: 44px; min-width: 44px; padding-block: 0.5rem; font: 400 var(--cf-small)/1.6 var(--cf-mono); }
   & .cf-masthead a[aria-current] { text-decoration: underline; text-underline-offset: 0.5em; text-decoration-color: var(--cf-amber); }
-  & .cf-page .cf-label, & .cf-story-meta { font-family: var(--cf-mono); font-size: var(--cf-label); font-stretch: 100%; font-weight: 400; line-height: 1.6; color: var(--cf-amber); }
+  & .cf-page .cf-label, & .cf-story-meta { font-family: var(--cf-mono); font-size: var(--cf-label); font-style: normal; font-stretch: 100%; font-weight: 400; line-height: 1.6; color: var(--cf-amber); }
   & .cf-page .cf-label, & .cf-story-meta a { text-transform: uppercase; font-weight: 500; letter-spacing: 0.03em; }
   & .cf-story-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
   & .cf-story-meta a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
@@ -124,7 +124,8 @@ export const styles = `
   & .cf-body [data-block='editorial'][data-variant='methodology'] { border-inline: 0; }
   & .cf-body [data-block='editorial'] > :first-child { margin-top: 0; }
   & .cf-body [data-block='embed'] a { display: inline-block; min-height: 44px; padding-block: 0.5rem; }
-  & .cf-body code { font-family: var(--cf-mono); font-size: 0.9em; overflow-wrap: anywhere; }
+  & .cf-body code { font-family: var(--cf-mono); font-size: 0.9em; font-style: normal; font-weight: 400; font-stretch: 100%; overflow-wrap: anywhere; }
+  & .cf-body code :is(em, strong) { font-style: normal; font-weight: 400; font-stretch: 100%; }
   & .cf-body pre { padding: 1rem; border-block: 1px solid var(--cf-body-secondary); white-space: pre-wrap; overflow-wrap: anywhere; font: 400 1rem/1.6 var(--cf-mono); }
   & .cf-body pre code { font-size: inherit; font-weight: 400; }
   & .cf-body hr { border: 0; border-top: 1px solid var(--cf-body-accent); margin-block: 3rem; }
@@ -150,6 +151,13 @@ export const styles = `
   & .cf-empty h2 { font-size: var(--cf-collection-title); line-height: 1.05; margin-block: 1.5rem; }
   & .cf-empty > p:last-child, & .cf-section-empty p { color: var(--cf-secondary); }
   & .cf-section-empty { padding-bottom: 2rem; }
+  & .cf-failure { width: min(100% - var(--cf-gutter) * 2, 42rem); margin-left: max(var(--cf-gutter), calc((100% - var(--cf-page)) / 2)); padding-block: var(--cf-space); }
+  & .cf-failure > p { margin-top: 1.5rem; color: var(--cf-secondary); }
+  & .cf-failure-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+  & .cf-failure-actions .cf-read { margin-top: 0; }
+  & .cf-retry { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0.75rem 1rem; border: 1px solid var(--cf-ui-rule); background: var(--cf-amber); color: var(--cf-ground); font: 500 var(--cf-small)/1.6 var(--cf-mono); cursor: pointer; }
+  & .cf-retry:is(:hover, :focus-visible) { text-decoration: underline; text-underline-offset: 0.2em; }
+  & .cf-retry:focus-visible { outline-color: var(--cf-ground); box-shadow: 0 0 0 9px var(--cf-amber); }
   & .cf-footer { padding-block: 2rem 4rem; margin-top: var(--cf-space); border-top: 1px solid var(--cf-slate); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; }
   & .cf-footer p { font-weight: 800; }
   & .cf-footer a { display: inline-flex; align-items: center; gap: 2rem; min-height: 44px; font: 400 var(--cf-small)/1.8 var(--cf-mono); }
@@ -194,10 +202,12 @@ export const styles = `
   @media (forced-colors: active) {
     & { --cf-ground: Canvas; --cf-ink: CanvasText; --cf-secondary: CanvasText; --cf-amber: LinkText; --cf-slate: CanvasText; --cf-ui-rule: ButtonBorder; --cf-paper: Canvas; --cf-body-ink: CanvasText; --cf-body-secondary: CanvasText; --cf-body-accent: LinkText; }
     & .cf-page a { color: LinkText; }
+    & .cf-retry { background: ButtonFace; color: ButtonText; }
+    & .cf-retry:focus-visible { box-shadow: none; }
     & .cf-page :focus-visible { outline-color: Highlight; }
   }
   @media print {
-    & .cf-masthead nav, & .cf-skip, & .cf-footer { display: none; }
+    & .cf-masthead nav, & .cf-skip, & .cf-footer, & .cf-retry { display: none; }
     & .cf-cover-page { display: block; }
     & .cf-article-hero { display: block; }
     & .cf-article-heading { display: block; }

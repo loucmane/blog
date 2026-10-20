@@ -129,6 +129,20 @@ describe('Cinematic Feature design constraints', () => {
     expect(Buffer.byteLength(emitted)).toBeLessThanOrEqual(24 * 1024)
   })
 
+  it('keeps Mono code upright in both emphasis mark orders without disabling prose synthesis', () => {
+    expect(declarations('& .cf-body code')).toMatchObject({
+      'font-style': 'normal',
+      'font-weight': '400',
+      'font-stretch': '100%',
+    })
+    expect(declarations('& .cf-body code :is(em, strong)')).toMatchObject({
+      'font-style': 'normal',
+      'font-weight': '400',
+      'font-stretch': '100%',
+    })
+    expect(declarations('& .cf-page')['font-synthesis']).toBe('weight style')
+  })
+
   it('declares the article type scale and lets native ordered-list numbering survive resets', () => {
     expect(tokens.light).toMatchObject({
       '--cf-heading': '1.875rem',
