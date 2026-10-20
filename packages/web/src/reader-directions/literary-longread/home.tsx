@@ -1,15 +1,10 @@
 import Link from 'next/link'
 
-import { ReaderImageView } from '@/reader/components/reader-image'
-import { formatPublishedDate } from '@/reader/format'
+import { formatPublishedDate, formatReadingTime } from '@/reader/format'
 
 import type { HomeDirectionProps } from '../contract'
 import { LiteraryShell, SectionLabel } from './shell'
-
-const coverSizes =
-  '(min-width: 1376px) 39rem, (min-width: 768px) 46vw, (min-width: 500px) 92vw, calc(100vw - 2.5rem)'
-const cardSizes =
-  '(min-width: 1376px) 18rem, (min-width: 1024px) 21vw, (min-width: 600px) 44vw, (min-width: 500px) 92vw, calc(100vw - 2.5rem)'
+import { coverSizes, LiteraryFigure, LiteraryStoryCard, LiteraryStoryMeta } from './story-card'
 
 export function LiteraryHome({ view }: HomeDirectionProps) {
   const { lead } = view
@@ -33,15 +28,20 @@ export function LiteraryHome({ view }: HomeDirectionProps) {
                 <Link href={lead.href}>{lead.title}</Link>
               </h2>
               {lead.dek ? <p className="ll-cover-dek">{lead.dek}</p> : null}
+              <LiteraryStoryMeta story={lead} />
               <Link className="ll-read" href={lead.href}>
-                Read the story <span aria-hidden="true">→</span>
+                Read the story
                 <span className="ll-sr-only">: {lead.title}</span>
+                <span aria-hidden="true">→</span>
               </Link>
             </div>
             {lead.image ? (
-              <div className="ll-cover-image">
-                <ReaderImageView image={lead.image} preload sizes={coverSizes} />
-              </div>
+              <LiteraryFigure
+                className="ll-cover-image"
+                image={lead.image}
+                preload
+                sizes={coverSizes}
+              />
             ) : null}
           </section>
           {featured.length > 0 ? (
@@ -51,17 +51,8 @@ export function LiteraryHome({ view }: HomeDirectionProps) {
               </h2>
               <ul className="ll-grid">
                 {featured.map((story) => (
-                  <li className={`ll-card${story.image ? '' : ' ll-card-text'}`} key={story.slug}>
-                    {story.image ? (
-                      <div className="ll-card-image">
-                        <ReaderImageView image={story.image} sizes={cardSizes} />
-                      </div>
-                    ) : null}
-                    <SectionLabel section={story.section} />
-                    <h3 className="ll-card-title">
-                      <Link href={story.href}>{story.title}</Link>
-                    </h3>
-                    {story.dek ? <p className="ll-card-dek">{story.dek}</p> : null}
+                  <li key={story.slug}>
+                    <LiteraryStoryCard story={story} />
                   </li>
                 ))}
               </ul>
@@ -81,6 +72,8 @@ export function LiteraryHome({ view }: HomeDirectionProps) {
                       <h3 className="ll-card-title">
                         <Link href={story.href}>{story.title}</Link>
                       </h3>
+                      {story.dek ? <p className="ll-card-dek">{story.dek}</p> : null}
+                      <p className="ll-meta">{formatReadingTime(story.readingMinutes)}</p>
                     </div>
                   </li>
                 ))}

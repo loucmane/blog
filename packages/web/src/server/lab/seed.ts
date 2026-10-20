@@ -1,18 +1,25 @@
 import { normalizeSlug } from '@/server/content/domain'
 import { CURRENT_CONTENT_DOCUMENT_VERSION } from '@/server/content/document'
 import { contentErrorCode } from '@/server/content/errors'
-import type { Clock, ContentRepository, OriginalObjectStore } from '@/server/content/ports'
+import type {
+  Clock,
+  ContentRepository,
+  ContentTransaction,
+  OriginalObjectStore,
+} from '@/server/content/ports'
 import { SectionService } from '@/server/content/sections'
-import { ContentService } from '@/server/content/service'
+import { ContentService, type CreateArticleInput } from '@/server/content/service'
 
 import { renderIllustration } from './illustrations'
 import { createLabMediaIfAbsent } from './media'
 import { LabSeedLimits, type LabSeedTimeouts } from './limits'
 import {
+  labAuthors,
   labImages,
   labPreparedAt,
   labSections,
   labStories,
+  labTopics,
   type LabImage,
   type LabStory,
 } from './north-house'
@@ -24,6 +31,12 @@ export interface LabSeedTarget {
 }
 
 export interface LabSeedReport {
+  readonly authors: {
+    readonly created: readonly string[]
+    readonly existing: readonly string[]
+    /** Authors whose slug already belongs to another author; no sample story credits them. */
+    readonly slugInUse: readonly string[]
+  }
   readonly images: {
     readonly created: readonly string[]
     readonly existing: readonly string[]
@@ -36,6 +49,11 @@ export interface LabSeedReport {
     readonly existing: readonly string[]
     /** Stories whose slug already belongs to another article; they were left untouched. */
     readonly slugInUse: readonly string[]
+  }
+  readonly topics: {
+    readonly created: readonly string[]
+    /** Includes an existing tag that already had a sample topic's slug; it was reused as it is. */
+    readonly existing: readonly string[]
   }
 }
 
@@ -73,52 +91,211 @@ export function labStorySlug(story: LabStory): string {
   return normalizeSlug(story.title)
 }
 
-async function seedStory(
-  target: LabSeedTarget,
+/**
+ * Topics are `tag` terms. Like sections, a topic that already exists, under its sample ID or as a
+ * tag with its slug, is kept as it is and reused. Returns each sample slug's term ID.
+ */
+async function ensureTopics(repository: ContentRepository) {
+  return repository.transaction(async (transaction) => {
+    const terms = await transaction.listTaxonomyTerms()
+    const ids = new Map<string, string>()
+    const created: string[] = []
+    const existing: string[] = []
+    for (const topic of labTopics) {
+      const current =
+        terms.find(({ id }) => id === topic.id) ??
+        terms.find(({ kind, slug }) => kind === 'tag' && slug === topic.slug)
+      if (current) {
+        existing.push(topic.slug)
+        ids.set(topic.slug, current.id)
+        continue
+      }
+      await transaction.saveTaxonomyTerm({
+        createdAt: labPreparedAt,
+        id: topic.id,
+        kind: 'tag',
+        name: topic.name,
+        slug: topic.slug,
+        updatedAt: labPreparedAt,
+      })
+      created.push(topic.slug)
+      ids.set(topic.slug, topic.id)
+    }
+    // A new topic or author has a public page, even before any story is filed under it.
+    if (created.length > 0) transaction.recordPublicationChange()
+    return { created, existing, ids }
+  })
+}
+
+/**
+ * An author that already exists under its sample ID is kept as it is. A sample author whose slug
+ * belongs to another author is left out, so no sample story is credited to that author. Returns
+ * each sample slug's author ID, or null for one that was left out.
+ */
+async function ensureAuthors(repository: ContentRepository) {
+  return repository.transaction(async (transaction) => {
+    const authors = await transaction.listAuthors()
+    const ids = new Map<string, string | null>()
+    const created: string[] = []
+    const existing: string[] = []
+    const slugInUse: string[] = []
+    for (const author of labAuthors) {
+      if (authors.some(({ id }) => id === author.id)) {
+        existing.push(author.slug)
+        ids.set(author.slug, author.id)
+      } else if (authors.some(({ slug }) => slug === author.slug)) {
+        slugInUse.push(author.slug)
+        ids.set(author.slug, null)
+      } else {
+        await transaction.saveAuthor({
+          bio: author.bio,
+          createdAt: labPreparedAt,
+          displayName: author.name,
+          id: author.id,
+          slug: author.slug,
+          updatedAt: labPreparedAt,
+        })
+        created.push(author.slug)
+        ids.set(author.slug, author.id)
+      }
+    }
+    if (created.length > 0) transaction.recordPublicationChange()
+    return { created, existing, ids, slugInUse }
+  })
+}
+
+/** Where the seed files a story and whom it credits, as stored IDs. */
+interface StoryFiling {
+  /** The authors to credit, in byline order. */
+  readonly authorIds: readonly string[]
+  readonly sectionId: string
+  /** The topic terms, in the order the story lists them. */
+  readonly topicIds: readonly string[]
+}
+
+function storyFiling(
   story: LabStory,
-  sectionId: string,
-): Promise<'created' | 'existing' | 'slug-in-use'> {
-  const sections = new SectionService(target.repository, fixedClock(story.publishedAt))
-  const existing = await target.repository.transaction((transaction) =>
-    transaction.getArticle(story.id),
-  )
-  if (existing) {
-    return 'existing'
+  ids: {
+    readonly authors: ReadonlyMap<string, string | null>
+    readonly sections: ReadonlyMap<string, string>
+    readonly topics: ReadonlyMap<string, string>
+  },
+): StoryFiling {
+  const sectionId = ids.sections.get(story.section)
+  if (!sectionId) throw new Error(`Lab story ${story.id} names an unknown section.`)
+  const authorIds = story.authors.map((slug) => {
+    const id = ids.authors.get(slug)
+    if (id === undefined) throw new Error(`Lab story ${story.id} credits an unknown author.`)
+    return id
+  })
+  const topicIds = story.topics.map((slug) => {
+    const id = ids.topics.get(slug)
+    if (!id) throw new Error(`Lab story ${story.id} names an unknown topic.`)
+    return id
+  })
+  return {
+    authorIds: authorIds.filter((id) => id !== null),
+    sectionId,
+    topicIds: [...new Set(topicIds)],
   }
-  const content = new ContentService(target.repository, fixedClock(story.publishedAt))
-  let created: Awaited<ReturnType<ContentService['createArticle']>>
-  try {
-    created = await content.createArticle({
-      dek: story.dek,
-      document: {
-        articleId: story.id,
-        document: { content: story.blocks, type: 'doc' },
-        migrationProvenance: [],
-        schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
-        title: story.title,
-      },
-      id: story.id,
-      idempotencyKey: `lab-seed:create:${story.id}`,
-      slug: labStorySlug(story),
+}
+
+/** The seed's first draft of a story, created under the seed's own idempotency key. */
+function labStoryDraft(story: LabStory): CreateArticleInput {
+  return {
+    dek: story.dek,
+    document: {
+      articleId: story.id,
+      document: { content: story.blocks, type: 'doc' },
+      migrationProvenance: [],
+      schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
       title: story.title,
+    },
+    id: story.id,
+    idempotencyKey: `lab-seed:create:${story.id}`,
+    slug: labStorySlug(story),
+    title: story.title,
+  }
+}
+
+/**
+ * A repository whose transactions all join one that is already open, so everything the content
+ * services write there commits, or rolls back, together.
+ */
+function joinTransaction(transaction: ContentTransaction): ContentRepository {
+  const unavailable = () => Promise.reject(new Error('Only a transaction can join an open one.'))
+  return {
+    readPublicationVersion: unavailable,
+    transaction: (work) => work(transaction),
+    tryExclusive: unavailable,
+  }
+}
+
+/** Credits a story the seed has just created and files it under its topics, after its section. */
+async function creditAndFileStory(
+  transaction: ContentTransaction,
+  articleId: string,
+  filing: StoryFiling,
+): Promise<void> {
+  // Hold the article row, as replacing a byline requires.
+  await transaction.getArticleForUpdate(articleId)
+  if (filing.authorIds.length > 0) {
+    await transaction.setArticleAuthors(articleId, filing.authorIds)
+  }
+  const links = (await transaction.listArticleTaxonomies()).filter(
+    (link) => link.articleId === articleId,
+  )
+  let position = Math.max(-1, ...links.map((link) => link.position))
+  for (const taxonomyId of filing.topicIds) {
+    if (links.some((link) => link.taxonomyId === taxonomyId)) continue
+    position += 1
+    await transaction.saveArticleTaxonomy({ articleId, position, taxonomyId })
+  }
+}
+
+/**
+ * Creates, files, credits and publishes a story in one transaction, so a run that fails at any
+ * step leaves nothing of it behind. An article that already exists is left exactly as it is,
+ * whatever its state. That includes a draft left unfinished by an older seed, which committed each
+ * step on its own: nothing tells such a draft apart from one the owner has changed since.
+ */
+async function seedStory(
+  repository: ContentRepository,
+  story: LabStory,
+  filing: StoryFiling,
+): Promise<'created' | 'existing' | 'slug-in-use'> {
+  try {
+    return await repository.transaction(async (transaction) => {
+      if (await transaction.getArticle(story.id)) return 'existing'
+      const joined = joinTransaction(transaction)
+      const clock = fixedClock(story.publishedAt)
+      const content = new ContentService(joined, clock)
+      const created = await content.createArticle(labStoryDraft(story))
+      await new SectionService(joined, clock).assignSection({
+        articleId: story.id,
+        sectionId: filing.sectionId,
+      })
+      await creditAndFileStory(transaction, story.id, filing)
+      await content.publish({
+        articleId: story.id,
+        expectedVersion: created.article.version,
+        idempotencyKey: `lab-seed:publish:${story.id}`,
+        revisionId: created.revision.id,
+      })
+      return 'created'
     })
   } catch (error) {
+    // Only creation can collide, and the whole transaction has rolled back.
     if (contentErrorCode(error) === 'duplicate_slug') return 'slug-in-use'
     throw error
   }
-  await sections.assignSection({ articleId: story.id, sectionId })
-  await content.publish({
-    articleId: story.id,
-    expectedVersion: created.article.version,
-    idempotencyKey: `lab-seed:publish:${story.id}`,
-    revisionId: created.revision.id,
-  })
-  return 'created'
 }
 
 /**
  * Seeds the North House sample magazine through the content services. It is idempotent: sections,
- * images, and stories that already exist are kept as they are, including any owner edits.
+ * topics, authors, images, and stories that already exist are kept as they are, including any
+ * owner edits. Each story is created, filed, credited and published in one transaction, so a failed
+ * run leaves no half-made story.
  */
 export async function seedLabContent(
   target: LabSeedTarget,
@@ -146,6 +323,10 @@ async function seedLockedContent(
     limits.check()
     sectionIds.set(section.slug, (await sections.ensureSection(section)).id)
   }
+  limits.check()
+  const topics = await ensureTopics(target.repository)
+  limits.check()
+  const authors = await ensureAuthors(target.repository)
 
   const images = { created: [] as string[], existing: [] as string[] }
   if (target.objects) {
@@ -166,9 +347,12 @@ async function seedLockedContent(
   const stories = { created: [] as string[], existing: [] as string[], slugInUse: [] as string[] }
   for (const story of labStories) {
     limits.check()
-    const sectionId = sectionIds.get(story.section)
-    if (!sectionId) throw new Error(`Lab story ${story.id} names an unknown section.`)
-    const outcome = await seedStory(target, story, sectionId)
+    const filing = storyFiling(story, {
+      authors: authors.ids,
+      sections: sectionIds,
+      topics: topics.ids,
+    })
+    const outcome = await seedStory(target.repository, story, filing)
     const slug = labStorySlug(story)
     if (outcome === 'created') stories.created.push(slug)
     else if (outcome === 'existing') stories.existing.push(slug)
@@ -177,11 +361,17 @@ async function seedLockedContent(
 
   limits.check()
   return {
+    authors: {
+      created: authors.created,
+      existing: authors.existing,
+      slugInUse: authors.slugInUse,
+    },
     images: {
       ...images,
       skipped: target.objects ? null : 'Media storage is not configured, so no images were stored.',
     },
     sections: labSections.map(({ slug }) => slug),
     stories,
+    topics: { created: topics.created, existing: topics.existing },
   }
 }

@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { Client, Pool } from 'pg'
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 
+import { labStories } from '../lab/north-house'
 import { seedLabContent } from '../lab/seed'
 import { applyContentMigrations, readContentMigrations } from './migrations'
 import { PostgresContentRepository } from './postgres-content-repository'
@@ -111,7 +112,9 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
         blocker.release()
       }
       await assertEmpty()
-      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(8)
+      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(
+        labStories.length,
+      )
     })
 
     it('cancels a slow statement through statement_timeout and rolls back before releasing the lock', async () => {
@@ -136,7 +139,9 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
       await assertLockAvailable()
       await assertEmpty()
       await independent.query('DROP TRIGGER delay_seed_insert ON taxonomies')
-      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(8)
+      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(
+        labStories.length,
+      )
     })
 
     it('expires the run while publication bookkeeping is blocked and rolls back on disconnect', async () => {
@@ -168,7 +173,9 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
         blocker.release()
       }
       await assertEmpty()
-      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(8)
+      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(
+        labStories.length,
+      )
     })
 
     it('rolls back real publication bookkeeping if the deadline has passed before COMMIT', async () => {
@@ -205,7 +212,9 @@ export function labSeedDatabaseIntegrationTests({ databaseUrl }: { databaseUrl: 
       probe = () => {}
       await assertEmpty()
       await assertLockAvailable()
-      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(8)
+      expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(
+        labStories.length,
+      )
       await assertSeedConnectionClosed()
     })
 
