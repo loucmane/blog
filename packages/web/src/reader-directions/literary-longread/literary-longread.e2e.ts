@@ -57,7 +57,7 @@ test('has no overflow at every required width and operable touch-sized navigatio
   page,
 }) => {
   test.setTimeout(120_000)
-  for (const width of [360, 390, 768, 1024, 1280, 1440]) {
+  for (const width of [320, 390, 767, 768, 1023, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     for (const path of ['/', storyPath, sectionPath]) {
       await page.goto(path)
@@ -144,7 +144,7 @@ test('uses visible keyboard focus and a warm dark reading ground', async ({ page
   ).toBe('rgb(27, 25, 23)')
 })
 
-for (const width of [390, 1440]) {
+for (const width of [390, 768, 1440]) {
   for (const theme of ['light', 'dark']) {
     test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
       test.setTimeout(120_000)
@@ -168,6 +168,80 @@ for (const width of [390, 1440]) {
     })
   }
 }
+
+test('uses the b1 cover, card and index geometry across both layout transitions', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  for (const width of [320, 390, 767, 768, 1023, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    const desktop = width >= 1024
+    const tablet = width >= 768
+    const gutter = desktop ? 48 : tablet ? 24 : 20
+    const contentWidth = Math.min(width - gutter * 2, 1248)
+    await page.goto('/')
+    const main = await page.locator('#ll-main').boundingBox()
+    expect(main!.width).toBeCloseTo(contentWidth, 0)
+    expect(main!.x).toBeCloseTo((width - contentWidth) / 2, 0)
+    await expect(page.locator('.ll-cover-title')).toHaveCSS(
+      'font-size',
+      desktop ? '56px' : tablet ? '40px' : '38px',
+    )
+    await expect(page.locator('.ll-cover-title')).toHaveCSS('text-transform', 'none')
+    await expect(page.locator('.ll-wordmark')).toHaveCSS(
+      'font-size',
+      desktop ? '44px' : tablet ? '36px' : '28px',
+    )
+    const cards = await page.locator('.ll-grid').evaluate((element) => {
+      const style = getComputedStyle(element)
+      return { columns: style.gridTemplateColumns.split(' ').length, gap: style.gap }
+    })
+    expect(cards).toEqual({ columns: tablet ? 2 : 1, gap: tablet ? '24px' : '40px' })
+    const panel = await page.locator('.ll-cover-panel').boundingBox()
+    const frame = await page.locator('.ll-cover-image .ll-image-frame').boundingBox()
+    expect(frame!.width).toBeCloseTo(tablet ? contentWidth / 2 : contentWidth, 0)
+    if (tablet) {
+      expect(frame!.y).toBeCloseTo(panel!.y, 0)
+      expect(frame!.height).toBeGreaterThanOrEqual(frame!.width * 1.25 - 1)
+    } else {
+      expect(frame!.y).toBeCloseTo(panel!.y + panel!.height, 0)
+      expect(frame!.height).toBeCloseTo(frame!.width * 0.75, 0)
+    }
+    const caption = page.locator('.ll-cover-image figcaption')
+    if (await caption.count()) {
+      expect((await caption.boundingBox())!.y).toBeGreaterThanOrEqual(frame!.y + frame!.height)
+      await expect(caption).toHaveCSS('font-size', '14px')
+    }
+    for (const cardFrame of await page.locator('.ll-card-image .ll-image-frame').all()) {
+      const box = (await cardFrame.boundingBox())!
+      expect(box.height).toBeCloseTo(box.width * 0.75, 0)
+    }
+    await page.goto(sectionPath)
+    await expect(page.locator('.ll-section-header h1')).toHaveCSS(
+      'font-size',
+      desktop ? '72px' : tablet ? '56px' : '42px',
+    )
+    for (const row of await page.locator('.ll-index-row').all()) {
+      const rowBox = (await row.boundingBox())!
+      const copy = (await row.locator('.ll-index-copy').boundingBox())!
+      const date = (await row.locator('.ll-date').boundingBox())!
+      const thumbnail = row.locator('.ll-index-image .ll-image-frame')
+      if (await thumbnail.count()) {
+        const box = (await thumbnail.boundingBox())!
+        expect(box.width).toBeCloseTo(desktop ? 160 : tablet ? 96 : 80, 0)
+        expect(box.height).toBeCloseTo(box.width * 0.75, 0)
+      } else {
+        expect(copy.x + copy.width).toBeCloseTo(rowBox.x + rowBox.width, 0)
+      }
+      if (desktop) {
+        expect(copy.x - date.x).toBeCloseTo(152, 0)
+      } else {
+        expect(copy.x).toBeCloseTo(date.x, 0)
+        expect(copy.y).toBeGreaterThanOrEqual(date.y + date.height)
+      }
+    }
+  }
+})
 
 test('uses a 65-character reading measure and genuine italic text, with reduced motion respected', async ({
   page,

@@ -1,12 +1,10 @@
 import Link from 'next/link'
 
-import { ReaderImageView } from '@/reader/components/reader-image'
-import { formatPublishedDate } from '@/reader/format'
+import { formatPublishedDate, formatReadingTime } from '@/reader/format'
 
 import type { SectionDirectionProps } from '../contract'
 import { LiteraryShell } from './shell'
-
-const thumbnailSizes = '(min-width: 768px) 10rem, 5rem'
+import { LiteraryFigure, thumbnailSizes } from './story-card'
 
 export function LiterarySection({ view }: SectionDirectionProps) {
   const firstImage = view.stories[0]?.image
@@ -32,22 +30,25 @@ export function LiterarySection({ view }: SectionDirectionProps) {
                 <h2>
                   <Link href={story.href}>{story.title}</Link>
                 </h2>
-                {story.dek ? <p>{story.dek}</p> : null}
+                {story.dek ? <p className="ll-card-dek">{story.dek}</p> : null}
+                <p className="ll-meta">{formatReadingTime(story.readingMinutes)}</p>
               </div>
               {story.image ? (
-                <div className="ll-index-image">
-                  <ReaderImageView
-                    image={story.image}
-                    preload={index === 0}
-                    sizes={thumbnailSizes}
-                  />
-                </div>
+                <LiteraryFigure
+                  className="ll-index-image"
+                  image={story.image}
+                  preload={index === 0}
+                  sizes={thumbnailSizes}
+                />
               ) : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="ll-section-empty">No stories have been published in this section yet.</p>
+        <div className="ll-section-empty">
+          <p>No stories have been published in this section yet.</p>
+          <Link href="/">All stories</Link>
+        </div>
       )}
     </LiteraryShell>
   )
