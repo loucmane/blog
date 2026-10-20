@@ -90,6 +90,23 @@ interface StoryMutation {
   readonly revision: { readonly id: string }
 }
 
+test('keeps baseline viewport scrolling smooth unless the reader requests reduced motion', async ({
+  page,
+  request,
+}) => {
+  await seedReaderLab(request)
+  for (const path of readerPages) {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.goto(path)
+    await expect(page.locator('[data-reader-direction="baseline"]')).toBeVisible()
+    await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth')
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto')
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth')
+  }
+})
+
 test('renders home, article, and section pages with landmarks and no axe violations at 390 and 1440 pixels', async ({
   page,
   request,

@@ -893,11 +893,10 @@ test('keeps the section index and the site index at 13 pixels on phones', async 
 test('walks the keyboard from the skip link through the masthead to the footer and back to top', async ({
   page,
 }) => {
-  // The global smooth scroll (globals.css) can stall mid-way under load; this test checks the
-  // keyboard path, not the animation, so reduced motion makes Back to top instant.
-  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(sectionPath)
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto')
   const swiss = page.locator(root)
   const theme = swiss.getByRole('button', { name: 'Choose color theme' })
   await expect(theme).toBeEnabled()
@@ -923,17 +922,10 @@ test('walks the keyboard from the skip link through the masthead to the footer a
   )
   const top = swiss.getByRole('contentinfo').getByRole('link', { name: 'Back to top' })
   await tabTo(page, top, 60)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#si-top$/)
-  await expect
-    // Smooth scrolling (globals.css) up a long page can take several seconds under load.
-    .poll(
-      () => page.evaluate(() => document.getElementById('si-top')!.getBoundingClientRect().top),
-      {
-        timeout: 15_000,
-      },
-    )
-    .toBeGreaterThanOrEqual(0)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   await page.goto(sectionPath)
   await tabTo(page, skip, 12)
   await page.keyboard.press('Enter')
