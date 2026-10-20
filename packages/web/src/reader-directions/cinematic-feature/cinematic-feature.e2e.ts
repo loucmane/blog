@@ -16,6 +16,8 @@ const authorPath = `/authors/${labAuthors[0]!.slug}`
 const topicPath = `/topics/${labTopics[0]!.slug}`
 const pagePaths = ['/', storyPath, sectionPath, authorPath, topicPath]
 const missingPath = '/stories/cinematic-b3-missing-story'
+// Collections whose newest story has no picture: the first grid row reaches the first view.
+const textFirstPaths = ['/sections/craft', '/topics/furniture']
 const root = '[data-reader-direction="cinematic-feature"]'
 const listStyles = {
   '1': 'decimal',
@@ -744,7 +746,13 @@ test('keeps recovery layout and keyboard navigation visible in normal and forced
       await expect(home).toHaveCSS('outline-width', '3px')
       await expect(home).toHaveCSS('outline-offset', '3px')
       expect((await home.boundingBox())!.height).toBeGreaterThanOrEqual(44)
-      let axe = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      let axe = new AxeBuilder({ page }).withTags([
+        'wcag2a',
+        'wcag2aa',
+        'wcag21a',
+        'wcag21aa',
+        'wcag22aa',
+      ])
       // axe cannot pair forced text/background colours accurately.
       if (forcedColors === 'active') axe = axe.disableRules(['color-contrast'])
       expect((await axe.analyze()).violations).toEqual([])
@@ -1015,7 +1023,7 @@ test('records all-page cold/warm paints and initial images with stable titles, w
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
       for (const theme of ['light', 'dark']) {
         await page.evaluate((theme) => localStorage.setItem('theme', theme), theme)
-        for (const route of pagePaths) {
+        for (const route of [...pagePaths, ...textFirstPaths]) {
           await cdp.send('Network.clearBrowserCache')
           for (const visit of ['cold', 'warm']) {
             await page.goto(route)
@@ -1053,13 +1061,18 @@ test('records all-page cold/warm paints and initial images with stable titles, w
               0.05,
             )
             expect(observed.shifts.title, `${route} ${width} ${theme} ${visit} title shift`).toBe(0)
-            // PR 110 supplies eager at normal priority. Preserve this inventory
-            // for the coordinator's pending wiring; do not claim it passed here.
-            if (images.some(({ loading }) => loading === 'lazy')) {
-              testInfo.annotations.push({
-                type: 'eager-handoff',
-                description: `${route} ${width} ${theme} ${visit}: initial-viewport lazy image; see blog-0044.51 worklog`,
-              })
+            // No picture in the first view waits for lazy loading.
+            expect(
+              images.filter(({ loading }) => loading === 'lazy'),
+              `${route} ${width} ${theme} ${visit}: lazy pictures in the first view`,
+            ).toEqual([])
+            if (textFirstPaths.includes(route)) {
+              // The route must still open with an image-free feature, or it tests nothing.
+              await expect(page.locator(`${root} .cf-collection > li:first-child`)).toHaveClass(
+                /cf-card-text/,
+              )
+              await expect(page.locator('link[rel="preload"][as="image"][href]')).toHaveCount(0)
+              expect(images.filter(({ priority }) => priority === 'high')).toEqual([])
             }
           }
         }

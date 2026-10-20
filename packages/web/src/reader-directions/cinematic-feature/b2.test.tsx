@@ -225,8 +225,13 @@ describe('Cinematic Feature b2 supplied views', () => {
       />,
     )
     expect(document.querySelector('link[as="image"]')).toBeNull()
-    for (const image of document.querySelectorAll('main img'))
-      expect(image).toHaveAttribute('loading', 'lazy')
+    for (const image of document.querySelectorAll('main img')) {
+      // After a text-only feature, the first grid row (cards 2 and 3) loads at once, unpromoted.
+      const firstRow =
+        image.closest('.cf-collection > li:is(:nth-child(2), :nth-child(3))') !== null
+      expect(image.getAttribute('loading')).toBe(firstRow ? null : 'lazy')
+      expect(image.hasAttribute('fetchpriority')).toBe(false)
+    }
   })
 
   it('retains all heading levels, ordered-list types, nested galleries and combined emphasis', () => {

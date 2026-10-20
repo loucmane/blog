@@ -155,3 +155,67 @@ describe('Cinematic b3 lead and fallback media', () => {
     expect(container.querySelector('.cf-card-text')).toHaveTextContent(story.title)
   })
 })
+
+describe('Cinematic b3 first-view loading after a text-only feature', () => {
+  it('loads the first grid row at once without promoting it, and keeps later cards lazy', () => {
+    const stories: StoryCard[] = [
+      { ...story, slug: 'text', href: '/stories/text', image: null },
+      ...[1, 2, 3, 4].map((n) => ({
+        ...story,
+        slug: `card-${n}`,
+        href: `/stories/card-${n}` as const,
+      })),
+    ]
+    const common = { name: 'Collection', slug: 'collection', stories, navigation: { sections: [] } }
+    for (const element of [
+      <direction.Section
+        key="section"
+        view={{ ...common, href: '/sections/collection', description: null }}
+      />,
+      <direction.Author
+        key="author"
+        view={{ ...common, href: '/authors/collection', bio: null }}
+      />,
+      <direction.Topic
+        key="topic"
+        view={{ ...common, href: '/topics/collection', description: null }}
+      />,
+    ]) {
+      const container = document.createElement('div')
+      container.innerHTML = renderToStaticMarkup(element)
+      expect(container.querySelectorAll('link[as="image"][href], img[fetchpriority]')).toHaveLength(
+        0,
+      )
+      const cards = [...container.querySelectorAll('.cf-collection > li')]
+      expect(cards).toHaveLength(stories.length)
+      cards.slice(1).forEach((card, index) => {
+        const loading = card.querySelector('img')!.getAttribute('loading')
+        expect(loading, `card ${index + 2}`).toBe(index < 2 ? null : 'lazy')
+      })
+    }
+  })
+
+  it('keeps every later card lazy when the feature has a picture', () => {
+    const stories: StoryCard[] = [1, 2, 3].map((n) => ({
+      ...story,
+      slug: `card-${n}`,
+      href: `/stories/card-${n}` as const,
+    }))
+    const container = document.createElement('div')
+    container.innerHTML = renderToStaticMarkup(
+      <direction.Section
+        view={{
+          name: 'Collection',
+          slug: 'collection',
+          stories,
+          navigation: { sections: [] },
+          href: '/sections/collection',
+          description: null,
+        }}
+      />,
+    )
+    const later = [...container.querySelectorAll('.cf-collection > li:not(:first-child) img')]
+    expect(later.length).toBeGreaterThan(0)
+    for (const image of later) expect(image).toHaveAttribute('loading', 'lazy')
+  })
+})

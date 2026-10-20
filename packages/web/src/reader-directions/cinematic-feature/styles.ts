@@ -207,7 +207,7 @@ export const styles = `
     & .cf-page :focus-visible { outline-color: Highlight; }
   }
   @media print {
-    & .cf-masthead nav, & .cf-skip, & .cf-footer { display: none; }
+    & .cf-masthead nav, & .cf-skip, & .cf-footer, & .cf-retry { display: none; }
     & .cf-cover-page { display: block; }
     & .cf-article-hero { display: block; }
     & .cf-article-heading { display: block; }

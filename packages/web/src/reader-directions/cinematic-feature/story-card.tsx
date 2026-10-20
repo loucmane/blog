@@ -29,12 +29,15 @@ export function StoryMeta({
 export function CinematicStoryCard({
   story,
   preload = false,
+  eager = false,
   feature = false,
   headingLevel = 2,
   sizes,
 }: {
   readonly story: StoryCard
   readonly preload?: boolean
+  /** Loads at once at normal priority: a card that reaches the first view. */
+  readonly eager?: boolean
   readonly feature?: boolean
   readonly headingLevel?: 2 | 3
   readonly sizes?: string
@@ -53,6 +56,7 @@ export function CinematicStoryCard({
             image={story.image}
             sizes={sizes ?? (feature ? featureSizes : cardSizes)}
             preload={preload}
+            eager={eager}
           />
         </div>
       ) : null}

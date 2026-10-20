@@ -25,6 +25,8 @@ export function CinematicSection({ view }: SectionDirectionProps) {
               story={story}
               feature={index === 0}
               preload={index === 0}
+              // After a text-only feature, the first grid row reaches the first view.
+              eager={!view.stories[0]?.image && (index === 1 || index === 2)}
             />
           ))}
         </ul>
