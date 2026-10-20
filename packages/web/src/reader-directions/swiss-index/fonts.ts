@@ -1,7 +1,8 @@
 import type { ReaderDirectionFont } from '../contract'
 
 // Fontsource 5.3.0 Latin subsets; full provenance and licences accompany the public assets.
-// Reproduce the installed Next table's fallback metrics with font-metrics.mjs.
+// Schibsted Grotesk's genuine 400 and 700 italics share the family's fallback. Reproduce the
+// installed Next table's fallback metrics with font-metrics.mjs.
 export const fonts = [
   {
     fallback: {
@@ -16,6 +17,8 @@ export const fonts = [
       { file: 'schibsted-grotesk-latin-400-normal.woff2', weight: 400 },
       { file: 'schibsted-grotesk-latin-700-normal.woff2', weight: 700 },
       { file: 'schibsted-grotesk-latin-800-normal.woff2', weight: 800 },
+      { file: 'schibsted-grotesk-latin-400-italic.woff2', weight: 400, style: 'italic' },
+      { file: 'schibsted-grotesk-latin-700-italic.woff2', weight: 700, style: 'italic' },
     ],
     variable: '--font-si-sans',
   },

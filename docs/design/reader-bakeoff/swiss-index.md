@@ -319,12 +319,13 @@ Budgets, proposed here; b3 records the first measurements and turns the determin
 | CLS, cold and warm loads        | under 0.01 | under 0.01      | layout-shift observer as in `reader-directions/cinematic-feature/cinematic-feature.e2e.ts:279-325`, and Lighthouse  |
 | Shift of the wordmark or `h1`   | 0          | 0               | the same observer, by element                                                                                       |
 | INP                             | ≤ 200 ms   | ≤ 200 ms        | DevTools trace at 4x CPU slowdown (open Theme, follow a link); TBT ≤ 200 ms as a proxy                              |
-| Font bytes                      | ≤ 105,000  | ≤ 130,000       | five normal faces are 104,192 (`swiss-index/fonts.test.ts:108`); one italic on a typical story, ≤ 155,000 with both |
+| Font bytes                      | ≤ 105,000  | ≤ 130,000       | five normal faces are 104,192 (`swiss-index/fonts.test.ts:197`); one italic on a typical story, ≤ 157,000 with both |
 | Lead image                      | ≤ 150 kB   | ≤ 150 kB        | transfer size of the chosen candidate                                                                               |
 | Images loaded without scrolling | ≤ 400 kB   | ≤ 300 kB        | 390 by 844px, lazy images included                                                                                  |
 | Story HTML                      | none       | under 150,000 B | the existing check, repeated with the Swiss cookie                                                                  |
 | Direction CSS                   | ≤ 20,000 B | ≤ 20,000 B      | the `styles` and `tokens` strings, uncompressed                                                                     |
 
+- **Italic font budget:** raised from 155,000 to 157,000 B on 2026-10-20 by operator decision. The genuine 400 and 700 italics bring the seven faces to 156,080 B; an italic file loads only on a page that uses it.
 - **Lead element:** home, plate 01's image (or its title); article, the hero (or the `h1`); section and topic, plate 01's image (or the `h1`); author, the `h1`. The preload follows (section 6).
 - **Fonts, cold:** faces use `font-display: optional` without preloads (`reader-directions/contract.ts:451`, `reader-directions/README.md:85-88`). A face that is not ready within the short block period is skipped for that page view: the metric-adjusted fallback stays, nothing swaps or shifts, and the file is cached for the next view. A first cold page often shows the fallback; that is accepted.
 - **Fonts, warm:** cached faces render at once. Italic files load only on pages with italic text. Nothing is preloaded, and this spec asks for no contract change.

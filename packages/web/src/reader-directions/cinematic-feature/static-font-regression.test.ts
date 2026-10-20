@@ -24,7 +24,7 @@ it.each([
   {
     direction: swissIndexDirection,
     id: 'swiss-index',
-    sha256: '38ff6d85f3bd6bc91d1b7ae4d499e9b11cf5baa529baa17e6681b30de317f8d1',
+    sha256: '4afd4215fb36d036a955645786d31b5f857a4a385b4012bfb98731460d10614a',
   },
 ])('keeps $id font output byte-for-byte compatible', ({ direction, sha256 }) => {
   expect(createHash('sha256').update(readerDirectionFontCss(direction)!).digest('hex')).toBe(sha256)
