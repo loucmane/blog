@@ -1,3 +1,4 @@
+import { statSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -946,6 +947,109 @@ test('uses a 65-character reading measure with reduced motion respected', async 
   expect(await body.evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
 })
 
+test('requests only the faces each page uses, within the font budgets', async ({ page }) => {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Network.enable')
+  await cdp.send('Network.setCacheDisabled', { cacheDisabled: true })
+  let requested = new Set<string>()
+  page.on('request', (request) => {
+    if (request.resourceType() === 'font')
+      requested.add(path.basename(new URL(request.url()).pathname))
+  })
+  const folder = path.resolve('packages/web/public/reader-directions/swiss-index/fonts')
+  const upright = [
+    'ibm-plex-mono-latin-400-normal.woff2',
+    'ibm-plex-mono-latin-500-normal.woff2',
+    'schibsted-grotesk-latin-400-normal.woff2',
+    'schibsted-grotesk-latin-700-normal.woff2',
+    'schibsted-grotesk-latin-800-normal.woff2',
+  ]
+  // Spec section 10. Only emphasis in story text is italic, and the sample has no bold emphasis:
+  // the story adds the 400 italic, and no page requests the 700 italic.
+  for (const [route, italics, budget] of [
+    ['/', [], 105_000],
+    [storyPath, ['schibsted-grotesk-latin-400-italic.woff2'], 130_000],
+    [sectionPath, [], 105_000],
+  ] as const) {
+    requested = new Set()
+    await page.goto(route)
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+    const expected = [...upright, ...italics].sort()
+    expect([...requested].sort(), route).toEqual(expected)
+    const bytes = expected.reduce(
+      (total, file) => total + statSync(path.join(folder, file)).size,
+      0,
+    )
+    expect(bytes, route).toBeLessThanOrEqual(budget)
+  }
+})
+
+test('sets emphasis in the genuine 400 and 700 italics', async ({ page }) => {
+  // This controls first layout to inspect faces; it is not cold-load evidence.
+  const captureFonts = await prepareFontCapture(page, root, {
+    '--font-si-sans': 'Schibsted Grotesk',
+    '--font-si-mono': 'IBM Plex Mono',
+  })
+  await captureFonts.goto(storyPath)
+  // The sample's emphasis is all in body text; probes add it to bold text, headings and quotes.
+  await page.locator('.si-body').evaluate((body) => {
+    const emphasis = () => {
+      const element = document.createElement('em')
+      element.textContent = 'genuine italic emphasis'
+      return element
+    }
+    const paragraph = document.createElement('p')
+    paragraph.dataset.probe = 'strong'
+    const strong = document.createElement('strong')
+    strong.append('Bold text with ', emphasis())
+    paragraph.append(strong)
+    const heading = document.createElement('h2')
+    heading.dataset.probe = 'heading'
+    heading.append('A heading with ', emphasis())
+    // The renderer's pull quote: figure, blockquote, paragraph.
+    const quote = document.createElement('figure')
+    quote.dataset.block = 'pull-quote'
+    quote.dataset.probe = 'pull-quote'
+    const blockquote = document.createElement('blockquote')
+    const line = document.createElement('p')
+    line.append('A quote with ', emphasis())
+    blockquote.append(line)
+    quote.append(blockquote)
+    body.append(paragraph, heading, quote)
+  })
+  await captureFonts.assertFonts()
+  const cdp = await page.context().newCDPSession(page)
+  try {
+    await cdp.send('DOM.enable')
+    await cdp.send('CSS.enable')
+    const { root: documentNode } = await cdp.send('DOM.getDocument')
+    for (const [selector, face] of [
+      ['.si-body > p:not([data-probe]) em', 'SchibstedGrotesk-Italic'],
+      ['[data-probe="strong"] em', 'SchibstedGrotesk-BoldItalic'],
+      ['[data-probe="heading"] em', 'SchibstedGrotesk-BoldItalic'],
+      ['[data-probe="pull-quote"] em', 'SchibstedGrotesk-BoldItalic'],
+    ] as const) {
+      await expect(page.locator(`${root} ${selector}`).first()).toHaveCSS('font-style', 'italic')
+      const { nodeId } = await cdp.send('DOM.querySelector', {
+        nodeId: documentNode.nodeId,
+        selector: `${root} ${selector}`,
+      })
+      const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId })
+      // The PostScript name tells a genuine italic from a slanted upright face of the family.
+      expect(
+        fonts
+          .filter((font) => font.glyphCount > 0)
+          .map((font) => [font.postScriptName, font.isCustomFont]),
+        selector,
+      ).toEqual([[face, true]])
+    }
+  } finally {
+    await cdp.detach()
+  }
+})
+
 test('removes Swiss Index font declarations when the owner switches back to baseline', async ({
   page,
 }) => {
@@ -993,7 +1097,7 @@ test('captures the article, author and topic pages at 390, 768 and 1440 pixels i
     '--font-si-sans': 'Schibsted Grotesk',
     '--font-si-mono': 'IBM Plex Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.47')
+  const destination = path.resolve('docs/worklog/blog-0044.60')
   await mkdir(destination, { recursive: true })
   for (const theme of ['light', 'dark']) {
     for (const [width, height] of [

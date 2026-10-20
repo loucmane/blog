@@ -33,6 +33,28 @@
     "sha256": "46876fbd58d448ffabbffca1598e18cf25546e57d9b5e4b95ac576f935465292"
   },
   {
+    "file": "schibsted-grotesk-latin-400-italic.woff2",
+    "package": "@fontsource/schibsted-grotesk",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-9k+Fd2eg7umKxI2JV2HtDcOkXEM0iJx0u4Iu1b+QHikVU8Sl/MtozJ/mtZfsltR6xnVGSQjpcxXQeJPW0KGpIA==",
+    "packagePath": "files/schibsted-grotesk-latin-400-italic.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/schibsted-grotesk/-/schibsted-grotesk-5.3.0.tgz",
+    "upstream": "https://github.com/schibsted/schibsted-grotesk",
+    "bytes": 25536,
+    "sha256": "b10306edd100a0706ea6060350f5a077a2e747bad1f46ec6605159719ba4a082"
+  },
+  {
+    "file": "schibsted-grotesk-latin-700-italic.woff2",
+    "package": "@fontsource/schibsted-grotesk",
+    "version": "5.3.0",
+    "npmIntegrity": "sha512-9k+Fd2eg7umKxI2JV2HtDcOkXEM0iJx0u4Iu1b+QHikVU8Sl/MtozJ/mtZfsltR6xnVGSQjpcxXQeJPW0KGpIA==",
+    "packagePath": "files/schibsted-grotesk-latin-700-italic.woff2",
+    "url": "https://registry.npmjs.org/@fontsource/schibsted-grotesk/-/schibsted-grotesk-5.3.0.tgz",
+    "upstream": "https://github.com/schibsted/schibsted-grotesk",
+    "bytes": 26352,
+    "sha256": "0cf55d899de73b4872bec42cf44565eeeda5a1fb24393e1d0c8b31fe363753e1"
+  },
+  {
     "file": "Schibsted-Grotesk-OFL.txt",
     "package": "@fontsource/schibsted-grotesk",
     "version": "5.3.0",
