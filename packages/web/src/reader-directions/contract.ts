@@ -593,7 +593,10 @@ function boldFallbackWeight(sources: ReaderDirectionFont['sources']): number | n
  */
 function fallbackFaceCss(font: ReaderDirectionFont, family: string): string {
   const { fallback } = font
-  const known = knownFallbackFaces[fallback.family]
+  // Own keys only: a validated name such as "constructor" must not reach Object.prototype.
+  const known = Object.hasOwn(knownFallbackFaces, fallback.family)
+    ? knownFallbackFaces[fallback.family]
+    : undefined
   const metrics = `ascent-override:${fallback.ascentOverride};descent-override:${fallback.descentOverride};line-gap-override:${fallback.lineGapOverride};size-adjust:${fallback.sizeAdjust};`
   const face = (name: FallbackFace, descriptors: string) => {
     const suffix = fallbackFaceSuffixes[name]

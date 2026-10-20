@@ -329,6 +329,22 @@ describe('local fallback faces', () => {
     ])
   })
 
+  it('treats a fallback named like an Object.prototype key as an unknown family', () => {
+    for (const family of ['constructor', 'toString']) {
+      expect(
+        localFaces(
+          display(
+            [
+              { file: 'a.woff2', weight: 400 },
+              { file: 'b.woff2', weight: 700 },
+            ],
+            { ...displayFont.fallback, family },
+          ),
+        ).map(({ src }) => src),
+      ).toEqual([`local("${family}")`, `local("${family} Bold")`])
+    }
+  })
+
   it('keeps one fallback family and its metric overrides on every face, after the web faces', () => {
     const fonts = display(
       [
