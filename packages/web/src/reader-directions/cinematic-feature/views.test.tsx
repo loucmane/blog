@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { within } from '@testing-library/dom'
-import postcss from 'postcss'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactNode } from 'react'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -17,7 +16,7 @@ import { contrastRatio } from '../contrast'
 import { CinematicArticle } from './article'
 import { CinematicHome } from './home'
 import { CinematicSection } from './section'
-import { coverTextScrimOpacity, styles } from './styles'
+import { styles } from './styles'
 import { tokens } from './tokens'
 
 function markup(element: ReactNode) {
@@ -41,100 +40,18 @@ describe('Cinematic Feature with published North House content', () => {
       articles.set(story.id, (await readArticleView(source, labStorySlug(story)))!)
   })
 
-  it('meets AA for both solid surfaces and the retained article scrim over image extremes', () => {
+  it('meets AA on opaque heading panels and paper surfaces in both themes', () => {
     for (const palette of [tokens.light, { ...tokens.light, ...tokens.dark }]) {
       for (const [text, background] of tokens.textPairs)
         expect(contrastRatio(palette[text], palette[background])).toBeGreaterThanOrEqual(4.5)
-      expect(contrastRatio(palette['--cf-ink'], palette['--cf-ground'])).toBeGreaterThanOrEqual(3)
     }
-    const scrim = tokens.light['--cf-ground'].match(/[\da-f]{2}/gi)!.map((hex) => parseInt(hex, 16))
-    // Only the article still uses a scrim until b2. The following regression
-    // reads its actual gradient and padding; home text sits on opaque ground.
-    for (const imageChannel of [0, 255]) {
-      for (const opacity of [coverTextScrimOpacity, 1]) {
-        const background = `rgb(${scrim
-          .map((channel) => (channel * opacity + imageChannel * (1 - opacity)).toFixed(2))
-          .join(' ')})`
-        for (const text of ['--cf-ink', '--cf-secondary', '--cf-amber'] as const) {
-          expect(contrastRatio(tokens.light[text], background)).toBeGreaterThanOrEqual(4.5)
-        }
-      }
-    }
-  })
-
-  it('guarantees AA behind every article hero text element with the longest title over white', () => {
-    const css = postcss.parse(styles)
-    function declaration(selector: string, property: string, media?: string) {
-      let value: string | undefined
-      css.walkRules(selector, (rule) => {
-        const parent = rule.parent
-        if (
-          media
-            ? parent?.type !== 'atrule' || parent.name !== 'media' || parent.params !== media
-            : parent?.type !== 'root'
-        )
-          return
-        rule.walkDecls(property, (entry) => {
-          value = entry.value
-        })
-      })
-      expect(value, `${selector} ${property} ${media ?? ''}`).toBeDefined()
-      return value!
-    }
-
-    // Read the actual CSS: the overlay must reach its floor at a fixed rem offset,
-    // then only darken toward the ground. A stop based on hero height fails here.
-    const gradient = declaration('& .cf-hero figure::after', 'background').match(
-      /^linear-gradient\(180deg, rgb\(([\d ]+) \/ ([\d.]+)%\), rgb\(([\d ]+) \/ ([\d.]+)%\) ([\d.]+)rem, var\(--cf-ground\)\)$/,
-    )
-    expect(gradient, 'article scrim must protect text independently of hero height').not.toBeNull()
-    const [, startRgb, startOpacity, textRgb, textOpacity, stopRem] = gradient!
-    expect(startRgb).toBe(textRgb)
-    expect(Number(startOpacity)).toBeLessThanOrEqual(Number(textOpacity))
-    expect(Number(textOpacity)).toBeLessThanOrEqual(100)
-    const channels = textRgb!.split(' ').map(Number)
+    expect(styles).not.toContain('linear-gradient')
     const longest = [...articles.values()].reduce((first, second) =>
       first.title.length >= second.title.length ? first : second,
     )
-    expect(longest.title.length).toBeGreaterThan(100)
-    const { document } = markup(<CinematicArticle view={{ ...longest, authors: ['A. Writer'] }} />)
-    const foregrounds = [
-      ['.cf-story-meta a', '--cf-amber'],
-      ['.cf-story-meta > span', '--cf-secondary'],
-      ['.cf-title', '--cf-ink'],
-      ['.cf-dek', '--cf-secondary'],
-      ['.cf-credits p', '--cf-secondary'],
-      ['.cf-credits time', '--cf-secondary'],
-    ] as const
-    for (const width of [390, 1440]) {
-      const padding =
-        width === 390
-          ? declaration('& .cf-article-heading', 'padding-top', '(max-width: 767px)')
-          : declaration('& .cf-article-heading', 'padding')
-      const minimumPadding = padding.match(/^(?:clamp\()?([\d.]+)rem(?:,|$)/)
-      expect(minimumPadding).not.toBeNull()
-      expect(
-        Number(minimumPadding![1]),
-        `first text clears the gradient stop at ${width}px`,
-      ).toBeGreaterThanOrEqual(Number(stopRem))
-      for (const palette of [tokens.light, { ...tokens.light, ...tokens.dark }]) {
-        expect(contrastRatio(`rgb(${textRgb})`, palette['--cf-ground'])).toBe(1)
-        for (const opacity of [Number(textOpacity) / 100, 1]) {
-          const background = `rgb(${channels
-            .map((channel) => (channel * opacity + 255 * (1 - opacity)).toFixed(2))
-            .join(' ')})`
-          for (const [selector, color] of foregrounds) {
-            expect(document.querySelector(selector)?.closest('.cf-article-heading')).toBe(
-              document.querySelector('.cf-article-heading'),
-            )
-            expect(
-              contrastRatio(palette[color], background),
-              `${selector} at ${width}px`,
-            ).toBeGreaterThanOrEqual(4.5)
-          }
-        }
-      }
-    }
+    const { document } = markup(<CinematicArticle view={longest} />)
+    for (const selector of ['.cf-story-meta', '.cf-title', '.cf-dek', '.cf-credits'])
+      expect(document.querySelector(selector)?.closest('.cf-article-panel')).toBeTruthy()
   })
 
   it('shows the lead, two secondary stories and all remaining rows once in supplied order', () => {
@@ -378,13 +295,15 @@ describe('Cinematic Feature with published North House content', () => {
   it('shows supplied authors and does not invent uncredited bylines', () => {
     const article = articles.get('article-lab-long-table')!
     expect(
-      markup(<CinematicArticle view={{ ...article, authors: [] }} />).document.querySelector(
-        '.cf-credits',
-      ),
+      markup(
+        <CinematicArticle view={{ ...article, authorLinks: [], authors: [] }} />,
+      ).document.querySelector('.cf-credits'),
     ).not.toHaveTextContent('Words by')
     expect(
       markup(
-        <CinematicArticle view={{ ...article, authors: ['A. Writer', 'B. Writer'] }} />,
+        <CinematicArticle
+          view={{ ...article, authorLinks: [], authors: ['A. Writer', 'B. Writer'] }}
+        />,
       ).document.querySelector('.cf-credits'),
     ).toHaveTextContent('Words by A. Writer, B. Writer')
   })

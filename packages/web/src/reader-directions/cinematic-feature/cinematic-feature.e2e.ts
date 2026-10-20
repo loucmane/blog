@@ -6,12 +6,15 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
 import { normalizeSlug } from '../../server/content/domain'
-import { labStories } from '../../server/lab/north-house'
+import { labAuthors, labStories, labTopics } from '../../server/lab/north-house'
 import { prepareFontCapture } from '../capture-fonts'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
 const sectionPath = '/sections/interiors'
+const authorPath = `/authors/${labAuthors[0]!.slug}`
+const topicPath = `/topics/${labTopics[0]!.slug}`
+const pagePaths = ['/', storyPath, sectionPath, authorPath, topicPath]
 const root = '[data-reader-direction="cinematic-feature"]'
 
 async function waitForThemeToSettle(page: Page) {
@@ -38,12 +41,18 @@ test.beforeEach(async ({ context, page, request }) => {
   await expect(page.locator(root)).toBeVisible()
 })
 
-test('opens Cinematic Feature from the lab and renders published titles on all three pages', async ({
+test('opens Cinematic Feature from the lab and renders published titles on all five pages', async ({
   page,
 }) => {
   await expect(
     page.locator(root).getByRole('heading', { name: storyTitle, exact: true }),
   ).toBeVisible()
+  await page.goto(authorPath)
+  await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(
+    labAuthors[0]!.name,
+  )
+  await page.goto(topicPath)
+  await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(labTopics[0]!.name)
   await page.goto(storyPath)
   await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(storyTitle)
   await page.goto(sectionPath)
@@ -59,7 +68,7 @@ test('has no overflow at every required width and operable touch-sized navigatio
   test.setTimeout(120_000)
   for (const width of [320, 360, 390, 768, 1024, 1280, 1440, 1536]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const path of ['/', storyPath, sectionPath]) {
+    for (const path of pagePaths) {
       await page.goto(path)
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -98,7 +107,7 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
       'article-lab-long-table',
     ].includes(id),
   )
-  for (const width of [360, 390, 768, 1024, 1280, 1440]) {
+  for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     for (const story of cases) {
       await page.goto(`/stories/${normalizeSlug(story.title)}`)
@@ -119,7 +128,7 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
 test('keeps cover text on solid ground and its credit strip below the photograph', async ({
   page,
 }) => {
-  for (const width of [390, 768, 1440]) {
+  for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/')
     await page.evaluate(async () => {
@@ -158,6 +167,8 @@ test('keeps cover text on solid ground and its credit strip below the photograph
     const title = (await page.locator('.cf-lead h2').boundingBox())!
     expect(title.y).toBeGreaterThanOrEqual(grownPanel.y + 24)
     expect(title.y + title.height).toBeLessThanOrEqual(grownPanel.y + grownPanel.height - 24)
+    const read = (await panel.locator('.cf-read').boundingBox())!
+    expect(read.y + read.height).toBeLessThanOrEqual(grownPanel.y + grownPanel.height - 24)
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
@@ -180,6 +191,332 @@ test('matches section feature and card sizes to their actual grid slots', async 
       const box = (await image.boundingBox())!
       expect(box.width).toBeCloseTo(width >= 768 ? (interior - gap) / 2 : interior, 0)
       expect(box.width / box.height).toBeCloseTo(3 / 2, 2)
+    }
+  }
+})
+
+test('keeps article heading, byline and credit order inside an opaque panel at every breakpoint', async ({
+  page,
+}) => {
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    const panel = page.locator('.cf-article-panel')
+    const hero = page.locator('.cf-hero img')
+    expect(await panel.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(
+      'rgb(11, 12, 12)',
+    )
+    expect(
+      await page
+        .locator('.cf-article-hero')
+        .evaluate((element) => element.firstElementChild?.className),
+    ).toBe('cf-article-heading')
+    expect(await page.locator('link[as="image"]').getAttribute('media')).toBe('(min-width: 1024px)')
+    const panelBox = (await panel.boundingBox())!
+    const heroBox = (await hero.boundingBox())!
+    if (width < 1024) {
+      expect(heroBox.y).toBeGreaterThanOrEqual(panelBox.y + panelBox.height - 1)
+      expect(heroBox.width / heroBox.height).toBeCloseTo(width < 768 ? 4 / 3 : 16 / 9, 2)
+    } else {
+      expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(heroBox.y + heroBox.height)
+    }
+    const caption = (await page.locator('.cf-hero figcaption').boundingBox())!
+    expect(caption.y).toBeGreaterThanOrEqual(heroBox.y + heroBox.height - 1)
+    const authors = page.locator('.cf-byline a')
+    const story = labStories.find(({ id }) => id === 'article-lab-long-table')!
+    await expect(authors).toHaveCount(story.authors.length)
+    await authors.first().focus()
+    for (let index = 1; index < story.authors.length; index++) {
+      await page.keyboard.press('Tab')
+      await expect(authors.nth(index)).toBeFocused()
+    }
+    for (const control of await authors.all()) {
+      const box = (await control.boundingBox())!
+      expect(box.width).toBeGreaterThanOrEqual(44)
+      expect(box.height).toBeGreaterThanOrEqual(44)
+    }
+    await page.locator('.cf-article-heading h1').evaluate((element) => {
+      element.textContent = 'Unbroken'.repeat(40)
+      element.style.lineHeight = '1.5'
+      element.style.letterSpacing = '0.12em'
+      element.style.wordSpacing = '0.16em'
+    })
+    const grown = (await panel.boundingBox())!
+    const credits = (await page.locator('.cf-credits').boundingBox())!
+    expect(credits.y + credits.height).toBeLessThanOrEqual(grown.y + grown.height - 24)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  }
+})
+
+test('computes the full article heading scale, list numbering and editorial treatments after shared resets', async ({
+  page,
+}) => {
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    // The server renderer's semantic output is covered by b2.test.tsx; these
+    // inserted extremes exercise its selectors against the actual global cascade.
+    await page.locator('.cf-body').evaluate((body) => {
+      const fixture = document.createElement('div')
+      fixture.dataset.styleProbe = 'true'
+      for (const level of [2, 3, 4, 5, 6]) {
+        const heading = document.createElement(`h${level}`)
+        heading.textContent = `Heading ${level}`
+        fixture.append(heading)
+      }
+      for (const type of ['1', 'a', 'A', 'i', 'I']) {
+        const list = document.createElement('ol')
+        list.type = type
+        list.start = 3
+        const item = document.createElement('li')
+        item.textContent = 'Numbered item'
+        list.append(item)
+        fixture.append(list)
+      }
+      for (const variant of ['key-points', 'methodology']) {
+        const section = document.createElement('section')
+        section.dataset.block = 'editorial'
+        section.dataset.variant = variant
+        section.textContent = 'Editorial treatment'
+        fixture.append(section)
+      }
+      body.append(fixture)
+    })
+    const headingSizes =
+      width < 768
+        ? [30, 24, 22, 20, 18]
+        : width < 1024
+          ? [36, 28, 24, 22, 20]
+          : [40, 30, 24, 22, 20]
+    const headings = await page
+      .locator('[data-style-probe] :is(h2,h3,h4,h5,h6)')
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const style = getComputedStyle(element)
+          return {
+            size: parseFloat(style.fontSize),
+            leading: parseFloat(style.lineHeight),
+            weight: style.fontWeight,
+            stretch: style.fontStretch,
+          }
+        }),
+      )
+    headings.forEach((style, index) => {
+      expect(style.size).toBe(headingSizes[index])
+      expect(style.leading).toBeCloseTo(style.size * (index < 2 ? 1.2 : 1.35), 1)
+      expect(style.weight).toBe(index < 2 ? '800' : '700')
+      expect(style.stretch).toBe(index < 2 ? '85%' : '100%')
+    })
+    expect(
+      await page
+        .locator('[data-style-probe] ol')
+        .evaluateAll((elements) =>
+          elements.map((element) => getComputedStyle(element).listStyleType),
+        ),
+    ).toEqual(['decimal', 'lower-alpha', 'upper-alpha', 'lower-roman', 'upper-roman'])
+    expect(
+      await page
+        .locator('.cf-body pre code')
+        .first()
+        .evaluate((element) => getComputedStyle(element).fontSize),
+    ).toBe('16px')
+    expect(
+      await page
+        .locator('.cf-body [data-block="pull-quote"] blockquote')
+        .first()
+        .evaluate((element) => getComputedStyle(element).fontSize),
+    ).toBe(width < 1024 ? '32px' : '40px')
+    expect(
+      await page
+        .locator('.cf-body [data-block="editorial"][data-variant="key-points"]')
+        .first()
+        .evaluate((element) => getComputedStyle(element).borderLeftWidth),
+    ).toBe('3px')
+    expect(
+      await page
+        .locator('[data-style-probe] [data-block="editorial"][data-variant="methodology"]')
+        .first()
+        .evaluate((element) => getComputedStyle(element).borderLeftWidth),
+    ).toBe('0px')
+  }
+})
+
+test('bounds body images, wide galleries and nested galleries to their declared slots', async ({
+  page,
+}) => {
+  for (const width of [390, 768, 1024, 1440, 1536, 1920]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await page.goto(storyPath)
+    const expectedSlot = width < 768 ? width : Math.min(672, width - (width < 1024 ? 64 : 96))
+    for (const image of await page
+      .locator('.cf-body > figure img, .cf-body > [data-block="gallery"] img')
+      .all()) {
+      expect((await image.boundingBox())!.width).toBeCloseTo(expectedSlot, 0)
+      await expect(image).toHaveAttribute('sizes', '(min-width: 768px) 42rem, 100vw')
+    }
+    const gallery = page.locator('.cf-body > [data-block="gallery"]').first()
+    expect((await gallery.boundingBox())!.width).toBeCloseTo(width >= 1536 ? 1368 : expectedSlot, 0)
+    await gallery.evaluate((element) => {
+      const nested = element.cloneNode(true) as HTMLElement
+      nested.dataset.nestedProbe = 'true'
+      const quote = document.createElement('blockquote')
+      quote.append(nested)
+      element.parentElement!.append(quote)
+      const carousel = element.cloneNode(true) as HTMLElement
+      carousel.dataset.layout = 'carousel'
+      element.parentElement!.append(carousel)
+    })
+    expect(
+      await page
+        .locator('[data-nested-probe]')
+        .evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+    ).toBe(1)
+    expect(
+      await page
+        .locator('.cf-body > [data-layout="carousel"]')
+        .last()
+        .evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+    ).toBe(1)
+  }
+  // User font enlargement also raises the rem breakpoint; two columns must
+  // never escape the available container.
+  await page.setViewportSize({ width: 1536, height: 1000 })
+  await page.goto(storyPath)
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '32px'
+  })
+  expect(
+    await page
+      .locator('.cf-body > [data-block="gallery"]')
+      .first()
+      .evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+  ).toBe(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+test('computes readable paper metadata and fixed related slots in both themes', async ({
+  page,
+}) => {
+  for (const width of [390, 768, 1440, 1536]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const dark of [false, true]) {
+      await page.goto(storyPath)
+      await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), dark)
+      await waitForThemeToSettle(page)
+      const accent = dark ? 'rgb(230, 182, 92)' : 'rgb(117, 80, 23)'
+      const secondary = dark ? 'rgb(207, 205, 197)' : 'rgb(79, 91, 102)'
+      for (const selector of ['.cf-related .cf-story-meta a', '.cf-topics a', '.cf-body p a']) {
+        expect(
+          await page
+            .locator(selector)
+            .first()
+            .evaluate((element) => getComputedStyle(element).color),
+        ).toBe(accent)
+      }
+      expect(
+        await page
+          .locator('.cf-related .cf-story-meta > span')
+          .first()
+          .evaluate((element) => getComputedStyle(element).color),
+      ).toBe(secondary)
+      const interior = Math.min(width - (width >= 1024 ? 96 : width >= 768 ? 64 : 40), 1440)
+      const columns = width >= 1024 ? 3 : width >= 768 ? 2 : 1
+      const gap = width >= 1024 ? 32 : width >= 768 ? 24 : 16
+      const card = page.locator('.cf-related .cf-card').first()
+      expect((await card.boundingBox())!.width).toBeCloseTo(
+        (interior - gap * (columns - 1)) / columns,
+        0,
+      )
+      // Removing siblings must not stretch the remaining card.
+      await page.locator('.cf-related-grid').evaluate((element) => {
+        for (const child of [...element.children].slice(1)) child.remove()
+      })
+      expect((await card.boundingBox())!.width).toBeCloseTo(
+        (interior - gap * (columns - 1)) / columns,
+        0,
+      )
+      const topic = page.locator('.cf-topics a').first()
+      await topic.focus()
+      expect(await topic.evaluate((element) => getComputedStyle(element).outlineColor)).toBe(accent)
+      expect((await topic.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      await page.goto(authorPath)
+      await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), dark)
+      expect(
+        await page.locator('.cf-author-bio').evaluate((element) => getComputedStyle(element).color),
+      ).toBe(secondary)
+    }
+  }
+})
+
+test('renders fixture-derived author/topic collections and omits an absent biography', async ({
+  page,
+}) => {
+  for (const [route, stories, label] of [
+    [
+      authorPath,
+      labStories.filter((story) => story.authors.includes(labAuthors[0]!.slug)),
+      `Stories by ${labAuthors[0]!.name}`,
+    ],
+    [
+      topicPath,
+      labStories.filter((story) => story.topics.includes(labTopics[0]!.slug)),
+      `Stories about ${labTopics[0]!.name}`,
+    ],
+  ] as const) {
+    await page.goto(route)
+    const expected = [...stories].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+    await expect(
+      page.getByRole('region', { name: label }).getByRole('heading', { level: 3 }),
+    ).toHaveText(expected.map(({ title }) => title))
+    expect(
+      await page
+        .locator('.cf-collection-title')
+        .evaluate((element) => getComputedStyle(element).lineHeight),
+    ).not.toBe('normal')
+  }
+  const noBio = labAuthors.find(({ bio }) => !bio)!
+  await page.goto(`/authors/${noBio.slug}`)
+  await expect(page.locator('.cf-author-bio')).toHaveCount(0)
+})
+
+test('keeps all five comparison previews scoped and readable at mobile and desktop widths', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  for (const route of pagePaths) {
+    await page.goto(`/owner/reader-lab/compare?page=${encodeURIComponent(route)}`)
+    const frame = page.frameLocator('[data-compare-direction="cinematic-feature"] iframe')
+    for (const width of [390, 1440]) {
+      await page.getByRole('radio', { name: width === 390 ? /Mobile/ : /Desktop/ }).check()
+      for (const dark of [false, true]) {
+        await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), dark)
+        await expect(frame.locator(root)).toBeVisible()
+        await expect(frame.locator(`${root} h1`)).toHaveCount(1)
+        await expect(frame.locator(`${root} .cf-page`)).toBeVisible()
+        expect(
+          await frame
+            .locator('body')
+            .evaluate(
+              (element) =>
+                element.ownerDocument.documentElement.scrollWidth <=
+                element.ownerDocument.defaultView!.innerWidth,
+            ),
+        ).toBe(true)
+        expect(
+          await frame
+            .locator(root)
+            .evaluate((element) => getComputedStyle(element).backgroundColor),
+        ).toBe('rgb(11, 12, 12)')
+        if (route === storyPath) {
+          await expect
+            .poll(() =>
+              frame
+                .locator('.cf-reading-surface')
+                .evaluate((element) => getComputedStyle(element).backgroundColor),
+            )
+            .toBe(dark ? 'rgb(11, 12, 12)' : 'rgb(242, 241, 236)')
+        }
+      }
     }
   }
 })
@@ -226,7 +563,7 @@ for (const width of [390, 1440]) {
     test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
       test.setTimeout(120_000)
       await page.setViewportSize({ width, height: 900 })
-      for (const path of ['/', storyPath, sectionPath]) {
+      for (const path of pagePaths) {
         await page.goto(path)
         await page.evaluate(async () => {
           await document.fonts.ready
@@ -319,7 +656,7 @@ test('uses a 65-character reading measure with reduced motion respected', async 
   })
   expect(metrics.fontSize).toBe('20px')
   expect(metrics.lineHeight).toBe('34px')
-  expect(Math.abs(metrics.width - metrics.measure)).toBeLessThan(1)
+  expect(Math.abs(metrics.width - Math.min(metrics.measure, 672))).toBeLessThan(1)
   expect(await body.evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
   const title = page.locator('.cf-article-heading h1')
   const titleStyle = await title.evaluate((element) => {
@@ -419,7 +756,7 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
     page.on('request', (request) => {
       if (request.resourceType() === 'font') fonts.push(request.url())
     })
-    for (const path of ['/', storyPath, sectionPath]) {
+    for (const path of pagePaths) {
       await page.goto(path)
       await page.evaluate(async () => {
         await document.fonts.ready
@@ -434,15 +771,13 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures b1 home, section and article regression screenshots in both themes', async ({
-  page,
-}) => {
+test('captures b2 all five page types and the wide gallery in both themes', async ({ page }) => {
   test.setTimeout(300_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-cf-sans': 'Archivo',
     '--font-cf-mono': 'Martian Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.49')
+  const destination = path.resolve('docs/worklog/blog-0044.50')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
@@ -450,6 +785,8 @@ test('captures b1 home, section and article regression screenshots in both theme
       ['home', '/'],
       ['article', storyPath],
       ['section', sectionPath],
+      ['author', authorPath],
+      ['topic', topicPath],
     ]) {
       await captureFonts.goto(route!)
       // Load lazy images before the full-page capture, then return to the cover.
@@ -485,5 +822,22 @@ test('captures b1 home, section and article regression screenshots in both theme
         }
       }
     }
+  }
+  await page.setViewportSize({ width: 1536, height: 1000 })
+  await captureFonts.goto(storyPath)
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(
+      (dark) => document.documentElement.classList.toggle('dark', dark),
+      theme === 'dark',
+    )
+    await waitForThemeToSettle(page)
+    const gallery = page.locator('.cf-body > [data-block="gallery"]').first()
+    await gallery.scrollIntoViewIfNeeded()
+    await page.evaluate(async () => {
+      for (const image of document.images) image.loading = 'eager'
+      await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
+    })
+    await captureFonts.assertFonts()
+    await gallery.screenshot({ path: path.join(destination, `gallery-1536-${theme}.png`) })
   }
 })

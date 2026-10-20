@@ -26,7 +26,7 @@ function declarations(selector: string, media?: string) {
   return result
 }
 
-describe('Cinematic Feature b1 design constraints', () => {
+describe('Cinematic Feature design constraints', () => {
   it('declares every text pairing and keeps UI boundaries above 3:1 in both themes', () => {
     expect(tokens.textPairs).toHaveLength(7)
     expect(tokens.textPairs).toContainEqual(['--cf-ground', '--cf-amber'])
@@ -127,5 +127,38 @@ describe('Cinematic Feature b1 design constraints', () => {
       readerDirectionStyleCss(cinematicFeatureDirection)! +
       readerDirectionTokenCss(cinematicFeatureDirection)!
     expect(Buffer.byteLength(emitted)).toBeLessThanOrEqual(24 * 1024)
+  })
+
+  it('declares the article type scale and lets native ordered-list numbering survive resets', () => {
+    expect(tokens.light).toMatchObject({
+      '--cf-heading': '1.875rem',
+      '--cf-h3': '1.5rem',
+      '--cf-h4': '1.375rem',
+      '--cf-h5': '1.25rem',
+      '--cf-h6': '1.125rem',
+      '--cf-measure': 'min(65ch, 42rem)',
+    })
+    expect(styles).not.toMatch(/ol\[type=/)
+    expect(declarations('& .cf-page :where(ul, ol:not([type]))')['list-style']).toBe('none')
+    expect(declarations('& .cf-body ol:not([type])')['list-style-type']).toBe('decimal')
+    expect(
+      declarations('& .cf-reading-surface .cf-story-meta, & .cf-reading-surface .cf-story-meta a')
+        .color,
+    ).toBe('var(--cf-body-accent)')
+    expect(declarations('& .cf-body pre code')['font-size']).toBe('inherit')
+  })
+
+  it('uses a compact, opaque article heading and a single gallery column by default', () => {
+    expect(declarations('& .cf-article-panel')).toMatchObject({
+      background: 'var(--cf-ground)',
+      padding: '1.5rem',
+    })
+    expect(declarations('& .cf-article-hero')['grid-template-rows']).toBeUndefined()
+    expect(declarations("& .cf-body [data-block='gallery']")['grid-template-columns']).toBe(
+      'minmax(0, 1fr)',
+    )
+    expect(styles).toContain('@media (min-width: 96rem)')
+    expect(styles).toContain('@container (min-width: 85.5rem)')
+    expect(styles).not.toContain('linear-gradient')
   })
 })

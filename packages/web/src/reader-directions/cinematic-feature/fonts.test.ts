@@ -114,4 +114,5 @@ it('ships authentic Latin glyphs, both Archivo axes, exact mono weights and comp
     }
   }
   expect(total).toBe(111_100)
+  expect(total).toBeLessThanOrEqual(180_000)
 })
