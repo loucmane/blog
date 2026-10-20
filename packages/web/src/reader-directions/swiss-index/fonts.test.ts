@@ -189,8 +189,7 @@ it('ships authentic Latin fonts, exact weights and styles, complete licences and
     }
   }
   // Spec section 10. Home sets only the five normal faces, and a typical story adds the 400
-  // italic for emphasis in its text. A story with bold emphasis as well loads all seven faces:
-  // 1,080 bytes over the 155,000 the spec estimated for both italics.
+  // italic for emphasis in its text. A story with bold emphasis as well loads all seven faces.
   const total = [...sizes.values()].reduce((sum, size) => sum + size, 0)
   const boldItalic = sizes.get('schibsted-grotesk-latin-700-italic.woff2')!
   const home = total - boldItalic - sizes.get('schibsted-grotesk-latin-400-italic.woff2')!

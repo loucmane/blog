@@ -20,7 +20,7 @@ import { SwissArticle } from './article'
 import { SwissHome } from './home'
 import { swissIndexDirection } from './index'
 import { SwissSection } from './section'
-import { cardSizes, leadSizes } from './story-card'
+import { plateSizes } from './story-card'
 import { tokens } from './tokens'
 
 function markup(element: ReactNode) {
@@ -83,6 +83,7 @@ describe('Swiss Index with real published North House content', () => {
   let section: SectionView
   const articles = new Map<string, ArticleView>()
 
+  // Seeding generates every sample image with sharp: load-sensitive, so allow 30 seconds.
   beforeAll(async () => {
     const repository = new InMemoryContentRepository()
     await seedLabContent({ objects: new InMemoryOriginalObjectStore(), repository })
@@ -92,7 +93,7 @@ describe('Swiss Index with real published North House content', () => {
     for (const story of labStories) {
       articles.set(story.id, (await readArticleView(source, labStorySlug(story)))!)
     }
-  })
+  }, 30_000)
 
   it('meets AA for all text and accent pairs in both themes, including ink on signal orange', () => {
     for (const palette of [tokens.light, { ...tokens.light, ...tokens.dark }]) {
@@ -240,7 +241,10 @@ describe('Swiss Index with real published North House content', () => {
       if (story.image) {
         const image = plate.querySelector('img')!
         expect(image).toHaveAttribute('alt', story.image.alt)
-        expect(image).toHaveAttribute('sizes', index === 0 ? leadSizes : cardSizes)
+        expect(image).toHaveAttribute(
+          'sizes',
+          plateSizes(story.image, index === 0 ? 'lead' : 'plate'),
+        )
         expect(image.closest('.si-plate-image')?.getAttribute('style')).toBe(focus(story.image))
         expect(plate.querySelector('.si-number-plate')).toBeNull()
       } else {
@@ -393,7 +397,10 @@ describe('Swiss Index with real published North House content', () => {
     expect(second!.querySelector('img')).toBeTruthy()
     expect(document.querySelector('link[as="image"]')).toBeNull()
     for (const image of document.querySelectorAll('main img')) {
-      expect(image).toHaveAttribute('loading', 'lazy')
+      // Story 02 shares the first row: it loads at once, but is never promoted to the lead.
+      if (image.closest('ol[aria-label$="stories"]') !== null)
+        expect(image).not.toHaveAttribute('loading')
+      else expect(image).toHaveAttribute('loading', 'lazy')
       expect(image).not.toHaveAttribute('fetchpriority')
     }
     const alone = markup(<SwissHome view={{ ...home, lead: chair, recent: [] }} />)
@@ -467,7 +474,8 @@ describe('Swiss Index with real published North House content', () => {
       expect(lead.getAttribute('width')).toBe(String(image.width))
       expect(lead.getAttribute('height')).toBe(String(image.height))
       for (const laterImage of [...document.querySelectorAll('main img')].slice(1)) {
-        expect(laterImage.getAttribute('loading')).toBe('lazy')
+        const firstRow = laterImage.closest('ol[aria-label$="stories"]') !== null
+        expect(laterImage.getAttribute('loading')).toBe(firstRow ? null : 'lazy')
         expect(laterImage.hasAttribute('fetchpriority')).toBe(false)
       }
     }
@@ -505,7 +513,8 @@ describe('Swiss Index with real published North House content', () => {
     expect(document.querySelector('link[as="image"]')).toBeNull()
     expect(document.querySelectorAll('main img').length).toBeGreaterThan(0)
     for (const image of document.querySelectorAll('main img')) {
-      expect(image.getAttribute('loading')).toBe('lazy')
+      const firstRow = image.closest('ol[aria-label$="stories"]') !== null
+      expect(image.getAttribute('loading')).toBe(firstRow ? null : 'lazy')
       expect(image.hasAttribute('fetchpriority')).toBe(false)
     }
     const article = articles.get('article-lab-long-table')!
@@ -610,8 +619,12 @@ describe('Swiss Index with real published North House content', () => {
       const story = stories[index]!
       expect(within(plate).getByRole('heading', { level: 2 })).toHaveTextContent(story.title)
       expect(linksTo(plate, story.href)).toHaveLength(1)
-      if (story.image) expect(plate.querySelector('img')).toHaveAttribute('sizes', cardSizes)
-      else expect(plate.querySelector('.si-number-plate')).toHaveAttribute('aria-hidden', 'true')
+      if (story.image) {
+        expect(plate.querySelector('img')).toHaveAttribute(
+          'sizes',
+          plateSizes(story.image, 'plate'),
+        )
+      } else expect(plate.querySelector('.si-number-plate')).toHaveAttribute('aria-hidden', 'true')
     })
     const rows = stories.slice(4)
     const earlier = regionNamedBy(screen, `Earlier in ${section.name}`)

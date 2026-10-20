@@ -1,6 +1,7 @@
 import { defineReaderDirection } from '../contract'
 import { articleImageSizes, SwissArticle } from './article'
 import { SwissAuthor } from './author'
+import { SwissError, SwissNotFound, SwissUnavailable } from './failure'
 import { fonts } from './fonts'
 import { SwissHome } from './home'
 import { SwissSection } from './section'
@@ -11,14 +12,17 @@ import { SwissTopic } from './topic'
 export const swissIndexDirection = defineReaderDirection({
   Article: SwissArticle,
   Author: SwissAuthor,
+  Error: SwissError,
   fonts,
   Home: SwissHome,
   id: 'swiss-index',
   imageSizes: articleImageSizes,
   name: 'Swiss Index',
+  NotFound: SwissNotFound,
   Section: SwissSection,
   styles,
   thesis: 'A well-ordered index: bold grotesk type, precise rules and room for every story.',
   tokens,
   Topic: SwissTopic,
+  Unavailable: SwissUnavailable,
 })

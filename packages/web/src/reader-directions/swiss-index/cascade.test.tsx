@@ -5,6 +5,7 @@ import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
+import { readerFailureView } from '@/reader/components/failure-view'
 import {
   readArticleView,
   readAuthorView,
@@ -28,6 +29,7 @@ import { labStorySlug, seedLabContent } from '@/server/lab/seed'
 import { readerDirectionStyleCss } from '../contract'
 import { SwissArticle } from './article'
 import { SwissAuthor } from './author'
+import { SwissError, SwissNotFound, SwissUnavailable } from './failure'
 import { SwissHome } from './home'
 import { swissIndexDirection } from './index'
 import { SwissSection } from './section'
@@ -38,9 +40,12 @@ const root = '[data-reader-direction="swiss-index"]'
 /** One width in each layout: phone, tablet and desktop. */
 const widths = [390, 768, 1440] as const
 
-/** Element resets style elements by their type alone, under the page wrapper. */
+/**
+ * Element resets style elements by their type alone, under the page wrapper; the list reset skips
+ * numbered lists with a type, whose markers the shared renderer sets.
+ */
 const resetSelector =
-  /^(?:\.si-page|:where\(\.si-page\)) (?:\*|[a-z0-9]+|:(?:is|where)\([a-z0-9, ]+\))$/
+  /^(?:\.si-page|:where\(\.si-page\)) (?:\*|[a-z0-9]+|:(?:is|where)\((?:[a-z0-9, ]|:not\(\[type\]\))+\))$/
 
 /** Whether a media query of the direction's styles holds on a screen `width` pixels wide. */
 function holds(query: string, width: number) {
@@ -100,6 +105,7 @@ describe('Swiss Index computed styles', () => {
   let author: AuthorView
   let topic: TopicView
 
+  // Seeding generates every sample image with sharp: load-sensitive, so allow 30 seconds.
   beforeAll(async () => {
     const repository = new InMemoryContentRepository()
     await seedLabContent({ objects: new InMemoryOriginalObjectStore(), repository })
@@ -117,7 +123,7 @@ describe('Swiss Index computed styles', () => {
     )!
     author = (await readAuthorView(source, labAuthors[0]!.slug))!
     topic = (await readTopicView(source, labTopics[0]!.slug))!
-  })
+  }, 30_000)
 
   afterEach(() => {
     document.head.innerHTML = ''
@@ -151,7 +157,7 @@ describe('Swiss Index computed styles', () => {
 
   it(
     'never lets an element reset decide a value that a component rule declares, on any page or width',
-    // Eleven pages at three widths, each resolved twice: well over the default under a full run.
+    // Fourteen pages at three widths, each resolved twice: well over the default under a full run.
     { timeout: 60_000 },
     () => {
       const stories = [home.lead!, ...home.recent]
@@ -167,9 +173,12 @@ describe('Swiss Index computed styles', () => {
         <SwissAuthor key="empty-author" view={{ ...author, stories: [] }} />,
         <SwissTopic key="topic" view={{ ...topic, stories }} />,
         <SwissTopic key="empty-topic" view={{ ...topic, stories: [] }} />,
+        <SwissNotFound key="not-found" view={readerFailureView} />,
+        <SwissError key="error" reset={() => {}} view={readerFailureView} />,
+        <SwissUnavailable key="unavailable" view={readerFailureView} />,
       ].map((page) => renderToStaticMarkup(page))
       const resets = rulesAt(1440).flatMap(({ css, reset }) => (reset ? [css] : []))
-      for (const elements of ['(ul, ol)', '(h1, h2, h3, h4, h5, h6)', ' a {']) {
+      for (const elements of ['(ul, ol:not([type]))', '(h1, h2, h3, h4, h5, h6)', ' a {']) {
         expect(
           resets.some((css) => css.includes(elements)),
           elements,
@@ -495,6 +504,88 @@ describe('Swiss Index computed styles', () => {
       const links = [...renderAt(<SwissHome view={home} />, width).querySelectorAll('.si-nav a')]
       expect(links.length).toBeGreaterThan(2)
       for (const link of links) expect(style(link).fontSize, `${width}px`).toBe('var(--si-small)')
+    }
+  })
+
+  it('keeps inline code upright and regular in both mark orders, over the body’s emphasis and bold', () => {
+    const text = (value: string, ...kinds: ('bold' | 'code' | 'italic')[]) => ({
+      kind: 'text' as const,
+      marks: kinds.map((kind) => ({ kind })),
+      text: value,
+    })
+    // Marks nest in order: the first wraps the text, so italic then code is code around em.
+    const body: ArticleBlock[] = [
+      {
+        content: [
+          text('emphasis', 'italic'),
+          text('strong', 'bold'),
+          text('code around em', 'italic', 'code'),
+          text('em around code', 'code', 'italic'),
+          text('code around strong', 'bold', 'code'),
+          text('strong around code', 'code', 'bold'),
+        ],
+        kind: 'paragraph',
+      },
+    ]
+    for (const width of widths) {
+      const paragraph = renderAt(<SwissArticle view={{ ...article, body }} />, width).querySelector(
+        '.si-body p',
+      )!
+      const marked = (name: string) =>
+        [...paragraph.querySelectorAll('*')].find((element) => element.textContent === name)!
+      // The controls: emphasis and bold outside code keep the direction's italic and bold.
+      expect(style(marked('emphasis')).fontStyle).not.toBe('normal')
+      expect(style(marked('strong')).fontWeight).toBe('700')
+      for (const name of ['code around em', 'em around code']) {
+        // Each element that holds the text: the code and the em inside or around it.
+        for (const element of paragraph.querySelectorAll('code, code *')) {
+          if (element.textContent !== name) continue
+          expect(style(element).fontStyle, `${name} ${element.localName} at ${width}px`).toBe(
+            'normal',
+          )
+        }
+      }
+      for (const name of ['code around strong', 'strong around code']) {
+        for (const element of paragraph.querySelectorAll('code, code *')) {
+          if (element.textContent !== name) continue
+          expect(style(element).fontWeight, `${name} ${element.localName} at ${width}px`).toBe(
+            '400',
+          )
+        }
+      }
+      expect(paragraph.querySelectorAll('code')).toHaveLength(4)
+    }
+  })
+
+  it('sets failure pages across columns 1 to 3 on desktops and full width below, under a page title', () => {
+    for (const width of widths) {
+      for (const page of [
+        <SwissNotFound key="not-found" view={readerFailureView} />,
+        <SwissError key="error" reset={() => {}} view={readerFailureView} />,
+        <SwissUnavailable key="unavailable" view={readerFailureView} />,
+      ]) {
+        const block = renderAt(page, width).querySelector('main > .si-failure')!
+        expect(style(block).display, `${width}px`).toBe('grid')
+        expect(style(block).gridTemplateColumns, `${width}px`).toBe(
+          width < 1024 ? '1fr' : 'repeat(4, minmax(0, 1fr))',
+        )
+        for (const part of block.children) {
+          expect(style(part).gridColumn, `${label(part)} at ${width}px`).toBe(
+            width < 1024 ? '1' : '1 / 4',
+          )
+        }
+        const title = block.querySelector('h1')!
+        expect(style(title).fontSize).toBe('var(--si-title)')
+        expect(style(title).fontWeight).toBe('800')
+        expect(style(title).getPropertyValue('text-wrap')).toBe('balance')
+        // The sentence is set as a dek: secondary, at 50ch.
+        const sentence = block.querySelector('.si-dek')!
+        expect(style(sentence).getPropertyValue('color')).toBe('var(--si-secondary)')
+        expect(style(sentence).maxWidth).toBe('50ch')
+        const home = block.querySelector('.si-failure-actions a')!
+        expect(style(home).minHeight).toBe('44px')
+        expect(style(home).getPropertyValue('text-decoration-line')).toBe('underline')
+      }
     }
   })
 })

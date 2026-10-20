@@ -39,21 +39,24 @@ function SwissIndexNav({ currentSection, isHome, label, navigation }: SwissIndex
   )
 }
 
+/** The frame of every page. Failure pages pass the site name their view supplies. */
 export function SwissShell({
   children,
   isHome = false,
   navigation,
   currentSection,
   leadImage,
+  siteName: name = siteName,
 }: {
   readonly children: ReactNode
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
   readonly currentSection?: string
   readonly leadImage?: SwissLeadImage | null
+  readonly siteName?: string
 }) {
   const Brand = isHome ? 'h1' : 'p'
-  const [firstWord, ...remainingWords] = siteName.split(' ')
+  const [firstWord, ...remainingWords] = name.split(' ')
   const index = { currentSection, isHome, navigation }
   return (
     <div className="si-page" id="si-top">
@@ -82,7 +85,7 @@ export function SwissShell({
         {children}
       </main>
       <footer className="si-footer">
-        <p className="si-footer-name">{siteName}</p>
+        <p className="si-footer-name">{name}</p>
         <SwissIndexNav label="Site index" {...index} />
         <a className="si-top-link" href="#si-top">
           Back to top

@@ -5,10 +5,76 @@ import { ReaderImageView } from '@/reader/components/reader-image'
 import { formatReadingTime } from '@/reader/format'
 import type { ReaderImage, StoryCard } from '@/reader/views'
 
-export const leadSizes =
-  '(min-width: 1440px) 41.25rem, (min-width: 1024px) calc(47vw - 0.75rem), (min-width: 667px) 94vw, calc(100vw - 2.5rem)'
-export const cardSizes =
-  '(min-width: 1440px) 19.875rem, (min-width: 1024px) calc(23.5vw - 1.125rem), (min-width: 667px) calc(47vw - 0.75rem), (min-width: 600px) calc(50vw - 2rem), calc(100vw - 2.5rem)'
+/**
+ * One entry of a `sizes` value, from `minWidth` up: a fixed width in rem, or a share of the
+ * viewport in vw less a length in rem.
+ */
+type SizesEntry = { readonly minWidth?: number } & (
+  { readonly rem: number } | { readonly less?: number; readonly vw: number }
+)
+
+/** A plate's cell: the home lead's, or any other plate's. */
+export type PlateCell = 'lead' | 'plate'
+
+/** The cells plates crop their images into: their width (spec sections 4 and 6) and shape. */
+const cells: Record<
+  PlateCell,
+  { readonly entries: readonly SizesEntry[]; readonly ratio: number }
+> = {
+  // Columns 1-2 from 1024px, both columns from 600px, the page below.
+  lead: {
+    entries: [
+      { minWidth: 1440, rem: 41.25 },
+      { minWidth: 1024, less: 0.75, vw: 47 },
+      { minWidth: 667, vw: 94 },
+      { less: 2.5, vw: 100 },
+    ],
+    ratio: 3 / 2,
+  },
+  // One column of four from 1024px, one of two from 600px, the page below.
+  plate: {
+    entries: [
+      { minWidth: 1440, rem: 19.875 },
+      { minWidth: 1024, less: 1.125, vw: 23.5 },
+      { minWidth: 667, less: 0.75, vw: 47 },
+      { minWidth: 600, less: 2, vw: 50 },
+      { less: 2.5, vw: 100 },
+    ],
+    ratio: 4 / 3,
+  },
+}
+
+function sizesValue(entries: readonly SizesEntry[], scale: number) {
+  const scaled = (value: number) => Number((value * scale).toFixed(4))
+  return entries
+    .map((entry) => {
+      const width =
+        'rem' in entry
+          ? `${scaled(entry.rem)}rem`
+          : entry.less
+            ? `calc(${scaled(entry.vw)}vw - ${scaled(entry.less)}rem)`
+            : `${scaled(entry.vw)}vw`
+      return entry.minWidth ? `(min-width: ${entry.minWidth}px) ${width}` : width
+    })
+    .join(', ')
+}
+
+/** The spec's sizes for the lead plate and for every other plate: the width of each cell. */
+export const leadSizes = sizesValue(cells.lead.entries, 1)
+export const cardSizes = sizesValue(cells.plate.entries, 1)
+
+/**
+ * The sizes of a plate's picture. A cell crops its image to fill it (`object-fit: cover`), so a
+ * source wider than the cell is drawn wider than the cell, by the ratio of the two shapes; the
+ * width descriptors measure the whole source, so the sizes grow by that ratio and the browser
+ * picks a file sharp enough for the part it shows. Sources no wider than their cell keep the
+ * cell's width. The preload repeats the picture's sizes.
+ */
+export function plateSizes(image: ReaderImage, cell: PlateCell) {
+  const { entries, ratio } = cells[cell]
+  const shape = image.width && image.height ? image.width / image.height : 0
+  return sizesValue(entries, Math.max(1, shape / ratio))
+}
 
 /** Titles longer than this many characters use the long title size. */
 const longTitleLength = 80
@@ -77,6 +143,7 @@ export function SwissPlate({
   number,
   lead = false,
   preload = false,
+  eager = false,
   alone = [],
   headingLevel = 2,
 }: {
@@ -84,6 +151,8 @@ export function SwissPlate({
   readonly number: number
   readonly lead?: boolean
   readonly preload?: boolean
+  /** Loads at once at normal priority: a plate that shares the first row with the lead. */
+  readonly eager?: boolean
   /** The layouts in which this plate has its grid row to itself, from `platesAlone`. */
   readonly alone?: readonly PlateWidth[] | undefined
   readonly headingLevel?: 2 | 3
@@ -113,9 +182,10 @@ export function SwissPlate({
       {story.image ? (
         <div className="si-plate-image" style={focus(story.image)}>
           <ReaderImageView
+            eager={eager}
             image={story.image}
             preload={preload}
-            sizes={lead ? leadSizes : cardSizes}
+            sizes={plateSizes(story.image, lead ? 'lead' : 'plate')}
           />
         </div>
       ) : numberPlate ? (

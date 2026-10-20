@@ -58,6 +58,8 @@ export function SwissPlateList({
             story={story}
             number={index + 1}
             preload={index === 0}
+            // Four across from 1024px; on phones plate 02 can be first when plate 01 has no image.
+            eager={index > 0}
             alone={alone[index]}
           />
         ))}
