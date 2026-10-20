@@ -1,22 +1,21 @@
 'use client'
 
-export default function Error({
-  error: _error,
+import { BaselineError } from '@/reader-directions/baseline/error'
+import { ReaderFailureBoundary } from '@/reader/components/failure-boundary'
+import { readerFailureView } from '@/reader/components/failure-view'
+
+export default function ErrorPage({
+  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
-      <p className="text-gray-600 mb-4">We apologize for the inconvenience.</p>
-      <button
-        onClick={() => reset()}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Try again
-      </button>
-    </div>
+    <ReaderFailureBoundary kind="error" error={error} reset={reset}>
+      <div data-reader-direction="baseline">
+        <BaselineError reset={reset} view={readerFailureView} />
+      </div>
+    </ReaderFailureBoundary>
   )
 }

@@ -30,7 +30,7 @@ function Byline({ authors }: { readonly authors: readonly AuthorLink[] }) {
   )
 }
 
-export function BaselineArticle({ view }: ArticleDirectionProps) {
+export function BaselineArticle({ imageSizes, view }: ArticleDirectionProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader navigation={view.navigation} />
@@ -67,7 +67,7 @@ export function BaselineArticle({ view }: ArticleDirectionProps) {
           ) : null}
 
           <div className="prose prose-lg max-w-2xl dark:prose-invert prose-figcaption:text-muted-foreground prose-pre:break-words prose-pre:whitespace-pre-wrap">
-            <ArticleBody blocks={view.body} />
+            <ArticleBody blocks={view.body} imageSizes={imageSizes} />
           </div>
 
           {view.topics.length > 0 ? (
