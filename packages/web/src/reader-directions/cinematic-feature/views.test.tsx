@@ -41,16 +41,15 @@ describe('Cinematic Feature with published North House content', () => {
       articles.set(story.id, (await readArticleView(source, labStorySlug(story)))!)
   })
 
-  it('meets AA for both reading surfaces and cover text over black and white image extremes', () => {
+  it('meets AA for both solid surfaces and the retained article scrim over image extremes', () => {
     for (const palette of [tokens.light, { ...tokens.light, ...tokens.dark }]) {
       for (const [text, background] of tokens.textPairs)
         expect(contrastRatio(palette[text], palette[background])).toBeGreaterThanOrEqual(4.5)
       expect(contrastRatio(palette['--cf-ink'], palette['--cf-ground'])).toBeGreaterThanOrEqual(3)
     }
     const scrim = tokens.light['--cf-ground'].match(/[\da-f]{2}/gi)!.map((hex) => parseInt(hex, 16))
-    // The text starts below --cf-cover-top at every breakpoint, where the local
-    // scrim has reached its minimum opacity. The directional wash and bottom fade
-    // can only increase that opacity; test both ends over the image's full range.
+    // Only the article still uses a scrim until b2. The following regression
+    // reads its actual gradient and padding; home text sits on opaque ground.
     for (const imageChannel of [0, 255]) {
       for (const opacity of [coverTextScrimOpacity, 1]) {
         const background = `rgb(${scrim
@@ -138,7 +137,7 @@ describe('Cinematic Feature with published North House content', () => {
     }
   })
 
-  it('shows every title once and preserves the newest-first sequence beside the lead', () => {
+  it('shows the lead, two secondary stories and all remaining rows once in supplied order', () => {
     const { document, screen } = markup(<CinematicHome view={home} />)
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(siteName)
@@ -149,12 +148,17 @@ describe('Cinematic Feature with published North House content', () => {
       ).toBe(true)
     }
     expect(
-      [...document.querySelectorAll('.cf-next h2')].map((heading) => heading.textContent),
-    ).toEqual(home.recent.slice(0, 3).map(({ title }) => title))
-    expect(document.querySelectorAll('.cf-further > li')).toHaveLength(home.recent.length - 3)
+      [...document.querySelectorAll('.cf-secondary h3')].map((heading) => heading.textContent),
+    ).toEqual(home.recent.slice(0, 2).map(({ title }) => title))
     expect(
-      [...document.querySelectorAll('.cf-number')].map((number) => number.textContent),
-    ).toEqual(['02', '03', '04'])
+      [...document.querySelectorAll('.cf-latest h3')].map((heading) => heading.textContent),
+    ).toEqual(home.recent.slice(2).map(({ title }) => title))
+    expect(screen.getByRole('heading', { name: 'More stories', level: 2 })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Latest stories', level: 2 })).toBeTruthy()
+    expect(document.querySelector('.cf-number, .cf-next')).toBeNull()
+    expect(
+      screen.getByRole('link', { name: `Read the story: ${home.lead!.title}` }),
+    ).toHaveAttribute('href', home.lead!.href)
     expect(document.querySelector('.cf-cover-image img')?.getAttribute('alt')).toBe(
       home.lead!.image!.alt,
     )
@@ -170,7 +174,97 @@ describe('Cinematic Feature with published North House content', () => {
       <CinematicHome view={{ ...home, lead: { ...home.lead!, image: null }, recent: [] }} />,
     )
     expect(solo.document.querySelector('.cf-hero-text')).toBeTruthy()
-    expect(solo.document.querySelector('.cf-next, .cf-further, img, link[as="image"]')).toBeNull()
+    expect(
+      solo.document.querySelector('.cf-secondary, .cf-latest, img, link[as="image"]'),
+    ).toBeNull()
+  })
+
+  it('omits empty home modules and keeps whole deks for any number of recent stories', () => {
+    for (const count of [0, 1, 2, home.recent.length]) {
+      const recent = home.recent.slice(0, count)
+      const { document, screen } = markup(<CinematicHome view={{ ...home, recent }} />)
+      expect(document.querySelectorAll('.cf-secondary li')).toHaveLength(Math.min(2, count))
+      expect(document.querySelectorAll('.cf-latest li')).toHaveLength(Math.max(0, count - 2))
+      expect(screen.queryByRole('heading', { name: 'More stories' }) !== null).toBe(count > 0)
+      expect(screen.queryByRole('heading', { name: 'Latest stories' }) !== null).toBe(count > 2)
+      for (const story of recent) {
+        const heading = screen.getByRole('heading', { name: story.title, level: 3 })
+        expect(heading.closest('li')).toHaveTextContent(story.dek)
+      }
+    }
+  })
+
+  it('preserves full image captions and separate credit links, with credit-only compact thumbnails', () => {
+    const image = {
+      ...home.lead!.image!,
+      caption: 'A supplied photograph caption.',
+      credit: { name: 'Supplied photographer', url: 'https://example.com/photographer' },
+      focalPoint: { x: 0.2, y: 0.8 },
+    }
+    const recent = home.recent.map((story) => ({ ...story, image }))
+    for (const element of [
+      <CinematicHome key="home" view={{ ...home, lead: { ...home.lead!, image }, recent }} />,
+      <CinematicSection key="section" view={{ ...section, stories: recent }} />,
+    ]) {
+      const { document } = markup(element)
+      for (const img of document.querySelectorAll('main img')) {
+        const figure = img.closest('figure')!
+        expect(figure, 'each supplied image keeps its figure and credit').not.toBeNull()
+        expect(img).toHaveAttribute('alt', image.alt)
+        const caption = figure.querySelector('figcaption')!
+        expect(caption).toHaveTextContent(image.credit.name)
+        if (figure.closest('.cf-row')) expect(caption).not.toHaveTextContent(image.caption)
+        else expect(caption).toHaveTextContent(image.caption)
+        expect(within(caption).getByRole('link')).toHaveAttribute('href', image.credit.url)
+        expect(caption.closest('a')).toBeNull()
+        const frame = img.closest<HTMLElement>('[style]')!
+        expect(frame.style.objectPosition).toBe('20% 80%')
+      }
+      expect(document.querySelector('a a')).toBeNull()
+    }
+  })
+
+  it('renders image-free cards without placeholders and omits absent captions', () => {
+    const { document } = markup(
+      <CinematicHome
+        view={{
+          ...home,
+          lead: { ...home.lead!, image: { ...home.lead!.image!, caption: null, credit: null } },
+          recent: home.recent.map((story) => ({ ...story, image: null })),
+        }}
+      />,
+    )
+    expect(document.querySelector('figcaption')).toBeNull()
+    expect(document.querySelectorAll('main img')).toHaveLength(1)
+    expect(document.querySelectorAll('.cf-card-text')).toHaveLength(home.recent.length)
+  })
+
+  it('keeps a labelled shell, focusable skip target and one page heading with long navigation', () => {
+    const navigation = {
+      sections: Array.from({ length: 12 }, (_, i) => ({
+        ...section,
+        name: `Section ${i} with a long name`,
+        slug: `section-${i}`,
+      })),
+    }
+    for (const element of [
+      <CinematicHome key="home" view={{ ...home, navigation }} />,
+      <CinematicSection key="section" view={{ ...section, navigation }} />,
+    ]) {
+      const { document, screen } = markup(element)
+      expect(screen.getAllByRole('banner')).toHaveLength(1)
+      expect(screen.getAllByRole('main')).toHaveLength(1)
+      expect(screen.getAllByRole('contentinfo')).toHaveLength(1)
+      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+      expect(
+        within(screen.getByRole('navigation', { name: 'Sections' })).getAllByRole('link'),
+      ).toHaveLength(13)
+      expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute(
+        'href',
+        '#cf-main',
+      )
+      expect(document.querySelector('#cf-main')).toHaveAttribute('tabindex', '-1')
+    }
   })
 
   it('preloads exactly the lead with matching sources and dimensions, leaving later images lazy', () => {
@@ -300,15 +394,39 @@ describe('Cinematic Feature with published North House content', () => {
       const { document, screen } = markup(<CinematicSection view={{ ...section, stories }} />)
       expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(section.name)
-      expect(document.querySelectorAll('.cf-grid > li')).toHaveLength(stories.length)
-      expect(document.querySelector('.cf-section-header .cf-label')).toHaveTextContent(
-        `${stories.length} ${stories.length === 1 ? 'story' : 'stories'}`,
-      )
+      expect(document.querySelectorAll('.cf-collection > li')).toHaveLength(stories.length)
+      expect(document.querySelectorAll('.cf-feature')).toHaveLength(stories.length ? 1 : 0)
+      expect(document.querySelector('.cf-section-header .cf-label')).toHaveTextContent(/^Section$/)
+      expect(
+        [...document.querySelectorAll('.cf-collection h2')].map((heading) => heading.textContent),
+      ).toEqual(stories.map(({ title }) => title))
       expect(document.querySelector('nav a[aria-current="page"]')?.getAttribute('href')).toBe(
         section.href,
       )
-      if (!stories.length)
+      if (!stories.length) {
         expect(screen.getByText('No stories have been published in this section yet.')).toBeTruthy()
+        expect(
+          within(screen.getByRole('main')).getByRole('link', { name: 'All stories' }),
+        ).toHaveAttribute('href', '/')
+      }
     }
+  })
+
+  it('uses feature, two-column and thumbnail sizes matching the specified slots', () => {
+    const { document: homeDocument } = markup(<CinematicHome view={home} />)
+    const { document: sectionDocument } = markup(<CinematicSection view={section} />)
+    expect(homeDocument.querySelector('.cf-cover-image img')).toHaveAttribute('sizes', '100vw')
+    for (const img of homeDocument.querySelectorAll('.cf-secondary img')) {
+      expect(img).toHaveAttribute(
+        'sizes',
+        '(min-width: 1536px) 704px, (min-width: 1024px) calc(50vw - 64px), (min-width: 768px) calc(50vw - 44px), calc(100vw - 40px)',
+      )
+    }
+    for (const img of homeDocument.querySelectorAll('.cf-latest img'))
+      expect(img).toHaveAttribute('sizes', '80px')
+    expect(sectionDocument.querySelector('.cf-feature img')).toHaveAttribute(
+      'sizes',
+      '(min-width: 1536px) 821.33px, (min-width: 1024px) calc(58.333333vw - 74.666667px), (min-width: 768px) calc(100vw - 64px), calc(100vw - 40px)',
+    )
   })
 })

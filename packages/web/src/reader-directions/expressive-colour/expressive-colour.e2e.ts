@@ -74,7 +74,7 @@ test('has no overflow at every required width and operable touch-sized navigatio
   page,
 }) => {
   test.setTimeout(120_000)
-  for (const width of [360, 390, 768, 1024, 1280, 1440]) {
+  for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     for (const path of ['/', storyPath, sectionPath]) {
       await page.goto(path)
@@ -87,7 +87,15 @@ test('has no overflow at every required width and operable touch-sized navigatio
       const masthead = await page.locator('.ec-masthead').boundingBox()
       const content = await page.locator('#ec-main').boundingBox()
       expect(content!.y).toBeGreaterThanOrEqual(masthead!.y + masthead!.height)
-      for (const control of await sections.getByRole('link').all()) {
+      for (const control of [
+        ...(await sections.getByRole('link').all()),
+        ...(await page
+          .locator(root)
+          .getByRole('navigation', { name: 'Footer' })
+          .getByRole('link')
+          .all()),
+        page.locator(root).getByRole('button', { name: 'Choose color theme' }),
+      ]) {
         const box = await control.boundingBox()
         expect(box?.width).toBeGreaterThanOrEqual(44)
         expect(box?.height).toBeGreaterThanOrEqual(44)
@@ -127,12 +135,12 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
   }
 })
 
-test('uses visible keyboard focus and the same paper reading ground in either site theme', async ({
+test('uses visible keyboard focus and the night-print reading ground in dark theme', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  const skip = page.getByRole('link', { name: 'Skip to stories' })
+  const skip = page.getByRole('link', { name: 'Skip to content' })
   for (
     let tabs = 0;
     tabs < 12 && !(await skip.evaluate((element) => element === document.activeElement));
@@ -150,7 +158,7 @@ test('uses visible keyboard focus and the same paper reading ground in either si
   await page.goto('/')
   const interiors = page
     .locator(root)
-    .getByRole('navigation')
+    .getByRole('navigation', { name: 'Sections' })
     .getByRole('link', { name: 'Interiors' })
   for (
     let tabs = 0;
@@ -166,7 +174,64 @@ test('uses visible keyboard focus and the same paper reading ground in either si
   await waitForThemeToSettle(page)
   expect(
     await page.locator(root).evaluate((element) => getComputedStyle(element).backgroundColor),
-  ).toBe('rgb(251, 244, 234)')
+  ).toBe('rgb(23, 20, 31)')
+})
+
+test('places the Theme control before section pills and supports keyboard theme selection', async ({
+  page,
+}) => {
+  const theme = page.locator(root).getByRole('button', { name: 'Choose color theme' })
+  const wordmark = page.locator('.ec-masthead .ec-wordmark a')
+  // The Theme control is disabled until hydration, and a disabled button is skipped by Tab.
+  await expect(theme).toBeEnabled()
+  await wordmark.focus()
+  await page.keyboard.press('Tab')
+  await expect(theme).toBeFocused()
+  expect(await theme.evaluate((element) => getComputedStyle(element).outlineWidth)).toBe('3px')
+  await page.keyboard.press('Enter')
+  const dark = page.getByRole('menuitemradio', { name: 'Dark theme', exact: true })
+  await dark.focus()
+  await page.keyboard.press('Enter')
+  await waitForThemeToSettle(page)
+  // Base UI radio items keep the menu open after selection; Escape returns focus to the trigger.
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('menu', { name: 'Color theme' })).toBeHidden()
+  await expect(theme).toBeFocused()
+  expect(
+    await page.locator(root).evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).toBe('rgb(23, 20, 31)')
+  await page.keyboard.press('Tab')
+  await expect(
+    page
+      .locator(root)
+      .getByRole('navigation', { name: 'Sections' })
+      .getByRole('link', { name: 'All stories' }),
+  ).toBeFocused()
+})
+
+test('moves the lead visual on hover without a reduced-motion preference', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  const card = page.locator('.ec-card-lead .ec-card-link')
+  await card.hover()
+  const visual = card.locator('img, .ec-motif').first()
+  await expect
+    .poll(() => visual.evaluate((element) => getComputedStyle(element).transform))
+    .not.toBe('none')
+})
+
+test('removes both card motion and transforms for reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const card = page.locator('.ec-card-lead .ec-card-link')
+  await card.hover()
+  for (const visual of await card.locator('img, .ec-motif').all()) {
+    // The shared global reduced-motion rule sets every duration to 0.01ms (!important).
+    const motion = await visual.evaluate((element) => ({
+      transition: parseFloat(getComputedStyle(element).transitionDuration),
+      transform: getComputedStyle(element).transform,
+    }))
+    expect(motion.transform).toBe('none')
+    expect(motion.transition).toBeLessThanOrEqual(0.00001)
+  }
 })
 
 for (const width of [390, 1440]) {
@@ -218,6 +283,7 @@ for (const width of [390, 1440]) {
         // published title on the lead / all-block article and exercise every palette pair.
         await heading.evaluate((element, title) => {
           element.textContent = title
+          if (element.closest('.ec-card')) element.classList.add('ec-card-title-long')
         }, longest.title)
         for (const colour of storyColours) {
           await surface.evaluate(
@@ -342,19 +408,18 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures twelve seeded screenshots for review', async ({ page }) => {
+test('captures home and section in both themes at the three b1 review widths', async ({ page }) => {
   test.setTimeout(180_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-ec-serif': 'Fraunces',
     '--font-ec-mono': 'Martian Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.7')
+  const destination = path.resolve('docs/worklog/blog-0044.52')
   await mkdir(destination, { recursive: true })
-  for (const width of [390, 1440]) {
+  for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
     for (const [name, route] of [
       ['home', '/'],
-      ['article', storyPath],
       ['section', sectionPath],
     ]) {
       await captureFonts.goto(route!)
@@ -372,21 +437,32 @@ test('captures twelve seeded screenshots for review', async ({ page }) => {
           ),
         `${name} images loaded`,
       ).toBe(true)
-      for (const fullPage of [false, true]) {
-        await captureFonts.assertFonts()
-        await page.screenshot({
-          path: path.join(destination, `${name}-${width}-${fullPage ? 'full' : 'viewport'}.png`),
-          fullPage,
-          animations: 'disabled',
-        })
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(
+          (dark) => document.documentElement.classList.toggle('dark', dark),
+          theme === 'dark',
+        )
+        await waitForThemeToSettle(page)
+        for (const fullPage of [false, true]) {
+          await captureFonts.assertFonts()
+          await page.screenshot({
+            path: path.join(
+              destination,
+              `${name}-${width}-${theme}-${fullPage ? 'full' : 'viewport'}.png`,
+            ),
+            fullPage,
+            animations: 'disabled',
+          })
+        }
       }
     }
   }
 })
 
-test('keeps the soft serif title stable on cold and warm article loads without the capture gate', async ({
+test('keeps home, section and article stable on cold and warm loads without the capture gate', async ({
   page,
 }) => {
+  test.setTimeout(180_000)
   type Shift = PerformanceEntry & {
     hadRecentInput: boolean
     value: number
@@ -405,7 +481,8 @@ test('keeps the soft serif title stable on cold and warm article loads without t
           entry.sources?.some(
             ({ node }) =>
               node instanceof Element &&
-              (node.matches('.ec-article-band h1') || node.closest('.ec-article-band h1')),
+              (node.matches('.ec-article-band h1, .ec-wordmark-home, .ec-section-header h1') ||
+                node.closest('.ec-article-band h1, .ec-wordmark-home, .ec-section-header h1')),
           )
         )
           measured.ecShifts.title += entry.value
@@ -413,27 +490,36 @@ test('keeps the soft serif title stable on cold and warm article loads without t
     }).observe({ type: 'layout-shift', buffered: true })
   })
   const cdp = await page.context().newCDPSession(page)
-  await cdp.send('Network.clearBrowserCache')
-  for (const visit of ['cold', 'warm']) {
-    await page.goto(storyPath)
-    await page.evaluate(async () => {
-      await document.fonts.ready
-      await Promise.all(
-        Array.from(document.querySelectorAll<HTMLImageElement>('.ec-hero img'), (image) =>
-          image.decode(),
-        ),
-      )
-    })
-    await waitForThemeToSettle(page)
-    // Give buffered observer entries a frame after the last font/image layout.
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-        ),
-    )
-    const shifts = await page.evaluate(() => (window as unknown as MeasuredWindow).ecShifts)
-    expect(shifts.total, `${visit} article CLS`).toBe(0)
-    expect(shifts.title, `${visit} soft-title shift`).toBe(0)
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((value) => localStorage.setItem('theme', value), theme)
+      for (const route of ['/', sectionPath, storyPath]) {
+        await cdp.send('Network.clearBrowserCache')
+        for (const visit of ['cold', 'warm']) {
+          await page.goto(route)
+          await page.evaluate(async () => {
+            await document.fonts.ready
+            await Promise.all(
+              Array.from(
+                document.querySelectorAll<HTMLImageElement>('.ec-hero img, .ec-card-lead img'),
+                (image) => image.decode(),
+              ),
+            )
+          })
+          await waitForThemeToSettle(page)
+          // Give buffered observer entries a frame after the last font/image layout.
+          await page.evaluate(
+            () =>
+              new Promise<void>((resolve) =>
+                requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              ),
+          )
+          const shifts = await page.evaluate(() => (window as unknown as MeasuredWindow).ecShifts)
+          expect(shifts.total, `${visit} ${route} ${theme} ${width} CLS`).toBe(0)
+          expect(shifts.title, `${visit} ${route} ${theme} ${width} title shift`).toBe(0)
+        }
+      }
+    }
   }
 })
