@@ -959,9 +959,19 @@ for (const width of [390, 1440]) {
             await expect(link).toHaveCSS('outline-style', 'solid')
             await expect(link).toHaveCSS('outline-width', '3px')
           }
-          const axe = await new AxeBuilder({ page })
-            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-            .analyze()
+          // In forced colours the user's palette sets contrast, and axe pairs authored text colours
+          // with forced backgrounds (it reported 1.04:1 for text Chromium paints in CanvasText).
+          // The contrast rule runs in the normal themes (nested-surface sweep); here the
+          // screenshots are the evidence.
+          const builder = new AxeBuilder({ page }).withTags([
+            'wcag2a',
+            'wcag2aa',
+            'wcag21a',
+            'wcag21aa',
+            'wcag22aa',
+          ])
+          if (medium === 'forced-colors') builder.disableRules(['color-contrast'])
+          const axe = await builder.analyze()
           expect(axe.violations).toEqual([])
           await testInfo.attach(`${medium}-${width}-${dark ? 'dark' : 'light'}`, {
             body: await page.screenshot({ fullPage: true, animations: 'disabled' }),
