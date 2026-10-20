@@ -115,7 +115,8 @@ describe('developed home and section lists', () => {
       ...Array<string>(12).fill('standard'),
       ...Array<string>(14).fill('compact'),
     ])
-    expect(container.querySelectorAll('main img')).toHaveLength(13)
+    expect(container.querySelectorAll('main .ec-card:has(img)')).toHaveLength(13)
+    expect(container.querySelectorAll('.ec-card-lead img')).toHaveLength(2)
     expect(container.querySelectorAll('.ec-spine-strip > span')).toHaveLength(24)
     expect(container.querySelector('.ec-spine-strip')).toHaveAttribute('aria-hidden', 'true')
     expect(container.querySelector('link[as="image"]')?.getAttribute('imagesizes')).toBe(
@@ -228,7 +229,7 @@ describe('developed home and section lists', () => {
       expect(image).toHaveAttribute('loading', 'lazy')
   })
 
-  it('keeps the registered author and topic fallbacks rendering while b2 is pending', () => {
+  it('keeps the registered author and topic pages rendering', () => {
     const Author = expressiveColourDirection.Author
     const Topic = expressiveColourDirection.Topic
     const author = markup(

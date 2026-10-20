@@ -1,7 +1,13 @@
 import { storyColour } from './colours'
 import { StoryMotif } from './motif'
 
-export function ExpressiveEmpty({ section = false }: { readonly section?: boolean }) {
+export function ExpressiveEmpty({
+  section = false,
+  collection = false,
+}: {
+  readonly section?: boolean
+  readonly collection?: boolean
+}) {
   return (
     <section
       className="ec-empty"
@@ -9,12 +15,14 @@ export function ExpressiveEmpty({ section = false }: { readonly section?: boolea
       data-story-colour={storyColour('empty').name}
     >
       <div>
-        {!section ? <p className="ec-label">All stories</p> : null}
+        {!section && !collection ? <p className="ec-label">All stories</p> : null}
         <h2 id="ec-empty-title">No stories yet</h2>
         <p>
           {section
             ? 'No stories have been published in this section yet.'
-            : 'New stories will appear here when they are published.'}
+            : collection
+              ? 'No stories are published here yet.'
+              : 'New stories will appear here when they are published.'}
         </p>
       </div>
       <div className="ec-empty-motif">

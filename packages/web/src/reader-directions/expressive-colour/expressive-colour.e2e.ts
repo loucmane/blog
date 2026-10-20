@@ -3,16 +3,30 @@ import path from 'node:path'
 
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
+import { ArticleBody } from '../../reader/components/article-body'
 import { normalizeSlug } from '../../server/content/domain'
-import { labStories } from '../../server/lab/north-house'
+import { labAuthors, labStories, labTopics } from '../../server/lab/north-house'
 import { prepareFontCapture } from '../capture-fonts'
-import { storyColour, storyColours } from './colours'
+import { contrastRatio } from '../contrast'
+import { blockFixture } from './block-fixture'
+import { storyColour, storyColours, storyMotif } from './colours'
+import { StoryMotif } from './motif'
+import { bodyImageSizes } from './sizes'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
 const sectionPath = '/sections/interiors'
+const author = labAuthors.find(({ slug }) =>
+  labStories.some((story) => story.authors.includes(slug)),
+)!
+const topic = labTopics.find(({ slug }) => labStories.some((story) => story.topics.includes(slug)))!
+const authorPath = `/authors/${author.slug}`
+const topicPath = `/topics/${topic.slug}`
+const pagePaths = ['/', storyPath, sectionPath, authorPath, topicPath]
 const root = '[data-reader-direction="expressive-colour"]'
 
 async function waitForThemeToSettle(page: Page) {
@@ -57,6 +71,7 @@ test('opens Expressive Colour from the lab and renders published titles on all t
     storyColour(leadPath!.split('/').at(-1)!).name,
   )
   await page.goto(storyPath)
+  await expect(page.locator(root).getByRole('banner')).toHaveCount(1)
   await expect(page.locator('.ec-article')).toHaveAttribute('data-story-colour', colour)
   await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(storyTitle)
   await page.goto(sectionPath)
@@ -76,7 +91,7 @@ test('has no overflow at every required width and operable touch-sized navigatio
   test.setTimeout(120_000)
   for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const path of ['/', storyPath, sectionPath]) {
+    for (const path of pagePaths) {
       await page.goto(path)
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -95,6 +110,7 @@ test('has no overflow at every required width and operable touch-sized navigatio
           .getByRole('link')
           .all()),
         page.locator(root).getByRole('button', { name: 'Choose color theme' }),
+        ...(await page.locator('.ec-topics a, .ec-credits a').all()),
       ]) {
         const box = await control.boundingBox()
         expect(box?.width).toBeGreaterThanOrEqual(44)
@@ -116,6 +132,7 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
       'article-lab-chair',
       'article-lab-shelf',
       'article-lab-long-table',
+      'article-lab-door-handle',
     ].includes(id),
   )
   for (const width of [360, 390, 768, 1024, 1280, 1440]) {
@@ -213,7 +230,7 @@ test('moves the lead visual on hover without a reduced-motion preference', async
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   const card = page.locator('.ec-card-lead .ec-card-link')
   await card.hover()
-  const visual = card.locator('img, .ec-motif').first()
+  const visual = card.locator('img:visible, .ec-motif:visible').first()
   await expect
     .poll(() => visual.evaluate((element) => getComputedStyle(element).transform))
     .not.toBe('none')
@@ -239,7 +256,7 @@ for (const width of [390, 1440]) {
     test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
       test.setTimeout(120_000)
       await page.setViewportSize({ width, height: 900 })
-      for (const path of ['/', storyPath, sectionPath]) {
+      for (const path of pagePaths) {
         await page.goto(path)
         await page.evaluate(async () => {
           await document.fonts.ready
@@ -284,6 +301,7 @@ for (const width of [390, 1440]) {
         await heading.evaluate((element, title) => {
           element.textContent = title
           if (element.closest('.ec-card')) element.classList.add('ec-card-title-long')
+          else element.classList.add('ec-title-long')
         }, longest.title)
         for (const colour of storyColours) {
           await surface.evaluate(
@@ -340,34 +358,361 @@ for (const width of [390, 1440]) {
   }
 }
 
-test('uses a 65-character reading measure with reduced motion respected', async ({ page }) => {
+test('uses a fixed 720px measure of about 65–70 characters with reduced motion respected', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(storyPath)
   await page.evaluate(async () => {
     await document.fonts.ready
   })
-  const body = page.locator('.ec-body')
+  const body = page.locator('.ec-body > p').first()
   const metrics = await body.evaluate((element) => {
     const style = getComputedStyle(element)
-    // Measure the CSS ch unit in the same active face, including a retained optional fallback.
+    // Measure representative lowercase letters and spaces in the actual active face.
     const probe = document.createElement('span')
-    probe.style.cssText = 'display:block;width:65ch;position:absolute;visibility:hidden'
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'
+    const sample = 'abcdefghijklmnopqrstuvwxyz '
+    probe.textContent = sample.repeat(10)
     element.append(probe)
-    const measure = probe.getBoundingClientRect().width
+    const average = probe.getBoundingClientRect().width / (sample.length * 10)
     probe.remove()
     return {
       width: element.getBoundingClientRect().width,
-      measure,
+      characters: element.getBoundingClientRect().width / average,
       fontSize: style.fontSize,
       lineHeight: style.lineHeight,
     }
   })
   expect(metrics.fontSize).toBe('20px')
   expect(metrics.lineHeight).toBe('35px')
-  expect(Math.abs(metrics.width - metrics.measure)).toBeLessThan(1)
+  expect(metrics.width).toBeCloseTo(720, 0)
+  expect(metrics.characters).toBeGreaterThanOrEqual(65)
+  expect(metrics.characters).toBeLessThanOrEqual(70)
   expect(await body.evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
 })
+
+test('keeps visible lead copy and image in DOM order and the wordmark unbroken at narrow widths', async ({
+  page,
+}) => {
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const layout = await page.locator('.ec-card-lead .ec-card-link').evaluate((element) => {
+      const children = Array.from(element.children).filter(
+        (child) => getComputedStyle(child).display !== 'none',
+      )
+      return children.map((child) => ({
+        copy: child.classList.contains('ec-card-copy'),
+        x: child.getBoundingClientRect().x,
+        y: child.getBoundingClientRect().y,
+        order: getComputedStyle(child).order,
+      }))
+    })
+    expect(layout.map(({ copy }) => copy)).toEqual(width < 1024 ? [false, true] : [true, false])
+    expect(layout.every(({ order }) => order === '0')).toBe(true)
+    if (width < 1024) expect(layout[0]!.y).toBeLessThan(layout[1]!.y)
+    else expect(layout[0]!.x).toBeLessThan(layout[1]!.x)
+    await expect(page.locator('.ec-card-lead img:visible')).toHaveCount(1)
+    const word = await page.locator('.ec-masthead .ec-wordmark em').evaluate((element) => ({
+      lines: element.getClientRects().length,
+      right: element.getBoundingClientRect().right,
+      wrap: getComputedStyle(element).whiteSpace,
+    }))
+    expect(word.lines).toBe(1)
+    expect(word.wrap).toBe('nowrap')
+    expect(word.right).toBeLessThanOrEqual(width)
+    const theme = await page
+      .locator(root)
+      .getByRole('button', { name: 'Choose color theme' })
+      .boundingBox()
+    expect(word.right).toBeLessThanOrEqual(theme!.x)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    )
+  }
+})
+
+test('paints every paper motif with both ink and story colour', async ({ page }) => {
+  const slugs = Array.from({ length: 100 }, (_, index) => `motif-${index}`)
+  for (const kind of [0, 1, 2]) {
+    const slug = slugs.find((candidate) => storyMotif(candidate).kind === kind)!
+    const html = renderToStaticMarkup(createElement(StoryMotif, { slug }))
+    await page.locator('#ec-main').evaluate((element, fixture) => {
+      const card = document.createElement('div')
+      card.className = 'ec-card'
+      card.dataset.surface = 'paper'
+      card.dataset.storyColour = 'cobalt'
+      card.id = 'ec-paper-probe'
+      card.innerHTML = fixture
+      element.querySelector('#ec-paper-probe')?.remove()
+      element.append(card)
+    }, html)
+    for (const dark of [false, true]) {
+      await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
+      await waitForThemeToSettle(page)
+      const paints = await page.locator('#ec-paper-probe').evaluate((element) => ({
+        ink: getComputedStyle(element).color,
+        colours: Array.from(element.querySelectorAll('path, circle')).flatMap((shape) => [
+          getComputedStyle(shape).fill,
+          getComputedStyle(shape).stroke,
+        ]),
+      }))
+      expect(paints.colours).toContain(paints.ink)
+      expect(paints.colours).toContain('rgb(47, 69, 214)')
+    }
+  }
+})
+
+test('keeps article, author and topic previews scoped inside the comparison frames', async ({
+  page,
+}) => {
+  test.setTimeout(240_000)
+  for (const route of [storyPath, authorPath, topicPath]) {
+    await page.goto(`/owner/reader-lab/compare?page=${encodeURIComponent(route)}`)
+    const frame = page.frameLocator('[data-compare-direction="expressive-colour"] iframe')
+    for (const width of [390, 1440]) {
+      await page
+        .getByRole('radio', { name: width === 390 ? 'Mobile · 390 px' : 'Desktop · 1440 px' })
+        .check()
+      for (const dark of [false, true]) {
+        await page.evaluate(
+          (value) => document.documentElement.classList.toggle('dark', value),
+          dark,
+        )
+        await expect(frame.locator(root)).toBeVisible()
+        await expect(frame.locator(root).getByRole('heading', { level: 1 })).toHaveCount(1)
+        await expect
+          .poll(() =>
+            frame.locator(root).evaluate((element) => getComputedStyle(element).backgroundColor),
+          )
+          .toBe(dark ? 'rgb(23, 20, 31)' : 'rgb(251, 244, 234)')
+        expect(
+          await frame
+            .locator('html')
+            .evaluate(
+              (element) => element.scrollWidth <= element.ownerDocument.defaultView!.innerWidth,
+            ),
+        ).toBe(true)
+        const skip = frame.getByRole('link', { name: 'Skip to content' })
+        await skip.focus()
+        await page.keyboard.press('Enter')
+        await expect(frame.locator('#ec-main')).toBeFocused()
+      }
+    }
+  }
+})
+
+test('opens author and topic links and derives every visible story from the current sample', async ({
+  page,
+}) => {
+  await page.goto(storyPath)
+  for (const nav of ['Sections', 'Footer']) {
+    await expect(
+      page.getByRole('navigation', { name: nav }).locator('[aria-current]'),
+    ).toHaveAttribute('aria-current', 'true')
+  }
+  const byline = page.locator('.ec-credits a').first()
+  const authorHref = await byline.getAttribute('href')
+  await byline.click()
+  await expect(page).toHaveURL(authorHref!)
+  await expect(page.locator('.ec-author-mark')).toBeVisible()
+  await page.goto(storyPath)
+  const topicLink = page.getByRole('navigation', { name: 'Topics' }).getByRole('link').first()
+  const topicHref = await topicLink.getAttribute('href')
+  await topicLink.click()
+  await expect(page).toHaveURL(topicHref!)
+  await expect(page.locator('.ec-chip-ring')).toBeVisible()
+  for (const [route, expected, name] of [
+    [authorPath, labStories.filter((story) => story.authors.includes(author.slug)), author.name],
+    [topicPath, labStories.filter((story) => story.topics.includes(topic.slug)), topic.name],
+  ] as const) {
+    await page.goto(route)
+    await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(name)
+    await expect(page.locator('.ec-grid > li')).toHaveCount(expected.length)
+    for (const story of expected)
+      await expect(
+        page.locator('.ec-grid').getByRole('link', { name: story.title, exact: true }),
+      ).toHaveAttribute('href', `/stories/${normalizeSlug(story.title)}`)
+  }
+})
+
+test('lays out square and portrait heroes once, using the real focal point and matching preload', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const id of ['article-lab-shelf', 'article-lab-door-handle']) {
+      const story = labStories.find((item) => item.id === id)!
+      await page.goto(`/stories/${normalizeSlug(story.title)}`)
+      const hero = page.locator('.ec-hero-cover')
+      await expect(hero.locator('img')).toHaveCount(1)
+      const copy = await page.locator('.ec-article-copy').boundingBox()
+      const frame = await hero.boundingBox()
+      const computed = await hero.locator('img').evaluate((element) => {
+        const style = getComputedStyle(element)
+        const host = element.closest<HTMLElement>('.ec-hero')!
+        return {
+          position: style.objectPosition,
+          expected: host.style.objectPosition,
+          fit: style.objectFit,
+          height: element.getBoundingClientRect().height,
+        }
+      })
+      expect(computed.position).toBe(computed.expected)
+      expect(computed.fit).toBe('cover')
+      expect(computed.height).toBeLessThanOrEqual(720)
+      const link = page.locator('link[as="image"]')
+      await expect(link).toHaveCount(1)
+      expect(await link.getAttribute('imagesizes')).toBe(
+        await hero.locator('img').getAttribute('sizes'),
+      )
+      if (width >= 1024) {
+        expect(frame!.x).toBeGreaterThan(copy!.x + copy!.width)
+        expect(
+          await hero.locator('figcaption').evaluate((element) => getComputedStyle(element).color),
+        ).toBe(
+          await page
+            .locator('.ec-article-band')
+            .evaluate((element) => getComputedStyle(element).color),
+        )
+      } else {
+        expect(frame!.y).toBeGreaterThanOrEqual(copy!.y + copy!.height)
+        expect(frame!.width).toBeLessThanOrEqual(576)
+        expect(
+          await hero.locator('figcaption').evaluate((element) => getComputedStyle(element).color),
+        ).toBe(
+          await page.locator(root).evaluate((element) => {
+            const probe = document.createElement('span')
+            probe.style.color = 'var(--ec-ink-soft)'
+            element.append(probe)
+            const colour = getComputedStyle(probe).color
+            probe.remove()
+            return colour
+          }),
+        )
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width,
+      )
+    }
+  }
+})
+
+for (const width of [390, 1440]) {
+  test(`computed editorial styles survive resets and nesting at ${width}px`, async ({ page }) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    // Real shared renderer, including block types/variants absent from this seeded article.
+    await page.locator('.ec-body').evaluate(
+      (element, html) => {
+        element.innerHTML = html
+      },
+      renderToStaticMarkup(
+        createElement(ArticleBody, { blocks: blockFixture, imageSizes: bodyImageSizes }),
+      ),
+    )
+    const dimensions = await page.locator('.ec-body').evaluate((element) => {
+      const style = (selector: string) => getComputedStyle(element.querySelector(selector)!)
+      const box = (selector: string) =>
+        element.querySelector(selector)!.getBoundingClientRect().width
+      return {
+        measure: box(':scope > p'),
+        feature: box(':scope > [data-block="pull-quote"]'),
+        wide: box(':scope > [data-layout="grid"]'),
+        gridColumns: style(':scope > [data-layout="grid"]').gridTemplateColumns.split(' ').length,
+        diptychColumns: style(':scope > [data-layout="diptych"]').gridTemplateColumns.split(' ')
+          .length,
+        carouselColumns: style(':scope > [data-layout="carousel"]').gridTemplateColumns.split(' ')
+          .length,
+        bullet: style(':scope > ul:not([data-block])').listStyleType,
+        roman: style(':scope > ol[type="I"]').listStyleType,
+        checklist: style(':scope > [data-block="checklist"]').listStyleType,
+        headingSize: parseFloat(style(':scope > h2').fontSize),
+        headingLeading: parseFloat(style(':scope > h2').lineHeight),
+        h5Italic: style(':scope > h5').fontStyle,
+        h6Family: style(':scope > h6').fontFamily,
+        captionFamily: style(':scope > figure:not([data-block]) figcaption').fontFamily,
+        captionSize: style(':scope > figure:not([data-block]) figcaption').fontSize,
+        codeSize: style(':scope > pre code').fontSize,
+        quoteWeight: style('[data-block="pull-quote"] blockquote').fontWeight,
+        headingMargin: style('[data-variant="key-points"] > h2').marginTop,
+      }
+    })
+    expect(dimensions.measure).toBeCloseTo(width === 1440 ? 720 : 358, 0)
+    expect(dimensions.feature).toBeCloseTo(width === 1440 ? 896 : 358, 0)
+    expect(dimensions.wide).toBeCloseTo(width === 1440 ? 1152 : 358, 0)
+    expect(dimensions.gridColumns).toBe(width === 1440 ? 3 : 1)
+    expect(dimensions.diptychColumns).toBe(width === 1440 ? 2 : 1)
+    expect(dimensions.carouselColumns).toBe(1)
+    expect(dimensions.bullet).toBe('disc')
+    expect(dimensions.roman).toBe('upper-roman')
+    expect(dimensions.checklist).toBe('none')
+    expect(dimensions.headingLeading).toBeCloseTo(dimensions.headingSize * 1.08, 1)
+    expect(dimensions.h5Italic).toBe('italic')
+    expect(dimensions.h6Family).toContain('font-ec-mono')
+    expect(dimensions.captionFamily).toContain('font-ec-serif')
+    expect(dimensions.captionSize).toBe('16px')
+    expect(dimensions.codeSize).toBe('14px')
+    expect(dimensions.quoteWeight).toBe('700')
+    expect(dimensions.headingMargin).toBe('48px')
+
+    for (const dark of [false, true]) {
+      await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
+      await waitForThemeToSettle(page)
+      for (const colour of storyColours) {
+        await page
+          .locator('.ec-article')
+          .evaluate((element, name) => element.setAttribute('data-story-colour', name), colour.name)
+        const pairs = await page.locator('.ec-body').evaluate((element) => {
+          function background(node: Element): string {
+            const colour = getComputedStyle(node).backgroundColor
+            return colour !== 'rgba(0, 0, 0, 0)' && colour !== 'transparent'
+              ? colour
+              : node.parentElement
+                ? background(node.parentElement)
+                : 'rgb(255, 255, 255)'
+          }
+          return Array.from(
+            element.querySelectorAll(
+              'p, h2, h3, h4, h5, h6, a, code, figcaption, figcaption > span, li > span[aria-hidden]',
+            ),
+          ).map((node) => ({
+            text: node.tagName,
+            foreground: getComputedStyle(node).color,
+            background: background(node),
+          }))
+        })
+        for (const pair of pairs)
+          expect(
+            contrastRatio(pair.foreground, pair.background),
+            `${colour.name}, dark=${dark}, ${pair.text}`,
+          ).toBeGreaterThanOrEqual(4.5)
+        const link = page.locator('.ec-body > [data-variant="key-points"] > p a')
+        await page.keyboard.press('Tab')
+        await link.focus()
+        const focus = await link.evaluate((element) => {
+          const style = getComputedStyle(element)
+          return {
+            colour: style.outlineColor,
+            style: style.outlineStyle,
+            width: style.outlineWidth,
+          }
+        })
+        expect(focus.style).toBe('solid')
+        expect(focus.width).toBe('3px')
+        expect(contrastRatio(focus.colour, colour.background)).toBeGreaterThanOrEqual(3)
+      }
+      const axe = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze()
+      expect(axe.violations).toEqual([])
+    }
+  })
+}
 
 test('removes Expressive Colour font declarations when the owner switches back to baseline', async ({
   page,
@@ -408,19 +753,34 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures home and section in both themes at the three b1 review widths', async ({ page }) => {
-  test.setTimeout(180_000)
+test('captures the developed pages in both themes at the three review widths', async ({ page }) => {
+  test.setTimeout(300_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-ec-serif': 'Fraunces',
     '--font-ec-mono': 'Martian Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.52')
+  const destination = path.resolve('docs/worklog/blog-0044.53')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
     for (const [name, route] of [
       ['home', '/'],
       ['section', sectionPath],
+      ['article', storyPath],
+      [
+        'shelf',
+        `/stories/${normalizeSlug(labStories.find(({ id }) => id === 'article-lab-shelf')!.title)}`,
+      ],
+      [
+        'chair',
+        `/stories/${normalizeSlug(labStories.find(({ id }) => id === 'article-lab-chair')!.title)}`,
+      ],
+      [
+        'door-handle',
+        `/stories/${normalizeSlug(labStories.find(({ id }) => id === 'article-lab-door-handle')!.title)}`,
+      ],
+      ['author', authorPath],
+      ['topic', topicPath],
     ]) {
       await captureFonts.goto(route!)
       // Load lazy images before the full-page capture, then return to the cover.
@@ -494,7 +854,7 @@ test('keeps home, section and article stable on cold and warm loads without the 
     await page.setViewportSize({ width, height: 900 })
     for (const theme of ['light', 'dark']) {
       await page.evaluate((value) => localStorage.setItem('theme', value), theme)
-      for (const route of ['/', sectionPath, storyPath]) {
+      for (const route of pagePaths) {
         await cdp.send('Network.clearBrowserCache')
         for (const visit of ['cold', 'warm']) {
           await page.goto(route)
