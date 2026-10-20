@@ -7,8 +7,10 @@ import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
 
 import type { AuthorView, StoryCard, TopicView } from '@/reader/views'
+import { readerFailureView } from '@/reader/components/failure-view'
 
 import { contrastRatio, wcagTextContrast } from './contrast'
+import { ReaderDirectionRoot } from './direction-root'
 import { readerDirections } from './registry'
 
 const directionsRoot = path.join(process.cwd(), 'packages/web/src/reader-directions')
@@ -112,6 +114,31 @@ function themeTokens(selector: ':root' | '.dark'): Map<string, string> {
 }
 
 describe('registered reader directions', () => {
+  it.each(readerDirections.directions)(
+    '$id renders all failure views with one h1 and only its own assets',
+    (direction) => {
+      for (const kind of ['NotFound', 'Error', 'Unavailable'] as const) {
+        const markup = renderToStaticMarkup(
+          createElement(ReaderDirectionRoot, {
+            direction,
+            children: createElement(direction[kind], { view: readerFailureView, reset: () => {} }),
+          }),
+        )
+        expect(topLevelHeadings(markup)).toHaveLength(1)
+        expect(markup).toContain(`data-reader-direction="${direction.id}"`)
+        expect(markup).toContain('<main')
+        expect(markup).toContain('href="/"')
+        for (const other of readerDirections.directions.filter(
+          (item) => item.id !== direction.id,
+        )) {
+          expect(markup).not.toContain(`/reader-directions/${other.id}/fonts/`)
+        }
+        if (direction.fonts.length)
+          expect(markup).toContain(`data-reader-direction-fonts="${direction.id}"`)
+      }
+    },
+  )
+
   it('registers baseline as the public default and keeps every id unique', () => {
     const ids = readerDirections.directions.map(({ id }) => id)
 

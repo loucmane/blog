@@ -3,7 +3,10 @@ import type { IllustrationSpec } from './illustrations'
 /*
  * Original sample copy for the Reader Lab: North House, a design and interiors magazine. The set
  * covers the edge cases public designs must handle: a very long title, a story without images, a
- * very short story, and a long read that uses every block type in the document schema.
+ * story whose only image comes after the opening, a very short story, a long read that uses every
+ * block type in the document schema, bylines of one to three authors, and a contributor without a
+ * biography. Every section, author and topic has several stories, so section, author, topic and
+ * related-story lists are realistic.
  */
 
 type Mark =
@@ -36,7 +39,24 @@ export interface LabImage {
   readonly illustration: IllustrationSpec
 }
 
+export interface LabAuthor {
+  /** A short biography, or empty for a contributor who has none. */
+  readonly bio: string
+  readonly id: string
+  readonly name: string
+  readonly slug: string
+}
+
+/** A topic readers can browse: a `tag` taxonomy term with its own topic page. */
+export interface LabTopic {
+  readonly id: string
+  readonly name: string
+  readonly slug: string
+}
+
 export interface LabStory {
+  /** The credited authors' slugs, in byline order. */
+  readonly authors: readonly string[]
   readonly blocks: readonly LabNode[]
   readonly dek: string
   readonly id: string
@@ -44,6 +64,8 @@ export interface LabStory {
   readonly publishedAt: string
   readonly section: string
   readonly title: string
+  /** The slugs of the topics the story is filed under, in the order the story lists them. */
+  readonly topics: readonly string[]
 }
 
 const studio = 'North House studio'
@@ -52,6 +74,45 @@ export const labSections: readonly LabSection[] = [
   { id: 'section-lab-architecture', name: 'Architecture', slug: 'architecture' },
   { id: 'section-lab-craft', name: 'Craft', slug: 'craft' },
   { id: 'section-lab-interiors', name: 'Interiors', slug: 'interiors' },
+]
+
+export const labAuthors: readonly LabAuthor[] = [
+  {
+    bio: 'Editor of North House. Writes about light, weather, and the houses that are planned around both.',
+    id: 'author-lab-ingrid-halvorsen',
+    name: 'Ingrid Halvorsen',
+    slug: 'ingrid-halvorsen',
+  },
+  {
+    bio: 'Furniture maker and craft editor, working in ash and oak from a small workshop by the river.',
+    id: 'author-lab-tomas-ek',
+    name: 'Tomas Ek',
+    slug: 'tomas-ek',
+  },
+  {
+    bio: 'Writes about colour and the rooms people actually live in. Trained as a painter, and still mixes every sample by hand before recommending a shade.',
+    id: 'author-lab-asa-nygard',
+    name: 'Åsa Nygård',
+    slug: 'asa-nygard',
+  },
+  {
+    bio: 'Architect of small buildings on difficult sites, and the magazine’s case for building less.',
+    id: 'author-lab-elias-brandt',
+    name: 'Elias Brandt',
+    slug: 'elias-brandt',
+  },
+  // A guest contributor without a biography.
+  { bio: '', id: 'author-lab-saga-lindqvist', name: 'Saga Lindqvist', slug: 'saga-lindqvist' },
+]
+
+export const labTopics: readonly LabTopic[] = [
+  { id: 'tag-lab-light', name: 'Light', slug: 'light' },
+  { id: 'tag-lab-winter', name: 'Winter', slug: 'winter' },
+  { id: 'tag-lab-timber', name: 'Timber', slug: 'timber' },
+  { id: 'tag-lab-small-spaces', name: 'Small spaces', slug: 'small-spaces' },
+  { id: 'tag-lab-colour', name: 'Colour', slug: 'colour' },
+  { id: 'tag-lab-materials', name: 'Materials', slug: 'materials' },
+  { id: 'tag-lab-furniture', name: 'Furniture', slug: 'furniture' },
 ]
 
 function illustration(
@@ -136,6 +197,25 @@ const images = {
       [0.2, 0.18, 0.6, 0.3],
     ),
   },
+  coldPorch: {
+    alt: 'Illustration of a narrow porch window letting cool daylight onto green-painted boards above a slate floor',
+    caption:
+      'The porch in February: cold enough for boots, warm enough to sit down and pull them off.',
+    creditName: studio,
+    focalPoint: { x: 0.68, y: 0.42 },
+    id: 'media-lab-cold-porch',
+    illustration: illustration(
+      1200,
+      900,
+      {
+        floor: [84, 90, 98],
+        light: [222, 234, 246],
+        wallBottom: [146, 158, 142],
+        wallTop: [164, 176, 160],
+      },
+      [0.62, 0.24, 0.16, 0.34],
+    ),
+  },
   handle: {
     alt: 'Illustration of warm side light from a narrow window grazing a plaster wall',
     caption: 'Side light is the honest test of any hardware: it shows every edge.',
@@ -170,6 +250,24 @@ const images = {
         wallTop: [226, 230, 224],
       },
       [0.12, 0.14, 0.26, 0.46],
+    ),
+  },
+  limewash: {
+    alt: 'Illustration of afternoon light from a small window across a wall washed in warm ochre, above a pale stone floor',
+    caption: 'Two coats of ochre limewash, still drying, and already uneven in the best way.',
+    creditName: studio,
+    focalPoint: { x: 0.32, y: 0.38 },
+    id: 'media-lab-limewash',
+    illustration: illustration(
+      1000,
+      1250,
+      {
+        floor: [200, 190, 172],
+        light: [255, 238, 196],
+        wallBottom: [204, 162, 96],
+        wallTop: [218, 180, 118],
+      },
+      [0.18, 0.2, 0.22, 0.3],
     ),
   },
   northRoom: {
@@ -208,6 +306,24 @@ const images = {
       [0.3, 0.16, 0.4, 0.36],
     ),
   },
+  stairLight: {
+    alt: 'Illustration of daylight from a tall window high on a pale wall, falling onto a stairwell floor of honey-coloured timber',
+    caption: 'Light at the top of a stair draws you up it.',
+    creditName: studio,
+    focalPoint: { x: 0.5, y: 0.2 },
+    id: 'media-lab-stair-light',
+    illustration: illustration(
+      900,
+      1350,
+      {
+        floor: [178, 128, 72],
+        light: [255, 248, 228],
+        wallBottom: [188, 184, 176],
+        wallTop: [206, 204, 198],
+      },
+      [0.3, 0.04, 0.4, 0.28],
+    ),
+  },
   winterLight: {
     alt: 'Illustration of low winter sun: a tall window of pale gold light on a blue-grey wall, casting a soft patch across a pine floor',
     caption: 'At three in the afternoon in December, the light arrives almost sideways.',
@@ -224,6 +340,24 @@ const images = {
         wallTop: [214, 220, 226],
       },
       [0.56, 0.12, 0.2, 0.42],
+    ),
+  },
+  workshop: {
+    alt: 'Illustration of a wide workshop window set high in a warm grey wall, throwing pale morning light onto a sawdust-coloured floor',
+    caption: 'The workshop at nine, when the light is good enough to judge a finish.',
+    creditName: studio,
+    focalPoint: { x: 0.47, y: 0.3 },
+    id: 'media-lab-workshop',
+    illustration: illustration(
+      1500,
+      1000,
+      {
+        floor: [168, 138, 104],
+        light: [255, 240, 210],
+        wallBottom: [150, 140, 128],
+        wallTop: [170, 162, 150],
+      },
+      [0.22, 0.06, 0.5, 0.22],
     ),
   },
 } as const satisfies Record<string, LabImage>
@@ -286,6 +420,7 @@ function mediaImage(image: LabImage, caption?: string): LabNode {
 }
 
 const winterLight: LabStory = {
+  authors: ['ingrid-halvorsen'],
   blocks: [
     mediaImage(images.winterLight),
     paragraph(
@@ -321,9 +456,11 @@ const winterLight: LabStory = {
   publishedAt: '2026-10-02T07:00:00.000Z',
   section: 'architecture',
   title: 'The quiet architecture of winter light',
+  topics: ['light', 'winter'],
 }
 
 const boathouse: LabStory = {
+  authors: ['saga-lindqvist', 'asa-nygard'],
   blocks: [
     mediaImage(images.boathouse),
     paragraph(
@@ -354,9 +491,11 @@ const boathouse: LabStory = {
   section: 'interiors',
   title:
     'Everything we learned from one long winter in a converted boathouse at the edge of the fjord, from keeping the stove alive to living with the sound of the ice',
+  topics: ['winter', 'small-spaces'],
 }
 
 const chair: LabStory = {
+  authors: ['tomas-ek'],
   blocks: [
     paragraph(
       'It is not a beautiful chair, exactly. The ash has gone the colour of milky tea, one stretcher has been reglued twice, and the seat dips where thirty years of people have sat in roughly the same way. But it has outlasted three sofas and two moves, and every attempt to replace it has ended with the new chair moving to the bedroom.',
@@ -381,9 +520,11 @@ const chair: LabStory = {
   publishedAt: '2026-09-27T07:00:00.000Z',
   section: 'craft',
   title: 'Notes on a chair that refuses to be moved',
+  topics: ['furniture', 'timber'],
 }
 
 const shelf: LabStory = {
+  authors: ['asa-nygard'],
   blocks: [
     mediaImage(images.shelf),
     paragraph(
@@ -396,9 +537,125 @@ const shelf: LabStory = {
   publishedAt: '2026-09-24T07:00:00.000Z',
   section: 'interiors',
   title: 'A single shelf, rearranged',
+  topics: ['furniture', 'small-spaces'],
+}
+
+const woodFinishes: LabStory = {
+  authors: ['tomas-ek', 'saga-lindqvist'],
+  blocks: [
+    mediaImage(images.workshop),
+    paragraph(
+      'Every piece of furniture that leaves the workshop is asked the same question before it is finished: how will it be touched? A table is wiped every day and leaned on every evening. A chair is held by its arms and kicked by its legs. A stair rail is gripped by hands that have just come in from the cold. The finish is the part of the furniture people actually touch, so it has to suit the touching.',
+    ),
+    paragraph(
+      'There are dozens of tins on the shelf, but nearly all of them are variations on three old ideas: oil, soap and wax. Each makes a different promise, and each keeps it in a different way.',
+    ),
+    heading(2, 'Oil: into the wood, not on top of it'),
+    paragraph(
+      'A drying oil such as linseed or tung soaks into the fibres and hardens there. It darkens the timber a little and brings up the grain, and it leaves a surface that still feels like wood rather than like a coating. Oil suits anything that is handled more than it is spilled on: chair arms, stair rails, tool handles, the front edge of a desk.',
+    ),
+    paragraph(
+      'Its price is patience. A good oil finish is built from many thin coats, each one wiped back and left to cure, and for the first few weeks it marks easily. A glass of water left overnight on fresh oil will leave a pale ring.',
+    ),
+    heading(2, 'Soap: the finish that looks used from the first day'),
+    paragraph(
+      'Soap is the old answer for pale timbers like ash, birch and pine. It keeps the wood light, almost raw, and the surface feels dry and soft under the hand. It does not so much resist stains as forgive them: a mark that looks permanent usually lifts with the next wash.',
+    ),
+    paragraph(
+      'That makes soap ideal for tables and floors that are washed often, and a poor choice for anything that rarely is. Our own long table has been soaped every few weeks for years. Think of soap less as a finish than as a habit.',
+    ),
+    heading(2, 'Wax: a soft shine over something harder'),
+    paragraph(
+      'Wax sits on the surface. On its own it protects very little, but over an oiled surface it adds a gentle sheen and a little resistance to water. It is the finish for things that are admired as much as used: a cabinet door, a picture frame, the top of a chest of drawers.',
+    ),
+    paragraph(
+      'Wax also marks the most easily. A hot mug leaves a cloudy ring and a warm hand leaves a print. Both buff out with a dry cloth, which is either a nuisance or a small pleasure, depending on who owns the furniture.',
+    ),
+    {
+      attrs: { attribution: 'Written on the workshop wall' },
+      content: [
+        text(
+          'Choose a finish for the way a thing will be touched, not for how it looks on the first day.',
+        ),
+      ],
+      type: 'pullQuote',
+    },
+    heading(2, 'Oiling a chair arm, step by step'),
+    orderedList(
+      '1',
+      'Sand to 180 grit, then wipe the wood with a damp cloth to raise the grain.',
+      'When it is dry, sand once more, lightly, to knock the raised fibres back down.',
+      'Wipe on a thin coat of oil, wait twenty minutes, and wipe away everything that has not soaked in.',
+      'Let it cure for a day, then repeat. Three coats is a beginning; six is a finish.',
+    ),
+    {
+      attrs: { label: 'Safety', variant: 'warning' },
+      content: [
+        text(
+          'Rags soaked in drying oil can heat up and catch fire on their own as the oil cures. Spread them flat outdoors to dry, or keep them under water in a closed metal tin until they can be thrown away.',
+        ),
+      ],
+      type: 'callout',
+    },
+    paragraph(
+      'Whichever you choose, finish an offcut of the same board first and live with it for a week. Leave a glass of water on it overnight. Rub it with a buttery thumb. The finish that survives your own household is the right one.',
+    ),
+  ],
+  dek: 'Three old finishes make three different promises. A furniture maker on choosing the one that suits the way a table, a chair or a stair rail will actually be used.',
+  id: 'article-lab-wood-finishes',
+  publishedAt: '2026-09-23T07:00:00.000Z',
+  section: 'craft',
+  title: 'Oil, soap or wax: how to finish wood you touch every day',
+  topics: ['timber', 'materials', 'furniture'],
+}
+
+const coldPorch: LabStory = {
+  authors: ['elias-brandt'],
+  blocks: [
+    mediaImage(images.coldPorch),
+    paragraph(
+      'Old farmhouses in the north almost always had one: a small, unheated room just inside the front door, with a bench, a row of hooks and a floor that did not mind snow. It was not quite a hall and not quite outdoors. Its job was to stand between the weather and the warm rooms, and it did that job for a hundred years without anyone calling it architecture.',
+    ),
+    paragraph(
+      'Many new houses have lost it. The front door opens straight into a heated hallway, and every time it opens in January, the warmth goes out and the snow comes in. The cold porch deserves to come back, and it asks for very little in return.',
+    ),
+    heading(2, 'What a porch does'),
+    bulletList(
+      'It works as an airlock. With two doors and a pause between them, the warm rooms barely notice that anyone has come in.',
+      'It gives wet and dirty things a place to stop: boots, coats, skis, the dog.',
+      'It keeps a few days of firewood dry and close, without bringing bark and beetles into the living room.',
+      'It gives visitors a moment to arrive, and the house a moment to receive them.',
+    ),
+    heading(2, 'Planning one'),
+    paragraph(
+      'A cold porch does not need to be large. Two metres by one and a half holds a bench, a boot rack and a stack of wood, as long as both doors can swing without hitting someone sitting down. Make it deep enough for the outer door to close behind you before you open the inner one. That pause is the whole point.',
+    ),
+    paragraph(
+      'Give it a window, even a small one. A porch without daylight is a cupboard, and nobody wants to sit in a cupboard to take off their boots. A low window beside the bench also shows you who is coming up the path.',
+    ),
+    heading(3, 'Materials that like the cold'),
+    paragraph(
+      'The floor should be stone, slate or tile, anything that can take meltwater and grit. Painted boards on the walls shrug off knocks from skis and shovels, and can be repainted in an afternoon. Set the hooks higher than seems necessary, because winter coats are long.',
+    ),
+    {
+      attrs: { attribution: 'Overheard on a site visit' },
+      content: [text('A good porch is the house taking a breath before it lets you in.')],
+      type: 'pullQuote',
+    },
+    paragraph(
+      'None of this is new, and that is the best argument for it. The cold porch is an old idea that every winter has tested, and it still works.',
+    ),
+  ],
+  dek: 'An unheated room between the front door and the house costs little, saves a great deal of heat, and gives boots, firewood and a wet dog somewhere to go.',
+  id: 'article-lab-cold-porch',
+  publishedAt: '2026-09-22T07:00:00.000Z',
+  section: 'architecture',
+  title: 'In praise of the cold porch',
+  topics: ['winter', 'small-spaces'],
 }
 
 const longTable: LabStory = {
+  authors: ['ingrid-halvorsen', 'saga-lindqvist', 'tomas-ek'],
   blocks: [
     mediaImage(images.kitchen),
     paragraph(
@@ -584,9 +841,73 @@ const longTable: LabStory = {
   publishedAt: '2026-09-20T07:00:00.000Z',
   section: 'interiors',
   title: 'The long table: a field guide to the North House kitchen',
+  topics: ['furniture', 'timber', 'colour'],
+}
+
+const limewash: LabStory = {
+  authors: ['asa-nygard', 'tomas-ek'],
+  blocks: [
+    paragraph(
+      'Limewash is one of the oldest wall finishes there is, and one of the simplest: slaked lime thinned with water, sometimes coloured with a pigment dug out of the ground. It is not paint. Paint forms a skin over a wall. Limewash soaks into it and hardens as it takes carbon dioxide from the air, slowly turning back into something close to limestone.',
+    ),
+    paragraph(
+      'The result has a depth that paint struggles to match. Every brushstroke dries a slightly different shade, and the wall keeps changing for weeks as the lime cures. In a north room it reads as soft and chalky. In low sun it glows.',
+    ),
+    mediaImage(images.limewash),
+    heading(2, 'Mixing a batch'),
+    paragraph(
+      'We mix in a bucket, by eye, and write everything down so that the next batch can match the last. A wall of about ten square metres takes roughly two litres of finished limewash for each coat, and it needs at least three coats.',
+    ),
+    orderedList(
+      '1',
+      'Stir lime putty into clean water until it is as thin as single cream.',
+      'Dissolve the pigment in a jar of warm water first, then pour it in. Dry pigment added straight to the bucket will streak.',
+      'Brush a test patch on a board and let it dry completely. Limewash dries several shades lighter than it looks when wet.',
+      'Strain the whole batch through an old cotton cloth before it goes anywhere near the wall.',
+    ),
+    {
+      attrs: { label: 'Safety', variant: 'warning' },
+      content: [
+        text(
+          'Lime is caustic. Wear gloves and eye protection while you mix and brush it, and keep a bowl of clean water nearby to rinse splashes from your skin straight away.',
+        ),
+      ],
+      type: 'callout',
+    },
+    heading(2, 'Brushing it on'),
+    paragraph(
+      'Use a wide, soft brush and work in loose crosses rather than straight lines, so that no single stroke stands out. Mist the wall with water before each coat. Lime cures badly on a surface that is too dry, and a warm, sunny wall needs more water than a cool one.',
+    ),
+    paragraph(
+      'The first coat will look thin and patchy, almost transparent. That is normal. The second evens it out and the third gives it depth. Resist judging the colour until a full day after the last coat.',
+    ),
+    heading(3, 'Choosing a pigment'),
+    bulletList(
+      'Yellow ochre makes a warm, sunny wall that holds its own against cool north light.',
+      'A little burnt umber softens white into the colour of old paper.',
+      'Red iron oxide gives the clay pinks that look so good beside green woodwork.',
+      'Stay with earth and mineral pigments. Lime is alkaline enough to fade many bright modern colours.',
+    ),
+    {
+      content: [
+        text('A limewashed wall is never finished. It is only ever on its way to being old.'),
+      ],
+      type: 'blockquote',
+    },
+    paragraph(
+      'Limewash marks more easily than paint and mends just as easily: a brush, a cup of the same batch and a few minutes. It will never look new again, and after the first winter you will not want it to.',
+    ),
+  ],
+  dek: 'Lime, water and a spoonful of earth pigment make a wall finish that breathes, softens with age, and never looks quite the same colour twice.',
+  id: 'article-lab-limewash',
+  publishedAt: '2026-09-18T07:00:00.000Z',
+  section: 'craft',
+  title: 'Limewash, mixed by hand',
+  topics: ['colour', 'materials'],
 }
 
 const northColour: LabStory = {
+  authors: ['asa-nygard'],
   blocks: [
     mediaImage(images.northRoom),
     paragraph(
@@ -610,9 +931,63 @@ const northColour: LabStory = {
   publishedAt: '2026-09-16T07:00:00.000Z',
   section: 'interiors',
   title: 'Paper, stone, and the colour of rooms that face north',
+  topics: ['colour', 'light'],
+}
+
+const stair: LabStory = {
+  authors: ['elias-brandt', 'ingrid-halvorsen'],
+  blocks: [
+    mediaImage(images.stairLight),
+    paragraph(
+      'Most of a house is experienced with the eyes. A stair is experienced with the legs, the hands and the inner ear. You notice a bad one at once, even if you cannot say why: the steps are a little too tall, the treads a little too short, or the rail ends just before you need it.',
+    ),
+    paragraph(
+      'A good stair disappears. You climb it while talking, carrying laundry or holding a child, and arrive at the top without having thought about it once.',
+    ),
+    heading(2, 'The arithmetic of a comfortable step'),
+    paragraph(
+      'The proportions of a comfortable stair have been understood for centuries. The height of each step, the rise, and its depth, the going, are tied to the length of a natural stride. The old rule of thumb is that twice the rise plus the going should come to between sixty and sixty-five centimetres.',
+    ),
+    bulletList(
+      'A rise of about seventeen centimetres with a going of about twenty-eight is gentle enough for a family house.',
+      'Steeper stairs save floor space but ask more of the knees, and they are harder to come down than to climb.',
+      'Every step in a flight must be the same. One step that differs by a single centimetre will trip people for as long as the house stands.',
+    ),
+    heading(2, 'A rail you can trust'),
+    paragraph(
+      'The handrail is the part of the stair you touch, and it deserves the same care as a good door handle. It should be round or oval enough to close a hand around, fixed firmly enough to take a stumble, and continuous from the bottom step to the top. Oiled oak or ash warms quickly under the hand. Steel stays cold all winter.',
+    ),
+    {
+      attrs: { attribution: 'From the North House notebook' },
+      content: [
+        text(
+          'A good stair disappears. You arrive at the top without having thought about it once.',
+        ),
+      ],
+      type: 'pullQuote',
+    },
+    heading(2, 'Light from above'),
+    paragraph(
+      'People climb towards light without being asked. A window or rooflight at the top of a stair draws the eye up and makes the climb feel shorter, and it lights the edge of each tread on the way up, so the steps are easy to read. Coming down, that light is behind you, which is why a lamp at the bottom of the stair matters as much as the window at the top.',
+    ),
+    heading(3, 'Timber treads'),
+    paragraph(
+      'Solid timber treads soften the sound of footsteps and wear in a way that records the life of the house: a shallow hollow in the middle of each step, paler where feet land most. Choose a hard timber such as oak or ash and oil it rather than lacquer it, so that a worn tread can be sanded and oiled again instead of stripped.',
+    ),
+    paragraph(
+      'Stairs are expensive to change once they are built. Spend time on them early. Walk up and down a few that you like, and measure them. Your legs already know which ones are right.',
+    ),
+  ],
+  dek: 'A stair is the one part of a house you use with your whole body. Getting it right comes down to a few centimetres, a rail you can trust, and light from above.',
+  id: 'article-lab-stair',
+  publishedAt: '2026-09-14T07:00:00.000Z',
+  section: 'architecture',
+  title: 'What a good stair feels like',
+  topics: ['light', 'timber'],
 }
 
 const threeCabins: LabStory = {
+  authors: ['elias-brandt'],
   blocks: [
     mediaImage(images.cabinMorning),
     paragraph(
@@ -646,9 +1021,11 @@ const threeCabins: LabStory = {
   publishedAt: '2026-09-12T07:00:00.000Z',
   section: 'architecture',
   title: 'Three cabins and the case for building less',
+  topics: ['small-spaces', 'light'],
 }
 
 const doorHandle: LabStory = {
+  authors: ['ingrid-halvorsen'],
   blocks: [
     mediaImage(images.handle),
     paragraph(
@@ -674,18 +1051,28 @@ const doorHandle: LabStory = {
   publishedAt: '2026-09-08T07:00:00.000Z',
   section: 'craft',
   title: 'The weight of a good door handle',
+  topics: ['materials'],
 }
 
+/*
+ * Newest first. The four newest are the winter-light lead, the long-titled boathouse, the chair
+ * without images and the very short shelf story, the front pages the direction specs describe; the
+ * stories added for fuller sections are all older.
+ */
 export const labStories: readonly LabStory[] = [
   winterLight,
   boathouse,
   chair,
   shelf,
+  woodFinishes,
+  coldPorch,
   longTable,
+  limewash,
   northColour,
+  stair,
   threeCabins,
   doorHandle,
 ]
 
-/** When the seed's sections and images were prepared, before the first story. */
+/** When the seed's sections, topics, authors and images were prepared, before the first story. */
 export const labPreparedAt = '2026-09-01T07:00:00.000Z'
