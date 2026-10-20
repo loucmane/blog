@@ -32,11 +32,13 @@ function Navigation({
   navigation,
   isHome,
   currentSection,
+  sectionContext,
 }: {
   readonly label: string
   readonly navigation: ReaderNavigation
   readonly isHome: boolean
   readonly currentSection?: string | undefined
+  readonly sectionContext: boolean
 }) {
   return (
     <nav className="ec-navigation" aria-label={label}>
@@ -50,7 +52,9 @@ function Navigation({
           <li key={section.slug}>
             <Link
               href={section.href}
-              aria-current={currentSection === section.slug ? 'page' : undefined}
+              aria-current={
+                currentSection === section.slug ? (sectionContext ? 'true' : 'page') : undefined
+              }
             >
               {section.name}
             </Link>
@@ -66,6 +70,7 @@ export function ExpressiveShell({
   isHome = false,
   navigation,
   currentSection,
+  sectionContext = false,
   leadImage,
   stories = [],
 }: {
@@ -73,6 +78,7 @@ export function ExpressiveShell({
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
   readonly currentSection?: string | undefined
+  readonly sectionContext?: boolean
   readonly leadImage?: ExpressiveLeadImage | null
   readonly stories?: readonly StoryCard[]
 }) {
@@ -92,6 +98,7 @@ export function ExpressiveShell({
           navigation={navigation}
           isHome={isHome}
           currentSection={currentSection}
+          sectionContext={sectionContext}
         />
         {isHome ? <ExpressiveSpineStrip stories={stories} /> : null}
       </header>
@@ -111,6 +118,7 @@ export function ExpressiveShell({
             navigation={navigation}
             isHome={isHome}
             currentSection={currentSection}
+            sectionContext={sectionContext}
           />
         </div>
       </footer>
