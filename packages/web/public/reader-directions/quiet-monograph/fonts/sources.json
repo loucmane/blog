@@ -14,11 +14,11 @@
     "sha256": "8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8"
   },
   {
-    "file": "jost-latin-300-normal.woff2",
-    "gitBlobSha": "5298f650ecd48a60ed3089de853424d58f3eab95",
-    "url": "https://github.com/fontsource/font-files/blob/main/fonts/google/jost/files/jost-latin-300-normal.woff2",
-    "bytes": 9876,
-    "sha256": "4755701d1a52180592b7619acd5f7f7852beb54adb7ee282ea8ad1d1bcfb2ae6"
+    "file": "cormorant-garamond-latin-400-italic.woff2",
+    "gitBlobSha": "d9272649681c0d1843e3b5403b7834e9c6add271",
+    "url": "https://github.com/fontsource/font-files/blob/main/fonts/google/cormorant-garamond/files/cormorant-garamond-latin-400-italic.woff2",
+    "bytes": 23660,
+    "sha256": "e48e58027030df56869b795ca6f19b7012158275f7ad7cde1900b4a0b68d02e2"
   },
   {
     "file": "jost-latin-400-normal.woff2",
@@ -33,5 +33,12 @@
     "url": "https://github.com/fontsource/font-files/blob/main/fonts/google/jost/files/jost-latin-500-normal.woff2",
     "bytes": 10476,
     "sha256": "98dce4f076fe71a123a7cd44470e6f05e969cb6d7c9b2717766ad103e3597297"
+  },
+  {
+    "file": "jost-latin-400-italic.woff2",
+    "gitBlobSha": "1539de1e53af44895be2f5a473f8492c4d4f1e1e",
+    "url": "https://github.com/fontsource/font-files/blob/main/fonts/google/jost/files/jost-latin-400-italic.woff2",
+    "bytes": 11088,
+    "sha256": "5e2038b7f8d366fc1c4036228b648b9a84676155e7a6235fab9c48a42f88ab41"
   }
 ]

@@ -6,13 +6,13 @@
  * child selector. Breakpoints: 600px (wordmark tracking, Theme label), 768px (two-column hang,
  * bays, monograms, two-column rows) and 1024px (navigation row instead of the menu).
  *
- * Italics: only genuine italics are intended (font-synthesis: none). Until the Cormorant and Jost
- * italic faces are vendored, deks stay upright rather than slanted, and emphasis in story text
- * keeps the synthesized italic it has today, so it stays visible. See fonts/README.md.
+ * Italics are genuine faces only (font-synthesis: none on .qm-page): deks are Cormorant 400 italic,
+ * and emphasis uses the 400 italic of the family it sits in. The browser never slants or bolds a
+ * face. See fonts/README.md.
  */
 export const styles = `
   & { background: var(--qm-paper); color: var(--qm-ink); color-scheme: var(--qm-scheme); }
-  & .qm-page { min-height: 100vh; font-family: var(--qm-text); font-size: var(--qm-body); font-weight: 400; line-height: 1.6; overflow-wrap: anywhere; font-synthesis: style; }
+  & .qm-page { min-height: 100vh; font-family: var(--qm-text); font-size: var(--qm-body); font-weight: 400; line-height: 1.6; overflow-wrap: anywhere; font-synthesis: none; }
   & .qm-page * { box-sizing: border-box; }
   & .qm-page ::selection { background: var(--qm-sand); color: var(--qm-ink); }
   & .qm-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote) { margin: 0; }
@@ -32,7 +32,7 @@ export const styles = `
   & .qm-page .qm-label { font-family: var(--qm-text); font-size: var(--qm-label); font-weight: 500; letter-spacing: 0.18em; line-height: 1.6; text-transform: uppercase; color: var(--qm-stone-ink); }
   & .qm-label a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--qm-ink); }
   & .qm-page .qm-meta { color: var(--qm-stone-ink); font-family: var(--qm-text); font-size: var(--qm-small); line-height: 1.6; }
-  & .qm-page .qm-dek { max-width: 20em; margin: 2rem auto 0; font-family: var(--qm-display); font-size: var(--qm-dek); font-style: italic; font-weight: 400; line-height: 1.45; text-wrap: pretty; font-synthesis: none; }
+  & .qm-page .qm-dek { max-width: 20em; margin: 2rem auto 0; font-family: var(--qm-display); font-size: var(--qm-dek); font-style: italic; font-weight: 400; line-height: 1.45; text-wrap: pretty; }
   & .qm-page :is(.qm-wordmark, .qm-footer-brand) { font-family: var(--qm-display); font-size: var(--qm-wordmark); font-weight: 500; letter-spacing: 0.32em; line-height: 1.6; text-transform: uppercase; }
   & .qm-masthead { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 0.75rem; width: min(100% - var(--qm-gutter) * 2, var(--qm-page)); margin-inline: auto; padding-block: 1.75rem; border-bottom: 1px solid var(--qm-sand); }
   & .qm-page .qm-wordmark { flex: 1 1 0; min-width: 0; }

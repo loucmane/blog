@@ -13,7 +13,7 @@ it.each([
   {
     direction: quietMonographDirection,
     id: 'quiet-monograph',
-    sha256: '7df47005151d461681da106ad168945d1aa254e336041822ea0e50016e07b687',
+    sha256: '699a0e52b23842212ec40021414052e0517eb937d3d2a40204eb61d88c4651ba',
   },
   {
     direction: literaryLongreadDirection,
