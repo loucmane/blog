@@ -1321,7 +1321,7 @@ test('keeps home and article still on cold and warm loads, and leads with the sp
                     ? 'lead image'
                     : heading?.contains(largest)
                       ? 'heading'
-                      : largest.closest('.qm-hang > li:nth-child(2)')
+                      : largest.matches('.qm-hang > li:nth-child(2) img')
                         ? 'first-row plate'
                         : [largest.tagName.toLowerCase(), ...largest.classList].join('.'),
               shifts,
@@ -1338,9 +1338,10 @@ test('keeps home and article still on cold and warm loads, and leads with the sp
           if (measured.hasLead && (measured.leadBitsPerPixel ?? 1) >= 0.05) {
             // Hang pictures stand on the bay's bottom edge, so at 1440px a square second plate can
             // paint more of the first viewport than a landscape first one; it loads eagerly.
-            const leads = [sectionPath, topicPath].includes(route)
-              ? ['lead image', 'heading', 'first-row plate']
-              : ['lead image', 'heading']
+            const leads =
+              width >= 768 && [sectionPath, topicPath].includes(route)
+                ? ['lead image', 'heading', 'first-row plate']
+                : ['lead image', 'heading']
             expect(leads, `${name}: LCP element`).toContain(measured.largest)
           }
         }
@@ -1419,6 +1420,9 @@ test('keeps the lead image and the first view’s images within the spec budgets
       for (const [route, budget] of [
         ['/', 200_000],
         [storyPath, 250_000],
+        // Section and topic use the home budget; their second plate loads at once (spec 6).
+        [sectionPath, 200_000],
+        [topicPath, 200_000],
       ] as const) {
         const context = await ownerContext(browser, { deviceScaleFactor, viewport })
         try {
@@ -1444,9 +1448,13 @@ test('keeps the lead image and the first view’s images within the spec budgets
           })
           const name = `${route} at ${viewport.width} by ${viewport.height}px, ${deviceScaleFactor}x`
           evidence.push({ name, ...measured })
-          // Both pages lead with a picture in the sample; its transfer is the chosen candidate.
-          expect(measured.lead, `${name}: lead image`).not.toBeNull()
-          expect(measured.lead!, `${name}: lead image`).toBeLessThanOrEqual(150_000)
+          // Home and the story lead with a picture in the sample; its transfer is the chosen candidate.
+          if (route === '/' || route === storyPath) {
+            expect(measured.lead, `${name}: lead image`).not.toBeNull()
+          }
+          if (measured.lead !== null) {
+            expect(measured.lead, `${name}: lead image`).toBeLessThanOrEqual(150_000)
+          }
           expect(measured.total, `${name}: images in the first view`).toBeLessThanOrEqual(budget)
         } finally {
           await context.close()
