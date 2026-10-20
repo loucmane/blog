@@ -182,6 +182,8 @@ test('places the Theme control before section pills and supports keyboard theme 
 }) => {
   const theme = page.locator(root).getByRole('button', { name: 'Choose color theme' })
   const wordmark = page.locator('.ec-masthead .ec-wordmark a')
+  // The Theme control is disabled until hydration, and a disabled button is skipped by Tab.
+  await expect(theme).toBeEnabled()
   await wordmark.focus()
   await page.keyboard.press('Tab')
   await expect(theme).toBeFocused()
@@ -191,6 +193,9 @@ test('places the Theme control before section pills and supports keyboard theme 
   await dark.focus()
   await page.keyboard.press('Enter')
   await waitForThemeToSettle(page)
+  // Base UI radio items keep the menu open after selection; Escape returns focus to the trigger.
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('menu', { name: 'Color theme' })).toBeHidden()
   await expect(theme).toBeFocused()
   expect(
     await page.locator(root).evaluate((element) => getComputedStyle(element).backgroundColor),
@@ -204,17 +209,28 @@ test('places the Theme control before section pills and supports keyboard theme 
   ).toBeFocused()
 })
 
+test('moves the lead visual on hover without a reduced-motion preference', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  const card = page.locator('.ec-card-lead .ec-card-link')
+  await card.hover()
+  const visual = card.locator('img, .ec-motif').first()
+  await expect
+    .poll(() => visual.evaluate((element) => getComputedStyle(element).transform))
+    .not.toBe('none')
+})
+
 test('removes both card motion and transforms for reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const card = page.locator('.ec-card-lead .ec-card-link')
-  await card.focus()
+  await card.hover()
   for (const visual of await card.locator('img, .ec-motif').all()) {
-    expect(
-      await visual.evaluate((element) => ({
-        transition: getComputedStyle(element).transitionDuration,
-        transform: getComputedStyle(element).transform,
-      })),
-    ).toEqual({ transition: '0s', transform: 'none' })
+    // The shared global reduced-motion rule sets every duration to 0.01ms (!important).
+    const motion = await visual.evaluate((element) => ({
+      transition: parseFloat(getComputedStyle(element).transitionDuration),
+      transform: getComputedStyle(element).transform,
+    }))
+    expect(motion.transform).toBe('none')
+    expect(motion.transition).toBeLessThanOrEqual(0.00001)
   }
 })
 
