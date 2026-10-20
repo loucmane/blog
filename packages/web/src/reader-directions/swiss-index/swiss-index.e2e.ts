@@ -239,7 +239,8 @@ test('sets earlier stories as a metadata line above the title on phones and in c
       .locator(root)
       .getByRole('region', { name: 'Earlier stories' })
       .getByRole('listitem')
-    await expect(rows).toHaveCount(5)
+    // Home shows plates 01-03; every other published sample story is an earlier row.
+    await expect(rows).toHaveCount(labStories.length - 3)
     for (const row of await rows.all()) {
       const heading = row.getByRole('heading', { level: 3 })
       const name = `${await heading.textContent()} at ${width}`
@@ -286,7 +287,8 @@ test('tabs through each earlier story in reading order, with one rendered and fo
       .locator(root)
       .getByRole('region', { name: 'Earlier stories' })
       .getByRole('listitem')
-    await expect(rows).toHaveCount(5)
+    // Home shows plates 01-03; every other published sample story is an earlier row.
+    await expect(rows).toHaveCount(labStories.length - 3)
     for (const row of await rows.all()) {
       const title = (await row.getByRole('heading', { level: 3 }).textContent())!.trim()
       const name = `${title} at ${width}`
@@ -382,7 +384,13 @@ test('walks the keyboard from the skip link through the masthead to the footer a
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#si-top$/)
   await expect
-    .poll(() => page.evaluate(() => document.getElementById('si-top')!.getBoundingClientRect().top))
+    // Smooth scrolling (globals.css) up a long page can take several seconds under load.
+    .poll(
+      () => page.evaluate(() => document.getElementById('si-top')!.getBoundingClientRect().top),
+      {
+        timeout: 15_000,
+      },
+    )
     .toBeGreaterThanOrEqual(0)
   await page.goto(sectionPath)
   await tabTo(page, skip, 12)
