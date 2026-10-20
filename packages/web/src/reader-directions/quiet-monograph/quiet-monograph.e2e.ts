@@ -1293,10 +1293,18 @@ test('keeps home and article still on cold and warm loads, and leads with the sp
               document.querySelector('.qm-cover-title') ?? document.querySelector('main h1')
             // Chromium skips an image under 0.05 bits per painted pixel as an LCP candidate. The
             // blurred sample illustrations fall under it at desktop sizes; a photograph does not.
+            // Only a decoded image from an OK image response qualifies: a broken one stays asserted.
             let leadBitsPerPixel: number | null = null
-            if (lead?.currentSrc) {
-              const bytes = (await (await fetch(lead.currentSrc, { cache: 'force-cache' })).blob())
-                .size
+            const response =
+              lead?.currentSrc && lead.complete && lead.naturalWidth > 0 && lead.naturalHeight > 0
+                ? await fetch(lead.currentSrc, { cache: 'force-cache' })
+                : null
+            if (
+              lead &&
+              response?.ok &&
+              response.headers.get('content-type')?.startsWith('image/')
+            ) {
+              const bytes = (await response.blob()).size
               const box = lead.getBoundingClientRect()
               const painted =
                 Math.max(0, Math.min(box.right, innerWidth) - Math.max(box.left, 0)) *
