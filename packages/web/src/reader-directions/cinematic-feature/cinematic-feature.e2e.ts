@@ -211,7 +211,10 @@ test('keeps article heading, byline and credit order inside an opaque panel at e
         .locator('.cf-article-hero')
         .evaluate((element) => element.firstElementChild?.className),
     ).toBe('cf-article-heading')
-    expect(await page.locator('link[as="image"]').getAttribute('media')).toBe('(min-width: 1024px)')
+    // React also emits its own href-less preload hints for srcset images; D's helper owns the href one.
+    expect(await page.locator('link[as="image"][href]').getAttribute('media')).toBe(
+      '(min-width: 1024px)',
+    )
     const panelBox = (await panel.boundingBox())!
     const heroBox = (await hero.boundingBox())!
     if (width < 1024) {
