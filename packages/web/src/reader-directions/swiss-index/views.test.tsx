@@ -644,7 +644,7 @@ describe('Swiss Index with real published North House content', () => {
       expect(
         screen.queryByRole('list', { name: `${section.name} stories` })?.children ?? [],
       ).toHaveLength(Math.min(stories.length, 4))
-      expect(document.querySelector('.si-section-header .si-label-row')).toHaveTextContent(
+      expect(document.querySelector('.si-page-header .si-label-row')).toHaveTextContent(
         `${stories.length} ${stories.length === 1 ? 'story' : 'stories'}`,
       )
       expect(document.querySelector('nav a[aria-current="page"]')?.getAttribute('href')).toBe(
@@ -665,16 +665,32 @@ describe('Swiss Index with real published North House content', () => {
 
   it('uses supplied article credits without inventing authors for uncredited stories', () => {
     const view = articles.get('article-lab-long-table')!
-    const uncredited = markup(<SwissArticle view={{ ...view, authors: [], hero: null }} />)
-    expect(uncredited.document.querySelector('.si-rail')?.textContent).not.toContain('Words')
-    expect(uncredited.document.querySelector('.si-rail')?.textContent).not.toContain('Lead photo')
+    const uncredited = markup(
+      <SwissArticle view={{ ...view, authorLinks: [], authors: [], hero: null }} />,
+    )
+    expect(uncredited.document.querySelector('.si-rail')?.textContent).not.toMatch(
+      /Author|Words|Lead photo/,
+    )
     const { document } = markup(<SwissArticle view={view} />)
     const rail = document.querySelector('.si-rail')!
     expect(rail.querySelector('time')?.getAttribute('datetime')).toBe(view.publishedAt)
-    if (view.hero?.credit) expect(rail.textContent).toContain(view.hero.credit.name)
+    // The hero's credit sits in its caption and the end matter, no longer repeated in the rail.
+    expect(view.hero?.credit).toBeTruthy()
+    expect(rail.textContent).not.toContain(view.hero!.credit!.name)
+    expect(document.querySelector('.si-end')).toHaveTextContent(view.hero!.credit!.name)
+    const authorLinks = [
+      { href: '/authors/a-writer', name: 'A. Writer' },
+      { href: '/authors/b-writer', name: 'B. Writer' },
+    ] as const
     const withAuthors = markup(
-      <SwissArticle view={{ ...view, authors: ['A. Writer', 'B. Writer'] }} />,
+      <SwissArticle
+        view={{ ...view, authorLinks, authors: authorLinks.map(({ name }) => name) }}
+      />,
     )
-    expect(withAuthors.document.querySelector('.si-rail')).toHaveTextContent('A. Writer, B. Writer')
+    expect(
+      [...withAuthors.document.querySelectorAll('.si-rail dd a')]
+        .filter((link) => link.getAttribute('href')?.startsWith('/authors/'))
+        .map((link) => [link.textContent, link.getAttribute('href')]),
+    ).toEqual(authorLinks.map(({ href, name }) => [name, href]))
   })
 })

@@ -6,13 +6,26 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
 import { normalizeSlug } from '../../server/content/domain'
-import { labStories } from '../../server/lab/north-house'
+import { labAuthors, labImages, labStories, labTopics } from '../../server/lab/north-house'
 import { prepareFontCapture } from '../capture-fonts'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
 const sectionPath = '/sections/interiors'
 const root = '[data-reader-direction="swiss-index"]'
+
+/** The seeded stories whose hero, the image that opens them, is upright: below 1.2 times its height. */
+const uprightStories = labStories.filter(({ blocks: [first] }) => {
+  const image = labImages.find(
+    ({ id }) => first?.type === 'mediaImage' && id === first.attrs?.mediaId,
+  )
+  return image !== undefined && image.illustration.width < 1.2 * image.illustration.height
+})
+const uprightPath = `/stories/${normalizeSlug(uprightStories[0]!.title)}`
+const author = labAuthors.find(({ bio }) => bio)!
+const authorPath = `/authors/${author.slug}`
+const topic = labTopics[0]!
+const topicPath = `/topics/${topic.slug}`
 
 async function waitForThemeToSettle(page: Page) {
   // The shared lab bar transitions its colours; assertions need the settled theme.
@@ -112,6 +125,394 @@ test('opens Swiss Index from the lab and renders published titles on all three p
   await expect(
     page.locator(root).getByRole('heading', { name: storyTitle, exact: true }),
   ).toBeVisible()
+})
+
+test('renders an author as a bibliography and a topic as plates, each with one h1 naming it', async ({
+  page,
+}) => {
+  const swiss = page.locator(root)
+  await page.goto(authorPath)
+  await expect(swiss.getByRole('heading', { level: 1 })).toHaveCount(1)
+  await expect(swiss.getByRole('heading', { level: 1 })).toHaveText(author.name)
+  await expect(swiss.locator('.si-page-header .si-bio')).toHaveText(author.bio)
+  const stories = swiss.getByRole('region', { name: 'Stories', exact: true })
+  await expect(stories.getByRole('listitem')).toHaveCount(
+    labStories.filter(({ authors }) => authors.includes(author.slug)).length,
+  )
+  await expect(swiss.locator('main img')).toHaveCount(0)
+  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveCount(0)
+  await page.goto(topicPath)
+  await expect(swiss.getByRole('heading', { level: 1 })).toHaveCount(1)
+  await expect(swiss.getByRole('heading', { level: 1 })).toHaveText(topic.name)
+  const onTopic = labStories.filter(({ topics }) => topics.includes(topic.slug))
+  await expect(
+    swiss.getByRole('list', { name: `${topic.name} stories` }).getByRole('listitem'),
+  ).toHaveCount(Math.min(4, onTopic.length))
+  await swiss
+    .getByRole('list', { name: `${topic.name} stories` })
+    .getByRole('heading', { level: 2 })
+    .first()
+    .getByRole('link')
+    .click()
+  await expect(page).toHaveURL(`/stories/${normalizeSlug(onTopic[0]!.title)}`)
+})
+
+test('sets the rail beside the story from 1024 pixels and under the header below, in DOM order', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  const swiss = page.locator(root)
+  const box = async (locator: Locator) => (await locator.boundingBox())!
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const path of [storyPath, uprightPath]) {
+      await page.goto(path)
+      await page.evaluate(async () => {
+        await document.fonts.ready
+      })
+      const label = `${path} at ${width}`
+      const header = await box(swiss.locator('.si-article-header'))
+      const rail = await box(swiss.locator('.si-rail'))
+      const hero = await box(swiss.locator('.si-hero'))
+      const body = await box(swiss.locator('.si-body'))
+      const end = await box(swiss.locator('.si-end'))
+      if (width >= 1024) {
+        // Column 1 holds the rail, level with the header; header, hero and body start at column 2.
+        expect(rail.x + rail.width, label).toBeLessThanOrEqual(header.x)
+        expect(Math.abs(rail.y - header.y), label).toBeLessThan(2)
+        expect(Math.abs(hero.x - header.x), label).toBeLessThan(1)
+        expect(Math.abs(body.x - header.x), label).toBeLessThan(1)
+      } else {
+        // One column: header, rail, hero, body.
+        expect(rail.y, label).toBeGreaterThanOrEqual(header.y + header.height)
+        expect(hero.y, label).toBeGreaterThanOrEqual(rail.y + rail.height)
+        expect(Math.abs(rail.x - header.x), label).toBeLessThan(1)
+      }
+      expect(body.y, label).toBeGreaterThanOrEqual(hero.y + hero.height)
+      // The end matter spans all four columns, under the body.
+      expect(end.y, label).toBeGreaterThanOrEqual(body.y + body.height)
+      expect(Math.abs(end.x - (width >= 1024 ? rail.x : header.x)), label).toBeLessThan(1)
+    }
+  }
+})
+
+test('sets upright heroes beside their caption from 600 pixels and above it on phones, landscape heroes above theirs', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  const swiss = page.locator(root)
+  const box = async (locator: Locator) => (await locator.boundingBox())!
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const story of uprightStories) {
+      await page.goto(`/stories/${normalizeSlug(story.title)}`)
+      const label = `${story.id} at ${width}`
+      const hero = await box(swiss.locator('.si-hero.si-hero-upright'))
+      const image = await box(swiss.locator('.si-hero img'))
+      const caption = await box(swiss.locator('.si-hero figcaption'))
+      if (width >= 600) {
+        // Two of the hero's three columns from 1024px, one of its two below; the caption beside.
+        const share = width >= 1024 ? 2 / 3 : 1 / 2
+        expect(image.width, label).toBeLessThan(hero.width * share + 1)
+        expect(image.width, label).toBeGreaterThan(hero.width * share - 24)
+        expect(image.x + image.width, label).toBeLessThanOrEqual(caption.x)
+        expect(caption.y + caption.height, label).toBeLessThanOrEqual(image.y + image.height + 1)
+      } else {
+        expect(Math.abs(image.width - hero.width), label).toBeLessThan(1)
+        expect(caption.y, label).toBeGreaterThanOrEqual(image.y + image.height)
+      }
+    }
+    await page.goto(storyPath)
+    const image = await box(swiss.locator('.si-hero img'))
+    const caption = await box(swiss.locator('.si-hero figcaption'))
+    await expect(swiss.locator('.si-hero-upright')).toHaveCount(0)
+    expect(caption.y, `landscape at ${width}`).toBeGreaterThanOrEqual(image.y + image.height)
+  }
+})
+
+test('sets end-matter terms beside their values from 1024 pixels, and related plates four, two and one to a row', async ({
+  page,
+}) => {
+  const swiss = page.locator(root)
+  const story = labStories.find(({ id }) => id === 'article-lab-long-table')!
+  // Related stories: the newest other stories in the story's section, at most four.
+  const related = labStories
+    .filter(({ id, section }) => section === story.section && id !== story.id)
+    .slice(0, 4)
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    const label = `${width}px`
+    const term = (await swiss.locator('.si-end dt').first().boundingBox())!
+    const value = (await swiss.locator('.si-end dd').first().boundingBox())!
+    if (width >= 1024) expect(term.x + term.width, label).toBeLessThanOrEqual(value.x)
+    else expect(term.y + term.height, label).toBeLessThanOrEqual(value.y)
+    const plates = swiss.getByRole('region', { name: 'Related stories' }).getByRole('listitem')
+    await expect(plates).toHaveCount(related.length)
+    await expect(plates.getByRole('heading', { level: 3 })).toHaveText(
+      related.map(({ title }) => title),
+    )
+    const tops = await plates.evaluateAll((items) =>
+      items.map((item) => Math.round(item.getBoundingClientRect().top)),
+    )
+    const perRow = width >= 1024 ? 4 : width >= 600 ? 2 : 1
+    expect(new Set(tops).size, label).toBe(Math.ceil(tops.length / perRow))
+    expect(tops.filter((top) => top === tops[0]).length, label).toBe(Math.min(perRow, tops.length))
+  }
+})
+
+test('applies the article and block treatments over the shared resets, read from computed styles', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(storyPath)
+  const swiss = page.locator(root)
+  const read = (selector: string, properties: readonly string[], pseudo: string | null = null) =>
+    swiss
+      .locator(selector)
+      .first()
+      .evaluate(
+        (element, [names, pseudoElement]) => {
+          const style = getComputedStyle(element, pseudoElement)
+          return Object.fromEntries(names.map((name) => [name, style.getPropertyValue(name)]))
+        },
+        [properties, pseudo] as const,
+      )
+  // Page h1, dek and rail.
+  expect(await read('.si-article-header h1', ['font-weight', 'text-wrap-style'])).toEqual({
+    'font-weight': '800',
+    'text-wrap-style': 'balance',
+  })
+  expect(await read('.si-article-header .si-dek', ['color'])).toEqual({
+    color: 'rgb(106, 106, 106)',
+  })
+  expect(await read('.si-rail', ['border-top-width'])).toEqual({ 'border-top-width': '4px' })
+  expect(await read('.si-rail dt', ['font-size', 'color'])).toEqual({
+    'font-size': '12px',
+    color: 'rgb(106, 106, 106)',
+  })
+  expect(await read('.si-rail dd', ['font-size'])).toEqual({ 'font-size': '13px' })
+  // Body headings, links and inline marks.
+  expect(
+    await read('.si-body h2', ['border-top-width', 'border-top-style', 'padding-top']),
+  ).toEqual({
+    'border-top-width': '1px',
+    'border-top-style': 'solid',
+    'padding-top': '12px',
+  })
+  expect(await read('.si-body p a', ['text-decoration-line', 'text-decoration-thickness'])).toEqual(
+    { 'text-decoration-line': 'underline', 'text-decoration-thickness': '1px' },
+  )
+  expect(await read('.si-body u', ['text-decoration-style'])).toEqual({
+    'text-decoration-style': 'dotted',
+  })
+  // Checklist boxes: the glyphs are hidden and a 1em square drawn, filled when done.
+  expect(await read('[data-block="checklist"] li > span[aria-hidden]', ['display'])).toEqual({
+    display: 'none',
+  })
+  const box = await swiss
+    .locator('[data-block="checklist"] li[data-checked="true"]')
+    .first()
+    .evaluate((item) => {
+      const marker = getComputedStyle(item, '::before')
+      return {
+        background: marker.backgroundColor,
+        border: marker.borderTopWidth,
+        square: marker.width === getComputedStyle(item).fontSize && marker.height === marker.width,
+      }
+    })
+  expect(box).toEqual({ background: 'rgb(14, 14, 14)', border: '2px', square: true })
+  expect(
+    await read(
+      '[data-block="checklist"] li[data-checked="false"]',
+      ['background-color'],
+      '::before',
+    ),
+  ).toEqual({ 'background-color': 'rgba(0, 0, 0, 0)' })
+  // Callouts, code, the embed card and editorial blocks.
+  expect(await read('[data-block="callout"][data-variant="tip"]', ['background-color'])).toEqual({
+    'background-color': 'rgb(242, 242, 242)',
+  })
+  expect(await read('[data-block="callout"] > p', ['text-transform'])).toEqual({
+    'text-transform': 'uppercase',
+  })
+  expect(await read('.si-body pre', ['background-color'])).toEqual({
+    'background-color': 'rgb(242, 242, 242)',
+  })
+  expect(await read('[data-block="embed"] a', ['font-weight'])).toEqual({ 'font-weight': '700' })
+  expect((await read('[data-block="embed"] a', ['content'], '::after')).content).toContain('↗')
+  expect(await read('[data-variant="key-points"]', ['border-top-width'])).toEqual({
+    'border-top-width': '4px',
+  })
+  expect(await read('[data-variant="key-points"]', ['display'], '::before')).toEqual({
+    display: 'block',
+  })
+  expect((await read('.si-body figure', ['content'], '::before')).content).toContain('Fig.')
+  // A warning callout carries a 4px signal rule at the left.
+  await page.goto(
+    `/stories/${normalizeSlug(labStories.find(({ id }) => id === 'article-lab-wood-finishes')!.title)}`,
+  )
+  expect(
+    await read('[data-block="callout"][data-variant="warning"]', [
+      'border-left-width',
+      'border-left-color',
+    ]),
+  ).toEqual({ 'border-left-width': '4px', 'border-left-color': 'rgb(255, 79, 31)' })
+})
+
+test('boxes only a checklist’s own items: a numbered list inside a task keeps its numbers and no box', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(storyPath)
+  const checklist = page.locator(root).locator('.si-body > [data-block="checklist"]')
+  await expect(checklist).toHaveCount(1)
+  // The sample's tasks hold one paragraph; nest a numbered list in the first, as the renderer would.
+  const styles = await checklist.evaluate((list) => {
+    const task = list.querySelector(':scope > li')!
+    task.insertAdjacentHTML(
+      'beforeend',
+      '<ol start="1" type="1"><li><p>Plates</p></li><li><p>Glasses</p></li></ol>',
+    )
+    const read = (item: Element) => {
+      const own = getComputedStyle(item)
+      return {
+        box: getComputedStyle(item, '::before').content,
+        markers: own.listStyleType,
+        paddingLeft: own.paddingLeft,
+        position: own.position,
+      }
+    }
+    return {
+      nested: [...task.lastElementChild!.children].map(read),
+      // The story's own numbered list, outside any checklist.
+      outside: read(document.querySelector('.si-body > ol > li')!),
+      task: read(task),
+    }
+  })
+  expect(styles.task.box).not.toBe('none')
+  expect(styles.outside).toMatchObject({ box: 'none', markers: 'decimal' })
+  for (const item of styles.nested) expect(item).toEqual(styles.outside)
+})
+
+test('describes every gallery image at least as wide as it shows, in the grid, diptych and carousel layouts', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  for (const width of [390, 640, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+    const gallery = page.locator(root).locator('.si-body > [data-block="gallery"]')
+    await expect(gallery).toHaveCount(1)
+    for (const layout of ['grid', 'diptych', 'carousel']) {
+      const label = `${layout} at ${width}`
+      // The sample has no carousel; the layout attribute alone sets a gallery's columns.
+      const { images, text } = await gallery.evaluate((list, value) => {
+        list.setAttribute('data-layout', value)
+        const probe = document.createElement('div')
+        probe.style.cssText = 'position: absolute; visibility: hidden'
+        document.body.append(probe)
+        /** The width a sizes attribute gives at this viewport: the length of its first match. */
+        const describe = (sizes: string | null) => {
+          for (const entry of sizes?.split(',') ?? []) {
+            const [, condition, length] = /^(\(.+?\))?\s*(.+)$/.exec(entry.trim())!
+            if (condition && !matchMedia(condition).matches) continue
+            probe.style.width = length!
+            return probe.getBoundingClientRect().width
+          }
+          return null
+        }
+        const measured = {
+          images: [...list.querySelectorAll('picture')].map((picture) => ({
+            described: [...picture.querySelectorAll('source, img')].map((element) =>
+              describe(element.getAttribute('sizes')),
+            ),
+            shown: picture.querySelector('img')!.getBoundingClientRect().width,
+          })),
+          text: list.closest('.si-body')!.getBoundingClientRect().width,
+        }
+        probe.remove()
+        return measured
+      }, layout)
+      expect(images.length, label).toBeGreaterThan(1)
+      // A carousel sets one image across the text; grid and diptych two, 1.5rem apart, from 600px.
+      const columns = layout !== 'carousel' && width >= 600 ? 2 : 1
+      for (const { described, shown } of images) {
+        expect(Math.abs(shown - (text - (columns - 1) * 24) / columns), label).toBeLessThan(1)
+        // Each of the picture's sources and the image itself.
+        expect(described.length, label).toBeGreaterThan(1)
+        for (const value of described) {
+          expect(value, label).not.toBeNull()
+          expect(value!, label).toBeGreaterThanOrEqual(shown - 0.5)
+        }
+      }
+    }
+  }
+})
+
+test('keeps article, author and topic pages free of overflow from 320 pixels, with touch-sized controls', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const path of [storyPath, uprightPath, authorPath, topicPath]) {
+      await page.goto(path)
+      await page.evaluate(async () => {
+        await document.fonts.ready
+      })
+      const label = `${path} at ${width}`
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        label,
+      ).toBe(true)
+      // Links inside body text are exempt from the 44px target size.
+      const parts = path.startsWith('/stories/')
+        ? ['.si-masthead', '.si-rail', '.si-hero', '.si-end', '.si-related', '.si-footer']
+        : ['.si-masthead', 'main', '.si-footer']
+      for (const part of parts) {
+        await expectTouchTargets(page.locator(root).locator(part), `${label} ${part}`)
+      }
+    }
+  }
+})
+
+test('tabs through an article in DOM order from the skip link to the footer, at 390, 768 and 1440 pixels', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const path of [storyPath, uprightPath]) {
+      await page.goto(path)
+      await expect(
+        page.locator(root).getByRole('button', { name: 'Choose color theme' }),
+      ).toBeEnabled()
+      const skip = page.getByRole('link', { name: 'Skip to content' })
+      await tabTo(page, skip, 12)
+      await page.keyboard.press('Enter')
+      await expect(page.locator('#si-main')).toBeFocused()
+      // Every rendered link and button in the story, the related stories and the footer.
+      const expected = await page
+        .locator(root)
+        .evaluate((swiss) =>
+          [...swiss.querySelectorAll('main a[href], main button, footer a[href], footer button')]
+            .filter((element) => element.checkVisibility())
+            .map((element) => element.textContent!.trim()),
+        )
+      expect(expected.length).toBeGreaterThan(4)
+      const order: string[] = []
+      for (const _ of expected) {
+        await page.keyboard.press('Tab')
+        order.push(await page.evaluate(() => document.activeElement?.textContent?.trim() ?? ''))
+      }
+      expect(order, `${path} at ${width}`).toEqual(expected)
+      expect(order.at(-1)).toBe('Back to top')
+    }
+  }
 })
 
 test('has no overflow at every required width and operable touch-sized navigation', async ({
@@ -354,6 +755,9 @@ test('keeps the section index and the site index at 13 pixels on phones', async 
 test('walks the keyboard from the skip link through the masthead to the footer and back to top', async ({
   page,
 }) => {
+  // The global smooth scroll (globals.css) can stall mid-way under load; this test checks the
+  // keyboard path, not the animation, so reduced motion makes Back to top instant.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(sectionPath)
   const swiss = page.locator(root)
@@ -431,19 +835,21 @@ test('switches to the true black theme with the square Theme control from the ke
   ).toBe('rgb(0, 0, 0)')
 })
 
-test('keeps the seeded long-title, image-free, short and long-read stories readable at every width', async ({
+test('keeps the seeded long-title, image-free, short, long-read and upright-hero stories readable at every width', async ({
   page,
 }) => {
-  test.setTimeout(180_000)
-  const cases = labStories.filter(({ id }) =>
-    [
-      'article-lab-boathouse',
-      'article-lab-chair',
-      'article-lab-shelf',
-      'article-lab-long-table',
-    ].includes(id),
+  test.setTimeout(300_000)
+  const cases = labStories.filter(
+    (story) =>
+      uprightStories.includes(story) ||
+      [
+        'article-lab-boathouse',
+        'article-lab-chair',
+        'article-lab-shelf',
+        'article-lab-long-table',
+      ].includes(story.id),
   )
-  for (const width of [360, 390, 768, 1024, 1280, 1440]) {
+  for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     for (const story of cases) {
       await page.goto(`/stories/${normalizeSlug(story.title)}`)
@@ -456,6 +862,9 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
         `${story.id} at ${width}px`,
       ).toBe(true)
       if (story.id === 'article-lab-chair') await expect(page.locator('.si-hero')).toHaveCount(0)
+      await expect(page.locator('.si-hero-upright')).toHaveCount(
+        uprightStories.includes(story) ? 1 : 0,
+      )
     }
   }
 })
@@ -486,9 +895,9 @@ test('uses visible keyboard focus and a true black reading ground', async ({ pag
 for (const width of [390, 1440]) {
   for (const theme of ['light', 'dark']) {
     test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
-      test.setTimeout(120_000)
+      test.setTimeout(240_000)
       await page.setViewportSize({ width, height: 900 })
-      for (const path of ['/', storyPath, sectionPath]) {
+      for (const path of ['/', storyPath, uprightPath, sectionPath, authorPath, topicPath]) {
         await page.goto(path)
         await page.evaluate(async () => {
           await document.fonts.ready
@@ -561,7 +970,7 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
     page.on('request', (request) => {
       if (request.resourceType() === 'font') fonts.push(request.url())
     })
-    for (const path of ['/', storyPath, sectionPath]) {
+    for (const path of ['/', storyPath, sectionPath, authorPath, topicPath]) {
       await page.goto(path)
       await page.evaluate(async () => {
         await document.fonts.ready
@@ -576,15 +985,15 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures home and Interiors at 390, 768 and 1440 pixels in both themes for review', async ({
+test('captures the article, author and topic pages at 390, 768 and 1440 pixels in both themes for review', async ({
   page,
 }) => {
-  test.setTimeout(300_000)
+  test.setTimeout(600_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-si-sans': 'Schibsted Grotesk',
     '--font-si-mono': 'IBM Plex Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.46')
+  const destination = path.resolve('docs/worklog/blog-0044.47')
   await mkdir(destination, { recursive: true })
   for (const theme of ['light', 'dark']) {
     for (const [width, height] of [
@@ -594,8 +1003,10 @@ test('captures home and Interiors at 390, 768 and 1440 pixels in both themes for
     ] as const) {
       await page.setViewportSize({ width, height })
       for (const [name, route] of [
-        ['home', '/'],
-        ['interiors', sectionPath],
+        ['article-landscape', storyPath],
+        ['article-upright', uprightPath],
+        ['author', authorPath],
+        ['topic', topicPath],
       ] as const) {
         await captureFonts.goto(route)
         await page.evaluate(
