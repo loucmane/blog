@@ -30,6 +30,9 @@ function declarations(selector: string, media: string | null = null) {
 describe('Swiss Index styles', () => {
   it('keeps the direction CSS, styles and tokens together, within 20,000 bytes', () => {
     expect(Buffer.byteLength(styleCss) + Buffer.byteLength(tokenCss)).toBeLessThanOrEqual(20_000)
+    // Emitted compactly: the readable source's line breaks, indentation and spaces around braces
+    // are not sent with every page.
+    expect(styleCss).not.toMatch(/\n|\s[{}]|[{}]\s/)
   })
 
   it('moves nothing: no transitions, animations, sticky or fixed elements, or smooth scrolling', () => {
@@ -239,6 +242,9 @@ describe('Swiss Index styles', () => {
       '.si-end a',
       '.si-page figcaption a',
       ".si-body [data-block='embed'] a",
+      '.si-failure-actions a',
+      '.si-retry',
+      '.si-theme',
     ]) {
       expect(declarations(selector)['min-height'], selector).toBe('44px')
     }

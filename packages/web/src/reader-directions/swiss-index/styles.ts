@@ -10,7 +10,12 @@
  * Checklist rules reach only the checklist's own items (`> li`), so a list nested in a task keeps
  * the body's list styles and draws no box. Emphasis takes the genuine 400 and 700 italics; the page
  * keeps weight and style synthesis because each family's fallback is one upright local face, and a
- * cold view that keeps it must still show bold and italic text.
+ * cold view that keeps it must still show bold and italic text. IBM Plex Mono has upright 400 and
+ * 500 faces only, so inline code (in either order of marks) and list markers reset the style and
+ * weight that emphasis would otherwise synthesize. Numbered lists with a type take their markers
+ * from the shared renderer, which sets them inline; no rule here selects a type, because HTML
+ * compares it case-insensitively (`ol[type='a']` also matches type="A"). Every page sends these
+ * rules, so they are emitted without line breaks, indentation or spaces around braces.
  */
 export const styles = `
   & { background: var(--si-paper); color: var(--si-ink); }
@@ -20,7 +25,7 @@ export const styles = `
   & :where(.si-page) :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, dd, figure, blockquote) { margin: 0; }
   & :where(.si-page) :is(h1, h2, h3, h4, h5, h6) { font-family: var(--si-sans); }
   & :where(.si-page) :where(h1, h2, h3, h4, h5, h6) { font-weight: 700; letter-spacing: -0.035em; text-wrap: pretty; }
-  & :where(.si-page) :where(ul, ol) { padding: 0; list-style: none; }
+  & :where(.si-page) :where(ul, ol:not([type])) { padding: 0; list-style: none; }
   & :where(.si-page) a { color: inherit; text-decoration: none; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
   & .si-page a:hover { text-decoration-line: underline; }
   & .si-page :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
@@ -36,8 +41,9 @@ export const styles = `
   & .si-page .si-wordmark { font-size: var(--si-wordmark); font-weight: 800; line-height: 0.95; letter-spacing: -0.065em; }
   & .si-wordmark a { display: inline-block; min-height: 44px; }
   & .si-wordmark span { display: block; }
-  & .si-theme { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; min-width: 44px; min-height: 44px; padding: 0 0.875rem; border: 1px solid var(--si-ink); border-radius: 0; background: var(--si-paper); color: var(--si-ink); box-shadow: none; font-family: var(--si-mono); font-size: var(--si-small); font-weight: 500; transition: none; }
-  & .si-theme:hover { text-decoration-line: underline; text-underline-offset: 0.18em; }
+  & .si-theme, & .si-retry { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; min-width: 44px; min-height: 44px; padding: 0 0.875rem; border: 1px solid var(--si-ink); border-radius: 0; background: var(--si-paper); color: var(--si-ink); box-shadow: none; font-family: var(--si-mono); font-size: var(--si-small); font-weight: 500; transition: none; }
+  & .si-retry { margin-left: 0; }
+  & .si-theme:hover, & .si-retry:hover { text-decoration-line: underline; text-underline-offset: 0.18em; }
   & .si-masthead .si-nav { margin-top: 1.5rem; }
   & .si-nav ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 var(--si-gap); }
   & .si-nav li { border-left: 1px solid var(--si-ink); padding-left: 1rem; }
@@ -80,20 +86,23 @@ export const styles = `
   & .si-row-title a { display: block; min-height: 44px; }
   & .si-row-dek { margin-top: 0.5rem; max-width: 65ch; font-size: var(--si-copy); line-height: 1.6; color: var(--si-secondary); }
   & .si-row-facts a { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; }
-  & .si-empty { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 var(--si-gap); align-content: start; min-height: 50vh; padding-block: var(--si-space); }
-  & .si-empty > * { grid-column: 1 / 4; }
+  & .si-empty, & .si-failure { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 var(--si-gap); align-content: start; min-height: 50vh; padding-block: var(--si-space); }
+  & .si-empty > *, & .si-failure > * { grid-column: 1 / 4; }
   & .si-empty h2 { padding-top: 1.5rem; border-top: 4px solid var(--si-ink); font-size: var(--si-title); line-height: 1.05; }
   & .si-empty p { margin-top: 1.5rem; max-width: 40ch; color: var(--si-secondary); }
+  & .si-failure { padding-top: 2rem; }
+  & .si-failure-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; margin-top: 2rem; }
   & .si-page-header { padding-block: 2rem var(--si-space); }
-  & .si-page-header h1 { margin-top: 1.5rem; }
-  & .si-article-header h1, & .si-page-header h1 { font-size: var(--si-title); font-weight: 800; line-height: 1; letter-spacing: -0.06em; text-wrap: balance; }
+  & .si-page-header h1, & .si-failure h1 { margin-top: 1.5rem; }
+  & .si-article-header h1, & .si-page-header h1, & .si-failure h1 { font-size: var(--si-title); font-weight: 800; line-height: 1; letter-spacing: -0.06em; text-wrap: balance; }
   & .si-article-header h1 { line-height: 0.98; }
   & .si-article-header h1.si-title-long, & .si-page-header h1.si-title-long { font-size: var(--si-title-long); line-height: 1.05; }
   & .si-dek { max-width: 50ch; margin-top: 1.75rem; font-size: var(--si-dek); line-height: 1.5; color: var(--si-secondary); }
   & .si-bio { white-space: pre-line; }
   & .si-list-empty { border-top: 1px solid var(--si-ink); padding-block: 2rem; }
   & .si-list-empty p:first-child { color: var(--si-secondary); }
-  & .si-list-empty a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 1rem; font-family: var(--si-mono); font-size: var(--si-small); text-decoration-line: underline; }
+  & .si-list-empty a, & .si-failure-actions a { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--si-mono); font-size: var(--si-small); text-decoration-line: underline; }
+  & .si-list-empty a { margin-top: 1rem; }
   & .si-article { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: 'rail head head head' 'rail hero hero hero' 'rail body body body' 'end end end end'; column-gap: var(--si-gap); padding-top: 2rem; counter-reset: si-figure; }
   & .si-article-header { grid-area: head; }
   & .si-rail { grid-area: rail; align-self: start; border-top: 4px solid var(--si-ink); padding-top: 1rem; }
@@ -121,12 +130,8 @@ export const styles = `
   & .si-body u { text-decoration-style: dotted; }
   & .si-body :is(ul, ol) { padding-left: 1.5rem; }
   & .si-body ul { list-style-type: disc; }
-  & .si-body ol { list-style-type: decimal; }
-  & .si-body ol[type='a'] { list-style-type: lower-alpha; }
-  & .si-body ol[type='A'] { list-style-type: upper-alpha; }
-  & .si-body ol[type='i'] { list-style-type: lower-roman; }
-  & .si-body ol[type='I'] { list-style-type: upper-roman; }
-  & .si-body li::marker { font-family: var(--si-mono); }
+  & .si-body ol:not([type]) { list-style-type: decimal; }
+  & .si-body li::marker { font-family: var(--si-mono); font-style: normal; }
   & .si-body li + li { margin-top: 0.5rem; }
   & .si-body li > * + * { margin-top: 0.75rem; }
   & .si-body blockquote { border-left: 4px solid var(--si-ink); padding-left: 1.5rem; }
@@ -155,7 +160,8 @@ export const styles = `
   & .si-body [data-variant='methodology'] { padding-top: 1rem; border-top: 1px solid var(--si-ink); font-size: var(--si-copy); color: var(--si-secondary); }
   & .si-body [data-block='embed'] a { display: inline-block; min-height: 44px; padding-block: 0.5rem; font-size: var(--si-card); font-weight: 700; line-height: 1.15; letter-spacing: -0.035em; }
   & .si-body [data-block='embed'] a::after { content: '↗' / ''; margin-left: 0.25em; }
-  & .si-body code { font-family: var(--si-mono); font-size: var(--si-copy); overflow-wrap: anywhere; }
+  & .si-body code { font-family: var(--si-mono); font-size: var(--si-copy); font-style: normal; font-weight: 400; overflow-wrap: anywhere; }
+  & .si-body code :is(em, strong) { font-style: normal; font-weight: 400; }
   & .si-body pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1.25rem; border-block: 1px solid var(--si-ink); background: var(--si-plate); }
   & .si-body hr { border: 0; border-top: 4px solid var(--si-ink); margin-block: 3rem; }
   & .si-end { grid-area: end; margin-top: var(--si-space); border-top: 4px solid var(--si-ink); padding-top: 1rem; }
@@ -176,8 +182,8 @@ export const styles = `
     & .si-row-facts-narrow { display: flex; margin-top: 0.25rem; }
     & .si-row-facts-wide { display: none; }
     & .si-number-plate[data-alone~='tablet'] { display: none; }
-    & .si-empty, & .si-footer { grid-template-columns: 1fr; }
-    & .si-empty > *, & .si-footer .si-nav { grid-column: 1; }
+    & .si-empty, & .si-failure, & .si-footer { grid-template-columns: 1fr; }
+    & .si-empty > *, & .si-failure > *, & .si-footer .si-nav { grid-column: 1; }
     & .si-footer .si-nav ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     & .si-article { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'head' 'rail' 'hero' 'body' 'end'; }
     & .si-rail { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin-top: 2rem; }
@@ -190,7 +196,7 @@ export const styles = `
     & .si-end dt { min-height: 0; }
   }
   @media (max-width: 599px) {
-    & .si-article-header h1, & .si-page-header h1 { letter-spacing: -0.04em; }
+    & .si-article-header h1, & .si-page-header h1, & .si-failure h1 { letter-spacing: -0.04em; }
     & .si-masthead { padding-top: 1.5rem; }
     & .si-nav ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     & .si-nav li { padding-left: 0.5rem; }
@@ -219,7 +225,10 @@ export const styles = `
   @media print {
     & .si-skip, & .si-nav, & .si-theme, & .si-top-link, & .si-number-plate, & .si-related { display: none; }
     & .si-page main { width: 100%; }
-    & .si-plates, & .si-index > li, & .si-empty, & .si-footer, & .si-article, & .si-end > div, & .si-hero-upright figure { display: block; }
+    & .si-plates, & .si-index > li, & .si-empty, & .si-failure, & .si-footer, & .si-article, & .si-end > div, & .si-hero-upright figure { display: block; }
     & .si-body { max-width: 65ch; }
   }
 `
+  .replace(/\s*\n\s*/g, '')
+  .replace(/\s*([{}])\s*/g, '$1')
+  .replace(/;}/g, '}')

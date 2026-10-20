@@ -1,7 +1,7 @@
 import type { HomeDirectionProps } from '../contract'
 import { SwissIndexList, SwissLabelRow } from './index-row'
 import { SwissShell } from './shell'
-import { leadSizes, platesAlone, SwissPlate } from './story-card'
+import { plateSizes, platesAlone, SwissPlate } from './story-card'
 
 /** The cover holds stories 01–03; the index lists the rest. */
 const coverSize = 3
@@ -16,7 +16,7 @@ export function SwissHome({ view }: HomeDirectionProps) {
     <SwissShell
       isHome
       navigation={view.navigation}
-      leadImage={lead?.image ? { image: lead.image, sizes: leadSizes } : null}
+      leadImage={lead?.image ? { image: lead.image, sizes: plateSizes(lead.image, 'lead') } : null}
     >
       {lead ? (
         <>
@@ -28,6 +28,8 @@ export function SwissHome({ view }: HomeDirectionProps) {
                 key={story.slug}
                 story={story}
                 number={index + 2}
+                // From 1024px plates 02 and 03 share the first row with plate 01.
+                eager
                 alone={alone[index + 1]}
               />
             ))}

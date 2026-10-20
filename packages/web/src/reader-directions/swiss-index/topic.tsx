@@ -1,7 +1,7 @@
 import type { TopicDirectionProps } from '../contract'
 import { SwissEmptyList, SwissPageHeader, SwissPlateList } from './listing'
 import { SwissShell } from './shell'
-import { cardSizes } from './story-card'
+import { plateSizes } from './story-card'
 
 /** A topic page is laid out as a section page; its index keeps the section, since topics cross sections. */
 export function SwissTopic({ view }: TopicDirectionProps) {
@@ -9,7 +9,7 @@ export function SwissTopic({ view }: TopicDirectionProps) {
   return (
     <SwissShell
       navigation={view.navigation}
-      leadImage={firstImage ? { image: firstImage, sizes: cardSizes } : null}
+      leadImage={firstImage ? { image: firstImage, sizes: plateSizes(firstImage, 'plate') } : null}
     >
       <SwissPageHeader count={view.stories.length} label="Topic" name={view.name}>
         {view.description ? <p className="si-dek">{view.description}</p> : null}

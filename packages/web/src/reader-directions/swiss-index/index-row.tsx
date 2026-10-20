@@ -9,14 +9,17 @@ export function storyCount(count: number) {
   return `${count} ${count === 1 ? 'story' : 'stories'}`
 }
 
-/** A mono label at the left and the story count at the right; a heading when it heads a list. */
+/**
+ * A mono label at the left and the story count, when the row counts stories, at the right; a
+ * heading when it heads a list.
+ */
 export function SwissLabelRow({
   count,
   heading = false,
   id,
   label,
 }: {
-  readonly count: number
+  readonly count?: number
   readonly heading?: boolean
   readonly id?: string
   readonly label: string
@@ -27,7 +30,7 @@ export function SwissLabelRow({
       <Label className="si-label" id={id}>
         {label}
       </Label>
-      <p className="si-label si-count">{storyCount(count)}</p>
+      {count === undefined ? null : <p className="si-label si-count">{storyCount(count)}</p>}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import type { SectionDirectionProps } from '../contract'
 import { SwissEmptyList, SwissPageHeader, SwissPlateList } from './listing'
 import { SwissShell } from './shell'
-import { cardSizes } from './story-card'
+import { plateSizes } from './story-card'
 
 export function SwissSection({ view }: SectionDirectionProps) {
   const firstImage = view.stories[0]?.image
@@ -9,7 +9,7 @@ export function SwissSection({ view }: SectionDirectionProps) {
     <SwissShell
       navigation={view.navigation}
       currentSection={view.slug}
-      leadImage={firstImage ? { image: firstImage, sizes: cardSizes } : null}
+      leadImage={firstImage ? { image: firstImage, sizes: plateSizes(firstImage, 'plate') } : null}
     >
       <SwissPageHeader count={view.stories.length} label="Section" name={view.name}>
         {view.description ? <p className="si-dek">{view.description}</p> : null}
