@@ -4,6 +4,7 @@ import { expect, it } from 'vitest'
 
 import { BaselineArticle } from '@/reader-directions/baseline/article'
 import { defineReaderDirection } from '@/reader-directions/contract'
+import { readerDirections } from '@/reader-directions/registry'
 import type { ArticleBlock, ArticleView, ReaderImage } from '@/reader/views'
 
 import { ArticleBody } from './article-body'
@@ -60,6 +61,71 @@ const view: ArticleView = {
 
 function documentFor(markup: string) {
   return new DOMParser().parseFromString(markup, 'text/html')
+}
+
+const sharedSizes = '(min-width: 768px) 42rem, 100vw'
+const layouts = ['grid', 'diptych', 'carousel'] as const
+type Slot = 'image' | (typeof layouts)[number]
+type Inset = 'quote' | 'bulleted' | 'numbered' | 'checklist' | 'editorial'
+
+/** An image block and a gallery of each layout, each image named for its place and slot. */
+function everySlot(place: string): ArticleBlock[] {
+  return [
+    { kind: 'image', image: { ...image, alt: `${place} image` } },
+    ...layouts.map((layout): ArticleBlock => ({
+      kind: 'gallery',
+      images: [{ ...image, alt: `${place} ${layout}` }],
+      layout,
+    })),
+  ]
+}
+
+/** Every block that nests other blocks. */
+const insets: Readonly<Record<Inset, (blocks: readonly ArticleBlock[]) => ArticleBlock>> = {
+  quote: (blocks) => ({ kind: 'quote', blocks }),
+  bulleted: (blocks) => ({ kind: 'bulleted-list', items: [{ blocks }] }),
+  numbered: (blocks) => ({ kind: 'numbered-list', items: [{ blocks }], numbering: '1', start: 1 }),
+  checklist: (blocks) => ({ kind: 'checklist', items: [{ blocks, checked: false }] }),
+  editorial: (blocks) => ({ kind: 'editorial', blocks, variant: 'fact-box' }),
+}
+
+/** Every slot at the top level, inside each kind of inset, and two insets deep. */
+const slotBody: readonly ArticleBlock[] = [
+  ...everySlot('top'),
+  ...Object.entries(insets).map(([place, inset]) => inset(everySlot(place))),
+  insets.quote([insets.checklist(everySlot('deep'))]),
+]
+const places = ['top', ...Object.keys(insets), 'deep']
+
+/** The sizes each picture carries, by its image's alt text, or every value if its elements differ. */
+function sizesByAlt(markup: string) {
+  return Object.fromEntries(
+    [...documentFor(markup).querySelectorAll('picture')].map((picture) => {
+      const sizes = [
+        ...new Set(
+          [...picture.querySelectorAll('source, img')].map((element) =>
+            element.getAttribute('sizes'),
+          ),
+        ),
+      ]
+      return [
+        picture.querySelector('img')?.getAttribute('alt'),
+        sizes.length === 1 ? sizes[0] : sizes,
+      ]
+    }),
+  )
+}
+
+/** The sizes every image in slotBody should carry, from its slot and whether it is nested. */
+function expectedSizes(sizesFor: (slot: Slot, nested: boolean) => string | undefined) {
+  return Object.fromEntries(
+    places.flatMap((place) =>
+      (['image', ...layouts] as const).map((slot) => [
+        `${place} ${slot}`,
+        sizesFor(slot, place !== 'top'),
+      ]),
+    ),
+  )
 }
 
 it('preserves default body and gallery sizes, responsive sources and captions', () => {
@@ -131,3 +197,111 @@ it('sets each numbered list marker inline, so case survives any stylesheet', () 
     Object.entries(expected).map(([numbering, marker]) => [numbering, '3', marker]),
   )
 })
+
+it('gives checklists and galleries, whose markers every direction removes, an explicit list role', () => {
+  const blocks: ArticleBlock[] = [
+    { kind: 'checklist', items: [{ blocks: [], checked: true }] },
+    ...layouts.map((layout): ArticleBlock => ({ kind: 'gallery', images: [image], layout })),
+    {
+      kind: 'bulleted-list',
+      items: [{ blocks: [{ kind: 'checklist', items: [{ blocks: [], checked: false }] }] }],
+    },
+    { kind: 'numbered-list', items: [{ blocks: [] }], numbering: '1', start: 1 },
+  ]
+  const document = documentFor(renderToStaticMarkup(<ArticleBody blocks={blocks} />))
+  expect(
+    [...document.querySelectorAll('ul, ol')].map((list) => [
+      list.localName,
+      list.getAttribute('data-block'),
+      list.getAttribute('role'),
+    ]),
+  ).toEqual([
+    ['ul', 'checklist', 'list'],
+    ['ul', 'gallery', 'list'],
+    ['ul', 'gallery', 'list'],
+    ['ul', 'gallery', 'list'],
+    // Bulleted and numbered lists keep their markers, so their native role is enough.
+    ['ul', null, null],
+    ['ul', 'checklist', 'list'],
+    ['ol', null, null],
+  ])
+})
+
+it('sizes every image as before, at any depth, when no layout or inset hint is set', () => {
+  expect(sizesByAlt(renderToStaticMarkup(<ArticleBody blocks={slotBody} />))).toEqual(
+    expectedSizes(() => sharedSizes),
+  )
+  expect(
+    sizesByAlt(
+      renderToStaticMarkup(
+        <ArticleBody blocks={slotBody} imageSizes={{ body: '80vw', gallery: '40vw' }} />,
+      ),
+    ),
+  ).toEqual(expectedSizes((slot) => (slot === 'image' ? '80vw' : '40vw')))
+})
+
+it('gives gallery items their layout hint, or gallery where it is unset, without an inset hint', () => {
+  const sizes = { body: '80vw', carousel: '70vw', diptych: '45vw', gallery: '40vw', grid: '30vw' }
+  expect(
+    sizesByAlt(renderToStaticMarkup(<ArticleBody blocks={slotBody} imageSizes={sizes} />)),
+  ).toEqual(expectedSizes((slot) => (slot === 'image' ? sizes.body : sizes[slot])))
+  expect(
+    sizesByAlt(
+      renderToStaticMarkup(
+        <ArticleBody blocks={slotBody} imageSizes={{ gallery: '40vw', grid: '30vw' }} />,
+      ),
+    ),
+  ).toEqual(
+    expectedSizes(
+      (slot) => ({ carousel: '40vw', diptych: '40vw', grid: '30vw', image: sharedSizes })[slot],
+    ),
+  )
+})
+
+it('gives every nested image and gallery item the inset hint, however deep, and no top-level one', () => {
+  const sizes = { body: '80vw', gallery: '40vw', grid: '30vw', inset: '60vw' }
+  expect(
+    sizesByAlt(renderToStaticMarkup(<ArticleBody blocks={slotBody} imageSizes={sizes} />)),
+  ).toEqual(
+    expectedSizes((slot, nested) =>
+      nested ? '60vw' : { carousel: '40vw', diptych: '40vw', grid: '30vw', image: '80vw' }[slot],
+    ),
+  )
+})
+
+it('forwards a direction’s layout and inset hints through its registered Article view', () => {
+  const direction = defineReaderDirection({
+    Article: BaselineArticle,
+    Home: () => null,
+    Section: () => null,
+    id: 'hinted',
+    imageSizes: { carousel: '70vw', diptych: '45vw', grid: '30vw', inset: '60vw' },
+    name: 'Hinted',
+    thesis: 'Every slot has its own sizes.',
+  })
+  expect(
+    sizesByAlt(renderToStaticMarkup(<direction.Article view={{ ...view, body: slotBody }} />)),
+  ).toEqual(
+    expectedSizes((slot, nested) =>
+      nested
+        ? '60vw'
+        : { carousel: '70vw', diptych: '45vw', grid: '30vw', image: sharedSizes }[slot],
+    ),
+  )
+})
+
+it.each(readerDirections.directions.map((direction) => [direction.name, direction] as const))(
+  'sizes every %s body image by its registered map, as before until it sets an optional hint',
+  (_, direction) => {
+    const { body, gallery, inset, ...layoutHints } = direction.imageSizes
+    expect(
+      sizesByAlt(renderToStaticMarkup(<direction.Article view={{ ...view, body: slotBody }} />)),
+    ).toEqual(
+      expectedSizes(
+        (slot, nested) =>
+          (nested ? inset : undefined) ??
+          (slot === 'image' ? body : (layoutHints[slot] ?? gallery)),
+      ),
+    )
+  },
+)

@@ -16,7 +16,7 @@ real site, with real published stories, in any registered direction.
 | `Author`, `Topic` (optional)         | Server components that receive `{ view }` (`AuthorView`, `TopicView`); baseline's if left out.          |
 | `NotFound`, `Unavailable` (optional) | Failure pages receiving `{ view: ReaderFailureView }`; baseline's if left out.                          |
 | `Error` (optional)                   | Client-compatible failure page receiving `{ view: ReaderFailureView, reset }`; baseline's if left out.  |
-| `imageSizes` (optional)              | Partial `{ body, gallery }` sizes map, passed to the Article component for forwarding to `ArticleBody`. |
+| `imageSizes` (optional)              | Partial `{ body, gallery }` sizes map with optional layout and inset hints, forwarded to `ArticleBody`. |
 | `fonts` (optional)                   | Local WOFF2 faces, a CSS variable, and metric-adjusted fallback data (see below).                       |
 | `tokens` (optional)                  | CSS custom properties for `light` and `dark`, plus the `textPairs` that must reach WCAG AA (4.5:1).     |
 | `styles` (optional)                  | CSS that is nested under the direction's root element, so it reaches only this direction.               |
@@ -52,7 +52,10 @@ registry.
   with its tokens and styles.
 - **The shared renderers.** Use `ArticleBody` for story bodies, and `ReaderImageView` or
   `ReaderFigure` for images, so blocks and image privacy rules stay in one place. Style their
-  semantic HTML and `data-block` attributes rather than reimplementing them.
+  semantic HTML and `data-block` attributes rather than reimplementing them. Checklists and
+  galleries are `<ul role="list">`: every direction removes their markers, and Safari then drops
+  the list semantics that VoiceOver needs to announce list positions, unless the role is
+  explicit. Bulleted and numbered lists keep their markers and their native role.
 - **Images are `<picture>` elements.** `ReaderImageView` renders resized AVIF and WebP variants
   with a fallback, as `<picture class="contents">` around the `<img>`. The picture takes no part in
   layout, but it does sit between the `<img>` and its parent in the DOM. So select images with a
@@ -111,21 +114,39 @@ defineReaderDirection({
   Article,
   imageSizes: {
     body: '(min-width: 60rem) 48rem, 100vw',
-    gallery: '(min-width: 60rem) 24rem, 50vw',
+    gallery: '(min-width: 60rem) 48rem, 100vw',
+    grid: '(min-width: 60rem) 23.25rem, (min-width: 40rem) 50vw, 100vw',
+    diptych: '(min-width: 60rem) 23.25rem, (min-width: 40rem) 50vw, 100vw',
+    inset: '(min-width: 60rem) 40rem, calc(100vw - 4rem)',
   },
 })
 ```
 
+The map's type is `ArticleBodyImageSizes`, from `@/reader/components/article-body`:
+
+| Key                                      | Images                                                                             | When unset                        |
+| ---------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------- |
+| `body`                                   | Image blocks                                                                       | `(min-width: 768px) 42rem, 100vw` |
+| `gallery`                                | Gallery items                                                                      | `(min-width: 768px) 42rem, 100vw` |
+| `grid`, `diptych`, `carousel` (optional) | Gallery items in that layout                                                       | `gallery`                         |
+| `inset` (optional)                       | Images nested in a quote, list or checklist item, or editorial block, at any depth | The image's own hint, as above    |
+
+An unset hint falls back when the body renders, so it follows the direction's own `body` and
+`gallery` values, and output changes only where a direction sets a hint. Nested gallery items also
+take `inset`, before their layout's hint, because an item is never wider than the inset it sits in.
+Where a direction keeps nested galleries in columns, `inset` names the whole inset, so their items
+fetch a larger candidate than they show, never a smaller one.
+
 Registration copies and freezes the map and supplies it to Article via a component wrapper.
 Directions without a map retain their Article component; registering an already defined direction
-reuses its frozen definition without adding another wrapper.
-The map accepts only `body` and `gallery`, with nonempty string values and no markup,
-declaration delimiters, or line breaks. It does not parse the full HTML `sizes` grammar;
-verify that the browser selects candidates matching the actual layout. Omitted entries keep
-`(min-width: 768px) 42rem, 100vw`. Existing directions need no changes until they opt in.
+reuses its frozen definition without adding another wrapper. The frozen map holds `body`,
+`gallery`, and only the hints the direction set. The map accepts only the keys above, with
+nonempty string values and no markup, declaration delimiters, or line breaks. It does not parse
+the full HTML `sizes` grammar; verify that the browser selects candidates matching the actual
+layout. Existing directions need no changes until they opt in.
 
-`ArticleBody` also accepts an explicit partial `imageSizes` map. It forwards both values through
-nested quotes, lists, checklists, and editorial blocks to `ReaderFigure`/`ReaderImageView`, including
+`ArticleBody` also accepts an explicit partial `imageSizes` map. It applies the map through nested
+quotes, lists, checklists, and editorial blocks to `ReaderFigure`/`ReaderImageView`, including
 every responsive `<source>` and `<img>`. Hero and story-card hints remain separate. Responsive
 sources, alt text, captions, credits, dimensions, and media authorization stay in the shared
 renderer; do not replace it to customize sizes.
@@ -213,8 +234,10 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
   the lab too.
 - `packages/web/src/app/failure-views.test.tsx` covers custom/fallback failure views and reset;
   `packages/web/tests/reader/failure-views.test.ts` checks real owner selection on failure surfaces.
-- `packages/web/src/reader/components/article-body.test.tsx` checks default and supplied sizes
-  through nested figures/galleries. The registry test renders all registered failure views.
+- `packages/web/src/reader/components/article-body.test.tsx` checks the sizes of every image
+  slot (the top level, each kind of inset, and two insets deep) with the defaults, layout hints,
+  and inset hints, in every registered direction too, and the list role on checklists and
+  galleries. The registry test renders all registered failure views.
 - Browser handoff: visit missing routes, trigger a server/client error, and simulate unavailable
   stories in each direction. At 390 and 1440 pixels, check one h1, axe, keyboard retry/home/lab
   controls, theme contrast, and active-only fonts. Also check initial error fallback, selection

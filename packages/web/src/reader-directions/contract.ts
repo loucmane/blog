@@ -1,6 +1,7 @@
 import { createElement, type FunctionComponent } from 'react'
 
-import { defaultReaderImageSizes, type ReaderImageSizes } from '@/reader/components/image-sizes'
+import type { ArticleBodyImageSizes } from '@/reader/components/article-body'
+import { defaultReaderImageSizes } from '@/reader/components/image-sizes'
 import type {
   ArticleView,
   AuthorView,
@@ -34,7 +35,7 @@ export interface HomeDirectionProps {
 
 export interface ArticleDirectionProps {
   /** Forward to ArticleBody. A registered direction supplies its configured map. */
-  readonly imageSizes?: Readonly<Partial<ReaderImageSizes>> | undefined
+  readonly imageSizes?: Readonly<Partial<ArticleBodyImageSizes>> | undefined
   readonly view: ArticleView
 }
 
@@ -122,8 +123,11 @@ export interface ReaderDirectionDefinition {
   readonly Home: FunctionComponent<HomeDirectionProps>
   /** Short lowercase kebab-case, such as `quiet-monograph`. */
   readonly id: string
-  /** Sizes passed to Article as imageSizes; omitted entries keep the shared defaults. */
-  readonly imageSizes?: Readonly<Partial<ReaderImageSizes>>
+  /**
+   * Sizes passed to Article as imageSizes. Omitted body and gallery entries keep the shared
+   * defaults; omitted layout and inset hints fall back as ArticleBody describes.
+   */
+  readonly imageSizes?: Readonly<Partial<ArticleBodyImageSizes>>
   /** The name the owner sees in the Reader Lab. */
   readonly name: string
   readonly NotFound?: FunctionComponent<NotFoundDirectionProps>
@@ -143,7 +147,7 @@ export interface ReaderDirection extends ReaderDirectionDefinition {
   readonly Author: FunctionComponent<AuthorDirectionProps>
   readonly Error: FunctionComponent<ErrorDirectionProps>
   readonly fonts: readonly ReaderDirectionFont[]
-  readonly imageSizes: ReaderImageSizes
+  readonly imageSizes: ArticleBodyImageSizes
   readonly NotFound: FunctionComponent<NotFoundDirectionProps>
   readonly Topic: FunctionComponent<TopicDirectionProps>
   readonly Unavailable: FunctionComponent<UnavailableDirectionProps>
@@ -184,23 +188,42 @@ const fontMetricPattern = /^\d+(?:\.\d+)?%$/
 const views = ['Home', 'Article', 'Section'] as const
 const optionalViews = ['Author', 'Topic', 'NotFound', 'Error', 'Unavailable'] as const
 
+/** Every imageSizes key, in the order messages list them; the type keeps the list complete. */
+const imageSizeKeys = {
+  body: true,
+  gallery: true,
+  grid: true,
+  diptych: true,
+  carousel: true,
+  inset: true,
+} as const satisfies Record<keyof ArticleBodyImageSizes, true>
+const imageSizeKeyList = Object.keys(imageSizeKeys).join(', ')
+
+function isImageSizeKey(key: string): key is keyof ArticleBodyImageSizes {
+  // Own keys only: "constructor" must not pass for a sizes key.
+  return Object.hasOwn(imageSizeKeys, key)
+}
+
+/** The shared defaults with the supplied sizes. Unset optional hints stay unset. */
 function requireImageSizes(
   id: string,
   sizes: ReaderDirectionDefinition['imageSizes'],
-): ReaderImageSizes {
+): ArticleBodyImageSizes {
   if (sizes === undefined) return defaultReaderImageSizes
   if (typeof sizes !== 'object' || sizes === null || Array.isArray(sizes)) {
-    fail(id, 'imageSizes must be an object with body and/or gallery sizes.')
+    fail(id, `imageSizes must be an object with sizes for any of ${imageSizeKeyList}.`)
   }
-  const validated = { ...defaultReaderImageSizes }
+  const supplied: Partial<Record<keyof ArticleBodyImageSizes, string>> = {}
   for (const [key, value] of Object.entries(sizes)) {
-    if (key !== 'body' && key !== 'gallery') fail(id, `unknown imageSizes key "${key}".`)
+    if (!isImageSizeKey(key)) {
+      fail(id, `unknown imageSizes key "${key}"; use one of ${imageSizeKeyList}.`)
+    }
     if (typeof value !== 'string' || !value.trim() || /[;{}<>\\\r\n]/.test(value)) {
       fail(id, `imageSizes.${key} must be a nonempty sizes string without markup or line breaks.`)
     }
-    validated[key] = value
+    supplied[key] = value
   }
-  return Object.freeze(validated)
+  return Object.freeze({ ...defaultReaderImageSizes, ...supplied })
 }
 
 function fail(id: string, problem: string): never {
