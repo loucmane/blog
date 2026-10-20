@@ -1,10 +1,43 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import { ThemeMenu } from '@/components/theme-menu'
 import { siteName } from '@/reader/components/site-header'
 import type { ReaderNavigation } from '@/reader/views'
 
 import { SwissImagePreload, type SwissLeadImage } from './image-preload'
+
+interface SwissIndexNavProps {
+  readonly currentSection: string | undefined
+  readonly isHome: boolean
+  readonly label: string
+  readonly navigation: ReaderNavigation
+}
+
+/** The front page and every section as ruled index cells, with the current page marked. */
+function SwissIndexNav({ currentSection, isHome, label, navigation }: SwissIndexNavProps) {
+  const cells = [
+    { current: isHome, href: '/', name: 'Front page' },
+    ...navigation.sections.map((section) => ({
+      current: section.slug === currentSection,
+      href: section.href,
+      name: section.name,
+    })),
+  ]
+  return (
+    <nav aria-label={label} className="si-nav">
+      <ul>
+        {cells.map((cell) => (
+          <li data-current={cell.current ? '' : undefined} key={cell.href}>
+            <Link aria-current={cell.current ? 'page' : undefined} href={cell.href}>
+              {cell.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
 
 export function SwissShell({
   children,
@@ -21,52 +54,39 @@ export function SwissShell({
 }) {
   const Brand = isHome ? 'h1' : 'p'
   const [firstWord, ...remainingWords] = siteName.split(' ')
+  const index = { currentSection, isHome, navigation }
   return (
-    <div className="si-page">
+    <div className="si-page" id="si-top">
       {leadImage ? <SwissImagePreload {...leadImage} /> : null}
       <a className="si-skip" href="#si-main">
-        Skip to stories
+        Skip to content
       </a>
       <header className="si-masthead">
-        <Brand className="si-wordmark">
-          <Link href="/">
-            <span>{firstWord}</span>
-            {remainingWords.length ? (
-              <>
-                {' '}
-                <span>{remainingWords.join(' ')}</span>
-              </>
-            ) : null}
-          </Link>
-        </Brand>
-        <nav aria-label="Sections">
-          <ul>
-            <li>
-              <Link aria-current={isHome ? 'page' : undefined} href="/">
-                All stories
-              </Link>
-            </li>
-            {navigation.sections.map((section) => (
-              <li key={section.slug}>
-                <Link
-                  aria-current={currentSection === section.slug ? 'page' : undefined}
-                  href={section.href}
-                >
-                  {section.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="si-masthead-bar">
+          <Brand className="si-wordmark">
+            <Link href="/">
+              <span>{firstWord}</span>
+              {remainingWords.length ? (
+                <>
+                  {' '}
+                  <span>{remainingWords.join(' ')}</span>
+                </>
+              ) : null}
+            </Link>
+          </Brand>
+          <ThemeMenu className="si-theme" />
+        </div>
+        <SwissIndexNav label="Sections" {...index} />
       </header>
       <main id="si-main" tabIndex={-1}>
         {children}
       </main>
       <footer className="si-footer">
-        <p>{siteName}</p>
-        <Link href="/">
-          All stories <span aria-hidden="true">↗</span>
-        </Link>
+        <p className="si-footer-name">{siteName}</p>
+        <SwissIndexNav label="Site index" {...index} />
+        <a className="si-top-link" href="#si-top">
+          Back to top
+        </a>
       </footer>
     </div>
   )
