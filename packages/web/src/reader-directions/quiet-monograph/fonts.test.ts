@@ -15,6 +15,14 @@ const folder = path.join(
   'packages/web/public/reader-directions/quiet-monograph/fonts',
 )
 
+// SHA-256 of the exact output from contract.ts, first pinned at base 68dde2b and updated for the
+// local bold and italic fallback faces (blog-0044.63). A range extension must not alter static CSS.
+it('keeps quiet-monograph font output byte-for-byte compatible', () => {
+  expect(
+    createHash('sha256').update(readerDirectionFontCss(quietMonographDirection)!).digest('hex'),
+  ).toBe('b6bb10662a34971b9cb4ccbd4975a783162dbea2fdccfe758e7b025096f069e6')
+})
+
 it('preserves Next fallback metrics and optional display for exactly the used faces', () => {
   const css = postcss.parse(readerDirectionFontCss(quietMonographDirection)!)
   const faces: Record<string, string>[] = []
