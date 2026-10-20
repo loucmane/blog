@@ -1,12 +1,17 @@
-import Link from 'next/link'
-
 import type { HomeDirectionProps } from '../contract'
+import { SwissIndexList, SwissLabelRow } from './index-row'
 import { SwissShell } from './shell'
-import { leadSizes, StoryMeta, SwissStoryCard } from './story-card'
+import { leadSizes, platesAlone, SwissPlate } from './story-card'
+
+/** The cover holds stories 01–03; the index lists the rest. */
+const coverSize = 3
 
 export function SwissHome({ view }: HomeDirectionProps) {
   const { lead } = view
-  const latest = view.recent.slice(2)
+  const cover = view.recent.slice(0, coverSize - 1)
+  const earlier = view.recent.slice(coverSize - 1)
+  // Plate 01 spans two columns.
+  const alone = platesAlone([2, ...cover.map(() => 1)])
   return (
     <SwissShell
       isHome
@@ -15,30 +20,27 @@ export function SwissHome({ view }: HomeDirectionProps) {
     >
       {lead ? (
         <>
-          <ul className="si-grid si-home-grid" aria-label="Latest stories">
-            <SwissStoryCard story={lead} number={1} lead wide preload />
-            {view.recent.slice(0, 2).map((story, index) => (
-              <SwissStoryCard key={story.slug} story={story} number={index + 2} />
+          {/* eslint-disable-next-line jsx-a11y-x/no-redundant-roles -- Removed list styles drop list semantics in Safari. */}
+          <ol aria-label="Latest stories" className="si-plates si-cover" role="list" start={1}>
+            <SwissPlate story={lead} number={1} lead preload />
+            {cover.map((story, index) => (
+              <SwissPlate
+                key={story.slug}
+                story={story}
+                number={index + 2}
+                alone={alone[index + 1]}
+              />
             ))}
-          </ul>
-          {latest.length ? (
-            <section className="si-latest" aria-labelledby="si-latest">
-              <h2 className="si-label" id="si-latest">
-                Further reading
-              </h2>
-              <ol start={4} className="si-index">
-                {latest.map((story, index) => (
-                  <li key={story.slug}>
-                    <StoryMeta story={story} number={index + 4} />
-                    <div className="si-index-copy">
-                      <h3>
-                        <Link href={story.href}>{story.title}</Link>
-                      </h3>
-                      {story.dek ? <p>{story.dek}</p> : null}
-                    </div>
-                  </li>
-                ))}
-              </ol>
+          </ol>
+          {earlier.length ? (
+            <section className="si-earlier" aria-labelledby="si-earlier">
+              <SwissLabelRow
+                count={earlier.length}
+                heading
+                id="si-earlier"
+                label="Earlier stories"
+              />
+              <SwissIndexList start={coverSize + 1} stories={earlier} />
             </section>
           ) : null}
         </>
