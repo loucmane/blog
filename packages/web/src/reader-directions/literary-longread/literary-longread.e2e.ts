@@ -341,12 +341,12 @@ test('preserves all five ordered numbering styles and starts in the article casc
   page,
 }) => {
   await page.goto(storyPath)
-  await expect(page.locator('.ll-body ol[type="1" s]').first()).toHaveCSS(
+  await expect(page.locator('.ll-body ol[type="1"]').first()).toHaveCSS(
     'list-style-type',
     'decimal',
   )
   await page.goto(`/stories/${normalizeSlug(doorHandle.title)}`)
-  await expect(page.locator('.ll-body ol[type="a" s]').first()).toHaveCSS(
+  await expect(page.locator('.ll-body ol[type="a"]').first()).toHaveCSS(
     'list-style-type',
     'lower-alpha',
   )
@@ -362,12 +362,14 @@ test('preserves all five ordered numbering styles and starts in the article casc
       (element, { type, marker }) => {
         element.insertAdjacentHTML(
           'beforeend',
-          `<ol type="${type}" start="4" style="list-style-type: ${marker}"><li><p>Numbering probe</p></li></ol>`,
+          `<ol data-probe="${type}" type="${type}" start="4" style="list-style-type: ${marker}"><li><p>Numbering probe</p></li></ol>`,
         )
       },
       { type, marker },
     )
-    const list = page.locator(`.ll-body ol[type="${type}" s]`)
+    // Attribute selectors match type case-insensitively (A also matches the real a list), so
+    // the probe is addressed by its own marker attribute.
+    const list = page.locator(`.ll-body ol[data-probe="${type}"]`)
     await expect(list).toHaveCSS('list-style-type', marker)
     expect(await list.evaluate((element) => (element as HTMLOListElement).start)).toBe(4)
   }
@@ -441,7 +443,7 @@ test('computes the article scale, body layout, list markers and end matter at ea
       desktop ? '40px' : tablet ? '32px' : '28px',
     )
     await expect(body.locator('ul:not([data-block])').first()).toHaveCSS('list-style-type', 'disc')
-    await expect(body.locator('ol[type="1" s]').first()).toHaveCSS('list-style-type', 'decimal')
+    await expect(body.locator('ol[type="1"]').first()).toHaveCSS('list-style-type', 'decimal')
     await expect(body.locator('[data-block="gallery"]')).toHaveCSS('gap', '24px')
     await expect(body.locator('[data-block="gallery"]')).toHaveCSS('transform', 'none')
     await expect(body.locator('[data-block="checklist"]')).toHaveCSS('list-style-type', 'none')
@@ -672,6 +674,20 @@ test('captures five page types in both themes for review', async ({ page }, test
           await waitForThemeToSettle(page)
           await diagnostics.checkpoint(`${theme}: after settle`)
           for (const fullPage of [false, true]) {
+            if (theme === 'dark' && !fullPage) {
+              // The light full-page screenshot can recreate FontFace objects and latch optional
+              // fallbacks (blog-0044.59), so the dark captures start from a fresh first layout.
+              await captureFonts.goto(route!)
+              await page.evaluate(async () => {
+                for (const image of document.images) image.loading = 'eager'
+                await Promise.all(
+                  Array.from(document.images, (image) => image.decode().catch(() => {})),
+                )
+                window.scrollTo(0, 0)
+              })
+              await page.evaluate(() => document.documentElement.classList.add('dark'))
+              await waitForThemeToSettle(page)
+            }
             await diagnostics.checkpoint(`${theme}: before assertFonts / fullPage=${fullPage}`)
             await captureFonts.assertFonts()
             await page.screenshot({
