@@ -155,7 +155,7 @@ export const styles = `
   & .ec-body [data-variant='warning'] > p:first-child strong::before { content: '! ' / ''; }
   & .ec-body [data-block='embed'] a { font-size: var(--ec-copy); font-weight: 700; }
   & .ec-body [data-block='embed'] a::before { content: '▶ ' / ''; }
-  & .ec-body code em { font-style: normal; }
+  & .ec-body :is(code, h6, [data-block='callout'] > p:first-child strong) em { font-style: normal; }
   & .ec-body code { font-family: var(--ec-mono); font-size: 0.85em; font-weight: 400; font-style: normal; overflow-wrap: anywhere; background: var(--ec-code-bg); color: inherit; padding: 0.1em 0.25em; border-radius: 0.25rem; box-shadow: inset 0 0 0 1px currentColor; }
   & .ec-body pre { background: var(--ec-code-bg); color: inherit; padding: 1.25rem; border: 1px solid currentColor; border-radius: 0.75rem; font: 400 0.875rem/1.7 var(--ec-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
   & .ec-body pre code { background: transparent; padding: 0; border-radius: 0; box-shadow: none; font: inherit; }

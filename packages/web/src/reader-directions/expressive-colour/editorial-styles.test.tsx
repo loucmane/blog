@@ -56,13 +56,18 @@ it('allows cold fallback emphasis until the contract supplies styled local fallb
   const sheet = document.createElement('style')
   sheet.textContent = styles.replaceAll('&', '.ec-test')
   document.body.innerHTML =
-    '<div class="ec-test"><div class="ec-page"><div class="ec-body"><blockquote><em><code>mono</code></em> <code><em>mono</em></code></blockquote></div></div></div>'
+    '<div class="ec-test"><div class="ec-page"><div class="ec-body"><blockquote><em><code>mono</code></em> <code><em>mono</em></code></blockquote><h6><em>mono</em></h6><div data-block="callout"><p><strong><em>mono</em></strong></p></div></div></div></div>'
   document.body.append(sheet)
   expect(getComputedStyle(document.querySelector('.ec-page')!).fontSynthesis).toBe('weight style')
   // Synthesis is on, so Martian Mono must reset its style or it gets a faux italic: inline code
-  // in either mark order, and ordered-list markers inside quotes (jsdom cannot compute ::marker).
-  for (const node of document.querySelectorAll('.ec-body :is(em > code, code > em)')) {
-    expect(getComputedStyle(node).fontStyle).toBe('normal')
+  // in either mark order, emphasis in h6 and callout labels, and ordered-list markers inside
+  // quotes (jsdom cannot compute ::marker).
+  const monoNodes = document.querySelectorAll(
+    '.ec-body :is(em > code, code > em, h6 > em, [data-block="callout"] strong > em)',
+  )
+  expect(monoNodes).toHaveLength(4)
+  for (const node of monoNodes) {
+    expect(getComputedStyle(node).fontStyle, node.parentElement!.tagName).toBe('normal')
   }
   expect(styles).toMatch(/\.ec-body ol > li::marker\{[^}]*font-style:normal/)
 })
