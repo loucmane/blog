@@ -1,32 +1,42 @@
 # Quiet Monograph font assets
 
-Vendored on 2026-10-06 from [Fontsource's font-files repository](https://github.com/fontsource/font-files),
+Vendored from [Fontsource's font-files repository](https://github.com/fontsource/font-files),
 which distributes Google Fonts subsets. These are font assets, not an installed package.
 `sources.json` records the exact source URL, Git blob SHA, byte count and SHA-256 of every file.
-Retrieval used the GitHub connector's base64 file reads; decoded bytes were checked against the
-Git blob SHA before saving. No font binaries were modified locally.
+The normal faces were vendored on 2026-10-06 with the GitHub connector's base64 file reads. The
+two italics were added on 2026-10-20: the coordinator downloaded them on the host and checked them
+against GitHub's recorded Git blob SHAs. In both cases the bytes were checked against the Git blob
+SHA before saving. No font binaries were modified locally.
 
-| Family             | Version | Subset/style   | Weights       | Total bytes |
-| ------------------ | ------- | -------------- | ------------- | ----------: |
-| Cormorant Garamond | v21     | Latin / normal | 400, 500      |      46,188 |
-| Jost               | v20     | Latin / normal | 300, 400, 500 |      29,756 |
+| Family             | Version | Subset | Faces                | Total bytes |
+| ------------------ | ------- | ------ | -------------------- | ----------: |
+| Cormorant Garamond | v21     | Latin  | 400, 500, 400 italic |      69,848 |
+| Jost               | v20     | Latin  | 400, 500, 400 italic |      30,968 |
 
-Total: **75,944 bytes**. Latin includes Swedish Å/Ä/Ö and their lowercase forms. Other scripts
+Total: **100,816 bytes**. Every face of a family has the same name-table version (Cormorant
+Garamond 4.001, Jost 3.710). Latin includes Swedish Å/Ä/Ö and their lowercase forms. Other scripts
 use the system fallback; there are no additional script subsets or unused weights to download.
 The browser requests only faces used by text in the active direction. No external font service
 is contacted during builds or browsing. If bytes change, change the filename and source record.
 
-## Pending: genuine italics
+## Italics and the font budget
 
-The developed-magazine spec (`docs/design/reader-bakeoff/quiet-monograph.md`, section 3) adds
-Cormorant Garamond 400 italic and Jost 400 italic and removes Jost 300. The two italic files could
-not be vendored offline when home and section were rebuilt, so `fonts.ts` is unchanged: Jost 300
-stays declared, but no style uses it any more, so browsers do not request it. Until the italics
-land, deks are set in italic with `font-synthesis: none` and render upright, while emphasis in
-story text keeps its synthesized italic so that it stays visible. When the files land, add them
-here with their `sources.json` records, declare them as `style: 'italic'` sources in `fonts.ts`,
-remove Jost 300, update `fonts.test.ts`, set `font-synthesis: none` on `.qm-page`, and update the
-pinned hash in `src/reader-directions/cinematic-feature/static-font-regression.test.ts`.
+The developed-magazine spec (`docs/design/reader-bakeoff/quiet-monograph.md`, sections 3 and 10)
+sets deks, bios and descriptions in Cormorant italic and emphasis in story text in the italic of
+its family. Both italics are genuine faces (italic angle −10° for Cormorant, −5° for Jost), and
+`.qm-page` sets `font-synthesis: none`, so the browser never slants or bolds a face. Jost 300 was
+removed: no style used it.
+
+An italic is requested only on pages whose text uses it. Home uses at most five faces (89,728
+bytes): the cover dek needs the Cormorant italic, and nothing on home needs the Jost italic. An
+article with a dek and emphasis uses all six (100,816 bytes). The spec's budgets are 95,000 bytes
+on home and 105,000 on an article; `src/reader-directions/quiet-monograph/fonts.test.ts` checks
+both.
+
+Each italic shares its family's metric-adjusted fallback (below), which has only an upright face.
+On a cold view where a face misses its short block period, its text keeps that fallback. Where
+Times New Roman and Arial are installed, italic text is then upright for that view, because
+synthesis is off.
 
 ## Licences
 
@@ -57,6 +67,8 @@ node packages/web/src/reader-directions/quiet-monograph/font-metrics.mjs
 
 The script calls Next's installed `calculateSizeAdjustValues`, which uses its Capsize metric
 table and fallback average glyph width to compute size adjustment and scaled vertical metrics.
-It is a maintenance tool only; runtime modules do not import it. When changing fonts, review
-the metrics and measure CLS again. Keep `font-display: optional`: matching metrics alone cannot
-prevent every line-wrap change during a late font swap.
+It is a maintenance tool only; runtime modules do not import it. The italics have the same
+vertical metrics as their family's upright faces (ascent, descent and line gap per 1,000 units:
+Cormorant 924, −287 and 0; Jost 1,070, −375 and 0), so one fallback per family serves both
+styles. When changing fonts, review the metrics and measure CLS again. Keep `font-display:
+optional`: matching metrics alone cannot prevent every line-wrap change during a late font swap.
