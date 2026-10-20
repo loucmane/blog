@@ -8,9 +8,19 @@ import { expect, it } from 'vitest'
 
 import sources from '../../../public/reader-directions/swiss-index/fonts/sources.json'
 import { readerDirectionFontCss } from '../contract'
+import { articleImageSizes } from './article'
 import { swissIndexDirection } from './index'
 
 const require = createRequire(import.meta.url)
+const parse = require('next/dist/compiled/@next/font/dist/fontkit').default as (bytes: Buffer) => {
+  familyName: string
+  italicAngle: number
+  unitsPerEm: number
+  'OS/2': { usWeightClass: number }
+  glyphForCodePoint(code: number): { advanceWidth: number }
+  hasGlyphForCodePoint(code: number): boolean
+}
+const folder = path.join(process.cwd(), 'packages/web/public/reader-directions/swiss-index/fonts')
 
 it('emits only the used weights and normal styles, with optional display and reproducible metrics', () => {
   const css = postcss.parse(readerDirectionFontCss(swissIndexDirection)!)
@@ -61,15 +71,6 @@ it('emits only the used weights and normal styles, with optional display and rep
 })
 
 it('ships authentic Latin fonts, exact weights, complete licences and verified provenance', () => {
-  const parse = require('next/dist/compiled/@next/font/dist/fontkit').default as (
-    bytes: Buffer,
-  ) => {
-    familyName: string
-    italicAngle: number
-    'OS/2': { usWeightClass: number }
-    hasGlyphForCodePoint(code: number): boolean
-  }
-  const folder = path.join(process.cwd(), 'packages/web/public/reader-directions/swiss-index/fonts')
   let total = 0
   const declared = swissIndexDirection.fonts.flatMap((font) => font.sources)
   expect(
@@ -107,4 +108,34 @@ it('ships authentic Latin fonts, exact weights, complete licences and verified p
   }
   expect(total).toBe(104_192)
   expect(total).toBeLessThan(105_000)
+})
+
+it('has no checklist glyphs in any face, so the styles draw the checklist boxes', () => {
+  for (const { file } of swissIndexDirection.fonts.flatMap((font) => font.sources)) {
+    const font = parse(fs.readFileSync(path.join(folder, file)))
+    for (const glyph of ['☐', '☑']) {
+      expect(font.hasGlyphForCodePoint(glyph.codePointAt(0)!), `${glyph} in ${file}`).toBe(false)
+    }
+  }
+})
+
+it('sizes body figures at the reading measure, 65ch of the regular face at the 20px body size', () => {
+  const font = parse(fs.readFileSync(path.join(folder, 'schibsted-grotesk-latin-400-normal.woff2')))
+  const ch = font.glyphForCodePoint('0'.codePointAt(0)!).advanceWidth / font.unitsPerEm
+  // --si-body is 1.25rem from 800px; the 65ch measure in rem, rounded up to a quarter.
+  const measure = Math.ceil(65 * ch * 1.25 * 4) / 4
+  // Where the column is narrower than the measure, it sets the width instead: columns 2–4,
+  // calc(70.5vw - 0.375rem), from 1024px; the one-column page, 94vw, from 667px.
+  const desktop = Math.ceil((measure * 16 + 6) / 0.705)
+  const tablet = Math.ceil((measure * 16) / 0.94)
+  expect(tablet).toBeGreaterThan(800)
+  expect(desktop).toBeLessThan(1430)
+  expect(articleImageSizes.body).toBe(
+    `(min-width: ${desktop}px) ${measure}rem, (min-width: 1024px) calc(70.5vw - 0.375rem), (min-width: ${tablet}px) ${measure}rem, (min-width: 667px) 94vw, calc(100vw - 2.5rem)`,
+  )
+  // Grid and diptych galleries set two images across that width, with a 1.5rem gap, from 600px.
+  const half = (measure - 1.5) / 2
+  expect(articleImageSizes.gallery).toBe(
+    `(min-width: ${desktop}px) ${half}rem, (min-width: 1024px) calc(35.25vw - 0.9375rem), (min-width: ${tablet}px) ${half}rem, (min-width: 667px) calc(47vw - 0.75rem), (min-width: 600px) calc(50vw - 2rem), calc(100vw - 2.5rem)`,
+  )
 })
