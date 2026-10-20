@@ -10,7 +10,13 @@
 
 ## Scope And Reversible Boundary
 
-The retained harness is isolated under `research/task37/`, outside the product pnpm
+> **Retired 2026-10-20 (blog-d1dx).** The harness was removed from the tree because its frozen,
+> exact-pinned dependencies were the source of every open Dependabot alert, while the shipped
+> app was already on patched versions. The evidence below is unchanged; the harness itself is
+> preserved in git history, for example `git show 0fca7a8:research/task37/README.md`, and can
+> be restored with `git checkout 0fca7a8 -- research/task37`.
+
+The retained harness was isolated under `research/task37/`, outside the product pnpm
 workspace. It contains exact-pinned research dependencies, synthetic fixtures, pure domain
 models, a digest-pinned local persistence drill, and a minimal framework portability app.
 It is not production code and must not be imported by `packages/*`.
