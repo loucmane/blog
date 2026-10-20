@@ -1,3 +1,4 @@
+import postcss from 'postcss'
 import { describe, expect, it } from 'vitest'
 
 import { BaselineAuthor } from './baseline/author'
@@ -10,6 +11,7 @@ import {
   readerDirectionTokenCss,
   ReaderDirectionError,
   type ReaderDirectionDefinition,
+  type ReaderDirectionFont,
 } from './contract'
 
 function TestView() {
@@ -112,6 +114,275 @@ describe('variable font descriptors', () => {
     expect(
       readerDirectionFontCss(variable({ weight: [400, 400], stretch: ['100%', '100%'] })),
     ).toContain('font-weight:400 400;font-stretch:100% 100%;')
+  })
+})
+
+describe('local fallback faces', () => {
+  type Source = ReaderDirectionFont['sources'][number]
+  const fallbackFamily = '"reader-quiet-monograph__font-display fallback"'
+  const timesOverrides = {
+    'ascent-override': '95.27%',
+    'descent-override': '29.59%',
+    'line-gap-override': '0.00%',
+    'size-adjust': '96.98%',
+  }
+  const arial = {
+    family: 'Arial',
+    ascentOverride: '93.46%',
+    descentOverride: '24.67%',
+    lineGapOverride: '0.00%',
+    sizeAdjust: '104.49%',
+  } as const
+
+  function css(fonts: readonly ReaderDirectionFont[]) {
+    return readerDirectionFontCss(defineReaderDirection(definition({ fonts })))!
+  }
+
+  /** The generated local fallback faces, in order, as descriptor maps. */
+  function localFaces(fonts: readonly ReaderDirectionFont[]) {
+    const faces: Record<string, string>[] = []
+    postcss.parse(css(fonts)).walkAtRules('font-face', (face) => {
+      const descriptors: Record<string, string> = {}
+      face.walkDecls(({ prop, value }) => {
+        descriptors[prop] = value
+      })
+      if (descriptors.src?.startsWith('local(')) faces.push(descriptors)
+    })
+    return faces
+  }
+
+  function display(sources: readonly Source[], fallback: ReaderDirectionFont['fallback']) {
+    return [{ ...displayFont, fallback, sources }]
+  }
+
+  it('gives a medium emphasis family regular, bold and italic faces, with a bold face from 500', () => {
+    // Quiet Monograph's shape: 400 and 500 with a 400 italic. Its emphasis is the 500, which
+    // browsers never synthesize as bold, so the local bold face must start at 500.
+    expect(
+      localFaces(
+        display(
+          [
+            { file: 'display-400.woff2', weight: 400 },
+            { file: 'display-500.woff2', weight: 500 },
+            { file: 'display-400-italic.woff2', weight: 400, style: 'italic' },
+          ],
+          displayFont.fallback,
+        ),
+      ),
+    ).toEqual([
+      {
+        'font-family': fallbackFamily,
+        src: 'local("Times New Roman"),local("TimesNewRomanPSMT"),local("Liberation Serif")',
+        ...timesOverrides,
+      },
+      {
+        'font-family': fallbackFamily,
+        'font-weight': '500 1000',
+        src: 'local("Times New Roman Bold"),local("TimesNewRomanPS-BoldMT"),local("Liberation Serif Bold")',
+        ...timesOverrides,
+      },
+      {
+        'font-family': fallbackFamily,
+        'font-style': 'italic',
+        src: 'local("Times New Roman Italic"),local("TimesNewRomanPS-ItalicMT"),local("Liberation Serif Italic")',
+        ...timesOverrides,
+      },
+    ])
+  })
+
+  it('gives a family with bold and bold italic web faces all four local faces, bold from 600', () => {
+    const overrides = {
+      'ascent-override': '93.46%',
+      'descent-override': '24.67%',
+      'line-gap-override': '0.00%',
+      'size-adjust': '104.49%',
+    }
+    expect(
+      localFaces(
+        display(
+          [
+            { file: 'sans-400.woff2', weight: 400 },
+            { file: 'sans-700.woff2', weight: 700 },
+            { file: 'sans-800.woff2', weight: 800 },
+            { file: 'sans-400-italic.woff2', weight: 400, style: 'italic' },
+            { file: 'sans-700-italic.woff2', weight: 700, style: 'italic' },
+          ],
+          arial,
+        ),
+      ),
+    ).toEqual([
+      {
+        'font-family': fallbackFamily,
+        src: 'local("Arial"),local("ArialMT"),local("Liberation Sans")',
+        ...overrides,
+      },
+      {
+        'font-family': fallbackFamily,
+        'font-weight': '600 1000',
+        src: 'local("Arial Bold"),local("Arial-BoldMT"),local("Liberation Sans Bold")',
+        ...overrides,
+      },
+      {
+        'font-family': fallbackFamily,
+        'font-style': 'italic',
+        src: 'local("Arial Italic"),local("Arial-ItalicMT"),local("Liberation Sans Italic")',
+        ...overrides,
+      },
+      {
+        'font-family': fallbackFamily,
+        'font-style': 'italic',
+        'font-weight': '600 1000',
+        src: 'local("Arial Bold Italic"),local("Arial-BoldItalicMT"),local("Liberation Sans Bold Italic")',
+        ...overrides,
+      },
+    ])
+  })
+
+  it.each<{ weights: readonly Source['weight'][]; bold: string | undefined }>([
+    { weights: [400], bold: undefined },
+    { weights: [300, 400], bold: undefined },
+    { weights: [[100, 400]], bold: undefined },
+    { weights: [400, 450], bold: '450 1000' },
+    { weights: [400, 500], bold: '500 1000' },
+    { weights: [[400, 500]], bold: '500 1000' },
+    { weights: [400, 500, 600], bold: '600 1000' },
+    { weights: [400, 600], bold: '600 1000' },
+    { weights: [400, 700, 800], bold: '600 1000' },
+    { weights: [700], bold: '600 1000' },
+    { weights: [[100, 900]], bold: '600 1000' },
+    { weights: [[400, 900]], bold: '600 1000' },
+  ])(
+    'starts the bold face at the heaviest weight up to 600 for weights $weights',
+    ({ weights, bold }) => {
+      const faces = localFaces(
+        display(
+          weights.map((weight, index) => ({ file: `face-${index}.woff2`, weight })),
+          displayFont.fallback,
+        ),
+      )
+      expect(faces.map((face) => face['font-weight'])).toEqual(
+        bold === undefined ? [undefined] : [undefined, bold],
+      )
+      expect(faces.every((face) => face['font-style'] === undefined)).toBe(true)
+    },
+  )
+
+  it('derives the italic faces from the italic web faces alone', () => {
+    const styles = (sources: readonly Source[]) =>
+      localFaces(display(sources, displayFont.fallback)).map((face) => [
+        face['font-style'] ?? 'normal',
+        face['font-weight'] ?? 'normal',
+      ])
+    // A 400-only italic paints strong em at 400 on warm views, so its fallback has no bold italic.
+    expect(
+      styles([
+        { file: 'a.woff2', weight: 400 },
+        { file: 'b.woff2', weight: 500 },
+        { file: 'c.woff2', weight: 400, style: 'italic' },
+      ]),
+    ).toEqual([
+      ['normal', 'normal'],
+      ['normal', '500 1000'],
+      ['italic', 'normal'],
+    ])
+    expect(
+      styles([
+        { file: 'a.woff2', weight: 400 },
+        { file: 'b.woff2', weight: 400, style: 'italic' },
+        { file: 'c.woff2', weight: [400, 900], style: 'italic' },
+      ]),
+    ).toEqual([
+      ['normal', 'normal'],
+      ['italic', 'normal'],
+      ['italic', '600 1000'],
+    ])
+    // Without italic web faces there is no local italic either, as on warm views.
+    expect(
+      styles([
+        { file: 'a.woff2', weight: 400 },
+        { file: 'b.woff2', weight: 600 },
+      ]),
+    ).toEqual([
+      ['normal', 'normal'],
+      ['normal', '600 1000'],
+    ])
+  })
+
+  it('names another fallback family by its full face names only', () => {
+    expect(
+      localFaces(
+        display(
+          [
+            { file: 'a.woff2', weight: 400 },
+            { file: 'b.woff2', weight: 700 },
+            { file: 'c.woff2', weight: 400, style: 'italic' },
+            { file: 'd.woff2', weight: 700, style: 'italic' },
+          ],
+          { ...displayFont.fallback, family: 'Georgia' },
+        ),
+      ).map(({ src }) => src),
+    ).toEqual([
+      'local("Georgia")',
+      'local("Georgia Bold")',
+      'local("Georgia Italic")',
+      'local("Georgia Bold Italic")',
+    ])
+  })
+
+  it('treats a fallback named like an Object.prototype key as an unknown family', () => {
+    for (const family of ['constructor', 'toString']) {
+      expect(
+        localFaces(
+          display(
+            [
+              { file: 'a.woff2', weight: 400 },
+              { file: 'b.woff2', weight: 700 },
+            ],
+            { ...displayFont.fallback, family },
+          ),
+        ).map(({ src }) => src),
+      ).toEqual([`local("${family}")`, `local("${family} Bold")`])
+    }
+  })
+
+  it('keeps one fallback family and its metric overrides on every face, after the web faces', () => {
+    const fonts = display(
+      [
+        { file: 'a.woff2', weight: [100, 900], stretch: ['62%', '125%'] },
+        { file: 'b.woff2', weight: 400, style: 'italic' },
+        { file: 'c.woff2', weight: 700, style: 'italic' },
+      ],
+      displayFont.fallback,
+    )
+    const faces = localFaces(fonts)
+    expect(faces).toHaveLength(4)
+    for (const face of faces) {
+      expect(face).toMatchObject({ 'font-family': fallbackFamily, ...timesOverrides })
+      expect(face['font-stretch']).toBeUndefined()
+      expect(face['font-display']).toBeUndefined()
+    }
+    const output = css(fonts)
+    expect(output.lastIndexOf('url(')).toBeLessThan(output.indexOf('local('))
+    expect(output).toMatch(
+      /\[data-reader-direction="quiet-monograph"\]\{--font-display:"reader-quiet-monograph__font-display","reader-quiet-monograph__font-display fallback",serif;\}$/,
+    )
+  })
+
+  it('emits the same fallback faces on every call and for any order of the web faces', () => {
+    const sources: Source[] = [
+      { file: 'a.woff2', weight: 400 },
+      { file: 'b.woff2', weight: 500 },
+      { file: 'c.woff2', weight: 400, style: 'italic' },
+      { file: 'd.woff2', weight: 600, style: 'italic' },
+    ]
+    const fallbacks = (order: readonly Source[]) => localFaces(display(order, displayFont.fallback))
+    expect(css(display(sources, displayFont.fallback))).toBe(
+      css(display(sources, displayFont.fallback)),
+    )
+    expect(fallbacks([...sources].reverse())).toEqual(fallbacks(sources))
+    expect(fallbacks([sources[2]!, sources[0]!, sources[3]!, sources[1]!])).toEqual(
+      fallbacks(sources),
+    )
   })
 })
 
@@ -488,7 +759,7 @@ describe('reader direction contract', () => {
     const direction = defineReaderDirection(definition({ fonts: [displayFont] }))
     expect(readerDirectionFontCss(direction)).toBe(
       '@font-face{font-family:"reader-quiet-monograph__font-display";font-style:normal;font-weight:400;font-display:optional;src:url("/reader-directions/quiet-monograph/fonts/display-latin-400.woff2") format("woff2");}' +
-        '@font-face{font-family:"reader-quiet-monograph__font-display fallback";src:local("Times New Roman");ascent-override:95.27%;descent-override:29.59%;line-gap-override:0.00%;size-adjust:96.98%;}' +
+        '@font-face{font-family:"reader-quiet-monograph__font-display fallback";src:local("Times New Roman"),local("TimesNewRomanPSMT"),local("Liberation Serif");ascent-override:95.27%;descent-override:29.59%;line-gap-override:0.00%;size-adjust:96.98%;}' +
         '[data-reader-direction="quiet-monograph"]{--font-display:"reader-quiet-monograph__font-display","reader-quiet-monograph__font-display fallback",serif;}',
     )
     const second = defineReaderDirection(definition({ id: 'second', fonts: [displayFont] }))

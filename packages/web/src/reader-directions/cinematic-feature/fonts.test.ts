@@ -63,17 +63,43 @@ it('emits genuine variable axes, static italics, used mono weights, optional dis
       sizeAdjust: string
     }
   }
+  // Archivo's range reaches 900 and it has 400 and 700 italics, so its fallback has all four local
+  // faces, bold from 600. The mono's heaviest face is its 500, so its local bold face starts there.
+  // The local faces are normal width, like the italics, and carry no stretch descriptor.
   const local = faces.filter((face) => face.src?.startsWith('local('))
-  expect(local).toHaveLength(2)
-  for (const [index, family] of ['Archivo', 'Martian Mono'].entries()) {
+  const sansFallback = '"reader-cinematic-feature__font-cf-sans fallback"'
+  const monoFallback = '"reader-cinematic-feature__font-cf-mono fallback"'
+  expect(
+    local.map((face) => [
+      face['font-family'],
+      face['font-weight'],
+      face['font-stretch'],
+      face['font-style'],
+    ]),
+  ).toEqual([
+    [sansFallback, undefined, undefined, undefined],
+    [sansFallback, '600 1000', undefined, undefined],
+    [sansFallback, undefined, undefined, 'italic'],
+    [sansFallback, '600 1000', undefined, 'italic'],
+    [monoFallback, undefined, undefined, undefined],
+    [monoFallback, '500 1000', undefined, undefined],
+  ])
+  for (const [fallback, family] of [
+    [sansFallback, 'Archivo'],
+    [monoFallback, 'Martian Mono'],
+  ] as const) {
     const metrics = calculateSizeAdjustValues(family)
-    expect(local[index]).toMatchObject({
-      src: `local("${metrics.fallbackFont}")`,
-      'ascent-override': `${metrics.ascent}%`,
-      'descent-override': `${metrics.descent}%`,
-      'line-gap-override': `${metrics.lineGap}%`,
-      'size-adjust': `${metrics.sizeAdjust}%`,
-    })
+    // Every face keeps the family's metrics and names the local face of its weight and style.
+    for (const face of local.filter((face) => face['font-family'] === fallback)) {
+      const style = `${face['font-weight'] ? ' Bold' : ''}${face['font-style'] ? ' Italic' : ''}`
+      expect(face).toMatchObject({
+        'ascent-override': `${metrics.ascent}%`,
+        'descent-override': `${metrics.descent}%`,
+        'line-gap-override': `${metrics.lineGap}%`,
+        'size-adjust': `${metrics.sizeAdjust}%`,
+      })
+      expect(face.src?.split(',')[0]).toBe(`local("${metrics.fallbackFont}${style}")`)
+    }
   }
 })
 

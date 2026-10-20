@@ -168,6 +168,33 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
   local fallbacks with size/ascent/descent/line-gap overrides. A slow first visit can retain its
   adjusted fallback for that navigation; a warm visit can use the intended font immediately.
   Metrics alone do not guarantee zero shift; keep the no-late-swap policy and verify CLS in a browser.
+- **Fallback faces keep bold and italic.** A cold view can keep the fallback for the whole page
+  view, so the contract derives local faces from each family's web faces. There is one fallback
+  family per web family, and every face carries that family's metric overrides. A direction can
+  therefore set `font-synthesis: none` without losing bold and italic where the local faces exist.
+  Adding a web face can add a fallback face, so update the pinned font CSS hashes with it.
+  - **Regular:** always.
+  - **Bold:** when the upright web faces go above 400, declared `font-weight: <b> 1000`. `<b>` is
+    the heaviest upright web weight, capped at 600. A family whose heaviest face is 500, such as
+    Quiet Monograph's or a mono family, sets its emphasis and labels at 500, and browsers
+    synthesize bold only from 600, so its local bold starts at 500, and all its 500 text paints
+    the local bold on a cold view. A family with a real bold keeps 500 on the regular
+    face, as CSS matches 500 to the 400 of a 400 and 700 pair, so its local bold starts at 600 and
+    Literary Long-read's 500 headings stay regular. The range ends at 1000, so 800 and 900 get the
+    genuine bold rather than a synthesized one.
+  - **Italic and bold italic:** when the family has italic web faces. The bold italic follows the
+    bold rule, applied to the italic web faces alone. Quiet Monograph's italics are 400 only, so it
+    has no bold italic.
+  - **Names:** each face lists its full name, such as `local("Arial Bold")`. Arial and Times New
+    Roman also list the PostScript name (`Arial-BoldMT`) and the metric-compatible Liberation face
+    (`Liberation Sans Bold`): Chromium matches `local()` against full and PostScript names only,
+    and Linux hosts and CI have Liberation but not the Microsoft fonts. Liberation keeps Arial's
+    and Times New Roman's advance widths, so the overrides give the same adjusted layout there.
+    Another fallback family gets full names only.
+  - **Missing faces:** when a host has none of a face's names, Chromium does not use the family's
+    regular face instead. It moves on to the generic family, which paints bold and italic with its
+    own faces or by synthesis. Hosts with none of the fonts (Android, ChromeOS, Linux without
+    Liberation) paint the generic family, as before.
 - **Baseline has no font rules or references.** The registry remains safe to import on every
   route because declarations are plain data. Visitor authorization, cache behavior, publication
   versions and CSP are unchanged. Existing `font-src 'self'` and inline-style policy suffice.
@@ -194,5 +221,9 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
   after hydration, failed selection lookup, and successful retry.
 - `tests/e2e/reader-lab.spec.ts` opens every registered direction from the lab and runs axe on
   home, an article, and a section at 390 and 1440 pixels, with the lab bar showing.
+- `tests/e2e/reader-lab-cold-fonts.spec.ts` blocks each direction's WOFF2 files and reads the
+  painted fonts over CDP. `strong` must paint a local bold face and `em` a local italic face, or,
+  where the host lacks those faces, paint differently from the body text. Run it on Linux
+  (Liberation) and on Windows or macOS (Arial and Times New Roman).
 - The [signed-in Lighthouse harness](../../../../scripts/lab-lighthouse.md) measures home,
   article, and section with the owner session and selected direction, and rejects baseline fallback.

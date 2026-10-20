@@ -528,6 +528,97 @@ function declarations(tokens: ReaderDirectionTokenSet): string {
     .join(';')
 }
 
+type FallbackFace = 'regular' | 'bold' | 'italic' | 'boldItalic'
+
+/** A face's full name is its family name with this suffix, such as "Arial Bold Italic". */
+const fallbackFaceSuffixes: Readonly<Record<FallbackFace, string>> = {
+  regular: '',
+  bold: ' Bold',
+  italic: ' Italic',
+  boldItalic: ' Bold Italic',
+}
+
+/**
+ * The fallbacks Next measures against, with their faces' PostScript names and a metric-compatible
+ * family. Liberation keeps each advance width, and the overrides set the vertical metrics, so the
+ * same adjusted layout holds on Linux hosts that have Liberation but not the Microsoft fonts.
+ */
+const knownFallbackFaces: Readonly<
+  Record<
+    string,
+    { readonly equivalent: string; readonly postScript: Readonly<Record<FallbackFace, string>> }
+  >
+> = {
+  Arial: {
+    equivalent: 'Liberation Sans',
+    postScript: {
+      regular: 'ArialMT',
+      bold: 'Arial-BoldMT',
+      italic: 'Arial-ItalicMT',
+      boldItalic: 'Arial-BoldItalicMT',
+    },
+  },
+  'Times New Roman': {
+    equivalent: 'Liberation Serif',
+    postScript: {
+      regular: 'TimesNewRomanPSMT',
+      bold: 'TimesNewRomanPS-BoldMT',
+      italic: 'TimesNewRomanPS-ItalicMT',
+      boldItalic: 'TimesNewRomanPS-BoldItalicMT',
+    },
+  },
+}
+
+/**
+ * The lightest weight one style's bold fallback face serves, or null when the web faces of that
+ * style never paint heavier than 400. A family whose heaviest face is 500 or lighter uses that
+ * face for emphasis, and browsers synthesize bold only from 600, so its bold face starts at that
+ * weight. A family with a heavier bold keeps 500 on the regular face, as CSS matches 500 to the
+ * 400 of a 400 and 700 pair, and its bold face starts at 600, the bold threshold, which also
+ * suits variable ranges.
+ */
+function boldFallbackWeight(sources: ReaderDirectionFont['sources']): number | null {
+  const heaviest = Math.max(
+    0,
+    ...sources.map(({ weight }) => (typeof weight === 'number' ? weight : weight[1])),
+  )
+  return heaviest > 400 ? Math.min(heaviest, 600) : null
+}
+
+/**
+ * Local faces for one family's fallback: a regular face, and a bold, italic and bold italic face
+ * where the family's own web faces paint those, so a cold view keeps them without synthesis.
+ * Each face lists its full name and, for a known fallback, its PostScript name and Liberation
+ * equivalent. When none is installed, the browser falls through to the generic family, as before.
+ */
+function fallbackFaceCss(font: ReaderDirectionFont, family: string): string {
+  const { fallback } = font
+  // Own keys only: a validated name such as "constructor" must not reach Object.prototype.
+  const known = Object.hasOwn(knownFallbackFaces, fallback.family)
+    ? knownFallbackFaces[fallback.family]
+    : undefined
+  const metrics = `ascent-override:${fallback.ascentOverride};descent-override:${fallback.descentOverride};line-gap-override:${fallback.lineGapOverride};size-adjust:${fallback.sizeAdjust};`
+  const face = (name: FallbackFace, descriptors: string) => {
+    const suffix = fallbackFaceSuffixes[name]
+    const names = [
+      `${fallback.family}${suffix}`,
+      ...(known ? [known.postScript[name], `${known.equivalent}${suffix}`] : []),
+    ]
+    return `@font-face{font-family:"${family}";${descriptors}src:${names.map((local) => `local("${local}")`).join(',')};${metrics}}`
+  }
+  const italics = font.sources.filter(({ style }) => style === 'italic')
+  const bold = boldFallbackWeight(font.sources.filter(({ style }) => style !== 'italic'))
+  const boldItalic = boldFallbackWeight(italics)
+  return (
+    face('regular', '') +
+    (bold === null ? '' : face('bold', `font-weight:${bold} 1000;`)) +
+    (italics.length === 0 ? '' : face('italic', 'font-style:italic;')) +
+    (boldItalic === null
+      ? ''
+      : face('boldItalic', `font-style:italic;font-weight:${boldItalic} 1000;`))
+  )
+}
+
 /** The direction's tokens as CSS for its root element, or null when it declares none. */
 export function readerDirectionTokenCss(direction: ReaderDirection): string | null {
   if (!direction.tokens) return null
@@ -544,8 +635,8 @@ export function readerDirectionStyleCss(direction: ReaderDirection): string | nu
 }
 
 /**
- * Top-level font faces with names unique to this direction, followed by scoped variables.
- * @font-face cannot be nested under a selector. Only the active root emits these rules.
+ * Top-level font faces with names unique to this direction, then the local fallback faces, then
+ * scoped variables. @font-face cannot be nested under a selector. Only the active root emits these.
  */
 export function readerDirectionFontCss(direction: ReaderDirection): string | null {
   if (direction.fonts.length === 0) return null
@@ -554,7 +645,6 @@ export function readerDirectionFontCss(direction: ReaderDirection): string | nul
       // The separator cannot occur in either validated id or variable, avoiding name collisions.
       const family = `reader-${direction.id}__${font.variable.slice(2)}`
       const fallback = `${family} fallback`
-      const metrics = font.fallback
       return (
         font.sources
           .map(
@@ -562,7 +652,7 @@ export function readerDirectionFontCss(direction: ReaderDirection): string | nul
               `@font-face{font-family:"${family}";font-style:${style};font-weight:${typeof weight === 'number' ? weight : weight.join(' ')};${stretch ? `font-stretch:${stretch.join(' ')};` : ''}font-display:optional;src:url("/reader-directions/${direction.id}/fonts/${file}") format("woff2");}`,
           )
           .join('') +
-        `@font-face{font-family:"${fallback}";src:local("${metrics.family}");ascent-override:${metrics.ascentOverride};descent-override:${metrics.descentOverride};line-gap-override:${metrics.lineGapOverride};size-adjust:${metrics.sizeAdjust};}` +
+        fallbackFaceCss(font, fallback) +
         `${scope(direction)}{${font.variable}:"${family}","${fallback}",${font.genericFamily};}`
       )
     })

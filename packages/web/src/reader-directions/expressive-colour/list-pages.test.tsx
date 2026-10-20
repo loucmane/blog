@@ -209,13 +209,14 @@ describe('developed home and section lists', () => {
     }
   })
 
-  it('keeps the complete inline font, token and style payload within the proposed 24 KB budget', () => {
+  it('keeps the complete inline font, token and style payload within the 25,500 B budget', () => {
     const css = [
       readerDirectionFontCss(expressiveColourDirection),
       readerDirectionTokenCss(expressiveColourDirection),
       readerDirectionStyleCss(expressiveColourDirection),
     ].join('')
-    expect(new TextEncoder().encode(css).length).toBeLessThanOrEqual(24_000)
+    // Raised from 24,000 B for local fallback faces: operator decision, 2026-10-20 (blog-0044.63).
+    expect(new TextEncoder().encode(css).length).toBeLessThanOrEqual(25_500)
   })
 
   it('supports related-list heading levels without numbers or a second preload', () => {

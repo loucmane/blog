@@ -47,17 +47,37 @@ it('emits genuine italic and variable weight faces, optional display and reprodu
       sizeAdjust: string
     }
   }
+  // Fraunces reaches 900 upright and italic, so its fallback has all four local faces, bold from
+  // 600. The mono's heaviest face is its 500, so its local bold face starts there.
   const local = faces.filter((face) => face.src?.startsWith('local('))
-  expect(local).toHaveLength(2)
-  for (const [index, family] of ['Fraunces', 'Martian Mono'].entries()) {
+  const serifFallback = '"reader-expressive-colour__font-ec-serif fallback"'
+  const monoFallback = '"reader-expressive-colour__font-ec-mono fallback"'
+  expect(
+    local.map((face) => [face['font-family'], face['font-weight'], face['font-style']]),
+  ).toEqual([
+    [serifFallback, undefined, undefined],
+    [serifFallback, '600 1000', undefined],
+    [serifFallback, undefined, 'italic'],
+    [serifFallback, '600 1000', 'italic'],
+    [monoFallback, undefined, undefined],
+    [monoFallback, '500 1000', undefined],
+  ])
+  for (const [fallback, family] of [
+    [serifFallback, 'Fraunces'],
+    [monoFallback, 'Martian Mono'],
+  ] as const) {
     const metrics = calculateSizeAdjustValues(family)
-    expect(local[index]).toMatchObject({
-      src: `local("${metrics.fallbackFont}")`,
-      'ascent-override': `${metrics.ascent}%`,
-      'descent-override': `${metrics.descent}%`,
-      'line-gap-override': `${metrics.lineGap}%`,
-      'size-adjust': `${metrics.sizeAdjust}%`,
-    })
+    // Every face keeps the family's metrics and names the local face of its weight and style.
+    for (const face of local.filter((face) => face['font-family'] === fallback)) {
+      const style = `${face['font-weight'] ? ' Bold' : ''}${face['font-style'] ? ' Italic' : ''}`
+      expect(face).toMatchObject({
+        'ascent-override': `${metrics.ascent}%`,
+        'descent-override': `${metrics.descent}%`,
+        'line-gap-override': `${metrics.lineGap}%`,
+        'size-adjust': `${metrics.sizeAdjust}%`,
+      })
+      expect(face.src?.split(',')[0]).toBe(`local("${metrics.fallbackFont}${style}")`)
+    }
   }
 })
 
