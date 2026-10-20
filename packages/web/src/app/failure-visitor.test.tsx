@@ -35,6 +35,11 @@ it.each(['error', 'not-found'] as const)(
     expect(container.querySelector('[data-reader-direction="baseline"]')).not.toBeNull()
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getAllByRole('main')).toHaveLength(1)
+    expect(screen.getByRole('banner').querySelector('a')?.textContent).toBe('Magazine Foundation')
+    expect(screen.getByRole('link', { name: 'Magazine Foundation' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/')
+    expect(screen.getAllByRole('link')).toHaveLength(2)
+    expect(screen.queryByRole('navigation')).toBeNull()
     expect(screen.queryByRole('complementary', { name: 'Reader Lab' })).toBeNull()
   },
 )
