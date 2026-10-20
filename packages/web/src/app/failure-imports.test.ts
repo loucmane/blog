@@ -82,6 +82,13 @@ it.each(['app/error.tsx', 'app/not-found.tsx'])('keeps %s eager fallback graph s
   ).toEqual([])
 })
 
+it.each(['app/error.tsx', 'app/not-found.tsx'])(
+  'keeps next/link out of the %s eager fallback graph',
+  (entry) => {
+    expect(staticGraph(entry).imports).not.toContain('next/link')
+  },
+)
+
 it('renders the baseline not-found on the server, outside the client upgrader graph', () => {
   const source = readFileSync(path.join(sourceRoot, 'app/not-found.tsx'), 'utf8')
   expect(source).not.toMatch(/^[\s\S]*?['"]use client['"]/)

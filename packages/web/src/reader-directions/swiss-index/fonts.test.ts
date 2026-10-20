@@ -26,6 +26,14 @@ const parse = require('next/dist/compiled/@next/font/dist/fontkit').default as (
 }
 const folder = path.join(process.cwd(), 'packages/web/public/reader-directions/swiss-index/fonts')
 
+// SHA-256 of the exact output from contract.ts, first pinned at base 68dde2b and updated for the
+// local bold and italic fallback faces (blog-0044.63). A range extension must not alter static CSS.
+it('keeps swiss-index font output byte-for-byte compatible', () => {
+  expect(
+    createHash('sha256').update(readerDirectionFontCss(swissIndexDirection)!).digest('hex'),
+  ).toBe('9bd3827f6d3b371682c9d46c4f19d4d87f73050c06f818f972fff98b2e4c5ee5')
+})
+
 /** The CSS ch unit of the regular face, the advance of "0", as a fraction of the font size. */
 function regularCh() {
   const font = parse(fs.readFileSync(path.join(folder, 'schibsted-grotesk-latin-400-normal.woff2')))

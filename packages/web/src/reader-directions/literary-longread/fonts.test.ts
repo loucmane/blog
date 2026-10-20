@@ -12,6 +12,14 @@ import { literaryLongreadDirection } from './index'
 
 const require = createRequire(import.meta.url)
 
+// SHA-256 of the exact output from contract.ts, first pinned at base 68dde2b and updated for the
+// local bold and italic fallback faces (blog-0044.63). A range extension must not alter static CSS.
+it('keeps literary-longread font output byte-for-byte compatible', () => {
+  expect(
+    createHash('sha256').update(readerDirectionFontCss(literaryLongreadDirection)!).digest('hex'),
+  ).toBe('b778cba0f0f490a2e8cde77c37fa39be2d936a36e01541c936f0c9a86121beeb')
+})
+
 it('emits only the used weights and genuine styles, with optional display and reproducible metrics', () => {
   const css = postcss.parse(readerDirectionFontCss(literaryLongreadDirection)!)
   const faces: Record<string, string>[] = []

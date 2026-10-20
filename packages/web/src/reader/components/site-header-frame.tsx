@@ -4,7 +4,9 @@ import type { ReactNode } from 'react'
 
 import type { ReaderNavigation } from '../views'
 
-export const siteName = 'Magazine Foundation'
+import { siteName } from './failure-view'
+
+export { siteName }
 
 export interface SiteHeaderFrameProps {
   readonly children?: ReactNode

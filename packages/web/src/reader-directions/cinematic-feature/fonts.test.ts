@@ -12,6 +12,14 @@ import { cinematicFeatureDirection } from './index'
 
 const require = createRequire(import.meta.url)
 
+// Independently assembled from the five expected source faces and six local fallback
+// faces (3,007 UTF-8 bytes), without calling the CSS generator to obtain the pin.
+it('pins Cinematic Feature font output including genuine 400 and 700 italics', () => {
+  expect(
+    createHash('sha256').update(readerDirectionFontCss(cinematicFeatureDirection)!).digest('hex'),
+  ).toBe('b893ba0db202eb67ed413b87170ee9d519376a67bbd18973a2dd38de8731d751')
+})
+
 it('emits genuine variable axes, static italics, used mono weights, optional display and reproducible fallback metrics', () => {
   const css = postcss.parse(readerDirectionFontCss(cinematicFeatureDirection)!)
   const faces: Record<string, string>[] = []
