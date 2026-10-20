@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react'
 
 import type { ArticleBlock, InlineContent, InlineMark } from '../views'
+import { defaultReaderImageSizes, type ReaderImageSizes } from './image-sizes'
 import { withContentKeys } from './keys'
 import { ReaderFigure } from './reader-image'
 
@@ -9,8 +10,6 @@ import { ReaderFigure } from './reader-image'
  * attributes for block kinds and variants; design directions style this markup instead of
  * reimplementing it.
  */
-
-const inlineImageSizes = '(min-width: 768px) 42rem, 100vw'
 
 const editorialLabels = {
   'fact-box': 'Fact box',
@@ -50,11 +49,25 @@ function Inline({ content }: { readonly content: readonly InlineContent[] }) {
   )
 }
 
-function Blocks({ blocks }: { readonly blocks: readonly ArticleBlock[] }) {
-  return withContentKeys(blocks).map(({ item, key }) => <Block block={item} key={key} />)
+function Blocks({
+  blocks,
+  imageSizes,
+}: {
+  readonly blocks: readonly ArticleBlock[]
+  readonly imageSizes: ReaderImageSizes
+}) {
+  return withContentKeys(blocks).map(({ item, key }) => (
+    <Block block={item} imageSizes={imageSizes} key={key} />
+  ))
 }
 
-function Block({ block }: { readonly block: ArticleBlock }) {
+function Block({
+  block,
+  imageSizes,
+}: {
+  readonly block: ArticleBlock
+  readonly imageSizes: ReaderImageSizes
+}) {
   switch (block.kind) {
     case 'paragraph':
       return (
@@ -73,7 +86,7 @@ function Block({ block }: { readonly block: ArticleBlock }) {
     case 'quote':
       return (
         <blockquote>
-          <Blocks blocks={block.blocks} />
+          <Blocks blocks={block.blocks} imageSizes={imageSizes} />
         </blockquote>
       )
     case 'pull-quote':
@@ -92,7 +105,7 @@ function Block({ block }: { readonly block: ArticleBlock }) {
         <ul>
           {withContentKeys(block.items).map(({ item, key }) => (
             <li key={key}>
-              <Blocks blocks={item.blocks} />
+              <Blocks blocks={item.blocks} imageSizes={imageSizes} />
             </li>
           ))}
         </ul>
@@ -102,7 +115,7 @@ function Block({ block }: { readonly block: ArticleBlock }) {
         <ol start={block.start} type={block.numbering}>
           {withContentKeys(block.items).map(({ item, key }) => (
             <li key={key}>
-              <Blocks blocks={item.blocks} />
+              <Blocks blocks={item.blocks} imageSizes={imageSizes} />
             </li>
           ))}
         </ol>
@@ -114,19 +127,19 @@ function Block({ block }: { readonly block: ArticleBlock }) {
             <li data-checked={item.checked} key={key}>
               <span aria-hidden="true">{item.checked ? '☑' : '☐'} </span>
               <span className="sr-only">{item.checked ? 'Done: ' : 'Not done: '}</span>
-              <Blocks blocks={item.blocks} />
+              <Blocks blocks={item.blocks} imageSizes={imageSizes} />
             </li>
           ))}
         </ul>
       )
     case 'image':
-      return <ReaderFigure image={block.image} sizes={inlineImageSizes} />
+      return <ReaderFigure image={block.image} sizes={imageSizes.body} />
     case 'gallery':
       return (
         <ul data-block="gallery" data-layout={block.layout}>
           {withContentKeys(block.images).map(({ item, key }) => (
             <li key={key}>
-              <ReaderFigure image={item} sizes={inlineImageSizes} />
+              <ReaderFigure image={item} sizes={imageSizes.gallery} />
             </li>
           ))}
         </ul>
@@ -168,12 +181,18 @@ function Block({ block }: { readonly block: ArticleBlock }) {
           data-block="editorial"
           data-variant={block.variant}
         >
-          <Blocks blocks={block.blocks} />
+          <Blocks blocks={block.blocks} imageSizes={imageSizes} />
         </section>
       )
   }
 }
 
-export function ArticleBody({ blocks }: { readonly blocks: readonly ArticleBlock[] }) {
-  return <Blocks blocks={blocks} />
+export function ArticleBody({
+  blocks,
+  imageSizes,
+}: {
+  readonly blocks: readonly ArticleBlock[]
+  readonly imageSizes?: Readonly<Partial<ReaderImageSizes>> | undefined
+}) {
+  return <Blocks blocks={blocks} imageSizes={{ ...defaultReaderImageSizes, ...imageSizes }} />
 }
