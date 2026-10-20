@@ -28,7 +28,7 @@ Tiptap exposes JSON persistence and static rendering while allowing custom nodes
 
 ## Task 37 Validation
 
-The exact-pinned standalone harness in `research/task37/` passed:
+The exact-pinned standalone harness in `research/task37/` (retired from the tree on 2026-10-20, kept in git history at `0fca7a8`) passed:
 
 - semantic Tiptap JSON round-trip and server rendering for every representative block;
 - structural URL/attribute validation and unknown-node quarantine before library parsing;
