@@ -13,6 +13,7 @@ export function CinematicShell({
   navigation,
   currentSection,
   leadImage,
+  name = siteName,
 }: {
   readonly children: ReactNode
   readonly isHome?: boolean
@@ -20,6 +21,7 @@ export function CinematicShell({
   readonly navigation: ReaderNavigation
   readonly currentSection?: string
   readonly leadImage?: CinematicLeadImage | null
+  readonly name?: string
 }) {
   const Brand = isHome ? 'h1' : 'p'
   return (
@@ -30,7 +32,7 @@ export function CinematicShell({
       </a>
       <header className="cf-masthead">
         <Brand className="cf-wordmark">
-          <Link href="/">{siteName}</Link>
+          <Link href="/">{name}</Link>
         </Brand>
         <nav aria-label="Sections">
           <ul>
@@ -56,7 +58,7 @@ export function CinematicShell({
         {children}
       </main>
       <footer className="cf-footer">
-        <p>{siteName}</p>
+        <p>{name}</p>
         <Link href="/">
           All stories <span aria-hidden="true">↗</span>
         </Link>

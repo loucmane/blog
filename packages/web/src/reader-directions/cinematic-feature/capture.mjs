@@ -11,7 +11,7 @@ const result = spawnSync(
     '--config',
     fileURLToPath(new URL('./playwright.config.ts', import.meta.url)),
     '--grep',
-    'captures b2',
+    'captures b3',
   ],
   { cwd: fileURLToPath(new URL('../../../../../', import.meta.url)), stdio: 'inherit' },
 )

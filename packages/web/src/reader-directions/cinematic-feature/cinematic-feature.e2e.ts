@@ -15,6 +15,7 @@ const sectionPath = '/sections/interiors'
 const authorPath = `/authors/${labAuthors[0]!.slug}`
 const topicPath = `/topics/${labTopics[0]!.slug}`
 const pagePaths = ['/', storyPath, sectionPath, authorPath, topicPath]
+const missingPath = '/stories/cinematic-b3-missing-story'
 const root = '[data-reader-direction="cinematic-feature"]'
 const listStyles = {
   '1': 'decimal',
@@ -609,6 +610,7 @@ test('keeps all five comparison previews scoped and readable at mobile and deskt
 })
 
 test('uses visible keyboard focus and a dark cinematic ground', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   const skip = page.getByRole('link', { name: 'Skip to content' })
@@ -650,7 +652,7 @@ for (const width of [390, 1440]) {
     test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
       test.setTimeout(120_000)
       await page.setViewportSize({ width, height: 900 })
-      for (const path of pagePaths) {
+      for (const path of [...pagePaths, missingPath]) {
         await page.goto(path)
         await page.evaluate(async () => {
           await document.fonts.ready
@@ -718,6 +720,198 @@ for (const width of [390, 1440]) {
   }
 }
 
+test('keeps recovery layout and keyboard navigation visible in normal and forced colours', async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const forcedColors of ['none', 'active'] as const) {
+      await page.emulateMedia({ forcedColors })
+      await page.goto(missingPath)
+      await expect(page.locator(`${root} .cf-failure`)).toBeVisible()
+      await expect(page.locator(`${root} h1`)).toHaveText('Page not found')
+      await expect(page.locator(`${root} main`)).toHaveCount(1)
+      await expect(page.locator(`${root} img, ${root} .cf-retry`)).toHaveCount(0)
+      const panel = page.locator('.cf-failure')
+      expect((await panel.boundingBox())!.width).toBeLessThanOrEqual(Math.min(width - 40, 672))
+      const home = panel.getByRole('link', { name: 'All stories' })
+      await home.focus()
+      await page.keyboard.press('Shift+Tab')
+      await page.keyboard.press('Tab')
+      await expect(home).toBeFocused()
+      await expect(home).toHaveCSS('outline-style', 'solid')
+      await expect(home).toHaveCSS('outline-width', '3px')
+      await expect(home).toHaveCSS('outline-offset', '3px')
+      expect((await home.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      let axe = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      // axe cannot pair forced text/background colours accurately.
+      if (forcedColors === 'active') axe = axe.disableRules(['color-contrast'])
+      expect((await axe.analyze()).violations).toEqual([])
+      await testInfo.attach(`not-found-${width}-${forcedColors}`, {
+        body: await page.screenshot(),
+        contentType: 'image/png',
+      })
+      await page.keyboard.press('Enter')
+      await expect(page).toHaveURL('/')
+    }
+  }
+})
+
+test('keeps Mono upright in both mark orders while prose uses genuine Archivo emphasis', async ({
+  page,
+}) => {
+  const captureFonts = await prepareFontCapture(page, root, {
+    '--font-cf-sans': 'Archivo',
+    '--font-cf-mono': 'Martian Mono',
+  })
+  await captureFonts.goto(storyPath)
+  await page.locator('.cf-body').evaluate((body) => {
+    const probe = document.createElement('div')
+    probe.dataset.monoProbe = 'true'
+    // Match both nesting orders produced by the shared inline mark renderer.
+    probe.innerHTML =
+      '<p><em><code>outer italic</code></em> <code><em>inner italic</em></code> <strong><code>outer bold</code></strong> <code><strong>inner bold</strong></code> <em data-prose>genuine prose</em></p>'
+    body.append(probe)
+  })
+  await captureFonts.assertFonts()
+  const cdp = await page.context().newCDPSession(page)
+  try {
+    await cdp.send('DOM.enable')
+    await cdp.send('CSS.enable')
+    const { root: documentNode } = await cdp.send('DOM.getDocument')
+    const { nodeIds } = await cdp.send('DOM.querySelectorAll', {
+      nodeId: documentNode.nodeId,
+      selector:
+        '[data-mono-probe] code:not(:has(em, strong)), [data-mono-probe] code :is(em, strong)',
+    })
+    expect(nodeIds).toHaveLength(4)
+    for (const element of await page
+      .locator('[data-mono-probe] code, [data-mono-probe] code :is(em,strong)')
+      .all()) {
+      await expect(element).toHaveCSS('font-style', 'normal')
+      await expect(element).toHaveCSS('font-weight', '400')
+      await expect(element).toHaveCSS('font-stretch', '100%')
+    }
+    for (const nodeId of nodeIds) {
+      const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId })
+      const painted = fonts.filter(({ glyphCount }) => glyphCount > 0)
+      expect(painted.length).toBeGreaterThan(0)
+      for (const font of painted) {
+        expect(font.isCustomFont).toBe(true)
+        expect(font.familyName).toContain('Martian Mono')
+      }
+    }
+    await expect(page.locator('[data-prose]')).toHaveCSS('font-style', 'italic')
+  } finally {
+    await cdp.detach()
+  }
+})
+
+test('propagates focal points through known and missing-dimension frames without image filters', async ({
+  page,
+}) => {
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const route of ['/', storyPath, sectionPath, authorPath, topicPath]) {
+      await page.goto(route)
+      const frame = page.locator('.cf-cover-image, .cf-hero, .cf-feature .cf-card-image').first()
+      await frame.evaluate((element) => {
+        ;(element as HTMLElement).style.objectPosition = '25% 75%'
+      })
+      const image = frame.locator('img')
+      await expect(image).toHaveCSS('object-position', '25% 75%')
+      await expect(image).toHaveCSS('object-fit', 'cover')
+      await expect(image).toHaveCSS('filter', 'none')
+      const originalBox = (await image.boundingBox())!
+      // Unit tests cover ReaderFigure's unknown-dimension markup. This probe
+      // puts its extra wrapper into the real cascade without invoking React.
+      await frame.locator('figure > picture').evaluate((picture) => {
+        const wrapper = document.createElement('div')
+        wrapper.className = 'relative aspect-[3/2] w-full overflow-hidden bg-muted'
+        picture.replaceWith(wrapper)
+        wrapper.append(picture)
+        const image = picture.querySelector('img')!
+        image.removeAttribute('width')
+        image.removeAttribute('height')
+      })
+      await expect(image).toHaveCSS('object-position', '25% 75%')
+      expect((await image.boundingBox())!.width).toBeCloseTo(originalBox.width, 0)
+      expect((await image.boundingBox())!.height).toBeCloseTo(originalBox.height, 0)
+    }
+  }
+})
+
+for (const width of [390, 1440]) {
+  for (const dpr of [1, 2]) {
+    test(`bounds selected lead responses for all formats at ${width}px DPR ${dpr}`, async ({
+      browser,
+      page,
+    }, testInfo) => {
+      test.setTimeout(180_000)
+      const context = await browser.newContext({
+        storageState: await page.context().storageState(),
+        viewport: { width, height: width === 390 ? 844 : 900 },
+        deviceScaleFactor: dpr,
+        baseURL: testInfo.project.use.baseURL!,
+      })
+      const probe = await context.newPage()
+      const measurements: unknown[] = []
+      try {
+        for (const route of pagePaths) {
+          await probe.goto(route)
+          await expect(probe.locator(root)).toBeVisible()
+          const image = probe.locator(`${root} main img[fetchpriority="high"]`)
+          await expect(image).toHaveCount(1)
+          await expect(probe.locator('link[as="image"][href]')).toHaveCount(1)
+          for (const format of ['avif', 'webp', 'png']) {
+            // PNG is the seeded original's fallback. JPEG is separately bounded
+            // in media-budget.test.ts; no format is exempt from the byte budget.
+            if (format !== 'avif') {
+              await image.evaluate((element) =>
+                element.closest('picture')!.querySelector('source')!.remove(),
+              )
+            }
+            await expect
+              .poll(() =>
+                image.evaluate((element) => {
+                  const selected = (element as HTMLImageElement).currentSrc
+                  return selected ? new URL(selected).searchParams.get('fm') : null
+                }),
+              )
+              .toBe(format)
+            const selected = await image.evaluate(async (element) => {
+              const image = element as HTMLImageElement
+              await image.decode()
+              return {
+                url: image.currentSrc,
+                naturalWidth: image.naturalWidth,
+                slot: image.getBoundingClientRect().width,
+              }
+            })
+            expect(selected.naturalWidth).toBeGreaterThan(0)
+            const response = await context.request.get(selected.url)
+            expect(response.ok()).toBe(true)
+            expect(response.headers()['content-type']).toContain(`image/${format}`)
+            const bytes = (await response.body()).byteLength
+            measurements.push({ route, width, dpr, format, ...selected, bytes })
+            expect(bytes, `${route} ${format}`).toBeGreaterThan(0)
+            expect(bytes, `${route} ${format}`).toBeLessThanOrEqual(
+              (width === 390 ? 200 : 350) * 1024,
+            )
+          }
+        }
+      } finally {
+        await testInfo.attach('selected-lead-responses', {
+          body: JSON.stringify(measurements, null, 2),
+          contentType: 'application/json',
+        })
+        await context.close()
+      }
+    })
+  }
+}
+
 test('uses a 65-character reading measure with reduced motion respected', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -771,19 +965,24 @@ test('uses a 65-character reading measure with reduced motion respected', async 
   }
 })
 
-test('keeps the condensed title stable on cold and warm article loads without the capture gate', async ({
+test('records all-page cold/warm paints and initial images with stable titles, without the capture gate', async ({
   page,
-}) => {
+}, testInfo) => {
+  test.setTimeout(180_000)
   type Shift = PerformanceEntry & {
     hadRecentInput: boolean
     value: number
     sources?: { node?: Node }[]
   }
-  type MeasuredWindow = Window & { cfShifts: { total: number; title: number } }
-  await page.setViewportSize({ width: 390, height: 844 })
+  type Paint = PerformanceEntry & { element?: Element; size: number }
+  type MeasuredWindow = Window & {
+    cfShifts: { total: number; title: number }
+    cfPaint: { milliseconds: number; element: string | null; size: number } | null
+  }
   await page.addInitScript(() => {
     const measured = window as unknown as MeasuredWindow
     measured.cfShifts = { total: 0, title: 0 }
+    measured.cfPaint = null
     new PerformanceObserver((entries) => {
       for (const entry of entries.getEntries() as Shift[]) {
         if (entry.hadRecentInput) continue
@@ -791,31 +990,87 @@ test('keeps the condensed title stable on cold and warm article loads without th
         if (
           entry.sources?.some(
             ({ node }) =>
-              node instanceof Element && (node.matches('.cf-title') || node.closest('.cf-title')),
+              node instanceof Element &&
+              (node.matches('.cf-title, .cf-collection-title, .cf-wordmark') ||
+                node.closest('.cf-title, .cf-collection-title, .cf-wordmark')),
           )
         )
           measured.cfShifts.title += entry.value
       }
     }).observe({ type: 'layout-shift', buffered: true })
+    new PerformanceObserver((entries) => {
+      for (const entry of entries.getEntries() as Paint[]) {
+        measured.cfPaint = {
+          milliseconds: entry.startTime,
+          element: entry.element ? `${entry.element.tagName}.${entry.element.className}` : null,
+          size: entry.size,
+        }
+      }
+    }).observe({ type: 'largest-contentful-paint', buffered: true })
   })
   const cdp = await page.context().newCDPSession(page)
-  await cdp.send('Network.clearBrowserCache')
-  for (const visit of ['cold', 'warm']) {
-    await page.goto(storyPath)
-    await page.evaluate(async () => {
-      await document.fonts.ready
+  const measurements: unknown[] = []
+  try {
+    for (const width of [390, 1440]) {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate((theme) => localStorage.setItem('theme', theme), theme)
+        for (const route of pagePaths) {
+          await cdp.send('Network.clearBrowserCache')
+          for (const visit of ['cold', 'warm']) {
+            await page.goto(route)
+            await expect(page.locator(root)).toBeVisible()
+            const images = await page.locator(`${root} main img`).evaluateAll(async (elements) => {
+              const visible = elements.filter((element) => {
+                const box = element.getBoundingClientRect()
+                return box.width > 0 && box.height > 0 && box.top < innerHeight && box.bottom > 0
+              }) as HTMLImageElement[]
+              await Promise.all(visible.map((image) => image.decode()))
+              return visible.map((image) => ({
+                src: image.currentSrc,
+                loading: image.loading,
+                priority: image.fetchPriority,
+                placement: image.closest('.cf-cover-image, .cf-hero, .cf-card, .cf-row, .cf-body')
+                  ?.className,
+              }))
+            })
+            await page.evaluate(async () => {
+              await document.fonts.ready
+            })
+            await waitForThemeToSettle(page)
+            await page.evaluate(
+              () =>
+                new Promise<void>((resolve) =>
+                  requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+                ),
+            )
+            const observed = await page.evaluate(() => ({
+              shifts: (window as unknown as MeasuredWindow).cfShifts,
+              paint: (window as unknown as MeasuredWindow).cfPaint,
+            }))
+            measurements.push({ route, width, theme, visit, ...observed, images })
+            expect(observed.shifts.total, `${route} ${width} ${theme} ${visit} CLS`).toBeLessThan(
+              0.05,
+            )
+            expect(observed.shifts.title, `${route} ${width} ${theme} ${visit} title shift`).toBe(0)
+            // PR 110 supplies eager at normal priority. Preserve this inventory
+            // for the coordinator's pending wiring; do not claim it passed here.
+            if (images.some(({ loading }) => loading === 'lazy')) {
+              testInfo.annotations.push({
+                type: 'eager-handoff',
+                description: `${route} ${width} ${theme} ${visit}: initial-viewport lazy image; see blog-0044.51 worklog`,
+              })
+            }
+          }
+        }
+      }
+    }
+  } finally {
+    await testInfo.attach('cold-warm-paints-and-initial-images', {
+      body: JSON.stringify(measurements, null, 2),
+      contentType: 'application/json',
     })
-    await waitForThemeToSettle(page)
-    // Give buffered observer entries a frame after the last font/image layout.
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-        ),
-    )
-    const shifts = await page.evaluate(() => (window as unknown as MeasuredWindow).cfShifts)
-    expect(shifts.total, `${visit} article CLS`).toBeLessThan(0.05)
-    expect(shifts.title, `${visit} condensed-title shift`).toBe(0)
+    await cdp.detach()
   }
 })
 
@@ -858,13 +1113,15 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures b2 all five page types and the wide gallery in both themes', async ({ page }) => {
+test('captures b3 all five page types, not-found and the wide gallery in both themes', async ({
+  page,
+}) => {
   test.setTimeout(300_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-cf-sans': 'Archivo',
     '--font-cf-mono': 'Martian Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.50')
+  const destination = path.resolve('docs/worklog/blog-0044.51')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
@@ -874,6 +1131,7 @@ test('captures b2 all five page types and the wide gallery in both themes', asyn
       ['section', sectionPath],
       ['author', authorPath],
       ['topic', topicPath],
+      ['not-found', missingPath],
     ]) {
       await captureFonts.goto(route!)
       // Load lazy images before the full-page capture, then return to the cover.
