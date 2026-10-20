@@ -24,7 +24,8 @@ export async function observeCaptureFonts(page: Page) {
         time: performance.now(),
         readyState: document.readyState,
         dark: document.documentElement?.classList.contains('dark'),
-        display: document.documentElement?.style.getPropertyValue('display'),
+        // The capture gate holds layout through an adopted stylesheet; record its effect.
+        display: document.documentElement && getComputedStyle(document.documentElement).display,
         styles: Array.from(document.querySelectorAll<HTMLStyleElement>(selector), (style) => ({
           id: identity(style),
           sheet: style.sheet ? identity(style.sheet) : null,

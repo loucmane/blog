@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { formatPublishedDate, formatReadingTime } from '@/reader/format'
 import type { StoryCard } from '@/reader/views'
 
-import { LiteraryFigure, thumbnailSizes } from './story-card'
+import { thumbnailSizes } from './image-sizes'
+import { LiteraryFigure } from './story-card'
 
 export function LiteraryStoryIndex({
   stories,
@@ -35,7 +36,7 @@ export function LiteraryStoryIndex({
               className="ll-index-image"
               image={story.image}
               preload={index === 0}
-              sizes={thumbnailSizes}
+              sizes={thumbnailSizes(story.image)}
             />
           ) : null}
         </li>

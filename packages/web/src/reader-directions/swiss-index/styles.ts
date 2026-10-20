@@ -8,11 +8,13 @@
  * parts sit in named grid areas, which list them in DOM order below 1024px. An upright hero's
  * picture takes no part in layout: its image is an item of the figure's grid, its sources are not.
  * Checklist rules reach only the checklist's own items (`> li`), so a list nested in a task keeps
- * the body's list styles and draws no box.
+ * the body's list styles and draws no box. Emphasis takes the genuine 400 and 700 italics; the page
+ * keeps weight and style synthesis because each family's fallback is one upright local face, and a
+ * cold view that keeps it must still show bold and italic text.
  */
 export const styles = `
   & { background: var(--si-paper); color: var(--si-ink); }
-  & .si-page { min-height: 100vh; font-family: var(--si-sans); font-size: var(--si-body); font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
+  & .si-page { min-height: 100vh; font-family: var(--si-sans); font-size: var(--si-body); font-weight: 400; font-synthesis: weight style; line-height: 1.5; overflow-wrap: anywhere; }
   & :where(.si-page) * { box-sizing: border-box; min-width: 0; }
   & .si-page ::selection { background: var(--si-ink); color: var(--si-paper); }
   & :where(.si-page) :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, dd, figure, blockquote) { margin: 0; }

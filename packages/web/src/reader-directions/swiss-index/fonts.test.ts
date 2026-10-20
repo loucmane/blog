@@ -14,9 +14,13 @@ import { swissIndexDirection } from './index'
 const require = createRequire(import.meta.url)
 const parse = require('next/dist/compiled/@next/font/dist/fontkit').default as (bytes: Buffer) => {
   familyName: string
+  postscriptName: string
   italicAngle: number
   unitsPerEm: number
-  'OS/2': { usWeightClass: number }
+  ascent: number
+  descent: number
+  lineGap: number
+  'OS/2': { usWeightClass: number; fsSelection: { italic: boolean } }
   glyphForCodePoint(code: number): { advanceWidth: number }
   hasGlyphForCodePoint(code: number): boolean
 }
@@ -45,7 +49,7 @@ function described(sizes: string, width: number) {
   throw new Error(`${sizes} describes no width at ${width}px`)
 }
 
-it('emits only the used weights and normal styles, with optional display and reproducible metrics', () => {
+it('emits the used weights and genuine 400 and 700 italics, with optional display and reproducible metrics', () => {
   const css = postcss.parse(readerDirectionFontCss(swissIndexDirection)!)
   const faces: Record<string, string>[] = []
   css.walkAtRules('font-face', (face) => {
@@ -57,18 +61,26 @@ it('emits only the used weights and normal styles, with optional display and rep
     faces.push(properties)
   })
   const web = faces.filter((face) => face.src?.startsWith('url('))
-  expect(web.map((face) => [face['font-weight'], face['font-style']])).toEqual([
-    ['400', 'normal'],
-    ['700', 'normal'],
-    ['800', 'normal'],
-    ['400', 'normal'],
-    ['500', 'normal'],
-  ])
+  const sans = '"reader-swiss-index__font-si-sans"'
+  const mono = '"reader-swiss-index__font-si-mono"'
+  // The italics join the grotesk family, so emphasis in text and in bold text finds a real face.
+  expect(web.map((face) => [face['font-family'], face['font-weight'], face['font-style']])).toEqual(
+    [
+      [sans, '400', 'normal'],
+      [sans, '700', 'normal'],
+      [sans, '800', 'normal'],
+      [sans, '400', 'italic'],
+      [sans, '700', 'italic'],
+      [mono, '400', 'normal'],
+      [mono, '500', 'normal'],
+    ],
+  )
   for (const face of web) {
     expect(face['font-display']).toBe('optional')
     expect(face.src).toMatch(
       /^url\("\/reader-directions\/swiss-index\/fonts\/[a-z0-9-]+\.woff2"\) format\("woff2"\)$/,
     )
+    expect(face.src).toContain(`-${face['font-weight']}-${face['font-style']}.woff2"`)
   }
   const { calculateSizeAdjustValues } = require('next/dist/server/font-utils') as {
     calculateSizeAdjustValues(family: string): {
@@ -79,6 +91,7 @@ it('emits only the used weights and normal styles, with optional display and rep
       sizeAdjust: string
     }
   }
+  // Each italic shares its family's metric-adjusted fallback.
   const local = faces.filter((face) => face.src?.startsWith('local('))
   expect(local).toHaveLength(2)
   for (const [index, family] of ['Schibsted Grotesk', 'IBM Plex Mono'].entries()) {
@@ -93,15 +106,43 @@ it('emits only the used weights and normal styles, with optional display and rep
   }
 })
 
-it('ships authentic Latin fonts, exact weights, complete licences and verified provenance', () => {
-  let total = 0
+it('keeps bold and italic synthesis for the upright fallback, and sets no narrow width', () => {
+  const presentation = postcss.parse(swissIndexDirection.styles!)
+  // Each fallback is one upright local face. On a cold view where a face misses its block period,
+  // synthesis keeps its bold and italic text bold and italic, so the page never sets `none`.
+  const synthesis: string[][] = []
+  presentation.walkDecls('font-synthesis', (declaration) => {
+    synthesis.push([(declaration.parent as postcss.Rule).selector, declaration.value])
+  })
+  expect(synthesis).toEqual([['& .si-page', 'weight style']])
+  // The italics are normal width; a narrower context would match an upright face and slant it.
+  const widths: string[] = []
+  presentation.walkDecls('font-stretch', (declaration) => {
+    widths.push(declaration.toString())
+  })
+  expect(widths).toEqual([])
+})
+
+it('ships authentic Latin fonts, exact weights and styles, complete licences and verified provenance', () => {
   const declared = swissIndexDirection.fonts.flatMap((font) => font.sources)
+  const files = declared.map(({ file }) => file).sort()
+  // Only declared faces are vendored and recorded.
+  expect(
+    fs
+      .readdirSync(folder)
+      .filter((file) => file.endsWith('.woff2'))
+      .sort(),
+  ).toEqual(files)
   expect(
     sources
       .filter(({ file }) => file.endsWith('.woff2'))
       .map(({ file }) => file)
       .sort(),
-  ).toEqual(declared.map(({ file }) => file).sort())
+  ).toEqual(files)
+  const regular = parse(
+    fs.readFileSync(path.join(folder, 'schibsted-grotesk-latin-400-normal.woff2')),
+  )
+  const sizes = new Map<string, number>()
   for (const source of sources) {
     const bytes = fs.readFileSync(path.join(folder, source.file))
     expect(bytes.length).toBe(source.bytes)
@@ -110,17 +151,35 @@ it('ships authentic Latin fonts, exact weights, complete licences and verified p
     expect(source.version).toBe('5.3.0')
     expect(source.npmIntegrity).toMatch(/^sha512-/)
     if (source.file.endsWith('.woff2')) {
-      total += bytes.length
+      sizes.set(source.file, bytes.length)
       expect(bytes.subarray(0, 4).toString()).toBe('wOF2')
       const font = parse(bytes)
       const face = declared.find(({ file }) => file === source.file)!
+      const italic = face.style === 'italic'
       expect(font.familyName).toMatch(
         source.file.startsWith('schibsted-grotesk')
           ? /^Schibsted Grotesk(?: |$)/
           : /^IBM Plex Mono(?: |$)/,
       )
       expect(font['OS/2'].usWeightClass).toBe(face.weight)
-      expect(font.italicAngle).toBe(0)
+      // A genuine italic is drawn slanted, so the browser never has to slant an upright face.
+      expect(font['OS/2'].fsSelection.italic).toBe(italic)
+      if (italic) {
+        expect(font.italicAngle).toBeLessThan(0)
+        // The browser checks identify the painted italics by these names.
+        expect(font.postscriptName).toBe(
+          face.weight === 700 ? 'SchibstedGrotesk-BoldItalic' : 'SchibstedGrotesk-Italic',
+        )
+        // The upright faces' vertical metrics, so the family's one fallback serves both styles.
+        expect(font).toMatchObject({
+          unitsPerEm: regular.unitsPerEm,
+          ascent: regular.ascent,
+          descent: regular.descent,
+          lineGap: regular.lineGap,
+        })
+      } else {
+        expect(font.italicAngle).toBe(0)
+      }
       for (const character of 'AaZzÅåÄäÖö0129')
         expect(font.hasGlyphForCodePoint(character.codePointAt(0)!)).toBe(true)
     } else {
@@ -129,8 +188,18 @@ it('ships authentic Latin fonts, exact weights, complete licences and verified p
       expect(bytes.toString()).toContain('DISCLAIMER')
     }
   }
-  expect(total).toBe(104_192)
-  expect(total).toBeLessThan(105_000)
+  // Spec section 10. Home sets only the five normal faces, and a typical story adds the 400
+  // italic for emphasis in its text. A story with bold emphasis as well loads all seven faces:
+  // 1,080 bytes over the 155,000 the spec estimated for both italics.
+  const total = [...sizes.values()].reduce((sum, size) => sum + size, 0)
+  const boldItalic = sizes.get('schibsted-grotesk-latin-700-italic.woff2')!
+  const home = total - boldItalic - sizes.get('schibsted-grotesk-latin-400-italic.woff2')!
+  expect(home).toBe(104_192)
+  expect(home).toBeLessThanOrEqual(105_000)
+  expect(total - boldItalic).toBeLessThanOrEqual(130_000)
+  expect(total).toBe(156_080)
+  // Spec section 10: at most 157,000 B with both italics (raised from 155,000, operator 2026-10-20).
+  expect(total).toBeLessThanOrEqual(157_000)
 })
 
 it('has no checklist glyphs in any face, so the styles draw the checklist boxes', () => {
