@@ -1,6 +1,6 @@
 import type { TopicDirectionProps } from '../contract'
+import { thumbnailSizes } from './image-sizes'
 import { LiteraryShell } from './shell'
-import { thumbnailSizes } from './story-card'
 import { LiteraryStoryIndex } from './story-index'
 
 export function LiteraryTopic({ view }: TopicDirectionProps) {
@@ -8,7 +8,7 @@ export function LiteraryTopic({ view }: TopicDirectionProps) {
   return (
     <LiteraryShell
       navigation={view.navigation}
-      leadImage={firstImage ? { image: firstImage, sizes: thumbnailSizes } : null}
+      leadImage={firstImage ? { image: firstImage, sizes: thumbnailSizes(firstImage) } : null}
     >
       <header className="ll-section-header">
         <p className="ll-label">Topic</p>

@@ -1,6 +1,7 @@
 import { defineReaderDirection } from '../contract'
 import { LiteraryArticle } from './article'
 import { LiteraryAuthor } from './author'
+import { LiteraryError, LiteraryNotFound, LiteraryUnavailable } from './failure'
 import { fonts } from './fonts'
 import { LiteraryHome } from './home'
 import { LiterarySection } from './section'
@@ -11,6 +12,7 @@ import { LiteraryTopic } from './topic'
 export const literaryLongreadDirection = defineReaderDirection({
   Article: LiteraryArticle,
   Author: LiteraryAuthor,
+  Error: LiteraryError,
   fonts,
   Home: LiteraryHome,
   id: 'literary-longread',
@@ -21,9 +23,11 @@ export const literaryLongreadDirection = defineReaderDirection({
     gallery: '(min-width: 768px) 42rem, (min-width: 712px) 42rem, calc(100vw - 2.5rem)',
   },
   name: 'Literary Long-read',
+  NotFound: LiteraryNotFound,
   Section: LiterarySection,
   styles,
   thesis: 'Words are the luxury: a bold illustrated cover and warm, unhurried reading.',
   tokens,
   Topic: LiteraryTopic,
+  Unavailable: LiteraryUnavailable,
 })

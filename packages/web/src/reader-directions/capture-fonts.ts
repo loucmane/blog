@@ -8,18 +8,14 @@ export async function prepareFontCapture(
 ) {
   // optional fonts cannot replace a painted fallback. A reload also revalidates
   // public fonts (max-age=0), so fonts.ready + reload is not a warm-cache guarantee.
-  // Hold layout in each capture document, load its real CSS faces, then reveal it.
+  // Hold layout in each capture document, load its real CSS faces, then reveal it. The hold is an
+  // adopted stylesheet, not an inline style on <html>: React re-applies <html>'s attributes when
+  // it client-renders the root (the not-found page does), which would reveal the page early.
   await page.addInitScript(() => {
-    const hide = () => {
-      if (!document.documentElement) return false
-      document.documentElement.style.setProperty('display', 'none', 'important')
-      return true
-    }
-    if (hide()) return
-    const observer = new MutationObserver(() => {
-      if (hide()) observer.disconnect()
-    })
-    observer.observe(document, { childList: true })
+    const gate = new CSSStyleSheet()
+    gate.replaceSync('html { display: none !important; }')
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, gate]
+    ;(window as Window & { __captureFontGate?: CSSStyleSheet }).__captureFontGate = gate
   })
 
   const cdp = await page.context().newCDPSession(page)
@@ -32,7 +28,12 @@ export async function prepareFontCapture(
       await page.locator(root).waitFor({ state: 'attached' })
       await page.evaluate(
         async ({ root, variables }) => {
-          if (document.documentElement.style.getPropertyValue('display') !== 'none') {
+          const gate = (window as Window & { __captureFontGate?: CSSStyleSheet }).__captureFontGate
+          if (
+            !gate ||
+            !document.adoptedStyleSheets.includes(gate) ||
+            getComputedStyle(document.documentElement).display !== 'none'
+          ) {
             throw new Error('Capture font loading must precede the first layout')
           }
           const element = document.querySelector(root)!
@@ -50,7 +51,9 @@ export async function prepareFontCapture(
           }
           await Promise.all(faces.map((face) => face.load()))
           await document.fonts.ready
-          document.documentElement.style.removeProperty('display')
+          document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
+            (sheet) => sheet !== gate,
+          )
         },
         { root, variables: Object.keys(families) },
       )
