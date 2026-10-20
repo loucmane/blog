@@ -30,6 +30,7 @@ export function ExpressiveStoryCard({
   const Heading = headingLevel === 3 ? 'h3' : 'h2'
   const compact = variant === 'compact'
   const visualFirst = variant === 'lead' || variant === 'secondary'
+  const split = variant === 'lead' || solo
   const badge =
     number === undefined ? null : (
       <span className="ec-number" aria-hidden="true">
@@ -45,34 +46,35 @@ export function ExpressiveStoryCard({
     </Heading>
   )
   const date = <time dateTime={story.publishedAt}>{formatPublishedDate(story.publishedAt)}</time>
-  const visual = compact ? null : (
-    <div
-      className="ec-card-visual"
-      style={
-        story.image
-          ? {
-              objectPosition: `${story.image.focalPoint.x * 100}% ${story.image.focalPoint.y * 100}%`,
+  const visual = (placement = '') =>
+    compact ? null : (
+      <div
+        className={`ec-card-visual${placement ? ` ec-visual-${placement}` : ''}`}
+        style={
+          story.image
+            ? {
+                objectPosition: `${story.image.focalPoint.x * 100}% ${story.image.focalPoint.y * 100}%`,
+              }
+            : undefined
+        }
+      >
+        {story.image ? (
+          <ReaderImageView
+            image={story.image}
+            sizes={
+              variant === 'lead' || solo
+                ? leadSizes
+                : variant === 'secondary'
+                  ? secondarySizes
+                  : cardSizes
             }
-          : undefined
-      }
-    >
-      {story.image ? (
-        <ReaderImageView
-          image={story.image}
-          sizes={
-            variant === 'lead' || solo
-              ? leadSizes
-              : variant === 'secondary'
-                ? secondarySizes
-                : cardSizes
-          }
-          preload={preload}
-        />
-      ) : (
-        <StoryMotif slug={story.slug} />
-      )}
-    </div>
-  )
+            preload={preload}
+          />
+        ) : (
+          <StoryMotif slug={story.slug} />
+        )}
+      </div>
+    )
   return (
     <li
       className={`ec-card ec-card-${variant}${solo ? ' ec-card-secondary-solo' : ''}`}
@@ -93,7 +95,7 @@ export function ExpressiveStoryCard({
           </>
         ) : (
           <>
-            {visualFirst ? visual : null}
+            {visualFirst ? visual(split ? 'stacked' : '') : null}
             <div className="ec-card-copy">
               <div className="ec-card-meta">
                 {badge}
@@ -109,7 +111,7 @@ export function ExpressiveStoryCard({
                 </span>
               </div>
             </div>
-            {!visualFirst ? visual : null}
+            {!visualFirst || split ? visual(split ? 'split' : '') : null}
           </>
         )}
       </Link>

@@ -1,12 +1,15 @@
 // @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { contrastRatio } from '../contrast'
 import type { ReaderDirectionTokenSet } from '../contract'
 import { ink, paper, storyColour, storyColours, storyHash, storyMotif } from './colours'
 import { StoryMotif } from './motif'
+import { styles } from './styles'
 import { tokens } from './tokens'
+
+afterEach(() => document.body.replaceChildren())
 
 describe('stable story identity and decorative motifs', () => {
   it('pins the hash algorithm across builds, calls and input order', () => {
@@ -43,6 +46,39 @@ describe('stable story identity and decorative motifs', () => {
       expect(svg).toContain('width="360" height="270"')
       expect(svg).not.toMatch(/<image|<text|<title|<script|<foreignObject|href=|\bid=/)
       expect(svg.length).toBeLessThan(800)
+    }
+  })
+
+  it.each([0, 1, 2])('gives paper motif %i both ink and story-colour paint', (kind) => {
+    const slug = Array.from({ length: 100 }, (_, index) => `motif-${index}`).find(
+      (candidate) => storyMotif(candidate).kind === kind,
+    )!
+    for (const theme of [tokens.light, { ...tokens.light, ...tokens.dark }]) {
+      document.body.innerHTML = renderToStaticMarkup(
+        <div className="ec-test">
+          <div className="ec-page">
+            <div className="ec-card" data-surface="paper" data-story-colour="cobalt">
+              <StoryMotif slug={slug} />
+            </div>
+          </div>
+        </div>,
+      )
+      const root = document.querySelector<HTMLElement>('.ec-test')!
+      for (const [name, value] of Object.entries(theme)) root.style.setProperty(name, value)
+      const sheet = document.createElement('style')
+      sheet.textContent = styles.replaceAll('&', '.ec-test')
+      document.body.append(sheet)
+      const card = document.querySelector('.ec-card')!
+      const paints = Array.from(card.querySelectorAll('path, circle')).flatMap((shape) => [
+        shape.getAttribute('fill'),
+        shape.getAttribute('stroke'),
+      ])
+      expect(paints).toContain('currentColor')
+      expect(paints).toContain(
+        kind === 1 ? 'var(--ec-story)' : 'var(--ec-motif-accent, currentColor)',
+      )
+      expect(getComputedStyle(card).getPropertyValue('--ec-motif-accent')).toBe('var(--ec-story)')
+      expect(getComputedStyle(card).getPropertyValue('--ec-story')).toBe('var(--ec-cobalt)')
     }
   })
 })

@@ -70,6 +70,7 @@ function focus(image: ReaderImage): CSSProperties {
  * covers the image cell, and the section link sits above it. The front page's lead without an
  * image is set as a typographic lead; any other plate without one keeps its cell as a decorative
  * number plate in the layouts where it shares a grid row, so titles stay aligned along the row.
+ * Titles are `h2` in a page's own lists and `h3` under the article's related-stories heading.
  */
 export function SwissPlate({
   story,
@@ -77,6 +78,7 @@ export function SwissPlate({
   lead = false,
   preload = false,
   alone = [],
+  headingLevel = 2,
 }: {
   readonly story: StoryCard
   readonly number: number
@@ -84,7 +86,9 @@ export function SwissPlate({
   readonly preload?: boolean
   /** The layouts in which this plate has its grid row to itself, from `platesAlone`. */
   readonly alone?: readonly PlateWidth[] | undefined
+  readonly headingLevel?: 2 | 3
 }) {
+  const Title = headingLevel === 3 ? 'h3' : 'h2'
   const typographic = lead && !story.image
   const numberPlate =
     !story.image && !typographic && plateWidths.some((width) => !alone.includes(width))
@@ -123,9 +127,9 @@ export function SwissPlate({
           {storyNumber(number)}
         </div>
       ) : null}
-      <h2 className="si-plate-title">
+      <Title className="si-plate-title">
         <Link href={story.href}>{story.title}</Link>
-      </h2>
+      </Title>
       {story.dek ? <p className="si-plate-dek">{story.dek}</p> : null}
     </li>
   )
