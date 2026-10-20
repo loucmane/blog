@@ -16,7 +16,8 @@ export const styles = `
   & .qm-page * { box-sizing: border-box; }
   & .qm-page ::selection { background: var(--qm-sand); color: var(--qm-ink); }
   & .qm-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote) { margin: 0; }
-  & .qm-page :is(h1, h2, h3, h4, h5, h6) { font-family: var(--qm-display); font-weight: 400; line-height: 1.2; text-wrap: balance; }
+  & .qm-page :is(h1, h2, h3, h4, h5, h6) { font-family: var(--qm-display); font-weight: 400; text-wrap: balance; }
+  & .qm-page :where(h1, h2, h3, h4, h5, h6) { line-height: 1.2; }
   & .qm-page :is(ul, ol) { padding: 0; list-style: none; }
   & .qm-page strong { font-weight: 500; }
   & .qm-page a { color: inherit; text-decoration: none; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
@@ -170,6 +171,7 @@ export const styles = `
     & .qm-page main { width: 100%; }
     & .qm-hang { grid-template-columns: minmax(0, 1fr); }
     & .qm-body { max-width: 66ch; }
+    & .qm-page { --qm-print: none; --qm-print-hover: none; }
     & .qm-page img { box-shadow: none; }
   }
 `

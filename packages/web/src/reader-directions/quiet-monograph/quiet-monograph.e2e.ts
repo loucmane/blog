@@ -109,6 +109,19 @@ test('has no overflow from 320 to 1440px, one Sections navigation and touch-size
   }
 })
 
+test('sets the cover title at the spec line height, not the general heading leading', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  const title = page.locator(root).locator('.qm-cover-title')
+  const [lineHeight, fontSize] = await title.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return [parseFloat(style.lineHeight), parseFloat(style.fontSize)]
+  })
+  expect(lineHeight / fontSize).toBeCloseTo(1.05, 2)
+})
+
 test('keeps the seeded long-title, image-free, short and long-read stories readable at every width', async ({
   page,
 }) => {
@@ -167,7 +180,13 @@ test('follows the keyboard path from the skip link through the menu and an artic
   await expect(frontPage).toBeFocused()
   await expect(frontPage).toHaveAttribute('aria-current', 'page')
 
-  await page.goto(storyPath)
+  // Open the cover story from the front page by keyboard, then continue to the footer.
+  const coverLink = direction.locator('.qm-cover-title a')
+  const coverPath = await coverLink.getAttribute('href')
+  await tabTo(page, coverLink, 40)
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(coverPath ?? /\/stories\//)
+  await expect(direction.getByRole('heading', { level: 1 })).toBeVisible()
   const backToTop = direction.getByRole('link', { name: 'Back to top' })
   await tabTo(page, backToTop, 60)
   await page.keyboard.press('Enter')
