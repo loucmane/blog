@@ -678,8 +678,10 @@ advisory until it is accepted with a reproducing check
 | Images loaded before any scroll              | ≤ 150 KB mobile, ≤ 350 KB desktop     | ≤ 150 KB, ≤ 300 KB | ≤ 150 KB, ≤ 350 KB     | b3 network log, cold cache                                                                  |
 | Web fonts                                    | 147,368 B, never more than 150,000 B  | Same               | Same                   | `ec/fonts.test.ts:129-130`                                                                  |
 | Article HTML                                 | –                                     | < 150,000 B        | –                      | Visitor budget `tests/e2e/homepage.spec.ts:223-236`, applied to E's signed-in article in b3 |
-| Inline direction CSS (fonts, tokens, styles) | ≤ 24 KB uncompressed                  | Same               | Same                   | b3 measures the three `<style>` elements; `ec/styles.ts` is 11,816 bytes today              |
+| Inline direction CSS (fonts, tokens, styles) | ≤ 25,500 B uncompressed               | Same               | Same                   | b3 measures the three `<style>` elements; `ec/styles.ts` is 11,816 bytes today              |
 | Client JavaScript added by E                 | Only `ThemeMenu`                      | Same               | Same                   | Baseline already ships it (`reader/components/site-header.tsx:29`)                          |
+
+- **Inline CSS budget:** raised from 24 KB to 25,500 B on 2026-10-20 by operator decision. The contract's shared bold and italic local fallback faces (blog-0044.63) add about 1.2 KB of font CSS; measured 25,221 B.
 
 - **Evidence today:** the Expressive Colour build recorded Lighthouse CLS 0 and performance 90–98
   (commit `0a82cd5`); in the same harness baseline measured LCP 2.40s (home), 2.65s (article) and
