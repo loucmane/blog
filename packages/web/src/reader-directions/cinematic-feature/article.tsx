@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Fragment } from 'react'
 
 import { ArticleBody } from '@/reader/components/article-body'
 import { ReaderFigure } from '@/reader/components/reader-image'
@@ -7,6 +8,10 @@ import { formatPublishedDate } from '@/reader/format'
 import type { ArticleDirectionProps } from '../contract'
 import { CinematicShell } from './shell'
 import { CinematicStoryCard, relatedSizes, StoryMeta } from './story-card'
+
+function authorSeparator(index: number, count: number) {
+  return index === 0 ? '' : index === count - 1 ? ' and ' : ', '
+}
 
 export function CinematicArticle({ view, imageSizes }: ArticleDirectionProps) {
   const seen = new Set([view.href])
@@ -35,15 +40,21 @@ export function CinematicArticle({ view, imageSizes }: ArticleDirectionProps) {
               <div className="cf-credits">
                 {view.authorLinks.length ? (
                   <p className="cf-byline">
-                    <span>Words by</span>
-                    {view.authorLinks.map((author) => (
-                      <Link key={author.href} href={author.href}>
-                        {author.name}
-                      </Link>
+                    <span>Words by </span>
+                    {view.authorLinks.map((author, index) => (
+                      <Fragment key={author.href}>
+                        {authorSeparator(index, view.authorLinks.length)}
+                        <Link href={author.href}>{author.name}</Link>
+                      </Fragment>
                     ))}
                   </p>
                 ) : view.authors.length ? (
-                  <p>Words by {view.authors.join(', ')}</p>
+                  <p>
+                    Words by{' '}
+                    {view.authors
+                      .map((author, index) => authorSeparator(index, view.authors.length) + author)
+                      .join('')}
+                  </p>
                 ) : null}
                 <time dateTime={view.publishedAt}>{formatPublishedDate(view.publishedAt)}</time>
               </div>

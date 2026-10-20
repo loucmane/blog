@@ -46,7 +46,14 @@ it('emits genuine variable axes, static italics, used mono weights, optional dis
       synthesis = declaration.value
     })
   })
-  expect(synthesis).toBe('none')
+  expect(synthesis).toBe('weight style')
+  let italicStretch: string | undefined
+  presentation.walkRules("& .cf-body :is(h2, h3, [data-block='pull-quote']) em", (rule) => {
+    rule.walkDecls('font-stretch', (declaration) => {
+      italicStretch = declaration.value
+    })
+  })
+  expect(italicStretch).toBe('100%')
   const { calculateSizeAdjustValues } = require('next/dist/server/font-utils') as {
     calculateSizeAdjustValues(family: string): {
       fallbackFont: string

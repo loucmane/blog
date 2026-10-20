@@ -1,7 +1,7 @@
 /** Only the active direction root emits these scoped styles. */
 export const styles = `
   & { background: var(--cf-ground); color: var(--cf-ink); }
-  & .cf-page { font-family: var(--cf-sans); font-size: var(--cf-body); font-weight: 400; font-stretch: 100%; font-synthesis: none; line-height: 1.5; overflow-wrap: anywhere; min-height: 100vh; }
+  & .cf-page { font-family: var(--cf-sans); font-size: var(--cf-body); font-weight: 400; font-stretch: 100%; font-synthesis: weight style; line-height: 1.5; overflow-wrap: anywhere; min-height: 100vh; }
   & .cf-page * { box-sizing: border-box; min-width: 0; }
   & .cf-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote) { margin: 0; }
   & .cf-page :is(h1, h2, h3, h4, h5, h6) { font-family: var(--cf-sans); }
@@ -79,7 +79,7 @@ export const styles = `
   & .cf-article-panel .cf-title { margin-top: 0.5rem; }
   & .cf-article-hero.cf-hero-text { grid-template-rows: auto; }
   & .cf-credits { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem 2rem; margin-top: 2rem; font: 400 var(--cf-small)/1.6 var(--cf-mono); color: var(--cf-secondary); }
-  & .cf-byline { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+  & .cf-byline { display: block; }
   & .cf-byline a { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; text-decoration: underline; }
   & .cf-page figcaption { font: 400 var(--cf-small)/1.6 var(--cf-mono); color: var(--cf-secondary); }
   & .cf-page figcaption a { text-decoration: underline; }
@@ -87,6 +87,7 @@ export const styles = `
   & .cf-body { max-width: var(--cf-measure); margin-inline: auto; font-size: var(--cf-body); font-stretch: 100%; line-height: var(--cf-leading); display: flow-root; }
   & .cf-body > * + * { margin-top: 1.5rem; }
   & .cf-body :is(h2, h3, h4, h5, h6) { line-height: 1.2; margin-block: 3rem 1rem; font-stretch: 85%; }
+  & .cf-body :is(h2, h3, [data-block='pull-quote']) em { font-stretch: 100%; }
   & .cf-body h2 { font-size: var(--cf-heading); }
   & .cf-body h3 { font-size: var(--cf-h3); }
   & .cf-body :is(h4, h5, h6) { font-weight: 700; font-stretch: 100%; line-height: 1.35; }

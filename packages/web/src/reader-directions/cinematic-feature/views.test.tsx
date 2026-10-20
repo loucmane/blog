@@ -305,7 +305,7 @@ describe('Cinematic Feature with published North House content', () => {
           view={{ ...article, authorLinks: [], authors: ['A. Writer', 'B. Writer'] }}
         />,
       ).document.querySelector('.cf-credits'),
-    ).toHaveTextContent('Words by A. Writer, B. Writer')
+    ).toHaveTextContent('Words by A. Writer and B. Writer')
   })
 
   it('handles empty, single-story and many-story sections with current navigation', () => {

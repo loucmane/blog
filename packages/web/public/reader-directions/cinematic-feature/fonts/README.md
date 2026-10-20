@@ -19,7 +19,10 @@ local subset command was run and no npm package version is inferred for them.
 
 Total WOFF2 size: **142,924 bytes** (180,000-byte budget). Latin includes Å/Ä/Ö;
 other scripts use system fallback. Prose emphasis and combined bold/italic use
-the genuine 400/700 italic faces. Font synthesis is disabled on `.cf-page`.
+the genuine 400/700 italic faces. Emphasis inside condensed h2/h3 headings and
+pull quotes selects normal width to match those genuine italic faces.
+`.cf-page` allows weight and style synthesis so a cold optional-font visit
+retains readable bold and italic emphasis over the adjusted Arial fallback.
 
 [`sources.json`](sources.json) records exact bytes, SHA-256, package version,
 archive URL, npm integrity, package path and upstream project for npm assets,

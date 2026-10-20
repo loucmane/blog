@@ -79,7 +79,9 @@ describe('Cinematic Feature b2 supplied views', () => {
       section: null,
     }
     const { document, screen } = markup(<direction.Article view={view} />)
-    expect(document.querySelector('.cf-credits')).toHaveTextContent('Words by A. Writer, B. Writer')
+    expect(document.querySelector('.cf-credits')).toHaveTextContent(
+      'Words by A. Writer and B. Writer',
+    )
     expect(document.querySelector('.cf-credits a, .cf-hero, link[as="image"]')).toBeNull()
     expect(screen.queryByRole('region', { name: 'Topics' })).toBeNull()
     expect(document.querySelector('.cf-related')).toBeNull()
@@ -87,6 +89,29 @@ describe('Cinematic Feature b2 supplied views', () => {
     expect(document.querySelector('.cf-article-return a')).toHaveAttribute('href', '/')
     const anonymous = markup(<direction.Article view={{ ...view, authors: [] }} />)
     expect(anonymous.document.querySelector('.cf-credits')).not.toHaveTextContent('Words by')
+  })
+
+  it.each([
+    { count: 1, expected: 'Words by Asa Nygard' },
+    { count: 2, expected: 'Words by Asa Nygard and Tomas Ek' },
+    { count: 3, expected: 'Words by Asa Nygard, Tomas Ek and Lina Berg' },
+  ])('separates $count linked authors like the name-only byline', ({ count, expected }) => {
+    const contributors: ArticleView['authorLinks'] = [
+      { name: 'Asa Nygard', href: '/authors/asa-nygard' },
+      { name: 'Tomas Ek', href: '/authors/tomas-ek' },
+      { name: 'Lina Berg', href: '/authors/lina-berg' },
+    ]
+    const authorLinks = contributors.slice(0, count)
+    const authors = authorLinks.map(({ name }) => name)
+    const linked = markup(<direction.Article view={{ ...article, authors, authorLinks }} />)
+    const byline = linked.document.querySelector('.cf-byline')!
+    expect(byline.textContent).toBe(expected)
+    expect(Array.from(byline.querySelectorAll('a'), (link) => link.textContent)).toEqual(authors)
+    expect(Array.from(byline.querySelectorAll('a'), (link) => link.getAttribute('href'))).toEqual(
+      authorLinks.map(({ href }) => href),
+    )
+    const plain = markup(<direction.Article view={{ ...article, authors, authorLinks: [] }} />)
+    expect(plain.document.querySelector('.cf-credits p')!.textContent).toBe(expected)
   })
 
   it('keeps up to three distinct related links in supplied order, excluding the current story', () => {

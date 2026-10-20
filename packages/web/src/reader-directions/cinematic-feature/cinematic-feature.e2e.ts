@@ -16,6 +16,13 @@ const authorPath = `/authors/${labAuthors[0]!.slug}`
 const topicPath = `/topics/${labTopics[0]!.slug}`
 const pagePaths = ['/', storyPath, sectionPath, authorPath, topicPath]
 const root = '[data-reader-direction="cinematic-feature"]'
+const listStyles = {
+  '1': 'decimal',
+  a: 'lower-alpha',
+  A: 'upper-alpha',
+  i: 'lower-roman',
+  I: 'upper-roman',
+} as const
 
 async function waitForThemeToSettle(page: Page) {
   // The shared lab bar transitions its colours; assertions need the settled theme.
@@ -259,7 +266,7 @@ test('computes the full article heading scale, list numbering and editorial trea
     await page.goto(storyPath)
     // The server renderer's semantic output is covered by b2.test.tsx; these
     // inserted extremes exercise its selectors against the actual global cascade.
-    await page.locator('.cf-body').evaluate((body) => {
+    await page.locator('.cf-body').evaluate((body, listStyles) => {
       const fixture = document.createElement('div')
       fixture.dataset.styleProbe = 'true'
       for (const level of [2, 3, 4, 5, 6]) {
@@ -267,10 +274,13 @@ test('computes the full article heading scale, list numbering and editorial trea
         heading.textContent = `Heading ${level}`
         fixture.append(heading)
       }
-      for (const type of ['1', 'a', 'A', 'i', 'I']) {
+      for (const [type, style] of Object.entries(listStyles)) {
         const list = document.createElement('ol')
         list.type = type
         list.start = 3
+        list.dataset.probe = `list-${type}`
+        // Match ArticleBody: Tailwind resets bare typed lists to list-style:none.
+        list.style.listStyleType = style
         const item = document.createElement('li')
         item.textContent = 'Numbered item'
         list.append(item)
@@ -284,7 +294,7 @@ test('computes the full article heading scale, list numbering and editorial trea
         fixture.append(section)
       }
       body.append(fixture)
-    })
+    }, listStyles)
     const headingSizes =
       width < 768
         ? [30, 24, 22, 20, 18]
@@ -310,13 +320,26 @@ test('computes the full article heading scale, list numbering and editorial trea
       expect(style.weight).toBe(index < 2 ? '800' : '700')
       expect(style.stretch).toBe(index < 2 ? '85%' : '100%')
     })
-    expect(
-      await page
-        .locator('[data-style-probe] ol')
-        .evaluateAll((elements) =>
-          elements.map((element) => getComputedStyle(element).listStyleType),
-        ),
-    ).toEqual(['decimal', 'lower-alpha', 'upper-alpha', 'lower-roman', 'upper-roman'])
+    for (const [type, style] of Object.entries(listStyles)) {
+      // data-* values preserve case; HTML type selectors do not.
+      const probe = page.locator(`[data-probe="list-${type}"]`)
+      await expect(probe).toHaveAttribute('type', type)
+      await expect(probe).toHaveAttribute('start', '3')
+      await expect(probe).toHaveCSS('list-style-type', style)
+    }
+    const authoredLists = await page
+      .locator('.cf-body ol[type]:not([data-probe])')
+      .evaluateAll((elements) =>
+        elements.map((element) => ({
+          type: element.getAttribute('type')!,
+          style: getComputedStyle(element).listStyleType,
+        })),
+      )
+    expect(authoredLists.length).toBeGreaterThan(0)
+    for (const { type, style } of authoredLists) {
+      expect(type in listStyles, `authored list type ${type}`).toBe(true)
+      expect(style, `authored list type ${type}`).toBe(listStyles[type as keyof typeof listStyles])
+    }
     expect(
       await page
         .locator('.cf-body pre code')
@@ -341,6 +364,62 @@ test('computes the full article heading scale, list numbering and editorial trea
         .first()
         .evaluate((element) => getComputedStyle(element).borderLeftWidth),
     ).toBe('0px')
+  }
+})
+
+test('paints genuine Archivo italics inside condensed headings and pull quotes', async ({
+  page,
+}) => {
+  // This controls first layout to inspect faces; it is not cold-load evidence.
+  const fontGate = await prepareFontCapture(page, root, {
+    '--font-cf-sans': 'Archivo',
+    '--font-cf-mono': 'Martian Mono',
+  })
+  await fontGate.goto(storyPath)
+  await page.locator('.cf-body').evaluate((body) => {
+    for (const tag of ['h2', 'h3', 'blockquote']) {
+      const container = document.createElement(tag)
+      container.dataset.probe = `condensed-${tag}`
+      container.append('Condensed text with ')
+      const emphasis = document.createElement('em')
+      emphasis.textContent = 'genuine italic emphasis'
+      container.append(emphasis)
+      if (tag === 'blockquote') {
+        const figure = document.createElement('figure')
+        figure.dataset.block = 'pull-quote'
+        figure.append(container)
+        body.append(figure)
+      } else {
+        body.append(container)
+      }
+    }
+  })
+  await fontGate.assertFonts()
+  const cdp = await page.context().newCDPSession(page)
+  try {
+    await cdp.send('DOM.enable')
+    await cdp.send('CSS.enable')
+    const { root: documentNode } = await cdp.send('DOM.getDocument')
+    for (const tag of ['h2', 'h3', 'blockquote']) {
+      const selector = `${root} [data-probe="condensed-${tag}"] em`
+      await expect(page.locator(`[data-probe="condensed-${tag}"]`)).toHaveCSS('font-stretch', '85%')
+      await expect(page.locator(selector)).toHaveCSS('font-stretch', '100%')
+      await expect(page.locator(selector)).toHaveCSS('font-style', 'italic')
+      const { nodeId } = await cdp.send('DOM.querySelector', {
+        nodeId: documentNode.nodeId,
+        selector,
+      })
+      const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId })
+      const painted = fonts.filter(({ glyphCount }) => glyphCount > 0)
+      expect(painted.length, `${selector}: ${JSON.stringify(fonts)}`).toBeGreaterThan(0)
+      for (const font of painted) {
+        expect(font.isCustomFont).toBe(true)
+        // Measured from archivo-latin-700-italic.woff2, not the CSS family alias.
+        expect(font.postScriptName).toBe('ArchivoSemiBold-BoldItalic')
+      }
+    }
+  } finally {
+    await cdp.detach()
   }
 })
 
@@ -440,7 +519,12 @@ test('computes readable paper metadata and fixed related slots in both themes', 
       )
       const topic = page.locator('.cf-topics a').first()
       await topic.focus()
-      expect(await topic.evaluate((element) => getComputedStyle(element).outlineColor)).toBe(accent)
+      await page.keyboard.press('Shift+Tab')
+      await page.keyboard.press('Tab')
+      await expect(topic).toBeFocused()
+      await expect(topic).toHaveCSS('outline-color', accent)
+      await expect(topic).toHaveCSS('outline-style', 'solid')
+      await expect(topic).toHaveCSS('outline-width', '3px')
       expect((await topic.boundingBox())!.height).toBeGreaterThanOrEqual(44)
       await page.goto(authorPath)
       await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), dark)
