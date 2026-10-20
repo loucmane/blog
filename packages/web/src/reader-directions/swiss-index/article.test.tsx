@@ -15,7 +15,7 @@ import { labStorySlug, seedLabContent } from '@/server/lab/seed'
 
 import { articleImageSizes, heroSizes, SwissArticle, uprightHeroSizes } from './article'
 import { swissIndexDirection } from './index'
-import { cardSizes } from './story-card'
+import { plateSizes } from './story-card'
 
 function markup(element: ReactNode) {
   const container = document.createElement('div')
@@ -77,6 +77,7 @@ describe('Swiss Index article pages with real published North House content', ()
   const articles = new Map<string, ArticleView>()
   let views: ArticleView[]
 
+  // Seeding generates every sample image with sharp: load-sensitive, so allow 30 seconds.
   beforeAll(async () => {
     const repository = new InMemoryContentRepository()
     await seedLabContent({ objects: new InMemoryOriginalObjectStore(), repository })
@@ -85,7 +86,7 @@ describe('Swiss Index article pages with real published North House content', ()
       articles.set(story.id, (await readArticleView(source, labStorySlug(story)))!)
     }
     views = [...articles.values()]
-  })
+  }, 30_000)
 
   it('sets one h1 per story, before the rail, at the long title size above 80 characters', () => {
     expect(views.some((view) => [...view.title].length > 80)).toBe(true)
@@ -306,7 +307,7 @@ describe('Swiss Index article pages with real published North House content', ()
         expect(number).toHaveAttribute('aria-hidden', 'true')
         if (story.image) {
           const image = plate.querySelector('img')!
-          expect(image).toHaveAttribute('sizes', cardSizes)
+          expect(image).toHaveAttribute('sizes', plateSizes(story.image, 'plate'))
           expect(image).toHaveAttribute('loading', 'lazy')
           expect(image).not.toHaveAttribute('fetchpriority')
         }

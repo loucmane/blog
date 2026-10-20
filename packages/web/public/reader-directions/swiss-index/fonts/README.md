@@ -26,14 +26,16 @@ Both are genuine italics, with slanted outlines, a negative italic angle and the
 italic bit; their PostScript names are `SchibstedGrotesk-Italic` and
 `SchibstedGrotesk-BoldItalic`. They share the upright faces' vertical metrics, so the
 family's one fallback serves both styles. There is no 800 italic: the wordmark, titles
-and number plates hold no emphasis. IBM Plex Mono has no italic, so italic mono text,
-such as code inside emphasis, keeps a synthesized slant.
+and number plates hold no emphasis. IBM Plex Mono has upright 400 and 500 faces only,
+so mono text never takes emphasis: inline code, in either order of marks, and list
+markers stay upright and regular rather than take a synthesized slant or bold.
 
-An italic is requested only on pages whose text uses it. Home and section pages use
-the five normal faces (104,192 bytes; the spec's budget is 105,000). A typical story
-adds the 400 italic (129,728 bytes; budget 130,000). A story with bold emphasis as well
-loads all seven faces, 156,080 bytes: 1,080 over the 155,000 the spec estimated for
-both italics. `src/reader-directions/swiss-index/fonts.test.ts` checks these totals.
+An italic is requested only on pages whose text uses it. Home, section, author, topic
+and failure pages use the five normal faces (104,192 bytes; the spec's budget is
+105,000). A typical story adds the 400 italic (129,728 bytes; budget 130,000). A story
+with bold emphasis as well loads all seven faces, 156,080 bytes, within the 157,000 the
+spec allows with both italics (raised from 155,000 by operator decision on 2026-10-20).
+`src/reader-directions/swiss-index/fonts.test.ts` checks these totals.
 
 `.si-page` keeps `font-synthesis: weight style`. Each family's metric-adjusted fallback
 is one upright local face. On a cold view where a face misses its short block period,

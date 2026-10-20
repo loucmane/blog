@@ -14,7 +14,7 @@ import { seedLabContent } from '@/server/lab/seed'
 
 import { SwissAuthor } from './author'
 import { swissIndexDirection } from './index'
-import { cardSizes, platesAlone } from './story-card'
+import { plateSizes, platesAlone } from './story-card'
 import { SwissTopic } from './topic'
 
 function markup(element: ReactNode) {
@@ -87,6 +87,7 @@ describe('Swiss Index author and topic pages with real published North House con
   let topics: TopicView[]
   let everyStory: StoryCard[]
 
+  // Seeding generates every sample image with sharp: load-sensitive, so allow 30 seconds.
   beforeAll(async () => {
     const repository = new InMemoryContentRepository()
     await seedLabContent({ objects: new InMemoryOriginalObjectStore(), repository })
@@ -99,7 +100,7 @@ describe('Swiss Index author and topic pages with real published North House con
     )
     const home = await readHomeView(source)
     everyStory = [home.lead!, ...home.recent]
-  })
+  }, 30_000)
 
   it('registers its own author and topic pages', () => {
     expect(swissIndexDirection.Author).toBe(SwissAuthor)
@@ -203,7 +204,7 @@ describe('Swiss Index author and topic pages with real published North House con
         expect(linksTo(plate, story.href)).toHaveLength(1)
         if (story.image) {
           const image = plate.querySelector('img')!
-          expect(image).toHaveAttribute('sizes', cardSizes)
+          expect(image).toHaveAttribute('sizes', plateSizes(story.image, 'plate'))
           expect(image.getAttribute('loading')).toBe(index === 0 ? null : 'lazy')
         } else {
           const shares = alone[index]!.length < 2
@@ -212,7 +213,8 @@ describe('Swiss Index author and topic pages with real published North House con
       })
       const preloads = document.querySelectorAll('link[rel="preload"][as="image"]')
       expect(preloads).toHaveLength(view.stories[0]?.image ? 1 : 0)
-      if (view.stories[0]?.image) expect(preloads[0]).toHaveAttribute('imagesizes', cardSizes)
+      const lead = view.stories[0]?.image
+      if (lead) expect(preloads[0]).toHaveAttribute('imagesizes', plateSizes(lead, 'plate'))
     }
   })
 
