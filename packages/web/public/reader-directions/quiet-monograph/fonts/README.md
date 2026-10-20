@@ -16,6 +16,20 @@ use the system fallback; there are no additional script subsets or unused weight
 The browser requests only faces used by text in the active direction. No external font service
 is contacted during builds or browsing. If bytes change, change the filename and source record.
 
+## Pending: genuine italics
+
+The developed-magazine spec (`docs/design/reader-bakeoff/quiet-monograph.md`, section 3) adds
+Cormorant Garamond 400 italic and Jost 400 italic and removes Jost 300. The two italic files could
+not be vendored offline when home and section were rebuilt, so `fonts.ts` is unchanged: Jost 300
+stays declared, but no style uses it any more, so browsers do not request it. Until the italics
+land, deks are set in italic with `font-synthesis: none` and render upright, while emphasis in
+story text keeps its synthesized italic so that it stays visible. When the files land, add them
+here with their `sources.json` records, declare them as `style: 'italic'` sources in `fonts.ts`,
+remove Jost 300, update `fonts.test.ts`, set `font-synthesis: none` on `.qm-page`, and update the
+pinned hash in `src/reader-directions/cinematic-feature/static-font-regression.test.ts`.
+
+## Licences
+
 Both fonts are under SIL Open Font License 1.1. Full original texts and copyright notices are
 included beside these files:
 
