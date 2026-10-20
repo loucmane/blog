@@ -15,6 +15,23 @@ import { styles } from './styles'
 
 afterEach(() => document.body.replaceChildren())
 
+it('keeps image credit labels block uppercase without capitalizing pull-quote attribution', () => {
+  const sheet = document.createElement('style')
+  sheet.textContent = styles.replaceAll('&', '.ec-test')
+  document.body.innerHTML = `<div class="ec-test"><div class="ec-page"><div class="ec-body">
+    <figure><figcaption>A caption<span><a href="/credit">North House</a></span></figcaption></figure>
+    <figure data-block="pull-quote"><blockquote>A quotation</blockquote><figcaption>A reader</figcaption></figure>
+  </div></div></div>`
+  document.body.append(sheet)
+  const label = getComputedStyle(document.querySelector('figcaption > span')!)
+  expect(label.display).toBe('block')
+  expect(label.textTransform).toBe('uppercase')
+  const attribution = getComputedStyle(
+    document.querySelector('[data-block="pull-quote"] figcaption')!,
+  )
+  expect(attribution.textTransform).toBe('none')
+})
+
 it('keeps heading and divider spacing from adding adjacent grid margins', () => {
   const sheet = document.createElement('style')
   sheet.textContent = styles.replaceAll('&', '.ec-test')

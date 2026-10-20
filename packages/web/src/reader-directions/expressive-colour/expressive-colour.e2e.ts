@@ -407,10 +407,14 @@ test('uses a fixed 720px measure of about 65–70 characters with reduced motion
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto(storyPath)
-  await page.evaluate(async () => {
-    await document.fonts.ready
+  // This is a typography check: optional faces must load before first layout,
+  // otherwise a cold view can retain the fallback even after fonts.ready.
+  const captureFonts = await prepareFontCapture(page, root, {
+    '--font-ec-serif': 'Fraunces',
+    '--font-ec-mono': 'Martian Mono',
   })
+  await captureFonts.goto(storyPath)
+  await captureFonts.assertFonts()
   const body = page.locator('.ec-body > p').first()
   const metrics = await body.evaluate((element) => {
     const style = getComputedStyle(element)
@@ -626,6 +630,21 @@ test('lays out square and portrait heroes once, using the real focal point and m
 })
 
 for (const width of [390, 1440]) {
+  blockTest(
+    `keeps image caption labels block uppercase and pull-quote attribution in sentence case at ${width}px`,
+    async ({ page, blockStoryPath }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto(blockStoryPath)
+      const label = page.locator('.ec-body > figure:not([data-block]) figcaption > span')
+      await expect(label).toHaveCount(1)
+      await expect(label).toHaveCSS('display', 'block')
+      await expect(label).toHaveCSS('text-transform', 'uppercase')
+      const attribution = page.locator('.ec-body > [data-block="pull-quote"] figcaption')
+      await expect(attribution).toHaveText('A reader')
+      await expect(attribution).toHaveCSS('text-transform', 'none')
+    },
+  )
+
   blockTest(
     `computed editorial styles survive resets and nesting at ${width}px`,
     async ({ page, blockStoryPath }) => {
