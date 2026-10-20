@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { formatPublishedDate, formatReadingTime } from '@/reader/format'
 
 import type { HomeDirectionProps } from '../contract'
+import { coverSizes } from './image-sizes'
 import { LiteraryShell, SectionLabel } from './shell'
-import { coverSizes, LiteraryFigure, LiteraryStoryCard, LiteraryStoryMeta } from './story-card'
+import { LiteraryFigure, LiteraryStoryCard, LiteraryStoryMeta } from './story-card'
 
 export function LiteraryHome({ view }: HomeDirectionProps) {
   const { lead } = view
@@ -14,7 +15,7 @@ export function LiteraryHome({ view }: HomeDirectionProps) {
     <LiteraryShell
       isHome
       navigation={view.navigation}
-      leadImage={lead?.image ? { image: lead.image, sizes: coverSizes } : null}
+      leadImage={lead?.image ? { image: lead.image, sizes: coverSizes(lead.image) } : null}
     >
       {lead ? (
         <>
@@ -43,7 +44,7 @@ export function LiteraryHome({ view }: HomeDirectionProps) {
                 className="ll-cover-image"
                 image={lead.image}
                 preload
-                sizes={coverSizes}
+                sizes={coverSizes(lead.image)}
               />
             ) : null}
           </section>

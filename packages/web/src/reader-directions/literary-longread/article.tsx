@@ -12,8 +12,6 @@ import { LiteraryStoryCard } from './story-card'
 
 const heroSizes =
   '(min-width: 1056px) 60rem, (min-width: 1024px) calc(100vw - 6rem), (min-width: 768px) calc(100vw - 3rem), calc(100vw - 2.5rem)'
-const relatedSizes =
-  '(min-width: 1344px) 25rem, (min-width: 1024px) calc(33.3333vw - 3rem), (min-width: 768px) calc(100vw - 3rem), calc(100vw - 2.5rem)'
 
 export function LiteraryArticle({ view, imageSizes }: ArticleDirectionProps) {
   // The shared model supplies parallel names/links, but legacy plain names can still render.
@@ -90,7 +88,7 @@ export function LiteraryArticle({ view, imageSizes }: ArticleDirectionProps) {
               <ul className="ll-related-grid" role="list">
                 {view.related.slice(0, 3).map((story) => (
                   <li key={story.slug}>
-                    <LiteraryStoryCard story={story} sizes={relatedSizes} />
+                    <LiteraryStoryCard story={story} related />
                   </li>
                 ))}
               </ul>

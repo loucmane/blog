@@ -21,13 +21,15 @@ export function LiteraryShell({
   currentSection,
   leadImage,
   skipLabel = 'Skip to stories',
+  siteTitle = siteName,
 }: {
   readonly children: ReactNode
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
   readonly currentSection?: string
   readonly leadImage?: LiteraryLeadImage | null
-  readonly skipLabel?: 'Skip to stories' | 'Skip to article'
+  readonly skipLabel?: 'Skip to stories' | 'Skip to article' | 'Skip to message'
+  readonly siteTitle?: string
 }) {
   const Brand = isHome ? 'h1' : 'p'
   return (
@@ -38,7 +40,7 @@ export function LiteraryShell({
       </a>
       <header className="ll-masthead">
         <Brand className="ll-wordmark">
-          <Link href="/">{siteName}</Link>
+          <Link href="/">{siteTitle}</Link>
         </Brand>
         <nav aria-label="Sections">
           <ul>
@@ -64,7 +66,7 @@ export function LiteraryShell({
         {children}
       </main>
       <footer className="ll-footer">
-        <p className="ll-footer-brand">{siteName}</p>
+        <p className="ll-footer-brand">{siteTitle}</p>
         <Link href="/">
           All stories <span aria-hidden="true">↑</span>
         </Link>
