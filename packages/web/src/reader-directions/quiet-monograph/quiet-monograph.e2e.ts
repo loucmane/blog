@@ -3,7 +3,14 @@ import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import {
+  expect,
+  test,
+  type Browser,
+  type BrowserContextOptions,
+  type Locator,
+  type Page,
+} from '@playwright/test'
 
 import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
 import { normalizeSlug } from '../../server/content/domain'
@@ -20,13 +27,19 @@ const authorPath = `/authors/${author.slug}`
 const topic = labTopics[0]!
 const topicPath = `/topics/${topic.slug}`
 const routes = ['/', storyPath, sectionPath, craftPath, authorPath, topicPath]
+// No story has this slug: the root not-found page, which upgrades to the direction's own view.
+const missingPath = '/stories/a-story-that-was-never-published'
 const root = '[data-reader-direction="quiet-monograph"]'
+const fontFiles = '**/reader-directions/quiet-monograph/fonts/*.woff2'
+const ownerToken = 'task43-owner-test-token-with-more-than-thirty-two-bytes'
+const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 const widths = [320, 360, 390, 768, 1024, 1280, 1440]
 const ink = 'rgb(28, 27, 25)'
 const stoneInk = 'rgb(107, 102, 94)'
 const stone = 'rgb(122, 118, 110)'
-// The generated Cormorant family first; Chromium may serialize the name without quotes.
+// The generated Cormorant and Jost families first; Chromium may serialize names without quotes.
 const displayFamily = /^"?reader-quiet-monograph__font-qm-display"?,/
+const textFamily = /^"?reader-quiet-monograph__font-qm-text"?,/
 
 function storyRoute(id: string) {
   return `/stories/${normalizeSlug(labStories.find((story) => story.id === id)!.title)}`
@@ -73,6 +86,97 @@ async function tabTo(page: Page, target: Locator, limit: number) {
   await expect(target).toBeFocused()
 }
 
+/**
+ * A new signed-in owner context in this direction. Its caches start empty, so every visit in it is
+ * a first visit and each image candidate is chosen afresh.
+ */
+async function ownerContext(browser: Browser, options: BrowserContextOptions) {
+  const context = await browser.newContext(options)
+  await dismissReaderLabIntroductions(context)
+  const session = await context.request.post('/api/owner/fixture-session', {
+    headers: { authorization: `Bearer ${ownerToken}` },
+  })
+  expect(session.status()).toBe(200)
+  await context.addCookies([
+    { name: 'reader_lab_direction', url: 'http://localhost:3100', value: 'quiet-monograph' },
+  ])
+  return context
+}
+
+interface AuditedImage {
+  /** The AVIF candidate a 1x screen picks for the `sizes` width: the narrowest that covers it. */
+  readonly candidate: string | null
+  readonly currentSrc: string
+  /** The width the image box is laid out at. */
+  readonly laidOut: number
+  /** The width the picture is painted at: a contained portrait can be narrower than its box. */
+  readonly painted: number
+  readonly slot: string
+  /** The width the image's `sizes` names at this viewport. */
+  readonly wanted: number
+}
+
+/** Every responsive picture in the page's main content, measured where it is laid out now. */
+function auditImages(page: Page) {
+  return page.locator(root).evaluate((element) => {
+    const probe = document.createElement('div')
+    probe.setAttribute('data-probe', 'sizes')
+    probe.style.cssText = 'position: absolute; height: 0; visibility: hidden'
+    document.body.append(probe)
+    // The first entry whose media condition matches, measured like a CSS width.
+    const resolve = (sizes: string) => {
+      for (const entry of sizes.split(/,\s*(?![^()]*\))/)) {
+        const match = /^(\([^()]*\))\s+(.+)$/.exec(entry.trim())
+        if (match && !matchMedia(match[1]!).matches) continue
+        probe.style.width = match ? match[2]! : entry.trim()
+        return probe.getBoundingClientRect().width
+      }
+      return 0
+    }
+    // Plates first; then body figures and galleries, which step out of the text column.
+    const slots = [
+      ['.qm-cover', 'cover'],
+      ['.qm-hero', 'hero'],
+      ['.qm-room', 'room'],
+      ['.qm-hang-item', 'bay'],
+      ['.qm-body > [data-block="gallery"][data-layout="carousel"]', 'carousel'],
+      ['.qm-body > [data-block="gallery"]', 'gallery'],
+      ['.qm-body > figure', 'figure'],
+    ] as const
+    const images: AuditedImage[] = Array.from(
+      element.querySelectorAll<HTMLImageElement>('main picture img[sizes]'),
+      (image) => {
+        const box = image.getBoundingClientRect()
+        const ratio = Number(image.getAttribute('width')) / Number(image.getAttribute('height'))
+        const wanted = resolve(image.sizes)
+        const candidates = (image.closest('picture')?.querySelector('source')?.srcset ?? '')
+          .split(',')
+          .map((entry) => {
+            const [url = '', descriptor = ''] = entry.trim().split(/\s+/)
+            return { url: new URL(url, location.href).href, width: parseInt(descriptor, 10) }
+          })
+          .filter(({ width }) => width > 0)
+          .sort((first, second) => first.width - second.width)
+        return {
+          candidate:
+            (candidates.find(({ width }) => width >= wanted) ?? candidates.at(-1))?.url ?? null,
+          currentSrc: image.currentSrc,
+          laidOut: box.width,
+          painted: ratio > 0 ? Math.min(box.width, box.height * ratio) : box.width,
+          slot: slots.find(([selector]) => image.closest(selector))?.[1] ?? 'nested',
+          wanted,
+        }
+      },
+    )
+    probe.remove()
+    return {
+      images,
+      // Classic scrollbars narrow the layout but not 100vw; overlay scrollbars take nothing.
+      scrollbar: window.innerWidth - document.documentElement.clientWidth,
+    }
+  })
+}
+
 test.beforeEach(async ({ context, page, request }) => {
   await dismissReaderLabIntroductions(context)
   const seed = await request.post('/api/internal/lab-seed', {
@@ -80,7 +184,7 @@ test.beforeEach(async ({ context, page, request }) => {
   })
   expect(seed.status()).toBe(200)
   const session = await context.request.post('/api/owner/fixture-session', {
-    headers: { authorization: 'Bearer task43-owner-test-token-with-more-than-thirty-two-bytes' },
+    headers: { authorization: `Bearer ${ownerToken}` },
   })
   expect(session.status()).toBe(200)
   await page.goto('/owner/reader-lab')
@@ -702,6 +806,9 @@ test('keeps the seeded long-title, image-free, short, long-read and 4:5-hero sto
 test('follows the keyboard path from the skip link through the menu and an article to the footer', async ({
   page,
 }) => {
+  // The shared smooth scroll (globals.css) can stall Back to top up a long article (blog-0044.57);
+  // reduced motion turns it off, as a reader who asks for it would have it.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   const direction = page.locator(root)
@@ -738,7 +845,6 @@ test('follows the keyboard path from the skip link through the menu and an artic
   const backToTop = direction.getByRole('link', { name: 'Back to top' })
   await tabTo(page, backToTop, 60)
   await page.keyboard.press('Enter')
-  // Smooth scrolling (globals.css) up a long article can take several seconds under load.
   await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 15_000 }).toBe(0)
 })
 
@@ -787,9 +893,7 @@ for (const width of [390, 1440]) {
         )
         await waitForThemeToSettle(page)
         await expect(page.getByRole('region', { name: 'Reader Lab', exact: true })).toBeVisible()
-        const result = await new AxeBuilder({ page })
-          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-          .analyze()
+        const result = await new AxeBuilder({ page }).withTags(axeTags).analyze()
         expect(result.violations, `${route} at ${width} in ${colorScheme}`).toEqual([])
       }
     })
@@ -813,8 +917,8 @@ test('requests only the faces each page uses, within the font budgets', async ({
     'jost-latin-500-normal.woff2',
   ]
   // Deks, bios and pull quotes are Cormorant italic; only emphasis in story text needs the Jost
-  // italic. Sections and topics without a description have no italic text. Pages without a
-  // budget of their own stay within home's.
+  // italic. Sections and topics without a description, and failure pages, have no italic text.
+  // Pages without a budget of their own stay within home's.
   for (const [route, italics, budget] of [
     ['/', ['cormorant-garamond-latin-400-italic.woff2'], 95_000],
     [
@@ -825,9 +929,12 @@ test('requests only the faces each page uses, within the font budgets', async ({
     [sectionPath, [], 95_000],
     [authorPath, ['cormorant-garamond-latin-400-italic.woff2'], 95_000],
     [topicPath, [], 95_000],
+    [missingPath, [], 95_000],
   ] as const) {
     requested = new Set()
     await page.goto(route)
+    // A missing page upgrades to this direction after hydration, and its faces load from then on.
+    await expect(page.locator(root).getByRole('heading', { level: 1 })).toBeVisible()
     await page.evaluate(async () => {
       await document.fonts.ready
     })
@@ -899,16 +1006,517 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures seeded review screenshots of two articles, an author and a topic in both themes', async ({
+test('upgrades a missing page to its own not-found view: one h1, the way home, the spec type and 44px targets', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme })
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 })
+      const response = await page.goto(missingPath)
+      // The server sends baseline; the client upgrade changes the presentation, never the status.
+      expect(response?.status()).toBe(404)
+      const direction = page.locator(root)
+      await expect(
+        direction.getByRole('heading', { level: 1, name: 'Page not found' }),
+      ).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+      await expect(page.getByRole('main')).toHaveCount(1)
+      const name = `${missingPath} at ${width}px in ${colorScheme}`
+      const block = direction.locator('main .qm-failure')
+      await expect(block.locator('.qm-label').first()).toHaveText('Not found')
+      await expect(block.locator('.qm-failure-message')).toHaveText(
+        'The page may have moved, or the address may be mistyped.',
+      )
+      const home = block.getByRole('link', { name: 'Front page' })
+      await expect(home).toHaveAttribute('href', '/')
+      // The site name is a link, not another heading, and nothing on the page is current.
+      const masthead = direction.locator('header.qm-masthead')
+      await expect(masthead.locator('p.qm-wordmark a[href="/"]')).toHaveCount(1)
+      await expect(direction.locator('[aria-current]')).toHaveCount(0)
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        name,
+      ).toBe(true)
+      if (width === 390 || width === 1440) {
+        // Spec 2.7: centred, --qm-space below the masthead, the h1 at the title size and one
+        // sentence in Jost at the body size.
+        const styles = await block.evaluate((element) => {
+          const title = getComputedStyle(element.querySelector('h1')!)
+          const sentence = getComputedStyle(element.querySelector('.qm-failure-message')!)
+          return {
+            align: getComputedStyle(element).textAlign,
+            sentenceFamily: sentence.fontFamily,
+            sentenceSize: parseFloat(sentence.fontSize),
+            space: parseFloat(getComputedStyle(element).paddingTop),
+            titleFamily: title.fontFamily,
+            titleLeading: parseFloat(title.lineHeight) / parseFloat(title.fontSize),
+            titleSize: parseFloat(title.fontSize),
+          }
+        })
+        expect(styles.align, name).toBe('center')
+        expect(styles.space, name).toBeCloseTo(
+          parseFloat(await resolvedToken(page, 'padding-top', '--qm-space')),
+          1,
+        )
+        expect(styles.titleSize, name).toBeCloseTo(
+          parseFloat(await resolvedToken(page, 'font-size', '--qm-title')),
+          1,
+        )
+        expect(styles.titleLeading, name).toBeCloseTo(1.05, 2)
+        expect(styles.titleFamily, name).toMatch(displayFamily)
+        expect(styles.sentenceFamily, name).toMatch(textFamily)
+        expect(styles.sentenceSize, name).toBeCloseTo(
+          parseFloat(await resolvedToken(page, 'font-size', '--qm-body')),
+          1,
+        )
+        expect(
+          await page.evaluate(() => document.documentElement.classList.contains('dark')),
+          name,
+        ).toBe(colorScheme === 'dark')
+        await waitForThemeToSettle(page)
+        expect(
+          await direction.evaluate((element) => getComputedStyle(element).backgroundColor),
+          name,
+        ).toBe(colorScheme === 'dark' ? 'rgb(46, 43, 39)' : 'rgb(246, 245, 241)')
+        await expect(page.getByRole('region', { name: 'Reader Lab', exact: true })).toBeVisible()
+        const result = await new AxeBuilder({ page }).withTags(axeTags).analyze()
+        expect(result.violations, name).toEqual([])
+      }
+      const targets = [
+        masthead.locator('.qm-wordmark a'),
+        masthead.getByRole('button', { name: 'Choose color theme' }),
+        home,
+        ...(await direction.locator('footer a').all()),
+      ]
+      if (width < 1024) {
+        const menu = masthead.locator('summary')
+        await menu.click()
+        targets.push(menu)
+      }
+      // The shared failure model knows no sections: one Sections navigation, "Front page" alone.
+      const sections = direction.getByRole('navigation', { name: 'Sections' })
+      await expect(sections).toHaveCount(1)
+      await expect(sections.getByRole('link')).toHaveText(['Front page'])
+      targets.push(...(await sections.getByRole('link').all()))
+      for (const control of targets) {
+        const box = await control.boundingBox()
+        const label = `${await control.textContent()} on ${name}`
+        expect(box?.width, label).toBeGreaterThanOrEqual(44)
+        expect(box?.height, label).toBeGreaterThanOrEqual(44)
+      }
+    }
+  }
+})
+
+test('delivers a story in this direction within the story HTML budget', async ({ page }) => {
+  // The visitor check (tests/e2e/homepage.spec.ts), repeated with the owner's direction cookie.
+  const response = await page.context().request.get(storyPath)
+  const body = await response.text()
+  expect(response.status()).toBe(200)
+  expect(response.headers()['content-type']).toContain('text/html')
+  expect(body).toContain('data-reader-direction="quiet-monograph"')
+  expect(body).toContain(storyTitle)
+  expect(body).not.toMatch(/tiptap|prosemirror|lexical|contenteditable/i)
+  expect(Buffer.byteLength(body)).toBeLessThan(150_000)
+})
+
+test('animates only the plate shadow, and nothing under reduced motion, in the real cascade', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  const plate = page.locator(root).locator('.qm-plate-box picture img').first()
+  const transition = () =>
+    plate.evaluate((element) => {
+      const style = getComputedStyle(element)
+      return {
+        durations: style.transitionDuration.split(',').map((value) => parseFloat(value)),
+        property: style.transitionProperty,
+        timing: style.transitionTimingFunction,
+      }
+    })
+  expect(await transition()).toEqual({
+    durations: [0.2],
+    property: 'box-shadow',
+    timing: 'ease-out',
+  })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const reduced = await transition()
+  expect(reduced.property).toBe('none')
+  // The shared reduced-motion rule still leaves 0.01ms, !important, on every element.
+  expect(Math.max(...reduced.durations)).toBeLessThanOrEqual(0.00001)
+})
+
+test('keeps emphasis visible on a cold view, where every face misses its block period', async ({
+  browser,
+  page,
+}) => {
+  // A first view over a slow connection: no web face arrives within its optional block period, so
+  // each family keeps its upright, metric-adjusted fallback. Failing the requests gives that state.
+  await page.route(fontFiles, (route) => route.abort())
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(storyPath)
+  await page.evaluate(async () => {
+    await document.fonts.ready
+  })
+  const direction = page.locator(root)
+  const body = direction.locator('.qm-body')
+  const dek = direction.locator('.qm-article-header .qm-dek')
+  // Emphasis alone may be slanted; deks, bios and pull quotes keep the letter of no synthesis.
+  const synthesis = (locator: Locator) =>
+    locator.evaluate((element) =>
+      getComputedStyle(element).getPropertyValue('font-synthesis-style'),
+    )
+  expect(await synthesis(body.locator('em').first())).toBe('auto')
+  expect(await synthesis(body.locator('p').first())).toBe('none')
+  expect(await synthesis(dek)).toBe('none')
+  // No web face painted this text, so the view really is cold.
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('DOM.enable')
+  await cdp.send('CSS.enable')
+  const { root: documentNode } = await cdp.send('DOM.getDocument')
+  const painted: Record<string, string[]> = {}
+  for (const [name, selector] of [
+    ['title', '.qm-article-header h1'],
+    ['dek', '.qm-article-header .qm-dek'],
+    ['body', '.qm-body > p'],
+    ['emphasis', '.qm-body em'],
+  ] as const) {
+    const { nodeId } = await cdp.send('DOM.querySelector', {
+      nodeId: documentNode.nodeId,
+      selector: `${root} ${selector}`,
+    })
+    const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId })
+    const faces = fonts
+      .filter(({ glyphCount }) => glyphCount > 0)
+      .map(({ familyName, postScriptName }) => postScriptName || familyName)
+    painted[name] = faces
+    expect(faces.join(', '), name).not.toMatch(/cormorant|jost/i)
+  }
+  /** Whether the element paints differently in italic than upright, at the same place. */
+  const slanted = async (locator: Locator) => {
+    const italic = await locator.screenshot({ animations: 'disabled', caret: 'hide' })
+    await locator.evaluate((element) => element.style.setProperty('font-style', 'normal'))
+    const upright = await locator.screenshot({ animations: 'disabled', caret: 'hide' })
+    await locator.evaluate((element) => element.style.removeProperty('font-style'))
+    return !italic.equals(upright)
+  }
+  // The same words as emphasis in the body's fallback: they must not look like plain text.
+  await body.evaluate((element) => {
+    const paragraph = document.createElement('p')
+    paragraph.setAttribute('data-probe', 'emphasis')
+    const emphasis = document.createElement('em')
+    emphasis.textContent = 'Emphasis stays visible on a cold view'
+    paragraph.append(emphasis)
+    element.prepend(paragraph)
+  })
+  expect(await slanted(body.locator('[data-probe="emphasis"] em'))).toBe(true)
+  // Deks stay upright where the local fallback face is installed. Recorded, not asserted: without
+  // it the generic family takes over, and that family may have an italic of its own.
+  await test.info().attach('cold-view-emphasis.json', {
+    body: JSON.stringify({ browser: browser.version(), dekSlanted: await slanted(dek), painted }),
+    contentType: 'application/json',
+  })
+})
+
+test('keeps home and article still on cold and warm loads, and leads with the spec LCP element', async ({
+  page,
+}) => {
+  test.setTimeout(420_000)
+  type Shift = PerformanceEntry & {
+    hadRecentInput: boolean
+    sources?: readonly { node?: Node | null }[]
+    value: number
+  }
+  type Measured = Window & {
+    qmLargest: Element | null
+    qmShifts: { lead: number; total: number }
+  }
+  await page.addInitScript(() => {
+    const measured = window as unknown as Measured
+    measured.qmLargest = null
+    measured.qmShifts = { lead: 0, total: 0 }
+    // Spec section 10: the wordmark, the cover title and the page's h1 never move.
+    const lead = '.qm-wordmark, .qm-cover-title, main h1'
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries() as Shift[]) {
+        if (entry.hadRecentInput) continue
+        measured.qmShifts.total += entry.value
+        const moved = entry.sources?.some(({ node }) => {
+          const element = node instanceof Element ? node : (node?.parentElement ?? null)
+          return element ? element.closest(lead) !== null : false
+        })
+        if (moved) measured.qmShifts.lead += entry.value
+      }
+    }).observe({ buffered: true, type: 'layout-shift' })
+    new PerformanceObserver((list) => {
+      const latest = list.getEntries().at(-1) as
+        (PerformanceEntry & { element?: Element | null }) | undefined
+      if (latest) measured.qmLargest = latest.element ?? null
+    }).observe({ buffered: true, type: 'largest-contentful-paint' })
+  })
+  const cdp = await page.context().newCDPSession(page)
+  const evidence: unknown[] = []
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme })
+      for (const route of ['/', storyPath, sectionPath, authorPath, topicPath]) {
+        // The spec budgets home and the article; the other page types are recorded.
+        const budgeted = route === '/' || route === storyPath
+        await cdp.send('Network.clearBrowserCache')
+        for (const visit of budgeted ? ['cold', 'warm'] : ['cold']) {
+          await page.goto(route)
+          await page.evaluate(async () => {
+            await document.fonts.ready
+            await Promise.all(
+              Array.from(
+                document.querySelectorAll<HTMLImageElement>('main img:not([loading="lazy"])'),
+                (image) => image.decode().catch(() => {}),
+              ),
+            )
+          })
+          await waitForThemeToSettle(page)
+          // Give buffered observer entries a frame after the last font and image layout.
+          await page.evaluate(
+            () =>
+              new Promise<void>((resolve) =>
+                requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              ),
+          )
+          const measured = await page.evaluate(async () => {
+            const { qmLargest: largest, qmShifts: shifts } = window as unknown as Measured
+            const lead = document.querySelector<HTMLImageElement>('main img[fetchpriority="high"]')
+            const heading =
+              document.querySelector('.qm-cover-title') ?? document.querySelector('main h1')
+            // Chromium skips an image under 0.05 bits per painted pixel as an LCP candidate. The
+            // blurred sample illustrations fall under it at desktop sizes; a photograph does not.
+            // Only a decoded image from an OK image response qualifies: a broken one stays asserted.
+            let leadBitsPerPixel: number | null = null
+            const response =
+              lead?.currentSrc && lead.complete && lead.naturalWidth > 0 && lead.naturalHeight > 0
+                ? await fetch(lead.currentSrc, { cache: 'force-cache' })
+                : null
+            if (
+              lead &&
+              response?.ok &&
+              response.headers.get('content-type')?.startsWith('image/')
+            ) {
+              const bytes = (await response.blob()).size
+              const box = lead.getBoundingClientRect()
+              const painted =
+                Math.max(0, Math.min(box.right, innerWidth) - Math.max(box.left, 0)) *
+                Math.max(0, Math.min(box.bottom, innerHeight) - Math.max(box.top, 0))
+              leadBitsPerPixel = painted ? (bytes * 8) / painted : null
+            }
+            return {
+              hasLead: lead !== null,
+              leadBitsPerPixel,
+              largest:
+                largest === null
+                  ? null
+                  : largest === lead
+                    ? 'lead image'
+                    : heading?.contains(largest)
+                      ? 'heading'
+                      : largest.matches('.qm-hang > li:nth-child(2) img')
+                        ? 'first-row plate'
+                        : [largest.tagName.toLowerCase(), ...largest.classList].join('.'),
+              shifts,
+            }
+          })
+          const name = `${visit} ${route} at ${width}px in ${colorScheme}`
+          evidence.push({ name, ...measured })
+          if (budgeted) {
+            expect(measured.shifts.total, `${name}: CLS`).toBeLessThan(0.01)
+            expect(measured.shifts.lead, `${name}: wordmark, cover title and h1`).toBe(0)
+          }
+          // Spec section 10's lead element: the page's lead image, or else its title. Below the
+          // entropy threshold the browser cannot pick the image, so the evidence only records it.
+          if (measured.hasLead && (measured.leadBitsPerPixel ?? 1) >= 0.05) {
+            // Hang pictures stand on the bay's bottom edge, so at 1440px a square second plate can
+            // paint more of the first viewport than a landscape first one; it loads eagerly.
+            const leads =
+              width >= 768 && [sectionPath, topicPath].includes(route)
+                ? ['lead image', 'heading', 'first-row plate']
+                : ['lead image', 'heading']
+            expect(leads, `${name}: LCP element`).toContain(measured.largest)
+          }
+        }
+      }
+    }
+  }
+  await test.info().attach('layout-shift-and-lcp.json', {
+    body: JSON.stringify(evidence),
+    contentType: 'application/json',
+  })
+})
+
+test('chooses every picture’s file from sizes that match its layout at 390, 768 and 1440px', async ({
+  browser,
+}) => {
+  test.setTimeout(600_000)
+  const audited = [
+    ...new Set([
+      '/',
+      storyPath,
+      ...portraitHeroes.map(({ id }) => storyRoute(id)),
+      sectionPath,
+      craftPath,
+      authorPath,
+      topicPath,
+    ]),
+  ]
+  const evidence: unknown[] = []
+  for (const width of [390, 768, 1440]) {
+    for (const route of audited) {
+      // One context per page: its cache starts empty, so no earlier, wider file stands in.
+      const context = await ownerContext(browser, { viewport: { width, height: 900 } })
+      try {
+        const page = await context.newPage()
+        await page.goto(route)
+        await expect(page.locator(root)).toBeVisible()
+        // Load every picture now, at this width, as a reader scrolling down would.
+        await page.evaluate(async () => {
+          for (const image of document.images) image.loading = 'eager'
+          await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
+        })
+        const { images, scrollbar } = await auditImages(page)
+        evidence.push({ images, route, scrollbar, width })
+        for (const image of images) {
+          const name = `${image.slot} on ${route} at ${width}px`
+          if (image.slot === 'nested' || (image.slot === 'gallery' && width >= 768)) {
+            // Two-up gallery cells and figures inside other blocks take the figure's sizes: the
+            // hook has one gallery value, so a larger file rather than a blurred one.
+            expect(image.wanted, name).toBeGreaterThanOrEqual(image.laidOut - 1)
+          } else {
+            expect(Math.abs(image.wanted - image.laidOut), name).toBeLessThanOrEqual(1 + scrollbar)
+          }
+          expect(image.currentSrc, `${name}: the 1x file for its sizes`).toBe(image.candidate)
+        }
+      } finally {
+        await context.close()
+      }
+    }
+  }
+  await test.info().attach('image-audit.json', {
+    body: JSON.stringify(evidence),
+    contentType: 'application/json',
+  })
+})
+
+test('keeps the lead image and the first view’s images within the spec budgets at 1x and 2x', async ({
+  browser,
+}) => {
+  test.setTimeout(300_000)
+  const evidence: unknown[] = []
+  for (const deviceScaleFactor of [1, 2]) {
+    for (const viewport of [
+      { width: 390, height: 844 },
+      { width: 1440, height: 900 },
+    ]) {
+      for (const [route, budget] of [
+        ['/', 200_000],
+        [storyPath, 250_000],
+        // Section and topic use the home budget; their second plate loads at once (spec 6).
+        [sectionPath, 200_000],
+        [topicPath, 200_000],
+      ] as const) {
+        const context = await ownerContext(browser, { deviceScaleFactor, viewport })
+        try {
+          const page = await context.newPage()
+          await page.goto(route)
+          await expect(page.locator(root)).toBeVisible()
+          await page.waitForLoadState('networkidle')
+          const measured = await page.evaluate(() => {
+            const media = (
+              performance.getEntriesByType('resource') as PerformanceResourceTiming[]
+            ).filter(({ name }) => new URL(name).pathname.startsWith('/api/media/'))
+            const lead = document.querySelector<HTMLImageElement>('main img[fetchpriority="high"]')
+            return {
+              lead: lead
+                ? (media.find(({ name }) => name === lead.currentSrc)?.transferSize ?? null)
+                : null,
+              requests: media.map(({ name, transferSize }) => [
+                new URL(name).pathname + new URL(name).search,
+                transferSize,
+              ]),
+              total: media.reduce((sum, { transferSize }) => sum + transferSize, 0),
+            }
+          })
+          const name = `${route} at ${viewport.width} by ${viewport.height}px, ${deviceScaleFactor}x`
+          evidence.push({ name, ...measured })
+          // Home and the story lead with a picture in the sample; its transfer is the chosen candidate.
+          if (route === '/' || route === storyPath) {
+            expect(measured.lead, `${name}: lead image`).not.toBeNull()
+          }
+          if (measured.lead !== null) {
+            expect(measured.lead, `${name}: lead image`).toBeLessThanOrEqual(150_000)
+          }
+          expect(measured.total, `${name}: images in the first view`).toBeLessThanOrEqual(budget)
+        } finally {
+          await context.close()
+        }
+      }
+    }
+  }
+  await test.info().attach('image-bytes.json', {
+    body: JSON.stringify(evidence),
+    contentType: 'application/json',
+  })
+})
+
+test('captures seeded review screenshots of the not-found page and of cold views in both themes', async ({
   page,
 }) => {
   test.setTimeout(600_000)
+  const destination = path.resolve('docs/worklog/blog-0044.42')
+  await mkdir(destination, { recursive: true })
+  // Cold views, without the capture gate: no web face arrives, so every family keeps its upright,
+  // metric-adjusted fallback, as on a slow first visit. Emphasis is slanted; deks stay upright.
+  const cold = await page.context().newPage()
+  try {
+    await cold.route(fontFiles, (route) => route.abort())
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await cold.emulateMedia({ colorScheme })
+      for (const [width, height] of [
+        [390, 844],
+        [1440, 1000],
+      ] as const) {
+        await cold.setViewportSize({ width, height })
+        for (const [name, route] of [
+          ['home', '/'],
+          ['article', storyPath],
+        ] as const) {
+          await cold.goto(route)
+          await cold.evaluate(async () => {
+            await document.fonts.ready
+          })
+          await waitForThemeToSettle(cold)
+          await cold.screenshot({
+            animations: 'disabled',
+            path: path.join(destination, `cold-${name}-${width}-${colorScheme}.png`),
+          })
+        }
+        // Still on the article: the first paragraph with emphasis.
+        await cold
+          .locator(`${root} .qm-body p:has(em)`)
+          .first()
+          .screenshot({
+            animations: 'disabled',
+            path: path.join(destination, `cold-emphasis-${width}-${colorScheme}.png`),
+          })
+      }
+    }
+  } finally {
+    await cold.close()
+  }
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-qm-display': 'Cormorant Garamond',
     '--font-qm-text': 'Jost',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.41')
-  await mkdir(destination, { recursive: true })
   for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme })
     for (const [width, height] of [
@@ -917,40 +1525,22 @@ test('captures seeded review screenshots of two articles, an author and a topic 
       [1440, 1000],
     ] as const) {
       await page.setViewportSize({ width, height })
-      // The long table has a landscape (3:2) hero; the first portrait story a 4:5 one.
-      for (const [name, route] of [
-        ['article-landscape', storyPath],
-        ['article-portrait', storyRoute(portraitHeroes[0]!.id)],
-        ['author', authorPath],
-        ['topic', topicPath],
-      ] as const) {
-        await captureFonts.goto(route)
-        // Load lazy images before the full-page capture, then return to the top.
-        await page.evaluate(async () => {
-          for (const image of document.images) image.loading = 'eager'
-          await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
-          window.scrollTo(0, 0)
+      // A fresh capture document at each width: a full-page shot can latch optional fallbacks.
+      await captureFonts.goto(missingPath)
+      await expect(
+        page.locator(root).getByRole('heading', { level: 1, name: 'Page not found' }),
+      ).toBeVisible()
+      await waitForThemeToSettle(page)
+      for (const fullPage of [false, true]) {
+        await captureFonts.assertFonts()
+        await page.screenshot({
+          animations: 'disabled',
+          fullPage,
+          path: path.join(
+            destination,
+            `not-found-${width}-${colorScheme}-${fullPage ? 'full' : 'viewport'}.png`,
+          ),
         })
-        expect(
-          await page
-            .locator(`${root} img`)
-            .evaluateAll((images) =>
-              images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
-            ),
-          `${name} images loaded`,
-        ).toBe(true)
-        await waitForThemeToSettle(page)
-        for (const fullPage of [false, true]) {
-          await captureFonts.assertFonts()
-          await page.screenshot({
-            path: path.join(
-              destination,
-              `${name}-${width}-${colorScheme}-${fullPage ? 'full' : 'viewport'}.png`,
-            ),
-            fullPage,
-            animations: 'disabled',
-          })
-        }
       }
     }
   }

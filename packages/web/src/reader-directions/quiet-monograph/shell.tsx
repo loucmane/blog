@@ -40,7 +40,8 @@ function Contents({ links }: { readonly links: readonly ContentsLink[] }) {
 /**
  * The frame of every page. The masthead holds the wordmark, the Theme control and, below 1024px,
  * the native "Menu" disclosure; from 1024px a navigation row replaces the menu. Both are rendered
- * and CSS hides one, so the accessibility tree has a single "Sections" navigation.
+ * and CSS hides one, so the accessibility tree has a single "Sections" navigation. Failure pages
+ * pass the site name their view supplies.
  */
 export function MonographShell({
   children,
@@ -48,12 +49,14 @@ export function MonographShell({
   navigation,
   currentSection,
   leadImage,
+  siteName: name = siteName,
 }: {
   readonly children: ReactNode
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
   readonly currentSection?: string | undefined
   readonly leadImage?: MonographLeadImage | null
+  readonly siteName?: string
 }) {
   const Brand = isHome ? 'h1' : 'p'
   const contents: ContentsLink[] = [
@@ -72,7 +75,7 @@ export function MonographShell({
       </a>
       <header className="qm-masthead">
         <Brand className="qm-wordmark">
-          <Link href="/">{siteName}</Link>
+          <Link href="/">{name}</Link>
         </Brand>
         <ThemeMenu className="qm-theme" />
         <details className="qm-menu">
@@ -92,7 +95,7 @@ export function MonographShell({
         {children}
       </main>
       <footer className="qm-footer">
-        <p className="qm-footer-brand">{siteName}</p>
+        <p className="qm-footer-brand">{name}</p>
         <nav aria-label="Contents">
           <Contents links={contents} />
         </nav>

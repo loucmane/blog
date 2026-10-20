@@ -6,6 +6,8 @@ interface ReaderImageProps {
   readonly image: ReaderImage
   /** Marks the page's lead image: it loads at once, at high priority, instead of lazily. */
   readonly preload?: boolean
+  /** Loads at once at normal priority: a picture that can share the first viewport with the lead. */
+  readonly eager?: boolean
   readonly sizes: string
 }
 
@@ -27,7 +29,13 @@ interface ReaderImageProps {
  * the RSC payload, and Next 16.3.8 does not write it into the HTML. The image is in the initial
  * HTML, eager and at high priority, so the browser finds and fetches it first anyway.
  */
-export function ReaderImageView({ className, image, preload = false, sizes }: ReaderImageProps) {
+export function ReaderImageView({
+  className,
+  eager = false,
+  image,
+  preload = false,
+  sizes,
+}: ReaderImageProps) {
   const variants = readerImageSources(image)
   const dimensions =
     image.width !== null && image.height !== null
@@ -49,7 +57,7 @@ export function ReaderImageView({ className, image, preload = false, sizes }: Re
         decoding="async"
         fetchPriority={preload ? 'high' : undefined}
         height={dimensions?.height}
-        loading={preload ? undefined : 'lazy'}
+        loading={preload || eager ? undefined : 'lazy'}
         sizes={variants ? sizes : undefined}
         src={variants?.fallback.src ?? image.src}
         srcSet={variants?.fallback.srcSet}

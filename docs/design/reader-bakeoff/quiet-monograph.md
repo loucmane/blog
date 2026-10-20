@@ -302,7 +302,8 @@ If the hook takes one gallery value, use the figure value: a larger file rather 
 - **Section and topic:** the first plate's picture. None when the first story has no image.
 - **Article:** the hero. None without one.
 - **Author:** the latest story's picture. None without one.
-- **Everything else** loads lazily (`reader/components/reader-image.tsx:50-52`).
+- **Section and topic, second plate:** loads at once at normal priority, without a preload or the high-priority hint. From 768px it shares the first row, and because hang pictures stand on the bay's bottom edge, a square second plate can paint more of the first view than a landscape first one. The `loading` attribute cannot vary by width, so this applies at every width; on a phone the plate is within the browser's lazy-load distance anyway (amended 2026-10-20 by operator decision, after the b3 browser run).
+- **Everything else** loads lazily (`reader/components/reader-image.tsx`).
 
 **Captions and credits.** The shared `ReaderFigure` caption holds the caption and "Credit: name", linked when there is a URL (`reader/components/reader-image.tsx:77-111`). Quiet Monograph sets it as a wall label: centred under the picture, 1rem below it, in Jost at `--qm-small` and stone ink, at most 34em wide, with credit links 44px high (today: `quiet-monograph/styles.ts:14-15`). Plates in lists have no caption, because they use `ReaderImageView`. There is no separate credits list: every picture carries its own credit, as a wall label does.
 
@@ -429,7 +430,8 @@ Budgets, proposed here. b3 records the first measurements and turns the determin
 | Story HTML                                 | none       | under 150,000 B | the existing check, repeated with the direction cookie                                                              |
 | Direction CSS                              | ≤ 20,000 B | ≤ 20,000 B      | the `styles` and `tokens` strings, uncompressed                                                                     |
 
-- **Lead element:** on home, the cover picture (or the cover title for a text-only lead); on articles, the hero (or the `h1` without one); on section and topic pages, the `h1` or the first plate's picture; on author pages, the `h1` or the latest story's picture. The preload follows section 6.
+- **Section and topic images:** the home column applies, at most 150 kB for the lead image and 200 kB in the first view, measured the same way (amended 2026-10-20 with the eager second plate).
+- **Lead element:** on home, the cover picture (or the cover title for a text-only lead); on articles, the hero (or the `h1` without one); on section and topic pages, the `h1` or the first plate's picture, or from 768px the second plate's picture (section 6); on author pages, the `h1` or the latest story's picture. The preload follows section 6.
 - **Fonts, cold:** faces use `font-display: optional` without preloads (`reader-directions/contract.ts:451`, `reader-directions/README.md:85-88`). A face that is not ready within the short block period is skipped for that page view: the metric-adjusted fallback stays and nothing swaps. A first cold view often shows Times New Roman and Arial; that is accepted.
 - **Fonts, warm:** a cached face renders at once, but public files are served with `max-age=0` today, so each view first revalidates every face (`reader-directions/capture-fonts.ts:9-10`). On a slow connection that round trip can outlast the block period and keep the fallback again. Font files change name when their bytes change (`fonts/README.md:17`), so a long `immutable` cache for `/reader-directions/*/fonts/*` would be safe. That is a shared header change (`packages/web/next.config.ts`), recommended to the kit, not made in this direction. Italic files download only on pages that use italics.
 - **Screenshots** for review use the screenshot-only font gate (`reader-directions/capture-fonts.ts:3`). They are never performance evidence.

@@ -223,6 +223,8 @@ describe('Expressive Colour article, author and topic pages (spec 2.4–2.6)', (
           blocks: [
             { kind: 'image', image },
             { kind: 'gallery', layout: 'grid', images: [image] },
+            { kind: 'gallery', layout: 'diptych', images: [image, image] },
+            { kind: 'gallery', layout: 'carousel', images: [image] },
           ],
         },
       ],
@@ -239,6 +241,16 @@ describe('Expressive Colour article, author and topic pages (spec 2.4–2.6)', (
         expect(element).toHaveAttribute('sizes', sizes.body)
       for (const element of container.querySelectorAll('[data-block="gallery"] :is(source, img)'))
         expect(element).toHaveAttribute('sizes', sizes.gallery)
+      expect(container.querySelectorAll('[data-block="gallery"]')).toHaveLength(3)
+      for (const img of container.querySelectorAll('.ec-body img')) {
+        expect(img).toHaveAttribute('loading', 'lazy')
+        expect(img).not.toHaveAttribute('fetchpriority')
+        expect(img).toHaveAttribute('alt', image.alt)
+        expect(img).toHaveAttribute('width', String(image.width))
+        expect(img).toHaveAttribute('height', String(image.height))
+        expect(img.closest('figure')?.querySelector('figcaption')).toHaveTextContent(image.caption!)
+      }
+      expect(container.querySelectorAll('link[as="image"][href]')).toHaveLength(1)
     }
     expect(direction.tokens?.light['--ec-measure']).toBe('45rem')
     expect(direction.tokens?.light['--ec-feature']).toBe('56rem')
