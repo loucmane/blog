@@ -499,11 +499,15 @@ describe('Quiet Monograph with real published North House content', () => {
     const cases = [
       { element: <MonographHome view={home} />, image: home.lead!.image! },
       { element: <MonographArticle view={article} />, image: article.hero! },
-      { element: <MonographSection view={section} />, image: section.stories[0]!.image! },
+      {
+        element: <MonographSection view={section} />,
+        image: section.stories[0]!.image!,
+        hang: true,
+      },
       { element: <MonographAuthor view={author} />, image: author.stories[0]!.image! },
-      { element: <MonographTopic view={topic} />, image: topic.stories[0]!.image! },
+      { element: <MonographTopic view={topic} />, image: topic.stories[0]!.image!, hang: true },
     ]
-    for (const { element, image } of cases) {
+    for (const { element, image, hang = false } of cases) {
       const { document } = markup(element)
       const lead = document.querySelector('main img')!
       const preferred = document.querySelector('main picture source')!
@@ -530,8 +534,14 @@ describe('Quiet Monograph with real published North House content', () => {
       expect(lead.getAttribute('width')).toBe(String(image.width))
       expect(lead.getAttribute('height')).toBe(String(image.height))
       for (const laterImage of [...document.querySelectorAll('main img')].slice(1)) {
-        expect(laterImage.getAttribute('loading')).toBe('lazy')
+        // The hang's second plate shares the first row from 768px and loads at once, at normal
+        // priority, so it can be the largest first paint without a second high-priority hint.
+        const firstRow = hang && laterImage.closest('.qm-hang > li:nth-child(2)') !== null
+        expect(laterImage.getAttribute('loading')).toBe(firstRow ? null : 'lazy')
         expect(laterImage.hasAttribute('fetchpriority')).toBe(false)
+      }
+      if (hang) {
+        expect(document.querySelector('.qm-hang > li:nth-child(2) img')).not.toBeNull()
       }
     }
   })
@@ -568,7 +578,9 @@ describe('Quiet Monograph with real published North House content', () => {
     expect(document.querySelector('link[as="image"]')).toBeNull()
     expect(document.querySelectorAll('main img').length).toBeGreaterThan(0)
     for (const image of document.querySelectorAll('main img')) {
-      expect(image.getAttribute('loading')).toBe('lazy')
+      // No high-priority hint anywhere; the second plate shares the first row and loads at once.
+      const firstRow = image.closest('.qm-hang > li:nth-child(2)') !== null
+      expect(image.getAttribute('loading')).toBe(firstRow ? null : 'lazy')
       expect(image.hasAttribute('fetchpriority')).toBe(false)
     }
     const article = articles.get('article-lab-long-table')!
@@ -676,7 +688,9 @@ describe('Quiet Monograph with real published North House content', () => {
       .map(([property, value]) => `${property}:${value}`)
       .join(';')
     expect(handle!.getAttribute('style')).toBe(expectedStyle)
-    expect(handle!.querySelector('img')?.getAttribute('loading')).toBe('lazy')
+    // The neighbour shares the first row: it loads at once, but gets no preload or priority hint.
+    expect(handle!.querySelector('img')?.getAttribute('loading')).toBeNull()
+    expect(handle!.querySelector('img')?.hasAttribute('fetchpriority')).toBe(false)
     expect(document.querySelector('link[as="image"]')).toBeNull()
 
     const alone = markup(<MonographSection view={{ ...craft, stories: [craft.stories[0]!] }} />)
