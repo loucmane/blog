@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 
+import type { ReaderImageSizes } from '@/reader/components/image-sizes'
 import type { ReaderImage } from '@/reader/views'
 
 /*
@@ -84,3 +85,15 @@ export function plateSizes(slot: PlateSlot, { fit, fitSmall }: PlateFit): string
 export function plateStyle({ fit, fitSmall }: PlateFit): CSSProperties {
   return { '--qm-fit': String(fit), '--qm-fit-sm': String(fitSmall) } as CSSProperties
 }
+
+/*
+ * Body figures and galleries step out to the figure width, min(W, 42rem), which is 42rem from
+ * 731px. Two-up galleries are 20.25rem a cell from 768px, but the hook takes one gallery value, so
+ * galleries use the figure's: a larger file rather than a blurred one.
+ */
+const figureSizes = '(min-width: 731px) 42rem, (min-width: 500px) 92vw, calc(100vw - 2.5rem)'
+
+export const bodyImageSizes = {
+  body: figureSizes,
+  gallery: figureSizes,
+} as const satisfies ReaderImageSizes
