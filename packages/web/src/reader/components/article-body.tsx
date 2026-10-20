@@ -18,6 +18,19 @@ const editorialLabels = {
   'related-stories': 'Related stories',
 } as const
 
+/*
+ * Markers for numbered lists, set inline. Attribute selectors match `type` case-insensitively
+ * (ol[type='a'] also matches type="A"), and the base layer resets list-style on every list, so a
+ * stylesheet cannot tell a, A, i and I apart reliably. An inline value wins in every browser.
+ */
+const listMarkers = {
+  '1': 'decimal',
+  a: 'lower-alpha',
+  A: 'upper-alpha',
+  i: 'lower-roman',
+  I: 'upper-roman',
+} as const
+
 function applyMark(content: ReactNode, mark: InlineMark): ReactNode {
   switch (mark.kind) {
     case 'bold':
@@ -112,7 +125,11 @@ function Block({
       )
     case 'numbered-list':
       return (
-        <ol start={block.start} type={block.numbering}>
+        <ol
+          start={block.start}
+          style={{ listStyleType: listMarkers[block.numbering] }}
+          type={block.numbering}
+        >
           {withContentKeys(block.items).map(({ item, key }) => (
             <li key={key}>
               <Blocks blocks={item.blocks} imageSizes={imageSizes} />
