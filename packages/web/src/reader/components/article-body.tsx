@@ -8,8 +8,37 @@ import { ReaderFigure } from './reader-image'
 /*
  * The single renderer for published document blocks. It emits plain semantic HTML with data
  * attributes for block kinds and variants; design directions style this markup instead of
- * reimplementing it.
+ * reimplementing it. Checklists and galleries keep an explicit list role, since every direction
+ * draws them without markers.
  */
+
+type GalleryLayout = Extract<ArticleBlock, { kind: 'gallery' }>['layout']
+
+/**
+ * The `sizes` hints for body images: the shared body and gallery pair, and optional hints for
+ * slots a direction lays out differently. An unset hint falls back to the value the image takes
+ * without it, so a direction's output changes only where it sets one.
+ */
+export interface ArticleBodyImageSizes extends ReaderImageSizes {
+  /** Gallery items in a carousel. Defaults to `gallery`. */
+  readonly carousel?: string
+  /** Gallery items in a diptych. Defaults to `gallery`. */
+  readonly diptych?: string
+  /** Gallery items in a grid. Defaults to `gallery`. */
+  readonly grid?: string
+  /**
+   * Every image nested in a quote, a list or checklist item, or an editorial block, at any depth.
+   * It covers gallery items too, since none is wider than the inset it sits in. Defaults to the
+   * image's own hint.
+   */
+  readonly inset?: string
+}
+
+/** The hint for an image block, or for a gallery item in the given layout. */
+function slotSizes(sizes: ArticleBodyImageSizes, nested: boolean, layout?: GalleryLayout) {
+  const own = layout === undefined ? sizes.body : (sizes[layout] ?? sizes.gallery)
+  return nested ? (sizes.inset ?? own) : own
+}
 
 const editorialLabels = {
   'fact-box': 'Fact box',
@@ -65,21 +94,26 @@ function Inline({ content }: { readonly content: readonly InlineContent[] }) {
 function Blocks({
   blocks,
   imageSizes,
+  nested = false,
 }: {
   readonly blocks: readonly ArticleBlock[]
-  readonly imageSizes: ReaderImageSizes
+  readonly imageSizes: ArticleBodyImageSizes
+  /** True inside a quote, a list or checklist item, or an editorial block. */
+  readonly nested?: boolean
 }) {
   return withContentKeys(blocks).map(({ item, key }) => (
-    <Block block={item} imageSizes={imageSizes} key={key} />
+    <Block block={item} imageSizes={imageSizes} key={key} nested={nested} />
   ))
 }
 
 function Block({
   block,
   imageSizes,
+  nested,
 }: {
   readonly block: ArticleBlock
-  readonly imageSizes: ReaderImageSizes
+  readonly imageSizes: ArticleBodyImageSizes
+  readonly nested: boolean
 }) {
   switch (block.kind) {
     case 'paragraph':
@@ -99,7 +133,7 @@ function Block({
     case 'quote':
       return (
         <blockquote>
-          <Blocks blocks={block.blocks} imageSizes={imageSizes} />
+          <Blocks blocks={block.blocks} imageSizes={imageSizes} nested />
         </blockquote>
       )
     case 'pull-quote':
@@ -118,7 +152,7 @@ function Block({
         <ul>
           {withContentKeys(block.items).map(({ item, key }) => (
             <li key={key}>
-              <Blocks blocks={item.blocks} imageSizes={imageSizes} />
+              <Blocks blocks={item.blocks} imageSizes={imageSizes} nested />
             </li>
           ))}
         </ul>
@@ -132,35 +166,39 @@ function Block({
         >
           {withContentKeys(block.items).map(({ item, key }) => (
             <li key={key}>
-              <Blocks blocks={item.blocks} imageSizes={imageSizes} />
+              <Blocks blocks={item.blocks} imageSizes={imageSizes} nested />
             </li>
           ))}
         </ol>
       )
     case 'checklist':
       return (
-        <ul data-block="checklist">
+        // eslint-disable-next-line jsx-a11y-x/no-redundant-roles -- Removed list styles drop list semantics in Safari.
+        <ul data-block="checklist" role="list">
           {withContentKeys(block.items).map(({ item, key }) => (
             <li data-checked={item.checked} key={key}>
               <span aria-hidden="true">{item.checked ? '☑' : '☐'} </span>
               <span className="sr-only">{item.checked ? 'Done: ' : 'Not done: '}</span>
-              <Blocks blocks={item.blocks} imageSizes={imageSizes} />
+              <Blocks blocks={item.blocks} imageSizes={imageSizes} nested />
             </li>
           ))}
         </ul>
       )
     case 'image':
-      return <ReaderFigure image={block.image} sizes={imageSizes.body} />
-    case 'gallery':
+      return <ReaderFigure image={block.image} sizes={slotSizes(imageSizes, nested)} />
+    case 'gallery': {
+      const sizes = slotSizes(imageSizes, nested, block.layout)
       return (
-        <ul data-block="gallery" data-layout={block.layout}>
+        // eslint-disable-next-line jsx-a11y-x/no-redundant-roles -- Removed list styles drop list semantics in Safari.
+        <ul data-block="gallery" data-layout={block.layout} role="list">
           {withContentKeys(block.images).map(({ item, key }) => (
             <li key={key}>
-              <ReaderFigure image={item} sizes={imageSizes.gallery} />
+              <ReaderFigure image={item} sizes={sizes} />
             </li>
           ))}
         </ul>
       )
+    }
     case 'callout':
       return (
         <div data-block="callout" data-variant={block.variant} role="note">
@@ -198,7 +236,7 @@ function Block({
           data-block="editorial"
           data-variant={block.variant}
         >
-          <Blocks blocks={block.blocks} imageSizes={imageSizes} />
+          <Blocks blocks={block.blocks} imageSizes={imageSizes} nested />
         </section>
       )
   }
@@ -209,7 +247,7 @@ export function ArticleBody({
   imageSizes,
 }: {
   readonly blocks: readonly ArticleBlock[]
-  readonly imageSizes?: Readonly<Partial<ReaderImageSizes>> | undefined
+  readonly imageSizes?: Readonly<Partial<ArticleBodyImageSizes>> | undefined
 }) {
   return <Blocks blocks={blocks} imageSizes={{ ...defaultReaderImageSizes, ...imageSizes }} />
 }

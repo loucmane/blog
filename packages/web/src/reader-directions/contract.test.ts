@@ -438,6 +438,47 @@ describe('reader direction contract', () => {
     })
   })
 
+  it('copies and freezes layout and inset hints, and leaves unset hints out', () => {
+    const sizes = { gallery: '50vw', grid: '25vw', inset: '(min-width: 60rem) 36rem, 90vw' }
+    const direction = defineReaderDirection(definition({ imageSizes: sizes }))
+    sizes.grid = '1px'
+    expect(direction.imageSizes).toStrictEqual({
+      body: '(min-width: 768px) 42rem, 100vw',
+      gallery: '50vw',
+      grid: '25vw',
+      inset: '(min-width: 60rem) 36rem, 90vw',
+    })
+    expect(Object.isFrozen(direction.imageSizes)).toBe(true)
+    expect(
+      defineReaderDirection(
+        definition({
+          imageSizes: { carousel: '70vw', diptych: '45vw', grid: '30vw', inset: '60vw' },
+        }),
+      ).imageSizes,
+    ).toStrictEqual({
+      body: '(min-width: 768px) 42rem, 100vw',
+      carousel: '70vw',
+      diptych: '45vw',
+      gallery: '(min-width: 768px) 42rem, 100vw',
+      grid: '30vw',
+      inset: '60vw',
+    })
+    // An unset hint stays unset, so the renderer falls back to the direction's own values.
+    for (const imageSizes of [undefined, { body: '80vw' }, { gallery: '50vw' }]) {
+      expect(
+        Object.keys(defineReaderDirection(definition(imageSizes ? { imageSizes } : {})).imageSizes),
+      ).toEqual(['body', 'gallery'])
+    }
+  })
+
+  it('names the accepted keys when an imageSizes key is unknown', () => {
+    expect(() =>
+      defineReaderDirection(definition({ imageSizes: { masonry: '50vw' } as never })),
+    ).toThrow(
+      'Reader direction "quiet-monograph": unknown imageSizes key "masonry"; use one of body, gallery, grid, diptych, carousel, inset.',
+    )
+  })
+
   it('keeps the validated sizes values without reading getters again', () => {
     let reads = 0
     const direction = defineReaderDirection(
@@ -480,6 +521,14 @@ describe('reader direction contract', () => {
       { body: '100vw\n' },
       { gallery: '100vw; color:red' },
       { body: '<img>' },
+      { grid: '' },
+      { diptych: 42 },
+      { carousel: '100vw\n' },
+      { inset: '100vw; color:red' },
+      { inset: '<img>' },
+      { masonry: '50vw' },
+      { Grid: '50vw' },
+      { constructor: '50vw' },
     ].map((value) => [value]),
   )('rejects malformed image sizes %j', (imageSizes) => {
     expect(() => defineReaderDirection(definition({ imageSizes: imageSizes as never }))).toThrow(
