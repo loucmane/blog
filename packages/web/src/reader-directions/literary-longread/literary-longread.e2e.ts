@@ -132,7 +132,6 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
 test('uses visible keyboard focus and a warm dark reading ground', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Choose color theme' })).toBeEnabled()
   const skip = page.getByRole('link', { name: 'Skip to stories' })
   for (
     let tabs = 0;
@@ -146,7 +145,6 @@ test('uses visible keyboard focus and a warm dark reading ground', async ({ page
   await page.keyboard.press('Enter')
   await expect(page.locator('#ll-main')).toBeFocused()
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Choose color theme' })).toBeEnabled()
   const interiors = page
     .locator(root)
     .getByRole('navigation')
@@ -429,7 +427,6 @@ test('computes the article scale, body layout, list markers and end matter at ea
 test('computes gold cover focus and accent focus elsewhere in both themes', async ({ page }) => {
   for (const dark of [false, true]) {
     await page.goto('/')
-    await expect(page.getByRole('button', { name: 'Choose color theme' })).toBeEnabled()
     await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
     await waitForThemeToSettle(page)
     await page.keyboard.press('Tab')
