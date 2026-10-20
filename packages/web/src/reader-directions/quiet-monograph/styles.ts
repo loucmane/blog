@@ -8,9 +8,12 @@
  * bays, monograms, two-column rows, two-up galleries) and 1024px (navigation row instead of the
  * menu).
  *
- * Italics are genuine faces only (font-synthesis: none on .qm-page): deks, bios and pull quotes are
+ * Italics are genuine faces (font-synthesis: none on .qm-page): deks, bios and pull quotes are
  * Cormorant 400 italic, and emphasis uses the 400 italic of the family it sits in. The browser
- * never slants or bolds a face. See fonts/README.md.
+ * never bolds a face. Each italic shares its family's upright fallback, so on a cold view where an
+ * italic misses its block period its text is upright; only em may then be slanted
+ * (font-synthesis-style), so emphasis stays visible. A genuine italic never needs it. See
+ * fonts/README.md.
  *
  * Resets sit in :where() so component rules win. The list reset never reaches a typed list:
  * attribute selectors match `type` case-insensitively, so per-type rules would turn a into A, and
@@ -26,6 +29,7 @@ export const styles = `
   & .qm-page :where(h1, h2, h3, h4, h5, h6) { line-height: 1.2; }
   & .qm-page :where(ul, ol:not([type])) { padding: 0; list-style: none; }
   & .qm-page strong { font-weight: 500; }
+  & .qm-page em { font-synthesis-style: auto; }
   & .qm-page a { color: inherit; text-decoration: none; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
   & .qm-page a:hover, & .qm-page nav a[aria-current] { text-decoration: underline; }
   & .qm-page :is(a, summary, button):focus-visible { outline: 2px solid var(--qm-ink); outline-offset: 5px; }
@@ -36,7 +40,7 @@ export const styles = `
   & .qm-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   & .qm-skip { position: absolute; top: 1rem; left: var(--qm-gutter); z-index: 20; transform: translateY(-200%); background: var(--qm-paper); padding: 1rem; }
   & .qm-skip:focus { transform: none; }
-  & .qm-page .qm-label, & .qm-body [data-block='pull-quote'] figcaption, & .qm-body [data-block='callout'] > p:first-child > strong, & .qm-body [data-block='editorial']::before { font-family: var(--qm-text); font-size: var(--qm-label); font-weight: 500; letter-spacing: 0.18em; line-height: 1.6; text-transform: uppercase; color: var(--qm-stone-ink); }
+  & .qm-page .qm-label, & .qm-page .qm-retry, & .qm-body [data-block='pull-quote'] figcaption, & .qm-body [data-block='callout'] > p:first-child > strong, & .qm-body [data-block='editorial']::before { font-family: var(--qm-text); font-size: var(--qm-label); font-weight: 500; letter-spacing: 0.18em; line-height: 1.6; text-transform: uppercase; color: var(--qm-stone-ink); }
   & .qm-label a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--qm-ink); }
   & .qm-page .qm-meta { color: var(--qm-stone-ink); font-family: var(--qm-text); font-size: var(--qm-small); line-height: 1.6; }
   & .qm-page .qm-dek { max-width: 20em; margin: 2rem auto 0; font-family: var(--qm-display); font-size: var(--qm-dek); font-style: italic; font-weight: 400; line-height: 1.45; text-wrap: pretty; }
@@ -95,6 +99,10 @@ export const styles = `
   & .qm-empty { max-width: 44rem; margin-inline: auto; padding-block: var(--qm-space); min-height: 55vh; text-align: center; }
   & .qm-empty h2 { font-size: var(--qm-title); line-height: 1.1; }
   & .qm-empty p { margin-top: 2rem; color: var(--qm-stone-ink); }
+  & .qm-failure { padding-block: var(--qm-space); text-align: center; }
+  & .qm-page .qm-failure-message { max-width: 30em; margin: 2rem auto 0; font-family: var(--qm-text); font-size: var(--qm-body); line-height: var(--qm-leading); text-wrap: pretty; }
+  & .qm-failure-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; column-gap: 2.5rem; margin-top: 2.5rem; }
+  & .qm-page .qm-retry { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--qm-ink); cursor: pointer; text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 0.22em; }
   & .qm-section-header { padding-block: var(--qm-space); text-align: center; }
   & .qm-section-header h1 { margin-top: 1.5rem; font-size: var(--qm-section-title); line-height: 1.05; }
   & .qm-section-header .qm-meta { margin-top: 1.75rem; }
@@ -110,7 +118,7 @@ export const styles = `
   & .qm-hero { width: min(100%, 58rem); margin-inline: auto; }
   & .qm-article-header { margin: clamp(3rem, 7vw, 6rem) auto 3.5rem; text-align: center; }
   & .qm-article-text .qm-article-header { margin-top: 0; }
-  & .qm-article-header h1 { max-width: 14em; margin: 1rem auto 0; font-size: var(--qm-title); line-height: 1.05; }
+  & .qm-article-header h1, & .qm-failure h1 { max-width: 14em; margin: 1rem auto 0; font-size: var(--qm-title); line-height: 1.05; }
   & .qm-byline { margin-top: 2rem; color: var(--qm-stone-ink); font-size: var(--qm-small); line-height: 1.8; }
   & .qm-byline a { color: var(--qm-ink); text-decoration: underline; }
   & .qm-article-header .qm-meta { margin-top: 2rem; }
@@ -184,6 +192,7 @@ export const styles = `
   }
   @media (prefers-reduced-motion: reduce) {
     & .qm-page *, & .qm-page *::before, & .qm-page *::after { scroll-behavior: auto; animation: none; transition: none; }
+    & .qm-plate-box picture img, & .qm-hero picture img { transition: none; }
   }
   @media (forced-colors: active) {
     & .qm-page :is(a, summary, button):focus-visible { outline-color: Highlight; }
@@ -191,7 +200,7 @@ export const styles = `
   @media print {
     & .qm-skip, & .qm-theme, & .qm-menu, & .qm-nav-row, & .qm-footer, & .qm-read-next { display: none; }
     & .qm-page main { width: 100%; }
-    & .qm-hang { grid-template-columns: minmax(0, 1fr); }
+    & .qm-hang, & .qm-body [data-block='gallery'] { grid-template-columns: minmax(0, 1fr); }
     & .qm-body { max-width: 66ch; }
     & .qm-page { --qm-print: none; --qm-print-hover: none; }
     & .qm-page img { box-shadow: none; }

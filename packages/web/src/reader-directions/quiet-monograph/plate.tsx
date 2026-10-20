@@ -72,16 +72,23 @@ export function MetaLine({
 /** The picture, whole, at its fit share of the plate's box. */
 export function PlateBox({
   bay = false,
+  eager = false,
   picture,
   preload,
 }: {
   readonly bay?: boolean
+  readonly eager?: boolean
   readonly picture: PlatePicture
   readonly preload: boolean
 }) {
   return (
     <div className={bay ? 'qm-plate-box qm-bay' : 'qm-plate-box'}>
-      <ReaderImageView image={picture.image} preload={preload} sizes={picture.sizes} />
+      <ReaderImageView
+        eager={eager}
+        image={picture.image}
+        preload={preload}
+        sizes={picture.sizes}
+      />
     </div>
   )
 }
@@ -142,11 +149,14 @@ function monogram(title: string): string | null {
  * titles align across a row. A story without a picture gets a monogram bay when it shares a row.
  */
 export function HangItem({
+  eager = false,
   preload,
   sharesRow,
   showSection = false,
   story,
 }: {
+  /** The second plate shares the first row from 768px: it can be the largest first paint. */
+  readonly eager?: boolean
   readonly preload: boolean
   readonly sharesRow: boolean
   readonly showSection?: boolean
@@ -159,7 +169,7 @@ export function HangItem({
     : `qm-hang-item qm-plate qm-plate-text${letter ? ' qm-plate-monogram' : ''}`
   return (
     <li className={className} style={picture?.style}>
-      {picture ? <PlateBox bay picture={picture} preload={preload} /> : null}
+      {picture ? <PlateBox bay eager={eager} picture={picture} preload={preload} /> : null}
       {letter ? (
         <div aria-hidden="true" className="qm-bay qm-monogram">
           {letter}
