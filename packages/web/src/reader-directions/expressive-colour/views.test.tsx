@@ -117,7 +117,10 @@ describe('Expressive Colour with real published North House content', () => {
       expect(lead.getAttribute('loading')).not.toBe('lazy')
       expect(lead.getAttribute('width')).toBe(String(image.width))
       expect(lead.getAttribute('height')).toBe(String(image.height))
-      for (const laterImage of [...document.querySelectorAll('main img')].slice(1)) {
+      // Responsive lead visuals share one request/preload; CSS exposes exactly one copy.
+      for (const laterImage of document.querySelectorAll(
+        'main img:not(.ec-card-lead img, .ec-hero img)',
+      )) {
         expect(laterImage.getAttribute('loading')).toBe('lazy')
         expect(laterImage.hasAttribute('fetchpriority')).toBe(false)
       }
@@ -225,12 +228,18 @@ describe('Expressive Colour with real published North House content', () => {
 
   it('uses supplied credits', () => {
     const view = articles.get('article-lab-long-table')!
-    const uncredited = markup(<ExpressiveArticle view={{ ...view, authors: [] }} />)
-    expect(uncredited.document.querySelector('.ec-credits')?.textContent).not.toContain('Words by')
-    const credited = markup(
-      <ExpressiveArticle view={{ ...view, authors: ['A. Writer', 'B. Writer'] }} />,
+    const uncredited = markup(
+      <ExpressiveArticle view={{ ...view, authorLinks: [], authors: [] }} />,
     )
-    expect(credited.document.querySelector('.ec-credits')).toHaveTextContent('A. Writer, B. Writer')
+    expect(uncredited.document.querySelector('.ec-credits')?.textContent).not.toContain('By')
+    const credited = markup(
+      <ExpressiveArticle
+        view={{ ...view, authorLinks: [], authors: ['A. Writer', 'B. Writer'] }}
+      />,
+    )
+    expect(credited.document.querySelector('.ec-credits')).toHaveTextContent(
+      'By A. Writer and B. Writer',
+    )
     expect(credited.document.querySelector('time')?.getAttribute('datetime')).toBe(view.publishedAt)
   })
 

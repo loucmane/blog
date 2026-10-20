@@ -5,18 +5,33 @@ import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
-import { readArticleView, readHomeView, readSectionView } from '@/reader/read-model'
-import type { ArticleView, HomeView, SectionView } from '@/reader/views'
+import {
+  readArticleView,
+  readAuthorView,
+  readHomeView,
+  readSectionView,
+  readTopicView,
+} from '@/reader/read-model'
+import type {
+  ArticleBlock,
+  ArticleView,
+  AuthorView,
+  HomeView,
+  SectionView,
+  TopicView,
+} from '@/reader/views'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { InMemoryOriginalObjectStore } from '@/server/content/media'
-import { labStories } from '@/server/lab/north-house'
+import { labAuthors, labStories, labTopics } from '@/server/lab/north-house'
 import { labStorySlug, seedLabContent } from '@/server/lab/seed'
 
 import { readerDirectionStyleCss } from '../contract'
 import { SwissArticle } from './article'
+import { SwissAuthor } from './author'
 import { SwissHome } from './home'
 import { swissIndexDirection } from './index'
 import { SwissSection } from './section'
+import { SwissTopic } from './topic'
 
 const root = '[data-reader-direction="swiss-index"]'
 
@@ -81,6 +96,9 @@ describe('Swiss Index computed styles', () => {
   let home: HomeView
   let section: SectionView
   let article: ArticleView
+  let upright: ArticleView
+  let author: AuthorView
+  let topic: TopicView
 
   beforeAll(async () => {
     const repository = new InMemoryContentRepository()
@@ -90,6 +108,15 @@ describe('Swiss Index computed styles', () => {
     section = (await readSectionView(source, 'interiors'))!
     const longTable = labStories.find(({ id }) => id === 'article-lab-long-table')!
     article = (await readArticleView(source, labStorySlug(longTable)))!
+    const articles = await Promise.all(
+      labStories.map(async (story) => (await readArticleView(source, labStorySlug(story)))!),
+    )
+    // The spec's upright hero: narrower than 1.2 times its height.
+    upright = articles.find(
+      ({ hero }) => hero?.width && hero.height && hero.width < 1.2 * hero.height,
+    )!
+    author = (await readAuthorView(source, labAuthors[0]!.slug))!
+    topic = (await readTopicView(source, labTopics[0]!.slug))!
   })
 
   afterEach(() => {
@@ -110,8 +137,10 @@ describe('Swiss Index computed styles', () => {
       for (const heading of front.querySelectorAll('.si-row-title, .si-label-row h2')) {
         expect(style(heading).getPropertyValue('text-wrap'), `${width}px`).toBe('pretty')
       }
-      // jsdom resolves the shorthand on its own; the e2e file reads the line in a browser.
-      expect(style(front.querySelector('.si-top-link')!).textDecoration).toBe('underline')
+      // Rules set the line alone, keeping the reset's 1px thickness; the e2e file reads it too.
+      expect(
+        style(front.querySelector('.si-top-link')!).getPropertyValue('text-decoration-line'),
+      ).toBe('underline')
 
       const sectionPage = renderAt(<SwissSection view={section} />, width)
       for (const title of sectionPage.querySelectorAll('main h1, .si-plate-title')) {
@@ -122,15 +151,22 @@ describe('Swiss Index computed styles', () => {
 
   it(
     'never lets an element reset decide a value that a component rule declares, on any page or width',
-    // Five pages at three widths, each resolved twice: well over the default under a full run.
-    { timeout: 20_000 },
+    // Eleven pages at three widths, each resolved twice: well over the default under a full run.
+    { timeout: 60_000 },
     () => {
+      const stories = [home.lead!, ...home.recent]
       const pages = [
         <SwissHome key="home" view={home} />,
         <SwissHome key="empty" view={{ lead: null, navigation: { sections: [] }, recent: [] }} />,
-        <SwissSection key="section" view={{ ...section, stories: [home.lead!, ...home.recent] }} />,
+        <SwissSection key="section" view={{ ...section, stories }} />,
         <SwissSection key="empty-section" view={{ ...section, stories: [] }} />,
         <SwissArticle key="article" view={article} />,
+        <SwissArticle key="upright" view={upright} />,
+        <SwissArticle key="no-hero" view={{ ...article, hero: null }} />,
+        <SwissAuthor key="author" view={author} />,
+        <SwissAuthor key="empty-author" view={{ ...author, stories: [] }} />,
+        <SwissTopic key="topic" view={{ ...topic, stories }} />,
+        <SwissTopic key="empty-topic" view={{ ...topic, stories: [] }} />,
       ].map((page) => renderToStaticMarkup(page))
       const resets = rulesAt(1440).flatMap(({ css, reset }) => (reset ? [css] : []))
       for (const elements of ['(ul, ol)', '(h1, h2, h3, h4, h5, h6)', ' a {']) {
@@ -286,6 +322,172 @@ describe('Swiss Index computed styles', () => {
             .display,
       ),
     ).toEqual(['none', 'flex', 'flex'])
+  })
+
+  it('sets the article on the grid on desktops and in one column in DOM order below 1024px', () => {
+    const areas = [
+      ['.si-article-header', 'head'],
+      ['.si-rail', 'rail'],
+      ['.si-hero', 'hero'],
+      ['.si-body', 'body'],
+      ['.si-end', 'end'],
+    ] as const
+    for (const width of widths) {
+      const page = renderAt(<SwissArticle view={article} />, width)
+      const grid = page.querySelector('.si-article')!
+      expect(style(grid).display, `${width}px`).toBe('grid')
+      expect(style(grid).getPropertyValue('grid-template-areas'), `${width}px`).toBe(
+        width < 1024
+          ? "'head' 'rail' 'hero' 'body' 'end'"
+          : "'rail head head head' 'rail hero hero hero' 'rail body body body' 'end end end end'",
+      )
+      // Each part sits in its own area; the narrow template lists them in DOM order.
+      expect([...grid.children].map((part) => style(part).getPropertyValue('grid-area'))).toEqual(
+        areas.map(([, area]) => area),
+      )
+      for (const [selector, area] of areas) {
+        expect(page.querySelector(selector)?.parentElement, selector).toBe(grid)
+        expect(style(page.querySelector(selector)!).getPropertyValue('grid-area'), selector).toBe(
+          area,
+        )
+      }
+      // End matter: terms beside their values on desktops, above them below 1024px.
+      const endRows = [...page.querySelectorAll('.si-end > div')]
+      expect(endRows.length).toBeGreaterThan(0)
+      for (const row of endRows)
+        expect(style(row).display, `${width}px`).toBe(width < 1024 ? 'block' : 'grid')
+      // Deks are secondary, at 50ch.
+      const dek = page.querySelector('.si-article-header .si-dek')!
+      expect(style(dek).getPropertyValue('color')).toBe('var(--si-secondary)')
+      expect(style(dek).maxWidth).toBe('50ch')
+      // Body links keep the 1px underline the link reset sets.
+      const link = page.querySelector('.si-body p a')!
+      expect(style(link).getPropertyValue('text-decoration-line')).toBe('underline')
+      expect(style(link).getPropertyValue('text-decoration-thickness')).toBe('1px')
+    }
+  })
+
+  it('sets an upright hero beside its caption on desktops and tablets and above it on phones', () => {
+    for (const width of widths) {
+      const page = renderAt(<SwissArticle view={upright} />, width)
+      const figure = page.querySelector('.si-hero.si-hero-upright figure')!
+      const image = figure.querySelector('img')!
+      const caption = figure.querySelector('figcaption')!
+      for (const source of figure.querySelectorAll('source'))
+        expect(style(source).display).toBe('none')
+      if (width < 600) {
+        expect(style(figure).display).toBe('block')
+        expect(style(caption).marginTop).toBe('0.75rem')
+        continue
+      }
+      expect(style(figure).display, `${width}px`).toBe('grid')
+      expect(style(figure).gridTemplateColumns, `${width}px`).toBe(
+        width < 1024 ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))',
+      )
+      expect(style(image).gridColumn, `${width}px`).toBe(width < 1024 ? '1' : '1 / span 2')
+      expect(style(caption).gridColumn, `${width}px`).toBe(width < 1024 ? '2' : '3')
+      expect(style(caption).marginTop, `${width}px`).toBe('0px')
+    }
+    // A landscape hero keeps its caption under it.
+    const landscape = renderAt(<SwissArticle view={article} />, 1440)
+    expect(style(landscape.querySelector('.si-hero figure')!).display).not.toBe('grid')
+  })
+
+  it('boxes only a checklist’s own items: lists nested in a task keep the body’s list styles', () => {
+    const paragraph = (text: string): ArticleBlock => ({
+      content: [{ kind: 'text', marks: [], text }],
+      kind: 'paragraph',
+    })
+    // Two paragraphs to an item, so the spacing inside an item shows too.
+    const item = (text: string) => ({ blocks: [paragraph(text), paragraph('Then the next.')] })
+    const numbered = (...texts: string[]): ArticleBlock => ({
+      items: texts.map(item),
+      kind: 'numbered-list',
+      numbering: '1',
+      start: 1,
+    })
+    const body: ArticleBlock[] = [
+      numbered('Outside a checklist'),
+      {
+        items: [
+          { blocks: [paragraph('Lay the table'), numbered('Plates', 'Glasses')], checked: true },
+          {
+            blocks: [
+              paragraph('Light the candles'),
+              { items: [item('Kitchen')], kind: 'bulleted-list' },
+              {
+                items: [{ blocks: [paragraph('Trim the wicks')], checked: true }],
+                kind: 'checklist',
+              },
+            ],
+            checked: false,
+          },
+        ],
+        kind: 'checklist',
+      },
+    ]
+    const named = (items: readonly Element[]) =>
+      items.map((listItem) => listItem.querySelector('p')!.textContent)
+    // jsdom computes no pseudo-elements: list the items that each checklist ::before rule matches.
+    const drawnBy = (property: string) => {
+      const rules = ([...document.styleSheets[0]!.cssRules] as CSSStyleRule[]).filter(
+        ({ selectorText, style: declared }) =>
+          selectorText.includes('checklist') &&
+          selectorText.endsWith('::before') &&
+          declared.getPropertyValue(property) !== '',
+      )
+      expect(rules.length, property).toBeGreaterThan(0)
+      return [
+        ...new Set(
+          rules.flatMap(({ selectorText }) => [
+            ...document.querySelectorAll(selectorText.replace(/::before$/, '')),
+          ]),
+        ),
+      ]
+    }
+    for (const width of widths) {
+      const page = renderAt(<SwissArticle view={{ ...article, body }} />, width)
+      // The renderer gives checklist items, and only those, a checked state.
+      const tasks = [...page.querySelectorAll('.si-body li[data-checked]')]
+      expect(named(tasks)).toEqual(['Lay the table', 'Light the candles', 'Trim the wicks'])
+      expect(named(drawnBy('border')), `${width}px`).toEqual(named(tasks))
+      expect(named(drawnBy('background')), `${width}px`).toEqual([
+        'Lay the table',
+        'Trim the wicks',
+      ])
+      // Items of a list nested in a task are set like the body's other list items.
+      const [outside, ...nested] = [...page.querySelectorAll('.si-body li:not([data-checked])')]
+      expect(named(nested)).toEqual(['Plates', 'Glasses', 'Kitchen'])
+      const listStyles = (listItem: Element) => ({
+        paddingLeft: style(listItem).paddingLeft,
+        position: style(listItem).position,
+        secondParagraph: style(listItem.children[1]!).marginTop,
+      })
+      for (const listItem of nested) {
+        expect(listStyles(listItem), `${named([listItem])} at ${width}px`).toEqual(
+          listStyles(outside!),
+        )
+      }
+    }
+  })
+
+  it('heads author and topic pages like a section, at the page title sizes', () => {
+    for (const width of widths) {
+      for (const page of [
+        renderAt(<SwissAuthor view={author} />, width),
+        renderAt(<SwissTopic view={topic} />, width),
+        renderAt(<SwissAuthor view={{ ...author, name: 'N'.repeat(81) }} />, width),
+      ]) {
+        const title = page.querySelector('main h1')!
+        expect(style(title).fontSize, `${width}px`).toBe(
+          title.textContent!.length > 80 ? 'var(--si-title-long)' : 'var(--si-title)',
+        )
+        expect(style(title).getPropertyValue('text-wrap'), `${width}px`).toBe('balance')
+      }
+      const bio = renderAt(<SwissAuthor view={author} />, width).querySelector('.si-bio')!
+      expect(style(bio).getPropertyValue('white-space')).toBe('pre-line')
+      expect(style(bio).getPropertyValue('color')).toBe('var(--si-secondary)')
+    }
   })
 
   it('keeps section index and site index links at the small size on phones too', () => {

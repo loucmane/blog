@@ -21,7 +21,7 @@ export function StoryMotif({ slug }: { readonly slug: string }) {
               d="M-90 95V-5a90 90 0 0 1 180 0v100H45V-5a45 45 0 0 0-90 0v100Z"
               fill="currentColor"
             />
-            <path d="M-105 110H105" stroke="currentColor" strokeWidth="3" />
+            <path d="M-105 110H105" stroke="var(--ec-motif-accent, currentColor)" strokeWidth="3" />
           </>
         ) : kind === 1 ? (
           <>
@@ -36,7 +36,7 @@ export function StoryMotif({ slug }: { readonly slug: string }) {
             />
             <path
               d="M0-96A96 96 0 0 1 96 0M-96 0A96 96 0 0 1 0 96"
-              stroke="currentColor"
+              stroke="var(--ec-motif-accent, currentColor)"
               strokeWidth="22"
             />
           </>
