@@ -897,6 +897,20 @@ test('captures b2 all five page types and the wide gallery in both themes', asyn
         )
         await waitForThemeToSettle(page)
         for (const fullPage of [false, true]) {
+          if (theme === 'dark' && !fullPage) {
+            // The light full-page screenshot can recreate FontFace objects and latch optional
+            // fallbacks (blog-0044.59), so the dark captures start from a fresh first layout.
+            await captureFonts.goto(route!)
+            await page.evaluate(async () => {
+              for (const image of document.images) image.loading = 'eager'
+              await Promise.all(
+                Array.from(document.images, (image) => image.decode().catch(() => {})),
+              )
+              window.scrollTo(0, 0)
+            })
+            await page.evaluate(() => document.documentElement.classList.add('dark'))
+            await waitForThemeToSettle(page)
+          }
           await captureFonts.assertFonts()
           await page.screenshot({
             path: path.join(
