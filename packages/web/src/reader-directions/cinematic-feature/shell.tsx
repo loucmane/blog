@@ -26,7 +26,7 @@ export function CinematicShell({
     <div className={`cf-page${cover ? ' cf-cover-page' : ''}`}>
       {leadImage ? <CinematicImagePreload {...leadImage} /> : null}
       <a className="cf-skip" href="#cf-main">
-        Skip to stories
+        Skip to content
       </a>
       <header className="cf-masthead">
         <Brand className="cf-wordmark">

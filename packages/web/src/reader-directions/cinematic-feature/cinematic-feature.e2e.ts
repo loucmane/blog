@@ -57,7 +57,7 @@ test('has no overflow at every required width and operable touch-sized navigatio
   page,
 }) => {
   test.setTimeout(120_000)
-  for (const width of [360, 390, 768, 1024, 1280, 1440]) {
+  for (const width of [320, 360, 390, 768, 1024, 1280, 1440, 1536]) {
     await page.setViewportSize({ width, height: 900 })
     for (const path of ['/', storyPath, sectionPath]) {
       await page.goto(path)
@@ -68,7 +68,10 @@ test('has no overflow at every required width and operable touch-sized navigatio
       const sections = page.locator(root).getByRole('navigation', { name: 'Sections' })
       await expect(sections).toBeVisible()
       const masthead = await page.locator('.cf-masthead').boundingBox()
-      const heading = await page.locator(`${root} main .cf-title`).first().boundingBox()
+      const heading = await page
+        .locator(`${root} main :is(.cf-title, .cf-collection-title)`)
+        .first()
+        .boundingBox()
       expect(heading!.y, `${path} heading clears masthead at ${width}`).toBeGreaterThanOrEqual(
         masthead!.y + masthead!.height,
       )
@@ -113,10 +116,78 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
   }
 })
 
+test('keeps cover text on solid ground and its credit strip below the photograph', async ({
+  page,
+}) => {
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+    const image = page.locator('.cf-cover-image img')
+    const caption = page.locator('.cf-cover-image figcaption')
+    const panel = page.locator('.cf-lead')
+    const mastheadBox = (await page.locator('.cf-masthead').boundingBox())!
+    const imageBox = (await image.boundingBox())!
+    const captionBox = (await caption.boundingBox())!
+    const panelBox = (await panel.boundingBox())!
+    expect(imageBox.y).toBeGreaterThanOrEqual(mastheadBox.y + mastheadBox.height)
+    expect(captionBox.y).toBeGreaterThanOrEqual(imageBox.y + imageBox.height - 1)
+    expect(await caption.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(
+      'rgb(11, 12, 12)',
+    )
+    expect(await panel.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(
+      'rgb(11, 12, 12)',
+    )
+    if (width < 1024) {
+      expect(panelBox.y).toBeGreaterThanOrEqual(captionBox.y + captionBox.height - 1)
+      expect(imageBox.width / imageBox.height).toBeCloseTo(width < 768 ? 4 / 3 : 16 / 9, 2)
+    } else {
+      expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(imageBox.y + imageBox.height)
+      expect(panelBox.width).toBeLessThan((imageBox.width * 2) / 3)
+    }
+    // A full, unbroken title and user text spacing must grow the solid panel.
+    await page.locator('.cf-lead h2 a').evaluate((element) => {
+      element.textContent = 'Unbroken'.repeat(40)
+      element.style.lineHeight = '1.5'
+      element.style.letterSpacing = '0.12em'
+      element.style.wordSpacing = '0.16em'
+    })
+    const grownPanel = (await panel.boundingBox())!
+    const title = (await page.locator('.cf-lead h2').boundingBox())!
+    expect(title.y).toBeGreaterThanOrEqual(grownPanel.y + 24)
+    expect(title.y + title.height).toBeLessThanOrEqual(grownPanel.y + grownPanel.height - 24)
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true)
+    const afterImage = (await image.boundingBox())!
+    const afterCaption = (await caption.boundingBox())!
+    expect(afterCaption.y).toBeGreaterThanOrEqual(afterImage.y + afterImage.height - 1)
+  }
+})
+
+test('matches section feature and card sizes to their actual grid slots', async ({ page }) => {
+  for (const width of [390, 768, 1024, 1440, 1536, 1920]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(sectionPath)
+    const interior = Math.min(width - (width >= 1024 ? 96 : width >= 768 ? 64 : 40), 1440)
+    const gap = width >= 1024 ? 32 : 24
+    const feature = (await page.locator('.cf-feature img').boundingBox())!
+    expect(feature.width).toBeCloseTo(width >= 1024 ? ((interior - gap) * 7) / 12 : interior, 0)
+    expect(feature.width / feature.height).toBeCloseTo(width < 768 ? 4 / 3 : 3 / 2, 2)
+    for (const image of await page.locator('.cf-card:not(.cf-feature) img').all()) {
+      const box = (await image.boundingBox())!
+      expect(box.width).toBeCloseTo(width >= 768 ? (interior - gap) / 2 : interior, 0)
+      expect(box.width / box.height).toBeCloseTo(3 / 2, 2)
+    }
+  }
+})
+
 test('uses visible keyboard focus and a dark cinematic ground', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  const skip = page.getByRole('link', { name: 'Skip to stories' })
+  const skip = page.getByRole('link', { name: 'Skip to content' })
   for (
     let tabs = 0;
     tabs < 12 && !(await skip.evaluate((element) => element === document.activeElement));
@@ -363,15 +434,17 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures twelve seeded screenshots for review', async ({ page }) => {
-  test.setTimeout(180_000)
+test('captures b1 home, section and article regression screenshots in both themes', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-cf-sans': 'Archivo',
     '--font-cf-mono': 'Martian Mono',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.6')
+  const destination = path.resolve('docs/worklog/blog-0044.49')
   await mkdir(destination, { recursive: true })
-  for (const width of [390, 1440]) {
+  for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
     for (const [name, route] of [
       ['home', '/'],
@@ -393,13 +466,23 @@ test('captures twelve seeded screenshots for review', async ({ page }) => {
           ),
         `${name} images loaded`,
       ).toBe(true)
-      for (const fullPage of [false, true]) {
-        await captureFonts.assertFonts()
-        await page.screenshot({
-          path: path.join(destination, `${name}-${width}-${fullPage ? 'full' : 'viewport'}.png`),
-          fullPage,
-          animations: 'disabled',
-        })
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(
+          (dark) => document.documentElement.classList.toggle('dark', dark),
+          theme === 'dark',
+        )
+        await waitForThemeToSettle(page)
+        for (const fullPage of [false, true]) {
+          await captureFonts.assertFonts()
+          await page.screenshot({
+            path: path.join(
+              destination,
+              `${name}-${width}-${theme}-${fullPage ? 'full' : 'viewport'}.png`,
+            ),
+            fullPage,
+            animations: 'disabled',
+          })
+        }
       }
     }
   }

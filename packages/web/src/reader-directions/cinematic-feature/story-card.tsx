@@ -1,11 +1,14 @@
 import Link from 'next/link'
 
-import { ReaderImageView } from '@/reader/components/reader-image'
+import { ReaderFigure, ReaderImageCredit, ReaderImageView } from '@/reader/components/reader-image'
 import { formatReadingTime } from '@/reader/format'
 import type { StoryCard } from '@/reader/views'
 
 export const cardSizes =
-  '(min-width: 1568px) 43.75rem, (min-width: 768px) calc(46vw - 1.25rem), (min-width: 500px) 92vw, calc(100vw - 2.5rem)'
+  '(min-width: 1536px) 704px, (min-width: 1024px) calc(50vw - 64px), (min-width: 768px) calc(50vw - 44px), calc(100vw - 40px)'
+
+export const featureSizes =
+  '(min-width: 1536px) 821.33px, (min-width: 1024px) calc(58.333333vw - 74.666667px), (min-width: 768px) calc(100vw - 64px), calc(100vw - 40px)'
 
 export function StoryMeta({
   story,
@@ -23,12 +26,17 @@ export function StoryMeta({
 export function CinematicStoryCard({
   story,
   preload = false,
+  feature = false,
+  headingLevel = 2,
 }: {
   readonly story: StoryCard
   readonly preload?: boolean
+  readonly feature?: boolean
+  readonly headingLevel?: 2 | 3
 }) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3'
   return (
-    <li className={`cf-card${story.image ? '' : ' cf-card-text'}`}>
+    <li className={`cf-card${feature ? ' cf-feature' : ''}${story.image ? '' : ' cf-card-text'}`}>
       {story.image ? (
         <div
           className="cf-card-image"
@@ -36,14 +44,51 @@ export function CinematicStoryCard({
             objectPosition: `${story.image.focalPoint.x * 100}% ${story.image.focalPoint.y * 100}%`,
           }}
         >
-          <ReaderImageView image={story.image} sizes={cardSizes} preload={preload} />
+          <ReaderFigure
+            image={story.image}
+            sizes={feature ? featureSizes : cardSizes}
+            preload={preload}
+          />
         </div>
       ) : null}
-      <StoryMeta story={story} />
-      <h2 className="cf-card-title">
-        <Link href={story.href}>{story.title}</Link>
-      </h2>
-      {story.dek ? <p className="cf-card-dek">{story.dek}</p> : null}
+      <div className="cf-card-copy">
+        <StoryMeta story={story} />
+        <Heading className="cf-card-title">
+          <Link href={story.href}>{story.title}</Link>
+        </Heading>
+        {story.dek ? <p className="cf-card-dek">{story.dek}</p> : null}
+      </div>
+    </li>
+  )
+}
+
+export function CinematicStoryRow({ story }: { readonly story: StoryCard }) {
+  return (
+    <li className={`cf-row${story.image ? '' : ' cf-card-text'}`}>
+      <div className="cf-card-copy">
+        <StoryMeta story={story} />
+        <h3 className="cf-card-title">
+          <Link href={story.href}>{story.title}</Link>
+        </h3>
+        {story.dek ? <p className="cf-card-dek">{story.dek}</p> : null}
+      </div>
+      {story.image ? (
+        <figure className="cf-row-media">
+          <div
+            className="cf-thumbnail"
+            style={{
+              objectPosition: `${story.image.focalPoint.x * 100}% ${story.image.focalPoint.y * 100}%`,
+            }}
+          >
+            <ReaderImageView image={story.image} sizes="80px" />
+          </div>
+          {story.image.credit ? (
+            <figcaption>
+              <ReaderImageCredit image={story.image} />
+            </figcaption>
+          ) : null}
+        </figure>
+      ) : null}
     </li>
   )
 }

@@ -1,6 +1,8 @@
 import type { HomeDirectionProps } from '../contract'
+import { ExpressiveEmpty } from './empty'
 import { ExpressiveShell } from './shell'
-import { ExpressiveStoryCard, leadSizes } from './story-card'
+import { leadSizes } from './sizes'
+import { ExpressiveStoryList } from './story-list'
 
 export function ExpressiveHome({ view }: HomeDirectionProps) {
   const stories = view.lead ? [view.lead, ...view.recent] : view.recent
@@ -8,26 +10,13 @@ export function ExpressiveHome({ view }: HomeDirectionProps) {
     <ExpressiveShell
       isHome
       navigation={view.navigation}
-      leadImage={view.lead?.image ? { image: view.lead.image, sizes: leadSizes } : null}
+      stories={stories}
+      leadImage={stories[0]?.image ? { image: stories[0].image, sizes: leadSizes } : null}
     >
       {stories.length ? (
-        <ol className="ec-grid" aria-label="Stories, newest first">
-          {stories.map((story, index) => (
-            <ExpressiveStoryCard
-              key={story.slug}
-              story={story}
-              number={index + 1}
-              lead={index === 0}
-              preload={index === 0}
-            />
-          ))}
-        </ol>
+        <ExpressiveStoryList stories={stories} layout="home" label="Stories, newest first" />
       ) : (
-        <section className="ec-empty" aria-labelledby="ec-empty-title">
-          <p className="ec-label">All stories</p>
-          <h2 id="ec-empty-title">No stories yet</h2>
-          <p>New stories will appear here when they are published.</p>
-        </section>
+        <ExpressiveEmpty />
       )}
     </ExpressiveShell>
   )

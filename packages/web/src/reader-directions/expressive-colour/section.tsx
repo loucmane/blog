@@ -1,7 +1,9 @@
 import type { SectionDirectionProps } from '../contract'
-import { storyColour } from './colours'
+import { ExpressiveEmpty } from './empty'
+import { ExpressivePageHeader } from './page-header'
 import { ExpressiveShell } from './shell'
-import { cardSizes, ExpressiveStoryCard } from './story-card'
+import { leadSizes } from './sizes'
+import { ExpressiveStoryList } from './story-list'
 
 export function ExpressiveSection({ view }: SectionDirectionProps) {
   const firstImage = view.stories[0]?.image
@@ -9,35 +11,18 @@ export function ExpressiveSection({ view }: SectionDirectionProps) {
     <ExpressiveShell
       navigation={view.navigation}
       currentSection={view.slug}
-      leadImage={firstImage ? { image: firstImage, sizes: cardSizes } : null}
+      leadImage={firstImage ? { image: firstImage, sizes: leadSizes } : null}
     >
-      <header className="ec-section-header">
-        <p className="ec-label">
-          Section · {view.stories.length} {view.stories.length === 1 ? 'story' : 'stories'}
-        </p>
-        <h1>
-          <span
-            className="ec-chip"
-            data-story-colour={storyColour(view.slug).name}
-            aria-hidden="true"
-          />
-          {view.name}
-        </h1>
-        {view.description ? <p className="ec-dek">{view.description}</p> : null}
-      </header>
+      <ExpressivePageHeader
+        name={view.name}
+        slug={view.slug}
+        description={view.description}
+        stories={view.stories}
+      />
       {view.stories.length ? (
-        <ol className="ec-grid" aria-label={`${view.name} stories, newest first`}>
-          {view.stories.map((story, index) => (
-            <ExpressiveStoryCard
-              key={story.slug}
-              story={story}
-              number={index + 1}
-              preload={index === 0}
-            />
-          ))}
-        </ol>
+        <ExpressiveStoryList stories={view.stories} label={`${view.name} stories, newest first`} />
       ) : (
-        <p className="ec-section-empty">No stories have been published in this section yet.</p>
+        <ExpressiveEmpty section />
       )}
     </ExpressiveShell>
   )
