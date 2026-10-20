@@ -356,6 +356,12 @@ test('serves versioned direction fonts with a one-year immutable cache, and othe
       [font, 'public, max-age=0'],
       [`${font}?v=${version.slice(1)}`, 'public, max-age=0'],
       [`${font}?v=0123456789ABCDEF`, 'public, max-age=0'],
+      // A well-formed but stale version (an old page after a font update) still gets today's
+      // bytes with the long cache: the version busts caches, it does not validate content.
+      [
+        `${font}?v=${version[0] === '0' ? '1' : '0'}${version.slice(1)}`,
+        'public, max-age=31536000, immutable',
+      ],
     ] as const) {
       const response = await request.get(url)
       expect(response.status(), url).toBe(200)
