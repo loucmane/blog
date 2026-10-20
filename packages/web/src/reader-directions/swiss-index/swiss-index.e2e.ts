@@ -755,6 +755,9 @@ test('keeps the section index and the site index at 13 pixels on phones', async 
 test('walks the keyboard from the skip link through the masthead to the footer and back to top', async ({
   page,
 }) => {
+  // The global smooth scroll (globals.css) can stall mid-way under load; this test checks the
+  // keyboard path, not the animation, so reduced motion makes Back to top instant.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(sectionPath)
   const swiss = page.locator(root)
