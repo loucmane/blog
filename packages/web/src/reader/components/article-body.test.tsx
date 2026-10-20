@@ -103,3 +103,31 @@ it('also accepts an explicit partial map without changing the gallery default', 
     '(min-width: 768px) 42rem, 100vw',
   )
 })
+
+it('sets each numbered list marker inline, so case survives any stylesheet', () => {
+  const expected = {
+    '1': 'decimal',
+    a: 'lower-alpha',
+    A: 'upper-alpha',
+    i: 'lower-roman',
+    I: 'upper-roman',
+  } as const
+  const lists: ArticleBlock[] = Object.keys(expected).map((numbering) => ({
+    kind: 'numbered-list',
+    start: 3,
+    numbering: numbering as keyof typeof expected,
+    items: [{ blocks: [{ kind: 'paragraph', content: [] }] }],
+  }))
+  const document = new DOMParser().parseFromString(
+    renderToStaticMarkup(<ArticleBody blocks={lists} />),
+    'text/html',
+  )
+  const rendered = [...document.querySelectorAll('ol')].map((list) => [
+    list.getAttribute('type'),
+    list.getAttribute('start'),
+    list.style.listStyleType,
+  ])
+  expect(rendered).toEqual(
+    Object.entries(expected).map(([numbering, marker]) => [numbering, '3', marker]),
+  )
+})
