@@ -87,6 +87,10 @@
 
   html {
     color-scheme: light;
+  }
+
+  /* Only baseline opts into smooth viewport scrolling; other directions keep browser defaults. */
+  html:not(:has([data-reader-direction]:not([data-reader-direction='baseline']))) {
     scroll-behavior: smooth;
   }
 

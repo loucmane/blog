@@ -806,11 +806,10 @@ test('keeps the seeded long-title, image-free, short, long-read and 4:5-hero sto
 test('follows the keyboard path from the skip link through the menu and an article to the footer', async ({
   page,
 }) => {
-  // The shared smooth scroll (globals.css) can stall Back to top up a long article (blog-0044.57);
-  // reduced motion turns it off, as a reader who asks for it would have it.
-  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto')
   const direction = page.locator(root)
   const skip = direction.getByRole('link', { name: 'Skip to content' })
   // The lab controls come first in the real tab order.
@@ -842,10 +841,13 @@ test('follows the keyboard path from the skip link through the menu and an artic
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(coverPath ?? /\/stories\//)
   await expect(direction.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto')
   const backToTop = direction.getByRole('link', { name: 'Back to top' })
   await tabTo(page, backToTop, 60)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
   await page.keyboard.press('Enter')
-  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 15_000 }).toBe(0)
+  await expect(page).toHaveURL(/#qm-top$/)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
 })
 
 test('switches to the warm graphite night version from the Theme control', async ({ page }) => {
