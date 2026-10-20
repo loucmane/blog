@@ -585,7 +585,8 @@ export async function createPortableContentBundle(
       authors.forEach(({ id: authorId }, position) =>
         articleAuthors.push({ articleId, authorId, position }),
       )
-      autosaves.push(...(await transaction.listAutosaves(articleId)))
+      // Append one by one: spreading a very large list into push() exceeds the argument limit.
+      for (const autosave of await transaction.listAutosaves(articleId)) autosaves.push(autosave)
     }
     return {
       articleAuthors,
