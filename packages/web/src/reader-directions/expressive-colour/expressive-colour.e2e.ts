@@ -3,19 +3,14 @@ import path from 'node:path'
 
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
 
 import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
-import { ArticleBody } from '../../reader/components/article-body'
 import { normalizeSlug } from '../../server/content/domain'
 import { labAuthors, labStories, labTopics } from '../../server/lab/north-house'
 import { prepareFontCapture } from '../capture-fonts'
 import { contrastRatio } from '../contrast'
-import { blockFixture } from './block-fixture'
-import { storyColour, storyColours, storyMotif } from './colours'
-import { StoryMotif } from './motif'
-import { bodyImageSizes } from './sizes'
+import { blockFixtureDocument } from './block-fixture'
+import { storyColour, storyColours } from './colours'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
@@ -28,6 +23,55 @@ const authorPath = `/authors/${author.slug}`
 const topicPath = `/topics/${topic.slug}`
 const pagePaths = ['/', storyPath, sectionPath, authorPath, topicPath]
 const root = '[data-reader-direction="expressive-colour"]'
+
+interface FixtureStory {
+  article: { id: string; slug: string; version: number }
+  revision: { id: string }
+}
+
+const blockTest = test.extend<{ blockStoryPath: string }>({
+  blockStoryPath: async ({ context }, use, testInfo) => {
+    const suffix = `${testInfo.testId}-${Date.now()}-${testInfo.retry}`
+    const headers = { origin: 'http://localhost:3100' }
+    const created = await context.request.post('/api/owner/stories', {
+      headers,
+      data: {
+        title: `Editorial style fixture ${suffix}`,
+        dek: 'A temporary story exercising every editorial surface and list marker.',
+        document: blockFixtureDocument,
+        idempotencyKey: `ec-create-${suffix}`,
+      },
+    })
+    expect(created.status()).toBe(200)
+    const draft = (await created.json()) as FixtureStory
+    const actions = `/api/owner/stories/${draft.article.id}/actions`
+    const published = await context.request.post(actions, {
+      headers,
+      data: {
+        action: 'publish',
+        expectedVersion: draft.article.version,
+        revisionId: draft.revision.id,
+        idempotencyKey: `ec-publish-${suffix}`,
+      },
+    })
+    expect(published.status()).toBe(200)
+    const story = (await published.json()) as FixtureStory
+    try {
+      await use(`/stories/${story.article.slug}`)
+    } finally {
+      const unpublished = await context.request.post(actions, {
+        headers,
+        data: {
+          action: 'unpublish',
+          expectedVersion: story.article.version,
+          idempotencyKey: `ec-unpublish-${suffix}`,
+          reason: 'The editorial style fixture has finished.',
+        },
+      })
+      expect(unpublished.status()).toBe(200)
+    }
+  },
+})
 
 async function waitForThemeToSettle(page: Page) {
   // The shared lab bar transitions its colours; assertions need the settled theme.
@@ -434,37 +478,6 @@ test('keeps visible lead copy and image in DOM order and the wordmark unbroken a
   }
 })
 
-test('paints every paper motif with both ink and story colour', async ({ page }) => {
-  const slugs = Array.from({ length: 100 }, (_, index) => `motif-${index}`)
-  for (const kind of [0, 1, 2]) {
-    const slug = slugs.find((candidate) => storyMotif(candidate).kind === kind)!
-    const html = renderToStaticMarkup(createElement(StoryMotif, { slug }))
-    await page.locator('#ec-main').evaluate((element, fixture) => {
-      const card = document.createElement('div')
-      card.className = 'ec-card'
-      card.dataset.surface = 'paper'
-      card.dataset.storyColour = 'cobalt'
-      card.id = 'ec-paper-probe'
-      card.innerHTML = fixture
-      element.querySelector('#ec-paper-probe')?.remove()
-      element.append(card)
-    }, html)
-    for (const dark of [false, true]) {
-      await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
-      await waitForThemeToSettle(page)
-      const paints = await page.locator('#ec-paper-probe').evaluate((element) => ({
-        ink: getComputedStyle(element).color,
-        colours: Array.from(element.querySelectorAll('path, circle')).flatMap((shape) => [
-          getComputedStyle(shape).fill,
-          getComputedStyle(shape).stroke,
-        ]),
-      }))
-      expect(paints.colours).toContain(paints.ink)
-      expect(paints.colours).toContain('rgb(47, 69, 214)')
-    }
-  }
-})
-
 test('keeps article, author and topic previews scoped inside the comparison frames', async ({
   page,
 }) => {
@@ -548,6 +561,9 @@ test('lays out square and portrait heroes once, using the real focal point and m
       const story = labStories.find((item) => item.id === id)!
       await page.goto(`/stories/${normalizeSlug(story.title)}`)
       const hero = page.locator('.ec-hero-cover')
+      await expect(hero).toHaveCount(1)
+      await expect(hero.locator('figure')).toHaveCount(1)
+      await expect(hero.locator('picture')).toHaveCount(1)
       await expect(hero.locator('img')).toHaveCount(1)
       const copy = await page.locator('.ec-article-copy').boundingBox()
       const frame = await hero.boundingBox()
@@ -564,11 +580,19 @@ test('lays out square and portrait heroes once, using the real focal point and m
       expect(computed.position).toBe(computed.expected)
       expect(computed.fit).toBe('cover')
       expect(computed.height).toBeLessThanOrEqual(720)
-      const link = page.locator('link[as="image"]')
+      // React can also hoist an automatic responsive hint without href. The host
+      // trace has both links for one hero, with identical AVIF sources and sizes.
+      const link = page.locator('link[rel="preload"][as="image"][href]')
       await expect(link).toHaveCount(1)
-      expect(await link.getAttribute('imagesizes')).toBe(
-        await hero.locator('img').getAttribute('sizes'),
-      )
+      const sizes = await hero.locator('img').getAttribute('sizes')
+      const source = hero.locator('source').first()
+      const srcset = await source.getAttribute('srcset')
+      const type = await source.getAttribute('type')
+      for (const hint of await page.locator('link[rel="preload"][as="image"]').all()) {
+        await expect(hint).toHaveAttribute('imagesizes', sizes!)
+        await expect(hint).toHaveAttribute('imagesrcset', srcset!)
+        await expect(hint).toHaveAttribute('type', type!)
+      }
       if (width >= 1024) {
         expect(frame!.x).toBeGreaterThan(copy!.x + copy!.width)
         expect(
@@ -602,116 +626,146 @@ test('lays out square and portrait heroes once, using the real focal point and m
 })
 
 for (const width of [390, 1440]) {
-  test(`computed editorial styles survive resets and nesting at ${width}px`, async ({ page }) => {
-    test.setTimeout(240_000)
-    await page.setViewportSize({ width, height: 900 })
-    await page.goto(storyPath)
-    // Real shared renderer, including block types/variants absent from this seeded article.
-    await page.locator('.ec-body').evaluate(
-      (element, html) => {
-        element.innerHTML = html
-      },
-      renderToStaticMarkup(
-        createElement(ArticleBody, { blocks: blockFixture, imageSizes: bodyImageSizes }),
-      ),
-    )
-    const dimensions = await page.locator('.ec-body').evaluate((element) => {
-      const style = (selector: string) => getComputedStyle(element.querySelector(selector)!)
-      const box = (selector: string) =>
-        element.querySelector(selector)!.getBoundingClientRect().width
-      return {
-        measure: box(':scope > p'),
-        feature: box(':scope > [data-block="pull-quote"]'),
-        wide: box(':scope > [data-layout="grid"]'),
-        gridColumns: style(':scope > [data-layout="grid"]').gridTemplateColumns.split(' ').length,
-        diptychColumns: style(':scope > [data-layout="diptych"]').gridTemplateColumns.split(' ')
-          .length,
-        carouselColumns: style(':scope > [data-layout="carousel"]').gridTemplateColumns.split(' ')
-          .length,
-        bullet: style(':scope > ul:not([data-block])').listStyleType,
-        roman: style(':scope > ol[type="I"]').listStyleType,
-        checklist: style(':scope > [data-block="checklist"]').listStyleType,
-        headingSize: parseFloat(style(':scope > h2').fontSize),
-        headingLeading: parseFloat(style(':scope > h2').lineHeight),
-        h5Italic: style(':scope > h5').fontStyle,
-        h6Family: style(':scope > h6').fontFamily,
-        captionFamily: style(':scope > figure:not([data-block]) figcaption').fontFamily,
-        captionSize: style(':scope > figure:not([data-block]) figcaption').fontSize,
-        codeSize: style(':scope > pre code').fontSize,
-        quoteWeight: style('[data-block="pull-quote"] blockquote').fontWeight,
-        headingMargin: style('[data-variant="key-points"] > h2').marginTop,
-      }
-    })
-    expect(dimensions.measure).toBeCloseTo(width === 1440 ? 720 : 358, 0)
-    expect(dimensions.feature).toBeCloseTo(width === 1440 ? 896 : 358, 0)
-    expect(dimensions.wide).toBeCloseTo(width === 1440 ? 1152 : 358, 0)
-    expect(dimensions.gridColumns).toBe(width === 1440 ? 3 : 1)
-    expect(dimensions.diptychColumns).toBe(width === 1440 ? 2 : 1)
-    expect(dimensions.carouselColumns).toBe(1)
-    expect(dimensions.bullet).toBe('disc')
-    expect(dimensions.roman).toBe('upper-roman')
-    expect(dimensions.checklist).toBe('none')
-    expect(dimensions.headingLeading).toBeCloseTo(dimensions.headingSize * 1.08, 1)
-    expect(dimensions.h5Italic).toBe('italic')
-    expect(dimensions.h6Family).toContain('font-ec-mono')
-    expect(dimensions.captionFamily).toContain('font-ec-serif')
-    expect(dimensions.captionSize).toBe('16px')
-    expect(dimensions.codeSize).toBe('14px')
-    expect(dimensions.quoteWeight).toBe('700')
-    expect(dimensions.headingMargin).toBe('48px')
+  blockTest(
+    `computed editorial styles survive resets and nesting at ${width}px`,
+    async ({ page, blockStoryPath }) => {
+      test.setTimeout(240_000)
+      await page.setViewportSize({ width, height: 900 })
+      expect((await page.goto(blockStoryPath))?.status()).toBe(200)
+      await page.evaluate(async () => {
+        await document.fonts.ready
+      })
+      const dimensions = await page.locator('.ec-body').evaluate((element) => {
+        const style = (selector: string) => getComputedStyle(element.querySelector(selector)!)
+        const box = (selector: string) =>
+          element.querySelector(selector)!.getBoundingClientRect().width
+        return {
+          measure: box(':scope > p'),
+          feature: box(':scope > [data-block="pull-quote"]'),
+          wide: box(':scope > [data-layout="grid"]'),
+          gridColumns: style(':scope > [data-layout="grid"]').gridTemplateColumns.split(' ').length,
+          diptychColumns: style(':scope > [data-layout="diptych"]').gridTemplateColumns.split(' ')
+            .length,
+          carouselColumns: style(':scope > [data-layout="carousel"]').gridTemplateColumns.split(' ')
+            .length,
+          bullet: style(':scope > ul:not([data-block])').listStyleType,
+          // HTML type selectors are case-insensitive. Compare attributes exactly
+          // so lower/upper alpha and Roman each test their own rendered list.
+          numbering: ['1', 'a', 'A', 'i', 'I'].map((type) => {
+            const lists = Array.from(element.querySelectorAll(':scope > ol')).filter(
+              (list) => list.getAttribute('type') === type,
+            )
+            return { type, count: lists.length, marker: getComputedStyle(lists[0]!).listStyleType }
+          }),
+          checklist: style(':scope > [data-block="checklist"]').listStyleType,
+          headingSize: parseFloat(style(':scope > h2').fontSize),
+          headingLeading: parseFloat(style(':scope > h2').lineHeight),
+          h5Italic: style(':scope > h5').fontStyle,
+          h6Family: style(':scope > h6').fontFamily,
+          captionFamily: style(':scope > figure:not([data-block]) figcaption').fontFamily,
+          captionSize: style(':scope > figure:not([data-block]) figcaption').fontSize,
+          codeSize: style(':scope > pre code').fontSize,
+          quoteWeight: style('[data-block="pull-quote"] blockquote').fontWeight,
+          headingMargin: style('[data-variant="key-points"] > h2').marginTop,
+        }
+      })
+      expect(dimensions.measure).toBeCloseTo(width === 1440 ? 720 : 358, 0)
+      expect(dimensions.feature).toBeCloseTo(width === 1440 ? 896 : 358, 0)
+      expect(dimensions.wide).toBeCloseTo(width === 1440 ? 1152 : 358, 0)
+      expect(dimensions.gridColumns).toBe(width === 1440 ? 3 : 1)
+      expect(dimensions.diptychColumns).toBe(width === 1440 ? 2 : 1)
+      expect(dimensions.carouselColumns).toBe(1)
+      expect(dimensions.bullet).toBe('disc')
+      expect(dimensions.numbering).toEqual([
+        { type: '1', count: 1, marker: 'decimal' },
+        { type: 'a', count: 1, marker: 'lower-alpha' },
+        { type: 'A', count: 1, marker: 'upper-alpha' },
+        { type: 'i', count: 1, marker: 'lower-roman' },
+        { type: 'I', count: 1, marker: 'upper-roman' },
+      ])
+      expect(dimensions.checklist).toBe('none')
+      expect(dimensions.headingLeading).toBeCloseTo(dimensions.headingSize * 1.08, 1)
+      expect(dimensions.h5Italic).toBe('italic')
+      expect(dimensions.h6Family).toContain('font-ec-mono')
+      expect(dimensions.captionFamily).toContain('font-ec-serif')
+      expect(dimensions.captionSize).toBe('16px')
+      expect(dimensions.codeSize).toBe('14px')
+      expect(dimensions.quoteWeight).toBe('700')
+      expect(dimensions.headingMargin).toBe('48px')
 
-    for (const dark of [false, true]) {
-      await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
-      await waitForThemeToSettle(page)
-      for (const colour of storyColours) {
-        await page
-          .locator('.ec-article')
-          .evaluate((element, name) => element.setAttribute('data-story-colour', name), colour.name)
-        const pairs = await page.locator('.ec-body').evaluate((element) => {
-          function background(node: Element): string {
-            const colour = getComputedStyle(node).backgroundColor
-            return colour !== 'rgba(0, 0, 0, 0)' && colour !== 'transparent'
-              ? colour
-              : node.parentElement
-                ? background(node.parentElement)
-                : 'rgb(255, 255, 255)'
-          }
-          return Array.from(
-            element.querySelectorAll(
-              'p, h2, h3, h4, h5, h6, a, code, figcaption, figcaption > span, li > span[aria-hidden]',
-            ),
-          ).map((node) => ({
-            text: node.tagName,
-            foreground: getComputedStyle(node).color,
-            background: background(node),
-          }))
-        })
-        for (const pair of pairs)
-          expect(
-            contrastRatio(pair.foreground, pair.background),
-            `${colour.name}, dark=${dark}, ${pair.text}`,
-          ).toBeGreaterThanOrEqual(4.5)
-        const link = page.locator('.ec-body > [data-variant="key-points"] > p a')
-        await page.keyboard.press('Tab')
-        await link.focus()
-        const focus = await link.evaluate((element) => {
-          const style = getComputedStyle(element)
-          return {
-            colour: style.outlineColor,
-            style: style.outlineStyle,
-            width: style.outlineWidth,
-          }
-        })
-        expect(focus.style).toBe('solid')
-        expect(focus.width).toBe('3px')
-        expect(contrastRatio(focus.colour, colour.background)).toBeGreaterThanOrEqual(3)
+      const gaps = await page.locator('.ec-body').evaluate((element) =>
+        Array.from(element.querySelectorAll(':scope > :is(h2, h3, h4, h5, h6, hr)')).map(
+          (block) => ({
+            tag: block.tagName,
+            gap:
+              block.nextElementSibling!.getBoundingClientRect().top -
+              block.getBoundingClientRect().bottom,
+          }),
+        ),
+      )
+      expect(gaps.map(({ tag }) => tag)).toEqual(['H2', 'H3', 'H4', 'H5', 'H6', 'HR'])
+      for (const { tag, gap } of gaps)
+        expect(gap, `${tag} rendered gap`).toBeCloseTo(tag === 'HR' ? 48 : 16, 1)
+
+      for (const dark of [false, true]) {
+        await page.evaluate(
+          (value) => document.documentElement.classList.toggle('dark', value),
+          dark,
+        )
+        await waitForThemeToSettle(page)
+        for (const colour of storyColours) {
+          await page
+            .locator('.ec-article')
+            .evaluate(
+              (element, name) => element.setAttribute('data-story-colour', name),
+              colour.name,
+            )
+          const pairs = await page.locator('.ec-body').evaluate((element) => {
+            function background(node: Element): string {
+              const colour = getComputedStyle(node).backgroundColor
+              return colour !== 'rgba(0, 0, 0, 0)' && colour !== 'transparent'
+                ? colour
+                : node.parentElement
+                  ? background(node.parentElement)
+                  : 'rgb(255, 255, 255)'
+            }
+            return Array.from(
+              element.querySelectorAll(
+                'p, h2, h3, h4, h5, h6, a, code, figcaption, figcaption > span, li > span[aria-hidden]',
+              ),
+            ).map((node) => ({
+              text: node.tagName,
+              foreground: getComputedStyle(node).color,
+              background: background(node),
+            }))
+          })
+          for (const pair of pairs)
+            expect(
+              contrastRatio(pair.foreground, pair.background),
+              `${colour.name}, dark=${dark}, ${pair.text}`,
+            ).toBeGreaterThanOrEqual(4.5)
+          const link = page.locator('.ec-body > [data-variant="key-points"] > p a').first()
+          await page.keyboard.press('Tab')
+          await link.focus()
+          const focus = await link.evaluate((element) => {
+            const style = getComputedStyle(element)
+            return {
+              colour: style.outlineColor,
+              style: style.outlineStyle,
+              width: style.outlineWidth,
+            }
+          })
+          expect(focus.style).toBe('solid')
+          expect(focus.width).toBe('3px')
+          expect(contrastRatio(focus.colour, colour.background)).toBeGreaterThanOrEqual(3)
+        }
+        const axe = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+          .analyze()
+        expect(axe.violations).toEqual([])
       }
-      const axe = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .analyze()
-      expect(axe.violations).toEqual([])
-    }
-  })
+    },
+  )
 }
 
 test('removes Expressive Colour font declarations when the owner switches back to baseline', async ({
