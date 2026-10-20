@@ -153,19 +153,43 @@ describe('Swiss Index styles', () => {
       'grid-template-columns': 'repeat(4, minmax(0, 1fr))',
     })
     expect(declarations('.si-row-copy')['grid-column']).toBe('2 / span 2')
-    expect(declarations('.si-row-facts')['grid-column']).toBe('4')
+    expect(declarations('.si-row-facts-wide')['grid-column']).toBe('4')
     expect(declarations('.si-index-sectionless .si-row-copy')['grid-column']).toBe('2 / -1')
     expect(declarations('.si-index > li', '(max-width: 1023px)')['grid-template-columns']).toBe(
       'repeat(2, minmax(0, 1fr))',
     )
+    expect(declarations('.si-row-copy', '(max-width: 1023px)')['grid-column']).toBe('2')
+    expect(declarations('.si-index-sectionless .si-row-copy', '(max-width: 1023px)')).toMatchObject(
+      { 'grid-column': '2' },
+    )
     expect(declarations('.si-index > li', '(max-width: 599px)')).toMatchObject({
       display: 'flex',
+      'flex-direction': 'column',
+    })
+    expect(declarations('.si-row-meta', '(max-width: 599px)')).toMatchObject({
+      'flex-direction': 'row',
       'flex-wrap': 'wrap',
     })
-    expect(declarations('.si-row-copy', '(max-width: 599px)')).toMatchObject({
-      order: '1',
-      'flex-basis': '100%',
+  })
+
+  it('shows one copy of an index row’s section and reading time: in the metadata below 1024px, after the dek from 1024px', () => {
+    // Desktop is the default; one query swaps the copies, so no width shows both or neither.
+    expect(declarations('.si-row-facts-narrow')).toMatchObject({ display: 'none' })
+    expect(declarations('.si-row-facts-narrow', '(max-width: 1023px)')).toMatchObject({
+      display: 'flex',
     })
+    expect(declarations('.si-row-facts-wide', '(max-width: 1023px)')).toMatchObject({
+      display: 'none',
+    })
+    expect(declarations('.si-row-facts-narrow', '(max-width: 599px)')).toMatchObject({
+      display: 'contents',
+    })
+    // DOM, focus and visual order agree: no rule moves an item away from its place in the DOM.
+    const reordered: string[] = []
+    css.walkDecls('order', (declaration) => {
+      reordered.push(`${(declaration.parent as Rule).selector} { ${declaration.toString()} }`)
+    })
+    expect(reordered).toEqual([])
   })
 
   it('styles the Theme trigger square, ruled and mono, 44px high, without a transition', () => {

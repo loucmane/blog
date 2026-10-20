@@ -31,14 +31,53 @@ async function tabTo(page: Page, target: Locator, limit = 20) {
   await expect(target).toBeFocused()
 }
 
-/** Every link and button in `scope` is at least 44 by 44 pixels. */
+/** Every rendered link and button in `scope` is at least 44 by 44 pixels. */
 async function expectTouchTargets(scope: Locator, label: string) {
-  for (const control of await scope.locator('a, button').all()) {
+  for (const control of await scope.locator('a, button').filter({ visible: true }).all()) {
     const box = await control.boundingBox()
     const name = `${label}: ${(await control.textContent())?.trim()}`
     expect(box?.width, name).toBeGreaterThanOrEqual(44)
     expect(box?.height, name).toBeGreaterThanOrEqual(44)
   }
+}
+
+/** The names of the links that Tab reaches in `row`, from the start of the row until focus leaves it. */
+async function tabOrder(page: Page, row: Locator) {
+  // Focus on the row itself, with tabindex -1, starts sequential navigation there.
+  await row.evaluate((item) => {
+    item.tabIndex = -1
+    item.focus()
+  })
+  const names: string[] = []
+  for (let tabs = 0; tabs < 10; tabs++) {
+    await page.keyboard.press('Tab')
+    const name = await row.evaluate((item) =>
+      item !== document.activeElement && item.contains(document.activeElement)
+        ? document.activeElement!.textContent!.trim()
+        : null,
+    )
+    if (name === null) break
+    names.push(name)
+  }
+  await row.evaluate((item) => item.removeAttribute('tabindex'))
+  return names
+}
+
+/**
+ * The names of the rendered links in `row` in reading order, top to bottom and left to right by
+ * column: of two links side by side, the left one, even when it starts lower (a tablet row reads
+ * column 1, then column 2); of two that share a column, the upper one.
+ */
+async function readingOrder(row: Locator) {
+  return row.evaluate((item) =>
+    [...item.querySelectorAll('a')]
+      .filter((link) => link.checkVisibility())
+      .map((link) => ({ box: link.getBoundingClientRect(), name: link.textContent!.trim() }))
+      .sort(({ box: a }, { box: b }) =>
+        a.right <= b.left || b.right <= a.left ? a.left - b.left : a.top - b.top,
+      )
+      .map(({ name }) => name),
+  )
 }
 
 test.beforeEach(async ({ context, page, request }) => {
@@ -206,12 +245,13 @@ test('sets earlier stories as a metadata line above the title on phones and in c
       const name = `${await heading.textContent()} at ${width}`
       const title = await box(heading)
       const number = await box(row.locator('.si-number'))
-      const section = await box(row.locator('.si-row-facts a'))
+      // The styles render one of the two copies of the section and reading time.
+      const section = await box(row.locator('.si-row-facts a').filter({ visible: true }))
       const metadata = [
         number,
         await box(row.locator('time')),
         section,
-        await box(row.locator('.si-row-facts .si-reading-time')),
+        await box(row.locator('.si-row-facts .si-reading-time').filter({ visible: true })),
       ]
       if (width < 600) {
         // One metadata line, wrapped where it must, then the title.
@@ -228,6 +268,48 @@ test('sets earlier stories as a metadata line above the title on phones and in c
       expect((await box(row.locator('.si-row-dek'))).y, name).toBeGreaterThanOrEqual(
         title.y + title.height,
       )
+    }
+  }
+})
+
+test('tabs through each earlier story in reading order, with one rendered and focusable section link, at 390, 768 and 1440 pixels', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+    const rows = page
+      .locator(root)
+      .getByRole('region', { name: 'Earlier stories' })
+      .getByRole('listitem')
+    await expect(rows).toHaveCount(5)
+    for (const row of await rows.all()) {
+      const title = (await row.getByRole('heading', { level: 3 }).textContent())!.trim()
+      const name = `${title} at ${width}`
+      // Both copies are in the DOM: the metadata's below 1024px, the one after the dek from 1024px.
+      const copies = row.locator('.si-row-facts a')
+      await expect(copies, name).toHaveCount(2)
+      const narrow = width < 1024
+      await expect(copies.nth(narrow ? 0 : 1), name).toBeVisible()
+      await expect(copies.nth(narrow ? 1 : 0), name).toBeHidden()
+      expect(
+        await copies.evaluateAll((links) =>
+          links.map((link) => {
+            link.focus()
+            return document.activeElement === link
+          }),
+        ),
+        name,
+      ).toEqual([narrow, !narrow])
+      await expect(row.getByRole('link'), name).toHaveCount(2)
+      const section = (await copies.nth(narrow ? 0 : 1).textContent())!.trim()
+      const order = await readingOrder(row)
+      expect(order, name).toEqual(narrow ? [section, title] : [title, section])
+      expect(await tabOrder(page, row), name).toEqual(order)
     }
   }
 })

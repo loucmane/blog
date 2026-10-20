@@ -1,7 +1,9 @@
 /**
  * Emitted and scoped by the active direction root; no imported stylesheets. Element resets wrap the
  * page in `:where()`, so they carry no more than the root's specificity and every component rule
- * overrides them, whatever its order.
+ * overrides them, whatever its order. Index rows hold their section and reading time twice
+ * (`index-row.tsx`): desktop shows the copy after the dek, and one query below 1024px swaps in the
+ * copy in the metadata, so exactly one copy shows at any width.
  */
 export const styles = `
   & { background: var(--si-paper); color: var(--si-ink); }
@@ -65,7 +67,8 @@ export const styles = `
   & .si-row-meta, & .si-row-facts { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; font-family: var(--si-mono); font-size: var(--si-label); line-height: 1.6; }
   & .si-row-copy { grid-column: 2 / span 2; }
   & .si-index-sectionless .si-row-copy { grid-column: 2 / -1; }
-  & .si-row-facts { grid-column: 4; }
+  & .si-row-facts-wide { grid-column: 4; }
+  & .si-row-facts-narrow { display: none; }
   & .si-row-title { font-size: var(--si-card); line-height: 1.15; }
   & .si-row-title a { display: block; min-height: 44px; }
   & .si-row-dek { margin-top: 0.5rem; max-width: 65ch; font-size: var(--si-copy); line-height: 1.6; color: var(--si-secondary); }
@@ -133,10 +136,10 @@ export const styles = `
   & .si-top-link { grid-column: 1; justify-self: start; display: inline-flex; align-items: center; min-height: 44px; font-family: var(--si-mono); font-size: var(--si-small); text-decoration: underline; }
   @media (max-width: 1023px) {
     & .si-plates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    & .si-index > li { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr; }
-    & .si-row-meta { grid-area: 1 / 1; }
-    & .si-row-facts { grid-area: 2 / 1; }
-    & .si-row-copy, & .si-index-sectionless .si-row-copy { grid-area: 1 / 2 / span 2; }
+    & .si-index > li { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    & .si-row-copy, & .si-index-sectionless .si-row-copy { grid-column: 2; }
+    & .si-row-facts-narrow { display: flex; margin-top: 0.25rem; }
+    & .si-row-facts-wide { display: none; }
     & .si-number-plate[data-alone~='tablet'] { display: none; }
     & .si-empty, & .si-footer { grid-template-columns: 1fr; }
     & .si-empty > *, & .si-footer .si-nav { grid-column: 1; }
@@ -156,9 +159,9 @@ export const styles = `
     & .si-plates { grid-template-columns: 1fr; }
     & .si-plate-lead { grid-column: auto; }
     & .si-number-plate { display: none; }
-    & .si-index > li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; }
-    & .si-row-meta, & .si-row-facts { display: contents; }
-    & .si-row-copy { order: 1; flex-basis: 100%; margin-top: 0.25rem; }
+    & .si-index > li { display: flex; flex-direction: column; }
+    & .si-row-meta { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; }
+    & .si-row-facts-narrow { display: contents; }
     & .si-body [data-block='gallery'] { grid-template-columns: 1fr; }
   }
   @media (min-width: 1024px) {

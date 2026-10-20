@@ -34,7 +34,11 @@ export function SwissLabelRow({
 
 /**
  * Numbered index rows: the number and date, the title and dek, then the section and reading time.
- * Without the section column, the reading time joins the number and date.
+ * No one DOM order fits every layout, so the section and reading time render twice: in the
+ * metadata before the title, read first on phones and tablets, and after the dek for desktop's
+ * fourth column. The styles show one copy at any width; `display: none` keeps the other out of
+ * the tab order and the accessibility tree. Without the section column, the reading time joins
+ * the number and date.
  */
 export function SwissIndexList({
   showSection = true,
@@ -56,6 +60,13 @@ export function SwissIndexList({
         const readingTime = (
           <span className="si-reading-time">{formatReadingTime(story.readingMinutes)}</span>
         )
+        // Narrow: phones and tablets, below 1024px. Wide: desktop.
+        const facts = (layout: 'narrow' | 'wide') => (
+          <div className={`si-row-facts si-row-facts-${layout}`}>
+            {story.section ? <Link href={story.section.href}>{story.section.name}</Link> : null}
+            {readingTime}
+          </div>
+        )
         return (
           <li key={story.slug}>
             <div className="si-row-meta">
@@ -63,7 +74,7 @@ export function SwissIndexList({
                 {storyNumber(start + index)}
               </span>
               <time dateTime={story.publishedAt}>{formatPublishedDate(story.publishedAt)}</time>
-              {showSection ? null : readingTime}
+              {showSection ? facts('narrow') : readingTime}
             </div>
             <div className="si-row-copy">
               <h3 className="si-row-title">
@@ -71,12 +82,7 @@ export function SwissIndexList({
               </h3>
               {story.dek ? <p className="si-row-dek">{story.dek}</p> : null}
             </div>
-            {showSection ? (
-              <div className="si-row-facts">
-                {story.section ? <Link href={story.section.href}>{story.section.name}</Link> : null}
-                {readingTime}
-              </div>
-            ) : null}
+            {showSection ? facts('wide') : null}
           </li>
         )
       })}

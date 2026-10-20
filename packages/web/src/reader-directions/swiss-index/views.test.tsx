@@ -51,6 +51,10 @@ function follows(first: Element, second: Element) {
   return Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
 }
 
+function label(element: Element) {
+  return [element.localName, ...element.classList].join('.')
+}
+
 /** For each plate in a list: null without a number plate, else the widths at which it is hidden. */
 function numberPlates(list: HTMLElement) {
   return [...list.children].map((plate) => {
@@ -282,10 +286,12 @@ describe('Swiss Index with real published North House content', () => {
       expect(time).toHaveAttribute('datetime', story.publishedAt)
       expect(time).toHaveTextContent(formatPublishedDate(story.publishedAt))
       if (story.section) {
-        expect(within(item).getByRole('link', { name: story.section.name })).toHaveAttribute(
-          'href',
-          story.section.href,
-        )
+        // One copy for phones and tablets, one for desktop; the styles render one of them.
+        expect(
+          within(item)
+            .getAllByRole('link', { name: story.section.name })
+            .map((link) => link.getAttribute('href')),
+        ).toEqual([story.section.href, story.section.href])
       }
       expect(item).toHaveTextContent(formatReadingTime(story.readingMinutes))
       const number = item.querySelector('.si-number')!
@@ -298,19 +304,44 @@ describe('Swiss Index with real published North House content', () => {
     }
   })
 
-  it('keeps each index row in desktop reading order: number and date, title and dek, section and reading time', () => {
+  it('puts the section and reading time in the metadata before the title and again after the dek, never on section pages', () => {
     const { screen } = markup(<SwissHome view={home} />)
     const items = within(regionNamedBy(screen, 'Earlier stories')).getAllByRole('listitem')
     for (const item of items) {
-      // Phones regroup the metadata visually; the DOM and focus order stay the desktop columns'.
-      expect([...item.children].map(({ className }) => className)).toEqual([
-        'si-row-meta',
-        'si-row-copy',
-        'si-row-facts',
+      // No one DOM order fits all three layouts: phones and tablets show the copy in the
+      // metadata, desktop the copy after the dek, so DOM, focus and visual order agree.
+      expect([...item.children].map(label)).toEqual([
+        'div.si-row-meta',
+        'div.si-row-copy',
+        'div.si-row-facts.si-row-facts-wide',
       ])
+      // The number and date come first at every width.
+      expect([...item.querySelector('.si-row-meta')!.children].map(label)).toEqual([
+        'span.si-number',
+        'time',
+        'div.si-row-facts.si-row-facts-narrow',
+      ])
+      const [narrow, wide] = item.querySelectorAll('.si-row-facts')
+      expect(narrow!.innerHTML).toBe(wide!.innerHTML)
+      expect(narrow!.querySelector('a')).toBeTruthy()
       const title = within(item).getByRole('heading', { level: 3 })
-      expect(follows(item.querySelector('time')!, title)).toBe(true)
-      expect(follows(title, item.querySelector('.si-row-facts a')!)).toBe(true)
+      expect(follows(narrow!, title)).toBe(true)
+      expect(follows(item.querySelector('.si-row-dek') ?? title, wide!)).toBe(true)
+    }
+
+    const { document } = markup(
+      <SwissSection view={{ ...section, stories: [home.lead!, ...home.recent] }} />,
+    )
+    const rows = document.querySelectorAll('.si-earlier .si-index > li')
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows) {
+      expect(row.querySelector('.si-row-facts')).toBeNull()
+      expect([...row.children].map(label)).toEqual(['div.si-row-meta', 'div.si-row-copy'])
+      expect([...row.querySelector('.si-row-meta')!.children].map(label)).toEqual([
+        'span.si-number',
+        'time',
+        'span.si-reading-time',
+      ])
     }
   })
 

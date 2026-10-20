@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { within } from '@testing-library/dom'
 import postcss, { type ChildNode, type Rule } from 'postcss'
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -186,35 +187,64 @@ describe('Swiss Index computed styles', () => {
     },
   )
 
-  it('sets phone index rows as one metadata line, then the title and dek; wider rows keep their columns', () => {
+  it('renders one copy of each index row’s section and reading time per width, where the layout reads it', () => {
+    const story = home.recent[2]!
     const firstRow = (width: number) =>
-      renderAt(<SwissHome view={home} />, width).querySelector('.si-earlier .si-index > li')!
+      renderAt(<SwissHome view={home} />, width).querySelector<HTMLElement>(
+        '.si-earlier .si-index > li',
+      )!
+    const rendered = (row: Element) =>
+      [...row.querySelectorAll('.si-row-facts')].filter((facts) => style(facts).display !== 'none')
+    // Testing Library leaves out what display: none hides from the keyboard and assistive technology.
+    const links = (row: HTMLElement) =>
+      within(row)
+        .getAllByRole('link')
+        .map((link) => link.textContent)
+    for (const width of widths) {
+      const row = firstRow(width)
+      const facts = rendered(row)
+      expect(facts.map(label), `${width}px`).toEqual([
+        width < 1024
+          ? 'div.si-row-facts.si-row-facts-narrow'
+          : 'div.si-row-facts.si-row-facts-wide',
+      ])
+      expect(facts[0]!.querySelector('a')).toHaveTextContent(story.section!.name)
+      // Phones and tablets read the metadata first; desktop reads the title before column 4.
+      expect(links(row), `${width}px`).toEqual(
+        width < 1024 ? [story.section!.name, story.title] : [story.title, story.section!.name],
+      )
+    }
+
+    // Phones: one metadata line of number, date, section and reading time, then the title and dek.
     const phone = firstRow(390)
     expect(style(phone).display).toBe('flex')
-    expect(style(phone).flexWrap).toBe('wrap')
-    // The two metadata groups flow as one line; the title and dek follow on lines of their own.
-    for (const group of phone.querySelectorAll('.si-row-meta, .si-row-facts')) {
-      expect(style(group).display).toBe('contents')
-    }
-    const copy = phone.querySelector('.si-row-copy')!
-    expect(style(copy).order).toBe('1')
-    expect(style(copy).flexBasis).toBe('100%')
-    for (const fact of phone.querySelectorAll('.si-row-meta > *, .si-row-facts > *')) {
-      expect(Number(style(fact).order || 0)).toBeLessThan(1)
-    }
-
+    expect(style(phone).flexDirection).toBe('column')
+    const meta = phone.querySelector('.si-row-meta')!
+    expect(style(meta).flexDirection).toBe('row')
+    expect(style(meta).flexWrap).toBe('wrap')
+    expect(style(meta.querySelector('.si-row-facts-narrow')!).display).toBe('contents')
+    // Tablets: column 1 holds all the metadata, column 2 the title and dek.
     const tablet = firstRow(768)
     expect(style(tablet).display).toBe('grid')
-    expect(style(tablet.querySelector('.si-row-meta')!).display).toBe('flex')
-    expect(style(tablet.querySelector('.si-row-facts')!).gridArea).toBe('2 / 1')
-    expect(style(tablet.querySelector('.si-row-copy')!).gridArea).toBe('1 / 2 / span 2')
-
+    expect(style(tablet.querySelector('.si-row-meta .si-row-facts-narrow')!).display).toBe('flex')
+    expect(style(tablet.querySelector('.si-row-copy')!).gridColumn).toBe('2')
+    // Desktop: number and date, the title and dek across columns 2 and 3, then column 4.
     const desktop = firstRow(1440)
     expect(style(desktop).display).toBe('grid')
     expect(style(desktop.querySelector('.si-row-copy')!).gridColumn).toBe('2 / span 2')
-    expect(style(desktop.querySelector('.si-row-facts')!).gridColumn).toBe('4')
-    for (const row of [tablet, desktop]) {
-      expect(Number(style(row.querySelector('.si-row-copy')!).order || 0)).toBe(0)
+    expect(style(desktop.querySelector('.si-row-facts-wide')!).gridColumn).toBe('4')
+
+    // Section pages leave out the section column: each row links only to its story.
+    const stories = [home.lead!, ...home.recent]
+    for (const width of widths) {
+      const page = renderAt(<SwissSection view={{ ...section, stories }} />, width)
+      const rows = [...page.querySelectorAll<HTMLElement>('.si-earlier .si-index > li')]
+      expect(rows).toHaveLength(stories.length - 4)
+      rows.forEach((row, index) => {
+        expect(row.querySelector('.si-row-facts')).toBeNull()
+        expect(links(row), `${width}px`).toEqual([stories[index + 4]!.title])
+        expect(style(row.querySelector('.si-row-meta .si-reading-time')!).display).not.toBe('none')
+      })
     }
   })
 
