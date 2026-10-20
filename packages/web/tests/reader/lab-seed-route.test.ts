@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 import { POST } from '@/app/api/internal/lab-seed/route'
 import { expirePublicReader } from '@/reader/cache'
 import type * as Illustrations from '@/server/lab/illustrations'
+import { labImages, labStories } from '@/server/lab/north-house'
 import { OwnerConfigurationError } from '@/server/owner/config'
 import * as runtime from '@/server/owner/runtime'
 
@@ -168,7 +169,7 @@ describe('hosted lab seed admission', () => {
     expect((await first).status).toBe(200)
     expect(expirePublicReader).toHaveBeenCalledOnce()
     expect((await POST(request())).status).toBe(200)
-    expect(put).toHaveBeenCalledTimes(9)
+    expect(put).toHaveBeenCalledTimes(labImages.length)
   })
 
   it(
@@ -182,8 +183,8 @@ describe('hosted lab seed admission', () => {
       expect(response.status).toBe(200)
       expect(response.headers.get('cache-control')).toBe('private, no-store')
       const report = await response.json()
-      expect(report.stories.created).toHaveLength(8)
-      expect(report.images.created).toHaveLength(9)
+      expect(report.stories.created).toHaveLength(labStories.length)
+      expect(report.images.created).toHaveLength(labImages.length)
       expect(report.images.skipped).toBeNull()
       expect(expirePublicReader).toHaveBeenCalledOnce()
       expect(JSON.stringify(report)).not.toContain(token)
