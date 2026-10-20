@@ -1,6 +1,6 @@
 import type { SectionDirectionProps } from '../contract'
+import { thumbnailSizes } from './image-sizes'
 import { LiteraryShell } from './shell'
-import { thumbnailSizes } from './story-card'
 import { LiteraryStoryIndex } from './story-index'
 
 export function LiterarySection({ view }: SectionDirectionProps) {
@@ -9,7 +9,7 @@ export function LiterarySection({ view }: SectionDirectionProps) {
     <LiteraryShell
       navigation={view.navigation}
       currentSection={view.slug}
-      leadImage={firstImage ? { image: firstImage, sizes: thumbnailSizes } : null}
+      leadImage={firstImage ? { image: firstImage, sizes: thumbnailSizes(firstImage) } : null}
     >
       <header className="ll-section-header">
         <p className="ll-label">Section</p>

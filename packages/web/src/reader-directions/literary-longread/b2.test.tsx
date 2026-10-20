@@ -101,7 +101,7 @@ describe('Literary Long-read b2 presentation', () => {
       expect(relatedImage).toHaveAttribute('loading', 'lazy')
       expect(relatedImage).toHaveAttribute(
         'sizes',
-        '(min-width: 1344px) 25rem, (min-width: 1024px) calc(33.3333vw - 3rem), (min-width: 768px) calc(100vw - 3rem), calc(100vw - 2.5rem)',
+        '(min-width: 1344px) 25rem, (min-width: 1024px) calc(33.333333vw - 3rem), (min-width: 768px) calc(100vw - 3rem), calc(100vw - 2.5rem)',
       )
     }
     expect(within(document.querySelector('.ll-article-exit')!).getByRole('link')).toHaveAttribute(

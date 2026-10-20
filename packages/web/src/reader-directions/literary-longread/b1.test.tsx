@@ -83,7 +83,8 @@ describe('Literary Long-read b1 design contract', () => {
       <LiteraryHome view={{ lead: story(0), navigation, recent: [story(1)] }} />,
     )
     const sizes = [
-      '(min-width: 1344px) 39rem, (min-width: 1024px) calc(50vw - 3rem), (min-width: 768px) calc(50vw - 1.5rem), calc(100vw - 2.5rem)',
+      // This 4:3 source fills a 4:5 desktop crop: source width is 5/3 of the slot.
+      '(min-width: 1344px) 65rem, (min-width: 1024px) calc(83.333333vw - 5rem), (min-width: 768px) calc(83.333333vw - 2.5rem), calc(100vw - 2.5rem)',
       '(min-width: 1344px) 38.25rem, (min-width: 1024px) calc(50vw - 3.75rem), (min-width: 768px) calc(50vw - 2.25rem), calc(100vw - 2.5rem)',
     ]
     const figures = document.querySelectorAll<HTMLElement>('main figure')
@@ -98,7 +99,7 @@ describe('Literary Long-read b1 design contract', () => {
       expect(figure.querySelector('img')).toHaveAttribute('sizes', sizes[index])
       expect(figure.style.getPropertyValue('--ll-focal-point')).toBe('20% 80%')
     }
-    const preloads = document.querySelectorAll('link[as="image"]')
+    const preloads = document.querySelectorAll('link[as="image"][href]')
     expect(preloads).toHaveLength(1)
     expect(preloads[0]).toHaveAttribute('imagesizes', sizes[0])
     expect(preloads[0]).toHaveAttribute(
