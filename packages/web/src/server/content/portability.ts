@@ -576,29 +576,24 @@ export async function createPortableContentBundle(
 ): Promise<PortableContentBundle> {
   const data = await repository.transaction(async (transaction): Promise<PortableContentData> => {
     const articles = sortById(await transaction.listArticles())
+    // One query at a time: the transaction holds a single PostgreSQL client, and concurrent
+    // client.query() calls on it are deprecated in pg 8 and removed in pg 9.
+    const articleAuthors: ArticleAuthor[] = []
+    const autosaves: DraftAutosave[] = []
+    for (const { id: articleId } of articles) {
+      const authors = await transaction.listArticleAuthors(articleId)
+      authors.forEach(({ id: authorId }, position) =>
+        articleAuthors.push({ articleId, authorId, position }),
+      )
+      autosaves.push(...(await transaction.listAutosaves(articleId)))
+    }
     return {
-      articleAuthors: (
-        await Promise.all(
-          articles.map(async ({ id: articleId }) =>
-            (await transaction.listArticleAuthors(articleId)).map(({ id: authorId }, position) => ({
-              articleId,
-              authorId,
-              position,
-            })),
-          ),
-        )
-      ).flat(),
+      articleAuthors,
       articleTaxonomies: await transaction.listArticleTaxonomies(),
       articles,
       auditEvents: sortById(await transaction.listAuditEvents()),
       authors: sortById(await transaction.listAuthors()),
-      autosaves: sortById(
-        (
-          await Promise.all(
-            articles.map(({ id: articleId }) => transaction.listAutosaves(articleId)),
-          )
-        ).flat(),
-      ),
+      autosaves: sortById(autosaves),
       mediaAssets: sortById(await transaction.listMediaAssets()),
       mediaRenditions: sortById(await transaction.listMediaRenditions()),
       outboxEvents: sortById(await transaction.listOutboxEvents()),

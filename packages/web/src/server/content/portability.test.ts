@@ -14,7 +14,7 @@ import {
   verifyPortableMedia,
   type PortableContentBundle,
 } from './portability'
-import type { Clock, IdentifierSource } from './ports'
+import type { Clock, ContentTransaction, IdentifierSource } from './ports'
 import { ContentService } from './service'
 
 class Identifiers implements IdentifierSource {
@@ -23,6 +23,25 @@ class Identifiers implements IdentifierSource {
   next(kind: string): string {
     this.index += 1
     return `${kind}-portable-${this.index}`
+  }
+}
+
+/** Fails every byline write, after authors and articles are already written in the transaction. */
+class FailingBylineRepository extends InMemoryContentRepository {
+  override transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
+    return super.transaction((transaction) =>
+      work(
+        new Proxy(transaction, {
+          get(target, property, receiver) {
+            if (property === 'setArticleAuthors') {
+              return () => Promise.reject(new Error('byline write failed'))
+            }
+            const value: unknown = Reflect.get(target, property, receiver)
+            return typeof value === 'function' ? value.bind(target) : value
+          },
+        }),
+      ),
+    )
   }
 }
 
@@ -185,6 +204,16 @@ describe('portable content ownership', () => {
       expect(await transaction.listArticleAuthors('article-empty')).toEqual([])
     })
     expect(await createPortableContentBundle(restored, exportedAt)).toEqual(bundle)
+
+    // A write that fails partway through rolls the whole import back.
+    const failing = new FailingBylineRepository()
+    await expect(importPortableContentBundle(failing, shuffled)).rejects.toThrow(
+      'byline write failed',
+    )
+    await failing.transaction(async (transaction) => {
+      expect(await transaction.listArticles()).toEqual([])
+      expect(await transaction.listAuthors()).toEqual([])
+    })
   })
 
   it('verifies and imports legacy bundles without article-author links as empty bylines', async () => {
