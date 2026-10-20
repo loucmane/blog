@@ -27,11 +27,28 @@ const parse = require('next/dist/compiled/@next/font/dist/fontkit').default as (
 const folder = path.join(process.cwd(), 'packages/web/public/reader-directions/swiss-index/fonts')
 
 // SHA-256 of the exact output from contract.ts, first pinned at base 68dde2b and updated for the
-// local bold and italic fallback faces (blog-0044.63). A range extension must not alter static CSS.
+// local bold and italic fallback faces (blog-0044.63) and the versioned font URLs (blog-0044.37).
+// A range extension must not alter static CSS.
 it('keeps swiss-index font output byte-for-byte compatible', () => {
   expect(
     createHash('sha256').update(readerDirectionFontCss(swissIndexDirection)!).digest('hex'),
-  ).toBe('9bd3827f6d3b371682c9d46c4f19d4d87f73050c06f818f972fff98b2e4c5ee5')
+  ).toBe('f0ba019edd54f4956450e26af1e0878cb92f5deb5e3d38ccd104cf68333190f0')
+})
+
+// The hash declared in fonts.ts versions each URL, and the server caches versioned font URLs for a
+// year as immutable. New bytes fail here until fonts.ts declares their hash, which also gives them
+// a new URL, so a returning reader never keeps a stale face.
+it('versions every font URL with the SHA-256 of the file it serves', () => {
+  const css = readerDirectionFontCss(swissIndexDirection)!
+  for (const source of swissIndexDirection.fonts.flatMap((font) => font.sources)) {
+    const sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(folder, source.file)))
+      .digest('hex')
+    expect(source.sha256, source.file).toBe(sha256)
+    expect(css).toContain(
+      `url("/reader-directions/swiss-index/fonts/${source.file}?v=${sha256.slice(0, 16)}")`,
+    )
+  }
 })
 
 /** The CSS ch unit of the regular face, the advance of "0", as a fraction of the font size. */
@@ -86,9 +103,9 @@ it('emits the used weights and genuine 400 and 700 italics, with optional displa
   for (const face of web) {
     expect(face['font-display']).toBe('optional')
     expect(face.src).toMatch(
-      /^url\("\/reader-directions\/swiss-index\/fonts\/[a-z0-9-]+\.woff2"\) format\("woff2"\)$/,
+      /^url\("\/reader-directions\/swiss-index\/fonts\/[a-z0-9-]+\.woff2\?v=[a-f0-9]{16}"\) format\("woff2"\)$/,
     )
-    expect(face.src).toContain(`-${face['font-weight']}-${face['font-style']}.woff2"`)
+    expect(face.src).toContain(`-${face['font-weight']}-${face['font-style']}.woff2?v=`)
   }
   const { calculateSizeAdjustValues } = require('next/dist/server/font-utils') as {
     calculateSizeAdjustValues(family: string): {

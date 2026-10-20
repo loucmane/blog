@@ -11,13 +11,34 @@ import { readerDirectionFontCss } from '../contract'
 import { cinematicFeatureDirection } from './index'
 
 const require = createRequire(import.meta.url)
+const folder = path.join(
+  process.cwd(),
+  'packages/web/public/reader-directions/cinematic-feature/fonts',
+)
 
 // Independently assembled from the five expected source faces and six local fallback
-// faces (3,007 UTF-8 bytes), without calling the CSS generator to obtain the pin.
+// faces (3,007 UTF-8 bytes), then each URL versioned with the first 16 hex digits of its
+// file's SHA-256 (3,102 bytes), without calling the CSS generator to obtain the pin.
 it('pins Cinematic Feature font output including genuine 400 and 700 italics', () => {
   expect(
     createHash('sha256').update(readerDirectionFontCss(cinematicFeatureDirection)!).digest('hex'),
-  ).toBe('b893ba0db202eb67ed413b87170ee9d519376a67bbd18973a2dd38de8731d751')
+  ).toBe('63362c245cc7232c546923aa0eb267dfdc53b0df92a11381ab9fc4dae8c085f6')
+})
+
+// The hash declared in fonts.ts versions each URL, and the server caches versioned font URLs for a
+// year as immutable. New bytes fail here until fonts.ts declares their hash, which also gives them
+// a new URL, so a returning reader never keeps a stale face.
+it('versions every font URL with the SHA-256 of the file it serves', () => {
+  const css = readerDirectionFontCss(cinematicFeatureDirection)!
+  for (const source of cinematicFeatureDirection.fonts.flatMap((font) => font.sources)) {
+    const sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(folder, source.file)))
+      .digest('hex')
+    expect(source.sha256, source.file).toBe(sha256)
+    expect(css).toContain(
+      `url("/reader-directions/cinematic-feature/fonts/${source.file}?v=${sha256.slice(0, 16)}")`,
+    )
+  }
 })
 
 it('emits genuine variable axes, static italics, used mono weights, optional display and reproducible fallback metrics', () => {
@@ -44,7 +65,7 @@ it('emits genuine variable axes, static italics, used mono weights, optional dis
   for (const face of web) {
     expect(face['font-display']).toBe('optional')
     expect(face.src).toMatch(
-      /^url\("\/reader-directions\/cinematic-feature\/fonts\/[a-z0-9-]+\.woff2"\) format\("woff2"\)$/,
+      /^url\("\/reader-directions\/cinematic-feature\/fonts\/[a-z0-9-]+\.woff2\?v=[a-f0-9]{16}"\) format\("woff2"\)$/,
     )
   }
   const presentation = postcss.parse(cinematicFeatureDirection.styles!)
@@ -129,10 +150,6 @@ it('ships authentic Latin glyphs, Archivo axes and static italics, exact mono we
     variationAxes: Record<string, { min: number; max: number; default: number }>
     hasGlyphForCodePoint(code: number): boolean
   }
-  const folder = path.join(
-    process.cwd(),
-    'packages/web/public/reader-directions/cinematic-feature/fonts',
-  )
   const declared = cinematicFeatureDirection.fonts.flatMap((font) => font.sources)
   expect(
     sources

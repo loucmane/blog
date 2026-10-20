@@ -11,6 +11,27 @@ import { readerDirectionFontCss } from '../contract'
 import { expressiveColourDirection } from './index'
 
 const require = createRequire(import.meta.url)
+const folder = path.join(
+  process.cwd(),
+  'packages/web/public/reader-directions/expressive-colour/fonts',
+)
+
+// The hash declared in fonts.ts versions each URL, and the server caches versioned font URLs for a
+// year as immutable. New bytes fail here until fonts.ts declares their hash, which also gives them
+// a new URL, so a returning reader never keeps a stale face. prepare-fonts.py rewrites the Fraunces
+// bytes under the same names, so it rewrites their declared hashes with them.
+it('versions every font URL with the SHA-256 of the file it serves', () => {
+  const css = readerDirectionFontCss(expressiveColourDirection)!
+  for (const source of expressiveColourDirection.fonts.flatMap((font) => font.sources)) {
+    const sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(folder, source.file)))
+      .digest('hex')
+    expect(source.sha256, source.file).toBe(sha256)
+    expect(css).toContain(
+      `url("/reader-directions/expressive-colour/fonts/${source.file}?v=${sha256.slice(0, 16)}")`,
+    )
+  }
+})
 
 it('emits genuine italic and variable weight faces, optional display and reproducible fallback metrics', () => {
   const css = postcss.parse(readerDirectionFontCss(expressiveColourDirection)!)
@@ -35,7 +56,7 @@ it('emits genuine italic and variable weight faces, optional display and reprodu
   for (const face of web) {
     expect(face['font-display']).toBe('optional')
     expect(face.src).toMatch(
-      /^url\("\/reader-directions\/expressive-colour\/fonts\/[a-z0-9-]+\.woff2"\) format\("woff2"\)$/,
+      /^url\("\/reader-directions\/expressive-colour\/fonts\/[a-z0-9-]+\.woff2\?v=[a-f0-9]{16}"\) format\("woff2"\)$/,
     )
   }
   const { calculateSizeAdjustValues } = require('next/dist/server/font-utils') as {
@@ -91,10 +112,6 @@ it('ships verified Latin subsets, actual SOFT axes, genuine italic and complete 
     variationAxes: Record<string, { min: number; max: number; default: number }>
     hasGlyphForCodePoint(code: number): boolean
   }
-  const folder = path.join(
-    process.cwd(),
-    'packages/web/public/reader-directions/expressive-colour/fonts',
-  )
   const declared = expressiveColourDirection.fonts.flatMap((font) => font.sources)
   expect(
     sources

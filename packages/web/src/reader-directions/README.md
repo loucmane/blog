@@ -160,7 +160,7 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
 
 - **Fonts are data.** Declare `fonts` in the direction's own `fonts.ts`, following
   [Quiet Monograph](quiet-monograph/fonts.ts). Each declaration provides a `variable` CSS custom
-  property, a `genericFamily` (`serif`, `sans-serif` or `monospace`), `sources` of `{ file, weight, style? }`
+  property, a `genericFamily` (`serif`, `sans-serif` or `monospace`), `sources` of `{ file, sha256, weight, style? }`
   for the weights used, and a `fallback` with `family`, `ascentOverride`, `descentOverride`,
   `lineGapOverride` and `sizeAdjust`. Metrics are nonnegative percentages; size adjustment is positive.
   Source `style` accepts only `normal` or `italic`, defaults to `normal`, and is emitted as the
@@ -179,6 +179,20 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
   their full licence text and source URLs/hashes. `file` is a lowercase filename, not a URL or
   path. Ship only subsets and weights actually used. No new per-direction shared plumbing is
   needed: the root generates URLs, unique family names, and scoped variable declarations.
+- **Versioned font URLs, cached as immutable.** Give every source the `sha256` of its file, as
+  64 lowercase hex digits. Every direction declares it in its `fonts.ts`; `sources.json` beside
+  the files records the same value with the provenance. The contract emits
+  `url("/reader-directions/<id>/fonts/<file>?v=<first 16 hex digits>")`, and `next.config.ts`
+  serves a `.woff2` request in that folder whose `v` is 16 lowercase hex digits with
+  `Cache-Control: public, max-age=31536000, immutable`. Every other request there keeps Next's
+  `public, max-age=0`, which revalidates. So never change a file's bytes without its hash: update
+  `sha256` in `fonts.ts` and `sources.json` together, and the URL changes with them. The
+  direction's `fonts.test.ts` fails while a declared hash differs from its file, and
+  `packages/web/tests/framework/framework-contract.test.ts` fails unless every registered
+  direction's font URLs carry their files' versions and get the cache rule. The contract still
+  accepts a source without `sha256`, which keeps an unversioned URL, but no registered direction
+  may leave it out. Expressive Colour's `prepare-fonts.py` rewrites the Fraunces hashes with
+  their bytes.
 - **Only the active root emits font CSS.** `ReaderDirectionRoot` renders an ordinary inline
   `<style data-reader-direction-fonts="<id>">` before the direction's content, with no `href` or
   `precedence`. It is removed on a switch to baseline; React must not retain it as a hoisted
@@ -217,7 +231,7 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
     own faces or by synthesis. Hosts with none of the fonts (Android, ChromeOS, Linux without
     Liberation) paint the generic family, as before.
 - **Baseline has no font rules or references.** The registry remains safe to import on every
-  route because declarations are plain data. Visitor authorization, cache behavior, publication
+  route because declarations are plain data. Visitor authorization, page caching, publication
   versions and CSP are unchanged. Existing `font-src 'self'` and inline-style policy suffice.
 - **No imported stylesheets** (`.css`, `.module.css`). Use Tailwind utilities, `tokens`, and
   `styles`. The page inlines a direction's tokens and styles only when it renders that direction.
@@ -230,6 +244,9 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
 
 - `vitest run packages/web/src/reader-directions` runs the contract, contrast, and registry tests.
   The registry test renders every direction's author and topic pages and expects one `h1` each.
+- `packages/web/tests/framework/framework-contract.test.ts` pins the font cache rule with Next's
+  own route matchers, and checks every registered direction's font URLs against it and against
+  the hashes of the files they serve.
 - `packages/web/tests/reader/author-topic-routes.test.ts` covers the author and topic routes, in
   the lab too.
 - `packages/web/src/app/failure-views.test.tsx` covers custom/fallback failure views and reset;
@@ -247,6 +264,8 @@ import or re-export `next/font` (Google or local), or import a stylesheet, inclu
 - `tests/e2e/reader-lab-cold-fonts.spec.ts` blocks each direction's WOFF2 files and reads the
   painted fonts over CDP. `strong` must paint a local bold face and `em` a local italic face, or,
   where the host lacks those faces, paint differently from the body text. Run it on Linux
-  (Liberation) and on Windows or macOS (Arial and Times New Roman).
+  (Liberation) and on Windows or macOS (Arial and Times New Roman). It also checks that every
+  blocked request had a versioned URL, and requests each font with and without a version to
+  check the `Cache-Control` the production server sends.
 - The [signed-in Lighthouse harness](../../../../scripts/lab-lighthouse.md) measures home,
   article, and section with the owner session and selected direction, and rejects baseline fallback.

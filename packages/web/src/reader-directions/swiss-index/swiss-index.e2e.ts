@@ -40,7 +40,11 @@ const missingPath = '/stories/a-story-that-was-never-published'
 const origin = 'http://localhost:3100'
 const ownerToken = 'task43-owner-test-token-with-more-than-thirty-two-bytes'
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
-const fontFiles = '**/reader-directions/swiss-index/fonts/*.woff2'
+// Every font request of this direction. Matched by path: the contract versions font URLs with
+// `?v=`, and a glob ending in `.woff2` would no longer match them.
+const fontFiles = (url: URL) =>
+  url.pathname.startsWith('/reader-directions/swiss-index/fonts/') &&
+  url.pathname.endsWith('.woff2')
 // The generated mono family first; Chromium may serialize the name without quotes.
 const monoFamily = /^"?reader-swiss-index__font-si-mono"?,/
 

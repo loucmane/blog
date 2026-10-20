@@ -73,3 +73,12 @@ for that navigation. The shared `capture-fonts.ts` helper gates first layout on 
 readiness and verifies the rendered faces before saving screenshots.
 The maintenance script is never imported by runtime code. The host browser checks
 must still measure CLS; metric overrides alone are not proof of zero shift.
+
+## Caching
+
+The page requests each face as `<file>?v=<version>`, where the version is the first 16 hex
+digits of the file's SHA-256. The hash is declared as `sha256` on the face's source in
+`src/reader-directions/swiss-index/fonts.ts`, the same value as in `sources.json`. The server
+caches these versioned URLs for a year as immutable. If a file's bytes change, update both
+hashes: the URL changes with them, so returning readers fetch the new file. `fonts.test.ts`
+fails while a declared hash differs from its file.

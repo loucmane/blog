@@ -692,6 +692,51 @@ describe('reader direction contract', () => {
     },
   )
 
+  it('versions each font URL with the first 16 hex digits of its declared SHA-256', () => {
+    const sha256 = 'e48e58027030df56869b795ca6f19b7012158275f7ad7cde1900b4a0b68d02e2'
+    const versioned = defineReaderDirection(
+      definition({
+        fonts: [{ ...displayFont, sources: [{ ...displayFont.sources[0], sha256 }] }],
+      }),
+    )
+    expect(readerDirectionFontCss(versioned)).toBe(
+      '@font-face{font-family:"reader-quiet-monograph__font-display";font-style:normal;font-weight:400;font-display:optional;src:url("/reader-directions/quiet-monograph/fonts/display-latin-400.woff2?v=e48e58027030df56") format("woff2");}' +
+        '@font-face{font-family:"reader-quiet-monograph__font-display fallback";src:local("Times New Roman"),local("TimesNewRomanPSMT"),local("Liberation Serif");ascent-override:95.27%;descent-override:29.59%;line-gap-override:0.00%;size-adjust:96.98%;}' +
+        '[data-reader-direction="quiet-monograph"]{--font-display:"reader-quiet-monograph__font-display","reader-quiet-monograph__font-display fallback",serif;}',
+    )
+    expect(versioned.fonts[0]?.sources[0]?.sha256).toBe(sha256)
+    // A source without a hash keeps its unversioned URL, byte for byte.
+    expect(
+      readerDirectionFontCss(defineReaderDirection(definition({ fonts: [displayFont] }))),
+    ).toContain(
+      'src:url("/reader-directions/quiet-monograph/fonts/display-latin-400.woff2") format',
+    )
+  })
+
+  it.each([
+    'A'.repeat(64),
+    'a'.repeat(63),
+    'a'.repeat(65),
+    `${'a'.repeat(63)}g`,
+    `${'a'.repeat(61)}")}`,
+    '',
+    null,
+    42,
+  ])('rejects the font hash %j', (sha256) => {
+    expect(() =>
+      defineReaderDirection(
+        definition({
+          fonts: [
+            {
+              ...displayFont,
+              sources: [{ file: 'display.woff2', weight: 400, sha256 } as never],
+            },
+          ],
+        }),
+      ),
+    ).toThrow(/sha256/)
+  })
+
   it('rejects malformed or unsafe tokens', () => {
     const invalidTokenSets = [
       { ink: '#111111' },

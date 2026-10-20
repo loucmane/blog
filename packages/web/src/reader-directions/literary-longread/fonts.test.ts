@@ -11,13 +11,34 @@ import { readerDirectionFontCss } from '../contract'
 import { literaryLongreadDirection } from './index'
 
 const require = createRequire(import.meta.url)
+const folder = path.join(
+  process.cwd(),
+  'packages/web/public/reader-directions/literary-longread/fonts',
+)
 
 // SHA-256 of the exact output from contract.ts, first pinned at base 68dde2b and updated for the
-// local bold and italic fallback faces (blog-0044.63). A range extension must not alter static CSS.
+// local bold and italic fallback faces (blog-0044.63) and the versioned font URLs (blog-0044.37).
+// A range extension must not alter static CSS.
 it('keeps literary-longread font output byte-for-byte compatible', () => {
   expect(
     createHash('sha256').update(readerDirectionFontCss(literaryLongreadDirection)!).digest('hex'),
-  ).toBe('b778cba0f0f490a2e8cde77c37fa39be2d936a36e01541c936f0c9a86121beeb')
+  ).toBe('3c1cead043b84063d751b5b7b5dcafe6a00330c205f759ab458491f0c52ad18b')
+})
+
+// The hash declared in fonts.ts versions each URL, and the server caches versioned font URLs for a
+// year as immutable. New bytes fail here until fonts.ts declares their hash, which also gives them
+// a new URL, so a returning reader never keeps a stale face.
+it('versions every font URL with the SHA-256 of the file it serves', () => {
+  const css = readerDirectionFontCss(literaryLongreadDirection)!
+  for (const source of literaryLongreadDirection.fonts.flatMap((font) => font.sources)) {
+    const sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(folder, source.file)))
+      .digest('hex')
+    expect(source.sha256, source.file).toBe(sha256)
+    expect(css).toContain(
+      `url("/reader-directions/literary-longread/fonts/${source.file}?v=${sha256.slice(0, 16)}")`,
+    )
+  }
 })
 
 it('emits only the used weights and genuine styles, with optional display and reproducible metrics', () => {
@@ -44,7 +65,7 @@ it('emits only the used weights and genuine styles, with optional display and re
   for (const face of web) {
     expect(face['font-display']).toBe('optional')
     expect(face.src).toMatch(
-      /^url\("\/reader-directions\/literary-longread\/fonts\/[a-z0-9-]+\.woff2"\) format\("woff2"\)$/,
+      /^url\("\/reader-directions\/literary-longread\/fonts\/[a-z0-9-]+\.woff2\?v=[a-f0-9]{16}"\) format\("woff2"\)$/,
     )
   }
   const { calculateSizeAdjustValues } = require('next/dist/server/font-utils') as {
@@ -99,10 +120,6 @@ it('ships authentic Latin fonts, exact weights and italics, complete licences an
     'OS/2': { usWeightClass: number }
     hasGlyphForCodePoint(code: number): boolean
   }
-  const folder = path.join(
-    process.cwd(),
-    'packages/web/public/reader-directions/literary-longread/fonts',
-  )
   let total = 0
   const declared = literaryLongreadDirection.fonts.flatMap((font) => font.sources)
   expect(
