@@ -1,7 +1,4 @@
-import Link from 'next/link'
 import type { ReactNode } from 'react'
-
-import { SiteHeaderFrame } from '@/reader/components/site-header-frame'
 
 import type { ReaderFailureView } from '../contract'
 
@@ -21,16 +18,27 @@ export function FailurePage({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground" data-reader-failure="">
-      <SiteHeaderFrame navigation={view.navigation} siteName={view.siteName} />
+      {/* readerFailureView always supplies empty navigation, so the failure header has no section nav. */}
+      <header className="border-b border-border">
+        <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4">
+          <p className="font-serif text-2xl font-semibold">
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- A full page load is intentional recovery from a failure page. */}
+            <a className="underline-offset-4 hover:underline" href="/">
+              {view.siteName}
+            </a>
+          </p>
+        </div>
+      </header>
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-2xl">
           <h1 className="mb-4 text-3xl font-semibold">{title}</h1>
           <p className="text-lg text-muted-foreground">{message}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             {children}
-            <Link className={actionClassName} href="/">
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- A full page load is intentional recovery from a failure page. */}
+            <a className={actionClassName} href="/">
               Return home
-            </Link>
+            </a>
           </div>
         </div>
       </main>
