@@ -20,14 +20,19 @@ export const uprightHeroSizes =
 /**
  * Body figures stay at text width: the 65ch measure at the 20px body size (fonts.test.ts derives
  * it and both crossings from the regular face), or the column where it is narrower, columns 2–4
- * up to 1137px and the one-column page up to 846px. Grid and diptych galleries set two images
- * across it, with a 1.5rem gap, from 600px.
+ * up to 1137px and the one-column page up to 846px.
  */
-export const articleImageSizes = {
-  body: '(min-width: 1138px) 49.75rem, (min-width: 1024px) calc(70.5vw - 0.375rem), (min-width: 847px) 49.75rem, (min-width: 667px) 94vw, calc(100vw - 2.5rem)',
-  gallery:
-    '(min-width: 1138px) 24.125rem, (min-width: 1024px) calc(35.25vw - 0.9375rem), (min-width: 847px) 24.125rem, (min-width: 667px) calc(47vw - 0.75rem), (min-width: 600px) calc(50vw - 2rem), calc(100vw - 2.5rem)',
-} as const
+const bodySizes =
+  '(min-width: 1138px) 49.75rem, (min-width: 1024px) calc(70.5vw - 0.375rem), (min-width: 847px) 49.75rem, (min-width: 667px) 94vw, calc(100vw - 2.5rem)'
+
+/**
+ * The renderer takes one gallery hint for every layout, so it describes the widest: a carousel,
+ * one image across the text. Grid and diptych galleries set two images across it, 1.5rem apart,
+ * from 600px, so they fetch a larger candidate than they show, never a smaller one. Per-layout
+ * hints are a shared renderer change, blog-0044.62; the two-up hint is then, from 600px, half the
+ * text width less half the gap.
+ */
+export const articleImageSizes = { body: bodySizes, gallery: bodySizes } as const
 
 /** Upright below 1.2 times the height; an image without stored dimensions counts as landscape. */
 function isUpright(image: ReaderImage) {

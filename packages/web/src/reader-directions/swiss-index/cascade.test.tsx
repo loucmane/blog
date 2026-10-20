@@ -12,7 +12,14 @@ import {
   readSectionView,
   readTopicView,
 } from '@/reader/read-model'
-import type { ArticleView, AuthorView, HomeView, SectionView, TopicView } from '@/reader/views'
+import type {
+  ArticleBlock,
+  ArticleView,
+  AuthorView,
+  HomeView,
+  SectionView,
+  TopicView,
+} from '@/reader/views'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { InMemoryOriginalObjectStore } from '@/server/content/media'
 import { labAuthors, labStories, labTopics } from '@/server/lab/north-house'
@@ -384,6 +391,84 @@ describe('Swiss Index computed styles', () => {
     // A landscape hero keeps its caption under it.
     const landscape = renderAt(<SwissArticle view={article} />, 1440)
     expect(style(landscape.querySelector('.si-hero figure')!).display).not.toBe('grid')
+  })
+
+  it('boxes only a checklist’s own items: lists nested in a task keep the body’s list styles', () => {
+    const paragraph = (text: string): ArticleBlock => ({
+      content: [{ kind: 'text', marks: [], text }],
+      kind: 'paragraph',
+    })
+    // Two paragraphs to an item, so the spacing inside an item shows too.
+    const item = (text: string) => ({ blocks: [paragraph(text), paragraph('Then the next.')] })
+    const numbered = (...texts: string[]): ArticleBlock => ({
+      items: texts.map(item),
+      kind: 'numbered-list',
+      numbering: '1',
+      start: 1,
+    })
+    const body: ArticleBlock[] = [
+      numbered('Outside a checklist'),
+      {
+        items: [
+          { blocks: [paragraph('Lay the table'), numbered('Plates', 'Glasses')], checked: true },
+          {
+            blocks: [
+              paragraph('Light the candles'),
+              { items: [item('Kitchen')], kind: 'bulleted-list' },
+              {
+                items: [{ blocks: [paragraph('Trim the wicks')], checked: true }],
+                kind: 'checklist',
+              },
+            ],
+            checked: false,
+          },
+        ],
+        kind: 'checklist',
+      },
+    ]
+    const named = (items: readonly Element[]) =>
+      items.map((listItem) => listItem.querySelector('p')!.textContent)
+    // jsdom computes no pseudo-elements: list the items that each checklist ::before rule matches.
+    const drawnBy = (property: string) => {
+      const rules = ([...document.styleSheets[0]!.cssRules] as CSSStyleRule[]).filter(
+        ({ selectorText, style: declared }) =>
+          selectorText.includes('checklist') &&
+          selectorText.endsWith('::before') &&
+          declared.getPropertyValue(property) !== '',
+      )
+      expect(rules.length, property).toBeGreaterThan(0)
+      return [
+        ...new Set(
+          rules.flatMap(({ selectorText }) => [
+            ...document.querySelectorAll(selectorText.replace(/::before$/, '')),
+          ]),
+        ),
+      ]
+    }
+    for (const width of widths) {
+      const page = renderAt(<SwissArticle view={{ ...article, body }} />, width)
+      // The renderer gives checklist items, and only those, a checked state.
+      const tasks = [...page.querySelectorAll('.si-body li[data-checked]')]
+      expect(named(tasks)).toEqual(['Lay the table', 'Light the candles', 'Trim the wicks'])
+      expect(named(drawnBy('border')), `${width}px`).toEqual(named(tasks))
+      expect(named(drawnBy('background')), `${width}px`).toEqual([
+        'Lay the table',
+        'Trim the wicks',
+      ])
+      // Items of a list nested in a task are set like the body's other list items.
+      const [outside, ...nested] = [...page.querySelectorAll('.si-body li:not([data-checked])')]
+      expect(named(nested)).toEqual(['Plates', 'Glasses', 'Kitchen'])
+      const listStyles = (listItem: Element) => ({
+        paddingLeft: style(listItem).paddingLeft,
+        position: style(listItem).position,
+        secondParagraph: style(listItem.children[1]!).marginTop,
+      })
+      for (const listItem of nested) {
+        expect(listStyles(listItem), `${named([listItem])} at ${width}px`).toEqual(
+          listStyles(outside!),
+        )
+      }
+    }
   })
 
   it('heads author and topic pages like a section, at the page title sizes', () => {

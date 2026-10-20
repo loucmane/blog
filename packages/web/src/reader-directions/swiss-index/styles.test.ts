@@ -369,11 +369,14 @@ describe('Swiss Index styles', () => {
       '1px solid var(--si-ink)',
     )
     expect(declarations('.si-body li::marker')['font-family']).toBe('var(--si-mono)')
-    // Checklist boxes are drawn: the glyphs lie outside the Latin subsets (fonts.test.ts).
-    expect(declarations(".si-body [data-block='checklist'] li > span[aria-hidden]")).toMatchObject({
+    // Checklist boxes are drawn: the glyphs lie outside the Latin subsets (fonts.test.ts). They
+    // mark the checklist's own items only, never a list nested in a task (cascade.test.tsx).
+    expect(
+      declarations(".si-body [data-block='checklist'] > li > span[aria-hidden]"),
+    ).toMatchObject({
       display: 'none',
     })
-    expect(declarations(".si-body [data-block='checklist'] li::before")).toMatchObject({
+    expect(declarations(".si-body [data-block='checklist'] > li::before")).toMatchObject({
       border: '2px solid var(--si-ink)',
       'box-sizing': 'border-box',
       content: "''",
@@ -381,11 +384,12 @@ describe('Swiss Index styles', () => {
       width: '1em',
     })
     expect(
-      declarations(".si-body [data-block='checklist'] li[data-checked='true']::before").background,
+      declarations(".si-body [data-block='checklist'] > li[data-checked='true']::before")
+        .background,
     ).toBe('var(--si-ink)')
     expect(
       declarations(
-        ".si-body [data-block='checklist'] li[data-checked='true']::before",
+        ".si-body [data-block='checklist'] > li[data-checked='true']::before",
         '(forced-colors: active)',
       ),
     ).toMatchObject({ background: 'CanvasText', 'forced-color-adjust': 'none' })

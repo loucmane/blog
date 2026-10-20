@@ -22,6 +22,29 @@ const parse = require('next/dist/compiled/@next/font/dist/fontkit').default as (
 }
 const folder = path.join(process.cwd(), 'packages/web/public/reader-directions/swiss-index/fonts')
 
+/** The CSS ch unit of the regular face, the advance of "0", as a fraction of the font size. */
+function regularCh() {
+  const font = parse(fs.readFileSync(path.join(folder, 'schibsted-grotesk-latin-400-normal.woff2')))
+  return font.glyphForCodePoint('0'.codePointAt(0)!).advanceWidth / font.unitsPerEm
+}
+
+/** The width in pixels that a `sizes` value describes on a screen `width` pixels wide. */
+function described(sizes: string, width: number) {
+  const pixels = (length: string) => {
+    const [, value, unit] = /^(\d+(?:\.\d+)?)(rem|vw)$/.exec(length)!
+    return Number(value) * (unit === 'vw' ? width / 100 : 16)
+  }
+  for (const entry of sizes.split(', ')) {
+    const [, minimum, length] = /^(?:\(min-width: (\d+)px\) )?(.+)$/.exec(entry)!
+    if (minimum && width < Number(minimum)) continue
+    const calc = /^calc\((\S+) ([+-]) (\S+)\)$/.exec(length!)
+    if (!calc) return pixels(length!)
+    const [, first, sign, second] = calc
+    return pixels(first!) + (sign === '-' ? -1 : 1) * pixels(second!)
+  }
+  throw new Error(`${sizes} describes no width at ${width}px`)
+}
+
 it('emits only the used weights and normal styles, with optional display and reproducible metrics', () => {
   const css = postcss.parse(readerDirectionFontCss(swissIndexDirection)!)
   const faces: Record<string, string>[] = []
@@ -120,8 +143,7 @@ it('has no checklist glyphs in any face, so the styles draw the checklist boxes'
 })
 
 it('sizes body figures at the reading measure, 65ch of the regular face at the 20px body size', () => {
-  const font = parse(fs.readFileSync(path.join(folder, 'schibsted-grotesk-latin-400-normal.woff2')))
-  const ch = font.glyphForCodePoint('0'.codePointAt(0)!).advanceWidth / font.unitsPerEm
+  const ch = regularCh()
   // --si-body is 1.25rem from 800px; the 65ch measure in rem, rounded up to a quarter.
   const measure = Math.ceil(65 * ch * 1.25 * 4) / 4
   // Where the column is narrower than the measure, it sets the width instead: columns 2–4,
@@ -133,9 +155,27 @@ it('sizes body figures at the reading measure, 65ch of the regular face at the 2
   expect(articleImageSizes.body).toBe(
     `(min-width: ${desktop}px) ${measure}rem, (min-width: 1024px) calc(70.5vw - 0.375rem), (min-width: ${tablet}px) ${measure}rem, (min-width: 667px) 94vw, calc(100vw - 2.5rem)`,
   )
-  // Grid and diptych galleries set two images across that width, with a 1.5rem gap, from 600px.
-  const half = (measure - 1.5) / 2
-  expect(articleImageSizes.gallery).toBe(
-    `(min-width: ${desktop}px) ${half}rem, (min-width: 1024px) calc(35.25vw - 0.9375rem), (min-width: ${tablet}px) ${half}rem, (min-width: 667px) calc(47vw - 0.75rem), (min-width: 600px) calc(50vw - 2rem), calc(100vw - 2.5rem)`,
-  )
+  // One gallery hint serves every layout, so it describes the widest: a carousel at text width.
+  expect(articleImageSizes.gallery).toBe(articleImageSizes.body)
+})
+
+it('sizes gallery images for the widest layout, the one-column carousel, so no layout under-fetches', () => {
+  const ch = regularCh()
+  for (let width = 320; width <= 2560; width++) {
+    // Section 4's grid: the page between clamp(1.25rem, 3vw, 3rem) gutters, at most 84rem; from
+    // 1024px four columns with 1.5rem gaps, the body in columns 2–4; one column below.
+    const gutter = Math.min(Math.max(20, 0.03 * width), 48)
+    const page = Math.min(width - 2 * gutter, 1344)
+    const column = width >= 1024 ? (3 * (page - 3 * 24)) / 4 + 2 * 24 : page
+    // The body is 65ch at --si-body, clamp(1.125rem, 1rem + 0.5vw, 1.25rem), or the column.
+    const size = Math.min(Math.max(18, 16 + 0.005 * width), 20)
+    const text = Math.min(65 * ch * size, column)
+    // A carousel sets one image across the text; grid and diptych two, 1.5rem apart, from 600px.
+    const shown = { carousel: text, grid: width >= 600 ? (text - 24) / 2 : text }
+    const hint = described(articleImageSizes.gallery, width)
+    for (const [layout, slot] of Object.entries(shown)) {
+      // To a hundredth of a pixel: the hint and the model compute the same calc() differently.
+      expect(hint, `${layout} at ${width}px`).toBeGreaterThanOrEqual(slot - 0.01)
+    }
+  }
 })

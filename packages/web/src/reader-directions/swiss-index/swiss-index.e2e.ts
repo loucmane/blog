@@ -360,6 +360,99 @@ test('applies the article and block treatments over the shared resets, read from
   ).toEqual({ 'border-left-width': '4px', 'border-left-color': 'rgb(255, 79, 31)' })
 })
 
+test('boxes only a checklist’s own items: a numbered list inside a task keeps its numbers and no box', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(storyPath)
+  const checklist = page.locator(root).locator('.si-body > [data-block="checklist"]')
+  await expect(checklist).toHaveCount(1)
+  // The sample's tasks hold one paragraph; nest a numbered list in the first, as the renderer would.
+  const styles = await checklist.evaluate((list) => {
+    const task = list.querySelector(':scope > li')!
+    task.insertAdjacentHTML(
+      'beforeend',
+      '<ol start="1" type="1"><li><p>Plates</p></li><li><p>Glasses</p></li></ol>',
+    )
+    const read = (item: Element) => {
+      const own = getComputedStyle(item)
+      return {
+        box: getComputedStyle(item, '::before').content,
+        markers: own.listStyleType,
+        paddingLeft: own.paddingLeft,
+        position: own.position,
+      }
+    }
+    return {
+      nested: [...task.lastElementChild!.children].map(read),
+      // The story's own numbered list, outside any checklist.
+      outside: read(document.querySelector('.si-body > ol > li')!),
+      task: read(task),
+    }
+  })
+  expect(styles.task.box).not.toBe('none')
+  expect(styles.outside).toMatchObject({ box: 'none', markers: 'decimal' })
+  for (const item of styles.nested) expect(item).toEqual(styles.outside)
+})
+
+test('describes every gallery image at least as wide as it shows, in the grid, diptych and carousel layouts', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  for (const width of [390, 640, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+    const gallery = page.locator(root).locator('.si-body > [data-block="gallery"]')
+    await expect(gallery).toHaveCount(1)
+    for (const layout of ['grid', 'diptych', 'carousel']) {
+      const label = `${layout} at ${width}`
+      // The sample has no carousel; the layout attribute alone sets a gallery's columns.
+      const { images, text } = await gallery.evaluate((list, value) => {
+        list.setAttribute('data-layout', value)
+        const probe = document.createElement('div')
+        probe.style.cssText = 'position: absolute; visibility: hidden'
+        document.body.append(probe)
+        /** The width a sizes attribute gives at this viewport: the length of its first match. */
+        const describe = (sizes: string | null) => {
+          for (const entry of sizes?.split(',') ?? []) {
+            const [, condition, length] = /^(\(.+?\))?\s*(.+)$/.exec(entry.trim())!
+            if (condition && !matchMedia(condition).matches) continue
+            probe.style.width = length!
+            return probe.getBoundingClientRect().width
+          }
+          return null
+        }
+        const measured = {
+          images: [...list.querySelectorAll('picture')].map((picture) => ({
+            described: [...picture.querySelectorAll('source, img')].map((element) =>
+              describe(element.getAttribute('sizes')),
+            ),
+            shown: picture.querySelector('img')!.getBoundingClientRect().width,
+          })),
+          text: list.closest('.si-body')!.getBoundingClientRect().width,
+        }
+        probe.remove()
+        return measured
+      }, layout)
+      expect(images.length, label).toBeGreaterThan(1)
+      // A carousel sets one image across the text; grid and diptych two, 1.5rem apart, from 600px.
+      const columns = layout !== 'carousel' && width >= 600 ? 2 : 1
+      for (const { described, shown } of images) {
+        expect(Math.abs(shown - (text - (columns - 1) * 24) / columns), label).toBeLessThan(1)
+        // Each of the picture's sources and the image itself.
+        expect(described.length, label).toBeGreaterThan(1)
+        for (const value of described) {
+          expect(value, label).not.toBeNull()
+          expect(value!, label).toBeGreaterThanOrEqual(shown - 0.5)
+        }
+      }
+    }
+  }
+})
+
 test('keeps article, author and topic pages free of overflow from 320 pixels, with touch-sized controls', async ({
   page,
 }) => {

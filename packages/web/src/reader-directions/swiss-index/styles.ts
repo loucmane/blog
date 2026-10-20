@@ -7,6 +7,8 @@
  * 1024px swaps in the copy in the metadata, so exactly one copy shows at any width. The article's
  * parts sit in named grid areas, which list them in DOM order below 1024px. An upright hero's
  * picture takes no part in layout: its image is an item of the figure's grid, its sources are not.
+ * Checklist rules reach only the checklist's own items (`> li`), so a list nested in a task keeps
+ * the body's list styles and draws no box.
  */
 export const styles = `
   & { background: var(--si-paper); color: var(--si-ink); }
@@ -133,11 +135,11 @@ export const styles = `
   & .si-body [data-block='gallery'] li { margin: 0; }
   & .si-body [data-layout='carousel'] { grid-template-columns: 1fr; }
   & .si-body [data-block='checklist'] { list-style: none; padding: 0; }
-  & .si-body [data-block='checklist'] li { position: relative; padding-left: 1.75rem; }
-  & .si-body [data-block='checklist'] li > span[aria-hidden] { display: none; }
-  & .si-body [data-block='checklist'] li::before { content: ''; position: absolute; left: 0; top: 0.325em; width: 1em; height: 1em; box-sizing: border-box; border: 2px solid var(--si-ink); }
-  & .si-body [data-block='checklist'] li[data-checked='true']::before { background: var(--si-ink); }
-  & .si-body [data-block='checklist'] li > p { margin-top: 0; }
+  & .si-body [data-block='checklist'] > li { position: relative; padding-left: 1.75rem; }
+  & .si-body [data-block='checklist'] > li > span[aria-hidden] { display: none; }
+  & .si-body [data-block='checklist'] > li::before { content: ''; position: absolute; left: 0; top: 0.325em; width: 1em; height: 1em; box-sizing: border-box; border: 2px solid var(--si-ink); }
+  & .si-body [data-block='checklist'] > li[data-checked='true']::before { background: var(--si-ink); }
+  & .si-body [data-block='checklist'] > li > p { margin-top: 0; }
   & .si-body [data-block='callout'], & .si-body [data-block='embed'] { border: 1px solid var(--si-ink); padding: clamp(1rem, 3vw, 2rem); }
   & .si-body [data-block='callout'] > * + *, & .si-body [data-block='editorial'] > * + * { margin-top: 1rem; }
   & .si-body [data-block='callout'] > :first-child { font-family: var(--si-mono); font-size: var(--si-label); letter-spacing: 0.03em; text-transform: uppercase; }
@@ -210,7 +212,7 @@ export const styles = `
   @media (forced-colors: active) {
     & .si-page :focus-visible { outline-color: Highlight; }
     & .si-state { border: 1px solid currentColor; }
-    & .si-body [data-block='checklist'] li[data-checked='true']::before { forced-color-adjust: none; background: CanvasText; border-color: CanvasText; }
+    & .si-body [data-block='checklist'] > li[data-checked='true']::before { forced-color-adjust: none; background: CanvasText; border-color: CanvasText; }
   }
   @media print {
     & .si-skip, & .si-nav, & .si-theme, & .si-top-link, & .si-number-plate, & .si-related { display: none; }
