@@ -190,7 +190,8 @@ test('follows the keyboard path from the skip link through the menu and an artic
   const backToTop = direction.getByRole('link', { name: 'Back to top' })
   await tabTo(page, backToTop, 60)
   await page.keyboard.press('Enter')
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  // Smooth scrolling (globals.css) up a long article can take several seconds under load.
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 15_000 }).toBe(0)
 })
 
 test('switches to the warm graphite night version from the Theme control', async ({ page }) => {
