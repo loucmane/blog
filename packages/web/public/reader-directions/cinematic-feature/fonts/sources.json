@@ -11,6 +11,28 @@
     "sha256": "e3a28eade21a900c7155a247757f4b2834c07bb7ef07ad7efa55cebaac1e8f5e"
   },
   {
+    "file": "archivo-latin-400-italic.woff2",
+    "url": "https://github.com/fontsource/font-files/blob/main/fonts/google/archivo/files/archivo-latin-400-italic.woff2",
+    "upstream": "https://github.com/Omnibus-Type/Archivo",
+    "fontVersion": "Version 2.001",
+    "license": "Archivo-OFL.txt",
+    "subset": "Unmodified upstream Latin subset; no local subsetting",
+    "bytes": 15820,
+    "sha256": "aff750193376fa0cc7299242c3847f3c1189a78a23d526bfc205dbfc526a5403",
+    "gitBlob": "b7e6837f45826e7ddaacc68b826afa5c1a62ca32"
+  },
+  {
+    "file": "archivo-latin-700-italic.woff2",
+    "url": "https://github.com/fontsource/font-files/blob/main/fonts/google/archivo/files/archivo-latin-700-italic.woff2",
+    "upstream": "https://github.com/Omnibus-Type/Archivo",
+    "fontVersion": "Version 2.001",
+    "license": "Archivo-OFL.txt",
+    "subset": "Unmodified upstream Latin subset; no local subsetting",
+    "bytes": 16004,
+    "sha256": "8b6268c2884ad2b89cb947b6823f2218eaad07fcf8dec770ef95c244fdd3273a",
+    "gitBlob": "da5e3fb21a09f9684dfaa9543d5f51bfd7119512"
+  },
+  {
     "file": "Archivo-OFL.txt",
     "package": "@fontsource-variable/archivo",
     "version": "5.3.0",

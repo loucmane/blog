@@ -4,10 +4,11 @@ import type { ReaderImage } from '@/reader/views'
 export interface CinematicLeadImage {
   readonly image: ReaderImage
   readonly sizes: string
+  readonly media?: string
 }
 
 // A real link is hoisted into HTML; an RSC preload() alone can stay in the Flight payload.
-export function CinematicImagePreload({ image, sizes }: CinematicLeadImage) {
+export function CinematicImagePreload({ image, sizes, media }: CinematicLeadImage) {
   const source = readerImageSources(image)?.sources[0]
   return (
     <link
@@ -16,6 +17,7 @@ export function CinematicImagePreload({ image, sizes }: CinematicLeadImage) {
       href={source ? source.srcSet.split(' ')[0] : image.src}
       imageSizes={source ? sizes : undefined}
       imageSrcSet={source?.srcSet}
+      media={media}
       rel="preload"
       type={source?.type ?? image.contentType}
     />

@@ -10,6 +10,9 @@ export const cardSizes =
 export const featureSizes =
   '(min-width: 1536px) 821.33px, (min-width: 1024px) calc(58.333333vw - 74.666667px), (min-width: 768px) calc(100vw - 64px), calc(100vw - 40px)'
 
+export const relatedSizes =
+  '(min-width: 1536px) 458.67px, (min-width: 1024px) calc(33.333333vw - 53.333333px), (min-width: 768px) calc(50vw - 44px), calc(100vw - 40px)'
+
 export function StoryMeta({
   story,
 }: {
@@ -28,11 +31,13 @@ export function CinematicStoryCard({
   preload = false,
   feature = false,
   headingLevel = 2,
+  sizes,
 }: {
   readonly story: StoryCard
   readonly preload?: boolean
   readonly feature?: boolean
   readonly headingLevel?: 2 | 3
+  readonly sizes?: string
 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3'
   return (
@@ -46,7 +51,7 @@ export function CinematicStoryCard({
         >
           <ReaderFigure
             image={story.image}
-            sizes={feature ? featureSizes : cardSizes}
+            sizes={sizes ?? (feature ? featureSizes : cardSizes)}
             preload={preload}
           />
         </div>
