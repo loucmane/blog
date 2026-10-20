@@ -58,7 +58,15 @@ it('rejects unsafe variable descriptors before the root emits CSS', () => {
 
 it('emits the selected italic faces and removes them when switching to a normal-only direction', () => {
   const literary = readerDirections.find('literary-longread')!
-  const quiet = readerDirections.find('quiet-monograph')!
+  const registered = readerDirections.find('quiet-monograph')!
+  // Every real direction gains italics during the bake-off, so build a normal-only one here.
+  const quiet = defineReaderDirection({
+    ...registered,
+    fonts: registered.fonts.map((font) => ({
+      ...font,
+      sources: font.sources.filter((source) => source.style !== 'italic'),
+    })),
+  })
   const { container, rerender } = render(
     <ReaderDirectionRoot direction={literary}>Literary</ReaderDirectionRoot>,
   )

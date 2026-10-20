@@ -72,6 +72,10 @@ export async function prepareFontCapture(
               (face) => face.family.replaceAll('"', '') === family,
             )
             if (!faces.length) throw new Error(`Missing capture font family: ${family}`)
+            // Chromium can recreate a stylesheet's FontFace objects after a full-page screenshot
+            // at a new width; only faces in use reload by themselves. Load them again here; the
+            // painted-face check below still catches a fallback latched by an optional font.
+            await Promise.all(faces.map((face) => face.load()))
             for (const face of faces) {
               // FontFace descriptors can contain a variable range; the check() shorthand
               // accepts a single instance, not e.g. "100 900 16px". Check its lower bound.

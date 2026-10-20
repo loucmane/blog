@@ -190,7 +190,8 @@ test('follows the keyboard path from the skip link through the menu and an artic
   const backToTop = direction.getByRole('link', { name: 'Back to top' })
   await tabTo(page, backToTop, 60)
   await page.keyboard.press('Enter')
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  // Smooth scrolling (globals.css) up a long article can take several seconds under load.
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 15_000 }).toBe(0)
 })
 
 test('switches to the warm graphite night version from the Theme control', async ({ page }) => {
@@ -247,32 +248,77 @@ for (const width of [390, 1440]) {
   }
 }
 
-test('requests only the faces home uses, within the font budget', async ({ page }) => {
+test('requests only the faces each page uses, within the font budgets', async ({ page }) => {
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Network.enable')
   await cdp.send('Network.setCacheDisabled', { cacheDisabled: true })
-  const requested = new Set<string>()
+  let requested = new Set<string>()
   page.on('request', (request) => {
     if (request.resourceType() === 'font')
       requested.add(path.basename(new URL(request.url()).pathname))
   })
-  await page.goto('/')
-  await page.evaluate(async () => {
-    await document.fonts.ready
-  })
-  // Jost 300 stays declared until the italics replace it, but no text uses it any more.
-  expect([...requested].sort()).toEqual([
+  const folder = path.resolve('packages/web/public/reader-directions/quiet-monograph/fonts')
+  const upright = [
     'cormorant-garamond-latin-400-normal.woff2',
     'cormorant-garamond-latin-500-normal.woff2',
     'jost-latin-400-normal.woff2',
     'jost-latin-500-normal.woff2',
-  ])
-  const folder = path.resolve('packages/web/public/reader-directions/quiet-monograph/fonts')
-  const bytes = [...requested].reduce(
-    (total, file) => total + statSync(path.join(folder, file)).size,
-    0,
-  )
-  expect(bytes).toBeLessThanOrEqual(95_000)
+  ]
+  // Deks are Cormorant italic; only emphasis in story text needs the Jost italic. A section
+  // without a description has no italic text, and has no font budget of its own: it stays
+  // within home's.
+  for (const [route, italics, budget] of [
+    ['/', ['cormorant-garamond-latin-400-italic.woff2'], 95_000],
+    [
+      storyPath,
+      ['cormorant-garamond-latin-400-italic.woff2', 'jost-latin-400-italic.woff2'],
+      105_000,
+    ],
+    [sectionPath, [], 95_000],
+  ] as const) {
+    requested = new Set()
+    await page.goto(route)
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+    const expected = [...upright, ...italics].sort()
+    expect([...requested].sort(), route).toEqual(expected)
+    const bytes = expected.reduce(
+      (total, file) => total + statSync(path.join(folder, file)).size,
+      0,
+    )
+    expect(bytes, route).toBeLessThanOrEqual(budget)
+  }
+})
+
+test('sets deks and emphasis in the genuine italic faces', async ({ page }) => {
+  const captureFonts = await prepareFontCapture(page, root, {
+    '--font-qm-display': 'Cormorant Garamond',
+    '--font-qm-text': 'Jost',
+  })
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('DOM.enable')
+  await cdp.send('CSS.enable')
+  for (const [route, selector, face] of [
+    ['/', '.qm-cover .qm-dek', 'CormorantGaramondLight-Italic'],
+    [storyPath, '.qm-article-header .qm-dek', 'CormorantGaramondLight-Italic'],
+    [storyPath, '.qm-body em', 'Jost-Italic'],
+  ] as const) {
+    await captureFonts.goto(route)
+    const { root: documentNode } = await cdp.send('DOM.getDocument')
+    const { nodeId } = await cdp.send('DOM.querySelector', {
+      nodeId: documentNode.nodeId,
+      selector: `${root} ${selector}`,
+    })
+    const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId })
+    // The PostScript name tells the italic face from an upright one of the same family.
+    expect(
+      fonts
+        .filter((font) => font.glyphCount > 0)
+        .map((font) => [font.postScriptName, font.isCustomFont]),
+      `${selector} on ${route}`,
+    ).toEqual([[face, true]])
+  }
 })
 
 test('keeps a visitor on baseline even with the direction cookie', async ({ browser }) => {
@@ -309,7 +355,7 @@ test('captures seeded review screenshots of home, Interiors and Craft in both th
     '--font-qm-display': 'Cormorant Garamond',
     '--font-qm-text': 'Jost',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.40')
+  const destination = path.resolve('docs/worklog/blog-0044.56')
   await mkdir(destination, { recursive: true })
   for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme })

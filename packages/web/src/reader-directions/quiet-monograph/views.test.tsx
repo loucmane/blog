@@ -174,9 +174,11 @@ describe('Quiet Monograph with real published North House content', () => {
       background: 'var(--qm-paper)',
       'color-scheme': 'var(--qm-scheme)',
     })
+    // Only genuine italics and weights: nothing on the page lets the browser fake a face.
+    expect(declarations('& .qm-page')).toMatchObject({ 'font-synthesis': 'none' })
     styleRules.walkDecls((declaration) => {
       expect(`${declaration.prop}: ${declaration.value}`).not.toMatch(
-        /^object-fit: cover|^font-weight: 300|^color-scheme: light/,
+        /^object-fit: cover|^font-weight: 300|^color-scheme: light|^font-synthesis(?!: none$)/,
       )
     })
     styleRules.walkRules((rule) => {
@@ -188,7 +190,6 @@ describe('Quiet Monograph with real published North House content', () => {
       'font-family': 'var(--qm-display)',
       'font-size': 'var(--qm-dek)',
       'font-style': 'italic',
-      'font-synthesis': 'none',
       'max-width': '20em',
     })
     expect(declarations('& .qm-plate-box picture img')).toMatchObject({
