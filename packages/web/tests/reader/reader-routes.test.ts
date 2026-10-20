@@ -15,6 +15,7 @@ import SectionPage, { generateMetadata as sectionMetadata } from '@/app/sections
 import StoryPage, { generateMetadata as storyMetadata } from '@/app/stories/[slug]/page'
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/content/document'
 import { SectionService } from '@/server/content/sections'
+import { labStories } from '@/server/lab/north-house'
 import { getOwnerRuntime } from '@/server/owner/runtime'
 import { createOwnerFixtureSession, ownerFixtureCookieName } from '@/server/owner/session'
 
@@ -450,7 +451,7 @@ describe('public reader routes', () => {
     expect(vi.mocked(revalidateTag)).toHaveBeenCalledWith('reader', { expire: 0 })
   })
 
-  // Nine sharp-generated fixture images can exceed 5s on a shared CI runner. Keep the
+  // Thirteen sharp-generated fixture images can exceed 5s on a shared CI runner. Keep the
   // allowance local and bounded (3x the default), so a stalled seed still fails promptly.
   it(
     'seeds the Reader Lab through the guarded route and never in production',
@@ -475,7 +476,7 @@ describe('public reader routes', () => {
 
       expect(seeded.status).toBe(200)
       expect(seeded.headers.get('cache-control')).toBe('private, no-store')
-      expect((await seeded.json()).stories.created).toHaveLength(8)
+      expect((await seeded.json()).stories.created).toHaveLength(labStories.length)
       expect(vi.mocked(revalidateTag)).toHaveBeenCalledWith('reader', { expire: 0 })
       expect(await render(HomePage())).toContain('The quiet architecture of winter light')
       expect(await render(SectionPage(slugParams('architecture')))).toContain(
