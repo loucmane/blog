@@ -1,7 +1,17 @@
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
+import type { IncomingMessage } from 'node:http'
 import path from 'node:path'
 
+import type { Header } from 'next/dist/lib/load-custom-routes'
+import { modifyRouteRegex } from 'next/dist/lib/redirect-status'
+import { tryToParsePath } from 'next/dist/lib/try-to-parse-path'
+import { getPathMatch } from 'next/dist/shared/lib/router/utils/path-match'
+import { matchHas } from 'next/dist/shared/lib/router/utils/prepare-destination'
 import { describe, expect, it } from 'vitest'
+
+import { readerDirectionFontCss } from '@/reader-directions/contract'
+import { readerDirections } from '@/reader-directions/registry'
 
 import nextConfig from '../../next.config'
 
@@ -13,6 +23,27 @@ interface PackageManifest {
 
 function readManifest(relativePath: string): PackageManifest {
   return JSON.parse(fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8'))
+}
+
+const readerFontSource = '/reader-directions/:id/fonts/:file([a-z0-9][a-z0-9_-]*\\.woff2)'
+
+/** Whether `next start` applies a header rule to a URL, decided by Next's own route matchers. */
+function appliesTo(rule: Header, url: string) {
+  const { pathname, searchParams } = new URL(url, 'http://localhost')
+  const match = getPathMatch(rule.source, {
+    regexModifier: (regex) => modifyRouteRegex(regex),
+    removeUnnamedParams: true,
+    strict: true,
+  })
+  return (
+    match(pathname) !== false &&
+    matchHas(
+      { headers: {} } as IncomingMessage,
+      Object.fromEntries(searchParams),
+      rule.has,
+      rule.missing,
+    ) !== false
+  )
 }
 
 describe('Next and React migration contract', () => {
@@ -151,6 +182,7 @@ describe('Next and React migration contract', () => {
       '/sections/:slug',
       '/authors/:slug',
       '/topics/:slug',
+      readerFontSource,
     ])
     const ownerHeaders = headers?.filter(({ source }) => source.includes('owner')) ?? []
     expect(ownerHeaders).toHaveLength(2)
@@ -174,9 +206,14 @@ describe('Next and React migration contract', () => {
       '/authors/:slug',
       '/topics/:slug',
     ]
-    const labRules = headers?.filter(({ has }) => has !== undefined) ?? []
+    const conditional = headers?.filter(({ has }) => has !== undefined) ?? []
+    const labRules = conditional.filter(({ has }) => has?.some(({ type }) => type === 'cookie'))
 
     expect(labRules.map(({ source }) => source)).toEqual(readerRoutes)
+    // The only other conditional rule caches versioned direction fonts, never a reader page.
+    expect(
+      conditional.filter((rule) => !labRules.includes(rule)).map(({ source }) => source),
+    ).toEqual([readerFontSource])
     for (const rule of labRules) {
       expect(rule.has, rule.source).toEqual([{ key: 'reader_lab_direction', type: 'cookie' }])
       expect(rule.missing, rule.source).toBeUndefined()
@@ -190,6 +227,65 @@ describe('Next and React migration contract', () => {
     const unconditional = headers?.filter(({ has }) => has === undefined) ?? []
     for (const route of readerRoutes) {
       expect(unconditional.map(({ source }) => source)).not.toContain(route)
+    }
+  })
+
+  it('caches only versioned direction font files, for a year as immutable', async () => {
+    const headers = await nextConfig.headers?.()
+    const rule = headers?.find(({ source }) => source === readerFontSource)
+
+    expect(rule).toEqual({
+      has: [{ key: 'v', type: 'query', value: '[a-f0-9]{16}' }],
+      headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      source: readerFontSource,
+    })
+    // `next build` rejects a source that its path-to-regexp cannot parse.
+    expect(tryToParsePath(readerFontSource).error).toBeUndefined()
+    const font = '/reader-directions/quiet-monograph/fonts/jost-latin-400-normal.woff2'
+    expect(appliesTo(rule!, `${font}?v=f94cffda16515fbb`)).toBe(true)
+    // Any other request keeps Next's revalidating default for public files.
+    for (const url of [
+      font,
+      `${font}?v=`,
+      `${font}?v=f94cffda16515fb`,
+      `${font}?v=f94cffda16515fbb0`,
+      `${font}?v=F94CFFDA16515FBB`,
+      `${font}?version=f94cffda16515fbb`,
+      '/reader-directions/quiet-monograph/fonts/README.md?v=f94cffda16515fbb',
+      '/reader-directions/quiet-monograph/fonts/sources.json?v=f94cffda16515fbb',
+      '/reader-directions/quiet-monograph/fonts/Jost-OFL.txt?v=f94cffda16515fbb',
+      '/reader-directions/quiet-monograph/fonts/nested/jost.woff2?v=f94cffda16515fbb',
+      '/reader-directions/quiet-monograph/jost-latin-400-normal.woff2?v=f94cffda16515fbb',
+      '/stories/jost-latin-400-normal.woff2?v=f94cffda16515fbb',
+      '/?v=f94cffda16515fbb',
+    ]) {
+      expect(appliesTo(rule!, url), url).toBe(false)
+    }
+  })
+
+  it('caches every font URL the registered directions emit, versioned by the file it serves', async () => {
+    const headers = await nextConfig.headers?.()
+    const rule = headers?.find(({ source }) => source === readerFontSource)
+    const directions = readerDirections.directions.filter(({ fonts }) => fonts.length > 0)
+
+    expect(rule).toBeDefined()
+    expect(directions.length).toBeGreaterThan(0)
+    for (const direction of directions) {
+      const urls = [...readerDirectionFontCss(direction)!.matchAll(/url\("([^"]+)"\)/g)].map(
+        ([, url]) => url!,
+      )
+      expect(urls, direction.id).toHaveLength(
+        direction.fonts.flatMap(({ sources }) => sources).length,
+      )
+      for (const url of urls) {
+        // A new hash gives new bytes a new URL, so the immutable cache never serves stale bytes.
+        const { pathname, searchParams } = new URL(url, 'http://localhost')
+        const bytes = fs.readFileSync(path.join(process.cwd(), 'packages/web/public', pathname))
+        expect(searchParams.get('v'), url).toBe(
+          createHash('sha256').update(bytes).digest('hex').slice(0, 16),
+        )
+        expect(appliesTo(rule!, url), url).toBe(true)
+      }
     }
   })
 

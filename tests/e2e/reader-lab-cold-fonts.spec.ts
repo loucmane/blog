@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto'
+import { readdirSync, readFileSync } from 'node:fs'
+import path from 'node:path'
+
 import {
   expect,
   test,
@@ -13,7 +17,10 @@ const labSeedToken = 'task44-lab-seed-token-with-more-than-32-bytes'
 const ownerTestToken = 'task43-owner-test-token-with-more-than-thirty-two-bytes'
 // Its first body paragraph sets "long table" in strong and "usually" in em.
 const seededStoryPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
-const directionFontFiles = '**/reader-directions/*/fonts/*.woff2'
+// Every direction's font requests. Matched by path: the contract versions font URLs with `?v=`,
+// and a glob ending in `.woff2` would no longer match them.
+const directionFontFiles = (url: URL) =>
+  /^\/reader-directions\/[^/]+\/fonts\/[^/]+\.woff2$/.test(url.pathname)
 
 /**
  * The text read on each cold view, by its data-cold-fonts value, with the emphasis it carries. Each
@@ -278,7 +285,11 @@ test('keeps bold and italic on cold views in every direction, from local fallbac
   // A cold first view: no web face arrives within its optional block period, so each family keeps
   // its metric-adjusted local fallback. Failing every direction's font requests from the first
   // navigation gives that state and keeps warm faces out of the memory cache.
-  await context.route(directionFontFiles, (route) => route.abort())
+  const fontRequests = new Set<string>()
+  await context.route(directionFontFiles, (route) => {
+    fontRequests.add(route.request().url())
+    return route.abort()
+  })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await seedReaderLab(request)
   await authenticate(context)
@@ -302,14 +313,59 @@ test('keeps bold and italic on cold views in every direction, from local fallbac
       evidence.push(await checkColdView(page, direction.id))
     }
     expect(checked, 'directions with web fonts').toBeGreaterThan(0)
+    // The aborts fired, and every face was requested at its content-versioned URL.
+    expect(fontRequests.size, 'aborted direction font requests').toBeGreaterThan(0)
+    for (const url of fontRequests) expect(new URL(url).search, url).toMatch(/^\?v=[a-f0-9]{16}$/)
   } finally {
     await testInfo.attach('cold-fonts.json', {
       body: JSON.stringify(
-        { browser: browser.version(), project: testInfo.project.name, evidence },
+        {
+          browser: browser.version(),
+          project: testInfo.project.name,
+          evidence,
+          fontRequests: [...fontRequests],
+        },
         null,
         2,
       ),
       contentType: 'application/json',
     })
   }
+})
+
+test('serves versioned direction fonts with a one-year immutable cache, and other requests as before', async ({
+  request,
+}) => {
+  const publicFolder = path.resolve('packages/web/public')
+  const fonts = readdirSync(path.join(publicFolder, 'reader-directions'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap(({ name: id }) =>
+      readdirSync(path.join(publicFolder, 'reader-directions', id, 'fonts'))
+        .filter((file) => file.endsWith('.woff2'))
+        .map((file) => `/reader-directions/${id}/fonts/${file}`),
+    )
+  expect(fonts.length).toBeGreaterThan(0)
+  for (const font of fonts) {
+    const version = createHash('sha256')
+      .update(readFileSync(path.join(publicFolder, font)))
+      .digest('hex')
+      .slice(0, 16)
+    for (const [url, cacheControl] of [
+      [`${font}?v=${version}`, 'public, max-age=31536000, immutable'],
+      // Without a version of exactly 16 lowercase hex digits, Next's revalidating default stays.
+      [font, 'public, max-age=0'],
+      [`${font}?v=${version.slice(1)}`, 'public, max-age=0'],
+      [`${font}?v=0123456789ABCDEF`, 'public, max-age=0'],
+    ] as const) {
+      const response = await request.get(url)
+      expect(response.status(), url).toBe(200)
+      expect(response.headers()['cache-control'], url).toBe(cacheControl)
+    }
+  }
+  // Only font files: the folder's documentation keeps the default even with a version.
+  const readme = await request.get(
+    '/reader-directions/quiet-monograph/fonts/README.md?v=0123456789abcdef',
+  )
+  expect(readme.status()).toBe(200)
+  expect(readme.headers()['cache-control']).toBe('public, max-age=0')
 })

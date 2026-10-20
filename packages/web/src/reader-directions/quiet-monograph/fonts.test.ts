@@ -16,11 +16,28 @@ const folder = path.join(
 )
 
 // SHA-256 of the exact output from contract.ts, first pinned at base 68dde2b and updated for the
-// local bold and italic fallback faces (blog-0044.63). A range extension must not alter static CSS.
+// local bold and italic fallback faces (blog-0044.63) and the versioned font URLs (blog-0044.37).
+// A range extension must not alter static CSS.
 it('keeps quiet-monograph font output byte-for-byte compatible', () => {
   expect(
     createHash('sha256').update(readerDirectionFontCss(quietMonographDirection)!).digest('hex'),
-  ).toBe('b6bb10662a34971b9cb4ccbd4975a783162dbea2fdccfe758e7b025096f069e6')
+  ).toBe('b725fe25aaf105c23cc4038f761633ffc91cabe7cbfd1efc8c9634362f92df9b')
+})
+
+// The hash declared in fonts.ts versions each URL, and the server caches versioned font URLs for a
+// year as immutable. New bytes fail here until fonts.ts declares their hash, which also gives them
+// a new URL, so a returning reader never keeps a stale face.
+it('versions every font URL with the SHA-256 of the file it serves', () => {
+  const css = readerDirectionFontCss(quietMonographDirection)!
+  for (const source of quietMonographDirection.fonts.flatMap((font) => font.sources)) {
+    const sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(folder, source.file)))
+      .digest('hex')
+    expect(source.sha256, source.file).toBe(sha256)
+    expect(css).toContain(
+      `url("/reader-directions/quiet-monograph/fonts/${source.file}?v=${sha256.slice(0, 16)}")`,
+    )
+  }
 })
 
 it('preserves Next fallback metrics and optional display for exactly the used faces', () => {
@@ -51,9 +68,9 @@ it('preserves Next fallback metrics and optional display for exactly the used fa
   for (const face of web) {
     expect(face['font-display']).toBe('optional')
     expect(face.src).toMatch(
-      /^url\("\/reader-directions\/quiet-monograph\/fonts\/[a-z0-9-]+\.woff2"\) format\("woff2"\)$/,
+      /^url\("\/reader-directions\/quiet-monograph\/fonts\/[a-z0-9-]+\.woff2\?v=[a-f0-9]{16}"\) format\("woff2"\)$/,
     )
-    expect(face.src).toContain(`-${face['font-weight']}-${face['font-style']}.woff2"`)
+    expect(face.src).toContain(`-${face['font-weight']}-${face['font-style']}.woff2?v=`)
   }
   // Each family's metric-adjusted fallback has a regular, a bold and an italic local face. The
   // bold starts at 500, the emphasis weight, which browsers never synthesize as bold. The italics

@@ -50,4 +50,14 @@ node packages/web/src/reader-directions/literary-longread/font-metrics.mjs
 These family-level metrics use Next's table, not newly measured per-style metrics.
 The maintenance script is never imported by the runtime. Optional display prevents
 late font swaps; the coordinator's production browser checks must verify CLS is zero.
-If assets change, update filenames, provenance, metrics and performance evidence.
+If assets change, update provenance, the hashes declared in `fonts.ts` (see
+[Caching](#caching)), metrics and performance evidence.
+
+## Caching
+
+The page requests each face as `<file>?v=<version>`, where the version is the first 16 hex
+digits of the file's SHA-256. The hash is declared as `sha256` on the face's source in
+`src/reader-directions/literary-longread/fonts.ts`, the same value as in `sources.json`. The
+server caches these versioned URLs for a year as immutable. If a file's bytes change, update
+both hashes: the URL changes with them, so returning readers fetch the new file.
+`fonts.test.ts` fails while a declared hash differs from its file.

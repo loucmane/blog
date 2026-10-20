@@ -107,6 +107,20 @@ function createReaderLabHeaderRules() {
   }))
 }
 
+/**
+ * Reader direction font URLs carry `?v=` with the first 16 hex digits of the file's SHA-256
+ * (`src/reader-directions/contract.ts`), so new bytes always get a new URL and a versioned font can
+ * be cached for a year as immutable. Any other request in the folder, such as an unversioned font,
+ * keeps Next's `public, max-age=0`, which revalidates.
+ */
+function createReaderDirectionFontHeaderRule() {
+  return {
+    has: [{ key: 'v', type: 'query' as const, value: '[a-f0-9]{16}' }],
+    headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+    source: '/reader-directions/:id/fonts/:file([a-z0-9][a-z0-9_-]*\\.woff2)',
+  }
+}
+
 const nextConfig: NextConfig = {
   compress: true,
   images: {
@@ -146,6 +160,7 @@ const nextConfig: NextConfig = {
         source: '/api/owner/:path*',
       },
       ...createReaderLabHeaderRules(),
+      createReaderDirectionFontHeaderRule(),
     ]
   },
   async redirects() {

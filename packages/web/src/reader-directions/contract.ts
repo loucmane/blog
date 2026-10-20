@@ -85,6 +85,12 @@ export interface ReaderDirectionFont {
   readonly sources: readonly {
     /** Filename under public/reader-directions/<id>/fonts/, with its licence alongside. */
     readonly file: string
+    /**
+     * SHA-256 of the file, as 64 lowercase hex digits. Its first 16 digits version the URL, so new
+     * bytes get a new URL and the immutable cache on versioned font URLs never serves stale ones.
+     * Without it the URL has no version and revalidates on every view.
+     */
+    readonly sha256?: string
     /** Omitted styles retain the original normal-face output. */
     readonly style?: 'normal' | 'italic'
     /** Static weight or inclusive variable axis range. */
@@ -184,6 +190,9 @@ const maxNameLength = 48
 const maxThesisLength = 180
 const tokenNamePattern = /^--[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const fontFilePattern = /^[a-z0-9][a-z0-9_-]*\.woff2$/
+const fontHashPattern = /^[a-f0-9]{64}$/
+/** Hex digits of a font's hash in its URL: 64 bits, so two versions of a file never collide. */
+const fontVersionLength = 16
 const fontMetricPattern = /^\d+(?:\.\d+)?%$/
 const views = ['Home', 'Article', 'Section'] as const
 const optionalViews = ['Author', 'Topic', 'NotFound', 'Error', 'Unavailable'] as const
@@ -278,6 +287,15 @@ function requireFonts(id: string, fonts: readonly ReaderDirectionFont[] | undefi
         fail(
           id,
           `the font ${font.variable} needs a WOFF2 filename inside its own direction folder.`,
+        )
+      }
+      if (
+        source.sha256 !== undefined &&
+        (typeof source.sha256 !== 'string' || !fontHashPattern.test(source.sha256))
+      ) {
+        fail(
+          id,
+          `the font ${font.variable} needs a sha256 of 64 lowercase hex digits for ${source.file}.`,
         )
       }
       const validWeight = (value: unknown): value is number =>
@@ -658,6 +676,15 @@ export function readerDirectionStyleCss(direction: ReaderDirection): string | nu
 }
 
 /**
+ * A font file's URL. A declared hash adds its first 16 hex digits as the `v` query, so new bytes
+ * always get a new URL; next.config.ts caches only these versioned URLs, for a year as immutable.
+ */
+function fontUrl(direction: ReaderDirection, file: string, sha256: string | undefined): string {
+  const url = `/reader-directions/${direction.id}/fonts/${file}`
+  return sha256 === undefined ? url : `${url}?v=${sha256.slice(0, fontVersionLength)}`
+}
+
+/**
  * Top-level font faces with names unique to this direction, then the local fallback faces, then
  * scoped variables. @font-face cannot be nested under a selector. Only the active root emits these.
  */
@@ -671,8 +698,8 @@ export function readerDirectionFontCss(direction: ReaderDirection): string | nul
       return (
         font.sources
           .map(
-            ({ file, weight, stretch, style = 'normal' }) =>
-              `@font-face{font-family:"${family}";font-style:${style};font-weight:${typeof weight === 'number' ? weight : weight.join(' ')};${stretch ? `font-stretch:${stretch.join(' ')};` : ''}font-display:optional;src:url("/reader-directions/${direction.id}/fonts/${file}") format("woff2");}`,
+            ({ file, sha256, weight, stretch, style = 'normal' }) =>
+              `@font-face{font-family:"${family}";font-style:${style};font-weight:${typeof weight === 'number' ? weight : weight.join(' ')};${stretch ? `font-stretch:${stretch.join(' ')};` : ''}font-display:optional;src:url("${fontUrl(direction, file, sha256)}") format("woff2");}`,
           )
           .join('') +
         fallbackFaceCss(font, fallback) +

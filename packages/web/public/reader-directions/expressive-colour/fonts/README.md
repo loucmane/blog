@@ -60,9 +60,21 @@ The script verifies the archive's SHA-512, processes only the two Fraunces faces
 and compares every encoded glyph's decomposed outline and advance at weights
 400/700/800/900 and SOFT 30/100 against the originals before writing. TrueType
 rounding introduces at most 2.547 of 2000 font units (0.0013 em); no glyph is
-removed. The script rejects differences above 3 units. It then writes the assets
-and provenance hashes; it is not a runtime dependency or part of the app build.
-Append `--check` to reproduce both faces and verify byte-for-byte equality without
-writing files.
+removed. The script rejects differences above 3 units. It then writes the assets,
+their provenance hashes and the matching `sha256` declarations in `fonts.ts` (see
+[Caching](#caching)); it is not a runtime dependency or part of the app build.
+Append `--check` to reproduce both faces and verify byte-for-byte equality, including
+the declared hashes, without writing files.
 `fonts.test.ts` checks the files, glyphs, trimmed axes, italic style, metrics,
 licences, hashes and a 150 KB regression budget offline.
+
+## Caching
+
+The page requests each face as `<file>?v=<version>`, where the version is the first 16 hex
+digits of the file's SHA-256. The hash is declared as `sha256` on the face's source in
+`src/reader-directions/expressive-colour/fonts.ts`, the same value as in `sources.json`. The
+server caches these versioned URLs for a year as immutable. If a file's bytes change, update
+both hashes: the URL changes with them, so returning readers fetch the new file.
+`fonts.test.ts` fails while a declared hash differs from its file. `prepare-fonts.py` writes new
+Fraunces bytes under the same names, so it rewrites both hashes itself, and refuses to run if
+`fonts.ts` does not declare a face's current hash exactly once.

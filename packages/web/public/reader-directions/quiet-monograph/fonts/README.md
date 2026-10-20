@@ -17,7 +17,8 @@ Total: **100,816 bytes**. Every face of a family has the same name-table version
 Garamond 4.001, Jost 3.710). Latin includes Swedish Å/Ä/Ö and their lowercase forms. Other scripts
 use the system fallback; there are no additional script subsets or unused weights to download.
 The browser requests only faces used by text in the active direction. No external font service
-is contacted during builds or browsing. If bytes change, change the filename and source record.
+is contacted during builds or browsing. If bytes change, update the source record and the hash
+declared in `fonts.ts` (see [Caching](#caching)).
 
 ## Italics and the font budget
 
@@ -77,3 +78,12 @@ vertical metrics as their family's upright faces (ascent, descent and line gap p
 Cormorant 924, −287 and 0; Jost 1,070, −375 and 0), so one fallback per family serves both
 styles. When changing fonts, review the metrics and measure CLS again. Keep `font-display:
 optional`: matching metrics alone cannot prevent every line-wrap change during a late font swap.
+
+## Caching
+
+The page requests each face as `<file>?v=<version>`, where the version is the first 16 hex
+digits of the file's SHA-256. The hash is declared as `sha256` on the face's source in
+`src/reader-directions/quiet-monograph/fonts.ts`, the same value as in `sources.json`. The server
+caches these versioned URLs for a year as immutable. If a file's bytes change, update both
+hashes: the URL changes with them, so returning readers fetch the new file. `fonts.test.ts`
+fails while a declared hash differs from its file.
