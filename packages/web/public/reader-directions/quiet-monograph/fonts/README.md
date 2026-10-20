@@ -24,8 +24,8 @@ is contacted during builds or browsing. If bytes change, change the filename and
 The developed-magazine spec (`docs/design/reader-bakeoff/quiet-monograph.md`, sections 3 and 10)
 sets deks, bios and descriptions in Cormorant italic and emphasis in story text in the italic of
 its family. Both italics are genuine faces (italic angle −10° for Cormorant, −5° for Jost), and
-`.qm-page` sets `font-synthesis: none`, so the browser never slants or bolds a face. Jost 300 was
-removed: no style used it.
+`.qm-page` sets `font-synthesis: none`, so the browser never bolds a face and slants one only for
+emphasis on a cold view (below). Jost 300 was removed: no style used it.
 
 An italic is requested only on pages whose text uses it. Home uses at most five faces (89,728
 bytes): the cover dek needs the Cormorant italic, and nothing on home needs the Jost italic. An
@@ -35,8 +35,13 @@ both.
 
 Each italic shares its family's metric-adjusted fallback (below), which has only an upright face.
 On a cold view where a face misses its short block period, its text keeps that fallback. Where
-Times New Roman and Arial are installed, italic text is then upright for that view, because
-synthesis is off.
+Times New Roman and Arial are installed, deks, bios and pull quotes are then upright for that view,
+because synthesis is off. Emphasis is the one exception: `em` sets `font-synthesis-style: auto`, so
+the fallback is slanted and emphasis keeps its meaning. A genuine italic face never needs
+synthesis, so warm views are unchanged. Upright fallbacks for every italic would need italic
+fallback faces (`local("Times New Roman Italic")`, `local("Arial Italic")`), which only a shared
+contract change can emit. Synthetic bold starts at weight 600, and the direction uses only 400 and
+500, so a cold view draws the 500 weights at 400 with or without synthesis.
 
 ## Licences
 

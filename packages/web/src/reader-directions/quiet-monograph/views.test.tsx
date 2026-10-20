@@ -223,11 +223,12 @@ describe('Quiet Monograph with real published North House content', () => {
       background: 'var(--qm-paper)',
       'color-scheme': 'var(--qm-scheme)',
     })
-    // Only genuine italics and weights: nothing on the page lets the browser fake a face.
+    // Only genuine italics and weights: the page lets the browser fake no face. The one exception,
+    // emphasis on a cold view, is pinned in b3.test.tsx.
     expect(declarations('& .qm-page')).toMatchObject({ 'font-synthesis': 'none' })
     styleRules.walkDecls((declaration) => {
       expect(`${declaration.prop}: ${declaration.value}`).not.toMatch(
-        /^object-fit: cover|^font-weight: 300|^color-scheme: light|^font-synthesis(?!: none$)/,
+        /^object-fit: cover|^font-weight: 300|^color-scheme: light/,
       )
     })
     styleRules.walkRules((rule) => {
