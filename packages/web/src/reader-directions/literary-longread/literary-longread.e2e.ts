@@ -8,12 +8,14 @@ import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/
 import { normalizeSlug } from '../../server/content/domain'
 import { labAuthors, labStories, labTopics } from '../../server/lab/north-house'
 import { prepareFontCapture } from '../capture-fonts'
+import { observeCaptureFonts } from './capture-font-diagnostics'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
 const sectionPath = '/sections/interiors'
 const root = '[data-reader-direction="literary-longread"]'
 const longRead = labStories.find(({ id }) => id === 'article-lab-long-table')!
+const doorHandle = labStories.find(({ id }) => id === 'article-lab-door-handle')!
 const author = labAuthors.find(({ slug }) => slug === longRead.authors[0])!
 const topic = labTopics.find(({ slug }) => slug === longRead.topics[0])!
 const authorPath = `/authors/${author.slug}`
@@ -335,6 +337,51 @@ test('uses a 65-character reading measure and genuine italic text, with reduced 
   ).toBeLessThanOrEqual(0.00001)
 })
 
+test('preserves all five ordered numbering styles and starts in the article cascade', async ({
+  page,
+}) => {
+  await page.goto(`/stories/${normalizeSlug(doorHandle.title)}`)
+  const list = page.locator('.ll-body ol').first()
+  // Begin with the real lettered North House list; exercise the other authored
+  // numbering values on the same rendered list without changing stored content.
+  await expect(list).toHaveAttribute('type', 'a')
+  await expect(list).toHaveCSS('list-style-type', 'lower-alpha')
+  const markers = {
+    '1': 'decimal',
+    a: 'lower-alpha',
+    A: 'upper-alpha',
+    i: 'lower-roman',
+    I: 'upper-roman',
+  }
+  for (const [type, marker] of Object.entries(markers)) {
+    await list.evaluate((element, type) => {
+      element.setAttribute('type', type)
+      element.setAttribute('start', '4')
+    }, type)
+    await expect(list).toHaveCSS('list-style-type', marker)
+    expect(await list.evaluate((element) => (element as HTMLOListElement).start)).toBe(4)
+  }
+  await list.evaluate((element) => element.removeAttribute('type'))
+  await expect(list).toHaveCSS('list-style-type', 'decimal')
+})
+
+test('aligns article title, dek, label and byline to the same mobile left edge', async ({
+  page,
+}) => {
+  for (const width of [700, 767]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    const header = page.locator('.ll-article-header')
+    const label = (await header.locator('.ll-label').boundingBox())!
+    for (const selector of ['h1', '.ll-dek', '.ll-byline']) {
+      const element = header.locator(selector)
+      await expect(element).toHaveCSS('margin-left', '0px')
+      await expect(element).toHaveCSS('margin-right', '0px')
+      expect((await element.boundingBox())!.x, `${selector} at ${width}px`).toBeCloseTo(label.x, 1)
+    }
+  }
+})
+
 test('computes the article scale, body layout, list markers and end matter at each breakpoint', async ({
   page,
 }) => {
@@ -415,6 +462,21 @@ test('computes the article scale, body layout, list markers and end matter at ea
     })
     await expect(body.locator('h5[data-probe]')).toHaveCSS('font-size', '22px')
     await expect(body.locator('h6[data-probe]')).toHaveCSS('font-size', '20px')
+    for (const level of [2, 3, 4, 5, 6]) {
+      const heading = body.locator(`h${level}`).first()
+      await expect(heading).toHaveCSS('margin-top', '44px')
+      await expect(heading).toHaveCSS('margin-bottom', '16px')
+    }
+    const embed = body.locator(':scope > figure[data-block="embed"]')
+    await expect(embed).toHaveCount(1)
+    // The resolved 65ch cap should match prose even when the available shell
+    // is narrower. Compare the cap as well as the final box.
+    const prose = body.locator(':scope > p').first()
+    await expect(embed).toHaveCSS(
+      'max-width',
+      await prose.evaluate((element) => getComputedStyle(element).maxWidth),
+    )
+    expect((await embed.boundingBox())!.width).toBeCloseTo((await prose.boundingBox())!.width, 0)
     expect(
       await body
         .locator(':scope > p')
@@ -442,6 +504,28 @@ test('computes gold cover focus and accent focus elsewhere in both themes', asyn
       dark ? 'rgb(229, 154, 145)' : 'rgb(155, 44, 44)',
     )
     await expect(ordinary).toHaveCSS('outline-width', '2px')
+
+    await page.goto(storyPath)
+    await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
+    await waitForThemeToSettle(page)
+    await page.keyboard.press('Tab')
+    for (const selector of [
+      '.ll-byline a',
+      '.ll-authors a',
+      '.ll-topics a',
+      '.ll-article-exit a',
+    ]) {
+      const link = page.locator(selector).first()
+      await link.focus()
+      await expect(link).toBeFocused()
+      expect(await link.evaluate((element) => element.matches(':focus-visible'))).toBe(true)
+      await expect(link).toHaveCSS('color', dark ? 'rgb(229, 154, 145)' : 'rgb(155, 44, 44)')
+      await expect(link).toHaveCSS(
+        'outline-color',
+        dark ? 'rgb(229, 154, 145)' : 'rgb(155, 44, 44)',
+      )
+      await expect(link).toHaveCSS('outline-width', '2px')
+    }
   }
 })
 
@@ -522,8 +606,9 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures five page types in both themes for review', async ({ page }) => {
+test('captures five page types in both themes for review', async ({ page }, testInfo) => {
   test.setTimeout(300_000)
+  const diagnostics = await observeCaptureFonts(page)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-ll-serif': 'Newsreader',
     '--font-ll-sans': 'Libre Franklin',
@@ -539,38 +624,48 @@ test('captures five page types in both themes for review', async ({ page }) => {
       ['author', authorPath],
       ['topic', topicPath],
     ]) {
-      await captureFonts.goto(route!)
-      // Load lazy images before the full-page capture, then return to the cover.
-      await page.evaluate(async () => {
-        for (const image of document.images) image.loading = 'eager'
-        await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
-        window.scrollTo(0, 0)
-      })
-      expect(
-        await page
-          .locator(`${root} img`)
-          .evaluateAll((images) =>
-            images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
-          ),
-        `${name} images loaded`,
-      ).toBe(true)
-      for (const theme of ['light', 'dark']) {
-        await page.evaluate(
-          (dark) => document.documentElement.classList.toggle('dark', dark),
-          theme === 'dark',
-        )
-        await waitForThemeToSettle(page)
-        for (const fullPage of [false, true]) {
-          await captureFonts.assertFonts()
-          await page.screenshot({
-            path: path.join(
-              destination,
-              `${name}-${width}-${theme}-${fullPage ? 'full' : 'viewport'}.png`,
+      try {
+        await captureFonts.goto(route!)
+        await diagnostics.checkpoint('after capture goto / before images')
+        // Load lazy images before the full-page capture, then return to the cover.
+        await page.evaluate(async () => {
+          for (const image of document.images) image.loading = 'eager'
+          await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
+          window.scrollTo(0, 0)
+        })
+        await diagnostics.checkpoint('after images / before theme')
+        expect(
+          await page
+            .locator(`${root} img`)
+            .evaluateAll((images) =>
+              images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
             ),
-            fullPage,
-            animations: 'disabled',
-          })
+          `${name} images loaded`,
+        ).toBe(true)
+        for (const theme of ['light', 'dark']) {
+          await page.evaluate(
+            (dark) => document.documentElement.classList.toggle('dark', dark),
+            theme === 'dark',
+          )
+          await diagnostics.checkpoint(`${theme}: after toggle / before settle`)
+          await waitForThemeToSettle(page)
+          await diagnostics.checkpoint(`${theme}: after settle`)
+          for (const fullPage of [false, true]) {
+            await diagnostics.checkpoint(`${theme}: before assertFonts / fullPage=${fullPage}`)
+            await captureFonts.assertFonts()
+            await page.screenshot({
+              path: path.join(
+                destination,
+                `${name}-${width}-${theme}-${fullPage ? 'full' : 'viewport'}.png`,
+              ),
+              fullPage,
+              animations: 'disabled',
+            })
+          }
         }
+      } finally {
+        await diagnostics.checkpoint('route finished or failed')
+        await diagnostics.attach(testInfo, `${name}-${width}-font-lifecycle`)
       }
     }
   }

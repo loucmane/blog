@@ -83,7 +83,11 @@ describe('Literary Long-read b2 presentation', () => {
       [...document.querySelector('.ll-end-matter')!.children].map((element) => element.className),
     ).toEqual(['ll-closing-rule', 'll-authors', 'll-topics', 'll-related', 'll-article-exit'])
     expect(document.querySelector('.ll-closing-rule')).toHaveAttribute('aria-hidden', 'true')
-    expect(within(document.querySelector('.ll-topics')!).getByRole('list')).toBeTruthy()
+    expect(within(document.querySelector('.ll-topics')!).getByRole('list')).toHaveAttribute(
+      'role',
+      'list',
+    )
+    expect(document.querySelector('.ll-related-grid')).toHaveAttribute('role', 'list')
     expect(screen.getByRole('link', { name: 'Books and rooms' })).toHaveAttribute(
       'href',
       '/topics/books',
@@ -165,11 +169,17 @@ describe('Literary Long-read b2 presentation', () => {
           )
           expect(document.querySelector('.ll-page')).toBeTruthy()
           expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-          expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-            kind === 'author'
-              ? 'Stories by A long entity name that must wrap naturally'
-              : 'Stories',
-          )
+          if (suppliedStories.length > 0) {
+            expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+              kind === 'author'
+                ? 'Stories by A long entity name that must wrap naturally'
+                : 'Stories',
+            )
+            expect(document.querySelector('.ll-index')).toHaveAttribute('role', 'list')
+          } else {
+            expect(screen.queryByRole('heading', { level: 2 })).toBeNull()
+            expect(document.querySelector(`[aria-labelledby="ll-${kind}-stories"]`)).toBeNull()
+          }
           expect(document.querySelectorAll('.ll-index h3')).toHaveLength(suppliedStories.length)
           expect(document.querySelectorAll('.ll-entity-description')).toHaveLength(
             description ? 1 : 0,

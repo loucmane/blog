@@ -15,16 +15,23 @@ export function LiteraryAuthor({ view }: AuthorDirectionProps) {
         <h1>{view.name}</h1>
         {view.bio ? <p className="ll-entity-description">{view.bio}</p> : null}
       </header>
-      <section aria-labelledby="ll-author-stories">
-        <h2 className="ll-index-heading" id="ll-author-stories">
-          Stories by {view.name}
-        </h2>
+      {view.stories.length > 0 ? (
+        <section aria-labelledby="ll-author-stories">
+          <h2 className="ll-index-heading" id="ll-author-stories">
+            Stories by {view.name}
+          </h2>
+          <LiteraryStoryIndex
+            stories={view.stories}
+            headingLevel={3}
+            emptyMessage="No published stories by this author yet."
+          />
+        </section>
+      ) : (
         <LiteraryStoryIndex
           stories={view.stories}
-          headingLevel={3}
           emptyMessage="No published stories by this author yet."
         />
-      </section>
+      )}
     </LiteraryShell>
   )
 }

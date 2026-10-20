@@ -6,7 +6,7 @@ export const styles = `
   & .ll-page ::selection { background: var(--ll-accent); color: var(--ll-paper); }
   & .ll-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote) { margin: 0; }
   & .ll-page :is(h1, h2, h3, h4, h5, h6) { font-family: var(--ll-serif); font-weight: 500; text-wrap: balance; }
-  & .ll-page :where(ul, ol) { padding: 0; list-style: none; }
+  & .ll-page :where(ul, ol:not([type])) { padding: 0; list-style: none; }
   & .ll-page a { color: inherit; text-decoration: none; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
   & .ll-page a:visited { color: inherit; }
   & .ll-page a:hover { color: var(--ll-accent); text-decoration: underline; }
@@ -64,8 +64,8 @@ export const styles = `
   & .ll-empty h2 { font-size: var(--ll-title); line-height: 1.1; }
   & .ll-empty p { margin-top: 1.5rem; color: var(--ll-secondary); }
   & .ll-article-header { max-width: 58rem; margin: var(--ll-space) auto 3rem; text-align: left; }
-  & .ll-article-header h1 { font-size: var(--ll-title); line-height: 1.08; max-width: 22ch; margin: 1rem auto 0; }
-  & .ll-dek { font-size: var(--ll-dek); font-style: italic; font-weight: 400; line-height: 1.45; max-width: 48ch; margin: 1.5rem auto 0; }
+  & .ll-article-header h1 { font-size: var(--ll-title); line-height: 1.08; max-width: 22ch; margin: 1rem 0 0; }
+  & .ll-dek { font-size: var(--ll-dek); font-style: italic; font-weight: 400; line-height: 1.45; max-width: 48ch; margin: 1.5rem 0 0; }
   & .ll-byline { font-family: var(--ll-sans); font-size: var(--ll-small); color: var(--ll-secondary); line-height: 1.65; margin-top: 1.75rem; }
   & .ll-byline > p + p { margin-top: 0.5rem; }
   & .ll-page :is(.ll-byline, .ll-authors, .ll-topics, .ll-article-exit, .ll-section-empty) a { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; max-width: 100%; text-decoration: underline; color: var(--ll-ink); }
@@ -73,7 +73,7 @@ export const styles = `
   & .ll-hero { max-width: 60rem; margin: 0 auto 3rem; }
   & .ll-hero figcaption { max-width: min(100%, 65ch, 42rem); margin-inline: auto; }
   & .ll-body { width: min(100%, 42rem); margin-inline: auto; line-height: var(--ll-leading); display: flow-root; }
-  & .ll-body > :where(p, h2, h3, h4, h5, h6, ul:not([data-block='gallery']), ol, blockquote, pre, div, section) { max-width: 65ch; margin-inline: auto; }
+  & .ll-body > :where(p, h2, h3, h4, h5, h6, ul:not([data-block='gallery']), ol, blockquote, pre, div, section, figure[data-block='embed']) { max-width: 65ch; margin-inline: auto; }
   & .ll-body > * + * { margin-top: 1.5rem; }
   & .ll-body :is(h2, h3, h4, h5, h6) { font-weight: 600; line-height: 1.2; margin-block: 2.75rem 1rem; }
   & .ll-body h2 { font-size: var(--ll-heading); }
@@ -86,11 +86,7 @@ export const styles = `
   & .ll-body a { text-decoration: underline; }
   & .ll-body :is(ul, ol) { padding-left: 1.5rem; }
   & .ll-body ul { list-style-type: disc; }
-  & .ll-body ol { list-style-type: decimal; }
-  & .ll-body ol[type='a'] { list-style-type: lower-alpha; }
-  & .ll-body ol[type='A'] { list-style-type: upper-alpha; }
-  & .ll-body ol[type='i'] { list-style-type: lower-roman; }
-  & .ll-body ol[type='I'] { list-style-type: upper-roman; }
+  & .ll-body ol:not([type]) { list-style-type: decimal; }
   & .ll-body li + li { margin-top: 0.5rem; }
   & .ll-body li > * + * { margin-top: 0.75rem; }
   & .ll-body blockquote { border-left: 2px solid var(--ll-accent); padding-left: 1.5rem; }
@@ -154,6 +150,7 @@ export const styles = `
     & .ll-index-row { grid-template-columns: minmax(0, 1fr) 6rem; column-gap: 1.5rem; }
     & .ll-index-text { grid-template-columns: minmax(0, 1fr); }
     & .ll-article-header { text-align: center; }
+    & .ll-article-header :is(h1, .ll-dek) { margin-inline: auto; }
     & .ll-body > p:first-child::first-letter { float: left; font-size: var(--ll-dropcap); line-height: 0.85; font-weight: 500; color: var(--ll-accent); padding: 0.08em 0.1em 0 0; }
     & .ll-body [data-block='gallery']:not([data-layout='carousel']) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     & .ll-footer { padding-block: 3rem; }

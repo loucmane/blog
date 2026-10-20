@@ -16,7 +16,8 @@ export function LiteraryStoryIndex({
 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3'
   return stories.length > 0 ? (
-    <ul className="ll-index">
+    // eslint-disable-next-line jsx-a11y-x/no-redundant-roles -- Removed list styles drop list semantics in Safari.
+    <ul className="ll-index" role="list">
       {stories.map((story, index) => (
         <li className={`ll-index-row${story.image ? '' : ' ll-index-text'}`} key={story.slug}>
           <time className="ll-date" dateTime={story.publishedAt}>

@@ -73,7 +73,8 @@ export function LiteraryArticle({ view, imageSizes }: ArticleDirectionProps) {
           {view.topics.length > 0 ? (
             <section className="ll-topics" aria-labelledby="ll-topics">
               <h2 id="ll-topics">Topics</h2>
-              <ul>
+              {/* eslint-disable-next-line jsx-a11y-x/no-redundant-roles -- Removed list styles drop list semantics in Safari. */}
+              <ul role="list">
                 {view.topics.map((topic) => (
                   <li key={topic.href}>
                     <Link href={topic.href}>{topic.name}</Link>
@@ -85,7 +86,8 @@ export function LiteraryArticle({ view, imageSizes }: ArticleDirectionProps) {
           {view.related.length > 0 ? (
             <section className="ll-related" aria-labelledby="ll-related">
               <h2 id="ll-related">Related stories</h2>
-              <ul className="ll-related-grid">
+              {/* eslint-disable-next-line jsx-a11y-x/no-redundant-roles -- Removed list styles drop list semantics in Safari. */}
+              <ul className="ll-related-grid" role="list">
                 {view.related.slice(0, 3).map((story) => (
                   <li key={story.slug}>
                     <LiteraryStoryCard story={story} sizes={relatedSizes} />
