@@ -180,12 +180,12 @@ export function labSeedIntegrationTests({
         expect(response.status).toBe(200)
         expect(response.headers.get('cache-control')).toBe('private, no-store')
         const report = await response.json()
-        expect(report.stories.created).toHaveLength(7)
+        expect(report.stories.created).toHaveLength(labStories.length - 1)
         expect(report.stories.slugInUse).toEqual([labStorySlug(collision)])
         expect(report.images.created).toHaveLength(labImages.length)
         expect(report.images.skipped).toBeNull()
         const home = await readHomeView({ mediaAvailable: true, repository: owner.repository })
-        expect(home.recent.length + (home.lead ? 1 : 0)).toBe(7)
+        expect(home.recent.length + (home.lead ? 1 : 0)).toBe(labStories.length - 1)
         const assets = await owner.repository.transaction((transaction) =>
           transaction.listMediaAssets(),
         )
@@ -251,7 +251,7 @@ export function labSeedIntegrationTests({
         expect(replay.status).toBe(200)
         const repeated = await replay.json()
         expect(repeated.stories.created).toEqual([])
-        expect(repeated.stories.existing).toHaveLength(7)
+        expect(repeated.stories.existing).toHaveLength(labStories.length - 1)
         expect(repeated.stories.slugInUse).toEqual([labStorySlug(collision)])
         expect(repeated.images.created).toEqual([])
         expect(put).not.toHaveBeenCalled()

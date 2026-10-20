@@ -35,7 +35,7 @@ import type { Clock, ContentRepository, IdentifierSource } from '../content/port
 import { SectionService } from '../content/sections'
 import { ContentService } from '../content/service'
 import { renderIllustration } from '../lab/illustrations'
-import { labImages } from '../lab/north-house'
+import { labImages, labStories } from '../lab/north-house'
 import { seedLabContent } from '../lab/seed'
 import { applyContentMigrations, readContentMigrations } from './migrations'
 import { PostgresContentRepository } from './postgres-content-repository'
@@ -533,7 +533,7 @@ describe('PostgreSQL and media persistence integration', () => {
     await mediaClient.send(new CreateBucketCommand({ Bucket: labBucket }))
     const target = { objects: new S3OriginalObjectStore(mediaClient, labBucket), repository }
     const seeded = await seedLabContent(target)
-    expect(seeded.stories.created).toHaveLength(8)
+    expect(seeded.stories.created).toHaveLength(labStories.length)
     expect(seeded.images.created).toEqual(labImages.map(({ id }) => id))
     expect((await readHomeView(source)).lead?.title).toBe('The quiet architecture of winter light')
     expect(await readPublicMediaIds(source)).toEqual(

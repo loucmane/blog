@@ -1,15 +1,32 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
+import { authorPath, topicPath } from '@/reader/paths'
 import type { ArticleBlock } from '@/reader/views'
-import { readArticleView, readHomeView, readSectionView } from '@/reader/read-model'
+import {
+  readArticleView,
+  readAuthorView,
+  readHomeView,
+  readSectionView,
+  readTopicView,
+} from '@/reader/read-model'
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentNode } from '@/server/content/document'
+import type { AuthorProfile, TaxonomyTerm } from '@/server/content/domain'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { InMemoryOriginalObjectStore, MediaOriginalService } from '@/server/content/media'
+import type { ContentTransaction } from '@/server/content/ports'
+import { SectionService } from '@/server/content/sections'
 import { ContentService } from '@/server/content/service'
 
 import { labSeedBarrier } from '../../../tests/support/lab-seed-barrier'
 
-import { labImages, labStories } from './north-house'
+import {
+  labAuthors,
+  labImages,
+  labSections,
+  labStories,
+  labTopics,
+  type LabStory,
+} from './north-house'
 import type * as Illustrations from './illustrations'
 import { renderIllustration } from './illustrations'
 import {
@@ -21,8 +38,8 @@ import {
 } from './seed'
 
 // These tests prove seed/locking behavior, not image rendering. Tiny real PNGs
-// avoid nine full-size renders per worker; illustrations.test.ts and the real
-// PostgreSQL/S3 integration suite retain full-size image coverage.
+// avoid a full-size render of every sample image per worker; illustrations.test.ts
+// and the real PostgreSQL/S3 integration suite retain full-size image coverage.
 vi.mock('./illustrations', async (importOriginal) => {
   const actual = await importOriginal<typeof Illustrations>()
   return {
@@ -247,6 +264,30 @@ function storySlug(id: string): string {
   return labStorySlug(story)
 }
 
+function labAuthorName(slug: string): string | undefined {
+  return labAuthors.find((author) => author.slug === slug)?.name
+}
+
+function labTopicName(slug: string): string | undefined {
+  return labTopics.find((topic) => topic.slug === slug)?.name
+}
+
+/** Everything a seed run may write, and the publication version readers are cached by. */
+async function snapshot(repository: InMemoryContentRepository) {
+  const publicationVersion = await repository.readPublicationVersion()
+  return repository.inspect(async (transaction) => ({
+    articles: await transaction.listArticles(),
+    audits: await transaction.listAuditEvents(),
+    authors: await transaction.listAuthors(),
+    bylines: await Promise.all(labStories.map(({ id }) => transaction.listArticleAuthors(id))),
+    links: await transaction.listArticleTaxonomies(),
+    media: await transaction.listMediaAssets(),
+    publicationVersion,
+    revisions: await transaction.listRevisions(),
+    terms: await transaction.listTaxonomyTerms(),
+  }))
+}
+
 function nodeTypes(node: ContentNode, types = new Set<string>()): Set<string> {
   types.add(node.type)
   for (const child of node.content ?? []) nodeTypes(child, types)
@@ -279,12 +320,15 @@ describe('Reader Lab seed', () => {
     firstRun = await seedLabContent({ objects, repository })
   })
 
-  it('publishes eight North House stories across three sections, with images', async () => {
+  it('publishes twelve North House stories, at least four in each of three sections, with images', async () => {
     const source = { mediaAvailable: true, repository }
     const home = await readHomeView(source)
 
     expect(firstRun.sections).toEqual(['architecture', 'craft', 'interiors'])
-    expect(firstRun.stories.created).toHaveLength(8)
+    for (const slug of ['architecture', 'craft', 'interiors']) {
+      expect((await readSectionView(source, slug))?.stories.length, slug).toBeGreaterThanOrEqual(4)
+    }
+    expect(firstRun.stories.created).toHaveLength(12)
     expect(firstRun.images).toEqual({
       created: labImages.map(({ id }) => id),
       existing: [],
@@ -296,18 +340,77 @@ describe('Reader Lab seed', () => {
       mediaId: 'media-lab-winter-light',
       width: 1440,
     })
-    expect(home.recent).toHaveLength(7)
+    // The direction specs describe this front page: a long title, a story without images, then a
+    // very short one.
+    expect(home.recent.slice(0, 3).map(({ slug }) => slug)).toEqual([
+      storySlug('article-lab-boathouse'),
+      storySlug('article-lab-chair'),
+      storySlug('article-lab-shelf'),
+    ])
+    expect(home.recent).toHaveLength(11)
     expect(home.navigation.sections.map(({ name }) => name)).toEqual([
       'Architecture',
       'Craft',
       'Interiors',
     ])
-    for (const slug of ['architecture', 'craft', 'interiors']) {
-      expect((await readSectionView(source, slug))?.stories.length).toBeGreaterThanOrEqual(2)
+    expect(firstRun.authors).toEqual({
+      created: labAuthors.map(({ slug }) => slug),
+      existing: [],
+      slugInUse: [],
+    })
+    expect(firstRun.topics).toEqual({ created: labTopics.map(({ slug }) => slug), existing: [] })
+  })
+
+  it('credits every story with one to three authors and files it under one to three topics', async () => {
+    const source = { mediaAvailable: true, repository }
+    for (const story of labStories) {
+      const view = await readArticleView(source, labStorySlug(story))
+
+      expect(view?.authors.length, story.id).toBeGreaterThanOrEqual(1)
+      expect(view?.authors.length, story.id).toBeLessThanOrEqual(3)
+      expect(view?.topics.length, story.id).toBeGreaterThanOrEqual(1)
+      expect(view?.topics.length, story.id).toBeLessThanOrEqual(3)
+      expect(view?.authorLinks, story.id).toEqual(
+        story.authors.map((slug) => ({ href: authorPath(slug), name: labAuthorName(slug) })),
+      )
+      expect(view?.topics, story.id).toEqual(
+        story.topics.map((slug) => ({ href: topicPath(slug), name: labTopicName(slug) })),
+      )
+      expect(view?.section?.slug, story.id).toBe(story.section)
     }
   })
 
-  it('is idempotent and keeps existing stories, images, and sections as they are', async () => {
+  it('gives every author and topic several stories, and every story at least three related stories', async () => {
+    const source = { mediaAvailable: true, repository }
+    const authors = await repository.inspect((transaction) => transaction.listAuthors())
+    const topics = (
+      await repository.inspect((transaction) => transaction.listTaxonomyTerms())
+    ).filter(({ kind }) => kind === 'tag')
+
+    expect(authors).toHaveLength(5)
+    expect(topics).toHaveLength(7)
+    expect(authors.map(({ id }) => id).sort()).toEqual(labAuthors.map(({ id }) => id).sort())
+    expect(topics.map(({ id }) => id).sort()).toEqual(labTopics.map(({ id }) => id).sort())
+    const authorViews = await Promise.all(authors.map(({ slug }) => readAuthorView(source, slug)))
+    for (const view of authorViews) {
+      expect(view?.stories.length, view?.slug).toBeGreaterThanOrEqual(3)
+    }
+    // One guest contributor has no biography, so author pages must work without one.
+    expect(authorViews.filter((view) => view?.bio === null).map((view) => view?.slug)).toEqual([
+      'saga-lindqvist',
+    ])
+    for (const { slug } of topics) {
+      expect((await readTopicView(source, slug))?.stories.length, slug).toBeGreaterThanOrEqual(3)
+    }
+    for (const story of labStories) {
+      const related = (await readArticleView(source, labStorySlug(story)))?.related
+      expect(related?.length, story.id).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('is idempotent and keeps existing stories, images, sections, authors and topics as they are', async () => {
+    const before = await snapshot(repository)
+
     const secondRun = await seedLabContent({ objects, repository })
 
     expect(secondRun.stories).toEqual({
@@ -320,11 +423,23 @@ describe('Reader Lab seed', () => {
       existing: labImages.map(({ id }) => id),
       skipped: null,
     })
+    expect(secondRun.authors).toEqual({
+      created: [],
+      existing: firstRun.authors.created,
+      slugInUse: [],
+    })
+    expect(secondRun.topics).toEqual({ created: [], existing: firstRun.topics.created })
+    expect(await snapshot(repository)).toEqual(before)
     await repository.inspect(async (transaction) => {
-      expect(await transaction.listArticles()).toHaveLength(8)
+      expect(await transaction.listArticles()).toHaveLength(labStories.length)
       expect(await transaction.listMediaAssets()).toHaveLength(labImages.length)
-      expect(await transaction.listTaxonomyTerms()).toHaveLength(3)
-      expect(await transaction.listArticleTaxonomies()).toHaveLength(8)
+      expect(await transaction.listAuthors()).toHaveLength(labAuthors.length)
+      expect(await transaction.listTaxonomyTerms()).toHaveLength(
+        labSections.length + labTopics.length,
+      )
+      expect(await transaction.listArticleTaxonomies()).toHaveLength(
+        labStories.reduce((links, { topics }) => links + 1 + topics.length, 0),
+      )
     })
   })
 
@@ -343,6 +458,7 @@ describe('Reader Lab seed', () => {
     expect(short).toMatchObject({ readingMinutes: 1 })
     expect(short?.body).toHaveLength(2)
     expect(longRead?.readingMinutes).toBeGreaterThanOrEqual(5)
+    expect(longRead?.authors).toHaveLength(3)
     expect([...blockKinds(longRead?.body ?? [])].sort()).toEqual([
       'bulleted-list',
       'callout',
@@ -362,6 +478,15 @@ describe('Reader Lab seed', () => {
     expect(
       [...nodeTypes({ content: longReadStory?.blocks as ContentNode[], type: 'doc' })].sort(),
     ).toEqual(documentNodeTypes)
+
+    // An image later in the story is not a lead image, but it still illustrates the story card.
+    const inlineImage = await readArticleView(source, storySlug('article-lab-limewash'))
+    const inlineCard = (await readSectionView(source, 'craft'))?.stories.find(
+      ({ slug }) => slug === inlineImage?.slug,
+    )
+    expect(inlineImage?.hero).toBeNull()
+    expect(inlineImage?.body.some(({ kind }) => kind === 'image')).toBe(true)
+    expect(inlineCard?.image?.mediaId).toBe('media-lab-limewash')
   })
 
   it('creates the stories without images when media storage is not configured', async () => {
@@ -374,7 +499,9 @@ describe('Reader Lab seed', () => {
       existing: [],
       skipped: 'Media storage is not configured, so no images were stored.',
     })
-    expect(report.stories.created).toHaveLength(8)
+    expect(report.stories.created).toHaveLength(labStories.length)
+    expect(report.authors.created).toHaveLength(labAuthors.length)
+    expect(report.topics.created).toHaveLength(labTopics.length)
     expect(
       (
         await readArticleView(
@@ -406,7 +533,15 @@ describe('Reader Lab seed', () => {
     const report = await seedLabContent({ objects: null, repository: occupied })
 
     expect(report.stories.slugInUse).toEqual([slug])
-    expect(report.stories.created).toHaveLength(7)
+    expect(report.stories.created).toHaveLength(labStories.length - 1)
+    await occupied.inspect(async (transaction) => {
+      expect(await transaction.listArticleAuthors('article-owner')).toEqual([])
+      expect(
+        (await transaction.listArticleTaxonomies()).filter(
+          ({ articleId }) => articleId === 'article-owner',
+        ),
+      ).toEqual([])
+    })
   })
 
   it('requires explicit Preview intent in a production runtime while preserving local labs', () => {
@@ -421,7 +556,7 @@ describe('Reader Lab seed', () => {
     expect(labSeedAllowed({ NODE_ENV: 'test' })).toBe(true)
   })
 
-  it('does not publish, edit or assign sections to an existing owner article with a sample ID', async () => {
+  it('does not publish, edit, credit or file an existing owner article with a sample ID', async () => {
     const occupied = new InMemoryContentRepository()
     const id = 'article-lab-winter-light'
     const owner = await new ContentService(occupied).createArticle({
@@ -446,6 +581,316 @@ describe('Reader Lab seed', () => {
       expect(
         (await transaction.listArticleTaxonomies()).filter((link) => link.articleId === id),
       ).toEqual([])
+      expect(await transaction.listArticleAuthors(id)).toEqual([])
     })
   })
+
+  it('keeps owner changes to sample authors, topics and bylines when it runs again', async () => {
+    const edited = new InMemoryContentRepository()
+    await seedLabContent({ objects: null, repository: edited })
+    const author = labAuthors[0]!
+    const topic = labTopics[0]!
+    const story = labStories.find(({ id }) => id === 'article-lab-long-table')!
+    await edited.transaction(async (transaction) => {
+      const profile = (await transaction.listAuthors()).find(({ id }) => id === author.id)!
+      const term = (await transaction.listTaxonomyTerms()).find(({ id }) => id === topic.id)!
+      // The in-memory store overwrites rows by ID, which stands in for owner edits here.
+      await transaction.saveAuthor({ ...profile, bio: 'Owner bio', displayName: 'Owner name' })
+      await transaction.saveTaxonomyTerm({ ...term, name: 'Owner topic' })
+      await transaction.setArticleAuthors(story.id, [])
+      transaction.recordPublicationChange()
+    })
+    const before = await snapshot(edited)
+
+    const replay = await seedLabContent({ objects: null, repository: edited })
+
+    expect(replay.authors).toEqual({
+      created: [],
+      existing: labAuthors.map(({ slug }) => slug),
+      slugInUse: [],
+    })
+    expect(replay.topics).toEqual({ created: [], existing: labTopics.map(({ slug }) => slug) })
+    expect(await snapshot(edited)).toEqual(before)
+  })
+
+  it('does not credit a sample author whose slug another author already uses', async () => {
+    const occupied = new InMemoryContentRepository()
+    const sample = labAuthors.find(({ slug }) => slug === 'tomas-ek')!
+    const owner: AuthorProfile = {
+      bio: 'The owner wrote this.',
+      createdAt: '2026-08-01T07:00:00.000Z',
+      displayName: 'Owner writer',
+      id: 'author-owner',
+      slug: sample.slug,
+      updatedAt: '2026-08-01T07:00:00.000Z',
+    }
+    await occupied.transaction((transaction) => transaction.saveAuthor(owner))
+
+    const report = await seedLabContent({ objects: null, repository: occupied })
+
+    expect(report.authors).toEqual({
+      created: labAuthors.filter(({ slug }) => slug !== sample.slug).map(({ slug }) => slug),
+      existing: [],
+      slugInUse: [sample.slug],
+    })
+    await occupied.inspect(async (transaction) => {
+      expect((await transaction.listAuthors()).find(({ id }) => id === owner.id)).toEqual(owner)
+      expect(await transaction.listAuthorArticles(owner.id)).toEqual([])
+      for (const story of labStories) {
+        expect(
+          (await transaction.listArticleAuthors(story.id)).map(({ slug }) => slug),
+          story.id,
+        ).toEqual(story.authors.filter((slug) => slug !== sample.slug))
+      }
+    })
+  })
+
+  it('files sample stories under an existing tag that already uses a topic slug', async () => {
+    const occupied = new InMemoryContentRepository()
+    const sample = labTopics.find(({ slug }) => slug === 'light')!
+    const owner: TaxonomyTerm = {
+      createdAt: '2026-08-01T07:00:00.000Z',
+      id: 'tag-owner-light',
+      kind: 'tag',
+      name: 'Owner light',
+      slug: sample.slug,
+      updatedAt: '2026-08-01T07:00:00.000Z',
+    }
+    await occupied.transaction((transaction) => transaction.saveTaxonomyTerm(owner))
+
+    const report = await seedLabContent({ objects: null, repository: occupied })
+
+    expect(report.topics).toEqual({
+      created: labTopics.filter(({ slug }) => slug !== sample.slug).map(({ slug }) => slug),
+      existing: [sample.slug],
+    })
+    await occupied.inspect(async (transaction) => {
+      expect(
+        (await transaction.listTaxonomyTerms()).filter(({ slug }) => slug === sample.slug),
+      ).toEqual([owner])
+      expect(
+        (await transaction.listArticleTaxonomies())
+          .filter(({ taxonomyId }) => taxonomyId === owner.id)
+          .map(({ articleId }) => articleId)
+          .sort(),
+      ).toEqual(
+        labStories
+          .filter(({ topics }) => topics.includes(sample.slug))
+          .map(({ id }) => id)
+          .sort(),
+      )
+    })
+  })
+})
+
+describe('seed recovery after an interrupted run', () => {
+  const failure = new Error('Injected failure')
+  const story = labStories[0]!
+  const sectionId = labSections.find(({ slug }) => slug === story.section)!.id
+  const slugs = labStories.map(labStorySlug)
+
+  afterEach(() => vi.restoreAllMocks())
+
+  /** The prototype every in-memory transaction shares, so a test can make one of its writes fail. */
+  function transactionPrototype(
+    repository: InMemoryContentRepository,
+  ): Promise<ContentTransaction> {
+    return repository.inspect(async (transaction) => Object.getPrototypeOf(transaction))
+  }
+
+  /** Everything stored about one story. */
+  function storyState(repository: InMemoryContentRepository, id: string) {
+    return repository.inspect(async (transaction) => ({
+      article: await transaction.getArticle(id),
+      audits: await transaction.listAuditEvents(id),
+      autosaves: await transaction.listAutosaves(id),
+      bylines: await transaction.listArticleAuthors(id),
+      links: (await transaction.listArticleTaxonomies()).filter(
+        ({ articleId }) => articleId === id,
+      ),
+      revisions: await transaction.listRevisions(id),
+    }))
+  }
+
+  /** Readers see the story, in its section, with its bylines and topics in order. */
+  async function expectFinished(repository: InMemoryContentRepository, finished: LabStory) {
+    const view = await readArticleView(
+      { mediaAvailable: false, repository },
+      labStorySlug(finished),
+    )
+    expect(view?.section?.slug).toBe(finished.section)
+    expect(view?.authorLinks).toEqual(
+      finished.authors.map((slug) => ({ href: authorPath(slug), name: labAuthorName(slug) })),
+    )
+    expect(view?.topics).toEqual(
+      finished.topics.map((slug) => ({ href: topicPath(slug), name: labTopicName(slug) })),
+    )
+  }
+
+  async function expectReplayWritesNothing(repository: InMemoryContentRepository) {
+    const before = await snapshot(repository)
+    const replay = await seedLabContent({ objects: null, repository })
+    expect(replay.stories).toEqual({ created: [], existing: slugs, slugInUse: [] })
+    expect(await snapshot(repository)).toEqual(before)
+  }
+
+  /**
+   * The seed used to commit creating a story and assigning its section one at a time, so a run
+   * that failed before publishing could leave a draft behind. This recreates what such a run left:
+   * the seed stops at its first story, which is then created, and optionally filed under its
+   * section, the way that seed did it.
+   */
+  async function interruptedEarlierRun(
+    repository: InMemoryContentRepository,
+    { sectioned }: { sectioned: boolean },
+  ) {
+    vi.spyOn(ContentService.prototype, 'createArticle').mockRejectedValueOnce(failure)
+    await expect(seedLabContent({ objects: null, repository })).rejects.toThrow(failure)
+    vi.restoreAllMocks()
+    const clock = { now: () => new Date(story.publishedAt) }
+    await new ContentService(repository, clock).createArticle({
+      dek: story.dek,
+      document: {
+        articleId: story.id,
+        document: { content: story.blocks, type: 'doc' },
+        migrationProvenance: [],
+        schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
+        title: story.title,
+      },
+      id: story.id,
+      idempotencyKey: `lab-seed:create:${story.id}`,
+      slug: labStorySlug(story),
+      title: story.title,
+    })
+    if (sectioned) {
+      await new SectionService(repository, clock).assignSection({
+        articleId: story.id,
+        sectionId,
+      })
+    }
+  }
+
+  const interruptions: readonly (readonly [
+    string,
+    (repository: InMemoryContentRepository) => Promise<unknown>,
+  ])[] = [
+    [
+      'assigning its section',
+      async () =>
+        vi.spyOn(SectionService.prototype, 'assignSection').mockRejectedValueOnce(failure),
+    ],
+    [
+      'crediting its authors',
+      async (repository) =>
+        vi
+          .spyOn(await transactionPrototype(repository), 'setArticleAuthors')
+          .mockRejectedValueOnce(failure),
+    ],
+    [
+      'filing it under a topic',
+      async (repository) => {
+        const prototype = await transactionPrototype(repository)
+        const save = prototype.saveArticleTaxonomy
+        const topic = labTopics.find(({ slug }) => slug === story.topics[0])!
+        return vi.spyOn(prototype, 'saveArticleTaxonomy').mockImplementation(function (
+          this: ContentTransaction,
+          link,
+        ) {
+          return link.taxonomyId === topic.id ? Promise.reject(failure) : save.call(this, link)
+        })
+      },
+    ],
+    [
+      'publishing it',
+      async () => vi.spyOn(ContentService.prototype, 'publish').mockRejectedValueOnce(failure),
+    ],
+  ]
+
+  it.each(interruptions)(
+    'stores nothing of a story when %s fails, and creates all of it on the retry',
+    async (_step, interrupt) => {
+      const repository = new InMemoryContentRepository()
+      await interrupt(repository)
+
+      await expect(seedLabContent({ objects: null, repository })).rejects.toThrow(failure)
+      vi.restoreAllMocks()
+
+      expect(await storyState(repository, story.id)).toEqual({
+        article: null,
+        audits: [],
+        autosaves: [],
+        bylines: [],
+        links: [],
+        revisions: [],
+      })
+      const retry = await seedLabContent({ objects: null, repository })
+      expect(retry.stories).toEqual({ created: slugs, existing: [], slugInUse: [] })
+      await expectFinished(repository, story)
+      await expectReplayWritesNothing(repository)
+    },
+  )
+
+  // The seed cannot tell a draft an earlier seed left from one the owner has changed since:
+  // replacing a byline changes neither the article's version nor its audit trail, and the owner
+  // can file the draft under the seed's own section. So any existing article stays as it is.
+  const leftDrafts: readonly (readonly [
+    string,
+    (repository: InMemoryContentRepository) => Promise<unknown>,
+  ])[] = [
+    [
+      'an earlier seed left it with no authors',
+      (repository) => interruptedEarlierRun(repository, { sectioned: false }),
+    ],
+    [
+      'an earlier seed left it filed under its section, with no authors',
+      (repository) => interruptedEarlierRun(repository, { sectioned: true }),
+    ],
+    [
+      'the owner credited an author and then removed the byline',
+      async (repository) => {
+        await interruptedEarlierRun(repository, { sectioned: true })
+        const author = labAuthors.find(({ slug }) => slug === story.authors[0])!
+        for (const authorIds of [[author.id], []]) {
+          await repository.transaction(async (transaction) => {
+            await transaction.getArticleForUpdate(story.id)
+            await transaction.setArticleAuthors(story.id, authorIds)
+          })
+        }
+      },
+    ],
+    [
+      'the owner filed it under its section',
+      async (repository) => {
+        await interruptedEarlierRun(repository, { sectioned: false })
+        await new SectionService(repository).assignSection({
+          actorId: 'owner',
+          articleId: story.id,
+          sectionId,
+        })
+      },
+    ],
+  ]
+
+  it.each(leftDrafts)(
+    'leaves a draft exactly as it is, unpublished, when %s',
+    async (_draft, leaveDraft) => {
+      const repository = new InMemoryContentRepository()
+      await leaveDraft(repository)
+      const left = await storyState(repository, story.id)
+      expect(left.article).toMatchObject({ publishedAt: null, status: 'draft' })
+
+      const retry = await seedLabContent({ objects: null, repository })
+
+      expect(retry.stories).toEqual({
+        created: slugs.slice(1),
+        existing: [labStorySlug(story)],
+        slugInUse: [],
+      })
+      expect(await storyState(repository, story.id)).toEqual(left)
+      expect(
+        await readArticleView({ mediaAvailable: false, repository }, labStorySlug(story)),
+      ).toBeNull()
+      await expectReplayWritesNothing(repository)
+    },
+  )
 })
