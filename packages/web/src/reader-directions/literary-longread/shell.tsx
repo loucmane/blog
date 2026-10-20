@@ -20,19 +20,21 @@ export function LiteraryShell({
   navigation,
   currentSection,
   leadImage,
+  skipLabel = 'Skip to stories',
 }: {
   readonly children: ReactNode
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
   readonly currentSection?: string
   readonly leadImage?: LiteraryLeadImage | null
+  readonly skipLabel?: 'Skip to stories' | 'Skip to article'
 }) {
   const Brand = isHome ? 'h1' : 'p'
   return (
     <div className="ll-page">
       {leadImage ? <LiteraryImagePreload {...leadImage} /> : null}
       <a className="ll-skip" href="#ll-main">
-        Skip to stories
+        {skipLabel}
       </a>
       <header className="ll-masthead">
         <Brand className="ll-wordmark">
