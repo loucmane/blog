@@ -71,12 +71,29 @@ describe('the complete contrast matrix', () => {
         expect(ratio, `${colour.name}: ${role}`).toBeGreaterThanOrEqual(4.5)
       }
     }
-    for (const [text, background] of tokens.textPairs) {
-      expect(contrastRatio(palette[text]!, palette[background]!)).toBeGreaterThanOrEqual(4.5)
+    for (const theme of [tokens.light, { ...tokens.light, ...tokens.dark }]) {
+      const colours: ReaderDirectionTokenSet = theme
+      for (const [text, background] of tokens.textPairs) {
+        expect(contrastRatio(colours[text]!, colours[background]!)).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(contrastRatio(colours['--ec-ink']!, colours['--ec-paper']!)).toBeGreaterThanOrEqual(7)
     }
     // Body, italic dek, captions, underlined links, unfilled navigation, paper focus ring;
     // and the reverse pair for filled navigation, skip link and selection.
     expect(contrastRatio(ink, paper)).toBeGreaterThan(15)
-    expect(tokens).not.toHaveProperty('dark')
+    expect(tokens).toHaveProperty('dark', {
+      '--ec-scheme': 'dark',
+      '--ec-paper': '#17141F',
+      '--ec-paper-2': '#231F2D',
+      '--ec-ink': '#F1E8DA',
+      '--ec-ink-soft': '#C4BBCB',
+    })
+    expect(tokens.textPairs).toEqual(
+      expect.arrayContaining([
+        ['--ec-ink-soft', '--ec-paper'],
+        ['--ec-ink', '--ec-paper-2'],
+        ['--ec-ink-soft', '--ec-paper-2'],
+      ]),
+    )
   })
 })
