@@ -910,17 +910,11 @@ for (const width of [390, 1440]) {
             await tab.evaluate(async () => {
               await Promise.all(Array.from(document.images, (img) => img.decode()))
             })
-            const themeButton = tab.getByRole('button', { name: 'Choose color theme' })
-            await expect(themeButton).toBeEnabled()
-            await themeButton.click()
-            await tab
-              .getByRole('menuitemradio', {
-                name: theme === 'dark' ? 'Light theme' : 'Dark theme',
-              })
-              .click()
-            await tab.keyboard.press('Escape')
-            await expect(themeButton).toBeFocused()
-            await waitForThemeToSettle(tab)
+            // Literary Long-read has no Theme control (its spec defines none), so the measured
+            // interactions are keyboard steps and a non-navigating click on the page heading.
+            await tab.keyboard.press('Tab')
+            await tab.keyboard.press('Tab')
+            await tab.locator(`${root} h1`).first().click()
             await tab.waitForTimeout(500)
             const result = await tab.evaluate(() => ({
               ...(window as unknown as MeasuredWindow).llMeasurements,
