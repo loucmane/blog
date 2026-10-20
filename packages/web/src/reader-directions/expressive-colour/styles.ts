@@ -121,7 +121,7 @@ export const styles = `
   & .ec-body ul { list-style-type: disc; }
   & .ec-body ol:not([type]) { list-style-type: decimal; }
   & .ec-body li::marker { color: currentColor; }
-  & .ec-body ol > li::marker { font-family: var(--ec-mono); font-weight: 500; }
+  & .ec-body ol > li::marker { font-family: var(--ec-mono); font-weight: 500; font-style: normal; }
   & .ec-body li + li { margin-top: 0.5rem; }
   & .ec-body :where(li, blockquote) > :where(* + *) { margin-top: 1rem; }
   & .ec-body blockquote { border-left: 0.4rem solid var(--ec-decoration); padding-left: 1.25rem; font-style: italic; }
@@ -155,6 +155,7 @@ export const styles = `
   & .ec-body [data-variant='warning'] > p:first-child strong::before { content: '! ' / ''; }
   & .ec-body [data-block='embed'] a { font-size: var(--ec-copy); font-weight: 700; }
   & .ec-body [data-block='embed'] a::before { content: '▶ ' / ''; }
+  & .ec-body code em { font-style: normal; }
   & .ec-body code { font-family: var(--ec-mono); font-size: 0.85em; font-weight: 400; font-style: normal; overflow-wrap: anywhere; background: var(--ec-code-bg); color: inherit; padding: 0.1em 0.25em; border-radius: 0.25rem; box-shadow: inset 0 0 0 1px currentColor; }
   & .ec-body pre { background: var(--ec-code-bg); color: inherit; padding: 1.25rem; border: 1px solid currentColor; border-radius: 0.75rem; font: 400 0.875rem/1.7 var(--ec-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
   & .ec-body pre code { background: transparent; padding: 0; border-radius: 0; box-shadow: none; font: inherit; }
