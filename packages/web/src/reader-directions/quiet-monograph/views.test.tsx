@@ -17,6 +17,7 @@ import { labStorySlug, seedLabContent } from '@/server/lab/seed'
 import { readerDirectionStyleCss, readerDirectionTokenCss } from '../contract'
 import { contrastRatio } from '../contrast'
 import { MonographArticle } from './article'
+import { plateFit, plateStyle } from './fit'
 import { MonographHome } from './home'
 import { quietMonographDirection } from './index'
 import { MonographSection } from './section'
@@ -603,7 +604,7 @@ describe('Quiet Monograph with real published North House content', () => {
   })
 
   it('gives an image-free story a monogram bay only when it shares a row', () => {
-    // Craft: the chair (no image) is newest and shares the first row with the door handle (4:5).
+    // Craft: the chair (no image) is newest and shares the first row with the next story's plate.
     const { document } = markup(<MonographSection view={craft} />)
     const [chair, handle] = [...document.querySelectorAll('.qm-hang > li')]
     expect(chair!.classList).toContain('qm-plate-text')
@@ -611,7 +612,12 @@ describe('Quiet Monograph with real published North House content', () => {
     expect(monogram.getAttribute('aria-hidden')).toBe('true')
     expect(monogram.textContent).toBe('N')
     expect(chair!.querySelector('img')).toBeNull()
-    expect(handle!.getAttribute('style')).toBe('--qm-fit:0.8;--qm-fit-sm:1')
+    // Derive the neighbour's fit from its own image, so the test follows the sample content.
+    const neighbour = craft.stories[1]!.image!
+    const expectedStyle = Object.entries(plateStyle(plateFit(neighbour, 'bay')))
+      .map(([property, value]) => `${property}:${value}`)
+      .join(';')
+    expect(handle!.getAttribute('style')).toBe(expectedStyle)
     expect(handle!.querySelector('img')?.getAttribute('loading')).toBe('lazy')
     expect(document.querySelector('link[as="image"]')).toBeNull()
 
