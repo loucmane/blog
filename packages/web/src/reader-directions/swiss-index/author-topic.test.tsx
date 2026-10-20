@@ -205,7 +205,9 @@ describe('Swiss Index author and topic pages with real published North House con
         if (story.image) {
           const image = plate.querySelector('img')!
           expect(image).toHaveAttribute('sizes', plateSizes(story.image, 'plate'))
-          expect(image.getAttribute('loading')).toBe(index === 0 ? null : 'lazy')
+          // All four plates share the first row from 1024px: none waits for lazy loading.
+          expect(image.getAttribute('loading')).toBeNull()
+          expect(image.hasAttribute('fetchpriority')).toBe(index === 0)
         } else {
           const shares = alone[index]!.length < 2
           expect(Boolean(plate.querySelector('.si-number-plate'))).toBe(shares)

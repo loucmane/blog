@@ -397,7 +397,10 @@ describe('Swiss Index with real published North House content', () => {
     expect(second!.querySelector('img')).toBeTruthy()
     expect(document.querySelector('link[as="image"]')).toBeNull()
     for (const image of document.querySelectorAll('main img')) {
-      expect(image).toHaveAttribute('loading', 'lazy')
+      // Story 02 shares the first row: it loads at once, but is never promoted to the lead.
+      if (image.closest('ol[aria-label$="stories"]') !== null)
+        expect(image).not.toHaveAttribute('loading')
+      else expect(image).toHaveAttribute('loading', 'lazy')
       expect(image).not.toHaveAttribute('fetchpriority')
     }
     const alone = markup(<SwissHome view={{ ...home, lead: chair, recent: [] }} />)
@@ -471,7 +474,8 @@ describe('Swiss Index with real published North House content', () => {
       expect(lead.getAttribute('width')).toBe(String(image.width))
       expect(lead.getAttribute('height')).toBe(String(image.height))
       for (const laterImage of [...document.querySelectorAll('main img')].slice(1)) {
-        expect(laterImage.getAttribute('loading')).toBe('lazy')
+        const firstRow = laterImage.closest('ol[aria-label$="stories"]') !== null
+        expect(laterImage.getAttribute('loading')).toBe(firstRow ? null : 'lazy')
         expect(laterImage.hasAttribute('fetchpriority')).toBe(false)
       }
     }
@@ -509,7 +513,8 @@ describe('Swiss Index with real published North House content', () => {
     expect(document.querySelector('link[as="image"]')).toBeNull()
     expect(document.querySelectorAll('main img').length).toBeGreaterThan(0)
     for (const image of document.querySelectorAll('main img')) {
-      expect(image.getAttribute('loading')).toBe('lazy')
+      const firstRow = image.closest('ol[aria-label$="stories"]') !== null
+      expect(image.getAttribute('loading')).toBe(firstRow ? null : 'lazy')
       expect(image.hasAttribute('fetchpriority')).toBe(false)
     }
     const article = articles.get('article-lab-long-table')!

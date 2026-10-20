@@ -472,7 +472,7 @@ describe('Swiss Index plate sizes, the preload and priority, with real North Hou
     expect(widened).toBeGreaterThan(0)
   })
 
-  it('emits one preload and one high-priority image per page, both for the lead image, and lazy-loads the rest', () => {
+  it('emits one preload and one high-priority image per page, both for the lead image, loads first-row plates at once and lazy-loads the rest', () => {
     const craft = sections.find(({ stories }) => stories[0] && !stories[0].image)!
     expect(craft).toBeDefined()
     const chair = [home.lead!, ...home.recent].find((story) => !story.image)!
@@ -524,7 +524,10 @@ describe('Swiss Index plate sizes, the preload and priority, with real North Hou
       const images = [...document.querySelectorAll('main img')]
       for (const picture of images) {
         if (picture === priority[0]) continue
-        expect(picture, name).toHaveAttribute('loading', 'lazy')
+        // First-row plates (home cover, section and topic lists) load at once at normal priority.
+        const firstRow = picture.closest('ol[aria-label$="stories"]') !== null
+        if (firstRow) expect(picture, name).not.toHaveAttribute('loading')
+        else expect(picture, name).toHaveAttribute('loading', 'lazy')
       }
       if (!lead) continue
       const [preload] = preloads

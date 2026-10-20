@@ -143,6 +143,7 @@ export function SwissPlate({
   number,
   lead = false,
   preload = false,
+  eager = false,
   alone = [],
   headingLevel = 2,
 }: {
@@ -150,6 +151,8 @@ export function SwissPlate({
   readonly number: number
   readonly lead?: boolean
   readonly preload?: boolean
+  /** Loads at once at normal priority: a plate that shares the first row with the lead. */
+  readonly eager?: boolean
   /** The layouts in which this plate has its grid row to itself, from `platesAlone`. */
   readonly alone?: readonly PlateWidth[] | undefined
   readonly headingLevel?: 2 | 3
@@ -179,6 +182,7 @@ export function SwissPlate({
       {story.image ? (
         <div className="si-plate-image" style={focus(story.image)}>
           <ReaderImageView
+            eager={eager}
             image={story.image}
             preload={preload}
             sizes={plateSizes(story.image, lead ? 'lead' : 'plate')}

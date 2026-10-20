@@ -28,6 +28,8 @@ export function SwissHome({ view }: HomeDirectionProps) {
                 key={story.slug}
                 story={story}
                 number={index + 2}
+                // From 1024px plates 02 and 03 share the first row with plate 01.
+                eager
                 alone={alone[index + 1]}
               />
             ))}

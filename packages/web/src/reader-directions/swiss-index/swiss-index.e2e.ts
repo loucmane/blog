@@ -1862,12 +1862,8 @@ test('keeps one preload and one high-priority image per page, both for its lead 
           srcset: measured.lead.srcset,
         })
       }
-      if (measured.lazyInView.length) {
-        testInfo.annotations.push({
-          description: `${name}: ${measured.lazyInView.join(', ')}`,
-          type: 'eager TODO (PR 110)',
-        })
-      }
+      // A picture in the first view never waits for lazy loading (first-row plates load eagerly).
+      expect(measured.lazyInView, `${name}: lazy pictures in the first view`).toEqual([])
     }
   }
   await testInfo.attach('preload-priority-and-lazy-first-view.json', {
