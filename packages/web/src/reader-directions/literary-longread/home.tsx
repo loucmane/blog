@@ -29,9 +29,12 @@ export function LiteraryHome({ view }: HomeDirectionProps) {
               </h2>
               {lead.dek ? <p className="ll-cover-dek">{lead.dek}</p> : null}
               <LiteraryStoryMeta story={lead} />
-              <Link className="ll-read" href={lead.href}>
+              <Link
+                className="ll-read"
+                href={lead.href}
+                aria-label={`Read the story: ${lead.title}`}
+              >
                 Read the story
-                <span className="ll-sr-only">: {lead.title}</span>
                 <span aria-hidden="true">→</span>
               </Link>
             </div>

@@ -6,13 +6,20 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { dismissReaderLabIntroductions } from '../../../../../tests/e2e/support/reader-lab'
 import { normalizeSlug } from '../../server/content/domain'
-import { labStories } from '../../server/lab/north-house'
+import { labAuthors, labStories, labTopics } from '../../server/lab/north-house'
 import { prepareFontCapture } from '../capture-fonts'
 
 const storyTitle = 'The long table: a field guide to the North House kitchen'
 const storyPath = '/stories/the-long-table-a-field-guide-to-the-north-house-kitchen'
 const sectionPath = '/sections/interiors'
 const root = '[data-reader-direction="literary-longread"]'
+const longRead = labStories.find(({ id }) => id === 'article-lab-long-table')!
+const author = labAuthors.find(({ slug }) => slug === longRead.authors[0])!
+const topic = labTopics.find(({ slug }) => slug === longRead.topics[0])!
+const authorPath = `/authors/${author.slug}`
+const topicPath = `/topics/${topic.slug}`
+const routes = ['/', storyPath, sectionPath, authorPath, topicPath]
+const leadStory = [...labStories].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))[0]!
 
 async function waitForThemeToSettle(page: Page) {
   // The shared lab bar transitions its colours; assertions need the settled theme.
@@ -38,7 +45,7 @@ test.beforeEach(async ({ context, page, request }) => {
   await expect(page.locator(root)).toBeVisible()
 })
 
-test('opens Literary Long-read from the lab and renders published titles on all three pages', async ({
+test('keeps the direction through article, author, topic and story navigation', async ({
   page,
 }) => {
   await expect(
@@ -46,6 +53,21 @@ test('opens Literary Long-read from the lab and renders published titles on all 
   ).toBeVisible()
   await page.goto(storyPath)
   await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(storyTitle)
+  await page.locator('.ll-byline').getByRole('link', { name: author.name, exact: true }).click()
+  await expect(page).toHaveURL(authorPath)
+  await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(author.name)
+  await expect(page.locator('.ll-index-row')).toHaveCount(
+    labStories.filter((story) => story.authors.includes(author.slug)).length,
+  )
+  await page.locator('.ll-index').getByRole('link', { name: storyTitle, exact: true }).click()
+  await page.locator('.ll-topics').getByRole('link', { name: topic.name, exact: true }).click()
+  await expect(page).toHaveURL(topicPath)
+  await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText(topic.name)
+  await expect(page.locator('.ll-index-row')).toHaveCount(
+    labStories.filter((story) => story.topics.includes(topic.slug)).length,
+  )
+  await page.locator('.ll-index').getByRole('link', { name: storyTitle, exact: true }).click()
+  await expect(page.locator(root)).toBeVisible()
   await page.goto(sectionPath)
   await expect(page.locator(root).getByRole('heading', { level: 1 })).toHaveText('Interiors')
   await expect(
@@ -59,7 +81,7 @@ test('has no overflow at every required width and operable touch-sized navigatio
   test.setTimeout(120_000)
   for (const width of [320, 390, 767, 768, 1023, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const path of ['/', storyPath, sectionPath]) {
+    for (const path of routes) {
       await page.goto(path)
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -110,6 +132,7 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
 test('uses visible keyboard focus and a warm dark reading ground', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  await expect(page.getByRole('button', { name: 'Choose color theme' })).toBeEnabled()
   const skip = page.getByRole('link', { name: 'Skip to stories' })
   for (
     let tabs = 0;
@@ -123,6 +146,7 @@ test('uses visible keyboard focus and a warm dark reading ground', async ({ page
   await page.keyboard.press('Enter')
   await expect(page.locator('#ll-main')).toBeFocused()
   await page.goto('/')
+  await expect(page.getByRole('button', { name: 'Choose color theme' })).toBeEnabled()
   const interiors = page
     .locator(root)
     .getByRole('navigation')
@@ -149,7 +173,7 @@ for (const width of [390, 768, 1440]) {
     test(`passes axe with the lab bar at ${width}px in ${theme} mode`, async ({ page }) => {
       test.setTimeout(120_000)
       await page.setViewportSize({ width, height: 900 })
-      for (const path of ['/', storyPath, sectionPath]) {
+      for (const path of routes) {
         await page.goto(path)
         await page.evaluate(async () => {
           await document.fonts.ready
@@ -192,6 +216,23 @@ test('uses the b1 cover, card and index geometry across both layout transitions'
       'font-size',
       desktop ? '44px' : tablet ? '36px' : '28px',
     )
+    await expect(page.locator('.ll-read')).toHaveAccessibleName(
+      `Read the story: ${leadStory.title}`,
+    )
+    await expect(page.locator('.ll-card-title').first()).toHaveCSS(
+      'font-size',
+      desktop ? '34px' : tablet ? '30px' : '28px',
+    )
+    await expect(page.locator('.ll-card-dek').first()).toHaveCSS(
+      'font-size',
+      desktop ? '20px' : '18px',
+    )
+    await expect(page.locator('.ll-cover-dek')).toHaveCSS(
+      'font-size',
+      desktop ? '28px' : tablet ? '26px' : '22px',
+    )
+    await expect(page.locator('.ll-label').first()).toHaveCSS('font-size', '13px')
+    await expect(page.locator('.ll-label').first()).toHaveCSS('font-weight', '600')
     const cards = await page.locator('.ll-grid').evaluate((element) => {
       const style = getComputedStyle(element)
       return { columns: style.gridTemplateColumns.split(' ').length, gap: style.gap }
@@ -220,6 +261,10 @@ test('uses the b1 cover, card and index geometry across both layout transitions'
     await expect(page.locator('.ll-section-header h1')).toHaveCSS(
       'font-size',
       desktop ? '72px' : tablet ? '56px' : '42px',
+    )
+    await expect(page.locator('.ll-index-copy h2').first()).toHaveCSS(
+      'font-size',
+      desktop ? '36px' : tablet ? '30px' : '28px',
     )
     for (const row of await page.locator('.ll-index-row').all()) {
       const rowBox = (await row.boundingBox())!
@@ -253,24 +298,28 @@ test('uses a 65-character reading measure and genuine italic text, with reduced 
     await document.fonts.ready
   })
   const body = page.locator('.ll-body')
-  const metrics = await body.evaluate((element) => {
-    const style = getComputedStyle(element)
-    // Measure the CSS ch unit in the same active face, including a retained optional fallback.
-    const probe = document.createElement('span')
-    probe.style.cssText = 'display:block;width:65ch;position:absolute;visibility:hidden'
-    element.append(probe)
-    const measure = probe.getBoundingClientRect().width
-    probe.remove()
-    return {
-      width: element.getBoundingClientRect().width,
-      measure,
-      fontSize: style.fontSize,
-      lineHeight: style.lineHeight,
-    }
-  })
+  const metrics = await body
+    .locator(':scope > p')
+    .first()
+    .evaluate((element) => {
+      const style = getComputedStyle(element)
+      // Measure the CSS ch unit in the same active face, including a retained optional fallback.
+      const probe = document.createElement('span')
+      probe.style.cssText = 'display:block;width:65ch;position:absolute;visibility:hidden'
+      element.append(probe)
+      const measure = probe.getBoundingClientRect().width
+      probe.remove()
+      return {
+        width: element.getBoundingClientRect().width,
+        measure,
+        fontSize: style.fontSize,
+        lineHeight: style.lineHeight,
+      }
+    })
   expect(metrics.fontSize).toBe('20px')
   expect(metrics.lineHeight).toBe('33px')
-  expect(Math.abs(metrics.width - metrics.measure)).toBeLessThan(1)
+  expect(metrics.width).toBeCloseTo(Math.min(metrics.measure, 672), 0)
+  expect((await body.boundingBox())!.width).toBeCloseTo(672, 0)
   expect(
     await page.locator('.ll-dek').evaluate((element) => getComputedStyle(element).fontStyle),
   ).toBe('italic')
@@ -281,6 +330,160 @@ test('uses a 65-character reading measure and genuine italic text, with reduced 
       .evaluate((element) => getComputedStyle(element, '::first-letter').cssFloat),
   ).toBe('left')
   expect(await body.evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
+  expect(
+    Number.parseFloat(
+      await body.evaluate((element) => getComputedStyle(element).transitionDuration),
+    ),
+  ).toBeLessThanOrEqual(0.00001)
+})
+
+test('computes the article scale, body layout, list markers and end matter at each breakpoint', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  for (const width of [390, 767, 768, 1023, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto(storyPath)
+    const desktop = width >= 1024
+    const tablet = width >= 768
+    const body = page.locator('.ll-body')
+    await expect(body).toHaveCSS('font-size', tablet ? '20px' : '18px')
+    await expect(body).toHaveCSS('line-height', tablet ? '33px' : '29.7px')
+    await expect(page.locator('.ll-article-header')).toHaveCSS(
+      'text-align',
+      tablet ? 'center' : 'left',
+    )
+    await expect(page.locator('.ll-article-header h1')).toHaveCSS(
+      'font-size',
+      desktop ? '72px' : tablet ? '56px' : '42px',
+    )
+    await expect(page.locator('.ll-dek')).toHaveCSS(
+      'font-size',
+      desktop ? '28px' : tablet ? '26px' : '22px',
+    )
+    await expect(body.locator('h2').first()).toHaveCSS(
+      'font-size',
+      desktop ? '40px' : tablet ? '36px' : '30px',
+    )
+    await expect(body.locator('h3').first()).toHaveCSS(
+      'font-size',
+      desktop ? '32px' : tablet ? '30px' : '26px',
+    )
+    await expect(body.locator('h4').first()).toHaveCSS('font-size', '24px')
+    await expect(body.locator('[data-block="pull-quote"] blockquote')).toHaveCSS(
+      'font-size',
+      desktop ? '40px' : tablet ? '32px' : '28px',
+    )
+    await expect(body.locator('ul:not([data-block])').first()).toHaveCSS('list-style-type', 'disc')
+    await expect(body.locator('ol').first()).toHaveCSS('list-style-type', 'decimal')
+    await expect(body.locator('[data-block="gallery"]')).toHaveCSS('gap', '24px')
+    await expect(body.locator('[data-block="gallery"]')).toHaveCSS('transform', 'none')
+    await expect(body.locator('[data-block="checklist"]')).toHaveCSS('list-style-type', 'none')
+    await expect(body.locator('[data-block="callout"]')).toHaveCSS(
+      'padding',
+      tablet ? '24px' : '16px',
+    )
+    expect(
+      await body
+        .locator(':scope > p')
+        .first()
+        .evaluate((element) => getComputedStyle(element, '::first-letter').cssFloat),
+    ).toBe(tablet ? 'left' : 'none')
+    const gallery = await body.locator('[data-block="gallery"]').evaluate((element) => ({
+      width: element.getBoundingClientRect().width,
+      columns: getComputedStyle(element).gridTemplateColumns.split(' ').length,
+    }))
+    expect(gallery.width).toBeCloseTo(Math.min(width - (tablet ? (desktop ? 96 : 48) : 40), 672), 0)
+    expect(gallery.columns).toBe(tablet ? 2 : 1)
+    expect(
+      await page
+        .locator('.ll-related-grid')
+        .evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+    ).toBe(desktop ? 3 : 1)
+    for (const link of await page.locator('.ll-byline a, .ll-authors a, .ll-topics a').all()) {
+      const box = (await link.boundingBox())!
+      expect(box.width).toBeGreaterThanOrEqual(44)
+      expect(box.height).toBeGreaterThanOrEqual(44)
+      await expect(link).toHaveCSS('text-decoration-line', 'underline')
+    }
+    // These semantic levels are absent from North House. Add isolated DOM probes
+    // to the real body to verify the active cascade, without altering stored content.
+    await body.evaluate((element) => {
+      element.insertAdjacentHTML(
+        'beforeend',
+        '<h5 data-probe>Fifth level</h5><h6 data-probe>Sixth level</h6>',
+      )
+      element.insertAdjacentHTML('afterbegin', '<h2 data-probe>A heading-led article</h2>')
+    })
+    await expect(body.locator('h5[data-probe]')).toHaveCSS('font-size', '22px')
+    await expect(body.locator('h6[data-probe]')).toHaveCSS('font-size', '20px')
+    expect(
+      await body
+        .locator(':scope > p')
+        .first()
+        .evaluate((element) => getComputedStyle(element, '::first-letter').cssFloat),
+    ).toBe('none')
+  }
+})
+
+test('computes gold cover focus and accent focus elsewhere in both themes', async ({ page }) => {
+  for (const dark of [false, true]) {
+    await page.goto('/')
+    await expect(page.getByRole('button', { name: 'Choose color theme' })).toBeEnabled()
+    await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
+    await waitForThemeToSettle(page)
+    await page.keyboard.press('Tab')
+    const cover = page.locator('.ll-read')
+    await cover.focus()
+    await expect(cover).toHaveCSS('outline-color', 'rgb(201, 168, 106)')
+    await expect(cover).toHaveCSS('outline-width', '2px')
+    await expect(cover).toHaveCSS('outline-offset', '4px')
+    const ordinary = page.locator('.ll-card-title a').first()
+    await ordinary.focus()
+    await expect(ordinary).toHaveCSS(
+      'outline-color',
+      dark ? 'rgb(229, 154, 145)' : 'rgb(155, 44, 44)',
+    )
+    await expect(ordinary).toHaveCSS('outline-width', '2px')
+  }
+})
+
+test('keeps all five pages scoped and readable in the comparison frames', async ({ page }) => {
+  test.setTimeout(180_000)
+  for (const route of routes) {
+    await page.goto(`/owner/reader-lab/compare?page=${encodeURIComponent(route)}`)
+    const frame = page.frameLocator('iframe[title="Literary Long-read — selected page preview"]')
+    for (const width of [390, 1440]) {
+      await page.getByRole('radio', { name: width === 390 ? /Mobile/ : /Desktop/ }).check()
+      for (const dark of [false, true]) {
+        await page.evaluate(
+          (value) => document.documentElement.classList.toggle('dark', value),
+          dark,
+        )
+        await expect(frame.locator(root)).toHaveCSS(
+          'background-color',
+          dark ? 'rgb(27, 25, 23)' : 'rgb(251, 248, 242)',
+        )
+        await expect(frame.locator('h1')).toHaveCount(1)
+        await expect(frame.locator('main')).toHaveCount(1)
+        expect(
+          await frame
+            .locator('html')
+            .evaluate((element) => element.scrollWidth <= element.clientWidth),
+        ).toBe(true)
+        await expect(frame.locator('.ll-page')).toHaveCSS(
+          'font-size',
+          width === 390 ? '18px' : '20px',
+        )
+        if (route === storyPath) {
+          await expect(frame.locator('.ll-body')).toHaveCSS(
+            'font-size',
+            width === 390 ? '18px' : '20px',
+          )
+        }
+      }
+    }
+  }
 })
 
 test('removes literary font declarations when the owner switches back to baseline', async ({
@@ -307,7 +510,7 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
     page.on('request', (request) => {
       if (request.resourceType() === 'font') fonts.push(request.url())
     })
-    for (const path of ['/', storyPath, sectionPath]) {
+    for (const path of routes) {
       await page.goto(path)
       await page.evaluate(async () => {
         await document.fonts.ready
@@ -322,13 +525,13 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
-test('captures twelve seeded screenshots for review', async ({ page }) => {
-  test.setTimeout(180_000)
+test('captures five page types in both themes for review', async ({ page }) => {
+  test.setTimeout(300_000)
   const captureFonts = await prepareFontCapture(page, root, {
     '--font-ll-serif': 'Newsreader',
     '--font-ll-sans': 'Libre Franklin',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.4')
+  const destination = path.resolve('docs/worklog/blog-0044.44')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
@@ -336,6 +539,8 @@ test('captures twelve seeded screenshots for review', async ({ page }) => {
       ['home', '/'],
       ['article', storyPath],
       ['section', sectionPath],
+      ['author', authorPath],
+      ['topic', topicPath],
     ]) {
       await captureFonts.goto(route!)
       // Load lazy images before the full-page capture, then return to the cover.
@@ -352,13 +557,23 @@ test('captures twelve seeded screenshots for review', async ({ page }) => {
           ),
         `${name} images loaded`,
       ).toBe(true)
-      for (const fullPage of [false, true]) {
-        await captureFonts.assertFonts()
-        await page.screenshot({
-          path: path.join(destination, `${name}-${width}-${fullPage ? 'full' : 'viewport'}.png`),
-          fullPage,
-          animations: 'disabled',
-        })
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(
+          (dark) => document.documentElement.classList.toggle('dark', dark),
+          theme === 'dark',
+        )
+        await waitForThemeToSettle(page)
+        for (const fullPage of [false, true]) {
+          await captureFonts.assertFonts()
+          await page.screenshot({
+            path: path.join(
+              destination,
+              `${name}-${width}-${theme}-${fullPage ? 'full' : 'viewport'}.png`,
+            ),
+            fullPage,
+            animations: 'disabled',
+          })
+        }
       }
     }
   }
