@@ -18,6 +18,7 @@ export function FailurePage({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground" data-reader-failure="">
+      {/* readerFailureView always supplies empty navigation, so the failure header has no section nav. */}
       <header className="border-b border-border">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4">
           <p className="font-serif text-2xl font-semibold">
