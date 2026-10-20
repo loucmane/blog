@@ -12,6 +12,7 @@ import {
   importPortableContentBundle,
   inspectPortableContentBundle,
   verifyPortableMedia,
+  type PortableContentBundle,
 } from './portability'
 import type { Clock, IdentifierSource } from './ports'
 import { ContentService } from './service'
@@ -86,6 +87,15 @@ async function populatedRepository() {
       slug: 'magazine-owner',
       updatedAt: '2026-07-17T22:00:00.000Z',
     })
+    await transaction.saveAuthor({
+      bio: 'Contributing writer',
+      createdAt: '2026-07-17T22:00:00.000Z',
+      displayName: 'Guest writer',
+      id: 'author-guest',
+      slug: 'guest-writer',
+      updatedAt: '2026-07-17T22:00:00.000Z',
+    })
+    await transaction.setArticleAuthors(created.article.id, ['author-owner', 'author-guest'])
     await transaction.saveTaxonomyTerm({
       createdAt: '2026-07-17T22:00:00.000Z',
       id: 'taxonomy-foundation',
@@ -100,7 +110,13 @@ async function populatedRepository() {
       taxonomyId: 'taxonomy-foundation',
     })
   })
-  return { objects, repository }
+  return { objects, repository, service }
+}
+
+function withArticleAuthors(bundle: PortableContentBundle, articleAuthors: unknown) {
+  const { digest: _discarded, ...base } = bundle
+  const unsigned = { ...base, data: { ...base.data, articleAuthors } }
+  return { ...unsigned, digest: createHash('sha256').update(canonicalJson(unsigned)).digest('hex') }
 }
 
 describe('portable content ownership', () => {
@@ -110,15 +126,176 @@ describe('portable content ownership', () => {
     const first = await createPortableContentBundle(repository, exportedAt)
     const second = await createPortableContentBundle(repository, exportedAt)
     expect(second).toEqual(first)
+    expect(first.data.articleAuthors).toEqual([
+      { articleId: 'article-portable', authorId: 'author-owner', position: 0 },
+      { articleId: 'article-portable', authorId: 'author-guest', position: 1 },
+    ])
     expect(inspectPortableContentBundle(first)).toMatchObject({ status: 'valid' })
     expect(await verifyPortableMedia(first, objects)).toEqual({ failed: [], verified: 1 })
 
     const restored = new InMemoryContentRepository()
     await expect(importPortableContentBundle(restored, first)).resolves.toMatchObject({
-      imported: { articles: 1, mediaAssets: 1, revisions: 1, taxonomies: 1 },
+      imported: { articleAuthors: 2, articles: 1, mediaAssets: 1, revisions: 1, taxonomies: 1 },
     })
+    const byline = await restored.transaction((transaction) =>
+      transaction.listArticleAuthors('article-portable'),
+    )
+    expect(byline.map(({ id }) => id)).toEqual(['author-owner', 'author-guest'])
     const restoredBundle = await createPortableContentBundle(restored, exportedAt)
     expect(restoredBundle).toEqual(first)
+  })
+
+  it('restores each byline by position even when links are interleaved and out of order', async () => {
+    const { repository, service } = await populatedRepository()
+    for (const articleId of ['article-second', 'article-empty']) {
+      await service.createArticle({
+        dek: '',
+        document: document(articleId),
+        id: articleId,
+        idempotencyKey: `create-${articleId}`,
+        slug: articleId,
+        title: articleId,
+      })
+    }
+    await repository.transaction((transaction) =>
+      transaction.setArticleAuthors('article-second', ['author-guest', 'author-owner']),
+    )
+    const exportedAt = '2026-07-17T22:30:00.000Z'
+    const bundle = await createPortableContentBundle(repository, exportedAt)
+    const links = [
+      { articleId: 'article-portable', authorId: 'author-owner', position: 0 },
+      { articleId: 'article-portable', authorId: 'author-guest', position: 1 },
+      { articleId: 'article-second', authorId: 'author-guest', position: 0 },
+      { articleId: 'article-second', authorId: 'author-owner', position: 1 },
+    ]
+    expect(bundle.data.articleAuthors).toEqual(links)
+    const shuffled = withArticleAuthors(bundle, [links[3], links[1], links[2], links[0]])
+    const restored = new InMemoryContentRepository()
+    await expect(importPortableContentBundle(restored, shuffled)).resolves.toMatchObject({
+      imported: { articleAuthors: 4, articles: 3 },
+    })
+    await restored.transaction(async (transaction) => {
+      expect(
+        (await transaction.listArticleAuthors('article-portable')).map(({ id }) => id),
+      ).toEqual(['author-owner', 'author-guest'])
+      expect((await transaction.listArticleAuthors('article-second')).map(({ id }) => id)).toEqual([
+        'author-guest',
+        'author-owner',
+      ])
+      expect(await transaction.listArticleAuthors('article-empty')).toEqual([])
+    })
+    expect(await createPortableContentBundle(restored, exportedAt)).toEqual(bundle)
+  })
+
+  it('verifies and imports legacy bundles without article-author links as empty bylines', async () => {
+    const { repository } = await populatedRepository()
+    const current = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
+    const { digest: _discardedDigest, data, ...base } = current
+    const { articleAuthors: _discardedLinks, ...legacyData } = data
+    const unsigned = { ...base, data: legacyData }
+    const legacy = {
+      ...unsigned,
+      digest: createHash('sha256').update(canonicalJson(unsigned)).digest('hex'),
+    }
+    expect(inspectPortableContentBundle(legacy)).toMatchObject({
+      bundle: { data: { articleAuthors: [] } },
+      status: 'valid',
+    })
+    const restored = new InMemoryContentRepository()
+    await expect(importPortableContentBundle(restored, legacy)).resolves.toMatchObject({
+      imported: { articleAuthors: 0, articles: 1 },
+    })
+    await expect(
+      restored.transaction((transaction) => transaction.listArticleAuthors('article-portable')),
+    ).resolves.toEqual([])
+    const reexported = await createPortableContentBundle(restored, current.exportedAt)
+    expect(reexported.data.articleAuthors).toEqual([])
+    expect(reexported.data.authors).toEqual(current.data.authors)
+    expect(inspectPortableContentBundle(reexported)).toMatchObject({ status: 'valid' })
+  })
+
+  it('includes article-author links in the bundle digest', async () => {
+    const { repository } = await populatedRepository()
+    const bundle = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
+    const tampered = { ...bundle, data: { ...bundle.data, articleAuthors: [] } }
+    expect(inspectPortableContentBundle(tampered)).toMatchObject({
+      issues: expect.arrayContaining(['bundle digest does not match canonical content']),
+      status: 'invalid',
+    })
+  })
+
+  it.each([
+    {
+      name: 'unknown article',
+      links: [{ articleId: 'missing-article', authorId: 'author-owner', position: 0 }],
+      issue: 'references missing article missing-article',
+    },
+    {
+      name: 'unknown author',
+      links: [{ articleId: 'article-portable', authorId: 'missing-author', position: 0 }],
+      issue: 'references missing author missing-author',
+    },
+    {
+      name: 'duplicate author on an article',
+      links: [
+        { articleId: 'article-portable', authorId: 'author-owner', position: 0 },
+        { articleId: 'article-portable', authorId: 'author-owner', position: 1 },
+      ],
+      issue: 'duplicate author author-owner',
+    },
+    {
+      name: 'duplicate position on an article',
+      links: [
+        { articleId: 'article-portable', authorId: 'author-owner', position: 0 },
+        { articleId: 'article-portable', authorId: 'author-guest', position: 0 },
+      ],
+      issue: 'duplicate author position 0',
+    },
+    {
+      name: 'position gap',
+      links: [
+        { articleId: 'article-portable', authorId: 'author-owner', position: 0 },
+        { articleId: 'article-portable', authorId: 'author-guest', position: 2 },
+      ],
+      issue: 'author positions must be contiguous starting at 0',
+    },
+    {
+      name: 'positions starting at one',
+      links: [{ articleId: 'article-portable', authorId: 'author-owner', position: 1 }],
+      issue: 'author positions must be contiguous starting at 0',
+    },
+    ...[-1, 0.5, '0', null].map((position) => ({
+      name: `invalid position ${JSON.stringify(position)}`,
+      links: [{ articleId: 'article-portable', authorId: 'author-owner', position }],
+      issue: 'data.articleAuthors.0.position',
+    })),
+    {
+      name: 'missing author id',
+      links: [{ articleId: 'article-portable', position: 0 }],
+      issue: 'data.articleAuthors.0.authorId',
+    },
+    {
+      name: 'unexpected link field',
+      links: [
+        { articleId: 'article-portable', authorId: 'author-owner', position: 0, extra: true },
+      ],
+      issue: 'data.articleAuthors.0',
+    },
+    { name: 'null links', links: null, issue: 'data.articleAuthors' },
+  ])('rejects $name before importing any content', async ({ links, issue }) => {
+    const { repository } = await populatedRepository()
+    const bundle = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
+    const malformed = withArticleAuthors(bundle, links)
+    expect(inspectPortableContentBundle(malformed)).toMatchObject({
+      issues: expect.arrayContaining([expect.stringContaining(issue)]),
+      status: 'invalid',
+    })
+    const restored = new InMemoryContentRepository()
+    await expect(importPortableContentBundle(restored, malformed)).rejects.toThrow(issue)
+    await restored.transaction(async (transaction) => {
+      expect(await transaction.listArticles()).toEqual([])
+      expect(await transaction.listAuthors()).toEqual([])
+    })
   })
 
   it('refuses collisions instead of overwriting existing canonical content', async () => {

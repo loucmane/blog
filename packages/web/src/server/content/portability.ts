@@ -9,6 +9,7 @@ import {
   outboxStatuses,
   publicationJobStatuses,
   type Article,
+  type ArticleAuthor,
   type ArticleRevision,
   type ArticleTaxonomy,
   type AuditEvent,
@@ -40,6 +41,7 @@ export interface PortableMediaObject {
 }
 
 export interface PortableContentData {
+  readonly articleAuthors: readonly ArticleAuthor[]
   readonly articleTaxonomies: readonly ArticleTaxonomy[]
   readonly articles: readonly Article[]
   readonly auditEvents: readonly AuditEvent[]
@@ -196,6 +198,9 @@ const taxonomySchema = z
 const articleTaxonomySchema = z
   .object({ articleId: id, position: z.number().int().nonnegative(), taxonomyId: id })
   .strict()
+const articleAuthorSchema = z
+  .object({ articleId: id, authorId: id, position: z.number().int().nonnegative() })
+  .strict()
 const settingsSchema = z
   .object({
     createdAt: timestamp,
@@ -282,6 +287,8 @@ const unsignedBundleSchema = z
   .object({
     data: z
       .object({
+        // Version-one bundles exported before byline support omit these links.
+        articleAuthors: z.array(articleAuthorSchema).optional(),
         articleTaxonomies: z.array(articleTaxonomySchema),
         articles: z.array(articleSchema),
         auditEvents: z.array(auditSchema),
@@ -314,6 +321,7 @@ function normalizePortableBundle(bundle: z.infer<typeof bundleSchema>): Portable
     ...bundle,
     data: {
       ...bundle.data,
+      articleAuthors: bundle.data.articleAuthors ?? [],
       mediaAssets: bundle.data.mediaAssets.map((asset) => ({
         ...asset,
         animated: asset.animated ?? null,
@@ -365,9 +373,20 @@ function uniqueIds(values: readonly { readonly id: string }[], label: string, is
   }
 }
 
+function groupArticleAuthors(links: readonly ArticleAuthor[]): Map<string, ArticleAuthor[]> {
+  const grouped = new Map<string, ArticleAuthor[]>()
+  for (const link of links) {
+    const articleLinks = grouped.get(link.articleId) ?? []
+    articleLinks.push(link)
+    grouped.set(link.articleId, articleLinks)
+  }
+  return grouped
+}
+
 function validateRelationships(bundle: PortableContentBundle, issues: string[]) {
   const articles = new Map(bundle.data.articles.map((article) => [article.id, article]))
   const articleIds = new Set(articles.keys())
+  const authorIds = new Set(bundle.data.authors.map(({ id: authorId }) => authorId))
   const revisions = new Map(bundle.data.revisions.map((revision) => [revision.id, revision]))
   const taxonomyIds = new Set(bundle.data.taxonomies.map(({ id: taxonomyId }) => taxonomyId))
   const mediaIds = new Set(bundle.data.mediaAssets.map(({ id: mediaId }) => mediaId))
@@ -451,6 +470,37 @@ function validateRelationships(bundle: PortableContentBundle, issues: string[]) 
       issues.push(`taxonomy link ${link.articleId}:${link.taxonomyId} is unresolved`)
     }
   }
+  for (const [articleId, links] of groupArticleAuthors(bundle.data.articleAuthors)) {
+    const seenAuthors = new Set<string>()
+    const positions = new Set<number>()
+    for (const link of links) {
+      if (!articleIds.has(articleId)) {
+        issues.push(
+          `author link ${articleId}:${link.authorId} references missing article ${articleId}`,
+        )
+      }
+      if (!authorIds.has(link.authorId)) {
+        issues.push(
+          `author link ${articleId}:${link.authorId} references missing author ${link.authorId}`,
+        )
+      }
+      if (seenAuthors.has(link.authorId)) {
+        issues.push(`article ${articleId} contains duplicate author ${link.authorId}`)
+      }
+      if (positions.has(link.position)) {
+        issues.push(`article ${articleId} contains duplicate author position ${link.position}`)
+      }
+      seenAuthors.add(link.authorId)
+      positions.add(link.position)
+    }
+    if (
+      [...positions]
+        .sort((left, right) => left - right)
+        .some((position, index) => position !== index)
+    ) {
+      issues.push(`article ${articleId} author positions must be contiguous starting at 0`)
+    }
+  }
   for (const autosave of bundle.data.autosaves) {
     const revision = revisions.get(autosave.revisionId)
     if (
@@ -524,31 +574,43 @@ export async function createPortableContentBundle(
   repository: ContentRepository,
   exportedAt: string,
 ): Promise<PortableContentBundle> {
-  const data = await repository.transaction(async (transaction): Promise<PortableContentData> => ({
-    articleTaxonomies: await transaction.listArticleTaxonomies(),
-    articles: sortById(await transaction.listArticles()),
-    auditEvents: sortById(await transaction.listAuditEvents()),
-    authors: sortById(await transaction.listAuthors()),
-    autosaves: sortById(
-      (
+  const data = await repository.transaction(async (transaction): Promise<PortableContentData> => {
+    const articles = sortById(await transaction.listArticles())
+    return {
+      articleAuthors: (
         await Promise.all(
-          (await transaction.listArticles()).map(({ id: articleId }) =>
-            transaction.listAutosaves(articleId),
+          articles.map(async ({ id: articleId }) =>
+            (await transaction.listArticleAuthors(articleId)).map(({ id: authorId }, position) => ({
+              articleId,
+              authorId,
+              position,
+            })),
           ),
         )
       ).flat(),
-    ),
-    mediaAssets: sortById(await transaction.listMediaAssets()),
-    mediaRenditions: sortById(await transaction.listMediaRenditions()),
-    outboxEvents: sortById(await transaction.listOutboxEvents()),
-    publicationJobs: sortById(await transaction.listPublicationJobs()),
-    publicationSettings: await transaction.getPublicationSettings(),
-    redirects: sortById(await transaction.listRedirects()),
-    reusableBlockRevisions: sortById(await transaction.listReusableBlockRevisions()),
-    reusableBlocks: sortById(await transaction.listReusableBlocks()),
-    revisions: sortById(await transaction.listRevisions()),
-    taxonomies: sortById(await transaction.listTaxonomyTerms()),
-  }))
+      articleTaxonomies: await transaction.listArticleTaxonomies(),
+      articles,
+      auditEvents: sortById(await transaction.listAuditEvents()),
+      authors: sortById(await transaction.listAuthors()),
+      autosaves: sortById(
+        (
+          await Promise.all(
+            articles.map(({ id: articleId }) => transaction.listAutosaves(articleId)),
+          )
+        ).flat(),
+      ),
+      mediaAssets: sortById(await transaction.listMediaAssets()),
+      mediaRenditions: sortById(await transaction.listMediaRenditions()),
+      outboxEvents: sortById(await transaction.listOutboxEvents()),
+      publicationJobs: sortById(await transaction.listPublicationJobs()),
+      publicationSettings: await transaction.getPublicationSettings(),
+      redirects: sortById(await transaction.listRedirects()),
+      reusableBlockRevisions: sortById(await transaction.listReusableBlockRevisions()),
+      reusableBlocks: sortById(await transaction.listReusableBlocks()),
+      revisions: sortById(await transaction.listRevisions()),
+      taxonomies: sortById(await transaction.listTaxonomyTerms()),
+    }
+  })
   const media = {
     objects: [
       ...data.mediaAssets.map((asset) => ({
@@ -658,6 +720,12 @@ export async function importPortableContentBundle(
     for (const rendition of data.mediaRenditions) await transaction.saveMediaRendition(rendition)
     for (const revision of data.revisions) await transaction.saveRevision(revision)
     for (const article of data.articles) await transaction.saveArticle(article, null)
+    for (const [articleId, links] of groupArticleAuthors(data.articleAuthors)) {
+      await transaction.setArticleAuthors(
+        articleId,
+        links.sort((left, right) => left.position - right.position).map(({ authorId }) => authorId),
+      )
+    }
     for (const link of data.articleTaxonomies) await transaction.saveArticleTaxonomy(link)
     for (const autosave of data.autosaves) await transaction.saveAutosave(autosave)
     for (const redirect of data.redirects) await transaction.saveRedirect(redirect)
@@ -673,6 +741,7 @@ export async function importPortableContentBundle(
 
   return {
     imported: {
+      articleAuthors: data.articleAuthors.length,
       articles: data.articles.length,
       auditEvents: data.auditEvents.length,
       mediaAssets: data.mediaAssets.length,
