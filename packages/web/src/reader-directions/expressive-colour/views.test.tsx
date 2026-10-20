@@ -263,4 +263,23 @@ describe('Expressive Colour with real published North House content', () => {
       }
     }
   })
+
+  it('breaks the sample lilac run on home and Interiors without changing the slug colours', () => {
+    const homePage = markup(<ExpressiveHome view={home} />).document
+    const interiors = markup(<ExpressiveSection view={section} />).document
+    for (const [id, homeSurface, sectionSurface] of [
+      ['article-lab-chair', 'filled', null],
+      ['article-lab-shelf', 'paper', 'filled'],
+      ['article-lab-long-table', 'filled', 'paper'],
+    ]) {
+      const story = articles.get(id!)!
+      const selector = `.ec-card:has([href="${story.href}"])`
+      expect(homePage.querySelector(selector)).toHaveAttribute('data-story-colour', 'lilac')
+      expect(homePage.querySelector(selector)).toHaveAttribute('data-surface', homeSurface)
+      if (sectionSurface) {
+        expect(interiors.querySelector(selector)).toHaveAttribute('data-story-colour', 'lilac')
+        expect(interiors.querySelector(selector)).toHaveAttribute('data-surface', sectionSurface)
+      }
+    }
+  })
 })
