@@ -340,29 +340,37 @@ test('uses a 65-character reading measure and genuine italic text, with reduced 
 test('preserves all five ordered numbering styles and starts in the article cascade', async ({
   page,
 }) => {
+  await page.goto(storyPath)
+  await expect(page.locator('.ll-body ol[type="1" s]').first()).toHaveCSS(
+    'list-style-type',
+    'decimal',
+  )
   await page.goto(`/stories/${normalizeSlug(doorHandle.title)}`)
-  const list = page.locator('.ll-body ol').first()
-  // Begin with the real lettered North House list; exercise the other authored
-  // numbering values on the same rendered list without changing stored content.
-  await expect(list).toHaveAttribute('type', 'a')
-  await expect(list).toHaveCSS('list-style-type', 'lower-alpha')
+  await expect(page.locator('.ll-body ol[type="a" s]').first()).toHaveCSS(
+    'list-style-type',
+    'lower-alpha',
+  )
+  // North House has no upper-alpha or Roman lists. Match the shared renderer's
+  // type plus inline marker style, rather than mutating only its type attribute.
   const markers = {
-    '1': 'decimal',
-    a: 'lower-alpha',
     A: 'upper-alpha',
     i: 'lower-roman',
     I: 'upper-roman',
   }
   for (const [type, marker] of Object.entries(markers)) {
-    await list.evaluate((element, type) => {
-      element.setAttribute('type', type)
-      element.setAttribute('start', '4')
-    }, type)
+    await page.locator('.ll-body').evaluate(
+      (element, { type, marker }) => {
+        element.insertAdjacentHTML(
+          'beforeend',
+          `<ol type="${type}" start="4" style="list-style-type: ${marker}"><li><p>Numbering probe</p></li></ol>`,
+        )
+      },
+      { type, marker },
+    )
+    const list = page.locator(`.ll-body ol[type="${type}" s]`)
     await expect(list).toHaveCSS('list-style-type', marker)
     expect(await list.evaluate((element) => (element as HTMLOListElement).start)).toBe(4)
   }
-  await list.evaluate((element) => element.removeAttribute('type'))
-  await expect(list).toHaveCSS('list-style-type', 'decimal')
 })
 
 test('aligns article title, dek, label and byline to the same mobile left edge', async ({
@@ -398,6 +406,19 @@ test('computes the article scale, body layout, list markers and end matter at ea
       'text-align',
       tablet ? 'center' : 'left',
     )
+    if (tablet) {
+      for (const selector of ['h1', '.ll-dek']) {
+        const margins = await page.locator(`.ll-article-header ${selector}`).evaluate((element) => {
+          // Typed computed styles retain auto; getComputedStyle resolves it to pixels.
+          const style = element.computedStyleMap()
+          return {
+            start: style.get('margin-inline-start')?.toString(),
+            end: style.get('margin-inline-end')?.toString(),
+          }
+        })
+        expect(margins, `${selector} at ${width}px`).toEqual({ start: 'auto', end: 'auto' })
+      }
+    }
     await expect(page.locator('.ll-article-header h1')).toHaveCSS(
       'font-size',
       desktop ? '72px' : tablet ? '56px' : '42px',
@@ -420,7 +441,7 @@ test('computes the article scale, body layout, list markers and end matter at ea
       desktop ? '40px' : tablet ? '32px' : '28px',
     )
     await expect(body.locator('ul:not([data-block])').first()).toHaveCSS('list-style-type', 'disc')
-    await expect(body.locator('ol').first()).toHaveCSS('list-style-type', 'decimal')
+    await expect(body.locator('ol[type="1" s]').first()).toHaveCSS('list-style-type', 'decimal')
     await expect(body.locator('[data-block="gallery"]')).toHaveCSS('gap', '24px')
     await expect(body.locator('[data-block="gallery"]')).toHaveCSS('transform', 'none')
     await expect(body.locator('[data-block="checklist"]')).toHaveCSS('list-style-type', 'none')
@@ -664,8 +685,12 @@ test('captures five page types in both themes for review', async ({ page }, test
           }
         }
       } finally {
-        await diagnostics.checkpoint('route finished or failed')
-        await diagnostics.attach(testInfo, `${name}-${width}-font-lifecycle`)
+        try {
+          await diagnostics.checkpoint('route finished or failed')
+          await diagnostics.attach(testInfo, `${name}-${width}-font-lifecycle`)
+        } catch {
+          // A closed page can prevent diagnostics; preserve the original capture error.
+        }
       }
     }
   }
