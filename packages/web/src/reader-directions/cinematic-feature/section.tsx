@@ -25,7 +25,8 @@ export function CinematicSection({ view }: SectionDirectionProps) {
               story={story}
               feature={index === 0}
               preload={index === 0}
-              // After a text-only feature, the first grid row reaches the first view.
+              // After a text-only feature, cards 2 and 3 share the first row from 1024px and reach the
+              // first view; on a phone card 3 sits lower and loads at once anyway (conservative).
               eager={!view.stories[0]?.image && (index === 1 || index === 2)}
             />
           ))}

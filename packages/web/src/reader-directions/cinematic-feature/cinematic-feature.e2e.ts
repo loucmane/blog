@@ -1071,6 +1071,13 @@ test('records all-page cold/warm paints and initial images with stable titles, w
               await expect(page.locator(`${root} .cf-collection > li:first-child`)).toHaveClass(
                 /cf-card-text/,
               )
+              // ...and cards 2 and 3 must still carry pictures in the first view at 1440px.
+              if (width === 1440) {
+                expect(
+                  images.filter(({ placement }) => placement?.includes('cf-card')).length,
+                  `${route}: first-row card pictures in the first view`,
+                ).toBeGreaterThanOrEqual(2)
+              }
               await expect(page.locator('link[rel="preload"][as="image"][href]')).toHaveCount(0)
               expect(images.filter(({ priority }) => priority === 'high')).toEqual([])
             }
