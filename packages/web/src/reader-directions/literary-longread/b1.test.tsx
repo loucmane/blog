@@ -226,6 +226,7 @@ describe('Literary Long-read b1 design contract', () => {
         readerDirectionTokenCss(literaryLongreadDirection),
       ].join(''),
     ).length
-    expect(bytes).toBeLessThanOrEqual(22_000)
+    // Raised from 22,000 B for local fallback faces: operator decision, 2026-10-20 (blog-0044.63).
+    expect(bytes).toBeLessThanOrEqual(23_500)
   })
 })

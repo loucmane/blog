@@ -48,17 +48,37 @@ it('emits only the used weights and genuine styles, with optional display and re
       sizeAdjust: string
     }
   }
+  // The serif has bold and italic web faces, so its fallback has all four local faces; the sans
+  // has a 600 and no italic. Bold starts at 600: 500 headings keep the regular face, 600 is bold.
   const local = faces.filter((face) => face.src?.startsWith('local('))
-  expect(local).toHaveLength(2)
-  for (const [index, family] of ['Newsreader', 'Libre Franklin'].entries()) {
+  const serif = '"reader-literary-longread__font-ll-serif fallback"'
+  const sans = '"reader-literary-longread__font-ll-sans fallback"'
+  expect(
+    local.map((face) => [face['font-family'], face['font-weight'], face['font-style']]),
+  ).toEqual([
+    [serif, undefined, undefined],
+    [serif, '600 1000', undefined],
+    [serif, undefined, 'italic'],
+    [serif, '600 1000', 'italic'],
+    [sans, undefined, undefined],
+    [sans, '600 1000', undefined],
+  ])
+  for (const [fallback, family] of [
+    [serif, 'Newsreader'],
+    [sans, 'Libre Franklin'],
+  ] as const) {
     const metrics = calculateSizeAdjustValues(family)
-    expect(local[index]).toMatchObject({
-      src: `local("${metrics.fallbackFont}")`,
-      'ascent-override': `${metrics.ascent}%`,
-      'descent-override': `${metrics.descent}%`,
-      'line-gap-override': `${metrics.lineGap}%`,
-      'size-adjust': `${metrics.sizeAdjust}%`,
-    })
+    // Every face keeps the family's metrics and names the local face of its weight and style.
+    for (const face of local.filter((face) => face['font-family'] === fallback)) {
+      const style = `${face['font-weight'] ? ' Bold' : ''}${face['font-style'] ? ' Italic' : ''}`
+      expect(face).toMatchObject({
+        'ascent-override': `${metrics.ascent}%`,
+        'descent-override': `${metrics.descent}%`,
+        'line-gap-override': `${metrics.lineGap}%`,
+        'size-adjust': `${metrics.sizeAdjust}%`,
+      })
+      expect(face.src?.split(',')[0]).toBe(`local("${metrics.fallbackFont}${style}")`)
+    }
   }
 })
 

@@ -47,23 +47,48 @@ it('preserves Next fallback metrics and optional display for exactly the used fa
     )
     expect(face.src).toContain(`-${face['font-weight']}-${face['font-style']}.woff2"`)
   }
-  // Each italic shares its family's metric-adjusted fallback.
+  // Each family's metric-adjusted fallback has a regular, a bold and an italic local face. The
+  // bold starts at 500, the emphasis weight, which browsers never synthesize as bold. The italics
+  // are 400 only, as on warm views, so there is no bold italic face.
+  const displayFallback = {
+    'font-family': '"reader-quiet-monograph__font-qm-display fallback"',
+    'ascent-override': '95.27%',
+    'descent-override': '29.59%',
+    'line-gap-override': '0.00%',
+    'size-adjust': '96.98%',
+  }
+  const textFallback = {
+    'font-family': '"reader-quiet-monograph__font-qm-text fallback"',
+    'ascent-override': '111.45%',
+    'descent-override': '39.06%',
+    'line-gap-override': '0.00%',
+    'size-adjust': '96.01%',
+  }
   expect(faces.filter((face) => face.src?.startsWith('local('))).toEqual([
     {
-      'font-family': '"reader-quiet-monograph__font-qm-display fallback"',
-      src: 'local("Times New Roman")',
-      'ascent-override': '95.27%',
-      'descent-override': '29.59%',
-      'line-gap-override': '0.00%',
-      'size-adjust': '96.98%',
+      ...displayFallback,
+      src: 'local("Times New Roman"),local("TimesNewRomanPSMT"),local("Liberation Serif")',
     },
     {
-      'font-family': '"reader-quiet-monograph__font-qm-text fallback"',
-      src: 'local("Arial")',
-      'ascent-override': '111.45%',
-      'descent-override': '39.06%',
-      'line-gap-override': '0.00%',
-      'size-adjust': '96.01%',
+      ...displayFallback,
+      'font-weight': '500 1000',
+      src: 'local("Times New Roman Bold"),local("TimesNewRomanPS-BoldMT"),local("Liberation Serif Bold")',
+    },
+    {
+      ...displayFallback,
+      'font-style': 'italic',
+      src: 'local("Times New Roman Italic"),local("TimesNewRomanPS-ItalicMT"),local("Liberation Serif Italic")',
+    },
+    { ...textFallback, src: 'local("Arial"),local("ArialMT"),local("Liberation Sans")' },
+    {
+      ...textFallback,
+      'font-weight': '500 1000',
+      src: 'local("Arial Bold"),local("Arial-BoldMT"),local("Liberation Sans Bold")',
+    },
+    {
+      ...textFallback,
+      'font-style': 'italic',
+      src: 'local("Arial Italic"),local("Arial-ItalicMT"),local("Liberation Sans Italic")',
     },
   ])
 })
