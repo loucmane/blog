@@ -53,6 +53,8 @@ export function HangPage({
         <StoryList className="qm-hang">
           {hang.map((story, index) => (
             <HangItem
+              // Both first-row plates load at once; only the first gets the high-priority hint.
+              eager={index === 1}
               key={story.slug}
               preload={index === 0}
               // Rows hold two stories: a second one always shares, a first one when a second follows.

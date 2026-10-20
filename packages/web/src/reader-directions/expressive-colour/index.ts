@@ -1,6 +1,7 @@
 import { defineReaderDirection } from '../contract'
 import { ExpressiveArticle } from './article'
 import { ExpressiveAuthor } from './author'
+import { ExpressiveError, ExpressiveNotFound, ExpressiveUnavailable } from './failure'
 import { fonts } from './fonts'
 import { ExpressiveHome } from './home'
 import { ExpressiveSection } from './section'
@@ -18,6 +19,9 @@ export const expressiveColourDirection = defineReaderDirection({
   Section: ExpressiveSection,
   Author: ExpressiveAuthor,
   Topic: ExpressiveTopic,
+  NotFound: ExpressiveNotFound,
+  Error: ExpressiveError,
+  Unavailable: ExpressiveUnavailable,
   imageSizes: bodyImageSizes,
   fonts,
   tokens,
