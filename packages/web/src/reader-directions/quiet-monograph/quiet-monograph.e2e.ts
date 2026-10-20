@@ -45,6 +45,7 @@ async function resolvedToken(page: Page, property: string, token: `--${string}`)
   return page.locator(root).evaluate(
     (element, { property, token }) => {
       const probe = document.createElement('div')
+      probe.setAttribute('data-probe', token)
       probe.style.setProperty(property, `var(${token})`)
       element.append(probe)
       const value = getComputedStyle(probe).getPropertyValue(property)
@@ -396,8 +397,18 @@ test('sets every editorial block of the long read to the spec in the real cascad
   expect(attribution).toBe('uppercase')
   expect(parseFloat(tracking!)).toBeCloseTo(0.18 * 12, 2)
 
-  // Headings keep 3rem above and 1.25rem below.
-  const heading = body.locator(':scope > h2:has(+ p)').first()
+  // Headings keep 3rem above and 1.25rem below, measured on the long read's h2s that open a
+  // paragraph ("The table" first). Playwright's :has() searches only inside an element, so a
+  // sibling :has(+ p) never matches; XPath names the next sibling.
+  const longRead = labStories.find(({ title }) => title === storyTitle)!.blocks
+  const opening = longRead.filter(
+    ({ attrs, type }, index) =>
+      type === 'heading' && attrs?.level === 2 && longRead[index + 1]?.type === 'paragraph',
+  ).length
+  expect(opening).toBeGreaterThan(0)
+  const headings = body.locator('xpath=h2[following-sibling::*[1][self::p]]')
+  await expect(headings).toHaveCount(opening)
+  const heading = headings.first()
   const [above, below] = await computed(heading, ['margin-top', 'margin-bottom'])
   expect([above, below]).toEqual(['48px', '20px'])
   const gap = await heading.evaluate(
@@ -530,18 +541,28 @@ test('keeps every numbered-list marker in the real cascade: 1, a, A, i and I', a
   )!
   await page.goto(`/stories/${normalizeSlug(lettered.title)}`)
   const body = page.locator(root).locator('.qm-body')
-  // The seeded list, as the shared renderer drew it.
+  // The seeded lists, as the shared renderer drew them. ol[type="a"] also matches type="A" (HTML
+  // compares the attribute case-insensitively), so the lists are filtered on its exact value.
+  const lists = body.locator(':scope > ol')
+  await expect(lists.first()).toBeAttached()
   expect(
-    await body
-      .locator('ol[type="a"] > li')
-      .first()
-      .evaluate((element) => getComputedStyle(element).listStyleType),
-  ).toBe('lower-alpha')
-  // Every numbering, in the same markup: the type attribute and the marker inline.
+    await lists.evaluateAll((elements) =>
+      elements
+        .filter((list) => list.getAttribute('type') === 'a')
+        .map((list) => getComputedStyle(list.querySelector('li')!).listStyleType),
+    ),
+  ).toEqual(
+    lettered.blocks
+      .filter(({ attrs, type }) => type === 'orderedList' && attrs?.type === 'a')
+      .map(() => 'lower-alpha'),
+  )
+  // Every numbering, in the same markup: the type attribute and the marker inline. Each probe is
+  // marked data-probe, so it is never taken for seeded content.
   const rendered = await body.evaluate((element, markers) => {
-    const template = element.querySelector('ol')!
+    const template = element.querySelector('ol:not([data-probe])')!
     return Object.entries(markers).map(([type, marker]) => {
       const list = template.cloneNode(true) as HTMLOListElement
+      list.setAttribute('data-probe', type)
       list.setAttribute('type', type)
       list.style.listStyleType = marker
       element.append(list)
