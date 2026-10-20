@@ -1,50 +1,64 @@
 import Link from 'next/link'
 
-import { ReaderImageView } from '@/reader/components/reader-image'
-import { formatPublishedDate } from '@/reader/format'
-
 import type { SectionDirectionProps } from '../contract'
+import { ChecklistRow, HangItem, platePicture, StoryList } from './plate'
 import { MonographShell } from './shell'
 
-const cardSizes =
-  '(min-width: 1600px) 34rem, (min-width: 1305px) calc(37.5rem - 3.5vw), (min-width: 768px) 42.5vw, (min-width: 500px) 92vw, calc(100vw - 2.5rem)'
+/** The hang holds the first six stories; later ones are rows. */
+const hangCount = 6
+
+function storyCount(count: number): string {
+  if (count === 0) return 'No stories'
+  return count === 1 ? '1 story' : `${count} stories`
+}
 
 export function MonographSection({ view }: SectionDirectionProps) {
-  const leadImage = view.stories[0]?.image
+  const hang = view.stories.slice(0, hangCount)
+  const earlier = view.stories.slice(hangCount)
+  const first = hang[0]
+  const lead = first ? platePicture(first.image, 'bay') : null
   return (
     <MonographShell
       currentSection={view.slug}
-      leadImage={leadImage ? { image: leadImage, sizes: cardSizes } : null}
+      leadImage={lead ? { image: lead.image, sizes: lead.sizes } : null}
       navigation={view.navigation}
     >
       <header className="qm-section-header">
         <p className="qm-label">Section</p>
         <h1>{view.name}</h1>
         {view.description ? <p className="qm-dek">{view.description}</p> : null}
+        <p className="qm-meta">{storyCount(view.stories.length)}</p>
       </header>
-      {view.stories.length > 0 ? (
-        <ul className="qm-grid">
-          {view.stories.map((story, index) => (
-            <li
-              className={story.image ? 'qm-grid-story' : 'qm-grid-story qm-story-text'}
+      {hang.length > 0 ? (
+        <StoryList className="qm-hang">
+          {hang.map((story, index) => (
+            <HangItem
               key={story.slug}
-            >
-              <Link className="qm-story-link" href={story.href}>
-                {story.image ? (
-                  <ReaderImageView image={story.image} preload={index === 0} sizes={cardSizes} />
-                ) : null}
-                <h2 className="qm-card-title">{story.title}</h2>
-              </Link>
-              {story.dek ? <p className="qm-story-dek">{story.dek}</p> : null}
-              <p className="qm-date">
-                <time dateTime={story.publishedAt}>{formatPublishedDate(story.publishedAt)}</time>
-              </p>
-            </li>
+              preload={index === 0}
+              // Rows hold two stories: a second one always shares, a first one when a second follows.
+              sharesRow={index % 2 === 1 || index + 1 < hang.length}
+              story={story}
+            />
           ))}
-        </ul>
+        </StoryList>
       ) : (
-        <p className="qm-section-empty">No stories have been published in this section yet.</p>
+        <div className="qm-section-empty">
+          <p>No stories have been published in this section yet.</p>
+          <p className="qm-label">
+            <Link href="/">Front page</Link>
+          </p>
+        </div>
       )}
+      {earlier.length > 0 ? (
+        <section className="qm-earlier">
+          <h2 className="qm-label">Earlier in {view.name}</h2>
+          <StoryList className="qm-rows">
+            {earlier.map((story) => (
+              <ChecklistRow dated key={story.slug} story={story} />
+            ))}
+          </StoryList>
+        </section>
+      ) : null}
     </MonographShell>
   )
 }
