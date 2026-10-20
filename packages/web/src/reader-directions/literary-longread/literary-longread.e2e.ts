@@ -132,6 +132,7 @@ test('keeps the seeded long-title, image-free, short and long-read stories reada
 })
 
 test('uses visible keyboard focus and a warm dark reading ground', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   const skip = page.getByRole('link', { name: 'Skip to stories' })
@@ -629,6 +630,348 @@ test('keeps a visitor on baseline even with the direction cookie', async ({ brow
   }
 })
 
+test('decodes crop sources against measured frames at DPR 1 and 2', async ({
+  browser,
+  context,
+  page,
+}, testInfo) => {
+  test.setTimeout(240_000)
+  const observations = []
+  for (const deviceScaleFactor of [1, 2]) {
+    const measured = await browser.newContext({
+      baseURL: new URL(page.url()).origin,
+      storageState: await context.storageState(),
+      deviceScaleFactor,
+    })
+    try {
+      for (const width of [390, 768, 1024, 1440]) {
+        const tab = await measured.newPage()
+        await tab.setViewportSize({ width, height: 900 })
+        for (const route of routes) {
+          await tab.goto(route)
+          await expect(tab.locator(root)).toBeVisible()
+          // Selection evidence only: this eagerly loaded run is not a CWV/transfer benchmark.
+          const crops = await tab.locator('.ll-image-frame img').evaluateAll(async (elements) => {
+            return Promise.all(
+              elements.map(async (element) => {
+                const img = element as HTMLImageElement
+                img.loading = 'eager'
+                await img.decode()
+                const frame = img.closest('.ll-image-frame')!.getBoundingClientRect()
+                const bitmap = await createImageBitmap(await (await fetch(img.currentSrc)).blob())
+                const sourceWidth = Number(img.getAttribute('width'))
+                const sourceHeight = Number(img.getAttribute('height'))
+                const descriptors = img.srcset
+                  .split(',')
+                  .map((candidate) =>
+                    Number.parseFloat(candidate.trim().split(/\s+/).at(-1) ?? '0'),
+                  )
+                const maximum = Math.max(...descriptors)
+                const required =
+                  Math.max(
+                    frame.width,
+                    sourceHeight ? (frame.height * sourceWidth) / sourceHeight : frame.width,
+                  ) * devicePixelRatio
+                const observation = {
+                  src: img.currentSrc,
+                  sizes: img.sizes,
+                  frame: { width: frame.width, height: frame.height },
+                  sourceWidth,
+                  sourceHeight,
+                  decodedWidth: bitmap.width,
+                  required,
+                  maximum,
+                  limitedBySource: required > maximum,
+                  objectPosition: getComputedStyle(img).objectPosition,
+                }
+                bitmap.close()
+                return observation
+              }),
+            )
+          })
+          observations.push({ route, width, deviceScaleFactor, crops })
+          for (const crop of crops) {
+            // If the original/variant ceiling is too small, record it rather than invent pixels.
+            expect
+              .soft(crop.decodedWidth, `${route} ${width}px DPR${deviceScaleFactor}: ${crop.src}`)
+              .toBeGreaterThanOrEqual(Math.min(crop.required, crop.maximum) - 2)
+          }
+          const preload = tab.locator(`${root} link[as="image"][href], head link[as="image"][href]`)
+          if (await preload.count()) {
+            await expect(preload).toHaveCount(1)
+            await expect(preload).toHaveAttribute(
+              'imagesizes',
+              (await tab.locator(`${root} main img`).first().getAttribute('sizes'))!,
+            )
+          }
+        }
+        await tab.close()
+      }
+    } finally {
+      await measured.close()
+    }
+  }
+  await testInfo.attach('decoded-crop-selection', {
+    body: JSON.stringify(observations, null, 2),
+    contentType: 'application/json',
+  })
+})
+
+test('places index captions below the whole row on phones and tablets', async ({ page }) => {
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const route of [sectionPath, authorPath, topicPath]) {
+      await page.goto(route)
+      for (const row of await page.locator('.ll-index-row:has(figcaption)').all()) {
+        const caption = row.locator('figcaption')
+        const box = (await caption.boundingBox())!
+        const frame = (await row.locator('.ll-image-frame').boundingBox())!
+        const copy = (await row.locator('.ll-index-copy').boundingBox())!
+        await expect(caption).toHaveCSS('font-size', '14px')
+        expect(box.y).toBeGreaterThanOrEqual(frame.y + frame.height - 1)
+        if (width < 1024) {
+          expect(box.y).toBeGreaterThanOrEqual(copy.y + copy.height - 1)
+          expect(box.x).toBeCloseTo(copy.x, 0)
+          expect(box.width).toBeGreaterThan(frame.width * 2)
+          await expect(caption).toHaveCSS('grid-column', '1 / -1')
+        }
+      }
+    }
+  }
+})
+
+test('renders the authorized missing-page shell and keeps failure recovery keyboard accessible', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const dark of [false, true]) {
+      const response = await page.goto('/stories/literary-b3-missing-story')
+      expect(response?.status()).toBe(404)
+      await expect(page.locator(`${root} .ll-failure`)).toBeVisible()
+      await page.evaluate((value) => document.documentElement.classList.toggle('dark', value), dark)
+      await waitForThemeToSettle(page)
+      await expect(page.locator('h1')).toHaveCount(1)
+      await expect(page.locator('main')).toHaveCount(1)
+      await expect(page.locator('h1')).toHaveText('Page not found')
+      await expect(page.locator(`${root} main img`)).toHaveCount(0)
+      expect((await page.locator('.ll-failure').boundingBox())!.width).toBeLessThanOrEqual(
+        Math.min(width - 40, 640),
+      )
+      const result = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze()
+      expect(result.violations).toEqual([])
+      await page.keyboard.press('Tab')
+      const home = page.getByRole('link', { name: 'Return to all stories' })
+      await home.focus()
+      await expect(home).toHaveCSS('outline-width', '2px')
+      await expect(home).toHaveCSS('outline-offset', '4px')
+      await page.keyboard.press('Enter')
+      await expect(page).toHaveURL('/')
+    }
+  }
+})
+
+test('prints light paper and full-composition images from either theme', async ({ page }) => {
+  for (const route of ['/', storyPath, sectionPath]) {
+    await page.goto(route)
+    await page.evaluate(() => document.documentElement.classList.add('dark'))
+    await page.emulateMedia({ media: 'print' })
+    await expect(page.locator(root)).toHaveCSS('background-color', 'rgb(251, 248, 242)')
+    await expect(page.locator('.ll-page')).toHaveCSS('color', 'rgb(20, 20, 20)')
+    await expect(page.locator('.ll-masthead nav')).toBeHidden()
+    await expect(page.locator('[data-reader-lab-bar]')).toBeHidden()
+    for (const image of await page.locator('.ll-image-frame img').all()) {
+      await expect(image).toHaveCSS('position', 'static')
+      await expect(image).toHaveCSS('object-fit', 'contain')
+      const ratio = await image.evaluate((element) => {
+        const img = element as HTMLImageElement
+        const box = img.getBoundingClientRect()
+        return {
+          actual: box.width / box.height,
+          original: Number(img.getAttribute('width')) / Number(img.getAttribute('height')),
+        }
+      })
+      expect(ratio.actual).toBeCloseTo(ratio.original, 2)
+    }
+    await page.emulateMedia({ media: 'screen' })
+  }
+})
+
+test('reflows all five pages with enlarged text and text-spacing overrides', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.setViewportSize({ width: 390, height: 900 })
+  for (const route of routes) {
+    await page.goto(route)
+    await page.addStyleTag({
+      content: `
+        html { font-size: 200% !important; }
+        .ll-page * { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }
+        .ll-page p { margin-bottom: 2em !important; }
+      `,
+    })
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      `${route}: enlarged text with spacing`,
+    ).toBe(true)
+    for (const caption of await page.locator('.ll-page figcaption').all()) {
+      expect(
+        await caption.evaluate((element) => element.scrollHeight <= element.clientHeight + 1),
+      ).toBe(true)
+    }
+    await expect(page.locator('h1')).toBeVisible()
+    await expect(page.locator('.ll-footer a')).toBeVisible()
+  }
+})
+
+for (const width of [390, 1440]) {
+  for (const theme of ['light', 'dark'] as const) {
+    test(`records natural cold/warm loading and interactions at ${width}px in ${theme}`, async ({
+      browser,
+      context,
+      page,
+    }, testInfo) => {
+      test.setTimeout(240_000)
+      type Measurements = {
+        shifts: { startTime: number; value: number }[]
+        lcp: { startTime: number; element: string; url: string }[]
+        interactions: { name: string; duration: number; interactionId: number }[]
+      }
+      type MeasuredWindow = Window & { llMeasurements: Measurements }
+      const observations = []
+      for (const route of routes) {
+        // A fresh context for each page type makes its first navigation browser-cache cold.
+        const measured = await browser.newContext({
+          baseURL: new URL(page.url()).origin,
+          storageState: await context.storageState(),
+          viewport: { width, height: 900 },
+          deviceScaleFactor: width === 390 ? 2 : 1,
+          colorScheme: theme,
+        })
+        try {
+          await measured.addInitScript((theme) => {
+            localStorage.setItem('theme', theme)
+            const metrics: Measurements = { shifts: [], lcp: [], interactions: [] }
+            ;(window as unknown as MeasuredWindow).llMeasurements = metrics
+            new PerformanceObserver((list) => {
+              for (const entry of list.getEntries()) {
+                const shift = entry as PerformanceEntry & { hadRecentInput: boolean; value: number }
+                if (!shift.hadRecentInput) {
+                  metrics.shifts.push({ startTime: shift.startTime, value: shift.value })
+                }
+              }
+            }).observe({ type: 'layout-shift', buffered: true })
+            new PerformanceObserver((list) => {
+              for (const entry of list.getEntries()) {
+                const lcp = entry as PerformanceEntry & { element?: Element; url?: string }
+                metrics.lcp.push({
+                  startTime: lcp.startTime,
+                  element: lcp.element ? `${lcp.element.tagName}.${lcp.element.className}` : '',
+                  url: lcp.url ?? '',
+                })
+              }
+            }).observe({ type: 'largest-contentful-paint', buffered: true })
+            new PerformanceObserver((list) => {
+              for (const entry of list.getEntries()) {
+                const event = entry as PerformanceEntry & { interactionId: number }
+                if (event.interactionId) {
+                  metrics.interactions.push({
+                    name: event.name,
+                    duration: event.duration,
+                    interactionId: event.interactionId,
+                  })
+                }
+              }
+            }).observe({
+              type: 'event',
+              buffered: true,
+              durationThreshold: 16,
+            } as PerformanceObserverInit)
+          }, theme)
+          const tab = await measured.newPage()
+          for (const cache of ['cold', 'warm']) {
+            await tab.goto(route)
+            await expect(tab.locator(root)).toBeVisible()
+            await tab.evaluate(async () => {
+              await document.fonts.ready
+            })
+            // Observe real optional fonts and lazy images; no capture-font loading or eager mutation.
+            await tab.waitForTimeout(500)
+            for (let step = 0; step < 150; step++) {
+              const atEnd = await tab.evaluate(() => {
+                window.scrollBy({ top: innerHeight * 0.8, behavior: 'instant' })
+                return scrollY + innerHeight >= document.documentElement.scrollHeight - 1
+              })
+              await tab.waitForTimeout(80)
+              if (atEnd) break
+            }
+            await tab.evaluate(async () => {
+              await Promise.all(Array.from(document.images, (img) => img.decode()))
+            })
+            // Literary Long-read has no Theme control (its spec defines none), so the measured
+            // interactions are keyboard steps and a click on plain text (on home the h1 is a link).
+            await tab.keyboard.press('Tab')
+            await tab.keyboard.press('Tab')
+            const urlBefore = tab.url()
+            await tab.locator(`${root} main p:not(:has(a))`).first().click()
+            expect(tab.url()).toBe(urlBefore)
+            await tab.waitForTimeout(500)
+            const result = await tab.evaluate(() => ({
+              ...(window as unknown as MeasuredWindow).llMeasurements,
+              fonts: [...document.fonts].map(({ family, style, weight, status }) => ({
+                family,
+                style,
+                weight,
+                status,
+              })),
+              resources: performance.getEntriesByType('resource').map((entry) => {
+                const resource = entry as PerformanceResourceTiming
+                return {
+                  name: resource.name,
+                  type: resource.initiatorType,
+                  transferSize: resource.transferSize,
+                  encodedBodySize: resource.encodedBodySize,
+                }
+              }),
+            }))
+            // CLS is the largest session window (<=1s gap, <=5s duration), not a lifetime sum.
+            let cls = 0
+            let start = 0
+            let previous = -Infinity
+            let sum = 0
+            for (const shift of result.shifts) {
+              if (shift.startTime - previous > 1000 || shift.startTime - start > 5000) {
+                start = shift.startTime
+                sum = 0
+              }
+              sum += shift.value
+              previous = shift.startTime
+              cls = Math.max(cls, sum)
+            }
+            observations.push({ route, width, theme, cache, cls, ...result })
+            expect.soft(cls, `${route} ${cache} CLS`).toBeLessThanOrEqual(0.05)
+            for (const interaction of result.interactions) {
+              expect
+                .soft(interaction.duration, `${route} ${cache} ${interaction.name}`)
+                .toBeLessThanOrEqual(200)
+            }
+          }
+        } finally {
+          await measured.close()
+        }
+      }
+      // This is unthrottled lab evidence. Empty Event Timing entries are not an INP pass;
+      // Lighthouse's three-run median and field p75 need separate measurements.
+      await testInfo.attach('natural-loading-and-interactions', {
+        body: JSON.stringify(observations, null, 2),
+        contentType: 'application/json',
+      })
+    })
+  }
+}
+
 test('captures five page types in both themes for review', async ({ page }, testInfo) => {
   test.setTimeout(300_000)
   const diagnostics = await observeCaptureFonts(page)
@@ -636,7 +979,7 @@ test('captures five page types in both themes for review', async ({ page }, test
     '--font-ll-serif': 'Newsreader',
     '--font-ll-sans': 'Libre Franklin',
   })
-  const destination = path.resolve('docs/worklog/blog-0044.44')
+  const destination = path.resolve('docs/worklog/blog-0044.45')
   await mkdir(destination, { recursive: true })
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })

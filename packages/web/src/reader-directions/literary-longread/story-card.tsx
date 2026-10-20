@@ -5,13 +5,8 @@ import { ReaderImageCredit, ReaderImageView } from '@/reader/components/reader-i
 import { formatPublishedDate, formatReadingTime } from '@/reader/format'
 import type { ReaderImage, StoryCard } from '@/reader/views'
 
+import { cardSizes, relatedSizes } from './image-sizes'
 import { SectionLabel } from './shell'
-
-export const coverSizes =
-  '(min-width: 1344px) 39rem, (min-width: 1024px) calc(50vw - 3rem), (min-width: 768px) calc(50vw - 1.5rem), calc(100vw - 2.5rem)'
-export const cardSizes =
-  '(min-width: 1344px) 38.25rem, (min-width: 1024px) calc(50vw - 3.75rem), (min-width: 768px) calc(50vw - 2.25rem), calc(100vw - 2.5rem)'
-export const thumbnailSizes = '(min-width: 1024px) 10rem, (min-width: 768px) 6rem, 5rem'
 
 /** Keep captions outside the crop; retain shared source, alt and credit semantics. */
 export function LiteraryFigure({
@@ -56,17 +51,21 @@ export function LiteraryStoryMeta({ story }: { readonly story: StoryCard }) {
 export function LiteraryStoryCard({
   story,
   headingLevel = 3,
-  sizes = cardSizes,
+  related = false,
 }: {
   readonly story: StoryCard
   readonly headingLevel?: 2 | 3
-  readonly sizes?: string
+  readonly related?: boolean
 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3'
   return (
     <article className={`ll-card${story.image ? '' : ' ll-card-text'}`}>
       {story.image ? (
-        <LiteraryFigure className="ll-card-image" image={story.image} sizes={sizes} />
+        <LiteraryFigure
+          className="ll-card-image"
+          image={story.image}
+          sizes={related ? relatedSizes(story.image) : cardSizes(story.image)}
+        />
       ) : null}
       <SectionLabel section={story.section} />
       <Heading className="ll-card-title">

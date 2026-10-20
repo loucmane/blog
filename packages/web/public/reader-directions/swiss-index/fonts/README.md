@@ -1,19 +1,43 @@
 # Swiss Index fonts
 
-Unmodified Latin normal WOFF2 subsets from **Fontsource 5.3.0**, staged by the
+Unmodified Latin WOFF2 subsets from **Fontsource 5.3.0**, staged by the
 coordinator from npm on 2026-10-07. Both tarballs' SHA-512 integrity values match the
 coordinator's record; each vendored file was compared with its tarball entry.
-The tarballs and extracted packages stay in ignored `ci-artifacts/`.
+The tarballs and extracted packages stay in ignored `ci-artifacts/`. The two
+Schibsted Grotesk italics were added on 2026-10-20 from the same Schibsted Grotesk
+tarball, whose npm integrity is the one recorded in `sources.json`: the coordinator
+extracted them on the host, and the copies here match their tarball entries' bytes
+and SHA-256.
 
-| Family            | Upstream metadata | Weights              | Use                                                  |
-| ----------------- | ----------------- | -------------------- | ---------------------------------------------------- |
-| Schibsted Grotesk | v7                | 400, 700, 800 normal | Body, story titles/strong emphasis, masthead/display |
-| IBM Plex Mono     | v20               | 400, 500 normal      | Metadata/captions/code, labels and state             |
+| Family            | Upstream metadata | Faces                                    | Use                                                            |
+| ----------------- | ----------------- | ---------------------------------------- | -------------------------------------------------------------- |
+| Schibsted Grotesk | v7                | 400, 700, 800 normal; 400 and 700 italic | Body, story titles/strong emphasis, masthead/display; emphasis |
+| IBM Plex Mono     | v20               | 400, 500 normal                          | Metadata/captions/code, labels and state                       |
 
-Total WOFF2 size: **104,192 bytes**. Schibsted 500 is omitted because the design
-does not use it. Latin includes Å/Ä/Ö; other scripts use system fallbacks. Inline
-emphasis uses browser-synthesized italic because this brief supplies normal faces
-only. No files are renamed or modified to suggest genuine italics.
+Total WOFF2 size: **156,080 bytes**. Schibsted 500 is omitted because the design
+does not use it. Latin includes Å/Ä/Ö; other scripts use system fallbacks.
+
+## Italics and the font budget
+
+The developed-magazine spec (`docs/design/reader-bakeoff/swiss-index.md`, sections 3,
+7 and 10) sets inline emphasis in the real italic face. Emphasis in text uses the 400
+italic; emphasis in bold text (`strong`, headings and pull quotes) uses the 700 italic.
+Both are genuine italics, with slanted outlines, a negative italic angle and the OS/2
+italic bit; their PostScript names are `SchibstedGrotesk-Italic` and
+`SchibstedGrotesk-BoldItalic`. They share the upright faces' vertical metrics, so the
+family's one fallback serves both styles. There is no 800 italic: the wordmark, titles
+and number plates hold no emphasis. IBM Plex Mono has no italic, so italic mono text,
+such as code inside emphasis, keeps a synthesized slant.
+
+An italic is requested only on pages whose text uses it. Home and section pages use
+the five normal faces (104,192 bytes; the spec's budget is 105,000). A typical story
+adds the 400 italic (129,728 bytes; budget 130,000). A story with bold emphasis as well
+loads all seven faces, 156,080 bytes: 1,080 over the 155,000 the spec estimated for
+both italics. `src/reader-directions/swiss-index/fonts.test.ts` checks these totals.
+
+`.si-page` keeps `font-synthesis: weight style`. Each family's metric-adjusted fallback
+is one upright local face. On a cold view where a face misses its short block period,
+its text keeps that fallback, and synthesis keeps bold and italic text bold and italic.
 
 [`sources.json`](sources.json) records the package version, source tarball URL,
 package-relative path, npm integrity, upstream project, bytes and SHA-256 for each

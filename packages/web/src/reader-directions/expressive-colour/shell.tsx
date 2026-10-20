@@ -9,17 +9,23 @@ import { storyColours } from './colours'
 import { ExpressiveImagePreload, type ExpressiveLeadImage } from './image-preload'
 import { ExpressiveSpineStrip } from './spine-strip'
 
-function Wordmark({ isHome = false }: { readonly isHome?: boolean }) {
+function Wordmark({
+  isHome = false,
+  name = siteName,
+}: {
+  readonly isHome?: boolean
+  readonly name?: string
+}) {
   const Brand = isHome ? 'h1' : 'p'
-  const finalSpace = siteName.lastIndexOf(' ')
+  const finalSpace = name.lastIndexOf(' ')
   return (
     <Brand className={`ec-wordmark${isHome ? ' ec-wordmark-home' : ''}`}>
       <Link href="/">
         {finalSpace < 0 ? (
-          siteName
+          name
         ) : (
           <>
-            {siteName.slice(0, finalSpace)} <em>{siteName.slice(finalSpace + 1)}</em>
+            {name.slice(0, finalSpace)} <em>{name.slice(finalSpace + 1)}</em>
           </>
         )}
       </Link>
@@ -73,6 +79,8 @@ export function ExpressiveShell({
   sectionContext = false,
   leadImage,
   stories = [],
+  name = siteName,
+  wordmarkHeading = isHome,
 }: {
   readonly children: ReactNode
   readonly isHome?: boolean
@@ -81,6 +89,8 @@ export function ExpressiveShell({
   readonly sectionContext?: boolean
   readonly leadImage?: ExpressiveLeadImage | null
   readonly stories?: readonly StoryCard[]
+  readonly name?: string
+  readonly wordmarkHeading?: boolean
 }) {
   return (
     <div className="ec-page">
@@ -90,7 +100,7 @@ export function ExpressiveShell({
       </a>
       <header className="ec-masthead">
         <div className="ec-masthead-row">
-          <Wordmark isHome={isHome} />
+          <Wordmark isHome={wordmarkHeading} name={name} />
           <ThemeMenu />
         </div>
         <Navigation
@@ -112,7 +122,7 @@ export function ExpressiveShell({
           ))}
         </div>
         <div className="ec-footer-row">
-          <Wordmark />
+          <Wordmark name={name} />
           <Navigation
             label="Footer"
             navigation={navigation}

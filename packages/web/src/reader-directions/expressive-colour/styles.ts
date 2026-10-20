@@ -4,12 +4,13 @@ import { storyColours } from './colours'
 export const styles = `
   & { background: var(--ec-paper); color: var(--ec-ink); color-scheme: var(--ec-scheme); }
   ${storyColours.map(({ name }) => `& [data-story-colour='${name}'] { --ec-story: var(--ec-${name}); --ec-on-story: var(--ec-on-${name}); }`).join('\n')}
-  & .ec-page { max-width: var(--ec-page); margin-inline: auto; padding-inline: var(--ec-gutter); min-height: 100vh; font-family: var(--ec-serif); font-size: var(--ec-body); font-weight: 400; font-variation-settings: 'SOFT' 30; font-synthesis: none; line-height: 1.5; overflow-wrap: anywhere; text-wrap: pretty; }
+  /* Optional fonts can retain the contract's single normal local fallback for a full visit. */
+  & .ec-page { max-width: var(--ec-page); margin-inline: auto; padding-inline: var(--ec-gutter); min-height: 100vh; font-family: var(--ec-serif); font-size: var(--ec-body); font-weight: 400; font-variation-settings: 'SOFT' 30; font-synthesis: weight style; line-height: 1.5; overflow-wrap: anywhere; text-wrap: pretty; }
   & .ec-page * { box-sizing: border-box; min-width: 0; }
   & .ec-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote) { margin: 0; }
   & .ec-page :is(h1, h2, h3, h4, h5, h6) { font-family: var(--ec-serif); }
   & .ec-page :where(h1, h2, h3, h4, h5, h6) { font-weight: 800; font-variation-settings: 'SOFT' 100; letter-spacing: -0.035em; line-height: 1.08; text-wrap: balance; }
-  & .ec-page :where(ul, ol) { list-style: none; padding: 0; }
+  & .ec-page :where(ul, ol:not([type])) { list-style: none; padding: 0; }
   /* Each painted surface resets its companions locally, including nested panels. */
   & .ec-page, & .ec-page :where(.ec-card[data-surface='paper'], [data-block='embed'], [data-variant='related-stories']) { background: var(--ec-paper); color: var(--ec-ink); --ec-text-soft: var(--ec-ink-soft); --ec-code-bg: var(--ec-paper-2); --ec-decoration: var(--ec-story, var(--ec-ink)); }
   & .ec-article { --ec-decoration: var(--ec-story); }
@@ -22,6 +23,7 @@ export const styles = `
   & .ec-page ::selection { background: var(--ec-ink); color: var(--ec-paper); }
   & .ec-page .ec-skip { position: absolute; top: 1rem; left: 1rem; z-index: 20; transform: translateY(-200%); padding: 1rem; border-radius: 0.5rem; background: var(--ec-ink); color: var(--ec-paper); font: 400 var(--ec-small)/1.5 var(--ec-mono); }
   & .ec-skip:focus { transform: none; }
+  & .ec-page .ec-skip:focus-visible { outline-offset: -5px; }
   & .ec-masthead { padding-block: 2rem var(--ec-space); }
   & .ec-masthead-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 1rem; }
   & .ec-page .ec-wordmark { font-size: var(--ec-wordmark-sm); font-weight: 900; font-variation-settings: 'SOFT' 100; line-height: 1.05; letter-spacing: -0.06em; overflow-wrap: normal; }
@@ -117,9 +119,9 @@ export const styles = `
   & .ec-body u { text-decoration: underline wavy 1px; }
   & .ec-body :is(ul, ol) { padding-left: 1.5rem; }
   & .ec-body ul { list-style-type: disc; }
-  & .ec-body ol { list-style-type: decimal; }
+  & .ec-body ol:not([type]) { list-style-type: decimal; }
   & .ec-body li::marker { color: currentColor; }
-  & .ec-body ol > li::marker { font-family: var(--ec-mono); font-weight: 500; }
+  & .ec-body ol > li::marker { font-family: var(--ec-mono); font-weight: 500; font-style: normal; }
   & .ec-body li + li { margin-top: 0.5rem; }
   & .ec-body :where(li, blockquote) > :where(* + *) { margin-top: 1rem; }
   & .ec-body blockquote { border-left: 0.4rem solid var(--ec-decoration); padding-left: 1.25rem; font-style: italic; }
@@ -153,7 +155,8 @@ export const styles = `
   & .ec-body [data-variant='warning'] > p:first-child strong::before { content: '! ' / ''; }
   & .ec-body [data-block='embed'] a { font-size: var(--ec-copy); font-weight: 700; }
   & .ec-body [data-block='embed'] a::before { content: '▶ ' / ''; }
-  & .ec-body code { font-family: var(--ec-mono); font-size: 0.85em; font-weight: 400; overflow-wrap: anywhere; background: var(--ec-code-bg); color: inherit; padding: 0.1em 0.25em; border-radius: 0.25rem; box-shadow: inset 0 0 0 1px currentColor; }
+  & .ec-body :is(code, h6, [data-block='callout'] > p:first-child strong) em { font-style: normal; }
+  & .ec-body code { font-family: var(--ec-mono); font-size: 0.85em; font-weight: 400; font-style: normal; overflow-wrap: anywhere; background: var(--ec-code-bg); color: inherit; padding: 0.1em 0.25em; border-radius: 0.25rem; box-shadow: inset 0 0 0 1px currentColor; }
   & .ec-body pre { background: var(--ec-code-bg); color: inherit; padding: 1.25rem; border: 1px solid currentColor; border-radius: 0.75rem; font: 400 0.875rem/1.7 var(--ec-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
   & .ec-body pre code { background: transparent; padding: 0; border-radius: 0; box-shadow: none; font: inherit; }
   & .ec-body hr { border: 0; background: var(--ec-decoration); height: 0.4rem; width: 4rem; border-radius: 1rem; margin: 3rem auto; }
@@ -174,11 +177,21 @@ export const styles = `
   & .ec-empty { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center; gap: 2rem; border: 1px solid currentColor; border-radius: var(--ec-radius); padding: var(--ec-space) var(--ec-band-padding); min-height: 50svh; }
   & .ec-empty h2 { font-size: var(--ec-title); margin-block: 2rem; }
   & .ec-empty p:last-child { max-width: 40ch; }
+  & .ec-failure { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 3rem; align-items: center; padding: var(--ec-band-padding); border: 3px solid currentColor; border-radius: var(--ec-radius); background: var(--ec-paper); color: var(--ec-ink); }
+  & .ec-failure :is(h1, h2) { font-size: var(--ec-title); margin-block: 1.5rem; }
+  & .ec-failure-copy > p:last-of-type { max-width: 34em; }
+  & .ec-failure-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+  & .ec-failure-actions button { background: var(--ec-paper); color: var(--ec-ink); cursor: pointer; }
+  & .ec-failure-motif { aspect-ratio: 4/3; }
+  & .ec-failure-stacked { display: none; }
   & .ec-footer { margin-top: var(--ec-space); padding-bottom: 3rem; }
   & .ec-footer-stripe { display: flex; height: 0.5rem; border-radius: 1rem; overflow: hidden; }
   & .ec-footer-stripe > span { flex: 1; background: var(--ec-story); }
   & .ec-footer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; padding-top: 2rem; }
   @media (max-width: 1023px) {
+    & .ec-failure { grid-template-columns: 1fr; gap: 1rem; }
+    & .ec-failure-stacked { display: block; width: min(100%, 8rem); }
+    & .ec-failure-split { display: none; }
     & .ec-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
     & .ec-card { grid-column: span 3; }
     & :is(.ec-card-lead, .ec-card-secondary-solo, .ec-card-compact) { grid-column: 1/-1; }
@@ -223,6 +236,8 @@ export const styles = `
     & .ec-card, & .ec-card[data-surface='paper'], & .ec-article-band, & .ec-body :is([data-block='callout'], [data-block='editorial'], [data-block='embed']) { border: 1px solid CanvasText; }
     & .ec-navigation a[aria-current] { border-width: 3px; }
     & :is(.ec-motif, .ec-author-mark, .ec-spine-strip, .ec-footer-stripe) { display: none; }
+    & .ec-failure { border-color: CanvasText; }
+    & .ec-failure-motif { display: none; }
   }
   @media print {
     & { --ec-paper: white; --ec-paper-2: white; --ec-ink: black; --ec-ink-soft: black; background: white; color: black; color-scheme: light; }
@@ -231,6 +246,8 @@ export const styles = `
     & .ec-page :is(.ec-card, .ec-card-compact .ec-number, .ec-article-band, .ec-article-copy, .ec-hero, [data-block='pull-quote'], [data-block='callout'], [data-block='editorial'], [data-block='embed']) { --ec-text-soft: black; --ec-code-bg: white; --ec-decoration: black; background: white; color: black; border: 1px solid black; }
     & .ec-body { display: block; max-width: 100%; }
     & .ec-cover-layout { display: block; }
+    & .ec-failure { display: block; background: white; color: black; border-color: black; }
+    & .ec-failure-motif { display: none; }
   }
 `
   // Compact this controlled literal at emission; retain readable source and calc spacing.
