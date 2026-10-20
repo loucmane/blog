@@ -2,7 +2,7 @@
 import { within } from '@testing-library/dom'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactNode } from 'react'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { readArticleView, readAuthorView, readHomeView, readTopicView } from '@/reader/read-model'
 import type { ArticleView, AuthorView, HomeView, TopicView } from '@/reader/views'
@@ -14,10 +14,15 @@ import { labStorySlug, seedLabContent } from '@/server/lab/seed'
 import { cinematicFeatureDirection as direction } from './index'
 
 function markup(element: ReactNode) {
-  const document = window.document.implementation.createHTMLDocument()
-  document.body.innerHTML = renderToStaticMarkup(element)
-  return { document, screen: within(document.body) }
+  const container = document.createElement('div')
+  container.innerHTML = renderToStaticMarkup(element)
+  // Keep a live defaultView and document-level ID lookup for aria-labelledby.
+  // Replace the previous view so repeated renders cannot resolve duplicate IDs.
+  document.body.replaceChildren(container)
+  return { document: container, screen: within(container) }
 }
+
+afterEach(() => document.body.replaceChildren())
 
 describe('Cinematic Feature b2 supplied views', () => {
   let article: ArticleView

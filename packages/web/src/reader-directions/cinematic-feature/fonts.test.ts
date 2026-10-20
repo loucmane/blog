@@ -12,7 +12,7 @@ import { cinematicFeatureDirection } from './index'
 
 const require = createRequire(import.meta.url)
 
-it('emits the genuine variable axes, used mono weights, optional display and reproducible fallback metrics', () => {
+it('emits genuine variable axes, static italics, used mono weights, optional display and reproducible fallback metrics', () => {
   const css = postcss.parse(readerDirectionFontCss(cinematicFeatureDirection)!)
   const faces: Record<string, string>[] = []
   css.walkAtRules('font-face', (face) => {
@@ -28,6 +28,8 @@ it('emits the genuine variable axes, used mono weights, optional display and rep
     web.map((face) => [face['font-weight'], face['font-stretch'], face['font-style']]),
   ).toEqual([
     ['100 900', '62% 125%', 'normal'],
+    ['400', undefined, 'italic'],
+    ['700', undefined, 'italic'],
     ['400', undefined, 'normal'],
     ['500', undefined, 'normal'],
   ])
@@ -37,6 +39,14 @@ it('emits the genuine variable axes, used mono weights, optional display and rep
       /^url\("\/reader-directions\/cinematic-feature\/fonts\/[a-z0-9-]+\.woff2"\) format\("woff2"\)$/,
     )
   }
+  const presentation = postcss.parse(cinematicFeatureDirection.styles!)
+  let synthesis: string | undefined
+  presentation.walkRules('& .cf-page', (rule) => {
+    rule.walkDecls('font-synthesis', (declaration) => {
+      synthesis = declaration.value
+    })
+  })
+  expect(synthesis).toBe('none')
   const { calculateSizeAdjustValues } = require('next/dist/server/font-utils') as {
     calculateSizeAdjustValues(family: string): {
       fallbackFont: string
@@ -60,13 +70,21 @@ it('emits the genuine variable axes, used mono weights, optional display and rep
   }
 })
 
-it('ships authentic Latin glyphs, both Archivo axes, exact mono weights and complete verified licences', () => {
+it('ships authentic Latin glyphs, Archivo axes and static italics, exact mono weights and complete verified licences', () => {
   const parse = require('next/dist/compiled/@next/font/dist/fontkit').default as (
     bytes: Buffer,
   ) => {
     familyName: string
+    subfamilyName: string
+    version: string
     italicAngle: number
-    'OS/2': { usWeightClass: number }
+    unitsPerEm: number
+    ascent: number
+    descent: number
+    lineGap: number
+    xHeight: number
+    capHeight: number
+    'OS/2': { usWeightClass: number; usWidthClass: number }
     variationAxes: Record<string, { min: number; max: number; default: number }>
     hasGlyphForCodePoint(code: number): boolean
   }
@@ -86,25 +104,53 @@ it('ships authentic Latin glyphs, both Archivo axes, exact mono weights and comp
     const bytes = fs.readFileSync(path.join(folder, source.file))
     expect(bytes.length).toBe(source.bytes)
     expect(createHash('sha256').update(bytes).digest('hex')).toBe(source.sha256)
-    expect(source.package).toMatch(/^@fontsource(?:-variable)?\/(archivo|martian-mono)$/)
-    expect(source.version).toBe('5.3.0')
-    expect(source.npmIntegrity).toMatch(/^sha512-/)
+    if (source.gitBlob) {
+      expect(createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')).toBe(
+        source.gitBlob,
+      )
+      expect(source.url).toBe(
+        `https://github.com/fontsource/font-files/blob/main/fonts/google/archivo/files/${source.file}`,
+      )
+      expect(source.license).toBe('Archivo-OFL.txt')
+    } else {
+      expect(source.package).toMatch(/^@fontsource(?:-variable)?\/(archivo|martian-mono)$/)
+      expect(source.version).toBe('5.3.0')
+      expect(source.npmIntegrity).toMatch(/^sha512-/)
+    }
     if (source.file.endsWith('.woff2')) {
       total += bytes.length
       expect(bytes.subarray(0, 4).toString()).toBe('wOF2')
       const font = parse(bytes)
-      expect(font.italicAngle).toBe(0)
+      const declaration = declared.find(({ file }) => file === source.file)!
+      const italic = declaration.style === 'italic'
+      expect(font.italicAngle).toBe(italic ? -10 : 0)
       if (source.file.startsWith('archivo')) {
         expect(font.familyName).toMatch(/^Archivo(?: |$)/)
-        expect(font.variationAxes).toMatchObject({
-          wght: { min: 100, max: 900 },
-          wdth: { min: 62, max: 125, default: 100 },
+        // Measured from each binary, including both newly staged italic faces.
+        expect(font).toMatchObject({
+          version: 'Version 2.001',
+          unitsPerEm: 1000,
+          ascent: 878,
+          descent: -210,
+          lineGap: 0,
+          xHeight: 526,
+          capHeight: 686,
         })
+        if (italic) {
+          expect(font.subfamilyName).toContain('Italic')
+          expect(font.variationAxes).toEqual({})
+          expect(font['OS/2'].usWeightClass).toBe(declaration.weight)
+          expect(font['OS/2'].usWidthClass).toBe(5)
+          expect(source.fontVersion).toBe(font.version)
+        } else {
+          expect(font.variationAxes).toMatchObject({
+            wght: { min: 100, max: 900 },
+            wdth: { min: 62, max: 125, default: 100 },
+          })
+        }
       } else {
         expect(font.familyName).toMatch(/^Martian Mono(?: |$)/)
-        expect(font['OS/2'].usWeightClass).toBe(
-          declared.find(({ file }) => file === source.file)!.weight,
-        )
+        expect(font['OS/2'].usWeightClass).toBe(declaration.weight)
       }
       for (const character of 'AaZzÅåÄäÖö0129')
         expect(font.hasGlyphForCodePoint(character.codePointAt(0)!)).toBe(true)
@@ -113,6 +159,6 @@ it('ships authentic Latin glyphs, both Archivo axes, exact mono weights and comp
         expect(bytes.toString()).toContain(text)
     }
   }
-  expect(total).toBe(111_100)
+  expect(total).toBe(142_924)
   expect(total).toBeLessThanOrEqual(180_000)
 })

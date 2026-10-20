@@ -1,7 +1,7 @@
 /** Only the active direction root emits these scoped styles. */
 export const styles = `
   & { background: var(--cf-ground); color: var(--cf-ink); }
-  & .cf-page { font-family: var(--cf-sans); font-size: var(--cf-body); font-weight: 400; font-stretch: 100%; line-height: 1.5; overflow-wrap: anywhere; min-height: 100vh; }
+  & .cf-page { font-family: var(--cf-sans); font-size: var(--cf-body); font-weight: 400; font-stretch: 100%; font-synthesis: none; line-height: 1.5; overflow-wrap: anywhere; min-height: 100vh; }
   & .cf-page * { box-sizing: border-box; min-width: 0; }
   & .cf-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote) { margin: 0; }
   & .cf-page :is(h1, h2, h3, h4, h5, h6) { font-family: var(--cf-sans); }
