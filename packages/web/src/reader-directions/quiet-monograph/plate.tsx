@@ -42,13 +42,19 @@ export function StoryList({
   )
 }
 
+/** "N stories", "1 story" or "No stories", for the count line under a page's name. */
+export function storyCount(count: number): string {
+  if (count === 0) return 'No stories'
+  return count === 1 ? '1 story' : `${count} stories`
+}
+
 /** The date and reading time, or only the reading time where the row already shows the date. */
 export function MetaLine({
   date = true,
   story,
 }: {
   readonly date?: boolean
-  readonly story: StoryCard
+  readonly story: Pick<StoryCard, 'publishedAt' | 'readingMinutes'>
 }) {
   return (
     <p className="qm-meta">
@@ -96,12 +102,17 @@ function PlateTitle({
   )
 }
 
-/** A home story with a band of its own: the plate, then its wall label. */
+/**
+ * A story with a band of its own: the plate, then its wall label. Home's stories 2 to 4, the
+ * first story to read next, and an author's latest story, whose picture leads the page.
+ */
 export function Room({
   heading,
+  preload = false,
   story,
 }: {
   readonly heading: 'h2' | 'h3'
+  readonly preload?: boolean
   readonly story: StoryCard
 }) {
   const picture = platePicture(story.image, 'room')
@@ -110,7 +121,7 @@ export function Room({
       className={picture ? 'qm-room qm-plate' : 'qm-room qm-plate qm-plate-text'}
       style={picture?.style}
     >
-      {picture ? <PlateBox picture={picture} preload={false} /> : null}
+      {picture ? <PlateBox picture={picture} preload={preload} /> : null}
       <div className="qm-wall-label">
         <SectionLabel section={story.section} />
         <PlateTitle className="qm-room-title" heading={heading} story={story} />

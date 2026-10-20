@@ -52,7 +52,7 @@ export function MonographShell({
   readonly children: ReactNode
   readonly isHome?: boolean
   readonly navigation: ReaderNavigation
-  readonly currentSection?: string
+  readonly currentSection?: string | undefined
   readonly leadImage?: MonographLeadImage | null
 }) {
   const Brand = isHome ? 'h1' : 'p'
