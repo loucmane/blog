@@ -56,9 +56,11 @@ it('allows cold fallback emphasis until the contract supplies styled local fallb
   const sheet = document.createElement('style')
   sheet.textContent = styles.replaceAll('&', '.ec-test')
   document.body.innerHTML =
-    '<div class="ec-test"><div class="ec-page"><strong>Bold</strong><em>Italic</em></div></div>'
+    '<div class="ec-test"><div class="ec-page"><div class="ec-body"><blockquote><em><code>mono</code></em></blockquote></div></div></div>'
   document.body.append(sheet)
   expect(getComputedStyle(document.querySelector('.ec-page')!).fontSynthesis).toBe('weight style')
+  // Synthesis is on, so inline code must reset its style or Martian Mono gets a faux italic.
+  expect(getComputedStyle(document.querySelector('.ec-body code')!).fontStyle).toBe('normal')
 })
 
 it('publishes the browser document with all five exact list types and nested media', async () => {
