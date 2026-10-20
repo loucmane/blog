@@ -200,7 +200,7 @@ export const styles = `
   @media print {
     & .qm-skip, & .qm-theme, & .qm-menu, & .qm-nav-row, & .qm-footer, & .qm-read-next { display: none; }
     & .qm-page main { width: 100%; }
-    & .qm-hang { grid-template-columns: minmax(0, 1fr); }
+    & .qm-hang, & .qm-body [data-block='gallery'] { grid-template-columns: minmax(0, 1fr); }
     & .qm-body { max-width: 66ch; }
     & .qm-page { --qm-print: none; --qm-print-hover: none; }
     & .qm-page img { box-shadow: none; }

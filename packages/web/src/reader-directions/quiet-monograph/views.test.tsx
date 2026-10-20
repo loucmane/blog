@@ -1157,6 +1157,12 @@ describe('Quiet Monograph with real published North House content', () => {
       'justify-content': 'center',
     })
     expect(declarations('& .qm-read-next', 'print')).toMatchObject({ display: 'none' })
+    // Print is one column: the hang and every gallery layout (spec section 8).
+    for (const selector of ['& .qm-hang', "& .qm-body [data-block='gallery']"]) {
+      expect(declarations(selector, 'print')).toMatchObject({
+        'grid-template-columns': 'minmax(0, 1fr)',
+      })
+    }
     // Author pages: the name at the title size, the bio at most 24em.
     expect(declarations('& .qm-author-header h1')).toMatchObject({ 'font-size': 'var(--qm-title)' })
     expect(declarations('& .qm-page .qm-bio')).toMatchObject({ 'max-width': '24em' })
