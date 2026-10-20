@@ -147,7 +147,7 @@ describe('Swiss Index styles', () => {
     expect(declarations('.si-row-dek')['max-width']).toBe('65ch')
   })
 
-  it('lays index rows on the grid: metadata, then title and dek, then section and reading time', () => {
+  it('lays index rows on the grid from 600px, and as a metadata line, title and dek on phones', () => {
     expect(declarations('.si-index > li')).toMatchObject({
       'border-top': '1px solid var(--si-ink)',
       'grid-template-columns': 'repeat(4, minmax(0, 1fr))',
@@ -158,9 +158,14 @@ describe('Swiss Index styles', () => {
     expect(declarations('.si-index > li', '(max-width: 1023px)')['grid-template-columns']).toBe(
       'repeat(2, minmax(0, 1fr))',
     )
-    expect(declarations('.si-index > li', '(max-width: 599px)')['grid-template-columns']).toBe(
-      '1fr',
-    )
+    expect(declarations('.si-index > li', '(max-width: 599px)')).toMatchObject({
+      display: 'flex',
+      'flex-wrap': 'wrap',
+    })
+    expect(declarations('.si-row-copy', '(max-width: 599px)')).toMatchObject({
+      order: '1',
+      'flex-basis': '100%',
+    })
   })
 
   it('styles the Theme trigger square, ruled and mono, 44px high, without a transition', () => {

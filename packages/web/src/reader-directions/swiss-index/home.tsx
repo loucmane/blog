@@ -1,14 +1,17 @@
 import type { HomeDirectionProps } from '../contract'
 import { SwissIndexList, SwissLabelRow } from './index-row'
 import { SwissShell } from './shell'
-import { leadSizes, SwissPlate } from './story-card'
+import { leadSizes, platesAlone, SwissPlate } from './story-card'
 
 /** The cover holds stories 01–03; the index lists the rest. */
 const coverSize = 3
 
 export function SwissHome({ view }: HomeDirectionProps) {
   const { lead } = view
+  const cover = view.recent.slice(0, coverSize - 1)
   const earlier = view.recent.slice(coverSize - 1)
+  // Plate 01 spans two columns.
+  const alone = platesAlone([2, ...cover.map(() => 1)])
   return (
     <SwissShell
       isHome
@@ -20,8 +23,13 @@ export function SwissHome({ view }: HomeDirectionProps) {
           {/* eslint-disable-next-line jsx-a11y-x/no-redundant-roles -- Removed list styles drop list semantics in Safari. */}
           <ol aria-label="Latest stories" className="si-plates si-cover" role="list" start={1}>
             <SwissPlate story={lead} number={1} lead preload />
-            {view.recent.slice(0, coverSize - 1).map((story, index) => (
-              <SwissPlate key={story.slug} story={story} number={index + 2} />
+            {cover.map((story, index) => (
+              <SwissPlate
+                key={story.slug}
+                story={story}
+                number={index + 2}
+                alone={alone[index + 1]}
+              />
             ))}
           </ol>
           {earlier.length ? (

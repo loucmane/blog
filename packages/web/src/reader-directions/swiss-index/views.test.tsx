@@ -7,9 +7,10 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { siteName } from '@/reader/components/site-header'
 import { formatPublishedDate, formatReadingTime } from '@/reader/format'
 import { readArticleView, readHomeView, readSectionView } from '@/reader/read-model'
-import type { ArticleView, HomeView, ReaderImage, SectionView } from '@/reader/views'
+import type { ArticleView, HomeView, ReaderImage, SectionView, StoryCard } from '@/reader/views'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { InMemoryOriginalObjectStore } from '@/server/content/media'
+import { maxSectionNameLength } from '@/server/content/sections'
 import { labStories } from '@/server/lab/north-house'
 import { labStorySlug, seedLabContent } from '@/server/lab/seed'
 
@@ -48,6 +49,18 @@ function focus(image: ReaderImage) {
 
 function follows(first: Element, second: Element) {
   return Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
+}
+
+/** For each plate in a list: null without a number plate, else the widths at which it is hidden. */
+function numberPlates(list: HTMLElement) {
+  return [...list.children].map((plate) => {
+    const numberPlate = plate.querySelector('.si-number-plate')
+    return numberPlate ? (numberPlate.getAttribute('data-alone')?.split(' ') ?? []) : null
+  })
+}
+
+function withoutImages(stories: readonly StoryCard[]) {
+  return stories.map((story) => ({ ...story, image: null }))
 }
 
 /**
@@ -285,6 +298,53 @@ describe('Swiss Index with real published North House content', () => {
     }
   })
 
+  it('keeps each index row in desktop reading order: number and date, title and dek, section and reading time', () => {
+    const { screen } = markup(<SwissHome view={home} />)
+    const items = within(regionNamedBy(screen, 'Earlier stories')).getAllByRole('listitem')
+    for (const item of items) {
+      // Phones regroup the metadata visually; the DOM and focus order stay the desktop columns'.
+      expect([...item.children].map(({ className }) => className)).toEqual([
+        'si-row-meta',
+        'si-row-copy',
+        'si-row-facts',
+      ])
+      const title = within(item).getByRole('heading', { level: 3 })
+      expect(follows(item.querySelector('time')!, title)).toBe(true)
+      expect(follows(title, item.querySelector('.si-row-facts a')!)).toBe(true)
+    }
+  })
+
+  it('keeps a number plate only for an image-free plate that shares its row, at each width', () => {
+    const sectionPlates = (count: number) =>
+      numberPlates(
+        markup(
+          <SwissSection
+            view={{
+              ...section,
+              stories: withoutImages([home.lead!, ...home.recent].slice(0, count)),
+            }}
+          />,
+        ).screen.getByRole('list', { name: `${section.name} stories` }),
+      )
+    // Section plates run four across from 1024px and two by two from 600px.
+    expect(sectionPlates(1)).toEqual([null])
+    expect(sectionPlates(2)).toEqual([[], []])
+    expect(sectionPlates(3)).toEqual([[], [], ['tablet']])
+    expect(sectionPlates(4)).toEqual([[], [], [], []])
+
+    const cover = (recent: readonly StoryCard[]) =>
+      numberPlates(
+        markup(<SwissHome view={{ ...home, recent }} />).screen.getByRole('list', {
+          name: 'Latest stories',
+        }),
+      )
+    // Plate 01 spans two columns: 02 and 03 sit beside it on desktop and share a row on tablet.
+    expect(cover(withoutImages(home.recent.slice(0, 2)))).toEqual([null, [], []])
+    expect(cover(withoutImages(home.recent.slice(0, 1)))).toEqual([null, ['tablet']])
+    // The seeded cover: the chair story, 03, has no image and shares its row at every width.
+    expect(cover(home.recent)).toEqual([null, null, []])
+  })
+
   it('sets an image-free lead as a typographic lead and never promotes story 02 to the lead image', () => {
     const chair = home.recent.find((story) => !story.image)!
     const illustrated = [home.lead!, ...home.recent].filter((story) => story.image)
@@ -476,6 +536,28 @@ describe('Swiss Index with real published North House content', () => {
     const description = 'Rooms, light and the things that live in them.'
     const described = markup(<SwissSection view={{ ...section, description }} />)
     expect(described.screen.getByText(description)).toHaveClass('si-dek')
+  })
+
+  it('sets section names over 80 characters at the long title size, as the front page’s lead', () => {
+    const heading = (name: string) => {
+      const title = markup(<SwissSection view={{ ...section, name }} />).screen.getByRole(
+        'heading',
+        { level: 1 },
+      )
+      expect(title.textContent).toBe(name)
+      return title
+    }
+    const named = (length: number) =>
+      'Rooms, light and the furniture that lives in them through the long northern winter '
+        .repeat(2)
+        .slice(0, length)
+    expect(named(80)).toHaveLength(80)
+    expect(heading(named(80))).not.toHaveClass('si-title-long')
+    expect(heading(named(81))).toHaveClass('si-title-long')
+    expect(heading(named(maxSectionNameLength))).toHaveClass('si-title-long')
+    // Like the lead's, the threshold counts characters: 60 here, in 120 UTF-16 code units.
+    expect(heading('🌲'.repeat(60))).not.toHaveClass('si-title-long')
+    expect(heading(section.name)).not.toHaveClass('si-title-long')
   })
 
   it('sets plates 01 to 04 and an index from 05 without the section column', () => {

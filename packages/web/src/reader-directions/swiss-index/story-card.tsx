@@ -13,6 +13,45 @@ export const cardSizes =
 /** Titles longer than this many characters use the long title size. */
 const longTitleLength = 80
 
+/** Whether a page title or typographic lead is set at `--si-title-long`; counts characters. */
+export function isLongTitle(title: string) {
+  return [...title].length > longTitleLength
+}
+
+/** Plate columns on tablets (600px) and desktops (1024px); phones stack plates in one column. */
+const plateColumns = { tablet: 2, desktop: 4 } as const
+
+/** A layout in which plates share grid rows. */
+export type PlateWidth = keyof typeof plateColumns
+
+const plateWidths = Object.keys(plateColumns) as PlateWidth[]
+
+/**
+ * For each plate, given the columns each one spans, the layouts in which it has a grid row to
+ * itself. Plates fill rows in order, as grid auto-placement does: a plate that spans more columns
+ * than its row has left starts the next row.
+ */
+export function platesAlone(spans: readonly number[]) {
+  const alone = spans.map((): PlateWidth[] => [])
+  for (const width of plateWidths) {
+    const columns: number = plateColumns[width]
+    let row = -1
+    let used = columns
+    const rows = spans.map((span) => {
+      if (used + span > columns) {
+        row += 1
+        used = 0
+      }
+      used += span
+      return row
+    })
+    rows.forEach((plateRow, index) => {
+      if (rows.filter((other) => other === plateRow).length === 1) alone[index]!.push(width)
+    })
+  }
+  return alone
+}
+
 /** A story's place in a list, as the two-digit number the index shows. */
 export function storyNumber(number: number) {
   return String(number).padStart(2, '0')
@@ -30,25 +69,30 @@ function focus(image: ReaderImage): CSSProperties {
  * A numbered plate in a list of stories. The title link is the plate's one story link: its target
  * covers the image cell, and the section link sits above it. The front page's lead without an
  * image is set as a typographic lead; any other plate without one keeps its cell as a decorative
- * number plate, so titles stay aligned along a row.
+ * number plate in the layouts where it shares a grid row, so titles stay aligned along the row.
  */
 export function SwissPlate({
   story,
   number,
   lead = false,
   preload = false,
+  alone = [],
 }: {
   readonly story: StoryCard
   readonly number: number
   readonly lead?: boolean
   readonly preload?: boolean
+  /** The layouts in which this plate has its grid row to itself, from `platesAlone`. */
+  readonly alone?: readonly PlateWidth[] | undefined
 }) {
   const typographic = lead && !story.image
+  const numberPlate =
+    !story.image && !typographic && plateWidths.some((width) => !alone.includes(width))
   const className = [
     'si-plate',
     lead && 'si-plate-lead',
     typographic && 'si-plate-text',
-    typographic && [...story.title].length > longTitleLength && 'si-plate-long',
+    typographic && isLongTitle(story.title) && 'si-plate-long',
   ]
     .filter(Boolean)
     .join(' ')
@@ -70,11 +114,15 @@ export function SwissPlate({
             sizes={lead ? leadSizes : cardSizes}
           />
         </div>
-      ) : typographic ? null : (
-        <div aria-hidden="true" className="si-number-plate">
+      ) : numberPlate ? (
+        <div
+          aria-hidden="true"
+          className="si-number-plate"
+          data-alone={alone.join(' ') || undefined}
+        >
           {storyNumber(number)}
         </div>
-      )}
+      ) : null}
       <h2 className="si-plate-title">
         <Link href={story.href}>{story.title}</Link>
       </h2>

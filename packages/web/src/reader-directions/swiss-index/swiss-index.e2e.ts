@@ -146,6 +146,127 @@ test('sets the cover and the earlier stories as numbered lists and makes each pl
   await expect(page).toHaveURL(/\/sections\/[a-z0-9-]+$/)
 })
 
+test('keeps the cover spacing, balanced titles and underlined links over the element resets', async ({
+  page,
+}) => {
+  const wrapping = (locator: Locator) =>
+    locator.evaluateAll((elements) =>
+      elements.map((element) => getComputedStyle(element).getPropertyValue('text-wrap-style')),
+    )
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const path of ['/', sectionPath]) {
+      await page.goto(path)
+      const swiss = page.locator(root)
+      const label = `${path} at ${width}`
+      const titles = await wrapping(swiss.locator('.si-plate-title'))
+      expect(titles.length, label).toBeGreaterThan(0)
+      expect(new Set(titles), label).toEqual(new Set(['balance']))
+      if (path === '/') {
+        expect(
+          await swiss
+            .locator('.si-cover')
+            .evaluate((element) => getComputedStyle(element).paddingTop),
+          label,
+        ).toBe('24px')
+        expect(
+          new Set(await wrapping(swiss.locator('.si-row-title, .si-label-row h2'))),
+          label,
+        ).toEqual(new Set(['pretty']))
+      } else {
+        expect(await wrapping(swiss.locator('main h1')), label).toEqual(['balance'])
+      }
+      expect(
+        await swiss
+          .getByRole('link', { name: 'Back to top' })
+          .evaluate((element) => getComputedStyle(element).textDecorationLine),
+        label,
+      ).toBe('underline')
+    }
+  }
+})
+
+test('sets earlier stories as a metadata line above the title on phones and in columns from 600 pixels', async ({
+  page,
+}) => {
+  const box = async (locator: Locator) => (await locator.boundingBox())!
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+    const rows = page
+      .locator(root)
+      .getByRole('region', { name: 'Earlier stories' })
+      .getByRole('listitem')
+    await expect(rows).toHaveCount(5)
+    for (const row of await rows.all()) {
+      const heading = row.getByRole('heading', { level: 3 })
+      const name = `${await heading.textContent()} at ${width}`
+      const title = await box(heading)
+      const number = await box(row.locator('.si-number'))
+      const section = await box(row.locator('.si-row-facts a'))
+      const metadata = [
+        number,
+        await box(row.locator('time')),
+        section,
+        await box(row.locator('.si-row-facts .si-reading-time')),
+      ]
+      if (width < 600) {
+        // One metadata line, wrapped where it must, then the title.
+        for (const part of metadata) expect(part.y + part.height, name).toBeLessThanOrEqual(title.y)
+      } else if (width < 1024) {
+        // Column 1 holds all the metadata, column 2 the title and dek.
+        for (const part of metadata) expect(part.x + part.width, name).toBeLessThanOrEqual(title.x)
+      } else {
+        // Number and date, then the title and dek, then the section and reading time.
+        expect(number.x + number.width, name).toBeLessThanOrEqual(title.x)
+        expect(title.x + title.width, name).toBeLessThanOrEqual(section.x)
+        expect(section.y, name).toBeLessThan(title.y + title.height)
+      }
+      expect((await box(row.locator('.si-row-dek'))).y, name).toBeGreaterThanOrEqual(
+        title.y + title.height,
+      )
+    }
+  }
+})
+
+test('shows a number plate where an image-free plate shares its row, and none on phones', async ({
+  page,
+}) => {
+  for (const [width, shown] of [
+    [390, false],
+    [768, true],
+    [1440, true],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 })
+    // The chair story has no image: 03 on the cover beside 02, and 01 in Craft beside 02.
+    for (const path of ['/', '/sections/craft']) {
+      await page.goto(path)
+      const plate = page.locator(root).locator('.si-plates .si-number-plate')
+      await expect(plate, `${path} at ${width}`).toHaveCount(1)
+      if (shown) await expect(plate, `${path} at ${width}`).toBeVisible()
+      else await expect(plate, `${path} at ${width}`).toBeHidden()
+    }
+  }
+})
+
+test('keeps the section index and the site index at 13 pixels on phones', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  for (const path of ['/', sectionPath]) {
+    await page.goto(path)
+    for (const name of ['Sections', 'Site index']) {
+      const sizes = await page
+        .locator(root)
+        .getByRole('navigation', { name })
+        .getByRole('link')
+        .evaluateAll((links) => links.map((link) => getComputedStyle(link).fontSize))
+      expect(new Set(sizes), `${name} on ${path}`).toEqual(new Set(['13px']))
+    }
+  }
+})
+
 test('walks the keyboard from the skip link through the masthead to the footer and back to top', async ({
   page,
 }) => {

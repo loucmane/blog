@@ -1,17 +1,22 @@
-/** Emitted and scoped by the active direction root; no imported stylesheets. */
+/**
+ * Emitted and scoped by the active direction root; no imported stylesheets. Element resets wrap the
+ * page in `:where()`, so they carry no more than the root's specificity and every component rule
+ * overrides them, whatever its order.
+ */
 export const styles = `
   & { background: var(--si-paper); color: var(--si-ink); }
   & .si-page { min-height: 100vh; font-family: var(--si-sans); font-size: var(--si-body); font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
-  & .si-page * { box-sizing: border-box; min-width: 0; }
+  & :where(.si-page) * { box-sizing: border-box; min-width: 0; }
   & .si-page ::selection { background: var(--si-ink); color: var(--si-paper); }
-  & .si-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, dd, figure, blockquote) { margin: 0; }
-  & .si-page :is(h1, h2, h3, h4, h5, h6) { font-family: var(--si-sans); font-weight: 700; letter-spacing: -0.035em; text-wrap: pretty; }
-  & .si-page :is(ul, ol) { padding: 0; list-style: none; }
-  & .si-page a { color: inherit; text-decoration: none; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+  & :where(.si-page) :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, dd, figure, blockquote) { margin: 0; }
+  & :where(.si-page) :is(h1, h2, h3, h4, h5, h6) { font-family: var(--si-sans); }
+  & :where(.si-page) :where(h1, h2, h3, h4, h5, h6) { font-weight: 700; letter-spacing: -0.035em; text-wrap: pretty; }
+  & :where(.si-page) :where(ul, ol) { padding: 0; list-style: none; }
+  & :where(.si-page) a { color: inherit; text-decoration: none; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
   & .si-page a:hover { text-decoration: underline; }
   & .si-page :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
-  & .si-page img { border-radius: 0; }
-  & .si-page time { font-variant-numeric: tabular-nums; }
+  & :where(.si-page) img { border-radius: 0; }
+  & :where(.si-page) time { font-variant-numeric: tabular-nums; }
   & .si-page figcaption { margin-top: 0.75rem; font-family: var(--si-mono); font-size: var(--si-small); color: var(--si-secondary); line-height: 1.7; }
   & .si-page figcaption a { display: inline-block; min-height: 44px; padding-block: 0.625rem; text-decoration: underline; }
   & .si-skip { position: absolute; top: 1rem; left: var(--si-gutter); z-index: 20; transform: translateY(-200%); padding: 1rem; background: var(--si-paper); font-family: var(--si-mono); font-size: var(--si-small); }
@@ -117,6 +122,7 @@ export const styles = `
   & .si-body hr { border: 0; border-top: 4px solid var(--si-ink); margin-block: 3rem; }
   & .si-section-header { padding-block: 2rem var(--si-space); }
   & .si-section-header h1 { margin-top: 1.5rem; font-size: var(--si-title); font-weight: 800; line-height: 1; letter-spacing: -0.06em; text-wrap: balance; }
+  & .si-section-header h1.si-title-long { font-size: var(--si-title-long); line-height: 1.05; }
   & .si-section-empty { border-top: 1px solid var(--si-ink); padding-block: 2rem; }
   & .si-section-empty p:first-child { color: var(--si-secondary); }
   & .si-section-empty a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 1rem; font-family: var(--si-mono); font-size: var(--si-small); text-decoration: underline; }
@@ -131,6 +137,7 @@ export const styles = `
     & .si-row-meta { grid-area: 1 / 1; }
     & .si-row-facts { grid-area: 2 / 1; }
     & .si-row-copy, & .si-index-sectionless .si-row-copy { grid-area: 1 / 2 / span 2; }
+    & .si-number-plate[data-alone~='tablet'] { display: none; }
     & .si-empty, & .si-footer { grid-template-columns: 1fr; }
     & .si-empty > *, & .si-footer .si-nav { grid-column: 1; }
     & .si-footer .si-nav ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -146,14 +153,16 @@ export const styles = `
     & .si-nav ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     & .si-nav li { padding-left: 0.5rem; }
     & .si-nav li[data-current] { padding-left: calc(0.5rem - 3px); }
-    & .si-nav a { font-size: var(--si-label); }
     & .si-plates { grid-template-columns: 1fr; }
     & .si-plate-lead { grid-column: auto; }
     & .si-number-plate { display: none; }
-    & .si-index > li { grid-template-columns: 1fr; grid-template-rows: none; }
-    & .si-row-meta, & .si-row-facts { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; }
-    & .si-row-meta, & .si-row-facts, & .si-row-copy, & .si-index-sectionless .si-row-copy { grid-area: auto; }
+    & .si-index > li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; }
+    & .si-row-meta, & .si-row-facts { display: contents; }
+    & .si-row-copy { order: 1; flex-basis: 100%; margin-top: 0.25rem; }
     & .si-body [data-block='gallery'] { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 1024px) {
+    & .si-number-plate[data-alone~='desktop'] { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     & .si-page *, & .si-page *::before, & .si-page *::after { scroll-behavior: auto; animation: none; transition: none; }
