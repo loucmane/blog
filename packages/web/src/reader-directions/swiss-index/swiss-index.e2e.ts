@@ -1910,8 +1910,31 @@ for (const width of [390, 1440]) {
         }),
         name,
       ).toEqual(['solid', '2px'])
-      // The focused skip link overlays the masthead only while focused; axe would count that
-      // transient overlap as obscured targets, so audit the page at rest.
+      // Focused, the skip link must be the topmost element across its whole box, so every part of
+      // it can be clicked (axe's target-size rule also counts the wordmark it covers while focused).
+      expect(
+        await skip.evaluate((element) => {
+          const box = element.getBoundingClientRect()
+          const points: [number, number][] = [
+            [0.5, 0.1],
+            [0.5, 0.5],
+            [0.5, 0.9],
+            [0.1, 0.5],
+            [0.9, 0.5],
+          ]
+          return points.every(([x, y]) =>
+            element.contains(
+              document.elementFromPoint(box.x + box.width * x, box.y + box.height * y),
+            ),
+          )
+        }),
+        `${name}: focused skip link on top`,
+      ).toBe(true)
+      await testInfo.attach(`forced-colours-${label}-${width}-skip-focused.png`, {
+        body: await page.screenshot({ animations: 'disabled' }),
+        contentType: 'image/png',
+      })
+      // Audit the page at rest: the overlap above exists only while the skip link has focus.
       await skip.blur()
       // In forced colours the user's palette sets contrast, and axe pairs authored text colours
       // with forced backgrounds: contrast is checked in the normal themes, and the screenshots
