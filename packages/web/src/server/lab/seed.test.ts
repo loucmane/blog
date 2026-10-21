@@ -31,6 +31,7 @@ import type * as Illustrations from './illustrations'
 import { renderIllustration } from './illustrations'
 import {
   LabSeedBusyError,
+  LabSeedSessionLimitsError,
   labSeedAllowed,
   labStorySlug,
   seedLabContent,
@@ -116,7 +117,7 @@ describe('seed concurrency and media preservation', () => {
   )
 
   it.each(['upload', 'verification'])(
-    'releases the seed lock and rolls back a failed %s',
+    'releases the seed lock and writes no media row after a failed %s',
     async (failure) => {
       const repository = new InMemoryContentRepository()
       const objects = new InMemoryOriginalObjectStore()
@@ -233,6 +234,59 @@ describe('seed time limits', () => {
     expect((await seedLabContent({ repository, objects: null })).stories.created).toHaveLength(
       labStories.length,
     )
+  })
+})
+
+describe('refused seed session limits', () => {
+  /** A driver error like the ones pg raises for a PostgreSQL error response. */
+  function databaseError(code: string | undefined, message: string) {
+    return Object.assign(new Error(message), { code })
+  }
+
+  it.each([
+    ['42704', 'unrecognized configuration parameter "idle_session_timeout"'],
+    ['42501', 'permission denied to set parameter "idle_in_transaction_session_timeout"'],
+    ['0A000', 'setting "lock_timeout" is not supported'],
+  ])('explains that the database refused a session limit (SQLSTATE %s)', async (code, message) => {
+    const repository = new InMemoryContentRepository()
+    const refused = databaseError(code, message)
+    vi.spyOn(repository, 'tryExclusive').mockRejectedValueOnce(refused)
+
+    const run = seedLabContent({ objects: null, repository })
+
+    await expect(run).rejects.toBeInstanceOf(LabSeedSessionLimitsError)
+    await expect(run).rejects.toMatchObject({
+      cause: refused,
+      message: expect.stringContaining(`(SQLSTATE ${code})`),
+    })
+    await expect(run).rejects.toThrow('PostgreSQL 14 or later')
+    await expect(run).rejects.toThrow('Retrying will not help')
+  })
+
+  it('explains a refusal when a transaction refreshes the limits', async () => {
+    const repository = new InMemoryContentRepository()
+    const refused = databaseError('42501', 'permission denied to set parameter "statement_timeout"')
+    vi.spyOn(repository, 'transaction').mockRejectedValueOnce(refused)
+
+    await expect(seedLabContent({ objects: null, repository })).rejects.toMatchObject({
+      cause: refused,
+      name: 'LabSeedSessionLimitsError',
+    })
+  })
+
+  it.each([
+    ['42501', 'permission denied for table taxonomies'],
+    ['42501', 'permission denied to set parameter "deadlock_timeout"'],
+    ['42704', 'type "fixture" does not exist'],
+    ['57P05', 'terminating connection due to idle-session timeout'],
+    ['25P03', 'terminating connection due to idle-in-transaction timeout'],
+    [undefined, 'unrecognized configuration parameter "idle_session_timeout"'],
+  ])('leaves any other failure as it is (SQLSTATE %s: %s)', async (code, message) => {
+    const repository = new InMemoryContentRepository()
+    const failure = databaseError(code, message)
+    vi.spyOn(repository, 'tryExclusive').mockRejectedValueOnce(failure)
+
+    await expect(seedLabContent({ objects: null, repository })).rejects.toBe(failure)
   })
 })
 

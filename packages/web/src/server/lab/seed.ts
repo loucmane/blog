@@ -68,6 +68,32 @@ export class LabSeedBusyError extends Error {
   }
 }
 
+/** The limits the seed's dedicated PostgreSQL session sets before its lock and each transaction. */
+const sessionLimitSettings =
+  /\b(?:statement_timeout|lock_timeout|idle_in_transaction_session_timeout|idle_session_timeout)\b/i
+
+/** An unknown setting (PostgreSQL below 14), a forbidden one, or one the server does not support. */
+const refusedSettingCodes = new Set(['42704', '42501', '0A000'])
+
+/** The database refused a session limit: a configuration problem that retrying cannot fix. */
+export class LabSeedSessionLimitsError extends Error {
+  constructor(code: string, cause: unknown) {
+    super(
+      `The database refused the session limits the lab seed sets on its connection (SQLSTATE ${code}). The seed needs PostgreSQL 14 or later, with permission to set statement_timeout, lock_timeout, idle_in_transaction_session_timeout and idle_session_timeout. Retrying will not help until the database configuration changes.`,
+      { cause },
+    )
+    this.name = 'LabSeedSessionLimitsError'
+  }
+}
+
+/** The SQLSTATE of a database error that refuses one of the seed's session limits, or null. */
+function refusedSessionLimit(error: unknown): string | null {
+  if (!(error instanceof Error) || !('code' in error) || typeof error.code !== 'string') return null
+  return refusedSettingCodes.has(error.code) && sessionLimitSettings.test(error.message)
+    ? error.code
+    : null
+}
+
 export interface LabSeedHooks extends LabSeedTimeouts {
   /** An optional instrumentation barrier after reading an asset, while holding the seed lock. */
   readonly afterMediaCheck?: (id: string) => Promise<void>
@@ -302,14 +328,20 @@ export async function seedLabContent(
   hooks: LabSeedHooks = {},
 ): Promise<LabSeedReport> {
   const limits = new LabSeedLimits(hooks)
-  const result = await target.repository.tryExclusive(
-    seedLockKey,
-    (repository) =>
-      seedLockedContent({ ...target, repository: limits.repository(repository) }, hooks, limits),
-    limits.database,
-  )
-  if (!result.acquired) throw new LabSeedBusyError()
-  return result.value
+  try {
+    const result = await target.repository.tryExclusive(
+      seedLockKey,
+      (repository) =>
+        seedLockedContent({ ...target, repository: limits.repository(repository) }, hooks, limits),
+      limits.database,
+    )
+    if (!result.acquired) throw new LabSeedBusyError()
+    return result.value
+  } catch (error) {
+    const code = refusedSessionLimit(error)
+    if (code) throw new LabSeedSessionLimitsError(code, error)
+    throw error
+  }
 }
 
 async function seedLockedContent(

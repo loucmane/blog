@@ -342,13 +342,13 @@ nine PNG originals**. Check `stories.created`, `stories.existing`,
 `stories.slugInUse`, `images.created`, `images.existing` and `images.skipped` in the
 report. Open the actual stories, sections and images before declaring success.
 
-| Result                                           | Meaning / action                                                                                                              |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| App HTTP 409                                     | Another seed holds the database lock, including on another instance. Wait, inspect the lab and retry; do not force-unlock it. |
-| App HTTP 404                                     | Seed disabled or token rejected. Check deployed token, explicit `preview` declaration and provider signals.                   |
-| App HTTP 503                                     | Invalid/missing content or media configuration, including forbidden fixture mode. Correct configuration and redeploy.         |
-| Redirect, provider 401/403, HTML instead of JSON | Protection intercepted the request. Use the protected helper; do not disable protection or create a public exception.         |
-| Timeout / other failure                          | A partial seed may remain. Inspect logs/data/pages, wait for the active run to end, then retry.                               |
+| Result                                           | Meaning / action                                                                                                                                                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| App HTTP 409                                     | Another seed holds the database lock, including on another instance. Wait for it to end (about five minutes at most; see the limits below), inspect the lab and retry; do not force-unlock it.                      |
+| App HTTP 404                                     | Seed disabled or token rejected. Check deployed token, explicit `preview` declaration and provider signals.                                                                                                         |
+| App HTTP 503                                     | Invalid/missing content or media configuration, including forbidden fixture mode, or a database that refuses the seed's session limits (see below). Correct configuration and redeploy; retrying alone never helps. |
+| Redirect, provider 401/403, HTML instead of JSON | Protection intercepted the request. Use the protected helper; do not disable protection or create a public exception.                                                                                               |
+| Timeout / other failure                          | A partial seed may remain. Inspect logs/data/pages, wait for the active run to end, then retry. A configuration refusal returns 503 instead; retrying does not fix it.                                              |
 
 Seeding is incremental, not one transaction. Retry preserves existing sample IDs,
 owner edits, unpublished status, section choices and media metadata/originals.
@@ -359,11 +359,25 @@ repaired or republished.
 
 The server has a five-minute run deadline. Storage PUT/verification, SQL statement,
 lock and idle-transaction waits are capped at 30 seconds and shortened to remaining
-time. Startup has a ten-second connection timeout; rollback, unlock and shutdown
-each have five-second cleanup bounds. Failed cleanup destroys the dedicated
-connection to release its lock. A caller timeout does not cancel work while the
-host keeps it alive; platform termination can interrupt it. The application's
-deadline does not override Vercel's limit.
+time. Storage work runs between database transactions, never inside one, so a slow
+upload cannot reach the idle-transaction limit. Startup has a ten-second connection
+timeout; rollback, unlock and shutdown each have five-second cleanup bounds. Failed
+cleanup destroys the dedicated connection to release its lock. If the host stops
+without closing that connection, PostgreSQL still ends the session: after 30
+seconds idle inside a transaction, or between transactions once the rest of the run
+deadline has passed (`idle_session_timeout`). Either way the lock is free at the
+latest about five minutes after the seed started. A caller timeout does not cancel
+work while the host keeps it alive; platform termination can interrupt it. The
+application's deadline does not override Vercel's limit.
+
+These session limits require **PostgreSQL 14 or later** (`idle_session_timeout`
+was added in 14) and a role that may set `statement_timeout`, `lock_timeout`,
+`idle_in_transaction_session_timeout` and `idle_session_timeout` on its own session.
+The setup above selects PostgreSQL 18 on a direct connection. A database that
+refuses one fails the seed before it takes its lock, with HTTP 503. The response
+and the function log give the SQLSTATE: 42704 means an older PostgreSQL, 42501 a
+setting the provider forbids, 0A000 one it does not support. Retrying never helps:
+correct the database or its role, then seed again.
 
 After checking the sample, remove `MAGAZINE_LAB_SEED_TOKEN` from Preview and
 redeploy. Verify a seed POST through the provider gate now returns the app's 404,

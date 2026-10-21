@@ -6,7 +6,12 @@ import {
   secureTokenMatches,
 } from '@/lib/request-security'
 import { expirePublicReader } from '@/reader/cache'
-import { LabSeedBusyError, labSeedAllowed, seedLabContent } from '@/server/lab/seed'
+import {
+  LabSeedBusyError,
+  LabSeedSessionLimitsError,
+  labSeedAllowed,
+  seedLabContent,
+} from '@/server/lab/seed'
 import { OwnerConfigurationError } from '@/server/owner/config'
 import { getOwnerRuntime, type OwnerRuntime } from '@/server/owner/runtime'
 
@@ -60,6 +65,12 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof LabSeedBusyError) {
       return NextResponse.json({ error: error.message }, { headers, status: 409 })
+    }
+    // A configuration problem like a missing store: retrying cannot fix it. The fixed message
+    // names the SQLSTATE, never the database's own error text, in the response and the log.
+    if (error instanceof LabSeedSessionLimitsError) {
+      console.error(error.message)
+      return NextResponse.json({ error: error.message }, { headers, status: 503 })
     }
     throw error
   }
