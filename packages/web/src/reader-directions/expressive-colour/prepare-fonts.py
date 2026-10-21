@@ -2,7 +2,8 @@
 
 python3 prepare-fonts.py /path/to/fontsource-variable-fraunces-5.3.0.tgz
 Verifies the archive, retains all characters/features, checks outlines/advances,
-then writes the two processed faces and their provenance. Never runs in the app.
+then writes the two processed faces, their provenance and the hashes fonts.ts
+declares for them, which version the font URLs. Never runs in the app.
 """
 
 import argparse
@@ -53,6 +54,18 @@ def verify_geometry(original, result):
     return round(maximum, 6)
 
 
+def update_declared_hashes(declarations, hashes):
+    """Replace each face's old hash in fonts.ts with its new one.
+
+    The first 16 digits of a declared hash version the face's URL, which is cached
+    for a year as immutable, so new bytes under the old name need the new hash.
+    """
+    for old, new in hashes:
+        assert declarations.count(f"'{old}'") == 1, f"fonts.ts must declare {old} once"
+        declarations = declarations.replace(f"'{old}'", f"'{new}'")
+    return declarations
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
@@ -62,9 +75,11 @@ def main():
     folder = Path(__file__).resolve().parents[3] / "public/reader-directions/expressive-colour/fonts"
     manifest = folder / "sources.json"
     sources = json.loads(manifest.read_text())
+    declarations_file = Path(__file__).resolve().parent / "fonts.ts"
     archive = args.archive.read_bytes()
     integrity = "sha512-" + base64.b64encode(hashlib.sha512(archive).digest()).decode()
     results = []
+    hashes = []
     with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as tar:
         for source in sources:
             if not source["file"].startswith("fraunces-"):
@@ -95,6 +110,7 @@ def main():
             data = output.getvalue()
             error = verify_geometry(original, TTFont(io.BytesIO(data)))
             old_file = source["file"]
+            hashes.append((source["sha256"], hashlib.sha256(data).hexdigest()))
             source.update(
                 file=old_file.replace("-soft-", "-reader-"),
                 bytes=len(data),
@@ -111,9 +127,11 @@ def main():
             )
             results.append((old_file, source["file"], data))
             print(source["file"], len(data), "bytes; max outline/advance error:", error)
+    declarations = update_declared_hashes(declarations_file.read_text(), hashes)
     # Write only after both faces have passed all checks.
     if args.check:
         assert sources == json.loads(manifest.read_text()), "Provenance differs"
+        assert declarations == declarations_file.read_text(), "Declared hashes differ"
         for _, new_file, data in results:
             assert (folder / new_file).read_bytes() == data, "Processed font differs"
         return
@@ -122,6 +140,7 @@ def main():
         if old_file != new_file:
             (folder / old_file).unlink()
     manifest.write_text(json.dumps(sources, indent=2) + "\n")
+    declarations_file.write_text(declarations)
 
 
 if __name__ == "__main__":
