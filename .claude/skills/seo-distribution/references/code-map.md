@@ -3,6 +3,9 @@
 Snapshot: Task 54 starting commit `efd9166e3e73c485991df47c5ca02693f4d3246e`.
 Re-read affected files at the reviewed revision; report drift rather than repeating this
 snapshot. The Phase 5 plan is design evidence, not proof of a running feature.
+Redirect and robots-header details below were rechecked against local `origin/main`
+at `28935cce6f6a22140ec6b3b33bfa2c6105159c30` on 2026-10-21; other rows retain the
+original snapshot scope.
 
 ## Existing surfaces
 
@@ -17,8 +20,8 @@ snapshot. The Phase 5 plan is design evidence, not proof of a running feature.
 | `packages/web/src/reader/read-model.ts` | Published revision supplies title and summary; href uses the current article slug, authors are empty, and section description is null. Do not infer real bylines from the metadata mapping. |
 | `packages/web/src/server/content/service.ts` | changeSlug validates expected version and slug, saves a SlugRedirect and updated article in a transaction, records a publication change and audits article.slug-changed. The audit entry is not an outbox event; this method has no saveOutbox call. Stored redirects do not prove public redirect resolution. |
 | `packages/web/public/robots.txt` | Static User-agent `*` and empty Disallow; it contains no sitemap declaration or private-route exclusions. Do not describe the planned robots policy as shipped. |
-| `packages/web/src/app/preview/stories/[slug]/page.tsx` | Has robots metadata for preview. Inspect route authorization separately; metadata is not an access-control test. |
-| `packages/web/next.config.ts` | Defines X-Robots-Tag for sensitive route patterns alongside other security headers. Inspect the exact matchers and response before claiming a route is excluded. The static robots file is a separate layer. |
+| `packages/web/src/app/preview/stories/[slug]/page.tsx` | Preview relies on page robots metadata (`index: false`, `follow: false`); its configured preview headers do not include X-Robots-Tag. Inspect route authorization separately; metadata is not an access-control test. |
+| `packages/web/next.config.ts` | Already defines the permanent `/blog/:slug` to `/stories/:slug` redirect; this preserves the slug and does not resolve historical article slugs. X-Robots-Tag (`noindex, nofollow, noarchive`) is supplied only by owner privacy headers: `/owner/:path*`, `/api/owner/:path*`, and reader routes (`/`, `/stories/:slug`, `/sections/:slug`, `/authors/:slug`, `/topics/:slug`) carrying the `reader_lab_direction` cookie. `/preview/:path*` uses preview privacy headers without X-Robots-Tag. Inspect the matchers and response before claiming exclusion; the static robots file is a separate layer. |
 
 ## Planned surfaces and ownership
 

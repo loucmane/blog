@@ -3,6 +3,9 @@
 Snapshot: Task 54 starting commit `efd9166e3e73c485991df47c5ca02693f4d3246e`.
 Inspect these files at the reviewed revision before using their commands or assumptions.
 This map describes configured checks, not successful executions of them.
+The unit-step example and dependency-review job below were rechecked against local
+`origin/main` at `28935cce6f6a22140ec6b3b33bfa2c6105159c30` on 2026-10-21;
+other entries retain the original snapshot scope.
 
 ## Existing checks
 
@@ -12,6 +15,7 @@ This map describes configured checks, not successful executions of them.
 | `.github/workflows/ci.yml` workspace job | Collects outcomes for runtime bootstrap/contract, frozen install, dependency security, typecheck, lint, format, unit/coverage tests, build, browser installation, baseline ratchet, browser tests and production smoke. Many steps continue-on-error to collect evidence; Enforce workspace results requires every listed outcome to be success. A skipped prerequisite-dependent check is not success. |
 | `.github/workflows/ci.yml` governance job | Checks skill platform, policy/workflow contracts, frozen Taskmaster/Aegis archive integrity, native coordination and legacy guard. Those historical integrity checks do not restore Taskmaster/Aegis as active workflow authority. Failure artifacts are uploaded conditionally; an absent artifact is not proof of a passing run. |
 | `.github/workflows/ci.yml` secret-scan job | Standard events use a pinned Gitleaks action; trusted dispatch uses a checksum-verified CLI. A workflow definition is not evidence that either scan ran for a particular candidate. |
+| `.github/workflows/ci.yml` dependency-review job | Runs only for pull_request events and uses the pinned dependency-review action with fail-on-severity set to moderate. This PR dependency-change review is separate from the workspace dependency audit; it does not run on push or dispatch, and its configuration is not proof of execution. |
 | `.github/workflows/auto-merge.yml` and `scripts/ci/auto-merge-policy.mjs` | Uses policy from the protected default branch, checks candidate identity and file inventory, validates check runs, rechecks PR state and matches the head commit when merging. It then dispatches post-merge CI with the merge SHA and reviewed head SHA. Existing automation does not grant this skill permission to label, merge or dispatch. |
 | `scripts/ci/check-test-capability.mjs` | Checks supported unit/browser capability, scripts, critical test inventory and disabled modifiers. Expected browser projects are desktop-chromium and mobile-chromium. This static source/config validation does not run those tests. It reads a historical Task 39 lifecycle field; do not update frozen state to satisfy it. |
 | `scripts/ci/check-test-results.mjs` | Vitest requires positive total, success, zero failed/pending/todo, all passed, nonempty assertion files and critical contracts exactly once. Playwright requires exact project inventory, executed specs, zero skipped/unexpected/flaky and runner errors, passing attempts and critical journeys once per project. CLI requires forbidOnly when CI is exactly true. Passing retries do not erase failed attempts under this contract. |
@@ -25,6 +29,16 @@ This map describes configured checks, not successful executions of them.
 `tests/ci/auto-merge-policy.test.mjs` and `tests/ci/auto-merge-workflow.test.mjs`
 exercise the verification machinery. Their pass counts are distinct from application tests,
 browser journeys or a live vulnerability scan.
+
+## Worked example: an overstated CI label
+
+The step named **Unit and integration tests** runs `pnpm test:capability unit`,
+`pnpm test:quality-contract`, and `pnpm test:coverage`. The default Vitest configuration
+excludes `*.integration.test.ts`; database integration selection requires
+`TASK42_CONTENT_INTEGRATION=1`, which the separate `test:content:integration` runner
+sets. This CI step does not invoke that runner. Report the commands and their actual
+results, with database integration execution unproven by this step, even if the step
+is green. Bead `blog-ued4` tracks the CI gap; the label alone is not coverage evidence.
 
 ## Deployment and recovery: requirements versus proof
 
