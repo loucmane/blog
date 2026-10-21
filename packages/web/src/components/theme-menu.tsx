@@ -3,7 +3,7 @@
 import { Menu } from '@base-ui/react/menu'
 import { Check, Monitor, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -35,8 +35,16 @@ export interface ThemeMenuProps {
 export function ThemeMenu({ className }: ThemeMenuProps) {
   const { resolvedTheme, setTheme, theme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  // Base UI portals into the global document. A trigger rendered into another document, such as
+  // a Reader Lab comparison frame, keeps the popup there, where it is positioned and dismissed.
+  const [portalContainer, setPortalContainer] = useState<HTMLElement>()
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+    const owner = triggerRef.current?.ownerDocument
+    if (owner && owner !== document) setPortalContainer(owner.body)
+  }, [])
 
   const selectedTheme = mounted && theme ? theme : 'system'
   const TriggerIcon = mounted && resolvedTheme === 'dark' ? Moon : Sun
@@ -53,11 +61,12 @@ export function ThemeMenu({ className }: ThemeMenuProps) {
         )}
         data-slot="theme-menu-trigger"
         disabled={!mounted}
+        ref={triggerRef}
       >
         <TriggerIcon aria-hidden="true" className="size-4" />
         <span>Theme</span>
       </Menu.Trigger>
-      <Menu.Portal>
+      <Menu.Portal container={portalContainer}>
         <Menu.Positioner align="end" className="z-50 outline-none" sideOffset={8}>
           <Menu.Popup
             aria-label="Color theme"

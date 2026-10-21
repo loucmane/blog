@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { ThemeMenu } from '@/components/theme-menu'
 
 import { CompareFrames } from './compare-frames'
 
@@ -10,9 +14,10 @@ afterEach(() => {
   cleanup()
   document.head.innerHTML = ''
   document.documentElement.className = ''
+  vi.unstubAllGlobals()
 })
 
-function mountedFrames() {
+function mountedFrames(header?: ReactNode) {
   const items = ['alpha', 'bravo'].map((id) => ({
     id,
     name: id,
@@ -26,6 +31,7 @@ function mountedFrames() {
           href={`reader-direction-styles-${id}`}
           precedence="reader-direction"
         >{`[data-reader-direction="${id}"] { color: red; }`}</style>
+        {header}
         <a href="#story-title">Skip to story</a>
         <h1 id="story-title">The same story</h1>
         <Link href="/stories/another-story">Another story</Link>
@@ -107,5 +113,31 @@ describe('comparison frames', () => {
     expect(event.defaultPrevented).toBe(true)
     expect(scroll).toHaveBeenCalledWith({ block: 'start' })
     expect(child.activeElement).toBe(target)
+  })
+  it('opens a direction Theme menu inside its own frame, never in the workspace document', async () => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        disconnect() {}
+        observe() {}
+        unobserve() {}
+      },
+    )
+    const frames = mountedFrames(<ThemeMenu />)
+    const child = frames[0]!.contentDocument!
+    const preview = within(child.body)
+    const trigger = preview.getByRole('button', { name: 'Choose color theme' })
+    await waitFor(() => expect(trigger).toBeEnabled())
+    const user = userEvent.setup({ document: child })
+    await user.click(trigger)
+
+    const menu = await preview.findByRole('menu')
+    expect(menu.closest('[data-base-ui-portal]')?.parentElement).toBe(child.body)
+    expect(document.querySelector('[data-base-ui-portal]')).toBeNull()
+    expect(frames[1]!.contentDocument!.querySelector('[data-base-ui-portal]')).toBeNull()
+
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(preview.queryByRole('menu')).toBeNull())
+    expect(child.activeElement).toBe(trigger)
   })
 })
