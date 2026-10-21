@@ -20,7 +20,9 @@ Read [the code map](references/code-map.md) for the affected surface and
    normalization, current and historical slugs, chained **slug redirects**, loops, unknown
    and withdrawn content, and query parameters. Stored redirects do not prove public
    redirect resolution. Check actual status and Location plus the destination canonical;
-   distinguish a proposed 308/410 contract from the current 404 behavior.
+   distinguish proposed historical-slug 308/410 handling from the current 404 for old
+   article slugs. The permanent `/blog/:slug` to `/stories/:slug` path redirect already
+   exists; it does not resolve an article's historical slug.
 3. Review **schema.org structured data** and JSON-LD against visible published content:
    article identity, headline, dates, authors, image and publisher. Do not invent authors,
    dates, ratings, or organization facts to fill a schema. For **social cards**, distinguish
