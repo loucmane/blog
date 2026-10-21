@@ -69,6 +69,29 @@ function labBar(page: Page) {
   return page.getByRole('region', { exact: true, name: 'Reader Lab' })
 }
 
+/** Where an open Theme menu sits in its own document: inside the viewport, next to its trigger. */
+function themeMenuPlacement(menu: Locator) {
+  return menu.evaluate((element) => {
+    const viewport = element.ownerDocument.documentElement
+    const box = element.getBoundingClientRect()
+    const anchor = element.ownerDocument
+      .querySelector('[data-slot="theme-menu-trigger"][aria-expanded="true"]')
+      ?.getBoundingClientRect()
+    return {
+      insideViewport:
+        box.left >= 0 &&
+        box.top >= 0 &&
+        box.right <= viewport.clientWidth &&
+        box.bottom <= viewport.clientHeight,
+      nextToTrigger:
+        anchor !== undefined &&
+        box.left < anchor.right &&
+        box.right > anchor.left &&
+        (box.top >= anchor.bottom || box.bottom <= anchor.top),
+    }
+  })
+}
+
 /** Clicks a lab bar control and waits for its Server Action, which posts to the current page. */
 async function submitInPlace(page: Page, control: Locator) {
   const currentPath = new URL(page.url()).pathname
@@ -259,6 +282,58 @@ test('reaches the lab bar from the keyboard with a visible focus, and hides it i
 
   await page.keyboard.press('Enter')
   await expect(labBar(page)).toHaveCount(0)
+})
+
+test('opens each preview Theme menu inside its own frame and viewport on the compare page', async ({
+  context,
+  page,
+  request,
+}) => {
+  test.setTimeout(120_000)
+  await seedReaderLab(request)
+  await authenticate(context)
+  await page.goto('/owner/reader-lab/compare')
+  const previews = page.locator('[data-compare-direction]')
+  await expect(previews.first()).toBeVisible()
+  const ids = await previews.evaluateAll((items) =>
+    items.map((item) => item.getAttribute('data-compare-direction') ?? ''),
+  )
+  const preview = (id: string) => page.frameLocator(`[data-compare-direction="${id}"] iframe`)
+
+  const checked: string[] = []
+  for (const preset of ['Mobile · 390 px', 'Desktop · 1440 px']) {
+    await page.getByRole('radio', { name: preset }).check()
+    for (const id of ids) {
+      const label = `${id} at ${preset}`
+      const frame = preview(id)
+      await expect(frame.locator(`[data-reader-direction="${id}"]`), label).toHaveCount(1)
+      const trigger = frame.getByRole('button', { name: 'Choose color theme' })
+      // Some directions have no Theme menu.
+      if ((await trigger.count()) === 0) continue
+      await trigger.click()
+      const menu = frame.getByRole('menu')
+      await expect(menu, label).toBeVisible()
+      await expect(page.locator('[data-slot="theme-menu-content"]'), label).toHaveCount(0)
+      await expect
+        .poll(() => themeMenuPlacement(menu), { message: label })
+        .toEqual({ insideViewport: true, nextToTrigger: true })
+      await page.keyboard.press('Escape')
+      await expect(menu, label).toBeHidden()
+      await expect(trigger, label).toBeFocused()
+      checked.push(label)
+    }
+  }
+  expect(checked).toEqual(
+    expect.arrayContaining(['baseline at Mobile · 390 px', 'baseline at Desktop · 1440 px']),
+  )
+
+  // A theme chosen inside a preview still applies to the workspace and every preview.
+  await preview('baseline').getByRole('button', { name: 'Choose color theme' }).click()
+  await preview('baseline').getByRole('menuitemradio', { name: 'Dark theme' }).click()
+  await expect(page.locator('html')).toHaveClass(/(^|\s)dark(\s|$)/)
+  for (const id of ids) {
+    await expect(preview(id).locator('html'), id).toHaveClass(/(^|\s)dark(\s|$)/)
+  }
 })
 
 test('loads no font files on default reader pages, because direction fonts load only when used', async ({
