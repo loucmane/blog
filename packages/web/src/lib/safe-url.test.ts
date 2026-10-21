@@ -156,6 +156,14 @@ describe('safe link addresses', () => {
         allowed: true,
       },
       { name: 'FTP credentials', value: 'ftp://reader:example@studio.example/', allowed: false },
+      // Email addresses never carry credentials: WHATWG still parses userinfo in mailto://.
+      {
+        name: 'email credentials',
+        value: 'mailto://reader:example@studio.example/',
+        allowed: false,
+      },
+      { name: 'email user only', value: 'mailto://reader@studio.example/', allowed: false },
+      { name: 'plain email', value: 'mailto:reader@studio.example', allowed: true },
       {
         name: 'script credentials',
         value: 'javascript://reader:example@studio.example/',

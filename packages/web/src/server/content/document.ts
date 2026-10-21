@@ -238,6 +238,9 @@ function validateUrl(value: unknown, path: string, issues: ContentDocumentIssue[
 
   if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) {
     pushIssue(issues, 'invalid_url', path, `protocol ${url.protocol} is not allowed`)
+  } else if (url.protocol === 'mailto:' && (url.username || url.password)) {
+    // Matches safeHref: an email address never carries a user name or password.
+    pushIssue(issues, 'invalid_url', path, 'an email address cannot carry credentials')
   }
 }
 
