@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { ReaderDirectionRoot } from '@/reader-directions/direction-root'
+import { ReaderRecoveryMarker } from '@/reader/components/failure-boundary'
 
 import { ReaderLabBar } from './lab-bar'
 import type { ReaderPresentation } from './presentation'
@@ -23,6 +24,8 @@ export function ReaderPage({ cacheGeneration, children, presentation }: ReaderPa
       {presentation.lab ? <ReaderLabBar lab={presentation.lab} /> : null}
       <ReaderDirectionRoot cacheGeneration={cacheGeneration} direction={presentation.direction}>
         {children}
+        {/* Pages render this after data resolves; failure context suppresses it in Lab errors. */}
+        <ReaderRecoveryMarker />
         {presentation.lab ? (
           <div
             aria-hidden="true"
