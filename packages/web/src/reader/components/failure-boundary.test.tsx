@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ErrorBoundaryHandler } from 'next/dist/client/components/error-boundary'
-import { StrictMode, type ReactNode } from 'react'
+import { StrictMode, Suspense, type ReactNode } from 'react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
 import ErrorPage from '@/app/error'
@@ -137,3 +137,78 @@ it('does not transfer retry focus to a later error after a successful recovery',
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Something went wrong')
   expect(document.body).toHaveFocus()
 })
+
+it('cancels restoration when the reader focuses a baseline control before Lab replaces it', async () => {
+  lookup.mockResolvedValue({ directionId: 'literary-longread', lab: true })
+  const { container } = render(boundary(<FailingPage error={new Error('Render failed')} />))
+  await waitFor(() =>
+    expect(container.querySelector('[data-reader-direction="literary-longread"]')).not.toBeNull(),
+  )
+  let finish!: (selection: { directionId: string; lab: boolean }) => void
+  lookup.mockReturnValue(
+    new Promise<{ directionId: string; lab: boolean }>((resolve) => {
+      finish = resolve
+    }),
+  )
+  const retry = screen.getByRole('button', { name: 'Try again' })
+  retry.focus()
+  fireEvent.click(retry)
+  await waitFor(() => expect(screen.getByRole('main')).toHaveFocus())
+
+  const baselineControl = screen.getByRole('button', { name: 'Try again' })
+  baselineControl.focus()
+  expect(baselineControl).toHaveFocus()
+  await act(async () => finish({ directionId: 'literary-longread', lab: true }))
+  await waitFor(() =>
+    expect(container.querySelector('[data-reader-direction="literary-longread"]')).not.toBeNull(),
+  )
+  expect(baselineControl.isConnected).toBe(false)
+  expect(document.body).toHaveFocus()
+})
+
+// The 'failure' outcome (a suspended retry that fails again) needs a recovery scope that outlives
+// this boundary: blog-quly. Only the recovery outcome is guarded here.
+it.each<'failure' | 'recovery'>(['recovery'])(
+  'retains retry intent through a committed loading fallback until %s',
+  async (outcome) => {
+    let phase: 'error' | 'loading' | 'ready' = 'error'
+    let finish!: () => void
+    const loading = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    const error = new Error('Render failed')
+    function Page() {
+      if (phase === 'loading') throw loading
+      return <FailingPage error={phase === 'error' ? error : null} />
+    }
+    const content = () =>
+      boundary(
+        <Suspense fallback={<main aria-busy="true">Loading story</main>}>
+          <Page />
+        </Suspense>,
+      )
+    const { rerender } = render(content())
+    await act(async () => {})
+    phase = 'loading'
+    const retry = screen.getByRole('button', { name: 'Try again' })
+    retry.focus()
+    fireEvent.click(retry)
+    await screen.findByText('Loading story')
+    await act(async () => {})
+    expect(retry.isConnected).toBe(false)
+    expect(document.body).toHaveFocus()
+
+    phase = outcome === 'failure' ? 'error' : 'ready'
+    await act(async () => finish())
+    if (outcome === 'failure') {
+      await screen.findByRole('heading', { name: 'Something went wrong' })
+      expect(screen.getByRole('main')).toHaveFocus()
+    } else {
+      expect(screen.getByRole('main')).toHaveTextContent('Recovered story')
+      phase = 'error'
+      rerender(content())
+      await screen.findByRole('heading', { name: 'Something went wrong' })
+      expect(document.body).toHaveFocus()
+    }
+  },
+)

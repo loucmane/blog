@@ -61,13 +61,13 @@ function useRetryFocus(reset: (() => void) | undefined) {
   useLayoutEffect(() => {
     if (!reset || !rootRef.current) return
     const container = rootRef.current
+    const document = container.ownerDocument
     if (pendingRetries.has(reset)) {
       pendingRetries.delete(reset)
       restoringRef.current = true
     }
     const restore = () => {
       if (!restoringRef.current) return
-      const document = container.ownerDocument
       if (
         document.activeElement !== document.body &&
         document.activeElement !== focusedMainRef.current
@@ -81,13 +81,24 @@ function useRetryFocus(reset: (() => void) | undefined) {
       focusedMainRef.current = main
       main.focus()
     }
-    restore()
     // A lazy authorized Lab view can replace the focused baseline after the mount effect.
     const observer = new MutationObserver(restore)
-    if (restoringRef.current) observer.observe(container, { childList: true, subtree: true })
+    const cancelOnFocusMove = (event: FocusEvent) => {
+      if (event.target === focusedMainRef.current) return
+      // Remember reader intent before a later replacement removes the focused control.
+      restoringRef.current = false
+      observer.disconnect()
+      document.removeEventListener('focusin', cancelOnFocusMove, true)
+    }
+    if (restoringRef.current) {
+      document.addEventListener('focusin', cancelOnFocusMove, true)
+      observer.observe(container, { childList: true, subtree: true })
+      restore()
+    }
     const retryOwner = ownerRef.current
     return () => {
       observer.disconnect()
+      document.removeEventListener('focusin', cancelOnFocusMove, true)
       // A failed retry consumes this during the replacement mount's layout effect. If it
       // succeeded, discard it after this commit rather than focusing a later unrelated error.
       queueMicrotask(() => {
