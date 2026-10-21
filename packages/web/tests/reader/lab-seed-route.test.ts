@@ -190,4 +190,45 @@ describe('hosted lab seed admission', () => {
       expect(JSON.stringify(report)).not.toContain(token)
     },
   )
+
+  it.each([
+    ['42704', 'unrecognized configuration parameter "idle_session_timeout"'],
+    ['42501', 'permission denied to set parameter "idle_in_transaction_session_timeout"'],
+  ])(
+    'explains a database that refuses a seed session limit (SQLSTATE %s) without its details',
+    async (code, message) => {
+      const owner = memoryRuntime()
+      runtimeSpy.mockReturnValue(owner)
+      const refused = Object.assign(new Error(`${message} (fixture database detail)`), { code })
+      vi.spyOn(owner.repository, 'tryExclusive').mockRejectedValueOnce(refused)
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const response = await POST(request())
+
+      expect(response.status).toBe(503)
+      expect(response.headers.get('cache-control')).toBe('private, no-store')
+      const body = await response.json()
+      expect(body).toEqual({ error: expect.any(String) })
+      expect(body.error).toContain(`(SQLSTATE ${code})`)
+      expect(body.error).toContain('PostgreSQL 14 or later')
+      expect(body.error).toContain('Retrying will not help')
+      expect(body.error).not.toContain('fixture database detail')
+      expect(body.error).not.toContain(token)
+      // Function logs get the same fixed message, so the cause stays visible to the operator.
+      expect(logged).toHaveBeenCalledExactlyOnceWith(body.error)
+      expect(expirePublicReader).not.toHaveBeenCalled()
+    },
+  )
+
+  it('leaves other database failures to the server error response', async () => {
+    const owner = memoryRuntime()
+    runtimeSpy.mockReturnValue(owner)
+    const failure = Object.assign(new Error('permission denied for table taxonomies'), {
+      code: '42501',
+    })
+    vi.spyOn(owner.repository, 'tryExclusive').mockRejectedValueOnce(failure)
+
+    await expect(POST(request())).rejects.toBe(failure)
+    expect(expirePublicReader).not.toHaveBeenCalled()
+  })
 })
