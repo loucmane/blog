@@ -8,7 +8,12 @@ const linkProtocols: readonly string[] = ['http:', 'https:', 'mailto:']
 export function safeHref(value: unknown): string | null {
   if (typeof value !== 'string') return null
   try {
-    return linkProtocols.includes(new URL(value).protocol) ? value : null
+    const url = new URL(value)
+    if (!linkProtocols.includes(url.protocol)) return null
+    // Credentials belong only to web addresses: an email address never carries a user name or
+    // password, so `mailto://user:secret@host/` is rejected rather than passed through.
+    if (url.protocol === 'mailto:' && (url.username || url.password)) return null
+    return value
   } catch {
     return null
   }
