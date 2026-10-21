@@ -331,6 +331,7 @@ describe('portable content ownership', () => {
     { collection: 'authors', label: 'authors' },
     { collection: 'taxonomies', label: 'taxonomies' },
     { collection: 'reusableBlocks', label: 'reusable blocks' },
+    { collection: 'reusableBlockRevisions', label: 'reusable block revisions' },
   ] as const)(
     'rejects duplicate $label ids before accessing the import repository',
     async ({ collection, label }) => {
