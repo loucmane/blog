@@ -1,15 +1,22 @@
 // @vitest-environment jsdom
 import { within } from '@testing-library/dom'
-import { fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render, waitFor } from '@testing-library/react'
 import postcss from 'postcss'
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import ErrorPage from '@/app/error'
 import type { ReaderImage, StoryCard } from '@/reader/views'
 
 import { literaryLongreadDirection as direction } from './index'
 import { styles } from './styles'
+
+const lookup = vi.hoisted(() => vi.fn())
+vi.mock('@/reader/components/resolve-error-presentation', () => ({
+  resolveErrorPresentation: lookup,
+}))
+vi.mock('@/reader-lab/lab-bar', () => ({ ReaderLabBar: () => null }))
 
 const image: ReaderImage = {
   alt: 'The whole dining room',
@@ -54,7 +61,7 @@ describe('Literary Long-read b3', () => {
     for (const source of container.querySelectorAll('.ll-cover-image source')) {
       expect(source).toHaveAttribute('sizes', sizes)
     }
-    const preload = container.querySelectorAll('link[as="image"][href]')
+    const preload = container.querySelectorAll('link[as="image"]')
     expect(preload).toHaveLength(1)
     expect(preload[0]).toHaveAttribute('imagesizes', sizes)
     expect(preload[0]).toHaveAttribute(
@@ -83,12 +90,12 @@ describe('Literary Long-read b3', () => {
     )
     expect(unknown.querySelector('main img')).toHaveAttribute('src', image.src)
     expect(unknown.querySelector('main img')).not.toHaveAttribute('sizes')
-    expect(unknown.querySelector('link[as="image"][href]')).toHaveAttribute('href', image.src)
+    expect(unknown.querySelector('link[as="image"]')).toHaveAttribute('href', image.src)
   })
 
   it('compensates cropped cards and all index preloads without promoting later images', () => {
     const home = markup(<direction.Home view={{ lead: null, recent: [], navigation }} />)
-    expect(home.querySelector('link[as="image"][href]')).toBeNull()
+    expect(home.querySelector('link[as="image"]')).toBeNull()
     const cards = markup(
       <direction.Home view={{ lead: story, recent: [{ ...story, slug: 'second' }], navigation }} />,
     )
@@ -117,7 +124,7 @@ describe('Literary Long-read b3', () => {
         />,
       ]) {
         const container = markup(element)
-        const preload = container.querySelector('link[as="image"][href]')
+        const preload = container.querySelector('link[as="image"]')
         expect(Boolean(preload)).toBe(Boolean(stories[0]!.image))
         if (preload) {
           const sizes = '(min-width: 1024px) 11.25rem, (min-width: 768px) 6.75rem, 5.625rem'
@@ -163,19 +170,40 @@ describe('Literary Long-read b3', () => {
     },
   )
 
-  it('invokes the real retry handler and keeps focus on retry when the failure view persists', () => {
+  // A retry that fails again remounts the whole error page (Next's boundary catches it again), so
+  // keeping focus then needs the shared failure boundary (K4). This covers a render in place.
+  it('keeps the retry button and its focus when the shared error page renders again with new children', async () => {
+    // The boundary imports the Lab page lazily, and its graph holds every direction: load it first.
+    await import('@/reader/components/lab-failure-page')
+    lookup.mockResolvedValue({ directionId: direction.id, lab: true })
     const reset = vi.fn()
-    const { getByRole, rerender, unmount } = render(
-      <direction.Error view={failureView} reset={reset} />,
-    )
-    const retry = getByRole('button', { name: 'Try again' })
+    const error = new Error('Unexpected failure')
+    const { container, rerender, unmount } = render(<ErrorPage error={error} reset={reset} />)
+    const button = `[data-reader-direction="${direction.id}"] .ll-failure button`
+    await waitFor(() => expect(container.querySelector(button)).not.toBeNull())
+    const retry = container.querySelector<HTMLButtonElement>(button)!
+    expect(retry).toHaveAccessibleName('Try again')
     expect(retry).toHaveAttribute('type', 'button')
     retry.focus()
     fireEvent.click(retry)
     expect(reset).toHaveBeenCalledTimes(1)
-    rerender(<direction.Error view={failureView} reset={reset} />)
+    // Next renders the same error page again when the tree above it re-renders. Its new fallback
+    // children make the shared boundary look the selection up again.
+    let settle!: (selection: { directionId: string; lab: boolean }) => void
+    lookup.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settle = resolve
+        }),
+    )
+    rerender(<ErrorPage error={error} reset={reset} />)
+    await act(async () => settle({ directionId: direction.id, lab: true }))
+    expect(lookup).toHaveBeenCalledTimes(2)
+    expect(container.querySelector(button)).toBe(retry)
     expect(retry).toHaveFocus()
-    expect(getByRole('alert')).toHaveTextContent('Please try again.')
+    expect(within(container).getByRole('alert')).toHaveTextContent('Please try again.')
+    fireEvent.click(retry)
+    expect(reset).toHaveBeenCalledTimes(2)
     unmount()
   })
 

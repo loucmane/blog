@@ -98,7 +98,7 @@ describe('Literary Long-read with real published North House content', () => {
       const { document } = markup(element)
       const lead = document.querySelector('main img')!
       const preferred = document.querySelector('main picture source')!
-      const preloads = document.querySelectorAll('link[rel="preload"][as="image"][href]')
+      const preloads = document.querySelectorAll('link[rel="preload"][as="image"]')
       expect(preloads).toHaveLength(1)
       const preload = preloads[0]!
       expect(preload.getAttribute('type')).toBe('image/avif')
@@ -137,7 +137,7 @@ describe('Literary Long-read with real published North House content', () => {
     ]) {
       const { document } = markup(<LiteraryArticle view={{ ...article, hero }} />)
       const image = document.querySelector('.ll-hero img')!
-      const preloads = document.querySelectorAll('link[rel="preload"][as="image"][href]')
+      const preloads = document.querySelectorAll('link[rel="preload"][as="image"]')
       expect(preloads).toHaveLength(1)
       expect(preloads[0]!.getAttribute('href')).toBe(hero.src)
       expect(preloads[0]!.getAttribute('type')).toBe(hero.contentType)

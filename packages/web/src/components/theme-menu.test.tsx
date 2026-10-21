@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createPortal } from 'react-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ThemeMenu } from './theme-menu'
@@ -18,6 +19,15 @@ class ResizeObserverStub {
   unobserve() {}
 }
 
+/** A same-origin frame that the page renders into, like a Reader Lab comparison preview. */
+function frameDocument() {
+  const frame = document.createElement('iframe')
+  document.body.append(frame)
+  const child = frame.contentDocument
+  if (!child) throw new Error('Missing frame document')
+  return child
+}
+
 describe('ThemeMenu', () => {
   beforeEach(() => {
     setTheme.mockClear()
@@ -26,6 +36,7 @@ describe('ThemeMenu', () => {
 
   afterEach(() => {
     cleanup()
+    document.body.innerHTML = ''
     vi.unstubAllGlobals()
   })
 
@@ -60,6 +71,36 @@ describe('ThemeMenu', () => {
     expect(darkTheme).toHaveAttribute('data-highlighted')
     await user.click(darkTheme)
 
+    expect(setTheme.mock.calls.at(-1)?.[0]).toBe('dark')
+  })
+
+  it('portals the popup into the page body, as Base UI does by default', async () => {
+    const user = userEvent.setup()
+    render(<ThemeMenu />)
+
+    const trigger = screen.getByRole('button', { name: 'Choose color theme' })
+    await waitFor(() => expect(trigger).toBeEnabled())
+    await user.click(trigger)
+
+    const menu = await screen.findByRole('menu')
+    expect(menu.closest('[data-base-ui-portal]')?.parentElement).toBe(document.body)
+  })
+
+  it('keeps the popup in the document that owns the trigger, such as a preview frame', async () => {
+    const child = frameDocument()
+    render(<>{createPortal(<ThemeMenu />, child.body)}</>)
+    const frame = within(child.body)
+
+    const trigger = frame.getByRole('button', { name: 'Choose color theme' })
+    await waitFor(() => expect(trigger).toBeEnabled())
+    const user = userEvent.setup({ document: child })
+    await user.click(trigger)
+
+    const menu = await frame.findByRole('menu')
+    expect(menu.closest('[data-base-ui-portal]')?.parentElement).toBe(child.body)
+    expect(document.querySelector('[data-base-ui-portal]')).toBeNull()
+
+    await user.click(frame.getByRole('menuitemradio', { name: 'Dark theme' }))
     expect(setTheme.mock.calls.at(-1)?.[0]).toBe('dark')
   })
 })
