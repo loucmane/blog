@@ -221,6 +221,29 @@
         "advisory-release-review"
       ],
       "resultSchema": "agent-skill-review-result-v1"
+    },
+    {
+      "id": "quality-reliability-observability",
+      "status": "active",
+      "entrypoint": ".claude/skills/quality-reliability-observability/SKILL.md",
+      "codexLink": ".agents/skills/quality-reliability-observability",
+      "provenance": {
+        "type": "project-authored",
+        "task": "60"
+      },
+      "capabilities": [
+        "test-strategy",
+        "owner-acceptance-journeys",
+        "accessibility-automation",
+        "performance-budgets",
+        "structured-logging-error-reporting",
+        "health-readiness-checks",
+        "production-verification",
+        "restore-drills",
+        "incident-rollback-readiness",
+        "advisory-quality-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1"
     }
   ]
 }
