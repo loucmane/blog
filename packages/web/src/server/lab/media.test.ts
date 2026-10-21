@@ -129,11 +129,11 @@ describe('seed media originals', () => {
 
   it.each(failures)(
     'writes no row when %s, deletes nothing, and the retry stores the same original',
-    async (_failure, fail) => {
+    async (_failure, arrangeFailure) => {
       const repository = new InMemoryContentRepository()
       const objects = new InMemoryOriginalObjectStore()
       const remove = vi.spyOn(objects, 'deleteOriginal')
-      fail(objects)
+      arrangeFailure(objects)
 
       await expect(createMedia(repository, objects)).rejects.toThrow()
       expect(await repository.inspect((transaction) => transaction.listMediaAssets())).toEqual([])
