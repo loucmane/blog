@@ -235,6 +235,31 @@
         "agent-skills-scripts",
         "agent-skills-tests"
       ]
+    },
+    {
+      "id": "quality-reliability-observability",
+      "match": [
+        "playwright.config.ts",
+        "vitest.config.ts",
+        "config/ci/**",
+        "tests/setup/**",
+        "tests/e2e/owner-workspace.spec.ts",
+        "tests/e2e/accessibility-baseline.json",
+        "packages/web/src/reader-directions/*/playwright.config.ts",
+        "packages/web/scripts/run-content-integration.mjs",
+        "packages/web/tests/content/**",
+        "docs/product/nonfunctional-requirements.md",
+        "packages/web/src/app/api/health/**",
+        "packages/web/src/server/observability/**"
+      ],
+      "skills": ["quality-reliability-observability"],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ]
     }
   ]
 }
