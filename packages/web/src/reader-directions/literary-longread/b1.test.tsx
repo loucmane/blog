@@ -99,7 +99,7 @@ describe('Literary Long-read b1 design contract', () => {
       expect(figure.querySelector('img')).toHaveAttribute('sizes', sizes[index])
       expect(figure.style.getPropertyValue('--ll-focal-point')).toBe('20% 80%')
     }
-    const preloads = document.querySelectorAll('link[as="image"][href]')
+    const preloads = document.querySelectorAll('link[as="image"]')
     expect(preloads).toHaveLength(1)
     expect(preloads[0]).toHaveAttribute('imagesizes', sizes[0])
     expect(preloads[0]).toHaveAttribute(
