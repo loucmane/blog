@@ -655,6 +655,9 @@ export function inspectPortableContentBundle(value: unknown): PortableContentIns
   const bundle = normalizePortableBundle(parsed.data)
   for (const [label, values] of [
     ['articles', bundle.data.articles],
+    ['authors', bundle.data.authors],
+    ['taxonomies', bundle.data.taxonomies],
+    ['reusable blocks', bundle.data.reusableBlocks],
     ['revisions', bundle.data.revisions],
     ['autosaves', bundle.data.autosaves],
     ['redirects', bundle.data.redirects],

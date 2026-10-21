@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentDocument } from './document'
 import { ImportCollisionError } from './errors'
@@ -326,6 +326,57 @@ describe('portable content ownership', () => {
       expect(await transaction.listAuthors()).toEqual([])
     })
   })
+
+  it.each([
+    { collection: 'authors', label: 'authors' },
+    { collection: 'taxonomies', label: 'taxonomies' },
+    { collection: 'reusableBlocks', label: 'reusable blocks' },
+  ] as const)(
+    'rejects duplicate $label ids before accessing the import repository',
+    async ({ collection, label }) => {
+      const { repository } = await populatedRepository()
+      await repository.transaction(async (transaction) => {
+        await transaction.saveReusableBlockRevision({
+          blockId: 'block-portable',
+          createdAt: clock.now().toISOString(),
+          document: document('block-portable'),
+          id: 'block-revision-portable',
+          revisionNumber: 1,
+        })
+        await transaction.saveReusableBlock({
+          createdAt: clock.now().toISOString(),
+          currentRevisionId: 'block-revision-portable',
+          id: 'block-portable',
+          kind: 'callout',
+          name: 'Portable callout',
+          updatedAt: clock.now().toISOString(),
+          version: 1,
+        })
+      })
+      const bundle = await createPortableContentBundle(repository, '2026-07-17T22:30:00.000Z')
+      expect(inspectPortableContentBundle(bundle)).toMatchObject({ status: 'valid' })
+      const duplicate = bundle.data[collection][0]!
+      const { digest: _discarded, ...base } = bundle
+      const unsigned = {
+        ...base,
+        data: { ...base.data, [collection]: [...base.data[collection], duplicate] },
+      }
+      const malformed = {
+        ...unsigned,
+        digest: createHash('sha256').update(canonicalJson(unsigned)).digest('hex'),
+      }
+      const issue = `${label} contains duplicate id ${duplicate.id}`
+      expect(inspectPortableContentBundle(malformed)).toMatchObject({
+        issues: [issue],
+        status: 'invalid',
+      })
+
+      const restored = new InMemoryContentRepository()
+      const transaction = vi.spyOn(restored, 'transaction')
+      await expect(importPortableContentBundle(restored, malformed)).rejects.toThrow(issue)
+      expect(transaction).not.toHaveBeenCalled()
+    },
+  )
 
   it('refuses collisions instead of overwriting existing canonical content', async () => {
     const { repository } = await populatedRepository()
