@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quality, Reliability, and Observability"
+  short_description: "Review magazine quality, reliability, and observability"
+  default_prompt: "Use $quality-reliability-observability to plan or review the magazine's test strategy, quality gates, observability, and recovery readiness."
