@@ -4,7 +4,13 @@ import type { ContentRepository, OriginalObjectStore } from '@/server/content/po
 import { labPreparedAt, type LabImage } from './north-house'
 import type { LabSeedLimits } from './limits'
 
-/** Seed-only creation. Normal owner uploads retain MediaOriginalService.store semantics. */
+/**
+ * Seed-only creation. Normal owner uploads retain MediaOriginalService.store semantics.
+ *
+ * Storage work runs between transactions: a PUT and a verification may each use the whole storage
+ * limit, longer together than the seed session's idle-in-transaction limit, after which PostgreSQL
+ * ends the session.
+ */
 export async function createLabMediaIfAbsent({
   repository,
   objects,
@@ -20,9 +26,11 @@ export async function createLabMediaIfAbsent({
   afterCheck?: (id: string) => Promise<void>
   limits: LabSeedLimits
 }): Promise<boolean> {
-  const existing = await repository.transaction((transaction) =>
-    transaction.getMediaAsset(image.id),
-  )
+  const exists = () =>
+    repository.transaction(
+      async (transaction) => (await transaction.getMediaAsset(image.id)) !== null,
+    )
+  const existing = await exists()
   if (afterCheck) await limits.wait(() => afterCheck(image.id))
   limits.check()
   if (existing) return false
@@ -30,10 +38,36 @@ export async function createLabMediaIfAbsent({
   const bytes = body()
   const checksum = sha256Bytes(bytes)
   const key = originalObjectKey(image.id, checksum)
-  return repository.transaction(async (transaction) => {
-    // An owner can create the identity after the read above. Reserve it before any
-    // PUT, using INSERT ... DO NOTHING rather than the owner's metadata upsert.
-    const created = await transaction.createMediaAssetIfAbsent({
+  // An owner can create the identity after the read above, while the seed waits or renders.
+  // Read again just before the PUT, so the seed does not store an original for it.
+  if (await exists()) return false
+
+  const stored = await limits.storage((signal) =>
+    objects.putOriginal(
+      {
+        body: bytes,
+        contentType: 'image/png',
+        key,
+        sha256: checksum,
+      },
+      signal,
+    ),
+  )
+  if (
+    stored.bytes !== bytes.byteLength ||
+    stored.contentType !== 'image/png' ||
+    stored.key !== key ||
+    stored.sha256 !== checksum ||
+    !(await limits.storage((signal) => objects.verifyOriginal(key, checksum, signal)))
+  ) {
+    throw new Error('Stored lab media original failed verification.')
+  }
+  // Publish the row only after verification. An owner can still create the identity during
+  // storage, so use INSERT ... DO NOTHING rather than the owner's metadata upsert. The key holds
+  // the checksum: a PUT cannot change the bytes of an original another row uses. Never delete the
+  // original after a failure, even an uncertain commit; a retry stores the same key again.
+  return repository.transaction((transaction) =>
+    transaction.createMediaAssetIfAbsent({
       alt: image.alt,
       animated: false,
       bytes: bytes.byteLength,
@@ -50,31 +84,6 @@ export async function createLabMediaIfAbsent({
       originalSha256: checksum,
       updatedAt: labPreparedAt,
       width: image.illustration.width,
-    })
-    if (!created) return false
-
-    const stored = await limits.storage((signal) =>
-      objects.putOriginal(
-        {
-          body: bytes,
-          contentType: 'image/png',
-          key,
-          sha256: checksum,
-        },
-        signal,
-      ),
-    )
-    if (
-      stored.bytes !== bytes.byteLength ||
-      stored.contentType !== 'image/png' ||
-      stored.key !== key ||
-      stored.sha256 !== checksum ||
-      !(await limits.storage((signal) => objects.verifyOriginal(key, checksum, signal)))
-    ) {
-      throw new Error('Stored lab media original failed verification.')
-    }
-    // Publish the row only after verification. On failure it rolls back. Do not
-    // delete an original after an uncertain commit; retry can reuse its identity.
-    return true
-  })
+    }),
+  )
 }
