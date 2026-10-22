@@ -1,14 +1,18 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import {
   Children,
   cloneElement,
+  createContext,
   isValidElement,
   lazy,
   Suspense,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -31,8 +35,44 @@ type FailureBoundaryProps = { readonly children: ReactNode } & (
   | { readonly kind: 'error'; readonly error: Error; readonly reset: () => void }
 )
 
-// Next keeps reset stable while replacing the failed subtree. A weak key isolates boundaries.
-const pendingRetries = new WeakMap<() => void, object>()
+interface RecoveryScope {
+  readonly pathname: string | null
+  pending: WeakSet<() => void>
+}
+
+const RecoveryContext = createContext<RecoveryScope | null>(null)
+const FailureContext = createContext(false)
+
+/** Lives above Next's error/loading boundary without adding DOM or changing its children. */
+export function ReaderRecoveryScope({ children }: { readonly children: ReactNode }) {
+  const pathname = usePathname()
+  const scope = useMemo<RecoveryScope>(() => ({ pathname, pending: new WeakSet() }), [pathname])
+
+  useLayoutEffect(() => {
+    // This listener survives a committed loading fallback. Moving focus cancels the
+    // request even if that control is removed before the next error commits.
+    const clear = () => {
+      scope.pending = new WeakSet()
+    }
+    document.addEventListener('focusin', clear, true)
+    return () => {
+      document.removeEventListener('focusin', clear, true)
+      clear()
+    }
+  }, [scope])
+
+  return <RecoveryContext value={scope}>{children}</RecoveryContext>
+}
+
+/** A resolved reader commit confirms recovery; failure presentations cannot confirm it. */
+export function ReaderRecoveryMarker() {
+  const scope = useContext(RecoveryContext)
+  const failure = useContext(FailureContext)
+  useLayoutEffect(() => {
+    if (scope && !failure) scope.pending = new WeakSet()
+  }, [scope, failure])
+  return null
+}
 
 // The app supplies an already-built fallback tree, so preserve its components and replace
 // only the matching reset prop. A render-prop API would also require changing the app page.
@@ -48,31 +88,31 @@ function withRetry(children: ReactNode, reset: () => void, retry: () => void): R
 /* eslint-enable @eslint-react/no-children-map, @eslint-react/no-clone-element */
 
 function useRetryFocus(reset: (() => void) | undefined) {
+  const scope = useContext(RecoveryContext)
   const rootRef = useRef<HTMLDivElement>(null)
-  const ownerRef = useRef({})
-  const restoringRef = useRef(false)
+  const restoringRef = useRef<RecoveryScope | null>(null)
   const focusedMainRef = useRef<HTMLElement | null>(null)
   const retry = useCallback(() => {
     if (!reset) return
-    pendingRetries.set(reset, ownerRef.current)
+    scope?.pending.add(reset)
     reset()
-  }, [reset])
+  }, [reset, scope])
 
   useLayoutEffect(() => {
-    if (!reset || !rootRef.current) return
+    if (!scope || !reset || !rootRef.current) return
     const container = rootRef.current
     const document = container.ownerDocument
-    if (pendingRetries.has(reset)) {
-      pendingRetries.delete(reset)
-      restoringRef.current = true
+    if (scope.pending.has(reset)) {
+      scope.pending.delete(reset)
+      restoringRef.current = scope
     }
     const restore = () => {
-      if (!restoringRef.current) return
+      if (restoringRef.current !== scope) return
       if (
         document.activeElement !== document.body &&
         document.activeElement !== focusedMainRef.current
       ) {
-        restoringRef.current = false
+        restoringRef.current = null
         return
       }
       const main = container.querySelector('main')
@@ -86,26 +126,20 @@ function useRetryFocus(reset: (() => void) | undefined) {
     const cancelOnFocusMove = (event: FocusEvent) => {
       if (event.target === focusedMainRef.current) return
       // Remember reader intent before a later replacement removes the focused control.
-      restoringRef.current = false
+      restoringRef.current = null
       observer.disconnect()
       document.removeEventListener('focusin', cancelOnFocusMove, true)
     }
-    if (restoringRef.current) {
+    if (restoringRef.current === scope) {
       document.addEventListener('focusin', cancelOnFocusMove, true)
       observer.observe(container, { childList: true, subtree: true })
       restore()
     }
-    const retryOwner = ownerRef.current
     return () => {
       observer.disconnect()
       document.removeEventListener('focusin', cancelOnFocusMove, true)
-      // A failed retry consumes this during the replacement mount's layout effect. If it
-      // succeeded, discard it after this commit rather than focusing a later unrelated error.
-      queueMicrotask(() => {
-        if (pendingRetries.get(reset) === retryOwner) pendingRetries.delete(reset)
-      })
     }
-  }, [reset])
+  }, [reset, scope])
 
   return { rootRef, retry }
 }
@@ -152,11 +186,15 @@ export function ReaderFailureBoundary(props: FailureBoundaryProps) {
       </Suspense>
     )
 
-  return props.kind === 'error' ? (
-    <div className="contents" ref={rootRef}>
-      {view}
-    </div>
-  ) : (
-    view
+  return (
+    <FailureContext value={true}>
+      {props.kind === 'error' ? (
+        <div className="contents" ref={rootRef}>
+          {view}
+        </div>
+      ) : (
+        view
+      )}
+    </FailureContext>
   )
 }

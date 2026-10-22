@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 
 import { PreviewStoryLoading } from '@/components/preview-story-loading'
+import { ReaderRecoveryMarker } from '@/reader/components/failure-boundary'
 import { getFrameworkStory, loadPreviewFrameworkStory } from '@/lib/framework-content'
 import { previewScopeCookieName, previewScopeMatches } from '@/lib/request-security'
 
@@ -71,6 +72,8 @@ async function PreviewStoryContent({ slug }: PreviewStoryContentProps) {
           ))}
         </div>
       </article>
+      {/* Resolved content: confirms a retry recovered, so a later error does not take retry focus. */}
+      <ReaderRecoveryMarker />
     </main>
   )
 }
