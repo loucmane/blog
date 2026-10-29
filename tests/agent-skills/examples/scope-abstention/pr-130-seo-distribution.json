@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "example-pr-130-seo-distribution-scope-abstention",
+  "skill": "seo-distribution",
+  "mode": "advisory",
+  "verdict": "not-applicable",
+  "summary": "Illustrative static review of PR #130: the six-file diff changes retry-focus persistence through ReaderRecoveryScope and null-rendering ReaderRecoveryMarker. The layout still uses the same metadata and canonical-origin definitions; no URL/discovery semantics, redirects, structured data, social cards, feeds, sitemap, robots, search or newsletter behavior changes. This is an evidenced scope abstention, not distribution verification.",
+  "generatedAt": "2026-10-29T17:43:00.033Z",
+  "headSha": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+  "findings": [],
+  "evidence": [
+    {
+      "kind": "file",
+      "path": "docs/agent-skills/advice-v2-inputs.json"
+    },
+    {
+      "kind": "file",
+      "path": "packages/web/src/app/layout.tsx"
+    },
+    {
+      "kind": "file",
+      "path": "packages/web/src/reader/components/failure-boundary.tsx"
+    }
+  ]
+}

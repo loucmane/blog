@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 1,
+  "mode": "advisory",
+  "subjective": true,
+  "blocking": false,
+  "method": "Read the brief, supplied merge SHAs, complete changed-file lists and raw patches, and the five canonical skills with their linked guidance. Used shell reads and Node probes to inspect the inputs and confirm that each changed-file list matches its patch. Application evidence comes exclusively from the supplied patches, not current source or reference-map snapshots. No tests, application code, browsers, dependencies, external sources, delegation or writes were used.",
+  "assessments": [
+    {
+      "number": 130,
+      "skill": "reader-frontend",
+      "result": {
+        "schemaVersion": 1,
+        "reviewId": "pr130-reader-frontend-advice-v2",
+        "skill": "reader-frontend",
+        "mode": "advisory",
+        "verdict": "pass",
+        "summary": "The supplied patch addresses reader keyboard orientation during retry, loading, repeated failure and recovery. A recovery scope above the replaced subtree retains retry intent; resolved-content markers, navigation and deliberate focus changes clear it. The added assertions distinguish Baseline and Lab presentations, but no browser or authentication session was exercised. This is a favorable static assessment, not a passing accessibility audit. Typography, media and direction styling are not changed; viewport, theme, screen-reader and performance evidence is unavailable.",
+        "generatedAt": "2026-10-29T17:54:01.584Z",
+        "headSha": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+        "findings": [
+          {
+            "id": "retry-focus-respects-reader-intent",
+            "severity": "info",
+            "category": "accessibility",
+            "message": "The changed lifecycle supports a useful distinction: a retry that fails again can restore focus to the failure main, while successful recovery or a deliberate focus move cancels that intent. ReaderRecoveryMarker also checks FailureContext, so a Lab failure presentation cannot count as successful recovery merely because it renders ReaderPage. Preserve these distinctions and verify the loading-to-failure sequence with keyboard input in a real browser, including moving focus to a loading control that subsequently disappears. The supplied assertions express these expectations but were not executed.",
+            "subjective": true,
+            "blocking": false,
+            "evidence": [
+              "packages/web/src/reader/components/failure-boundary.tsx: ReaderRecoveryScope retains pending reset functions across the loading subtree and clears them on focusin, pathname replacement and disposal.",
+              "packages/web/src/reader/components/failure-boundary.tsx: ReaderRecoveryMarker clears pending intent only outside FailureContext; ReaderFailureBoundary supplies that context.",
+              "packages/web/src/reader/components/failure-boundary.test.tsx: added cases cover repeated failure, recovery, loading/outside focus, navigation, scope isolation and Lab failure presentation."
+            ]
+          },
+          {
+            "id": "root-provider-performance-limit",
+            "severity": "info",
+            "category": "measurement-gap",
+            "message": "RootLayout now mounts a client recovery provider for its children. Returning only a context provider and a null marker supports the intended absence of additional DOM, and the hydration fixture asserts unchanged markup. Neither establishes unchanged client payload, hydration cost or Core Web Vitals. If performance neutrality is claimed, obtain anonymous-reader build and measurement evidence separately from signed-in Lab results; no regression or budget failure is established here.",
+            "subjective": true,
+            "blocking": false,
+            "evidence": [
+              "packages/web/src/app/layout.tsx: ThemeProvider now contains ReaderRecoveryScope around children.",
+              "packages/web/src/reader/components/failure-boundary.tsx: ReaderRecoveryScope returns a context provider and ReaderRecoveryMarker returns null.",
+              "packages/web/src/reader/components/failure-boundary.test.tsx: the hydration case compares rendered markup, main identity, focus and recoverable-error callbacks without measuring performance."
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "path": "docs/agent-skills/advice-v2-inputs.json"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/app/layout.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader/components/failure-boundary.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader/components/failure-boundary.test.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader-lab/reader-page.tsx"
+          }
+        ]
+      },
+      "usefulness": {
+        "judgment": "usable",
+        "rationale": "The assessment connects the changed recovery lifecycle to concrete keyboard consequences and identifies the precise browser sequence still needing observation. It also bounds the root-provider performance inference without inventing a regression.",
+        "evidence": [
+          "The review distinguishes failed retry focus restoration from cancellation after recovery, navigation or deliberate focus movement.",
+          "It identifies FailureContext suppression as necessary when a failure presentation itself renders ReaderPage.",
+          "It treats hydration assertions as source evidence rather than accessibility or performance results."
+        ],
+        "subjective": true,
+        "blocking": false
+      }
+    },
+    {
+      "number": 130,
+      "skill": "seo-distribution",
+      "result": {
+        "schemaVersion": 1,
+        "reviewId": "pr130-seo-distribution-advice-v2",
+        "skill": "seo-distribution",
+        "mode": "advisory",
+        "verdict": "not-applicable",
+        "summary": "At d67f2a4901e27c68890f5f59febe1e14eb605bb1, the complete supplied patch changes recovery context, retry-focus handling, resolved-content markers and their tests. RootLayout gains a provider; the preview page gains a null recovery marker. Neither edit changes canonical construction, metadata, robots directives, redirects, structured data, social cards, feeds, sitemap, search or newsletter delivery. usePathname keys recovery state rather than implementing URL or redirect semantics. No supported indirect distribution change appears in the patch. This is a scope abstention, not verification of existing indexing or HTTP behavior.",
+        "generatedAt": "2026-10-29T17:54:01.584Z",
+        "headSha": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+        "findings": [],
+        "evidence": [
+          {
+            "kind": "file",
+            "path": "docs/agent-skills/advice-v2-inputs.json"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/app/layout.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/app/preview/stories/[slug]/page.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader/components/failure-boundary.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader-lab/reader-page.tsx"
+          }
+        ]
+      },
+      "usefulness": {
+        "judgment": "unusable",
+        "rationale": "The scope disposition is grounded and prevents an unwarranted distribution audit, but this assignment produces no substantive distribution advice or verification applicable to the change. Its limited routing value does not establish useful SEO advice.",
+        "evidence": [
+          "The layout hunk wraps children without changing its metadata configuration.",
+          "The preview hunk adds only ReaderRecoveryMarker.",
+          "The pathname dependency controls retry-intent lifetime, not public URL resolution."
+        ],
+        "subjective": true,
+        "blocking": false
+      }
+    },
+    {
+      "number": 130,
+      "skill": "owner-publishing-ux",
+      "result": {
+        "schemaVersion": 1,
+        "reviewId": "pr130-owner-publishing-ux-advice-v2",
+        "skill": "owner-publishing-ux",
+        "mode": "advisory",
+        "verdict": "pass",
+        "summary": "Implementation assumption: owner relevance is limited to the changed preview recovery behavior. PreviewStoryContent now marks resolved content as recovered, which should prevent an earlier retry from moving focus during a later unrelated preview failure. The patch supports that interaction inference, but does not show the owner's preview entry controls, actual session, save state or complete recovery journey. No owner need or editorial policy is inferred. This favorable static assessment covers preview orientation only; authoring, scheduling, publication, revisions, media, destructive actions and mobile behavior are not assessed.",
+        "generatedAt": "2026-10-29T17:54:01.584Z",
+        "headSha": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+        "findings": [
+          {
+            "id": "preview-recovery-orientation",
+            "severity": "info",
+            "category": "implementation-assumption",
+            "message": "Implementation assumption: after retrying an unavailable preview and reaching resolved preview content, the previous retry should no longer authorize a later focus jump. The marker's placement inside PreviewStoryContent supports this distinction. Validate that exact sequence through the actual owner preview entry: failed preview, Try again, resolved preview, then a separate failure. The shared recovery fixture exercises ReaderPage, while the preview page's new coverage is a source-text marker check; neither demonstrates the complete owner journey. Do not infer saved drafts, publication changes or preview privacy from this marker.",
+            "subjective": true,
+            "blocking": false,
+            "evidence": [
+              "packages/web/src/app/preview/stories/[slug]/page.tsx: ReaderRecoveryMarker is added inside the main returned by PreviewStoryContent.",
+              "packages/web/src/reader/components/failure-boundary.tsx: a resolved marker clears scope.pending outside FailureContext.",
+              "packages/web/src/reader/components/failure-boundary.test.tsx: FailingPage renders ReaderPage and the recovery case expects a subsequent error not to take focus.",
+              "packages/web/src/app/recovery-marker.test.ts: the new route inventory checks source text for ReaderPage or ReaderRecoveryMarker rather than exercising preview recovery."
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "path": "docs/agent-skills/advice-v2-inputs.json"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/app/preview/stories/[slug]/page.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader/components/failure-boundary.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader/components/failure-boundary.test.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/app/recovery-marker.test.ts"
+          }
+        ]
+      },
+      "usefulness": {
+        "judgment": "usable",
+        "rationale": "The assessment derives a narrow preview-orientation consequence from the actual marker insertion and identifies a specific owner-preview sequence missing from the supplied behavioral evidence. It explicitly treats owner integration as an assumption and avoids expanding into unsupported publishing requirements.",
+        "evidence": [
+          "PreviewStoryContent gains a marker that clears prior retry intent after resolution.",
+          "The supplied behavioral fixture uses ReaderPage rather than the preview page.",
+          "The recommended check concerns stale focus after successful preview recovery, not an invented save, publish or import workflow."
+        ],
+        "subjective": true,
+        "blocking": false
+      }
+    },
+    {
+      "number": 130,
+      "skill": "quality-reliability-observability",
+      "result": {
+        "schemaVersion": 1,
+        "reviewId": "pr130-quality-reliability-observability-advice-v2",
+        "skill": "quality-reliability-observability",
+        "mode": "advisory",
+        "verdict": "warn",
+        "summary": "Implementation assumption: the added component assertions substantially improve coverage of retry lifetime, cancellation and hydration, but the new route inventory overstates what a source-token check can establish. All test claims here concern inspected assertions, not execution. CI wiring, coverage inclusion, browser behavior, accessibility scans and performance results at this revision are unavailable. The patch changes no logging, health, restore or rollback mechanisms, and supplies no production-verification evidence.",
+        "generatedAt": "2026-10-29T17:54:01.584Z",
+        "headSha": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+        "findings": [
+          {
+            "id": "route-marker-check-is-lexical",
+            "severity": "warning",
+            "category": "test-strategy",
+            "message": "Implementation assumption: the test named 'confirms recovery from every page under the root error boundary' is useful as a wiring inventory, but its regex only finds a ReaderPage or ReaderRecoveryMarker token in source. A token in a comment, unreachable branch or prematurely rendered shell would satisfy that assertion without confirming a resolved-content commit. Keep its claimed coverage narrow and supplement it with behavioral evidence where marker timing matters, particularly the separately wired preview page. This is an advisory coverage concern, not a reproduced failing test or evidence that any current page is incorrectly wired.",
+            "subjective": true,
+            "blocking": false,
+            "evidence": [
+              "packages/web/src/app/recovery-marker.test.ts: pages() scans page.tsx files, excludes owner directories, and asserts /<ReaderPage\\b|<ReaderRecoveryMarker\\b/.test(source).",
+              "packages/web/src/app/recovery-marker.test.ts: found.length greater than five and token presence do not assert render timing or successful recovery.",
+              "packages/web/src/app/preview/stories/[slug]/page.tsx: PreviewStoryContent receives a direct marker rather than using the ReaderPage fixture exercised by the component tests."
+            ]
+          },
+          {
+            "id": "recovery-failure-matrix-strengthened",
+            "severity": "info",
+            "category": "test-strategy",
+            "message": "Implementation assumption: expanding the suspended-retry case from recovery alone to both failure and recovery across the direction selections directly targets the changed lifetime contract. Additional cases cover focus cancellation, navigation away and back, disposal, scope isolation, failure presentations and hydration. Explicitly resolved promises provide controlled asynchronous transitions. Retain these assertions; they offer more specific regression protection than the source inventory. Their passing status and CI enforcement remain unverified because execution and CI inspection are outside this review.",
+            "subjective": true,
+            "blocking": false,
+            "evidence": [
+              "packages/web/src/reader/components/failure-boundary.test.tsx: directions.flatMap pairs each selection with failure and recovery, replacing the recovery-only parameterization.",
+              "packages/web/src/reader/components/failure-boundary.test.tsx: new tests explicitly resolve pending promises and assert focus after cancellation, pathname changes and scope replacement.",
+              "packages/web/src/reader/components/failure-boundary.test.tsx: the hydration test asserts unchanged markup and main identity, body focus, no recoverable hydration error and no presentation lookup."
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "path": "docs/agent-skills/advice-v2-inputs.json"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/app/recovery-marker.test.ts"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader/components/failure-boundary.test.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/reader/components/failure-boundary.tsx"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/app/preview/stories/[slug]/page.tsx"
+          }
+        ]
+      },
+      "usefulness": {
+        "judgment": "usable",
+        "rationale": "The review identifies a concrete mismatch between a test's stated guarantee and its lexical assertion, while crediting the separate behavioral matrix for the transitions it actually asserts. The recommendation is specific and does not confuse configured tests with executed gates.",
+        "evidence": [
+          "The route guard checks source tokens without rendering a route.",
+          "The component matrix now covers the previously excluded suspended-retry failure outcome.",
+          "The review distinguishes marker-placement inventory, behavioral assertions and unavailable CI/browser results."
+        ],
+        "subjective": true,
+        "blocking": false
+      }
+    },
+    {
+      "number": 128,
+      "skill": "content-platform-backend",
+      "result": {
+        "schemaVersion": 1,
+        "reviewId": "pr128-content-platform-backend-advice-v2",
+        "skill": "content-platform-backend",
+        "mode": "advisory",
+        "verdict": "pass",
+        "summary": "The patch extends portable-bundle inspection to authors, taxonomies, reusable blocks and reusable-block revisions through the existing collection-validation loop. Its new cases specify rejection of duplicate identities before opening the destination transaction. This is a favorable static assessment of portability and data-integrity intent. The loop body and import control flow are outside the supplied hunks, and no tests were run, so early refusal is an asserted contract rather than a reproduced result. No schema, lifecycle, media, job, search or backup mechanism changes are shown.",
+        "generatedAt": "2026-10-29T17:54:01.584Z",
+        "headSha": "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1",
+        "findings": [
+          {
+            "id": "duplicate-identities-before-transaction",
+            "severity": "info",
+            "category": "portability",
+            "message": "Documented contract: portable import should validate canonical identities before writing. Adding these four collections to the inspector's existing loop aligns with that requirement. The regression fixture first expects a valid export, then appends a duplicate and recomputes the SHA-256 digest over canonical JSON. That construction isolates duplicate-identity validation from simple digest corruption. It then expects invalid inspection, import rejection and no destination transaction. Preserve this pre-transaction rejection contract; the unseen implementation and unexecuted assertions limit verification.",
+            "subjective": true,
+            "blocking": false,
+            "evidence": [
+              ".claude/skills/content-platform-backend/references/backend-map.md: portable import guidance requires strict inspection and refusal of invalid bundles.",
+              "packages/web/src/server/content/portability.ts: the inspectPortableContentBundle hunk adds authors, taxonomies, reusable blocks and reusable block revisions to the collection loop.",
+              "packages/web/src/server/content/portability.test.ts: each malformed fixture receives a recomputed digest, expects the duplicate-id issue and spies on the destination transaction method."
+            ]
+          },
+          {
+            "id": "identity-conflict-coverage-boundary",
+            "severity": "info",
+            "category": "data-integrity",
+            "message": "Implementation assumption: uniqueness must depend on identity even when two records with that identity contain different payloads. The added cases append the exact existing object, which establishes the intended identical-duplicate case but does not independently demonstrate conflicting-payload handling. If that case is not covered elsewhere, add a digest-valid bundle with the same id and different otherwise-valid non-identity data, retaining the invalid-inspection and no-transaction expectations. This is a bounded follow-up, not a claim that the validator accepts such input.",
+            "subjective": true,
+            "blocking": false,
+            "evidence": [
+              "packages/web/src/server/content/portability.test.ts: duplicate is assigned from bundle.data[collection][0] and that same object is appended to the collection.",
+              "packages/web/src/server/content/portability.ts: the supplied hunk exposes collection selection but not the duplicate-detection loop body.",
+              "docs/agent-skills/advice-v2-inputs.json: PR #128 supplies only portability.ts and portability.test.ts changes; broader validation coverage was not inspected."
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "path": "docs/agent-skills/advice-v2-inputs.json"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/server/content/portability.ts"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/server/content/portability.test.ts"
+          },
+          {
+            "kind": "file",
+            "path": ".claude/skills/content-platform-backend/references/backend-map.md"
+          }
+        ]
+      },
+      "usefulness": {
+        "judgment": "usable",
+        "rationale": "The assessment explains why digest-valid duplicate fixtures and rejection before the transaction matter to canonical-data integrity. It also identifies the exact boundary of the added duplicate cases without pretending to inspect the missing validator body or prove runtime behavior.",
+        "evidence": [
+          "Four previously unlisted canonical collections enter the existing inspection loop.",
+          "Recomputed digests prevent checksum rejection from substituting for duplicate-identity detection.",
+          "The transaction spy expresses the intended no-write boundary, while the conflicting-payload recommendation is explicitly conditional."
+        ],
+        "subjective": true,
+        "blocking": false
+      }
+    },
+    {
+      "number": 128,
+      "skill": "owner-publishing-ux",
+      "result": {
+        "schemaVersion": 1,
+        "reviewId": "pr128-owner-publishing-ux-advice-v2",
+        "skill": "owner-publishing-ux",
+        "mode": "advisory",
+        "verdict": "not-applicable",
+        "summary": "At 40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1, the supplied change extends backend bundle validation and specifies duplicate-id rejection before a destination transaction. No changed owner action, screen, feedback mapping or recovery journey is evidenced. The duplicate-id issue is asserted at the inspector/import boundary; the patch does not show whether or how an owner encounters it. Owner-facing import integration is unavailable, so this disposition is limited to the supplied change and does not assert that no such workflow exists. Backend integrity belongs to content-platform-backend; no owner error-copy or confirmation requirement is invented.",
+        "generatedAt": "2026-10-29T17:54:01.584Z",
+        "headSha": "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1",
+        "findings": [],
+        "evidence": [
+          {
+            "kind": "file",
+            "path": "docs/agent-skills/advice-v2-inputs.json"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/server/content/portability.ts"
+          },
+          {
+            "kind": "file",
+            "path": "packages/web/src/server/content/portability.test.ts"
+          }
+        ]
+      },
+      "usefulness": {
+        "judgment": "unusable",
+        "rationale": "The assessment honestly limits scope, but the supplied evidence cannot support specific owner-journey advice. Recasting the backend exception as displayed owner copy, or prescribing import confirmations and recovery controls, would require an integration that was not supplied.",
+        "evidence": [
+          "The complete changed-file list contains only the portability module and its test.",
+          "The added assertion observes inspectPortableContentBundle, importPortableContentBundle and repository.transaction, not an owner interaction.",
+          "No caller or error-to-interface mapping connects the new rejection to an owner-visible consequence."
+        ],
+        "subjective": true,
+        "blocking": false
+      }
+    }
+  ]
+}

@@ -6,6 +6,47 @@ Give a concise human review and a JSON wrapper valid against
 `tests/agent-skills/fixtures/seo-distribution.json` is synthetic contract data, not a crawl,
 feed parse, redirect check or observation of a failing origin test.
 
+## Scope disposition
+
+Apply the skill's scope gate before producing substantive distribution advice.
+An abstention is an assessment of applicability, not a passing distribution audit.
+Use `verdict: not-applicable` with `findings: []`; explain what changed and which
+distribution surfaces did not, citing the reviewed diff and affected contracts in
+top-level evidence. Do not run the remaining surface inventory merely to fill a
+review. Missing evidence is an `evidence-gap`, not proof of absent scope.
+
+These are field excerpts for the JSON wrapper below, not complete review results:
+
+```json
+{
+  "verdict": "not-applicable",
+  "summary": "The inspected diff changes reader typography only; canonical URLs, metadata and distribution behavior are unchanged. This is a scope abstention, not distribution verification.",
+  "findings": []
+}
+```
+
+If another skill owns the changed behavior and a next review is useful, a scoped
+handoff may replace abstention. Name the owner and boundary in an informational
+finding; use `pass` for this info-only wrapper and state that it is a handoff only,
+not substantive distribution advice or verification. Keep it subjective and
+non-blocking; the handoff grants no dispatch or implementation authority.
+
+```json
+{
+  "id": "reader-presentation-handoff",
+  "severity": "info",
+  "category": "handoff",
+  "message": "Hand the changed typography to reader-frontend for readability and responsive layout review; no distribution behavior changed.",
+  "subjective": true,
+  "blocking": false,
+  "evidence": ["The reviewed diff changes reader typography only."]
+}
+```
+
+Replace illustrative text with observed evidence. Keep the original skill
+selection and historical usefulness counts unchanged; neither an abstention nor
+a handoff retroactively removes an assessment or proves new advice usable.
+
 ## Human evidence
 
 Identify revision, public origin (without secrets), routes, publication state and evidence
