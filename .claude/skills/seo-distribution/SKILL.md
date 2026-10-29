@@ -12,6 +12,27 @@ Read [the code map](references/code-map.md) for the affected surface and
 
 ## Review workflow
 
+### Scope gate
+
+Before reviewing a change, inspect the diff and directly affected contracts for a
+change to URL/discovery semantics: canonical URLs, redirects, metadata, structured
+data, social cards, feeds, sitemap, robots, search or newsletter delivery. Trace
+indirect effects when supported; a matching file path or task-text keyword alone
+does not establish scope. An explicit design request for one of these surfaces
+also establishes scope, even before implementation.
+
+If no distribution surface changes, stop with `verdict: not-applicable`,
+`findings: []`, and a summary plus evidence identifying the inspected revision,
+changed behavior and absent distribution scope. Do not invent findings to fill the
+workflow. Alternatively, give a scoped `handoff` naming the owning skill and the
+specific changed behavior, with `subjective: true` and `blocking: false`; for
+example, reader interaction belongs to `reader-frontend`. Follow the
+[scope disposition output](references/output-contract.md#scope-disposition).
+If the diff or affected contract is unavailable, report an evidence gap rather
+than claim scope is absent. For mixed changes, review only the distribution part.
+
+### In-scope review
+
 1. Identify the reviewed revision, routes, publication state, audience, and question.
    Label each surface implemented, planned, or unverified. Plans and bead acceptance
    criteria describe intended behavior; their presence does not establish delivery.

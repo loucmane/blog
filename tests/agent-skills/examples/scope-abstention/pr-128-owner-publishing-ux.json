@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "example-pr-128-owner-publishing-ux-scope-abstention",
+  "skill": "owner-publishing-ux",
+  "mode": "advisory",
+  "verdict": "not-applicable",
+  "summary": "Illustrative static review of PR #128: the complete two-file diff adds duplicate-ID inspection for authors, taxonomies, reusable blocks and reusable-block revisions, plus repository-isolation regression tests. No owner intent, state transition, feedback or recovery journey is changed or specified. The word revisions names backend records here; it does not establish an owner surface. This is a scope abstention, not owner UX approval.",
+  "generatedAt": "2026-10-29T17:43:00.033Z",
+  "headSha": "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1",
+  "findings": [],
+  "evidence": [
+    {
+      "kind": "file",
+      "path": "docs/agent-skills/advice-v2-inputs.json"
+    },
+    {
+      "kind": "file",
+      "path": "packages/web/src/server/content/portability.test.ts"
+    },
+    {
+      "kind": "file",
+      "path": "packages/web/src/server/content/portability.ts"
+    }
+  ]
+}

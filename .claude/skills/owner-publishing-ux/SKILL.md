@@ -59,6 +59,26 @@ Classify every material statement as exactly one of:
 
 ## Workflow
 
+### 0. Confirm Review Scope
+
+For a change review, inspect the diff and directly affected contracts for a changed
+owner intent, state transition, feedback or recovery journey. Identify the owner
+action and observable consequence; a matching file path or task-text keyword alone
+does not establish scope. Backend changes can qualify when their owner-visible
+effect is evidenced. An explicit design request for an owner journey also qualifies
+before implementation.
+
+If no owner journey changes, stop with `verdict: not-applicable`, `findings: []`,
+and a summary plus evidence identifying the inspected revision, changed behavior
+and absent owner scope. Do not invent findings, journey cards or product decisions
+to fill the workflow. Alternatively, give a scoped `handoff` naming the owning
+skill and specific changed behavior, with `subjective: true` and `blocking: false`;
+backend integrity belongs to `content-platform-backend`. Read
+[scope abstention and handoff examples](references/scope-abstention.md) for this
+output instead of the full journey contract. If the diff or affected contract is
+unavailable, report an evidence gap rather than claim scope is absent. For mixed
+changes, continue only for the evidenced owner journey.
+
 ### 1. Frame The Owner Context
 
 Read the canonical product truth, content workflow, relevant approved decisions, current
