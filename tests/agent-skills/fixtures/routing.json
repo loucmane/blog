@@ -421,6 +421,84 @@
     }
   },
   "quality-reliability-observability": {
+    "recoveryCoveragePositive": {
+      "paths": ["packages/web/src/app/recovery-marker.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "PR #130: a coverage contract for every route under the error boundary needs quality review even without PR prose."
+    },
+    "suspendedRetryPositive": {
+      "paths": ["packages/web/src/reader/components/failure-boundary.test.tsx"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #130: the Suspense retry and focus regression tests need quality review alongside reader accessibility."
+    },
+    "fontDigestPositive": {
+      "paths": ["packages/web/src/reader-directions/cinematic-feature/fonts.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #118: font hash assertions bind declared digests to bytes; this is a verification contract as well as a reader concern."
+    },
+    "fontContractPositive": {
+      "paths": ["packages/web/src/reader-directions/contract.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #118: tests of versioned font URLs establish a quality contract; changing only tests does not change document node definitions."
+    },
+    "directionBrowserPositive": {
+      "paths": ["packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #118: direction browser assertions must still intercept versioned fonts and exercise the intended state."
+    },
+    "frameworkCachePositive": {
+      "paths": ["packages/web/tests/framework/framework-contract.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "PR #118: the framework cache-header contract belongs to test and quality review independently of configuration edits."
+    },
+    "coldFontBrowserPositive": {
+      "paths": ["tests/e2e/reader-lab-cold-fonts.spec.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "PR #118: cold-font and immutable-cache browser assertions need quality review without relying on verification boilerplate."
+    },
+    "recoveryPresentationNegative": {
+      "paths": ["packages/web/src/reader/components/failure-boundary.tsx"],
+      "taskText": "Adjust the fallback spacing and button colour.",
+      "expected": ["reader-frontend"],
+      "rationale": "Adjacent presentation-only fallback changes retain reader review; the test path must not also match its source component."
+    },
+    "layoutPresentationNegative": {
+      "paths": ["packages/web/src/app/layout.tsx"],
+      "taskText": "Adjust the page frame spacing.",
+      "expected": ["reader-frontend", "seo-distribution"],
+      "rationale": "A layout source edit alone retains established reader and distribution routes without manufacturing quality scope."
+    },
+    "fontPresentationNegative": {
+      "paths": [
+        "packages/web/src/reader-directions/cinematic-feature/fonts.ts",
+        "packages/web/public/reader-directions/cinematic-feature/fonts/README.md"
+      ],
+      "taskText": "Adjust font choices and typography documentation. Verification: pnpm test:coverage, pnpm test:browser.",
+      "expected": ["reader-frontend"],
+      "rationale": "Font presentation files and ordinary test-command mentions do not constitute changed verification contracts."
+    },
+    "directionPresentationNegative": {
+      "paths": ["packages/web/src/reader-directions/quiet-monograph/styles.css"],
+      "taskText": "Adjust premium typography and reader layout.",
+      "expected": ["reader-frontend"],
+      "rationale": "Direction styling belongs to reader presentation; adding browser test paths must not widen the whole directory."
+    },
+    "presentationAndRegressionPositive": {
+      "paths": [
+        "packages/web/src/reader-directions/quiet-monograph/styles.css",
+        "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts"
+      ],
+      "taskText": "Adjust premium typography and reader layout.",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "Explicit changed-test evidence retains quality review in a mixed change even when prose contains presentation exclusions."
+    },
     "pathPositive": {
       "paths": ["config/ci/budgets.json"],
       "taskText": "",

@@ -14,15 +14,20 @@ const fixtures = json('./fixtures/routing.json')
 test('all registered skills have explicit positive, negative and ambiguous path and text cases', () => {
   assert.deepEqual(Object.keys(fixtures).sort(), config.catalog.skills.map(({ id }) => id).sort())
   for (const [skill, cases] of Object.entries(fixtures)) {
-    assert.deepEqual(Object.keys(cases).sort(), [
+    const required = [
       'pathAmbiguous',
       'pathNegative',
       'pathPositive',
       'textAmbiguous',
       'textNegative',
       'textPositive',
-    ])
+    ]
+    assert.ok(
+      required.every((kind) => Object.hasOwn(cases, kind)),
+      `${skill}: core fixtures`,
+    )
     for (const [kind, fixture] of Object.entries(cases)) {
+      assert.match(kind, /(?:Positive|Negative|Ambiguous)$/)
       assert.equal(fixture.expected.includes(skill), !kind.endsWith('Negative'), `${skill}/${kind}`)
       assert.ok(fixture.rationale.length > 15)
     }
