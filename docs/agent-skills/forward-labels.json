@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "labelledAt": "2026-10-29T08:42:00Z",
+  "baseline": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+  "method": "Expected review scopes recorded before implementing or running the shared router. Labels use PR intent and changed behavior, not every incidental file match. The blind reviewer must not read this file or evaluation results.",
+  "cases": [
+    {
+      "number": 130,
+      "selectionReason": "Reader accessibility recovery spans a shared layout, private preview and a new route coverage contract.",
+      "expected": [
+        {
+          "skill": "reader-frontend",
+          "rationale": "Failed retry focus restoration directly affects keyboard and screen-reader navigation."
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "rationale": "The route coverage contract and Suspense regression require review of accessibility automation and test completeness."
+        }
+      ]
+    },
+    {
+      "number": 128,
+      "selectionReason": "A narrow portable-import consistency repair isolates backend data integrity from presentation and security policy.",
+      "expected": [
+        {
+          "skill": "content-platform-backend",
+          "rationale": "Duplicate collection identifiers must reject consistently before either repository applies a portable import."
+        }
+      ]
+    },
+    {
+      "number": 125,
+      "selectionReason": "URL sanitization changes shared document validation without changing document node types or renderer behavior.",
+      "expected": [
+        {
+          "skill": "security-identity-privacy",
+          "rationale": "Allowed protocols and mailto userinfo rejection are sanitization rules with caller-wide security regression cases."
+        }
+      ]
+    },
+    {
+      "number": 123,
+      "selectionReason": "Skill registration and test-quality guidance exercise platform validation plus a domain-specific advisory review.",
+      "expected": [
+        {
+          "skill": "cross-agent-skill-platform",
+          "rationale": "Canonical files, relative links, catalog, routes and output fixtures must obey the cross-agent platform contract."
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "rationale": "The new skill's substantive test, observability and recovery guidance needs review against the repository's actual quality tooling."
+        }
+      ]
+    },
+    {
+      "number": 118,
+      "selectionReason": "Font caching combines reader performance, the shared direction contract and browser cache assertions.",
+      "expected": [
+        {
+          "skill": "reader-frontend",
+          "rationale": "Optional font display and immutable cache behavior affect warm-view typography and reader performance."
+        },
+        {
+          "skill": "editorial-blocks",
+          "rationale": "The shared Reader Lab direction contract gains font digests and versioned URL projection."
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "rationale": "Digest consistency, stale-version behavior and browser font interception require a coherent performance verification strategy."
+        }
+      ]
+    }
+  ]
+}

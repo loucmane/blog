@@ -332,6 +332,19 @@ test("rejects enforced subjective review mode", (t) => {
   assert.ok(report.errors.includes("subjective findings must remain advisory"));
 });
 
+test("platform validation rejects missing lifecycle criteria and subjective check classes", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  editJson(root, "config/agent-skills/catalog.yaml", (value) => {
+    delete value.skills[0].lifecycle.retirement;
+    value.policy.blockingEligibleCategories.push("editorial-taste");
+  });
+  const report = validatePlatform({ root });
+  assert.equal(report.passed, false);
+  assert.ok(report.errors.some((error) => error.includes("lifecycle.retirement")));
+  assert.ok(report.errors.some((error) => error.includes("only deterministic check classes")));
+});
+
 test("requires a digest lock for upstream skills", (t) => {
   const root = copyFixture();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

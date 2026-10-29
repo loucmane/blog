@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 1,
+  "mode": "advisory",
+  "blocking": false,
+  "metrics": {
+    "cases": 5,
+    "decisions": 60,
+    "truePositives": 7,
+    "falsePositives": 9,
+    "falseNegatives": 2,
+    "trueNegatives": 42,
+    "precision": 0.4375,
+    "recall": 0.7777777777777778,
+    "falsePositiveRate": 0.17647058823529413,
+    "falseNegativeRate": 0.2222222222222222,
+    "exactMatches": 0,
+    "missedRoutingCases": 2,
+    "whollyMissedCases": 0,
+    "assessedAdvice": 16,
+    "unusableAdvice": 2,
+    "unusableAdviceFindings": 2,
+    "unusableAdviceRate": 0.125
+  },
+  "perSkill": [
+    {
+      "skill": "content-platform-backend",
+      "expected": 1,
+      "selected": 2,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "cross-agent-skill-platform",
+      "expected": 1,
+      "selected": 1,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "editorial-blocks",
+      "expected": 1,
+      "selected": 2,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "gas-city-coordinator",
+      "expected": 0,
+      "selected": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "magazine-product-discovery",
+      "expected": 0,
+      "selected": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "owner-publishing-ux",
+      "expected": 0,
+      "selected": 3,
+      "falsePositives": 3,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "quality-reliability-observability",
+      "expected": 3,
+      "selected": 1,
+      "falsePositives": 0,
+      "falseNegatives": 2
+    },
+    {
+      "skill": "reader-frontend",
+      "expected": 2,
+      "selected": 3,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "release-witness",
+      "expected": 0,
+      "selected": 1,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "security-identity-privacy",
+      "expected": 1,
+      "selected": 2,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "seo-distribution",
+      "expected": 0,
+      "selected": 1,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "stack-research-adr",
+      "expected": 0,
+      "selected": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    }
+  ],
+  "cases": [
+    {
+      "number": 130,
+      "title": "fix(reader): keep retry focus intent through a suspended retry that fails again (blog-quly)",
+      "merge": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+      "selectionReason": "Reader accessibility recovery spans a shared layout, private preview and a new route coverage contract.",
+      "expected": [
+        "quality-reliability-observability",
+        "reader-frontend"
+      ],
+      "selected": [
+        "owner-publishing-ux",
+        "reader-frontend",
+        "seo-distribution"
+      ],
+      "truePositives": [
+        "reader-frontend"
+      ],
+      "falsePositives": [
+        "owner-publishing-ux",
+        "seo-distribution"
+      ],
+      "falseNegatives": [
+        "quality-reliability-observability"
+      ],
+      "advice": [
+        {
+          "skill": "owner-publishing-ux",
+          "usable": true,
+          "recommendation": "Review the private-preview retry journey explicitly: after a failed retry, focus should reach the useful error summary; after a successful preview retry, a later unrelated error must not take focus as though a retry were pending. Record a keyboard acceptance case for that sequence, because the new marker in PreviewStoryContent affects an owner preview journey and the source-text contract alone cannot prove its behavior. Keep preview privacy and public status explicit in that journey.",
+          "evidence": [
+            ".claude/skills/owner-publishing-ux/SKILL.md#5. Review Failure And Recovery First",
+            ".claude/skills/owner-publishing-ux/SKILL.md#6. Review Accessibility And Mobile Use",
+            ".claude/skills/owner-publishing-ux/references/owner-publishing-ux-output-contract.md#Preview, Scheduling, Publish, And Unpublish",
+            "d67f2a4901e27c68890f5f59febe1e14eb605bb1:packages/web/src/app/preview/stories/[slug]/page.tsx#PreviewStoryContent",
+            "d67f2a4901e27c68890f5f59febe1e14eb605bb1:packages/web/src/app/recovery-marker.test.ts"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "reader-frontend",
+          "usable": true,
+          "recommendation": "Retain the failed-retry, deliberate focus-move, navigation, and successful-recovery cases, then verify the suspended retry with keyboard activation in a real browser for Baseline and a Lab direction. The changed scope listens to focusin outside the boundary and the tests currently drive focus and click in jsdom; browser and assistive-technology evidence should confirm that a second failure focuses main without taking focus from a reader-selected control. Do not infer complete accessibility conformance from the reported suite counts.",
+          "evidence": [
+            ".claude/skills/reader-frontend/SKILL.md#Review workflow (steps 3 and 6)",
+            ".claude/skills/reader-frontend/references/code-map.md#Accessibility and performance evidence",
+            "d67f2a4901e27c68890f5f59febe1e14eb605bb1:packages/web/src/reader/components/failure-boundary.tsx#ReaderRecoveryScope and useRetryFocus",
+            "d67f2a4901e27c68890f5f59febe1e14eb605bb1:packages/web/src/reader/components/failure-boundary.test.tsx#retains retry intent through a committed loading fallback"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "seo-distribution",
+          "usable": false,
+          "recommendation": "Mark distribution review not applicable to this diff and hand the focus/recovery behavior to reader-frontend. The layout hunk adds a recovery provider around children; it changes no canonical, Open Graph, robots, feed, sitemap, redirect, or publication-eligibility behavior.",
+          "evidence": [
+            ".claude/skills/seo-distribution/SKILL.md#Review workflow",
+            ".claude/skills/seo-distribution/references/code-map.md#Existing surfaces",
+            "d67f2a4901e27c68890f5f59febe1e14eb605bb1:packages/web/src/app/layout.tsx#RootLayout diff",
+            "d67f2a4901e27c68890f5f59febe1e14eb605bb1:packages/web/src/reader/components/failure-boundary.tsx#ReaderRecoveryMarker"
+          ],
+          "findings": [
+            {
+              "category": "off-scope",
+              "message": "The route matches app/layout.tsx because that file also owns metadata, but the actual diff only wraps children in ReaderRecoveryScope and adds null-rendering recovery markers. SEO workflow steps concern URL/discovery semantics that this patch does not change, so applying them yields no substantive distribution recommendation for this PR.",
+              "subjective": true,
+              "blocking": false,
+              "evidence": [
+                "config/agent-skills/review-map.yaml#seo-distribution.match",
+                ".claude/skills/seo-distribution/SKILL.md#Review workflow (steps 2-5)",
+                "d67f2a4901e27c68890f5f59febe1e14eb605bb1:packages/web/src/app/layout.tsx#RootLayout diff"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 128,
+      "title": "fix(content): reject duplicate ids for every collection in portable import (blog-zcx9)",
+      "merge": "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1",
+      "selectionReason": "A narrow portable-import consistency repair isolates backend data integrity from presentation and security policy.",
+      "expected": [
+        "content-platform-backend"
+      ],
+      "selected": [
+        "content-platform-backend",
+        "owner-publishing-ux"
+      ],
+      "truePositives": [
+        "content-platform-backend"
+      ],
+      "falsePositives": [
+        "owner-publishing-ux"
+      ],
+      "falseNegatives": [],
+      "advice": [
+        {
+          "skill": "content-platform-backend",
+          "usable": true,
+          "recommendation": "Keep duplicate-id rejection before any repository transaction and retain the correctly recomputed bundle digest in the new regressions. Strengthen the four added collection cases with distinct row contents sharing an id, while still asserting that transaction is never called and the rejected original remains available; the present fixture appends the exact same row. That distinguishes identity integrity from accidental deduplication by full-row equality and protects the canonical-data refusal contract.",
+          "evidence": [
+            ".claude/skills/content-platform-backend/SKILL.md#2. Review Every Platform Area (Portable import and export; Data-integrity and failure-path review)",
+            ".claude/skills/content-platform-backend/references/backend-map.md#Portable Import And Export",
+            ".claude/skills/content-platform-backend/references/content-platform-backend-output-contract.md#Data Integrity And Failure Paths",
+            "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1:packages/web/src/server/content/portability.ts#inspectPortableContentBundle",
+            "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1:packages/web/src/server/content/portability.test.ts#rejects duplicate ids before accessing the import repository"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "usable": false,
+          "recommendation": "Mark owner-journey review not applicable and keep the import identity checks with content-platform-backend. The word revisions refers to reusable-block revision rows in a portable bundle; the patch supplies no owner revision-history, restore, preview, or recovery interaction to review.",
+          "evidence": [
+            ".claude/skills/owner-publishing-ux/SKILL.md#Trigger Contract",
+            ".claude/skills/owner-publishing-ux/references/owner-publishing-ux-output-contract.md#Revisions And Destructive Actions",
+            "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1:packages/web/src/server/content/portability.ts#inspectPortableContentBundle",
+            "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1:packages/web/src/server/content/portability.test.ts"
+          ],
+          "findings": [
+            {
+              "category": "off-scope",
+              "message": "The only routing evidence is the PR-body word revisions. The complete two-file diff adds backend collection validation and repository-isolation tests. Owner-publishing-ux requires an owner intent, state transition, feedback and recovery journey; none is changed or specified here, so applying that workflow would invent an owner surface.",
+              "subjective": true,
+              "blocking": false,
+              "evidence": [
+                "config/agent-skills/review-map.yaml#owner-publishing-ux.taskText",
+                ".claude/skills/owner-publishing-ux/SKILL.md#1. Frame The Owner Context",
+                "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1:packages/web/src/server/content/portability.ts",
+                "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1:packages/web/src/server/content/portability.test.ts"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 125,
+      "title": "test(security): safe-URL bypass regressions, and reject email addresses with credentials (blog-hh6c)",
+      "merge": "28935cce6f6a22140ec6b3b33bfa2c6105159c30",
+      "selectionReason": "URL sanitization changes shared document validation without changing document node types or renderer behavior.",
+      "expected": [
+        "security-identity-privacy"
+      ],
+      "selected": [
+        "content-platform-backend",
+        "editorial-blocks",
+        "security-identity-privacy"
+      ],
+      "truePositives": [
+        "security-identity-privacy"
+      ],
+      "falsePositives": [
+        "content-platform-backend",
+        "editorial-blocks"
+      ],
+      "falseNegatives": [],
+      "advice": [
+        {
+          "skill": "content-platform-backend",
+          "usable": true,
+          "recommendation": "Add a correctly digested portable-bundle regression containing an article or reusable-block revision with a newly rejected mailto userinfo URL, and assert import rejects before repository access while preserving the rejected data. The validator change reaches parseMigratedContentDocument in both relationship checks, so previously accepted canonical bundles can now fail inspection even though portability.ts is unchanged. Record that compatibility effect without weakening the URL rule.",
+          "evidence": [
+            ".claude/skills/content-platform-backend/SKILL.md#3. Exercise Failure Paths First",
+            ".claude/skills/content-platform-backend/references/backend-map.md#Portable Import And Export",
+            ".claude/skills/content-platform-backend/references/backend-map.md#Failure Catalog (Invalid stored document)",
+            "28935cce6f6a22140ec6b3b33bfa2c6105159c30:packages/web/src/server/content/document.ts#validateUrl",
+            "28935cce6f6a22140ec6b3b33bfa2c6105159c30:packages/web/src/server/content/portability.ts#validateRelationships and importPortableContentBundle"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "editorial-blocks",
+          "usable": true,
+          "recommendation": "Extend the new mailto-credentials cases to assert quarantine preserves the complete original document and reports invalid_url at the precise link or credit attribute. Keep null credit URLs valid while null link href remains invalid. The diff already tests status agreement across link, image credit and gallery credit; preserving the original and exact attribute path would additionally prove the document-contract behavior when accepted content narrows.",
+          "evidence": [
+            ".claude/skills/editorial-blocks/SKILL.md#Review workflow (steps 2-4)",
+            ".claude/skills/editorial-blocks/references/code-map.md#Stored document boundary",
+            "28935cce6f6a22140ec6b3b33bfa2c6105159c30:packages/web/src/lib/safe-url.test.ts#documentWithUrl and expectUrlAgreement",
+            "28935cce6f6a22140ec6b3b33bfa2c6105159c30:packages/web/src/server/content/document.ts#inspectContentDocument and validateUrl"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "security-identity-privacy",
+          "usable": true,
+          "recommendation": "Keep the helper and document validator aligned on parsed mailto username/password rejection, and add positive controls for mailto query parameters, multiple recipients and percent-encoded addresses alongside the new negative cases. Check each entry path independently before claiming every caller inherits the rule: the added test directly covers safeHref and three document contexts, while owner media metadata and portable media credits require their own boundary evidence. Treat these as scoped validation checks, not a full sanitization or security audit.",
+          "evidence": [
+            ".claude/skills/security-identity-privacy/SKILL.md#Workflow (Rich-content sanitization)",
+            ".claude/skills/security-identity-privacy/references/security-map.md#Rich Content and Media",
+            "28935cce6f6a22140ec6b3b33bfa2c6105159c30:packages/web/src/lib/safe-url.ts#safeHref",
+            "28935cce6f6a22140ec6b3b33bfa2c6105159c30:packages/web/src/server/content/document.ts#validateUrl",
+            "28935cce6f6a22140ec6b3b33bfa2c6105159c30:packages/web/src/lib/safe-url.test.ts#expectUrlAgreement"
+          ],
+          "findings": []
+        }
+      ]
+    },
+    {
+      "number": 123,
+      "title": "feat(skills): quality, reliability and observability skill (blog-0060)",
+      "merge": "7970b23f520e795974e4e0f5e42c12d994862a70",
+      "selectionReason": "Skill registration and test-quality guidance exercise platform validation plus a domain-specific advisory review.",
+      "expected": [
+        "cross-agent-skill-platform",
+        "quality-reliability-observability"
+      ],
+      "selected": [
+        "cross-agent-skill-platform",
+        "owner-publishing-ux",
+        "quality-reliability-observability",
+        "reader-frontend",
+        "release-witness"
+      ],
+      "truePositives": [
+        "cross-agent-skill-platform",
+        "quality-reliability-observability"
+      ],
+      "falsePositives": [
+        "owner-publishing-ux",
+        "reader-frontend",
+        "release-witness"
+      ],
+      "falseNegatives": [],
+      "advice": [
+        {
+          "skill": "cross-agent-skill-platform",
+          "usable": true,
+          "recommendation": "Preserve the canonical .claude skill and relative Codex symlink, and keep catalog registration, route and fixture checks together. Describe the new test file's matchesQuality substring helper and globToRegExp helper as fixture-contract checks only: they do not exercise the shared general router, so their pass counts must not be presented as evidence of that router's accuracy. The diff already labels the glob helper as fixture-only; retain that limit in review evidence.",
+          "evidence": [
+            ".claude/skills/cross-agent-skill-platform/SKILL.md#Workflow",
+            ".claude/skills/cross-agent-skill-platform/SKILL.md#Guardrails",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:.agents/skills/quality-reliability-observability",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:config/agent-skills/catalog.yaml",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:tests/agent-skills/quality-reliability-observability.test.mjs#matchesQuality and globToRegExp"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "usable": true,
+          "recommendation": "Make the new Acceptance Journey Review explicitly map owner failure scenarios to coverage or a named gap, including session expiry during publish and stale or unavailable preview. Its acceptance rule currently asks for at least one failure path per lifecycle action; that alone can leave these distinct owner recovery requirements unexamined. This is useful review of the new acceptance guidance, with implementation assumptions kept separate from delivered owner behavior.",
+          "evidence": [
+            ".claude/skills/owner-publishing-ux/SKILL.md#5. Review Failure And Recovery First",
+            ".claude/skills/owner-publishing-ux/references/owner-publishing-ux-output-contract.md#Journey Acceptance Rules",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:.claude/skills/quality-reliability-observability/references/quality-reliability-observability-output-contract.md#Acceptance Journey Review",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:.claude/skills/quality-reliability-observability/references/quality-reliability-observability-output-contract.md#Acceptance Journeys"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "usable": true,
+          "recommendation": "Strengthen the new gate-drift assertions so a mere mention in a workflow comment cannot establish CI execution. The test derives integrationInCi and lanesInCi from whole-file string inclusion; scope those checks to executed commands and add a negative fixture with the relevant words present only in comments. Keep the map's local/CI classifications tied to actual invocation, consistent with its own configured-is-not-executed rule.",
+          "evidence": [
+            ".claude/skills/quality-reliability-observability/SKILL.md#Evidence And Authority Boundary",
+            ".claude/skills/quality-reliability-observability/SKILL.md#4. Exercise Failure Paths First",
+            ".claude/skills/quality-reliability-observability/references/quality-map.md#Test Layers And CI Execution",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:tests/agent-skills/quality-reliability-observability.test.mjs#states the current quality gates as the repository defines them"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "reader-frontend",
+          "usable": true,
+          "recommendation": "Clarify the new performance-budget table's TBT wording: it quotes a proposed target as an INP proxy but later correctly says TBT is not INP. Label it as a lab blocking-time target and require interaction or field evidence for INP. Preserve the table's separation of anonymous reader budgets, signed-in Reader Lab measurements and local direction checks; this advice applies to the newly added reader-performance guidance, not an observed page regression.",
+          "evidence": [
+            ".claude/skills/reader-frontend/SKILL.md#Review workflow (step 5)",
+            ".claude/skills/reader-frontend/references/code-map.md#Accessibility and performance evidence",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:.claude/skills/quality-reliability-observability/references/quality-map.md#Performance Budgets"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "release-witness",
+          "usable": true,
+          "recommendation": "Add an explicit artifact/run identity and execution context field to the new Check Inventory template. It currently records command, CI step, revision, status and result, while the sample blocking result cites only a command and uses placeholder identity. Requiring the actual report/run and whether it ran on a worker, host or CI makes later verification claims inspectable and prevents schema-valid synthetic examples from being mistaken for executed checks.",
+          "evidence": [
+            ".claude/skills/release-witness/SKILL.md#Review workflow (steps 1-3)",
+            ".claude/skills/release-witness/references/output-contract.md#Verification record",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:.claude/skills/quality-reliability-observability/references/quality-reliability-observability-output-contract.md#Check Inventory",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:.claude/skills/quality-reliability-observability/references/quality-reliability-observability-output-contract.md#Advisory Review Result",
+            "7970b23f520e795974e4e0f5e42c12d994862a70:tests/agent-skills/quality-reliability-observability.test.mjs#emits schema-valid advisory findings where only deterministic ones block"
+          ],
+          "findings": []
+        }
+      ]
+    },
+    {
+      "number": 118,
+      "title": "perf(reader-lab): versioned direction font URLs with long immutable caching (blog-0044.37)",
+      "merge": "7c35a2b4365f07c4025bded2e52989f5b1535b0f",
+      "selectionReason": "Font caching combines reader performance, the shared direction contract and browser cache assertions.",
+      "expected": [
+        "editorial-blocks",
+        "quality-reliability-observability",
+        "reader-frontend"
+      ],
+      "selected": [
+        "editorial-blocks",
+        "reader-frontend",
+        "security-identity-privacy"
+      ],
+      "truePositives": [
+        "editorial-blocks",
+        "reader-frontend"
+      ],
+      "falsePositives": [
+        "security-identity-privacy"
+      ],
+      "falseNegatives": [
+        "quality-reliability-observability"
+      ],
+      "advice": [
+        {
+          "skill": "editorial-blocks",
+          "usable": true,
+          "recommendation": "Keep sha256 optional for existing direction definitions, reject malformed values before CSS generation, and preserve all unversioned CSS behavior in the shared contract tests. Correct the new comment that says a 64-bit prefix means two versions never collide: this is a cache-busting identifier, not an absolute uniqueness or content-validation guarantee. State that limit consistently with the stale-version response case, which intentionally serves current bytes for any well-formed version.",
+          "evidence": [
+            ".claude/skills/editorial-blocks/SKILL.md#Review workflow (steps 5-6)",
+            ".claude/skills/editorial-blocks/references/code-map.md#Reader Lab integration",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:packages/web/src/reader-directions/contract.ts#ReaderDirectionFont, fontVersionLength and fontUrl",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:packages/web/src/reader-directions/contract.test.ts#versions each font URL with the first 16 hex digits of its declared SHA-256",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:tests/e2e/reader-lab-cold-fonts.spec.ts#stale version case"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "reader-frontend",
+          "usable": true,
+          "recommendation": "Pair the new response-header matrix with a repeat-navigation browser observation under a recorded warm cache, checking that optional web fonts actually paint from cache without a revalidation request and that layout shift stays within each direction's accepted budget. The API request checks prove header values, not warm rendered font behavior. Retain pathname-based abort matching and its observed request set for cold fallback checks, and avoid using the screenshot font-loading gate as performance evidence.",
+          "evidence": [
+            ".claude/skills/reader-frontend/SKILL.md#Review workflow (step 5)",
+            ".claude/skills/reader-frontend/references/code-map.md#Direction presentation and fonts",
+            ".claude/skills/reader-frontend/references/code-map.md#Accessibility and performance evidence",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:tests/e2e/reader-lab-cold-fonts.spec.ts#directionFontFiles, fontRequests and cache header test",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts#fontFiles"
+          ],
+          "findings": []
+        },
+        {
+          "skill": "security-identity-privacy",
+          "usable": true,
+          "recommendation": "Retain the narrow public-font matcher and verify that adding a valid v query to owner, private-preview and Reader Lab page requests never gives those responses public immutable caching. The framework tests already preserve cookie-conditioned Lab rules and reject several non-font paths; add or identify runtime negative cases for the private surfaces. Treat the version as cache busting, not an integrity/authentication check, because the new stale-version case intentionally returns current bytes.",
+          "evidence": [
+            ".claude/skills/security-identity-privacy/SKILL.md#Workflow (Authorization; Session, credential, and secret handling)",
+            ".claude/skills/security-identity-privacy/references/security-map.md#Session, Credentials, Requests, and Headers",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:packages/web/next.config.ts#createReaderDirectionFontHeaderRule",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:packages/web/tests/framework/framework-contract.test.ts#caches only versioned direction font files",
+            "7c35a2b4365f07c4025bded2e52989f5b1535b0f:tests/e2e/reader-lab-cold-fonts.spec.ts#stale version case"
+          ],
+          "findings": []
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "baseline": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+    "frozenAt": "2026-10-29T08:45:22.579000+00:00",
+    "sha256": {
+      "docs/agent-skills/forward-labels.json": "82df2b9bfbdee256fb889ca3f92e26ec06b882a25edf533dd4e39e99403c4959",
+      "docs/agent-skills/forward-inputs.json": "cfeb91af4dddce7e2e4bd2fc54e8e1b59c66216ada3351e753bd0f1c4eacd242",
+      "config/agent-skills/catalog.yaml": "4a2df0efdb87c43bfc0371e72424b0c3c4bdf5fd3074c528a61ac3bc42b5e2d0",
+      "config/agent-skills/review-map.yaml": "97f958e0c6ed97f101f6ab39da2d52d2f2e9f464eaefe9610846ee4b14579dbb",
+      "scripts/agent-skills/routing.mjs": "a8fa58f29c29f21f95d7518078503976f1a798cd250f56df4630814d8ccfe63b",
+      "docs/agent-skills/forward-blind-review.json": "ff8ea11377d76959b1590f68b06426c9ca95c6c89a17960bff9bdead5fa11be8"
+    },
+    "reviewMethod": "Offline independent static review. Read the supplied PR title/body/files, the frozen shared routing module and config, applicable AGENTS instructions, and the selected canonical skill guidance and relevant references. Generated each full routing result only with selectSkills({paths:pr.files,taskText:pr.title+\"\\n\"+pr.body},config). Inspected local merged diffs with git --no-optional-locks show and scoped historical dependency code where needed. No forward labels, freeze metadata, scoring results, report, worklog or parent review notes were read. No browser, network, tests, dependency installation or workflow-state commands were run. Recommendations assess whether guidance yields actionable review of the actual diff or its directly affected contracts; usable does not mean the PR was reverified. missingScopes records this reviewer's independent judgment, not evaluator labels. All findings are subjective and non-blocking; only this review artifact was written.",
+    "labelsVisibleToReviewer": false
+  }
+}
