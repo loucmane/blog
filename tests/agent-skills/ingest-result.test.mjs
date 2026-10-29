@@ -85,7 +85,9 @@ test('plans an explicitly routed Beads update and append-only worklog receipt', 
     sha256,
   }
   assert.deepEqual(plan.receipt, receipt)
-  assert.equal(plan.metadataKey, 'skills.review.cross-agent-skill-platform.ingestion-review.1')
+  assert.equal(plan.metadataKey, 'skills.review.cross_agent_skill_platform.ingestion_review.1')
+  // The live Beads store rejects any other key shape.
+  assert.match(plan.metadataKey, /^[a-zA-Z_][a-zA-Z0-9_./]*$/)
   assert.deepEqual(plan.gcArgv, [
     ...route,
     'bd',
@@ -386,6 +388,24 @@ test('duplicate receipt with changed bytes refuses even when the parsed JSON is 
   assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
 })
 
+test('a review ID that encodes to an existing key is refused, not treated as a duplicate', (t) => {
+  const input = fixture(t)
+  const plan = library.buildBeadsIngestPlan(input)
+  const review = validResult()
+  review.reviewId = 'ingestion_review.1'
+  fs.writeFileSync(path.join(input.root, resultPath), JSON.stringify(review))
+  const colliding = library.buildBeadsIngestPlan(input)
+  assert.equal(colliding.metadataKey, plan.metadataKey)
+  const prior = { ...plan.receipt, sha256: colliding.receipt.sha256 }
+  const fake = recordingRunner({ id: bead, metadata: { [plan.metadataKey]: prior } })
+  assert.throws(
+    () => library.ingestReviewResult({ ...input, execute: true, runner: fake.runner }),
+    /receipt conflict/,
+  )
+  assert.equal(fake.calls.length, 1)
+  assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
+})
+
 test('a different review ID has its own receipt key', (t) => {
   const input = fixture(t)
   const plan = library.buildBeadsIngestPlan(input)
@@ -426,11 +446,17 @@ for (const operation of ['show', 'update']) {
     const fake = recordingRunner()
     const runner = (command, args, options) => {
       const result = fake.runner(command, args, options)
-      return args[5] === operation ? { status: 1, stdout: '' } : result
+      return args[5] === operation
+        ? {
+            status: 1,
+            stdout: '',
+            stderr: 'noise\nError: validation failed: invalid metadata key\n',
+          }
+        : result
     }
     assert.throws(
       () => library.ingestReviewResult({ ...input, execute: true, runner }),
-      /did not complete successfully/,
+      /did not complete successfully \(1\): Error: validation failed: invalid metadata key;/,
     )
     assert.equal(fake.calls.length, operation === 'show' ? 1 : 2)
     assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)

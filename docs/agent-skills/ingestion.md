@@ -30,7 +30,7 @@ The update argv has this shape; each displayed placeholder is one argument, with
 /home/loucmane/gascity/bin/gc --city /home/loucmane/gascity/city --rig blog bd update <bead> --append-notes <summary> --set-metadata <key>=<compact-json>
 ```
 
-The metadata key is `skills.review.<skill>.<reviewId>`. Its compact JSON value contains:
+The metadata key is `skills.review.<skill>.<reviewId>` with every hyphen replaced by an underscore, because Beads only accepts keys matching `^[a-zA-Z_][a-zA-Z0-9_./]*$`. Two review IDs that differ only in `-` versus `_` share a key; execution compares the stored `skill` and `reviewId` exactly and refuses such a collision. Its compact JSON value contains:
 
 - `skill`, `reviewId`, `headSha`, and `mode` (`advisory`);
 - `findings.bySeverity` (`info`, `warning`, `error`), `findings.blocking`, and `findings.advisory` (all non-blocking findings);

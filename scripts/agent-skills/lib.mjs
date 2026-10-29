@@ -705,7 +705,10 @@ export function buildBeadsIngestPlan({
     evidence: relative(root, absoluteResult),
     sha256: createHash('sha256').update(bytes).digest('hex'),
   }
-  const metadataKey = `skills.review.${result.skill}.${result.reviewId}`
+  // Beads metadata keys must match ^[a-zA-Z_][a-zA-Z0-9_./]*$, so hyphens become
+  // underscores. Execution compares the stored skill and review ID exactly, so a
+  // collision (a-b versus a_b) is refused rather than treated as a duplicate.
+  const metadataKey = `skills.review.${result.skill}.${result.reviewId}`.replaceAll('-', '_')
   const counts = `info=${findings.bySeverity.info}, warning=${findings.bySeverity.warning}, error=${findings.bySeverity.error}; blocking=${findings.blocking}, advisory=${findings.advisory}`
   // Copy identifiers/counts, not free-form findings or summary, into the sinks.
   const summary = `Recorded advisory ${result.skill} review ${result.reviewId}; head=${result.headSha}; verdict=${result.verdict}; ${counts}; evidence=${receipt.evidence}; sha256=${receipt.sha256}`
@@ -765,8 +768,10 @@ function runIngestionCommand(argv, root, runner) {
     },
   })
   if (outcome.error || outcome.status !== 0) {
+    // The last stderr line carries Beads validation errors (e.g. a rejected key).
+    const detail = String(outcome.stderr ?? '').trim().split('\n').at(-1)?.slice(0, 300)
     throw new Error(
-      `Beads ${argv[6]} did not complete successfully (${outcome.error?.message ?? outcome.signal ?? outcome.status}); inspect the bead before retrying`,
+      `Beads ${argv[6]} did not complete successfully (${outcome.error?.message ?? outcome.signal ?? outcome.status})${detail ? `: ${detail}` : ''}; inspect the bead before retrying`,
     )
   }
   return outcome.stdout
@@ -798,9 +803,14 @@ export function ingestReviewResult({
       typeof metadata[plan.metadataKey] === 'string'
         ? JSON.parse(metadata[plan.metadataKey])
         : metadata[plan.metadataKey]
-    if (!isRecord(prior) || prior.sha256 !== plan.receipt.sha256) {
+    if (
+      !isRecord(prior) ||
+      prior.skill !== plan.receipt.skill ||
+      prior.reviewId !== plan.receipt.reviewId ||
+      prior.sha256 !== plan.receipt.sha256
+    ) {
       throw new Error(
-        `Review receipt conflict for ${plan.metadataKey}: different or missing SHA-256`,
+        `Review receipt conflict for ${plan.metadataKey}: different skill, review ID or SHA-256`,
       )
     }
     return { status: 'already ingested', ...plan }
