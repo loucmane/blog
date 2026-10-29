@@ -406,6 +406,36 @@ test('a review ID that encodes to an existing key is refused, not treated as a d
   assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
 })
 
+test('only an identical stored receipt counts as already ingested', (t) => {
+  const input = fixture(t)
+  const plan = library.buildBeadsIngestPlan(input)
+  const { findings: _findings, ...withoutFindings } = plan.receipt
+  for (const prior of [
+    withoutFindings,
+    { ...plan.receipt, skill: 'cross_agent_skill_platform' },
+    { ...plan.receipt, headSha: '0'.repeat(40) },
+    { ...plan.receipt, evidence: 'reports/agent-skills/other.json' },
+    { ...plan.receipt, extra: true },
+  ]) {
+    const fake = recordingRunner({ id: bead, metadata: { [plan.metadataKey]: prior } })
+    assert.throws(
+      () => library.ingestReviewResult({ ...input, execute: true, runner: fake.runner }),
+      /receipt conflict/,
+    )
+    assert.equal(fake.calls.length, 1)
+    assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
+  }
+})
+
+test('a non-string stderr keeps the failure diagnostic', (t) => {
+  const input = fixture(t)
+  const runner = () => ({ status: 2, stdout: '', stderr: Object.create(null) })
+  assert.throws(
+    () => library.ingestReviewResult({ ...input, execute: true, runner }),
+    /did not complete successfully \(2\); inspect the bead/,
+  )
+})
+
 test('a different review ID has its own receipt key', (t) => {
   const input = fixture(t)
   const plan = library.buildBeadsIngestPlan(input)

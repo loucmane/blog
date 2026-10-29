@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { blockingEligibleCategories, validateRoutingConfig } from "./routing.mjs";
 
 const SKILL_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -769,7 +770,10 @@ function runIngestionCommand(argv, root, runner) {
   })
   if (outcome.error || outcome.status !== 0) {
     // The last stderr line carries Beads validation errors (e.g. a rejected key).
-    const detail = String(outcome.stderr ?? '').trim().split('\n').at(-1)?.slice(0, 300)
+    const detail =
+      typeof outcome.stderr === 'string'
+        ? outcome.stderr.trim().split('\n').at(-1).slice(0, 300)
+        : ''
     throw new Error(
       `Beads ${argv[6]} did not complete successfully (${outcome.error?.message ?? outcome.signal ?? outcome.status})${detail ? `: ${detail}` : ''}; inspect the bead before retrying`,
     )
@@ -803,14 +807,12 @@ export function ingestReviewResult({
       typeof metadata[plan.metadataKey] === 'string'
         ? JSON.parse(metadata[plan.metadataKey])
         : metadata[plan.metadataKey]
-    if (
-      !isRecord(prior) ||
-      prior.skill !== plan.receipt.skill ||
-      prior.reviewId !== plan.receipt.reviewId ||
-      prior.sha256 !== plan.receipt.sha256
-    ) {
+    // Every receipt field derives from the result bytes and path, so only an
+    // identical receipt is a duplicate; anything else (including a key collision
+    // or a malformed receipt) is refused.
+    if (!isDeepStrictEqual(prior, plan.receipt)) {
       throw new Error(
-        `Review receipt conflict for ${plan.metadataKey}: different skill, review ID or SHA-256`,
+        `Review receipt conflict for ${plan.metadataKey}: stored receipt differs from this result`,
       )
     }
     return { status: 'already ingested', ...plan }
