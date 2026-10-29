@@ -8,10 +8,12 @@ import { selectSkills } from './routing.mjs'
 
 const root = new URL('../../', import.meta.url)
 const read = (name) => fs.readFileSync(new URL(name, root), 'utf8')
-const json = (name) => JSON.parse(read(name))
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex')
 
-export function evaluateForward() {
+export function evaluateForward({ root: inputRoot = root } = {}) {
+  // An explicit root lets completion fixtures replay the same evaluator.
+  const read = (name) => fs.readFileSync(new URL(name, inputRoot), 'utf8')
+  const json = (name) => JSON.parse(read(name))
   const freeze = json('docs/agent-skills/forward-freeze.json')
   for (const [name, expected] of Object.entries(freeze.sha256)) {
     assert.equal(digest(read(name)), expected, `frozen input changed: ${name}`)

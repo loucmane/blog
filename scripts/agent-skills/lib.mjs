@@ -105,6 +105,10 @@ function gitIgnoredPaths(root, relativePaths, errors) {
       cwd: workTree,
       encoding: "utf8",
       input: relativePaths.map((relativePath) => `${relativePath}\0`).join(""),
+      // A missing/hung Git probe must become missing evidence, never an
+      // indefinitely stalled platform/completion report.
+      timeout: 5000,
+      killSignal: "SIGKILL",
     },
   );
   // Exit status 1 means that none of the paths are ignored.
@@ -563,14 +567,22 @@ export function validatePlatform({ root = process.cwd() } = {}) {
   };
 }
 
-export function buildAegisIngestCommand({ root = process.cwd(), resultPath }) {
+export function buildAegisIngestCommand({
+  root = process.cwd(),
+  resultPath,
+  result: suppliedResult,
+}) {
   const absoluteResult = path.resolve(root, resultPath);
   const reportsRoot = path.resolve(root, "reports/agent-skills");
   const relation = path.relative(reportsRoot, absoluteResult);
   if (relation.startsWith("..") || path.isAbsolute(relation)) {
     throw new Error("review result must be beneath reports/agent-skills");
   }
-  const result = JSON.parse(fs.readFileSync(absoluteResult, "utf8"));
+  // Offline auditors can exercise the exact ingestion contract in memory,
+  // without writing generated evidence or invoking the legacy workflow.
+  const result = suppliedResult === undefined
+    ? JSON.parse(fs.readFileSync(absoluteResult, "utf8"))
+    : suppliedResult;
   const errors = validateReviewResult(result);
   if (errors.length > 0) throw new Error(errors.join("; "));
   const evidence = relative(root, absoluteResult);
