@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isDeepStrictEqual } from 'node:util'
-import { validatePlatform, validateReviewResult, buildAegisIngestCommand } from './lib.mjs'
+import { validatePlatform, validateReviewResult, buildBeadsIngestPlan } from './lib.mjs'
 import { validateRoutingConfig } from './routing.mjs'
 import { evaluateForward } from './evaluate-forward.mjs'
 import { scoreEvaluation, renderReport } from './evaluation.mjs'
@@ -226,7 +226,7 @@ export function checkV1Completion({ root = defaultRoot } = {}) {
     [
       'tests/agent-skills/fixtures/',
       'node scripts/agent-skills/validate-review-result.mjs <result.json>',
-      'node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --dry-run',
+      'node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id>',
       'scripts/agent-skills/lib.mjs',
       forward('blind-review.json'),
       forward('results.json'),
@@ -241,10 +241,12 @@ export function checkV1Completion({ root = defaultRoot } = {}) {
         try {
           explain(validateReviewResult(output))
           requireThat(known.has(output.skill), `unregistered review skill: ${output.skill}`)
-          buildAegisIngestCommand({
+          buildBeadsIngestPlan({
             root,
             resultPath: `reports/agent-skills/${output.reviewId}.json`,
             result: output,
+            // A synthetic destination for an in-memory dry run, never a live receipt.
+            bead: 'blog-v1-completion',
           })
         } catch (error) {
           errors.push(`${source}: ${error.message}`)
@@ -267,7 +269,7 @@ export function checkV1Completion({ root = defaultRoot } = {}) {
         evaluationContainers: containers,
         skillsWithoutRecordedEnvelope: [...known].filter((id) => !covered.has(id)).sort(),
       }
-      return `${outputs.length} recorded per-skill envelopes pass validation and in-memory ingestion command construction. ${containers.length} forward containers are evaluation/provenance records, not ingestible per-skill envelopes; embedded blind advice passes the evaluation contract. No ingestion was executed. Skills without a persisted envelope: ${result.reviewOutputs.skillsWithoutRecordedEnvelope.join(', ') || 'none'}.`
+      return `${outputs.length} recorded per-skill envelopes pass validation and in-memory Beads/worklog ingestion planning through buildBeadsIngestPlan. ${containers.length} forward containers are evaluation/provenance records, not ingestible per-skill envelopes; embedded blind advice passes the evaluation contract. The dry run used a synthetic bead ID; no Gas City call or evidence write was made. Skills without a persisted envelope: ${result.reviewOutputs.skillsWithoutRecordedEnvelope.join(', ') || 'none'}.`
     },
   )
   add(
@@ -460,7 +462,7 @@ export function renderCompletionReport(result) {
     '',
     measurementSummary(result),
     '',
-    'Criterion c checks the existing validator and ingestion command builder, without invoking the legacy Aegis sink. Forward metadata, routing and advice containers use the evaluation contract; they are not silently converted into per-skill review-result envelopes. Synthetic fixtures prove contract acceptance only. Recorded PR provenance and blind review are preserved evidence, not independently reattested by this offline run. Capability coverage, validator/schema parity and the current ingestion destination remain explicit proposals below.',
+    'Criterion c checks the validator and buildBeadsIngestPlan in memory, without calling Gas City or writing evidence. It proves contract acceptance, not a live Beads receipt or worklog append. Forward metadata, routing and advice containers use the evaluation contract; they are not silently converted into per-skill review-result envelopes. Recorded PR provenance and blind review are preserved evidence, not independently reattested by this offline run. The gap proposals below preserve the historical v1 record, including the ingestion migration proposal; their inclusion does not assert that each proposal remains open.',
     '',
     '## Post-v1 gaps',
     '',

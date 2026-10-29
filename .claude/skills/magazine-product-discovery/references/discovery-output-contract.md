@@ -132,5 +132,7 @@ Validate generated results before ingestion:
 
 ```bash
 node scripts/agent-skills/validate-review-result.mjs reports/agent-skills/<result>.json
-node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --dry-run
+node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id>
 ```
+
+Beads/worklog ingestion defaults to a dry run. Only the coordinator runs `--execute` on the host after reviewing the evidence and plan; see `docs/agent-skills/ingestion.md`.

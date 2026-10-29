@@ -74,6 +74,7 @@
   "findingCategories": [
     "test-strategy",
     "acceptance-journey",
+    "critical-browser",
     "accessibility",
     "performance-budget",
     "observability",
@@ -380,7 +381,7 @@
       {
         "id": "owner-journey-flaky",
         "severity": "error",
-        "category": "acceptance-journey",
+        "category": "critical-browser",
         "message": "Synthetic failure example only: the browser result validator rejects the run because an owner acceptance journey passed only on retry.",
         "subjective": false,
         "blocking": true,
