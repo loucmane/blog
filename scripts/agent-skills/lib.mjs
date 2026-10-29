@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { validateRoutingConfig } from "./routing.mjs";
+import { isDeepStrictEqual } from "node:util";
+import { blockingEligibleCategories, validateRoutingConfig } from "./routing.mjs";
 
 const SKILL_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const REVIEW_ID = /^[a-z0-9][a-z0-9._-]*$/;
@@ -567,6 +569,8 @@ export function validatePlatform({ root = process.cwd() } = {}) {
   };
 }
 
+// Deprecated: compatibility only for the historical completion checker.
+// Active ingestion uses buildBeadsIngestPlan / ingestReviewResult below.
 export function buildAegisIngestCommand({
   root = process.cwd(),
   resultPath,
@@ -602,4 +606,234 @@ export function buildAegisIngestCommand({
       `Recorded advisory ${result.skill} review ${result.reviewId} with verdict ${result.verdict}`,
     ],
   };
+}
+
+const INGEST_ROUTE = {
+  command: '/home/loucmane/gascity/bin/gc',
+  city: '/home/loucmane/gascity/city',
+  rig: 'blog',
+}
+
+function ingestionPath(root, value, directory, label, required = false) {
+  if (typeof value !== 'string' || !value || /[\x00-\x1f\x7f]/.test(value)) {
+    throw new Error(`${label} must be a non-empty path without control characters`)
+  }
+  const target = path.resolve(root, value)
+  const relation = path.relative(path.resolve(root, directory), target)
+  if (
+    !relation ||
+    relation === '..' ||
+    relation.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relation)
+  ) {
+    throw new Error(`${label} must be beneath ${directory}`)
+  }
+  // Reject links in every component, including reports/ or docs/ themselves.
+  // This also prevents a custom worklog from writing frozen workflow state.
+  let current = root
+  const parts = path.relative(root, target).split(path.sep)
+  for (const [index, part] of parts.entries()) {
+    current = path.join(current, part)
+    let stat
+    try {
+      stat = fs.lstatSync(current)
+    } catch (error) {
+      if (!required && error.code === 'ENOENT') continue
+      throw error
+    }
+    if (stat.isSymbolicLink()) throw new Error(`${label} must not traverse symlinks`)
+    if (index < parts.length - 1 ? !stat.isDirectory() : !stat.isFile()) {
+      throw new Error(`${label} must name a regular file beneath directories`)
+    }
+    if (!required && index === parts.length - 1 && stat.nlink > 1) {
+      throw new Error(`${label} must not be a hard-linked file`)
+    }
+  }
+  return target
+}
+
+function markdownCode(value) {
+  const ticks = '`'.repeat(Math.max(0, ...(value.match(/`+/g) ?? []).map((run) => run.length)) + 1)
+  return `${ticks} ${value} ${ticks}`
+}
+
+export function buildBeadsIngestPlan({
+  root = process.cwd(),
+  resultPath,
+  bead,
+  worklog = `docs/worklog/${bead}.md`,
+  city = INGEST_ROUTE.city,
+  rig = INGEST_ROUTE.rig,
+} = {}) {
+  if (typeof bead !== 'string' || !/^[a-z0-9]+-[a-z0-9][a-z0-9._-]*$/.test(bead)) {
+    throw new Error('--bead must be a valid bead ID')
+  }
+  if (typeof rig !== 'string' || !SKILL_ID.test(rig)) throw new Error('--rig must be a rig name')
+  if (typeof city !== 'string' || !path.isAbsolute(city) || /[\x00-\x1f\x7f]/.test(city)) {
+    throw new Error('--city must be an absolute path without control characters')
+  }
+  root = path.resolve(root)
+  const absoluteResult = ingestionPath(
+    root,
+    resultPath,
+    'reports/agent-skills',
+    'review result',
+    true,
+  )
+  const bytes = fs.readFileSync(absoluteResult)
+  const result = JSON.parse(bytes.toString('utf8'))
+  const errors = validateReviewResult(result)
+  if (errors.length) throw new Error(errors.join('; '))
+  for (const finding of result.findings) {
+    if (finding.blocking && !blockingEligibleCategories.includes(finding.category)) {
+      throw new Error(
+        `blocking finding ${finding.id} must use a deterministic allowlisted category`,
+      )
+    }
+  }
+  const absoluteWorklog = ingestionPath(root, worklog, 'docs/worklog', 'worklog')
+  const findings = { bySeverity: { info: 0, warning: 0, error: 0 }, blocking: 0, advisory: 0 }
+  for (const finding of result.findings) {
+    findings.bySeverity[finding.severity]++
+    findings[finding.blocking ? 'blocking' : 'advisory']++
+  }
+  const receipt = {
+    skill: result.skill,
+    reviewId: result.reviewId,
+    headSha: result.headSha,
+    mode: result.mode,
+    findings,
+    evidence: relative(root, absoluteResult),
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+  }
+  // Beads metadata keys must match ^[a-zA-Z_][a-zA-Z0-9_./]*$, so hyphens become
+  // underscores. Execution compares the stored skill and review ID exactly, so a
+  // collision (a-b versus a_b) is refused rather than treated as a duplicate.
+  const metadataKey = `skills.review.${result.skill}.${result.reviewId}`.replaceAll('-', '_')
+  const counts = `info=${findings.bySeverity.info}, warning=${findings.bySeverity.warning}, error=${findings.bySeverity.error}; blocking=${findings.blocking}, advisory=${findings.advisory}`
+  // Copy identifiers/counts, not free-form findings or summary, into the sinks.
+  const summary = `Recorded advisory ${result.skill} review ${result.reviewId}; head=${result.headSha}; verdict=${result.verdict}; ${counts}; evidence=${receipt.evidence}; sha256=${receipt.sha256}`
+  return {
+    bead,
+    metadataKey,
+    receipt,
+    summary,
+    gcArgv: [
+      INGEST_ROUTE.command,
+      '--city',
+      city,
+      '--rig',
+      rig,
+      'bd',
+      'update',
+      bead,
+      '--append-notes',
+      summary,
+      '--set-metadata',
+      `${metadataKey}=${JSON.stringify(receipt)}`,
+    ],
+    worklog: {
+      path: relative(root, absoluteWorklog),
+      entry: [
+        '',
+        '',
+        `### Skill review: ${result.skill} / ${result.reviewId}`,
+        '',
+        'Classification: internal project evidence.',
+        '',
+        `- Bead: ${markdownCode(bead)}`,
+        `- Review ID: ${markdownCode(result.reviewId)}`,
+        `- Head SHA: ${markdownCode(result.headSha)}`,
+        `- Mode: advisory; verdict: ${result.verdict}`,
+        `- Findings: ${counts}`,
+        `- Evidence: ${markdownCode(receipt.evidence)}`,
+        `- Result SHA-256: ${markdownCode(receipt.sha256)}`,
+        `- Beads metadata: ${markdownCode(metadataKey)}`,
+        '- This receipt records validated structure and supplied claims; it does not verify evidence truth.',
+        '',
+      ].join('\n'),
+    },
+  }
+}
+
+function runIngestionCommand(argv, root, runner) {
+  const outcome = runner(argv[0], argv.slice(1), {
+    cwd: root,
+    shell: false,
+    encoding: 'utf8',
+    timeout: 30000,
+    killSignal: 'SIGKILL',
+    env: {
+      GC_HOME: '/home/loucmane/gascity/home',
+      PATH: '/home/loucmane/gascity/bin:/usr/local/bin:/usr/bin:/bin',
+    },
+  })
+  if (outcome.error || outcome.status !== 0) {
+    // The last stderr line carries Beads validation errors (e.g. a rejected key).
+    const detail =
+      typeof outcome.stderr === 'string'
+        ? outcome.stderr.trim().split('\n').at(-1).slice(0, 300)
+        : ''
+    throw new Error(
+      `Beads ${argv[6]} did not complete successfully (${outcome.error?.message ?? outcome.signal ?? outcome.status})${detail ? `: ${detail}` : ''}; inspect the bead before retrying`,
+    )
+  }
+  return outcome.stdout
+}
+
+export function ingestReviewResult({
+  root = process.cwd(),
+  execute = false,
+  runner = spawnSync,
+  ...options
+} = {}) {
+  root = path.resolve(root)
+  const plan = buildBeadsIngestPlan({ root, ...options })
+  if (!execute) return { status: 'dry-run', ...plan }
+
+  const showArgv = [...plan.gcArgv.slice(0, 5), 'bd', 'show', plan.bead, '--json']
+  const shown = JSON.parse(runIngestionCommand(showArgv, root, runner))
+  const record = Array.isArray(shown) && shown.length === 1 ? shown[0] : shown
+  if (
+    !isRecord(record) ||
+    record.id !== plan.bead ||
+    (record.metadata !== undefined && !isRecord(record.metadata))
+  ) {
+    throw new Error('Beads show must return the requested bead and valid metadata')
+  }
+  const metadata = record.metadata ?? {}
+  if (Object.hasOwn(metadata, plan.metadataKey)) {
+    const prior =
+      typeof metadata[plan.metadataKey] === 'string'
+        ? JSON.parse(metadata[plan.metadataKey])
+        : metadata[plan.metadataKey]
+    // Every receipt field derives from the result bytes and path, so only an
+    // identical receipt is a duplicate; anything else (including a key collision
+    // or a malformed receipt) is refused.
+    if (!isDeepStrictEqual(prior, plan.receipt)) {
+      throw new Error(
+        `Review receipt conflict for ${plan.metadataKey}: stored receipt differs from this result`,
+      )
+    }
+    return { status: 'already ingested', ...plan }
+  }
+
+  // Check local writability before the remote mutation. The two sinks are not
+  // transactional; an append error after the update needs coordinator repair.
+  const logPath = ingestionPath(root, plan.worklog.path, 'docs/worklog', 'worklog')
+  let writable = logPath
+  while (!fs.existsSync(writable)) writable = path.dirname(writable)
+  fs.accessSync(writable, fs.constants.W_OK)
+  runIngestionCommand(plan.gcArgv, root, runner)
+  try {
+    ingestionPath(root, plan.worklog.path, 'docs/worklog', 'worklog')
+    fs.mkdirSync(path.dirname(logPath), { recursive: true })
+    fs.appendFileSync(logPath, plan.worklog.entry, 'utf8')
+  } catch (error) {
+    throw new Error(
+      `Beads receipt recorded, but worklog append did not complete: ${error.message}. Coordinator must reconcile ${plan.worklog.path}; an equal-hash retry writes nothing.`,
+      { cause: error },
+    )
+  }
+  return { status: 'ingested', ...plan }
 }
