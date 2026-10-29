@@ -14,7 +14,7 @@ import {
   evaluateForward,
   evaluateRoutingV2,
 } from '../../scripts/agent-skills/evaluate-forward.mjs'
-import { buildAegisIngestCommand } from '../../scripts/agent-skills/lib.mjs'
+import { buildBeadsIngestPlan, validateReviewResult } from '../../scripts/agent-skills/lib.mjs'
 
 const repository = fileURLToPath(new URL('../../', import.meta.url))
 const readJson = (root, name) => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'))
@@ -163,6 +163,31 @@ test('criterion c rejects malformed review fixtures through the shared contract'
   assert.match(row.detail, /headSha/)
 })
 
+test('criterion c applies the Beads deterministic blocking allowlist', (t) => {
+  const root = fixture(t)
+  const fixturePath = 'tests/agent-skills/fixtures/reader-frontend.json'
+  editJson(root, fixturePath, (value) => {
+    value.reviewResult.findings[0].subjective = false
+    value.reviewResult.findings[0].blocking = true
+    value.reviewResult.findings[0].category = 'editorial-taste'
+  })
+  assert.deepEqual(validateReviewResult(readJson(root, fixturePath).reviewResult), [])
+  const row = criterion(root, 'c')
+  assert.equal(row.status, 'fail')
+  assert.match(row.detail, /deterministic allowlisted category/)
+})
+
+test('criterion c plans missing evidence files without creating reports or worklogs', (t) => {
+  const root = fixture(t)
+  for (const method of ['mkdirSync', 'writeFileSync', 'appendFileSync']) {
+    t.mock.method(fs, method, () => { throw new Error(`unexpected write: ${method}`) })
+  }
+  const row = criterion(root, 'c')
+  assert.equal(row.status, 'pass', row.detail)
+  assert.equal(fs.existsSync(path.join(root, 'reports')), false)
+  assert.equal(fs.existsSync(path.join(root, 'docs/worklog')), false)
+})
+
 test('criterion c cannot pass on an empty review-output collection', (t) => {
   const root = fixture(t)
   for (const name of fs.readdirSync(path.join(root, 'tests/agent-skills/fixtures'))) {
@@ -185,18 +210,21 @@ test('in-memory ingestion planning matches file ingestion without executing the 
   const root = fixture(t)
   const result = readJson(root, 'tests/agent-skills/fixtures/reader-frontend.json').reviewResult
   const resultPath = 'reports/agent-skills/example.json'
+  const options = { root, resultPath, bead: 'blog-v1-completion' }
+  const inMemory = buildBeadsIngestPlan({ ...options, result })
+  assert.equal(fs.existsSync(path.join(root, 'reports')), false)
   fs.mkdirSync(path.join(root, 'reports/agent-skills'), { recursive: true })
   writeJson(root, resultPath, result)
   assert.deepEqual(
-    buildAegisIngestCommand({ root, resultPath, result }),
-    buildAegisIngestCommand({ root, resultPath }),
+    inMemory,
+    buildBeadsIngestPlan(options),
   )
   assert.throws(
-    () => buildAegisIngestCommand({ root, resultPath: 'outside.json', result }),
+    () => buildBeadsIngestPlan({ ...options, resultPath: 'outside.json', result }),
     /beneath reports/,
   )
   assert.throws(
-    () => buildAegisIngestCommand({ root, resultPath, result: { ...result, mode: 'enforced' } }),
+    () => buildBeadsIngestPlan({ ...options, result: { ...result, mode: 'enforced' } }),
     /advisory/,
   )
 })

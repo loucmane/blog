@@ -14,7 +14,7 @@ Keep Claude and Codex on one canonical project skill implementation while preser
 3. Keep `.agents/skills/<skill-id>` as a relative symlink to the canonical directory. Never copy or fork the skill body for Codex.
 4. Register the skill, provenance, routes, deterministic checks, and advisory mode in the project configs.
 5. Run `pnpm ci:agent-skills` and the system `quick_validate.py` against each changed skill.
-6. Write generated review results beneath `reports/agent-skills/`, validate them with `scripts/agent-skills/validate-review-result.mjs`, and ingest them only through `scripts/agent-skills/ingest-result.mjs` or the project-local Aegis CLI.
+6. Write generated review results beneath `reports/agent-skills/`, validate them with `scripts/agent-skills/validate-review-result.mjs`, and plan Beads/worklog ingestion with `node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id>`. This defaults to a dry run; only the coordinator runs `--execute` on the host after reviewing the evidence and plan. See `docs/agent-skills/ingestion.md` for receipt and retry behavior.
 
 ## Guardrails
 
@@ -23,7 +23,7 @@ Keep Claude and Codex on one canonical project skill implementation while preser
 - Keep catalog and review-map files in JSON-compatible YAML until a reviewed parser dependency is justified.
 - Pin imported upstream skills by immutable revision and SHA-256 digest; project-authored skills do not need an upstream lock entry.
 - Keep subjective findings non-blocking and advisory. Deterministic schema, link, script, test, build, typecheck, lint, security, and critical browser checks may block.
-- Never write `.aegis/` state directly. Use the project-local Aegis CLI for evidence ingestion.
+- Never write `.aegis/` state directly. Legacy Aegis and Taskmaster state are frozen; Beads is the active task authority.
 - Never commit generated files beneath `reports/agent-skills/`.
 
 ## Commands
@@ -32,7 +32,7 @@ Keep Claude and Codex on one canonical project skill implementation while preser
 pnpm ci:agent-skills
 python3 /home/loucmane/.codex/skills/.system/skill-creator/scripts/quick_validate.py .claude/skills/<skill-id>
 node scripts/agent-skills/validate-review-result.mjs reports/agent-skills/<result>.json
-node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --dry-run
+node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id>
 ```
 
 If validation reports subjective concerns, preserve them in the result artifact and continue unless a separate owner-approved policy promotes that finding class to enforcement.

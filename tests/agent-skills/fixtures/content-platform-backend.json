@@ -94,6 +94,7 @@
     "state-machine",
     "server-boundary",
     "schema-migration",
+    "schema",
     "media-lifecycle",
     "background-job",
     "search-indexing",
@@ -270,7 +271,7 @@
       {
         "id": "schema-projection-drift",
         "severity": "error",
-        "category": "schema-migration",
+        "category": "schema",
         "message": "The Drizzle projection declares a column that no reviewed migration creates, so the migration alignment test fails.",
         "subjective": false,
         "blocking": true,

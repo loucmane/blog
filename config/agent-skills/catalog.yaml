@@ -42,7 +42,7 @@
         "skill-authoring",
         "skill-link-validation",
         "review-result-validation",
-        "aegis-evidence-ingestion"
+        "beads-worklog-evidence-ingestion"
       ],
       "resultSchema": "agent-skill-review-result-v1",
       "lifecycle": {

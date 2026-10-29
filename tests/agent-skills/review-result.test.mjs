@@ -5,7 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
-  buildAegisIngestCommand,
+  buildBeadsIngestPlan,
   validateReviewResult,
 } from "../../scripts/agent-skills/lib.mjs";
 
@@ -55,7 +55,7 @@ test("rejects enforcement mode during advisory dogfood", () => {
   assert.ok(validateReviewResult(result).includes("mode must remain advisory"));
 });
 
-test("builds an argument-safe Aegis CLI ingestion command", (t) => {
+test("builds an argument-safe Beads ingestion plan", (t) => {
   const root = fs.mkdtempSync(
     path.join(repository, "tests/agent-skills/.review-result-"),
   );
@@ -64,18 +64,19 @@ test("builds an argument-safe Aegis CLI ingestion command", (t) => {
   fs.mkdirSync(path.dirname(resultPath), { recursive: true });
   fs.writeFileSync(resultPath, `${JSON.stringify(validResult(), null, 2)}\n`);
 
-  const invocation = buildAegisIngestCommand({ root, resultPath });
-  assert.equal(invocation.command, "./.aegis/bin/aegis");
-  assert.deepEqual(invocation.args.slice(0, 7), [
-    "log",
-    "--target-dir",
-    ".",
-    "--handler",
-    "agent-skill:cross-agent-skill-platform",
-    "--event-class",
-    "verification",
+  const plan = buildBeadsIngestPlan({ root, resultPath, bead: "blog-example" });
+  assert.deepEqual(plan.gcArgv.slice(0, 8), [
+    "/home/loucmane/gascity/bin/gc",
+    "--city",
+    "/home/loucmane/gascity/city",
+    "--rig",
+    "blog",
+    "bd",
+    "update",
+    "blog-example",
   ]);
-  assert.ok(invocation.args.includes("reports/agent-skills/task49.json"));
+  assert.equal(plan.receipt.evidence, "reports/agent-skills/task49.json");
+  assert.equal(plan.worklog.path, "docs/worklog/blog-example.md");
 });
 
 test("refuses to ingest evidence outside the generated reports root", (t) => {
@@ -87,7 +88,7 @@ test("refuses to ingest evidence outside the generated reports root", (t) => {
   fs.writeFileSync(resultPath, `${JSON.stringify(validResult(), null, 2)}\n`);
 
   assert.throws(
-    () => buildAegisIngestCommand({ root, resultPath }),
+    () => buildBeadsIngestPlan({ root, resultPath, bead: "blog-example" }),
     /must be beneath reports\/agent-skills/,
   );
 });

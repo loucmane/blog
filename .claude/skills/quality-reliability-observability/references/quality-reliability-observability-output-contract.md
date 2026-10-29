@@ -235,6 +235,7 @@ Use these finding categories:
 
 - `test-strategy`;
 - `acceptance-journey`;
+- `critical-browser` (only for a failing deterministic critical browser check that blocks);
 - `accessibility`;
 - `performance-budget`;
 - `observability`;
@@ -255,6 +256,7 @@ Use these finding categories:
 - Only deterministic findings are blocking-eligible. A deterministic finding uses
   `subjective: false`, cites its reproducing command in `evidence` as `command: <command>`,
   and repeats that command in the top-level `evidence` with `kind: "command"`.
+- A blocking finding must use a category from the catalog's deterministic allowlist (`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`); ingestion refuses any other blocking category. Topic categories stay advisory. A blocking browser or journey check uses `critical-browser`, not `acceptance-journey`.
 
 | Check | Required evidence |
 | --- | --- |
@@ -334,8 +336,10 @@ Validate generated results before ingestion:
 
 ```bash
 node scripts/agent-skills/validate-review-result.mjs reports/agent-skills/<result>.json
-node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --dry-run
+node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id>
 ```
+
+Beads/worklog ingestion defaults to a dry run. Only the coordinator runs `--execute` on the host after reviewing the evidence and plan; see `docs/agent-skills/ingestion.md`.
 
 A schema-valid result does not prove that any command ran, and a green result is not merge
 or deployment permission. Evidence ingestion belongs to the active project workflow.

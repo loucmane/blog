@@ -241,6 +241,7 @@ these finding categories:
 - `state-machine`;
 - `server-boundary`;
 - `schema-migration`;
+- `schema` (only for a failing deterministic schema or migration check that blocks);
 - `media-lifecycle`;
 - `background-job`;
 - `search-indexing`;
@@ -264,6 +265,7 @@ these finding categories:
   platform or review-result validator failure, a forward migration without its paired down
   file shown by a listing command, or a failing type check or unit test.
 - A deterministic finding may still be non-blocking, for example an informational count.
+- A blocking finding must use a category from the catalog's deterministic allowlist (`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`); ingestion refuses any other blocking category. Topic categories stay advisory. A blocking migration check uses `schema`, not `schema-migration`.
 - `security-handoff` findings are always subjective and non-blocking here; the security skill
   owns their enforcement.
 
@@ -289,7 +291,7 @@ these finding categories:
     {
       "id": "schema-projection-drift",
       "severity": "error",
-      "category": "schema-migration",
+      "category": "schema",
       "message": "The Drizzle projection declares a column that no reviewed migration creates.",
       "subjective": false,
       "blocking": true,
@@ -324,5 +326,7 @@ Validate generated results before ingestion:
 
 ```bash
 node scripts/agent-skills/validate-review-result.mjs reports/agent-skills/<result>.json
-node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --dry-run
+node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id>
 ```
+
+Beads/worklog ingestion defaults to a dry run. Only the coordinator runs `--execute` on the host after reviewing the evidence and plan; see `docs/agent-skills/ingestion.md`.
