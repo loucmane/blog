@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   buildAegisIngestCommand,
   validateReviewResult,
 } from "../../scripts/agent-skills/lib.mjs";
+
+const repository = fileURLToPath(new URL('../../', import.meta.url));
 
 function validResult() {
   return {
@@ -55,7 +57,7 @@ test("rejects enforcement mode during advisory dogfood", () => {
 
 test("builds an argument-safe Aegis CLI ingestion command", (t) => {
   const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "blog-agent-skill-result-"),
+    path.join(repository, "tests/agent-skills/.review-result-"),
   );
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const resultPath = path.join(root, "reports/agent-skills/task49.json");
@@ -78,7 +80,7 @@ test("builds an argument-safe Aegis CLI ingestion command", (t) => {
 
 test("refuses to ingest evidence outside the generated reports root", (t) => {
   const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "blog-agent-skill-result-"),
+    path.join(repository, "tests/agent-skills/.review-result-"),
   );
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const resultPath = path.join(root, "outside.json");
