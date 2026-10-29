@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import { realpathSync } from 'node:fs'
 import { createServer } from 'node:net'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -87,7 +88,13 @@ export async function runContentIntegration() {
   }
 }
 
-if (import.meta.main) {
+export function isEntrypoint(argv1, moduleUrl) {
+  if (!argv1) return false
+  // Node resolves the module URL even when the script is launched through a symlink.
+  return realpathSync(argv1) === fileURLToPath(moduleUrl)
+}
+
+if (isEntrypoint(process.argv[1], import.meta.url)) {
   try {
     await runContentIntegration()
   } catch (error) {

@@ -1,5 +1,7 @@
 import { EventEmitter } from 'node:events'
-import { readFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, symlink } from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { parse } from 'yaml'
@@ -52,11 +54,61 @@ beforeEach(() => {
   mocks.createServer.mockReset().mockImplementation(() => probe())
 })
 
-describe('content integration ports', () => {
+describe('content integration entrypoint', () => {
+  const moduleUrl = new URL('./run-content-integration.mjs', import.meta.url).href
+  const modulePath = fileURLToPath(moduleUrl)
+
+  it.each([
+    ['absolute', modulePath],
+    ['relative', path.relative(process.cwd(), modulePath)],
+  ])('recognizes its own %s path', (_kind, argv1) => {
+    expect(runner.isEntrypoint(argv1, moduleUrl)).toBe(true)
+  })
+
+  it('recognizes its own path through a symlink', async () => {
+    const fixtureRoot = new URL('../../../ci-artifacts/', import.meta.url)
+    await mkdir(fixtureRoot, { recursive: true })
+    const directory = await mkdtemp(new URL('content-entrypoint-', fixtureRoot))
+    try {
+      const link = path.join(directory, 'runner link.mjs')
+      await symlink(modulePath, link)
+      expect(runner.isEntrypoint(link, moduleUrl)).toBe(true)
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects another module path', () => {
+    expect(runner.isEntrypoint(fileURLToPath(import.meta.url), moduleUrl)).toBe(false)
+  })
+
+  it('accepts a missing script argument without starting the suite', () => {
+    expect(runner.isEntrypoint(undefined, moduleUrl)).toBe(false)
+  })
+
   it('can be imported without starting Docker or the integration suite', () => {
     expect(importCalls).toBe(0)
   })
 
+  it('starts the suite when invoked as the main script', async () => {
+    const argv = process.argv
+    try {
+      process.argv = [process.execPath, modulePath]
+      vi.resetModules()
+      await import('./run-content-integration.mjs')
+      expect(mocks.spawnSync.mock.calls.map(([command, args]) => [command, args[3]])).toEqual([
+        ['docker', 'down'],
+        ['docker', 'up'],
+        ['pnpm', 'packages/web/src/server/database/postgres.integration.test.ts'],
+        ['docker', 'down'],
+      ])
+    } finally {
+      process.argv = argv
+    }
+  })
+})
+
+describe('content integration ports', () => {
   it('uses distinct loopback ports below the ephemeral range without trial clashes', async () => {
     const trial = parse(await readFile(new URL('./lab-trial.compose.yml', import.meta.url), 'utf8'))
     const trialPorts = Object.values(trial.services).flatMap((service) =>
