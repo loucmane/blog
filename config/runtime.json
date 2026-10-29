@@ -113,7 +113,7 @@
       "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "2186a655bc706f191189c21dc0919c12584714719239209304f19879e78f3170",
       "tests/ci/runtime-contract.test.mjs": "a4e83110d0d6f17c30ab16a97c30a0d61137049e0bcff6c7fedfc0f5b0702be1",
-      "tests/ci/security-hotfix.test.mjs": "6bcb4d18cc16a5521748f2f49fd92c3fa9e140a93ca65f8fdb313a1c5191dcb5",
+      "tests/ci/security-hotfix.test.mjs": "a11823b6103937910e3a02a9457a8f05c706bdfb606811c2186004de671e3923",
       "tests/ci/test-capability.test.mjs": "d15f5278ba272de4fe73175102a54de15608277f3b97f72a2cba3dc2b0e361c9",
       "tests/ci/test-results.test.mjs": "0edea1509359b9914a9b553d4ed61eedd5f1eca96456c631aa31f39307ef4fbe"
     },

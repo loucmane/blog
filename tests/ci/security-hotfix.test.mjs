@@ -387,10 +387,15 @@ test('security-patched direct and transitive versions remain pinned', () => {
   )
   const workspace = fs.readFileSync(new URL('../../pnpm-workspace.yaml', import.meta.url), 'utf8')
 
-  assert.equal(rootPackage.devDependencies['@next/eslint-plugin-next'], '16.3.8')
-  assert.equal(rootPackage.devDependencies['@vitest/coverage-v8'], '4.1.11')
-  assert.equal(rootPackage.devDependencies.vitest, '4.1.11')
-  assert.equal(webPackage.dependencies.next, '16.3.8')
+  assert.equal(rootPackage.devDependencies['@next/eslint-plugin-next'], '16.4.1')
+  assert.equal(rootPackage.devDependencies['@vitest/coverage-v8'], '4.1.12')
+  assert.equal(rootPackage.devDependencies.vitest, '4.1.12')
+  assert.equal(webPackage.dependencies.next, '16.4.1')
+  // Advisories published 2026-10-29 (blog-b7rn): better-auth and its adapters, and zod.
+  assert.equal(webPackage.dependencies['better-auth'], '1.7.14')
+  assert.equal(webPackage.dependencies['@better-auth/passkey'], '1.7.14')
+  assert.equal(webPackage.dependencies['@better-auth/drizzle-adapter'], '1.7.14')
+  assert.equal(webPackage.dependencies.zod, '4.6.6')
   assert.equal(webPackage.dependencies.sharp, '0.35.5')
   assert.equal(webPackage.devDependencies.postcss, '8.5.23')
   assert.match(workspace, /'sharp@0\.35\.5': true/)
@@ -405,8 +410,8 @@ test('security-patched direct and transitive versions remain pinned', () => {
   ])
   assert.match(workspace, /'browserslist@>=4\.0\.0 <4\.28\.7': 4\.28\.7/)
   assert.match(workspace, /'nanoid@>=3\.0\.0 <3\.3\.18': 3\.3\.18/)
-  assert.match(workspace, /'next@16\.3\.8>postcss': 8\.5\.23/)
-  assert.match(workspace, /'next@16\.3\.8>sharp': 0\.35\.5/)
+  assert.match(workspace, /'next@16\.4\.1>postcss': 8\.5\.23/)
+  assert.match(workspace, /'next@16\.4\.1>sharp': 0\.35\.5/)
   // GHSA-rj75-hqrm-r3gf has no patched 6.x release, so the only copy (6.0.10, under
   // @tailwindcss/typography) moves across the major line to 7.1.6.
   assert.deepEqual(workspace.match(/^ {2}'postcss-selector-parser@.+$/gm), [
@@ -415,7 +420,7 @@ test('security-patched direct and transitive versions remain pinned', () => {
   assert.deepEqual(workspace.match(/^ {2}'source-map-js@.+$/gm), [
     "  'source-map-js@>=1.0.0 <1.2.2': 1.2.2",
   ])
-  assert.match(workspace, /'undici@>=7\.0\.0 <7\.29\.1': 7\.29\.1/)
+  assert.match(workspace, /'undici@>=7\.0\.0 <7\.30\.1': 7\.30\.1/)
   // @tiptap/core is patched for GHSA-cp6q-959q-f8rh from 3.30.4 and GHSA-j95f-988m-3j2f from
   // 3.30.5. Every direct pin and transitive override in the editor family moves in lockstep.
   const tiptapPins = Object.entries(webPackage.dependencies).filter(([name]) =>
