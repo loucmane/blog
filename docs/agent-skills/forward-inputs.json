@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "source": "Coordinator-supplied offline recent-prs.json, merged PRs 100-130",
+  "sourceSha256": "fd2f7c3181ccb36633b52a7b81d8451266a6a0b7e1670f43fe19bd800aa0aa7c",
+  "cases": [
+    {
+      "body": "## Summary\n\nAccessibility fix for failed retries (Bead blog-quly), completing #129. In some cases \"Try again\" commits a Suspense loading fallback and the render then fails again. The failure boundary had already unmounted and lost its pending-retry intent, so focus stayed on `body` after the second failure.\n\n- **Recovery scope:** `app/layout.tsx` wraps the routed subtree in a persistent recovery scope (implemented in `reader/components/failure-boundary.tsx`). Retry intent now outlives the error component.\n- **Recovery marker:** rendered only inside resolved content, it confirms a real recovery and clears the intent. It lives in `ReaderPage`, so it covers every reader route and Reader Lab direction, and in the private preview page.\n- **Excluded:** error, Lab-failure and loading renders never confirm recovery. Owner routes have their own error boundary and are unaffected.\n- **Tests:**\n  - The suspended-failure regression case is restored.\n  - A new contract test (`app/recovery-marker.test.ts`) requires every page under the root error boundary to render `ReaderPage` or the marker.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean.\n- `pnpm test:coverage`: 2,224 tests passed.\n- `pnpm test:browser`: 66/66 on the final tree.\n- Direction suites, because the root layout changed: Quiet Monograph 27/27, Literary Long-read 29/29, Swiss Index 46/46, Cinematic Feature 33/33, Expressive Colour 38/38.\n\n## Review\n\nImplemented by the Codex worker from the blog-ysui worker's design. The Codex review held it on one gap. The private preview page shares the root error boundary but rendered no marker, so after a successful retry there an unrelated error took retry focus (reproduced `BODY \u2192 MAIN`). The coordinator added the marker and the contract test (779eb82). The narrow re-review passed: `BODY \u2192 BODY`, the marker appears only in resolved content, and excluding the owner routes is correct.\n",
+      "branch": "codex/blog-quly-failure-boundary-keep-retry-focus-intent-through-a-suspended",
+      "files": [
+        "packages/web/src/app/layout.tsx",
+        "packages/web/src/app/preview/stories/[slug]/page.tsx",
+        "packages/web/src/app/recovery-marker.test.ts",
+        "packages/web/src/reader-lab/reader-page.tsx",
+        "packages/web/src/reader/components/failure-boundary.test.tsx",
+        "packages/web/src/reader/components/failure-boundary.tsx"
+      ],
+      "merge": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+      "mergedAt": "2026-10-22T01:27:11Z",
+      "number": 130,
+      "title": "fix(reader): keep retry focus intent through a suspended retry that fails again (blog-quly)"
+    },
+    {
+      "body": "## Summary\n\nPortable import integrity fix (Bead blog-zcx9), from the review of #120.\n\n- **Before:** the bundle inspection's duplicate-id check skipped authors, taxonomies, reusable blocks and reusable-block revisions. A bundle with a repeated id inspected as valid. The in-memory repository then kept the last row silently, while PostgreSQL would roll the import back.\n- **Now:** all 13 id-bearing collections are checked, with a regression test per added kind; each is rejected before the repository is touched. `articleAuthors` and `articleTaxonomies` have no id of their own, and `publicationSettings` is a singleton.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean.\n- `pnpm test:coverage`: 2,171 tests passed. Portability tests: 27/27.\n\n## Review\n\nImplemented by the Codex worker. The Codex review held it because reusable-block revisions were still missing, reproduced with a digested bundle. The coordinator added them (1605bd6), and a narrow re-review passed. It confirmed all 13 collections against the `PortableContentData` type, and that the new case fails without the fix.",
+      "branch": "codex/blog-zcx9-portable-import-check-duplicate-ids-for-authors-taxonomies-a",
+      "files": [
+        "packages/web/src/server/content/portability.test.ts",
+        "packages/web/src/server/content/portability.ts"
+      ],
+      "merge": "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1",
+      "mergedAt": "2026-10-21T20:03:07Z",
+      "number": 128,
+      "title": "fix(content): reject duplicate ids for every collection in portable import (blog-zcx9)"
+    },
+    {
+      "body": "## Summary\n\nSecurity tests and one fix (Bead blog-hh6c).\n\n- **Regression tests:** `packages/web/src/lib/safe-url.test.ts` now commits the bypass shapes from the blog-wmyj security review. Each case is checked against the document link and credit rule:\n  - percent-encoded schemes;\n  - control characters in or before the scheme;\n  - backslash forms;\n  - credentials;\n  - protocol-relative and relative forms;\n  - million-character values;\n  - non-string inputs.\n- **Fix:** the Codex review found that `mailto://user:secret@host/` kept its credentials through both `safeHref` and the document URL rule. WHATWG URLs parse userinfo in `mailto://` too. Only web addresses may carry credentials, so both rules now reject a `mailto:` address with a user name or password. Plain `mailto:reader@host`, query parameters, several recipients and percent-encoded addresses stay valid. Every caller inherits the rule: reader blocks, media credits, portability and owner contracts.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean.\n- `pnpm test:coverage`: all tests passed, including 952 safe-URL cases.\n\n## Review\n\nTests implemented by the Codex worker. The Codex review held them on the missing `mailto://` credentials case. The coordinator added the rejection to both rules (6e0216a), and a narrow Codex re-review passed it. That re-review probed 33 more URLs across three document contexts and confirmed every caller inherits the rule.\n",
+      "branch": "codex/blog-hh6c-safe-url-helper-commit-the-reviewed-bypass-shapes-as-regress",
+      "files": [
+        "packages/web/src/lib/safe-url.test.ts",
+        "packages/web/src/lib/safe-url.ts",
+        "packages/web/src/server/content/document.ts"
+      ],
+      "merge": "28935cce6f6a22140ec6b3b33bfa2c6105159c30",
+      "mergedAt": "2026-10-21T14:32:27Z",
+      "number": 125,
+      "title": "test(security): safe-URL bypass regressions, and reject email addresses with credentials (blog-hh6c)"
+    },
+    {
+      "body": "## Summary\n\nA new project skill, `quality-reliability-observability` (Bead blog-0060). It is modelled on the content-platform-backend skill (#74).\n\n- **Coverage:** test strategy (unit, integration, contract, browser), owner publishing acceptance journeys, accessibility automation and manual review, performance budgets and Core Web Vitals, structured logging and error reporting, health and readiness checks, production verification, backup and restore drills, and incident and rollback readiness.\n- **Grounding:** this repository's CI checks, test-capability files, Playwright configs, the Lighthouse harness and the Reader Lab budgets.\n- **Registration:** in `config/agent-skills/catalog.yaml` and `review-map.yaml`, with the relative `.agents/skills` link for Codex. Review results are schema-valid, and the skill has its own test and fixture.\n- **Severity:** subjective findings stay advisory. Deterministic test, accessibility, performance-budget and health checks are eligible to block.\n\nThe worker's session could not write into `.claude/skills`, so it staged the four skill files byte-exact. The coordinator placed them and verified all nine recorded SHA-256 digests.\n\n## Verification (host)\n\n- `pnpm ci:agent-skills`: passed. 12 skills and 12 routes; node tests 105/105.\n- `quick_validate.py`: the skill is valid.\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean. `pnpm test:coverage`: 1,201 tests passed.\n\n## Review\n\nImplemented by the Claude worker. The Codex review passed. It confirmed the repository claims, the intended route overlaps with the other skills, and the split between deterministic and advisory checks.",
+      "branch": "codex/blog-0060-implement-quality-reliability-and-observability-skill",
+      "files": [
+        ".agents/skills/quality-reliability-observability",
+        ".claude/skills/quality-reliability-observability/SKILL.md",
+        ".claude/skills/quality-reliability-observability/agents/openai.yaml",
+        ".claude/skills/quality-reliability-observability/references/quality-map.md",
+        ".claude/skills/quality-reliability-observability/references/quality-reliability-observability-output-contract.md",
+        "config/agent-skills/catalog.yaml",
+        "config/agent-skills/review-map.yaml",
+        "tests/agent-skills/fixtures/quality-reliability-observability.json",
+        "tests/agent-skills/platform.test.mjs",
+        "tests/agent-skills/quality-reliability-observability.test.mjs"
+      ],
+      "merge": "7970b23f520e795974e4e0f5e42c12d994862a70",
+      "mergedAt": "2026-10-21T14:12:20Z",
+      "number": 123,
+      "title": "feat(skills): quality, reliability and observability skill (blog-0060)"
+    },
+    {
+      "body": "## Summary\n\nShared Reader Lab performance fix (Bead blog-0044.37). Direction font files were served with `max-age=0`. Every direction uses `font-display: optional`, so a warm view only uses a web font that is already cached, and each view revalidated every face. Long immutable caching was unsafe because font file names don't change when their bytes change. Round 1 found that and stopped.\n\n- **Versioned URLs:**\n  - Each direction's font sources declare the sha256 of every woff2 file.\n  - The contract emits each font URL with `?v=<first 16 hex digits>`.\n  - Tests check every declared hash against its file, so a byte change without a declaration change fails CI. All 29 declared hashes match their files.\n  - Expressive Colour's `prepare-fonts.py` rewrites its declarations.\n- **Caching:**\n  - `next.config.ts` serves only versioned woff2 under `/reader-directions/<id>/fonts/` with `public, max-age=31536000, immutable`, pinned in the framework contract.\n  - Unversioned or malformed requests keep today's revalidating default.\n  - A well-formed but stale version still gets the current file with the long cache: the version busts caches, it doesn't validate content. A test documents this.\n  - Unhashed fonts, such as a test fixture, stay unversioned.\n- **Browser tests:** Quiet Monograph, Swiss Index and the shared cold-font spec now match fonts by pathname, so their aborts and font audits still fire. A new test checks the `Cache-Control` header of every font file.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 104 files, 1,201 tests passed.\n- `pnpm test:browser`: 64/64, plus the stale-version case afterwards (2/2).\n- Direction suites: Quiet Monograph 27/27, Literary Long-read 29/29, Swiss Index 46/46, Cinematic Feature 33/33, Expressive Colour 38/38.\n\n## Review\n\nImplemented by the Claude worker in two rounds; round 1 stopped correctly at the unmet precondition. The Codex cross-vendor review passed. It confirmed:\n- the hashes, the safe query values and the preparation helper;\n- that the other 11 header rules are unchanged;\n- that the browser predicates still fire;\n- that all 24 files are within the lane's write set.\n\nThe coordinator added the stale-version test from its low note.\n",
+      "branch": "codex/blog-0044.37-direction-font-files-served-with-max-age-0-weakening-warm-fo",
+      "files": [
+        "packages/web/next.config.ts",
+        "packages/web/public/reader-directions/cinematic-feature/fonts/README.md",
+        "packages/web/public/reader-directions/expressive-colour/fonts/README.md",
+        "packages/web/public/reader-directions/literary-longread/fonts/README.md",
+        "packages/web/public/reader-directions/quiet-monograph/fonts/README.md",
+        "packages/web/public/reader-directions/swiss-index/fonts/README.md",
+        "packages/web/src/reader-directions/README.md",
+        "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+        "packages/web/src/reader-directions/cinematic-feature/fonts.ts",
+        "packages/web/src/reader-directions/contract.test.ts",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader-directions/expressive-colour/fonts.test.ts",
+        "packages/web/src/reader-directions/expressive-colour/fonts.ts",
+        "packages/web/src/reader-directions/expressive-colour/prepare-fonts.py",
+        "packages/web/src/reader-directions/literary-longread/fonts.test.ts",
+        "packages/web/src/reader-directions/literary-longread/fonts.ts",
+        "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts",
+        "packages/web/src/reader-directions/quiet-monograph/fonts.ts",
+        "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+        "packages/web/src/reader-directions/swiss-index/fonts.test.ts",
+        "packages/web/src/reader-directions/swiss-index/fonts.ts",
+        "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+        "packages/web/tests/framework/framework-contract.test.ts",
+        "tests/e2e/reader-lab-cold-fonts.spec.ts"
+      ],
+      "merge": "7c35a2b4365f07c4025bded2e52989f5b1535b0f",
+      "mergedAt": "2026-10-20T21:21:46Z",
+      "number": 118,
+      "title": "perf(reader-lab): versioned direction font URLs with long immutable caching (blog-0044.37)"
+    }
+  ]
+}

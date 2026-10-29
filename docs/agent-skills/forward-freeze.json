@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-29T08:45:22.579000+00:00",
+  "phase": "before first real-PR router execution and blind review",
+  "sha256": {
+    "docs/agent-skills/forward-labels.json": "82df2b9bfbdee256fb889ca3f92e26ec06b882a25edf533dd4e39e99403c4959",
+    "docs/agent-skills/forward-inputs.json": "cfeb91af4dddce7e2e4bd2fc54e8e1b59c66216ada3351e753bd0f1c4eacd242",
+    "config/agent-skills/catalog.yaml": "4a2df0efdb87c43bfc0371e72424b0c3c4bdf5fd3074c528a61ac3bc42b5e2d0",
+    "config/agent-skills/review-map.yaml": "97f958e0c6ed97f101f6ab39da2d52d2f2e9f464eaefe9610846ee4b14579dbb",
+    "scripts/agent-skills/routing.mjs": "a8fa58f29c29f21f95d7518078503976f1a798cd250f56df4630814d8ccfe63b"
+  },
+  "labelsBeforeFormattingSha256": "4cdc0a0d85599169ec1ab5e7e19cec32aa3a7ef9ef8fa4aa464ab59ae43ee1e5",
+  "labelsCanonicalSha256": "4f5180a4697badcdcef170f501ca69c59e1989f7af62e7710d7649bef7e3ef49",
+  "formattingNote": "Labels formatted after freeze; canonical JSON content unchanged, prior raw digest retained. No routing or reviewer output had been read.",
+  "nonBehavioralAmendments": [
+    {
+      "path": "scripts/agent-skills/routing.mjs",
+      "beforeSha256": "36333e9b52978d4df502b4d17c4488a6a722007a3e4272fa7dc1ced161431a1b",
+      "afterSha256": "a8fa58f29c29f21f95d7518078503976f1a798cd250f56df4630814d8ccfe63b",
+      "recordedAt": "2026-10-29T08:52:09.225105+00:00",
+      "reason": "Remove an unnecessary slash escape inside a regex character class for ESLint; matching behavior is unchanged. Blind predictions are independently replay-checked against this file."
+    }
+  ]
+}

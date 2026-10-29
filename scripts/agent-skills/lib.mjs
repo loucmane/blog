@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { validateRoutingConfig } from "./routing.mjs";
 
 const SKILL_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const REVIEW_ID = /^[a-z0-9][a-z0-9._-]*$/;
@@ -21,6 +22,7 @@ function readJsonCompatibleYaml(filePath) {
   } catch (error) {
     throw new Error(
       `${filePath}: expected JSON-compatible YAML (${error.message})`,
+      { cause: error },
     );
   }
 }
@@ -267,6 +269,7 @@ export function validatePlatform({ root = process.cwd() } = {}) {
 
   if (catalog.schemaVersion !== 1)
     errors.push("catalog.schemaVersion must equal 1");
+  errors.push(...validateRoutingConfig({ catalog, reviewMap }));
   if (catalog.canonicalRoot !== ".claude/skills")
     errors.push("catalog.canonicalRoot must be .claude/skills");
   if (catalog.codexRoot !== ".agents/skills")
