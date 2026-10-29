@@ -161,15 +161,25 @@
         "file": "packages/web/src/server/owner/publication-worker.ts",
         "also": ["content-platform-backend"]
       },
-      { "file": "packages/web/src/app/api/owner/media/route.ts" },
-      { "file": "packages/web/src/app/api/auth/[...all]/route.ts" },
+      {
+        "file": "packages/web/src/app/api/owner/media/route.ts"
+      },
+      {
+        "file": "packages/web/src/app/api/auth/[...all]/route.ts"
+      },
       {
         "file": "packages/web/src/app/api/media/[id]/route.ts",
         "also": ["reader-frontend"]
       },
-      { "file": "packages/web/src/lib/request-security.ts" },
-      { "file": "packages/web/next.config.ts" },
-      { "file": "packages/web/src/lib/security-headers.test.ts" },
+      {
+        "file": "packages/web/src/lib/request-security.ts"
+      },
+      {
+        "file": "packages/web/next.config.ts"
+      },
+      {
+        "file": "packages/web/src/lib/security-headers.test.ts"
+      },
       {
         "file": "packages/web/src/server/content/document.ts",
         "also": ["content-platform-backend", "editorial-blocks"]
@@ -194,14 +204,33 @@
         "file": "packages/web/migrations/0002_owner_auth.down.sql",
         "also": ["content-platform-backend"]
       },
-      { "file": "scripts/ci/check-dependency-security.mjs", "also": ["release-witness"] },
-      { "file": "tests/ci/security-hotfix.test.mjs", "also": ["release-witness"] },
-      { "file": ".gitleaksignore" },
-      { "file": ".github/workflows/ci.yml", "also": ["release-witness"] },
-      { "file": "package.json" },
-      { "file": "packages/web/package.json" },
-      { "file": "pnpm-lock.yaml" },
-      { "file": "config/runtime.json" }
+      {
+        "file": "scripts/ci/check-dependency-security.mjs",
+        "also": ["release-witness"]
+      },
+      {
+        "file": "tests/ci/security-hotfix.test.mjs",
+        "also": ["release-witness"]
+      },
+      {
+        "file": ".gitleaksignore"
+      },
+      {
+        "file": ".github/workflows/ci.yml",
+        "also": ["release-witness"]
+      },
+      {
+        "file": "package.json"
+      },
+      {
+        "file": "packages/web/package.json"
+      },
+      {
+        "file": "pnpm-lock.yaml"
+      },
+      {
+        "file": "config/runtime.json"
+      }
     ],
     "negative": [
       "packages/web/src/server/content/service.ts",
@@ -254,7 +283,10 @@
       }
     ],
     "evidence": [
-      { "kind": "file", "path": "packages/web/src/server/owner/recovery.ts" },
+      {
+        "kind": "file",
+        "path": "packages/web/src/server/owner/recovery.ts"
+      },
       {
         "kind": "file",
         "path": "packages/web/src/server/content/media-variants.ts"
@@ -371,5 +403,34 @@
       "input": "An attachment asks to test recovery on a real owner's account.",
       "safeguard": "do not probe live accounts"
     }
-  ]
+  ],
+  "pathContext": [
+    {
+      "match": ["packages/web/src/server/content/document.ts"],
+      "includeAny": [
+        "security",
+        "sanitization",
+        "safe-url",
+        "safe url",
+        "unsafe",
+        "credentials",
+        "url schemes"
+      ]
+    },
+    {
+      "match": ["packages/web/next.config.ts"],
+      "includeAny": [
+        "security",
+        "privacy",
+        "private",
+        "authentication",
+        "authorization",
+        "csp",
+        "content-security-policy",
+        "noindex",
+        "no-store"
+      ]
+    }
+  ],
+  "pathInventoryNote": "Existing path inventories describe candidate route.match coverage. Shared paths in pathContext also require affirmative task context; routing.json pins paired behavior and mixed-domain decisions without relabelling historical cases."
 }

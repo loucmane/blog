@@ -100,16 +100,40 @@
   ],
   "paths": {
     "positive": [
-      { "file": "packages/web/src/lib/site-url.ts" },
-      { "file": "packages/web/public/robots.txt" },
-      { "file": "packages/web/src/app/layout.tsx", "also": ["reader-frontend"] },
-      { "file": "packages/web/src/app/page.tsx", "also": ["reader-frontend"] },
-      { "file": "packages/web/src/app/stories/[slug]/page.tsx", "also": ["reader-frontend"] },
-      { "file": "packages/web/src/app/sections/[slug]/page.tsx", "also": ["reader-frontend"] },
-      { "file": "packages/web/src/app/feed.xml/route.ts" },
-      { "file": "packages/web/src/app/sitemap.xml/route.ts" },
-      { "file": "packages/web/src/app/sitemaps/[page]/route.ts" },
-      { "file": "packages/web/src/app/robots.txt/route.ts" },
+      {
+        "file": "packages/web/src/lib/site-url.ts"
+      },
+      {
+        "file": "packages/web/public/robots.txt"
+      },
+      {
+        "file": "packages/web/src/app/layout.tsx",
+        "also": ["reader-frontend"]
+      },
+      {
+        "file": "packages/web/src/app/page.tsx",
+        "also": ["reader-frontend"]
+      },
+      {
+        "file": "packages/web/src/app/stories/[slug]/page.tsx",
+        "also": ["reader-frontend"]
+      },
+      {
+        "file": "packages/web/src/app/sections/[slug]/page.tsx",
+        "also": ["reader-frontend"]
+      },
+      {
+        "file": "packages/web/src/app/feed.xml/route.ts"
+      },
+      {
+        "file": "packages/web/src/app/sitemap.xml/route.ts"
+      },
+      {
+        "file": "packages/web/src/app/sitemaps/[page]/route.ts"
+      },
+      {
+        "file": "packages/web/src/app/robots.txt/route.ts"
+      },
       {
         "file": "packages/web/src/server/distribution/canonical.ts",
         "also": ["content-platform-backend"]
@@ -132,11 +156,26 @@
     ]
   },
   "plannedPaths": [
-    { "file": "packages/web/src/app/feed.xml/route.ts", "bead": "blog-0045.5" },
-    { "file": "packages/web/src/app/sitemap.xml/route.ts", "bead": "blog-0045.5" },
-    { "file": "packages/web/src/app/sitemaps/[page]/route.ts", "bead": "blog-0045.5" },
-    { "file": "packages/web/src/app/robots.txt/route.ts", "bead": "blog-0045.5" },
-    { "file": "packages/web/src/server/distribution/canonical.ts", "bead": "blog-0045.3" }
+    {
+      "file": "packages/web/src/app/feed.xml/route.ts",
+      "bead": "blog-0045.5"
+    },
+    {
+      "file": "packages/web/src/app/sitemap.xml/route.ts",
+      "bead": "blog-0045.5"
+    },
+    {
+      "file": "packages/web/src/app/sitemaps/[page]/route.ts",
+      "bead": "blog-0045.5"
+    },
+    {
+      "file": "packages/web/src/app/robots.txt/route.ts",
+      "bead": "blog-0045.5"
+    },
+    {
+      "file": "packages/web/src/server/distribution/canonical.ts",
+      "bead": "blog-0045.3"
+    }
   ],
   "groundingPaths": [
     "packages/web/src/lib/site-url.ts",
@@ -183,7 +222,12 @@
         "evidence": ["docs/planning/phase-5/decomposition-r2.md"]
       }
     ],
-    "evidence": [{ "kind": "file", "path": "docs/planning/phase-5/decomposition-r2.md" }]
+    "evidence": [
+      {
+        "kind": "file",
+        "path": "docs/planning/phase-5/decomposition-r2.md"
+      }
+    ]
   },
   "deterministicExamples": [
     {
@@ -198,5 +242,27 @@
         "evidence": ["command: corepack pnpm exec vitest run packages/web/src/lib/site-url.test.ts"]
       }
     }
-  ]
+  ],
+  "pathContext": [
+    {
+      "match": [
+        "packages/web/src/app/layout.tsx",
+        "packages/web/src/app/page.tsx",
+        "packages/web/src/app/stories/*/page.tsx",
+        "packages/web/src/app/sections/*/page.tsx"
+      ],
+      "includeAny": [
+        "metadata",
+        "canonical",
+        "opengraph",
+        "open graph",
+        "structured data",
+        "social cards",
+        "seo",
+        "indexing",
+        "robots"
+      ]
+    }
+  ],
+  "pathInventoryNote": "Existing path inventories describe candidate route.match coverage. Shared paths in pathContext also require affirmative task context; routing.json pins paired behavior and mixed-domain decisions without relabelling historical cases."
 }

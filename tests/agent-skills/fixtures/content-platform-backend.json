@@ -1,10 +1,6 @@
 {
   "skillId": "content-platform-backend",
-  "handoffSkills": [
-    "owner-publishing-ux",
-    "stack-research-adr",
-    "magazine-product-discovery"
-  ],
+  "handoffSkills": ["owner-publishing-ux", "stack-research-adr", "magazine-product-discovery"],
   "routingContract": {
     "includeAny": [
       "content platform",
@@ -140,15 +136,9 @@
       ".claude/skills/content-platform-backend/SKILL.md"
     ],
     "intendedOverlaps": {
-      "docs/deployment/backup-restore.md": [
-        "release-witness"
-      ],
-      "packages/web/src/server/owner/publication-worker.ts": [
-        "security-identity-privacy"
-      ],
-      "docs/architecture/content-persistence-foundation.md": [
-        "stack-research-adr"
-      ]
+      "docs/deployment/backup-restore.md": ["release-witness"],
+      "packages/web/src/server/owner/publication-worker.ts": ["security-identity-privacy"],
+      "docs/architecture/content-persistence-foundation.md": ["stack-research-adr"]
     }
   },
   "positive": [
@@ -317,5 +307,18 @@
         "path": "packages/web/src/server/content/service.ts"
       }
     ]
-  }
+  },
+  "pathContext": [
+    {
+      "match": ["packages/web/src/server/content/document.ts"],
+      "includeAny": [
+        "content domain model",
+        "backend data design",
+        "database schema",
+        "data integrity",
+        "portability"
+      ]
+    }
+  ],
+  "pathInventoryNote": "Existing path inventories describe candidate route.match coverage. Shared paths in pathContext also require affirmative task context; routing.json pins paired behavior and mixed-domain decisions without relabelling historical cases."
 }

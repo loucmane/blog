@@ -1,0 +1,2303 @@
+{
+  "schemaVersion": 1,
+  "evaluation": "routing-v3",
+  "mode": "advisory",
+  "blocking": false,
+  "heldout": {
+    "v2": {
+      "schemaVersion": 1,
+      "mode": "advisory",
+      "blocking": false,
+      "metrics": {
+        "cases": 8,
+        "decisions": 96,
+        "truePositives": 15,
+        "falsePositives": 7,
+        "falseNegatives": 1,
+        "trueNegatives": 73,
+        "precision": 0.6818181818181818,
+        "recall": 0.9375,
+        "falsePositiveRate": 0.0875,
+        "falseNegativeRate": 0.0625,
+        "exactMatches": 4,
+        "missedRoutingCases": 1,
+        "whollyMissedCases": 0
+      },
+      "perSkill": [
+        {
+          "skill": "content-platform-backend",
+          "expected": 2,
+          "selected": 3,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "editorial-blocks",
+          "expected": 2,
+          "selected": 3,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "gas-city-coordinator",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "magazine-product-discovery",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "expected": 0,
+          "selected": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "expected": 4,
+          "selected": 5,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "reader-frontend",
+          "expected": 3,
+          "selected": 4,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "release-witness",
+          "expected": 0,
+          "selected": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "security-identity-privacy",
+          "expected": 4,
+          "selected": 3,
+          "falsePositives": 0,
+          "falseNegatives": 1
+        },
+        {
+          "skill": "seo-distribution",
+          "expected": 1,
+          "selected": 1,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "stack-research-adr",
+          "expected": 0,
+          "selected": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        }
+      ],
+      "cases": [
+        {
+          "number": 80,
+          "title": "fix(media): restrict asset credit URLs to safe schemes (blog-wmyj)",
+          "merge": "eb949e10b043191c387093ed575c151efc4d94e2",
+          "selectionReason": "Sanitization crosses media persistence, owner input and reader projection without changing their domain contracts; tests a broad-path over-selection risk.",
+          "expected": [
+            "security-identity-privacy"
+          ],
+          "selected": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "reader-frontend",
+            "security-identity-privacy"
+          ],
+          "truePositives": [
+            "security-identity-privacy"
+          ],
+          "falsePositives": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "reader-frontend"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/media.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/media.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/contracts.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/owner-foundation.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader/blocks.ts",
+              "pattern": "packages/web/src/reader/blocks.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/blocks.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/blocks.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/src/server/content/media.ts",
+              "pattern": "packages/web/src/server/content/media.ts"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/contracts.ts",
+              "pattern": "packages/web/src/server/owner/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/owner-foundation.test.ts",
+              "pattern": "packages/web/src/server/owner/**"
+            }
+          ]
+        },
+        {
+          "number": 89,
+          "title": "feat(reader): author and topic pages, bylines and related stories (blog-0044.22)",
+          "merge": "8428bb14baba32e0c79d11d5f140ab7b3a9aba20",
+          "selectionReason": "A genuine multi-domain feature must retain justified overlap: two reader routes, metadata, visibility-aware repositories, direction interfaces, privacy headers and parity coverage.",
+          "expected": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend",
+            "security-identity-privacy",
+            "seo-distribution"
+          ],
+          "selected": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend",
+            "security-identity-privacy",
+            "seo-distribution"
+          ],
+          "truePositives": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend",
+            "security-identity-privacy",
+            "seo-distribution"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/in-memory-repository.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/in-memory-repository.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/ports.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/database/postgres-content-repository.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/database/postgres-content-repository.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/database/postgres.integration.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/contract.ts"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader/views.ts",
+              "pattern": "packages/web/src/reader/views.ts"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "task-text",
+              "value": "direction contract"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/contract.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/tests/framework/framework-contract.test.ts",
+              "pattern": "packages/web/tests/framework/framework-contract.test.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/app/stories/[slug]/page.tsx",
+              "pattern": "packages/web/src/app/stories/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/README.md",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/article.tsx",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/author.tsx",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/index.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/topic.tsx",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/registry.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/cache.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/cache.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/paths.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/paths.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/read-model.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/read-model.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/views.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/next.config.ts",
+              "pattern": "packages/web/next.config.ts"
+            },
+            {
+              "skill": "seo-distribution",
+              "route": "seo-distribution",
+              "kind": "path",
+              "value": "packages/web/src/app/stories/[slug]/page.tsx",
+              "pattern": "packages/web/src/app/stories/*/page.tsx"
+            }
+          ]
+        },
+        {
+          "number": 98,
+          "title": "chore: retire the Task 37 research spike (blog-d1dx)",
+          "merge": "107f3dd4afef2dc0e47eeef8c9492d51f6453566",
+          "selectionReason": "Single-domain retirement of an unused vulnerable dependency tree; historical ADR annotations do not constitute a new stack choice.",
+          "expected": [
+            "security-identity-privacy"
+          ],
+          "selected": [
+            "stack-research-adr"
+          ],
+          "truePositives": [],
+          "falsePositives": [
+            "stack-research-adr"
+          ],
+          "falseNegatives": [
+            "security-identity-privacy"
+          ],
+          "matches": [
+            {
+              "skill": "stack-research-adr",
+              "route": "stack-research-adr",
+              "kind": "task-text",
+              "value": "adr"
+            }
+          ]
+        },
+        {
+          "number": 113,
+          "title": "fix(reader-lab): smooth scrolling only on the baseline site (blog-0044.57)",
+          "merge": "5e4f5885d027c55925a831daf619dbc99e9c4bab",
+          "selectionReason": "Reader motion behavior plus meaningful accessibility/browser regression coverage, with no metadata or block-contract change.",
+          "expected": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "selected": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "truePositives": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/app/globals.css",
+              "pattern": "packages/web/src/app/globals.css"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "tests/e2e/reader.spec.ts",
+              "pattern": "tests/e2e/reader.spec.ts"
+            }
+          ]
+        },
+        {
+          "number": 117,
+          "title": "feat(reader-lab): list semantics and optional per-layout gallery size hints in the shared renderer (blog-0044.62)",
+          "merge": "addf9658c71ee977171526f26ae96fc9712579a1",
+          "selectionReason": "Shared renderer and direction contract evolve together with list accessibility and a cross-direction nested-image test matrix.",
+          "expected": [
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "selected": [
+            "editorial-blocks",
+            "owner-publishing-ux",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "truePositives": [
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "falsePositives": [
+            "owner-publishing-ux"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/contract.ts"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/article-body.tsx",
+              "pattern": "packages/web/src/reader/components/article-body.tsx"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "task-text",
+              "value": "gallery"
+            },
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "validation"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/contract.test.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/README.md",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/article-body.test.tsx",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/article-body.tsx",
+              "pattern": "packages/web/src/reader/**"
+            }
+          ]
+        },
+        {
+          "number": 120,
+          "title": "feat(content): include article-author links in portable export and import (blog-597f)",
+          "merge": "4d9316b9c844ea52e25762d354fc61cd991a9e6e",
+          "selectionReason": "Single backend portability change; ordinary domain tests and PR verification prose should not add owner UX or release review scopes.",
+          "expected": [
+            "content-platform-backend"
+          ],
+          "selected": [
+            "content-platform-backend"
+          ],
+          "truePositives": [
+            "content-platform-backend"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.ts",
+              "pattern": "packages/web/src/server/**"
+            }
+          ]
+        },
+        {
+          "number": 132,
+          "title": "fix(deps): upgrade next, better-auth, undici, zod and vitest for new advisories (blog-b7rn)",
+          "merge": "199cf23464b524b768d0f2c4980479271a058e93",
+          "selectionReason": "Single security dependency update; version-pin assertions and evidence summaries do not introduce a new quality strategy or architecture decision.",
+          "expected": [
+            "security-identity-privacy"
+          ],
+          "selected": [
+            "quality-reliability-observability",
+            "release-witness",
+            "security-identity-privacy"
+          ],
+          "truePositives": [
+            "security-identity-privacy"
+          ],
+          "falsePositives": [
+            "quality-reliability-observability",
+            "release-witness"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/tests/framework/framework-contract.test.ts",
+              "pattern": "packages/web/tests/framework/framework-contract.test.ts"
+            },
+            {
+              "skill": "release-witness",
+              "route": "release-witness",
+              "kind": "path",
+              "value": "tests/ci/security-hotfix.test.mjs",
+              "pattern": "tests/ci/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "config/runtime.json",
+              "pattern": "config/runtime.json"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "package.json",
+              "pattern": "package.json"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/package.json",
+              "pattern": "packages/web/package.json"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "pnpm-lock.yaml",
+              "pattern": "pnpm-lock.yaml"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "tests/ci/security-hotfix.test.mjs",
+              "pattern": "tests/ci/security-hotfix.test.mjs"
+            }
+          ]
+        },
+        {
+          "number": 134,
+          "title": "fix(web): run the content integration suite on Node without import.meta.main (blog-v05k)",
+          "merge": "95d6421a3bc111b8d46a7179ecd251602c8b0302",
+          "selectionReason": "Single quality-runner reliability fix, separate from backend data behavior and release evidence ingestion.",
+          "expected": [
+            "quality-reliability-observability"
+          ],
+          "selected": [
+            "quality-reliability-observability"
+          ],
+          "truePositives": [
+            "quality-reliability-observability"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/scripts/run-content-integration.mjs",
+              "pattern": "packages/web/scripts/run-content-integration.mjs"
+            }
+          ]
+        }
+      ]
+    },
+    "v3": {
+      "schemaVersion": 1,
+      "mode": "advisory",
+      "blocking": false,
+      "metrics": {
+        "cases": 8,
+        "decisions": 96,
+        "truePositives": 15,
+        "falsePositives": 7,
+        "falseNegatives": 1,
+        "trueNegatives": 73,
+        "precision": 0.6818181818181818,
+        "recall": 0.9375,
+        "falsePositiveRate": 0.0875,
+        "falseNegativeRate": 0.0625,
+        "exactMatches": 4,
+        "missedRoutingCases": 1,
+        "whollyMissedCases": 0
+      },
+      "perSkill": [
+        {
+          "skill": "content-platform-backend",
+          "expected": 2,
+          "selected": 3,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "editorial-blocks",
+          "expected": 2,
+          "selected": 3,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "gas-city-coordinator",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "magazine-product-discovery",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "expected": 0,
+          "selected": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "expected": 4,
+          "selected": 5,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "reader-frontend",
+          "expected": 3,
+          "selected": 4,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "release-witness",
+          "expected": 0,
+          "selected": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "security-identity-privacy",
+          "expected": 4,
+          "selected": 3,
+          "falsePositives": 0,
+          "falseNegatives": 1
+        },
+        {
+          "skill": "seo-distribution",
+          "expected": 1,
+          "selected": 1,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "stack-research-adr",
+          "expected": 0,
+          "selected": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        }
+      ],
+      "cases": [
+        {
+          "number": 80,
+          "title": "fix(media): restrict asset credit URLs to safe schemes (blog-wmyj)",
+          "merge": "eb949e10b043191c387093ed575c151efc4d94e2",
+          "selectionReason": "Sanitization crosses media persistence, owner input and reader projection without changing their domain contracts; tests a broad-path over-selection risk.",
+          "expected": [
+            "security-identity-privacy"
+          ],
+          "selected": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "reader-frontend",
+            "security-identity-privacy"
+          ],
+          "truePositives": [
+            "security-identity-privacy"
+          ],
+          "falsePositives": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "reader-frontend"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/media.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/media.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/contracts.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/owner-foundation.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader/blocks.ts",
+              "pattern": "packages/web/src/reader/blocks.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/blocks.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/blocks.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/src/server/content/media.ts",
+              "pattern": "packages/web/src/server/content/media.ts"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/contracts.ts",
+              "pattern": "packages/web/src/server/owner/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/src/server/owner/owner-foundation.test.ts",
+              "pattern": "packages/web/src/server/owner/**"
+            }
+          ]
+        },
+        {
+          "number": 89,
+          "title": "feat(reader): author and topic pages, bylines and related stories (blog-0044.22)",
+          "merge": "8428bb14baba32e0c79d11d5f140ab7b3a9aba20",
+          "selectionReason": "A genuine multi-domain feature must retain justified overlap: two reader routes, metadata, visibility-aware repositories, direction interfaces, privacy headers and parity coverage.",
+          "expected": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend",
+            "security-identity-privacy",
+            "seo-distribution"
+          ],
+          "selected": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend",
+            "security-identity-privacy",
+            "seo-distribution"
+          ],
+          "truePositives": [
+            "content-platform-backend",
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend",
+            "security-identity-privacy",
+            "seo-distribution"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/in-memory-repository.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/in-memory-repository.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/ports.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/database/postgres-content-repository.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/database/postgres-content-repository.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/database/postgres.integration.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/contract.ts"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader/views.ts",
+              "pattern": "packages/web/src/reader/views.ts"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "task-text",
+              "value": "direction contract"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/contract.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/tests/framework/framework-contract.test.ts",
+              "pattern": "packages/web/tests/framework/framework-contract.test.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/app/stories/[slug]/page.tsx",
+              "pattern": "packages/web/src/app/stories/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/README.md",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/article.tsx",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/author.tsx",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/index.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/baseline/topic.tsx",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/registry.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/cache.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/cache.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/paths.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/paths.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/read-model.test.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/read-model.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/views.ts",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/next.config.ts",
+              "pattern": "packages/web/next.config.ts",
+              "context": [
+                "no-store",
+                "noindex",
+                "privacy",
+                "private"
+              ]
+            },
+            {
+              "skill": "seo-distribution",
+              "route": "seo-distribution",
+              "kind": "path",
+              "value": "packages/web/src/app/stories/[slug]/page.tsx",
+              "pattern": "packages/web/src/app/stories/*/page.tsx",
+              "context": [
+                "metadata"
+              ]
+            }
+          ]
+        },
+        {
+          "number": 98,
+          "title": "chore: retire the Task 37 research spike (blog-d1dx)",
+          "merge": "107f3dd4afef2dc0e47eeef8c9492d51f6453566",
+          "selectionReason": "Single-domain retirement of an unused vulnerable dependency tree; historical ADR annotations do not constitute a new stack choice.",
+          "expected": [
+            "security-identity-privacy"
+          ],
+          "selected": [
+            "stack-research-adr"
+          ],
+          "truePositives": [],
+          "falsePositives": [
+            "stack-research-adr"
+          ],
+          "falseNegatives": [
+            "security-identity-privacy"
+          ],
+          "matches": [
+            {
+              "skill": "stack-research-adr",
+              "route": "stack-research-adr",
+              "kind": "task-text",
+              "value": "adr"
+            }
+          ]
+        },
+        {
+          "number": 113,
+          "title": "fix(reader-lab): smooth scrolling only on the baseline site (blog-0044.57)",
+          "merge": "5e4f5885d027c55925a831daf619dbc99e9c4bab",
+          "selectionReason": "Reader motion behavior plus meaningful accessibility/browser regression coverage, with no metadata or block-contract change.",
+          "expected": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "selected": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "truePositives": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/app/globals.css",
+              "pattern": "packages/web/src/app/globals.css"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "tests/e2e/reader.spec.ts",
+              "pattern": "tests/e2e/reader.spec.ts"
+            }
+          ]
+        },
+        {
+          "number": 117,
+          "title": "feat(reader-lab): list semantics and optional per-layout gallery size hints in the shared renderer (blog-0044.62)",
+          "merge": "addf9658c71ee977171526f26ae96fc9712579a1",
+          "selectionReason": "Shared renderer and direction contract evolve together with list accessibility and a cross-direction nested-image test matrix.",
+          "expected": [
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "selected": [
+            "editorial-blocks",
+            "owner-publishing-ux",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "truePositives": [
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "falsePositives": [
+            "owner-publishing-ux"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/contract.ts"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/article-body.tsx",
+              "pattern": "packages/web/src/reader/components/article-body.tsx"
+            },
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "task-text",
+              "value": "gallery"
+            },
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "validation"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/contract.test.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/README.md",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/article-body.test.tsx",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/article-body.tsx",
+              "pattern": "packages/web/src/reader/**"
+            }
+          ]
+        },
+        {
+          "number": 120,
+          "title": "feat(content): include article-author links in portable export and import (blog-597f)",
+          "merge": "4d9316b9c844ea52e25762d354fc61cd991a9e6e",
+          "selectionReason": "Single backend portability change; ordinary domain tests and PR verification prose should not add owner UX or release review scopes.",
+          "expected": [
+            "content-platform-backend"
+          ],
+          "selected": [
+            "content-platform-backend"
+          ],
+          "truePositives": [
+            "content-platform-backend"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.ts",
+              "pattern": "packages/web/src/server/**"
+            }
+          ]
+        },
+        {
+          "number": 132,
+          "title": "fix(deps): upgrade next, better-auth, undici, zod and vitest for new advisories (blog-b7rn)",
+          "merge": "199cf23464b524b768d0f2c4980479271a058e93",
+          "selectionReason": "Single security dependency update; version-pin assertions and evidence summaries do not introduce a new quality strategy or architecture decision.",
+          "expected": [
+            "security-identity-privacy"
+          ],
+          "selected": [
+            "quality-reliability-observability",
+            "release-witness",
+            "security-identity-privacy"
+          ],
+          "truePositives": [
+            "security-identity-privacy"
+          ],
+          "falsePositives": [
+            "quality-reliability-observability",
+            "release-witness"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/tests/framework/framework-contract.test.ts",
+              "pattern": "packages/web/tests/framework/framework-contract.test.ts"
+            },
+            {
+              "skill": "release-witness",
+              "route": "release-witness",
+              "kind": "path",
+              "value": "tests/ci/security-hotfix.test.mjs",
+              "pattern": "tests/ci/**"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "config/runtime.json",
+              "pattern": "config/runtime.json"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "package.json",
+              "pattern": "package.json"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/package.json",
+              "pattern": "packages/web/package.json"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "pnpm-lock.yaml",
+              "pattern": "pnpm-lock.yaml"
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "tests/ci/security-hotfix.test.mjs",
+              "pattern": "tests/ci/security-hotfix.test.mjs"
+            }
+          ]
+        },
+        {
+          "number": 134,
+          "title": "fix(web): run the content integration suite on Node without import.meta.main (blog-v05k)",
+          "merge": "95d6421a3bc111b8d46a7179ecd251602c8b0302",
+          "selectionReason": "Single quality-runner reliability fix, separate from backend data behavior and release evidence ingestion.",
+          "expected": [
+            "quality-reliability-observability"
+          ],
+          "selected": [
+            "quality-reliability-observability"
+          ],
+          "truePositives": [
+            "quality-reliability-observability"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/scripts/run-content-integration.mjs",
+              "pattern": "packages/web/scripts/run-content-integration.mjs"
+            }
+          ]
+        }
+      ]
+    },
+    "denominators": {
+      "prs": 8,
+      "skills": 12,
+      "decisions": 96,
+      "expectedPositives": 16,
+      "expectedNegatives": 80,
+      "selectedV2": 22,
+      "selectedV3": 22
+    },
+    "acceptance": {
+      "rule": "Accept only if held-out recall and precision do not drop; undefined rates do not pass.",
+      "accepted": true,
+      "disposition": "keep revision"
+    }
+  },
+  "originalFive": {
+    "v2": {
+      "cases": 5,
+      "decisions": 60,
+      "truePositives": 9,
+      "falsePositives": 9,
+      "falseNegatives": 0,
+      "trueNegatives": 42,
+      "precision": 0.5,
+      "recall": 1,
+      "falsePositiveRate": 0.17647058823529413,
+      "falseNegativeRate": 0,
+      "exactMatches": 0,
+      "missedRoutingCases": 0,
+      "whollyMissedCases": 0
+    },
+    "v3": {
+      "schemaVersion": 1,
+      "mode": "advisory",
+      "blocking": false,
+      "metrics": {
+        "cases": 5,
+        "decisions": 60,
+        "truePositives": 9,
+        "falsePositives": 6,
+        "falseNegatives": 0,
+        "trueNegatives": 45,
+        "precision": 0.6,
+        "recall": 1,
+        "falsePositiveRate": 0.11764705882352941,
+        "falseNegativeRate": 0,
+        "exactMatches": 1,
+        "missedRoutingCases": 0,
+        "whollyMissedCases": 0
+      },
+      "perSkill": [
+        {
+          "skill": "content-platform-backend",
+          "expected": 1,
+          "selected": 2,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "expected": 1,
+          "selected": 1,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "editorial-blocks",
+          "expected": 1,
+          "selected": 1,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "gas-city-coordinator",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "magazine-product-discovery",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "expected": 0,
+          "selected": 3,
+          "falsePositives": 3,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "expected": 3,
+          "selected": 3,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "reader-frontend",
+          "expected": 2,
+          "selected": 3,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "release-witness",
+          "expected": 0,
+          "selected": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "security-identity-privacy",
+          "expected": 1,
+          "selected": 1,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "seo-distribution",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        {
+          "skill": "stack-research-adr",
+          "expected": 0,
+          "selected": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        }
+      ],
+      "cases": [
+        {
+          "number": 130,
+          "title": "fix(reader): keep retry focus intent through a suspended retry that fails again (blog-quly)",
+          "merge": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+          "selectionReason": "Reader accessibility recovery spans a shared layout, private preview and a new route coverage contract.",
+          "expected": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "selected": [
+            "owner-publishing-ux",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "truePositives": [
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "falsePositives": [
+            "owner-publishing-ux"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "accessibility"
+            },
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "preview"
+            },
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "recovery"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/app/recovery-marker.test.ts",
+              "pattern": "packages/web/src/app/recovery-marker.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/failure-boundary.test.tsx",
+              "pattern": "packages/web/src/reader/components/failure-boundary.test.tsx"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/app/layout.tsx",
+              "pattern": "packages/web/src/app/layout.tsx"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/failure-boundary.test.tsx",
+              "pattern": "packages/web/src/reader/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader/components/failure-boundary.tsx",
+              "pattern": "packages/web/src/reader/**"
+            }
+          ]
+        },
+        {
+          "number": 128,
+          "title": "fix(content): reject duplicate ids for every collection in portable import (blog-zcx9)",
+          "merge": "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1",
+          "selectionReason": "A narrow portable-import consistency repair isolates backend data integrity from presentation and security policy.",
+          "expected": [
+            "content-platform-backend"
+          ],
+          "selected": [
+            "content-platform-backend",
+            "owner-publishing-ux"
+          ],
+          "truePositives": [
+            "content-platform-backend"
+          ],
+          "falsePositives": [
+            "owner-publishing-ux"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.test.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/portability.ts",
+              "pattern": "packages/web/src/server/**"
+            },
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "revisions"
+            }
+          ]
+        },
+        {
+          "number": 125,
+          "title": "test(security): safe-URL bypass regressions, and reject email addresses with credentials (blog-hh6c)",
+          "merge": "28935cce6f6a22140ec6b3b33bfa2c6105159c30",
+          "selectionReason": "URL sanitization changes shared document validation without changing document node types or renderer behavior.",
+          "expected": [
+            "security-identity-privacy"
+          ],
+          "selected": [
+            "content-platform-backend",
+            "security-identity-privacy"
+          ],
+          "truePositives": [
+            "security-identity-privacy"
+          ],
+          "falsePositives": [
+            "content-platform-backend"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "content-platform-backend",
+              "route": "content-platform-backend",
+              "kind": "path",
+              "value": "packages/web/src/server/content/document.ts",
+              "pattern": "packages/web/src/server/**",
+              "context": [
+                "portability"
+              ]
+            },
+            {
+              "skill": "security-identity-privacy",
+              "route": "security-identity-privacy",
+              "kind": "path",
+              "value": "packages/web/src/server/content/document.ts",
+              "pattern": "packages/web/src/server/content/document.ts",
+              "context": [
+                "credentials",
+                "safe-url",
+                "security"
+              ]
+            }
+          ]
+        },
+        {
+          "number": 123,
+          "title": "feat(skills): quality, reliability and observability skill (blog-0060)",
+          "merge": "7970b23f520e795974e4e0f5e42c12d994862a70",
+          "selectionReason": "Skill registration and test-quality guidance exercise platform validation plus a domain-specific advisory review.",
+          "expected": [
+            "cross-agent-skill-platform",
+            "quality-reliability-observability"
+          ],
+          "selected": [
+            "cross-agent-skill-platform",
+            "owner-publishing-ux",
+            "quality-reliability-observability",
+            "reader-frontend",
+            "release-witness"
+          ],
+          "truePositives": [
+            "cross-agent-skill-platform",
+            "quality-reliability-observability"
+          ],
+          "falsePositives": [
+            "owner-publishing-ux",
+            "reader-frontend",
+            "release-witness"
+          ],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": ".agents/skills/quality-reliability-observability",
+              "pattern": ".agents/skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": ".claude/skills/quality-reliability-observability/SKILL.md",
+              "pattern": ".claude/skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": ".claude/skills/quality-reliability-observability/agents/openai.yaml",
+              "pattern": ".claude/skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": ".claude/skills/quality-reliability-observability/references/quality-map.md",
+              "pattern": ".claude/skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": ".claude/skills/quality-reliability-observability/references/quality-reliability-observability-output-contract.md",
+              "pattern": ".claude/skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": "config/agent-skills/catalog.yaml",
+              "pattern": "config/agent-skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": "config/agent-skills/review-map.yaml",
+              "pattern": "config/agent-skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": "tests/agent-skills/fixtures/quality-reliability-observability.json",
+              "pattern": "tests/agent-skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": "tests/agent-skills/platform.test.mjs",
+              "pattern": "tests/agent-skills/**"
+            },
+            {
+              "skill": "cross-agent-skill-platform",
+              "route": "cross-agent-skill-platform",
+              "kind": "path",
+              "value": "tests/agent-skills/quality-reliability-observability.test.mjs",
+              "pattern": "tests/agent-skills/**"
+            },
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "accessibility"
+            },
+            {
+              "skill": "owner-publishing-ux",
+              "route": "owner-publishing-ux",
+              "kind": "task-text",
+              "value": "publishing"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "task-text",
+              "value": "accessibility automation"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "task-text",
+              "value": "core web vitals"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "task-text",
+              "value": "error reporting"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "task-text",
+              "value": "incident"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "task-text",
+              "value": "production verification"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "task-text",
+              "value": "structured logging"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "task-text",
+              "value": "test strategy"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "task-text",
+              "value": "core web vitals"
+            },
+            {
+              "skill": "release-witness",
+              "route": "release-witness",
+              "kind": "task-text",
+              "value": "rollback readiness"
+            }
+          ]
+        },
+        {
+          "number": 118,
+          "title": "perf(reader-lab): versioned direction font URLs with long immutable caching (blog-0044.37)",
+          "merge": "7c35a2b4365f07c4025bded2e52989f5b1535b0f",
+          "selectionReason": "Font caching combines reader performance, the shared direction contract and browser cache assertions.",
+          "expected": [
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "selected": [
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "truePositives": [
+            "editorial-blocks",
+            "quality-reliability-observability",
+            "reader-frontend"
+          ],
+          "falsePositives": [],
+          "falseNegatives": [],
+          "matches": [
+            {
+              "skill": "editorial-blocks",
+              "route": "editorial-blocks",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/contract.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/contract.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/expressive-colour/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/literary-longread/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "packages/web/tests/framework/framework-contract.test.ts",
+              "pattern": "packages/web/tests/framework/framework-contract.test.ts"
+            },
+            {
+              "skill": "quality-reliability-observability",
+              "route": "quality-reliability-observability",
+              "kind": "path",
+              "value": "tests/e2e/reader-lab-cold-fonts.spec.ts",
+              "pattern": "tests/e2e/reader-lab-cold-fonts.spec.ts"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/public/reader-directions/cinematic-feature/fonts/README.md",
+              "pattern": "packages/web/public/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/public/reader-directions/expressive-colour/fonts/README.md",
+              "pattern": "packages/web/public/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/public/reader-directions/literary-longread/fonts/README.md",
+              "pattern": "packages/web/public/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/public/reader-directions/quiet-monograph/fonts/README.md",
+              "pattern": "packages/web/public/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/public/reader-directions/swiss-index/fonts/README.md",
+              "pattern": "packages/web/public/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/README.md",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/cinematic-feature/fonts.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/contract.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/expressive-colour/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/expressive-colour/fonts.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/expressive-colour/prepare-fonts.py",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/literary-longread/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/literary-longread/fonts.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/fonts.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/fonts.test.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/fonts.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            },
+            {
+              "skill": "reader-frontend",
+              "route": "reader-frontend",
+              "kind": "path",
+              "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+              "pattern": "packages/web/src/reader-directions/**"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "method": "Purposive held-out sample labelled by the same worker before either router ran. Separate from the original five PRs; not an independent blind review or a random sample.",
+    "labelsChanged": false,
+    "independentReviewer": false,
+    "labelsVisibleDuringRevision": true,
+    "adviceAssessment": "not performed; routing-only comparison",
+    "labelsFrozenAt": "2026-10-29T17:26:53.211824+00:00",
+    "candidateFrozenAt": "2026-10-29T17:42:41.979610+00:00",
+    "sha256": {
+      "docs/agent-skills/heldout-inputs.json": "0300281637677da4d83712744c73961a6e7a68b6cb0bfa07d7c882c5f4c19b61",
+      "docs/agent-skills/heldout-labels.json": "c9cb67dc1cb648e03ba780d9f6ff7c1af4e6f5686d2eff21a7534a31db99bbae",
+      "docs/agent-skills/heldout-diff-evidence.json": "b2b53f338fdfd0c0f7b19dff2ba09cee3613f6e945617eb0734b765afeae39c0",
+      "docs/agent-skills/baseline-v2/freeze.json": "3ba071d76a682e6f00b2d50e039a28e4ed6cc240c211fd4533c227d4f38e0a83",
+      "docs/agent-skills/routing-v3-router.mjs": "2963d605c52f98ee8a6fba0d9774a225e14c891d0255f628f0a1b666336b5304",
+      "docs/agent-skills/routing-v3-map.yaml": "039749e0cb38ab3a7b26c8d0121b25e3ad5d3fdd019b56a1c8841dc25bd5e082",
+      "docs/agent-skills/routing-v3-catalog.yaml": "4a2df0efdb87c43bfc0371e72424b0c3c4bdf5fd3074c528a61ac3bc42b5e2d0",
+      "docs/agent-skills/heldout-freeze.json": "70a849c9adb8f3870f125f77151ff0dd09ec29af55914a2f21270b684d3249ab",
+      "scripts/agent-skills/evaluate-forward.mjs": "99233afaa423ad09ef77ed020fd503189a89b187e135326922b05dd8a9a4a56f",
+      "scripts/agent-skills/evaluation.mjs": "0bd9a9731f8771efebd000a07f848d058552085ad6aff4963a427b0cf4c659fc",
+      "tests/agent-skills/fixtures/routing.json": "17cd2f0b688a11fee28b0f975afb21d577e0d5e6b46860086a0101d330bd2c59",
+      "docs/agent-skills/routing-v3-freeze.json": "b2e21510260ac62c91cfd0bf6d15a777575a329a53562bfef75388480b378533"
+    }
+  }
+}

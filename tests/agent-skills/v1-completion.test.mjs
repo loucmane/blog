@@ -11,6 +11,7 @@ import {
 } from '../../scripts/agent-skills/check-v1-completion.mjs'
 import {
   baselineV1Paths,
+  baselineV2Paths,
   evaluateForward,
   evaluateRoutingV2,
 } from '../../scripts/agent-skills/evaluate-forward.mjs'
@@ -249,19 +250,20 @@ test('criterion d uses the evaluator with the supplied fixture root', (t) => {
   assert.equal(criterion(root, 'd').status, 'fail')
 })
 
-test('v1 replay is isolated from live routes while v2 measures their actual behavior', (t) => {
+test('v1 and v2 replay are isolated from live routes', (t) => {
   const root = fixture(t),
     url = pathToFileURL(`${root}/`)
   const before = evaluateForward({ root: url })
-  // Revert only the live map to v1: the new evaluation must recover the old misses.
+  const v2Before = evaluateRoutingV2({ root: url })
+  // Revert only the live map to v1: both frozen evaluations must stay unchanged.
   fs.copyFileSync(
     path.join(root, baselineV1Paths['config/agent-skills/review-map.yaml']),
     path.join(root, 'config/agent-skills/review-map.yaml'),
   )
   assert.deepEqual(evaluateForward({ root: url }), before)
   const revised = evaluateRoutingV2({ root: url })
-  assert.equal(revised.metrics.falseNegatives, 2)
-  assert.equal(revised.comparison.delta.recall, 0)
+  assert.deepEqual(revised, v2Before)
+  assert.equal(revised.metrics.falseNegatives, 0)
   assert.equal(criterion(root, 'd').status, 'pass')
   assert.equal(criterion(root, 'e').status, 'pass')
 })
@@ -298,15 +300,34 @@ test('a rewritten snapshot digest cannot certify code other than the loaded froz
   )
 })
 
-test('v2 refuses a changed decision denominator or code identity', (t) => {
+test('v2 ignores live mutations and refuses changed or unpinned snapshot inputs', (t) => {
   const root = fixture(t),
     url = pathToFileURL(`${root}/`)
-  const catalog = readJson(root, 'config/agent-skills/catalog.yaml')
+  const before = evaluateRoutingV2({ root: url })
   editJson(root, 'config/agent-skills/catalog.yaml', (v) => v.skills.pop())
-  assert.throws(() => evaluateRoutingV2({ root: url }), /same skill denominator/)
-  writeJson(root, 'config/agent-skills/catalog.yaml', catalog)
   fs.appendFileSync(path.join(root, 'scripts/agent-skills/routing.mjs'), '\n')
-  assert.throws(() => evaluateRoutingV2({ root: url }), /live router differs/)
+  assert.deepEqual(evaluateRoutingV2({ root: url }), before)
+  const manifestPath = 'docs/agent-skills/baseline-v2/freeze.json'
+  const manifest = readJson(root, manifestPath)
+  for (const [original, snapshot] of Object.entries(baselineV2Paths)) {
+    const target = path.join(root, snapshot),
+      bytes = fs.readFileSync(target)
+    fs.appendFileSync(target, '\n')
+    assert.throws(() => evaluateRoutingV2({ root: url }), /v2 snapshot changed/)
+    fs.writeFileSync(target, bytes)
+    editJson(root, manifestPath, (v) => delete v.files[original])
+    assert.throws(() => evaluateRoutingV2({ root: url }), /missing v2 snapshot/)
+    writeJson(root, manifestPath, manifest)
+  }
+  const original = 'scripts/agent-skills/routing.mjs',
+    snapshot = baselineV2Paths[original]
+  fs.appendFileSync(path.join(root, snapshot), '\n')
+  editJson(root, manifestPath, (v) => {
+    v.files[original].sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(root, snapshot)))
+      .digest('hex')
+  })
+  assert.throws(() => evaluateRoutingV2({ root: url }), /loaded snapshot module/)
 })
 
 test('criterion e rejects both Markdown drift and metrics drift', (t) => {

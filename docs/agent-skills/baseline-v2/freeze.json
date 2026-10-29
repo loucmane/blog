@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-29T17:23:12.790163+00:00",
+  "base": "fadac1fcf606b250906204f07a13b686d9c5653c",
+  "files": {
+    "config/agent-skills/catalog.yaml": {
+      "snapshot": "docs/agent-skills/baseline-v2/catalog.yaml",
+      "sha256": "4a2df0efdb87c43bfc0371e72424b0c3c4bdf5fd3074c528a61ac3bc42b5e2d0"
+    },
+    "config/agent-skills/review-map.yaml": {
+      "snapshot": "docs/agent-skills/baseline-v2/review-map.yaml",
+      "sha256": "5f4f4b0aed4f935f679022664141aaafdb69dd9a5d57f3853f0e21b8a93dbfa2"
+    },
+    "scripts/agent-skills/routing.mjs": {
+      "snapshot": "docs/agent-skills/baseline-v2/routing.mjs",
+      "sha256": "a8fa58f29c29f21f95d7518078503976f1a798cd250f56df4630814d8ccfe63b"
+    },
+    "scripts/agent-skills/evaluate-forward.mjs": {
+      "snapshot": "docs/agent-skills/baseline-v2/evaluate-forward.mjs",
+      "sha256": "ccec86fb82b4ce3cd05a176772561668d4d5d7cffe59d8a07caf65bf8ef2d04a"
+    },
+    "scripts/agent-skills/evaluation.mjs": {
+      "snapshot": "docs/agent-skills/baseline-v2/evaluation.mjs",
+      "sha256": "7e8d166433def76f7e8d6176c4ad7cec9920a7b5ec87050db447d92ebc394939"
+    },
+    "tests/agent-skills/fixtures/routing.json": {
+      "snapshot": "docs/agent-skills/baseline-v2/routing.json",
+      "sha256": "99e3401647f62e825f915d5c13c9e0084cfb5a6a05fcc102f5856d4741f03419"
+    }
+  },
+  "artifacts": {
+    "docs/agent-skills/routing-v2-results.json": "d198312abe1ead86917b1764e13933327a41a40a4e992f49e84a88f5db3a98db",
+    "docs/agent-skills/routing-v2-report.md": "ad6f2c13f0c6a06abac937d1a2abd4d553ff615c4eb71f69882bbeff6331c881"
+  }
+}
