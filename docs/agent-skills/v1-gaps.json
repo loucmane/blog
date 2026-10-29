@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "none": false,
+  "gaps": [
+    {
+      "id": "gap-quality-routing-misses",
+      "title": "Route quality reviews for accessibility contracts and font-cache verification",
+      "type": "bug",
+      "priority": "P1",
+      "criteria": ["d", "e"],
+      "detail": "The frozen evaluation misses quality-reliability-observability on PR #130 (recovery coverage/Suspense regression) and #118 (font digest, cache and browser assertions). Recall is 77.8%; two of five PRs miss an expected scope.",
+      "acceptanceCriteria": [
+        "Add independently labelled positive fixtures for the #130 and #118 changed-test patterns and negative fixtures for adjacent presentation-only changes.",
+        "A reviewed routing revision selects quality-reliability-observability for both cases without dropping other required scopes.",
+        "Publish a new frozen evaluation with explicit denominators and changed false-positive/false-negative counts; retain the original five-PR artifacts unchanged."
+      ],
+      "evidence": [
+        "docs/agent-skills/forward-results.json#cases",
+        "docs/agent-skills/forward-labels.json",
+        "config/agent-skills/review-map.yaml"
+      ]
+    },
+    {
+      "id": "gap-broad-path-overlap",
+      "title": "Reduce incidental skill selection from broad path routes",
+      "type": "bug",
+      "priority": "P2",
+      "criteria": ["d", "e"],
+      "detail": "Precision is 43.8% (7 TP / 16 selections), with nine false positives. Shared layout, document and reader paths can select domains whose behavior did not change. SEO selected on PR #130 is the clearest unusable path-only result. Seven of nine extra selections were still considered useful, so blanket removal of overlaps is not justified.",
+      "acceptanceCriteria": [
+        "Add paired fixtures for layout recovery versus metadata changes and document sanitization versus block-contract changes.",
+        "Review route scope using actual changed behavior and preserve justified cross-domain overlap.",
+        "Measure precision and recall on a separately labelled evaluation before accepting the revision; do not relabel the historical sample to improve its score."
+      ],
+      "evidence": [
+        "docs/agent-skills/forward-report.md",
+        "docs/agent-skills/forward-blind-review.json#cases",
+        "scripts/agent-skills/routing.mjs"
+      ]
+    },
+    {
+      "id": "gap-task-text-noise",
+      "title": "Separate task intent from boilerplate and historical mentions in text routing",
+      "type": "bug",
+      "priority": "P2",
+      "criteria": ["d", "e"],
+      "detail": "The router matches the full PR title/body. PR #128 selects owner-publishing-ux from the backend word revisions; #123 contains historical skill mentions. Whole-text exclusions can also hide relevant intent in mixed or negated prose.",
+      "acceptanceCriteria": [
+        "Add fixtures for verification boilerplate, historical references, backend revisions and mixed or negated exclusions.",
+        "Document the reviewed input-section and exclusion semantics, with explicit routing evidence for each selection.",
+        "Re-evaluate independently labelled real PRs and publish the changes to false positives and missed routes without changing the frozen baseline."
+      ],
+      "evidence": [
+        "docs/agent-skills/forward-inputs.json",
+        "docs/agent-skills/forward-blind-review.json",
+        "docs/agent-skills/lifecycle.md",
+        "scripts/agent-skills/routing.mjs"
+      ]
+    },
+    {
+      "id": "gap-unusable-advice",
+      "title": "Make off-scope review advice an explicit abstention or handoff",
+      "type": "task",
+      "priority": "P2",
+      "criteria": ["c", "d", "e"],
+      "detail": "Two of sixteen assessments (12.5%) produced unusable advice, with two findings: seo-distribution on #130 has no URL/discovery change; owner-publishing-ux on #128 has no owner intent, state transition, feedback or recovery journey. Skill edits are outside this lane.",
+      "acceptanceCriteria": [
+        "Add review-output examples for both findings that state why the scope is absent and avoid inventing a product journey or distribution change.",
+        "Distinguish not-applicable or a scoped handoff from substantive review advice while retaining original selection and usefulness counts.",
+        "Collect new blind advice and record usefulness as subjective, advisory evidence; no review score becomes blocking."
+      ],
+      "evidence": [
+        "docs/agent-skills/forward-report.md#Advice findings",
+        "docs/agent-skills/forward-blind-review.json",
+        ".claude/skills/seo-distribution/SKILL.md",
+        ".claude/skills/owner-publishing-ux/SKILL.md"
+      ]
+    },
+    {
+      "id": "gap-capability-coverage",
+      "title": "Extend persisted output and real-change coverage across all registered skills",
+      "type": "task",
+      "priority": "P2",
+      "criteria": ["a", "c", "d"],
+      "detail": "The suite has twelve registered skills but ten persisted per-skill review fixtures. cross-agent-skill-platform has an in-test synthetic result; gas-city-coordinator lacks a persisted review-result example. Five retrospective PRs cannot establish every capability, model/provider behavior or future routing accuracy. File presence proves implementation structure, not prose quality.",
+      "acceptanceCriteria": [
+        "Inventory every catalog skill, canonical source, relative link, capability and persisted review-result example; resolve missing examples or document an approved exception.",
+        "Add schema-valid persisted output examples for the platform and coordinator skills, and retain traceable per-skill envelopes for actual forward reviews without inventing timestamps or review identities.",
+        "Publish a prospective, independently labelled sample spanning skills absent from the first sample; separate routing accuracy, advice usefulness and any provider comparison."
+      ],
+      "evidence": [
+        "config/agent-skills/catalog.yaml",
+        "tests/agent-skills/fixtures/",
+        "tests/agent-skills/review-result.test.mjs",
+        "docs/agent-skills/forward-results.json#perSkill"
+      ]
+    },
+    {
+      "id": "gap-current-ingestion-sink",
+      "title": "Replace legacy Aegis review ingestion with the current Beads and worklog contract",
+      "type": "feature",
+      "priority": "P1",
+      "criteria": ["c"],
+      "detail": "The command builder still produces ./.aegis/bin/aegis log, while active project coordination freezes Aegis and makes Beads authoritative. Dry-run contract acceptance does not demonstrate delivery to an active evidence sink. This checker deliberately performs no ingestion.",
+      "acceptanceCriteria": [
+        "Approve and document a Beads/worklog ingestion destination with explicit skill, review ID, head SHA and durable evidence references.",
+        "Preserve validation, advisory classification and duplicate/retry behavior, with tests for rejection before any evidence write.",
+        "Demonstrate one authorized end-to-end ingestion receipt on the host without mutating historical Aegis or Taskmaster state; revise affected skill guidance in a separately admitted lane."
+      ],
+      "evidence": [
+        "AGENTS.md#Active Project Coordination",
+        "scripts/agent-skills/ingest-result.mjs",
+        "scripts/agent-skills/lib.mjs#buildAegisIngestCommand",
+        ".claude/skills/cross-agent-skill-platform/SKILL.md"
+      ]
+    },
+    {
+      "id": "gap-review-schema-parity",
+      "title": "Align runtime review-result validation with the published JSON schema",
+      "type": "bug",
+      "priority": "P2",
+      "criteria": ["c", "f"],
+      "detail": "The runtime validator does not reject extra fields inside evidence items although the schema sets additionalProperties:false there. Conversely, the runtime rejects subjective blocking findings while the JSON schema does not express that conditional rule. A passed fixture is not proof that both contracts reject the same malformed inputs.",
+      "acceptanceCriteria": [
+        "Add a shared valid/invalid corpus covering evidence extra properties, timestamp format and subjective blocking combinations.",
+        "Make schema and runtime decisions agree, preserving the stricter advisory boundary and intentional compatibility behavior.",
+        "Ensure ingestion uses the aligned contract and documents which checks validate structure versus evidence truth."
+      ],
+      "evidence": [
+        "schemas/agent-skills/review-result.schema.json",
+        "scripts/agent-skills/lib.mjs#validateReviewResult",
+        "tests/agent-skills/review-result.test.mjs"
+      ]
+    },
+    {
+      "id": "gap-deterministic-evidence",
+      "title": "Bind blocking-eligible findings to verified deterministic check receipts",
+      "type": "feature",
+      "priority": "P2",
+      "criteria": ["c", "f"],
+      "detail": "Static policy and subjective:true guards are enforceable, but a finding can currently assert subjective:false and blocking:true without a registered executed check or trustworthy receipt. Synthetic deterministic fixture examples do not establish live enforcement. The completion checker independently pins the four v1 check IDs; it does not adjudicate arbitrary claims of determinism.",
+      "acceptanceCriteria": [
+        "Define a reviewed mapping from deterministic check identity to permitted finding classes and head-bound execution receipts.",
+        "Reject promotion based only on a caller-supplied subjective:false label, an arbitrary category, or an unverified command string.",
+        "Test forged, missing and stale receipts along with legitimate deterministic failures; keep every subjective finding advisory."
+      ],
+      "evidence": [
+        "config/agent-skills/catalog.yaml#policy",
+        "scripts/agent-skills/routing.mjs#blockingEligibleCategories",
+        "scripts/agent-skills/lib.mjs#validateReviewResult",
+        "docs/agent-skills/lifecycle.md"
+      ]
+    },
+    {
+      "id": "gap-platform-host-evidence",
+      "title": "Make platform validation evidence reproducible in managed workers and host checks",
+      "type": "task",
+      "priority": "P2",
+      "criteria": ["a", "b"],
+      "detail": "The Git-ignore-aware validator needs a working subprocess to distinguish managed runtime skills from unregistered project skills. The initial worker invocation stalled in that probe. A timeout now preserves the unresolved diagnostics; a host run must resolve them before completion can be asserted.",
+      "acceptanceCriteria": [
+        "Run the existing validator on the exact reviewed worktree on the host and retain its full skills/routes summary and any unregistered-entry diagnostics.",
+        "Add a bounded regression for an unavailable or unresponsive Git probe and document which checks managed workers can reproduce.",
+        "If worker support is changed, preserve Git-ignore and tracked-path semantics; do not skip unknown skills or turn missing evidence into a pass. Regenerate the completion artifacts from verified inputs."
+      ],
+      "evidence": [
+        "scripts/agent-skills/lib.mjs#gitIgnoredPaths",
+        "tests/agent-skills/platform.test.mjs",
+        "docs/worklog/blog-0055.2.md"
+      ]
+    },
+    {
+      "id": "gap-completion-ci",
+      "title": "Add an approved freshness check for completion and forward evidence",
+      "type": "task",
+      "priority": "P3",
+      "criteria": ["d", "e", "g"],
+      "detail": "The checker is a manual command in this lane. Its new test file is discovered by the existing agent-skills test glob, but regeneration/freshness checking of the real completion artifacts is not wired into package scripts or CI. Proposed gaps also need coordinator review and actual Beads filing.",
+      "acceptanceCriteria": [
+        "After review, add explicit forward replay and completion --check commands to the appropriate CI stage without treating subjective quality metrics as thresholds.",
+        "Demonstrate that altered measurements, missing PRs, stale Markdown, absent gap declarations and unlinked incomplete criteria are rejected.",
+        "Review these proposals, create accepted Beads with evidence and dependencies, and record their IDs without updating frozen Taskmaster files. Preserve the original evaluation when producing a revised baseline."
+      ],
+      "evidence": [
+        "scripts/agent-skills/check-v1-completion.mjs",
+        "docs/agent-skills/v1-gaps.json",
+        "package.json#scripts.ci:agent-skills",
+        ".github/workflows/ci.yml"
+      ]
+    }
+  ]
+}
