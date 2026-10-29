@@ -1,0 +1,539 @@
+{
+  "cross-agent-skill-platform": {
+    "pathPositive": {
+      "paths": ["config/agent-skills/catalog.yaml"],
+      "taskText": "",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["docs/product/audience.md"],
+      "taskText": "",
+      "expected": ["magazine-product-discovery"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["config/agent-skills/catalog.yaml", "docs/product/audience.md"],
+      "taskText": "",
+      "expected": ["cross-agent-skill-platform", "magazine-product-discovery"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review skill routing.",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review product discovery.",
+      "expected": ["magazine-product-discovery"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review skill routing. Review product discovery.",
+      "expected": ["cross-agent-skill-platform", "magazine-product-discovery"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "magazine-product-discovery": {
+    "pathPositive": {
+      "paths": ["docs/product/audience.md"],
+      "taskText": "",
+      "expected": ["magazine-product-discovery"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["docs/architecture/stack.md"],
+      "taskText": "",
+      "expected": ["stack-research-adr"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["docs/product/audience.md", "docs/architecture/stack.md"],
+      "taskText": "",
+      "expected": ["magazine-product-discovery", "stack-research-adr"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review product discovery.",
+      "expected": ["magazine-product-discovery"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review stack research.",
+      "expected": ["stack-research-adr"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review product discovery. Review stack research.",
+      "expected": ["magazine-product-discovery"],
+      "rationale": "Both domains are named, but the existing stack trigger excludes product discovery across the task text; preserve and expose that precedence."
+    }
+  },
+  "stack-research-adr": {
+    "pathPositive": {
+      "paths": ["docs/architecture/stack.md"],
+      "taskText": "",
+      "expected": ["stack-research-adr"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["config/agent-skills/catalog.yaml"],
+      "taskText": "",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["docs/architecture/stack.md", "config/agent-skills/catalog.yaml"],
+      "taskText": "",
+      "expected": ["cross-agent-skill-platform", "stack-research-adr"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review compatibility matrix.",
+      "expected": ["stack-research-adr"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review skill routing.",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review compatibility matrix. Review skill routing.",
+      "expected": ["cross-agent-skill-platform", "stack-research-adr"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "owner-publishing-ux": {
+    "pathPositive": {
+      "paths": ["docs/design/owner-publishing/flow.md"],
+      "taskText": "",
+      "expected": ["owner-publishing-ux"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["docs/deployment/release.md"],
+      "taskText": "",
+      "expected": ["release-witness"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["docs/design/owner-publishing/flow.md", "docs/deployment/release.md"],
+      "taskText": "",
+      "expected": ["owner-publishing-ux", "release-witness"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review owner publishing ux.",
+      "expected": ["owner-publishing-ux"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review release evidence.",
+      "expected": ["release-witness"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review owner publishing ux. Review release evidence.",
+      "expected": ["owner-publishing-ux", "release-witness"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "gas-city-coordinator": {
+    "pathPositive": {
+      "paths": ["AGENTS.md"],
+      "taskText": "",
+      "expected": ["gas-city-coordinator"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["AGENTS.md", "packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["gas-city-coordinator", "seo-distribution"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Plan gas city dispatch.",
+      "expected": ["gas-city-coordinator"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review canonical urls.",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Plan gas city dispatch. Review canonical urls.",
+      "expected": ["gas-city-coordinator", "seo-distribution"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "content-platform-backend": {
+    "pathPositive": {
+      "paths": ["packages/web/src/server/content/portability.ts"],
+      "taskText": "",
+      "expected": ["content-platform-backend"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": [
+        "packages/web/src/server/content/portability.ts",
+        "packages/web/src/lib/site-url.ts"
+      ],
+      "taskText": "",
+      "expected": ["content-platform-backend", "seo-distribution"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review data integrity.",
+      "expected": ["content-platform-backend"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review canonical urls.",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review data integrity. Review canonical urls.",
+      "expected": ["content-platform-backend", "seo-distribution"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "security-identity-privacy": {
+    "pathPositive": {
+      "paths": ["packages/web/src/lib/request-security.ts"],
+      "taskText": "",
+      "expected": ["security-identity-privacy"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["packages/web/src/reader/styles.css"],
+      "taskText": "",
+      "expected": ["reader-frontend"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["packages/web/src/lib/request-security.ts", "packages/web/src/reader/styles.css"],
+      "taskText": "",
+      "expected": ["reader-frontend", "security-identity-privacy"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review upload security.",
+      "expected": ["security-identity-privacy"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review responsive images.",
+      "expected": ["reader-frontend"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review upload security. Review responsive images.",
+      "expected": ["reader-frontend", "security-identity-privacy"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "reader-frontend": {
+    "pathPositive": {
+      "paths": ["packages/web/src/reader/styles.css"],
+      "taskText": "",
+      "expected": ["reader-frontend"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["packages/web/src/reader/styles.css", "packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["reader-frontend", "seo-distribution"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review responsive images.",
+      "expected": ["reader-frontend"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review canonical urls.",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review responsive images. Review canonical urls.",
+      "expected": ["reader-frontend", "seo-distribution"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "editorial-blocks": {
+    "pathPositive": {
+      "paths": ["packages/web/src/reader/blocks.ts"],
+      "taskText": "",
+      "expected": ["editorial-blocks", "reader-frontend"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["docs/deployment/release.md"],
+      "taskText": "",
+      "expected": ["release-witness"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["packages/web/src/reader/blocks.ts", "docs/deployment/release.md"],
+      "taskText": "",
+      "expected": ["editorial-blocks", "reader-frontend", "release-witness"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review node and mark types.",
+      "expected": ["editorial-blocks"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review release evidence.",
+      "expected": ["release-witness"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review node and mark types. Review release evidence.",
+      "expected": ["editorial-blocks", "release-witness"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "seo-distribution": {
+    "pathPositive": {
+      "paths": ["packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["seo-distribution"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["AGENTS.md"],
+      "taskText": "",
+      "expected": ["gas-city-coordinator"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["packages/web/src/lib/site-url.ts", "AGENTS.md"],
+      "taskText": "",
+      "expected": ["gas-city-coordinator", "seo-distribution"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review canonical urls.",
+      "expected": ["seo-distribution"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Plan gas city dispatch.",
+      "expected": ["gas-city-coordinator"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review canonical urls. Plan gas city dispatch.",
+      "expected": ["gas-city-coordinator", "seo-distribution"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "release-witness": {
+    "pathPositive": {
+      "paths": ["docs/deployment/release.md"],
+      "taskText": "",
+      "expected": ["release-witness"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["config/agent-skills/catalog.yaml"],
+      "taskText": "",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["docs/deployment/release.md", "config/agent-skills/catalog.yaml"],
+      "taskText": "",
+      "expected": ["cross-agent-skill-platform", "release-witness"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review release evidence.",
+      "expected": ["release-witness"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review skill routing.",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review release evidence. Review skill routing.",
+      "expected": ["cross-agent-skill-platform", "release-witness"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  },
+  "quality-reliability-observability": {
+    "recoveryCoveragePositive": {
+      "paths": ["packages/web/src/app/recovery-marker.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "PR #130: a coverage contract for every route under the error boundary needs quality review even without PR prose."
+    },
+    "suspendedRetryPositive": {
+      "paths": ["packages/web/src/reader/components/failure-boundary.test.tsx"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #130: the Suspense retry and focus regression tests need quality review alongside reader accessibility."
+    },
+    "fontDigestPositive": {
+      "paths": ["packages/web/src/reader-directions/cinematic-feature/fonts.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #118: font hash assertions bind declared digests to bytes; this is a verification contract as well as a reader concern."
+    },
+    "fontContractPositive": {
+      "paths": ["packages/web/src/reader-directions/contract.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #118: tests of versioned font URLs establish a quality contract; changing only tests does not change document node definitions."
+    },
+    "directionBrowserPositive": {
+      "paths": ["packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "PR #118: direction browser assertions must still intercept versioned fonts and exercise the intended state."
+    },
+    "frameworkCachePositive": {
+      "paths": ["packages/web/tests/framework/framework-contract.test.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "PR #118: the framework cache-header contract belongs to test and quality review independently of configuration edits."
+    },
+    "coldFontBrowserPositive": {
+      "paths": ["tests/e2e/reader-lab-cold-fonts.spec.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "PR #118: cold-font and immutable-cache browser assertions need quality review without relying on verification boilerplate."
+    },
+    "recoveryPresentationNegative": {
+      "paths": ["packages/web/src/reader/components/failure-boundary.tsx"],
+      "taskText": "Adjust the fallback spacing and button colour.",
+      "expected": ["reader-frontend"],
+      "rationale": "Adjacent presentation-only fallback changes retain reader review; the test path must not also match its source component."
+    },
+    "layoutPresentationNegative": {
+      "paths": ["packages/web/src/app/layout.tsx"],
+      "taskText": "Adjust the page frame spacing.",
+      "expected": ["reader-frontend", "seo-distribution"],
+      "rationale": "A layout source edit alone retains established reader and distribution routes without manufacturing quality scope."
+    },
+    "fontPresentationNegative": {
+      "paths": [
+        "packages/web/src/reader-directions/cinematic-feature/fonts.ts",
+        "packages/web/public/reader-directions/cinematic-feature/fonts/README.md"
+      ],
+      "taskText": "Adjust font choices and typography documentation. Verification: pnpm test:coverage, pnpm test:browser.",
+      "expected": ["reader-frontend"],
+      "rationale": "Font presentation files and ordinary test-command mentions do not constitute changed verification contracts."
+    },
+    "directionPresentationNegative": {
+      "paths": ["packages/web/src/reader-directions/quiet-monograph/styles.css"],
+      "taskText": "Adjust premium typography and reader layout.",
+      "expected": ["reader-frontend"],
+      "rationale": "Direction styling belongs to reader presentation; adding browser test paths must not widen the whole directory."
+    },
+    "presentationAndRegressionPositive": {
+      "paths": [
+        "packages/web/src/reader-directions/quiet-monograph/styles.css",
+        "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts"
+      ],
+      "taskText": "Adjust premium typography and reader layout.",
+      "expected": ["quality-reliability-observability", "reader-frontend"],
+      "rationale": "Explicit changed-test evidence retains quality review in a mixed change even when prose contains presentation exclusions."
+    },
+    "pathPositive": {
+      "paths": ["config/ci/budgets.json"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "The changed path belongs to this review scope, retaining documented overlaps."
+    },
+    "pathNegative": {
+      "paths": ["packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring review scope must not select this skill."
+    },
+    "pathAmbiguous": {
+      "paths": ["config/ci/budgets.json", "packages/web/src/lib/site-url.ts"],
+      "taskText": "",
+      "expected": ["quality-reliability-observability", "seo-distribution"],
+      "rationale": "A mixed change retains both review scopes without first-match precedence."
+    },
+    "textPositive": {
+      "paths": [],
+      "taskText": "Review test strategy.",
+      "expected": ["quality-reliability-observability"],
+      "rationale": "An explicit domain phrase selects this advisory skill."
+    },
+    "textNegative": {
+      "paths": [],
+      "taskText": "Review canonical urls.",
+      "expected": ["seo-distribution"],
+      "rationale": "A neighboring domain request must not select this skill."
+    },
+    "textAmbiguous": {
+      "paths": [],
+      "taskText": "Review test strategy. Review canonical urls.",
+      "expected": ["quality-reliability-observability", "seo-distribution"],
+      "rationale": "Two independent domain requests retain both advisory skills."
+    }
+  }
+}

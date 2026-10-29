@@ -130,6 +130,22 @@ test('defaults to a side-effect-free dry run, including the explicit dry-run ali
   assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
 })
 
+test('ingestion cannot substitute an in-memory result for recorded file bytes', (t) => {
+  const input = fixture(t)
+  const fake = recordingRunner()
+  for (const execute of [false, true]) {
+    for (const result of [undefined, validResult()]) {
+      assert.throws(
+        () => library.ingestReviewResult({ ...input, result, execute, runner: fake.runner }),
+        /requires file-backed evidence/,
+      )
+    }
+  }
+  assert.deepEqual(fake.calls, [])
+  assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
+  assert.equal(fs.readFileSync(path.join(input.root, resultPath), 'utf8'), input.bytes)
+})
+
 test('executes show then update without a shell or inherited environment and appends exact Markdown', (t) => {
   const input = fixture(t)
   const fake = recordingRunner([{ id: bead, metadata: {} }])

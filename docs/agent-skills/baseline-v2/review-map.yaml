@@ -1,0 +1,530 @@
+{
+  "schemaVersion": 1,
+  "defaultMode": "advisory",
+  "routes": [
+    {
+      "id": "cross-agent-skill-platform",
+      "match": [
+        ".claude/skills/**",
+        ".agents/skills/**",
+        "config/agent-skills/**",
+        "schemas/agent-skills/**",
+        "scripts/agent-skills/**",
+        "tests/agent-skills/**"
+      ],
+      "skills": [
+        "cross-agent-skill-platform"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "skill routing",
+          "skill registration",
+          "cross-agent skill",
+          "review-result schema"
+        ],
+        "excludeAny": []
+      }
+    },
+    {
+      "id": "magazine-product-discovery",
+      "match": [
+        ".taskmaster/docs/prd.txt",
+        "docs/product/**",
+        "docs/research/product-discovery/**"
+      ],
+      "skills": [
+        "magazine-product-discovery"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "product discovery",
+          "owner needs",
+          "reader needs",
+          "audience",
+          "value proposition",
+          "editorial workflow",
+          "requirements framing"
+        ],
+        "excludeAny": [
+          "implement",
+          "upgrade",
+          "package",
+          "security audit",
+          "deploy",
+          "migration",
+          "release verification"
+        ]
+      }
+    },
+    {
+      "id": "stack-research-adr",
+      "match": [
+        "docs/architecture/**",
+        "docs/research/stack/**",
+        "docs/decisions/architecture/**"
+      ],
+      "skills": [
+        "stack-research-adr"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "stack research",
+          "architecture decision",
+          "adr",
+          "latest stable",
+          "support policy",
+          "compatibility matrix",
+          "framework comparison"
+        ],
+        "excludeAny": [
+          "implement",
+          "upgrade dependencies",
+          "install package",
+          "edit package.json",
+          "product discovery",
+          "user journey",
+          "security audit",
+          "deploy the application",
+          "run migration"
+        ]
+      }
+    },
+    {
+      "id": "owner-publishing-ux",
+      "match": [
+        "docs/product/content-workflow.md",
+        "docs/product/owner-publishing/**",
+        "docs/design/owner-publishing/**",
+        "docs/research/owner-publishing/**"
+      ],
+      "skills": [
+        "owner-publishing-ux"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "owner publishing ux",
+          "owner publishing journey",
+          "nontechnical owner workflow",
+          "autosave",
+          "drafts",
+          "preview",
+          "scheduling",
+          "publishing",
+          "unpublishing",
+          "revisions",
+          "media handling",
+          "validation",
+          "recovery",
+          "destructive actions",
+          "accessibility",
+          "mobile ergonomics",
+          "plain-language error handling"
+        ],
+        "excludeAny": [
+          "product discovery",
+          "implement",
+          "package upgrade",
+          "stack research",
+          "backend architecture",
+          "database schema",
+          "security audit",
+          "deployment",
+          "migration",
+          "release verification"
+        ]
+      }
+    },
+    {
+      "id": "gas-city-coordinator",
+      "match": [
+        ".beads/**",
+        "AGENTS.md",
+        "CLAUDE.md"
+      ],
+      "skills": [
+        "gas-city-coordinator"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "gas city dispatch",
+          "beads task",
+          "managed worker",
+          "worklog evidence"
+        ],
+        "excludeAny": []
+      }
+    },
+    {
+      "id": "content-platform-backend",
+      "match": [
+        "packages/web/src/server/**",
+        "packages/web/migrations/**",
+        "packages/web/scripts/migrate.mjs",
+        "docs/architecture/content-persistence-foundation.md",
+        "docs/deployment/backup-restore.md"
+      ],
+      "skills": [
+        "content-platform-backend"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "content platform",
+          "backend",
+          "content domain model",
+          "state machine",
+          "server boundaries",
+          "api contract",
+          "database schema",
+          "reversible migration",
+          "media storage",
+          "background job",
+          "outbox",
+          "idempotency",
+          "search indexing",
+          "import and export",
+          "backup and recovery",
+          "data integrity"
+        ],
+        "excludeAny": [
+          "owner publishing journey",
+          "owner publishing ux",
+          "plain-language error",
+          "accessibility",
+          "mobile ergonomics",
+          "stack research",
+          "architecture decision record",
+          "latest stable version",
+          "product discovery",
+          "value proposition",
+          "security audit",
+          "threat model",
+          "authentication",
+          "secret handling",
+          "sanitization",
+          "privacy review",
+          "deployment",
+          "release verification"
+        ]
+      }
+    },
+    {
+      "id": "security-identity-privacy",
+      "match": [
+        "packages/web/src/server/owner/**",
+        "packages/web/src/app/api/owner/**",
+        "packages/web/src/app/api/auth/**",
+        "packages/web/src/app/api/media/**",
+        "packages/web/src/lib/request-security.ts",
+        "packages/web/next.config.ts",
+        "packages/web/src/lib/security-headers.test.ts",
+        "packages/web/src/server/content/document.ts",
+        "packages/web/src/server/content/media.ts",
+        "packages/web/src/server/content/media-variants.ts",
+        "packages/web/src/server/content/media-variant-rules.ts",
+        "packages/web/migrations/0002_owner_auth*.sql",
+        "scripts/ci/check-dependency-security.mjs",
+        "tests/ci/security-hotfix.test.mjs",
+        ".gitleaksignore",
+        ".github/workflows/**",
+        "package.json",
+        "packages/web/package.json",
+        "pnpm-lock.yaml",
+        "config/runtime.json"
+      ],
+      "skills": [
+        "security-identity-privacy"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "owner authentication",
+          "account recovery",
+          "authorization",
+          "secret handling",
+          "rich-content sanitization",
+          "upload security",
+          "rate-limit",
+          "privacy review",
+          "supply-chain",
+          "threat model"
+        ],
+        "excludeAny": [
+          "backend data design",
+          "owner publishing ux",
+          "stack research",
+          "product discovery",
+          "release verification",
+          "about-page copy"
+        ]
+      }
+    },
+    {
+      "id": "reader-frontend",
+      "match": [
+        "packages/web/src/app/page.tsx",
+        "packages/web/src/app/layout.tsx",
+        "packages/web/src/app/globals.css",
+        "packages/web/src/app/stories/**",
+        "packages/web/src/app/sections/**",
+        "packages/web/src/app/not-found.tsx",
+        "packages/web/src/app/error.tsx",
+        "packages/web/src/reader/**",
+        "packages/web/src/reader-directions/**",
+        "packages/web/public/reader-directions/**",
+        "packages/web/src/app/api/media/**",
+        "scripts/lab-lighthouse.mjs",
+        "tests/e2e/homepage.spec.ts",
+        "tests/e2e/reader.spec.ts"
+      ],
+      "skills": [
+        "reader-frontend"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "premium typography",
+          "responsive images",
+          "core web vitals",
+          "visual hierarchy"
+        ],
+        "excludeAny": [
+          "persisted node",
+          "database persistence",
+          "url sanitization",
+          "owner editing ux",
+          "frontend framework"
+        ]
+      }
+    },
+    {
+      "id": "editorial-blocks",
+      "match": [
+        "packages/web/src/server/content/document.ts",
+        "packages/web/src/reader/blocks.ts",
+        "packages/web/src/reader/views.ts",
+        "packages/web/src/reader/components/article-body.tsx",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader-directions/registry.ts"
+      ],
+      "skills": [
+        "editorial-blocks"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "node and mark types",
+          "gallery",
+          "direction contract",
+          "block contract"
+        ],
+        "excludeAny": [
+          "premium typography",
+          "backend data",
+          "sanitization",
+          "owner editing ux",
+          "stack choices"
+        ]
+      }
+    },
+    {
+      "id": "seo-distribution",
+      "match": [
+        "packages/web/src/lib/site-url.ts",
+        "packages/web/public/robots.txt",
+        "packages/web/src/app/layout.tsx",
+        "packages/web/src/app/page.tsx",
+        "packages/web/src/app/stories/*/page.tsx",
+        "packages/web/src/app/sections/*/page.tsx",
+        "packages/web/src/app/feed.xml/**",
+        "packages/web/src/app/sitemap.xml/**",
+        "packages/web/src/app/sitemaps/**",
+        "packages/web/src/app/robots.txt/**",
+        "packages/web/src/server/distribution/**"
+      ],
+      "skills": [
+        "seo-distribution"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "canonical urls",
+          "rss",
+          "social cards",
+          "structured data"
+        ],
+        "excludeAny": [
+          "release evidence only",
+          "reader layout only",
+          "block contract only",
+          "backend data only",
+          "security audit only"
+        ]
+      }
+    },
+    {
+      "id": "release-witness",
+      "match": [
+        ".github/workflows/**",
+        "scripts/ci/**",
+        "tests/ci/**",
+        "docs/deployment/**"
+      ],
+      "skills": [
+        "release-witness"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "release evidence",
+          "rollback readiness",
+          "verification report"
+        ],
+        "excludeAny": [
+          "seo design only",
+          "reader layout only",
+          "block contract only",
+          "backend data only",
+          "security audit only"
+        ]
+      }
+    },
+    {
+      "id": "quality-reliability-observability",
+      "match": [
+        "playwright.config.ts",
+        "vitest.config.ts",
+        "config/ci/**",
+        "tests/setup/**",
+        "tests/e2e/owner-workspace.spec.ts",
+        "tests/e2e/accessibility-baseline.json",
+        "packages/web/src/app/recovery-marker.test.ts",
+        "packages/web/src/reader/components/failure-boundary.test.tsx",
+        "packages/web/src/reader-directions/*/fonts.test.ts",
+        "packages/web/src/reader-directions/contract.test.ts",
+        "packages/web/src/reader-directions/*/*.e2e.ts",
+        "packages/web/tests/framework/framework-contract.test.ts",
+        "tests/e2e/reader-lab-cold-fonts.spec.ts",
+        "packages/web/src/reader-directions/*/playwright.config.ts",
+        "packages/web/scripts/run-content-integration.mjs",
+        "packages/web/tests/content/**",
+        "docs/product/nonfunctional-requirements.md",
+        "packages/web/src/app/api/health/**",
+        "packages/web/src/server/observability/**"
+      ],
+      "skills": [
+        "quality-reliability-observability"
+      ],
+      "mode": "advisory",
+      "requiredChecks": [
+        "agent-skills-schema",
+        "agent-skills-links",
+        "agent-skills-scripts",
+        "agent-skills-tests"
+      ],
+      "taskText": {
+        "includeAny": [
+          "test strategy",
+          "acceptance journey",
+          "accessibility automation",
+          "performance budget",
+          "core web vitals",
+          "structured logging",
+          "error reporting",
+          "health check",
+          "readiness check",
+          "production verification",
+          "restore drill",
+          "incident",
+          "rollback rehearsal",
+          "runbook"
+        ],
+        "excludeAny": [
+          "reader layout",
+          "premium typography",
+          "owner publishing ux",
+          "backend data design",
+          "database schema",
+          "security audit",
+          "threat model",
+          "release evidence",
+          "verification report",
+          "stack research",
+          "architecture decision record",
+          "product discovery"
+        ]
+      }
+    }
+  ]
+}

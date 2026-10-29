@@ -1,13 +1,24 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import fs from 'node:fs'
+import { createHash } from 'node:crypto'
+import { pathToFileURL } from 'node:url'
 import {
   scoreEvaluation,
   scoreRoutingEvaluation,
   renderReport,
   renderRoutingRevisionReport,
+  compareRoutingScores,
+  renderRoutingV3Report,
 } from '../../scripts/agent-skills/evaluation.mjs'
-import { evaluateForward, evaluateRoutingV2 } from '../../scripts/agent-skills/evaluate-forward.mjs'
+import {
+  evaluateForward,
+  evaluateRoutingV2,
+  evaluateRoutingV3,
+  verifyHeldoutFreeze,
+  verifyV3Disposition,
+  routingV3Paths,
+} from '../../scripts/agent-skills/evaluate-forward.mjs'
 
 const sample = () => ({
   skillIds: ['alpha', 'beta', 'gamma'],
@@ -185,6 +196,151 @@ test('routing-only scoring shares decision counts without inventing blind advice
   assert.ok(result.cases.every((row) => !Object.hasOwn(row, 'advice')))
   predictions.cases[0].routing.blocking = true
   assert.throws(() => scoreRoutingEvaluation({ ...input, predictions }), /advisory/)
+})
+
+test('held-out acceptance requires both precision and recall without undefined rates', () => {
+  const { blind, ...input } = sample()
+  const score = (skills) =>
+    scoreRoutingEvaluation({
+      ...input,
+      predictions: {
+        schemaVersion: 1,
+        cases: blind.cases.map(({ number, merge }, i) => ({
+          number,
+          merge,
+          routing: { mode: 'advisory', blocking: false, skills: skills[i] },
+        })),
+      },
+    })
+  const baseline = score([['alpha', 'gamma'], ['gamma']])
+  const better = score([['alpha', 'beta'], ['gamma']])
+  assert.equal(compareRoutingScores(baseline, better).acceptance.accepted, true)
+  assert.equal(compareRoutingScores(baseline, baseline).acceptance.accepted, true)
+  // Each regression is rejected even when the other metric improves.
+  assert.equal(compareRoutingScores(baseline, score([['alpha'], []])).acceptance.accepted, false)
+  assert.equal(
+    compareRoutingScores(
+      baseline,
+      score([
+        ['alpha', 'beta', 'gamma'],
+        ['alpha', 'beta', 'gamma'],
+      ]),
+    ).acceptance.accepted,
+    false,
+  )
+  assert.equal(compareRoutingScores(baseline, score([[], []])).acceptance.accepted, false)
+  const changed = structuredClone(better)
+  changed.cases[0].expected = ['gamma']
+  assert.throws(() => compareRoutingScores(baseline, changed), /identical cases/)
+})
+
+function heldoutFixture(t) {
+  // Keep transient roots out of docs/agent-skills: the v1 completion tests copy
+  // that directory concurrently and fail if a root vanishes mid-copy.
+  const docs = new URL('../../docs/agent-skills/', import.meta.url)
+  const root = fs.mkdtempSync(new URL('.forward-evaluation-', import.meta.url))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const url = pathToFileURL(`${root}/`)
+  for (const name of [
+    ...fs
+      .readdirSync(docs, { withFileTypes: true })
+      .filter(
+        (entry) =>
+          ['baseline-v1', 'baseline-v2'].includes(entry.name) ||
+          (entry.isFile() && /^(forward-|heldout-|routing-v[23]-)/.test(entry.name)),
+      )
+      .map(({ name }) => `docs/agent-skills/${name}`),
+    'config/agent-skills',
+    'scripts/agent-skills/evaluate-forward.mjs',
+    'scripts/agent-skills/evaluation.mjs',
+    'scripts/agent-skills/routing.mjs',
+    'tests/agent-skills/fixtures/routing.json',
+  ]) {
+    const target = new URL(name, url)
+    fs.mkdirSync(new URL('./', target), { recursive: true })
+    fs.cpSync(new URL(`../../${name}`, import.meta.url), target, { recursive: true })
+  }
+  return url
+}
+
+test('held-out freeze rejects changed labels, inputs, missing digests and baseline drift', (t) => {
+  const root = heldoutFixture(t)
+  assert.equal(verifyHeldoutFreeze({ root }).labelsBeforeRouting, true)
+  for (const name of ['inputs', 'labels', 'diff-evidence']) {
+    const target = new URL(`docs/agent-skills/heldout-${name}.json`, root)
+    const bytes = fs.readFileSync(target)
+    fs.appendFileSync(target, '\n')
+    assert.throws(() => verifyHeldoutFreeze({ root }), /held-out input changed/)
+    fs.writeFileSync(target, bytes)
+  }
+  const target = new URL('docs/agent-skills/heldout-freeze.json', root)
+  const original = fs.readFileSync(target)
+  const freeze = JSON.parse(fs.readFileSync(target, 'utf8'))
+  delete freeze.sha256['docs/agent-skills/heldout-labels.json']
+  fs.writeFileSync(target, JSON.stringify(freeze))
+  assert.throws(() => verifyHeldoutFreeze({ root }), /missing held-out digest/)
+  fs.writeFileSync(target, original)
+  fs.appendFileSync(new URL('docs/agent-skills/baseline-v2/routing.mjs', root), '\n')
+  assert.throws(() => verifyHeldoutFreeze({ root }), /v2 snapshot changed/)
+})
+
+test('v3 replays the sealed comparison and checks the live keep or revert disposition', () => {
+  const result = evaluateRoutingV3()
+  const read = (name) =>
+    fs.readFileSync(new URL(`../../docs/agent-skills/${name}`, import.meta.url), 'utf8')
+  assert.deepEqual(JSON.parse(read('routing-v3-results.json')), result)
+  assert.equal(read('routing-v3-report.md'), renderRoutingV3Report(result))
+  assert.equal(result.heldout.denominators.prs, 8)
+  assert.equal(result.heldout.denominators.decisions, 96)
+  assert.equal(result.heldout.denominators.expectedPositives, 16)
+  assert.equal(result.provenance.independentReviewer, false)
+  assert.equal(result.provenance.labelsChanged, false)
+  assert.equal(Object.hasOwn(result.heldout.v3.metrics, 'assessedAdvice'), false)
+  assert.match(renderRoutingV3Report(result), /not an independent blind review/)
+  verifyV3Disposition(result)
+})
+
+test('v3 rejects candidate drift, missing digests and a rewritten loaded-router identity', (t) => {
+  const root = heldoutFixture(t)
+  for (const name of Object.values(routingV3Paths)) {
+    const target = new URL(name, root),
+      bytes = fs.readFileSync(target)
+    fs.appendFileSync(target, '\n')
+    assert.throws(() => evaluateRoutingV3({ root }), /v3 candidate changed/)
+    fs.writeFileSync(target, bytes)
+  }
+  const target = new URL('docs/agent-skills/routing-v3-freeze.json', root)
+  const freeze = JSON.parse(fs.readFileSync(target, 'utf8'))
+  const name = routingV3Paths['scripts/agent-skills/routing.mjs']
+  const changed = structuredClone(freeze)
+  delete changed.sha256[name]
+  fs.writeFileSync(target, JSON.stringify(changed))
+  assert.throws(() => evaluateRoutingV3({ root }), /missing v3 digest/)
+  fs.appendFileSync(new URL(name, root), '\n')
+  freeze.sha256[name] = createHash('sha256')
+    .update(fs.readFileSync(new URL(name, root)))
+    .digest('hex')
+  fs.writeFileSync(target, JSON.stringify(freeze))
+  assert.throws(() => evaluateRoutingV3({ root }), /loaded snapshot module/)
+})
+
+test('v3 disposition refuses unreviewed live routes and supports replay after rejection', (t) => {
+  const root = heldoutFixture(t)
+  const result = { heldout: { acceptance: { accepted: true } } }
+  for (const name of ['scripts/agent-skills/routing.mjs', 'config/agent-skills/review-map.yaml']) {
+    fs.copyFileSync(new URL(routingV3Paths[name], root), new URL(name, root))
+  }
+  verifyV3Disposition(result, { root })
+  const name = 'config/agent-skills/review-map.yaml'
+  fs.appendFileSync(new URL(name, root), '\n')
+  assert.throws(() => verifyV3Disposition(result, { root }), /live routes differ/)
+  result.heldout.acceptance.accepted = false
+  for (const [live, snapshot] of [
+    ['scripts/agent-skills/routing.mjs', 'routing.mjs'],
+    [name, 'review-map.yaml'],
+  ])
+    fs.copyFileSync(new URL(`docs/agent-skills/baseline-v2/${snapshot}`, root), new URL(live, root))
+  verifyV3Disposition(result, { root })
 })
 
 test('v2 corrects only the two quality misses and preserves original scopes and labels', () => {

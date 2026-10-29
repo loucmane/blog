@@ -569,45 +569,6 @@ export function validatePlatform({ root = process.cwd() } = {}) {
   };
 }
 
-// Deprecated: compatibility only for the historical completion checker.
-// Active ingestion uses buildBeadsIngestPlan / ingestReviewResult below.
-export function buildAegisIngestCommand({
-  root = process.cwd(),
-  resultPath,
-  result: suppliedResult,
-}) {
-  const absoluteResult = path.resolve(root, resultPath);
-  const reportsRoot = path.resolve(root, "reports/agent-skills");
-  const relation = path.relative(reportsRoot, absoluteResult);
-  if (relation.startsWith("..") || path.isAbsolute(relation)) {
-    throw new Error("review result must be beneath reports/agent-skills");
-  }
-  // Offline auditors can exercise the exact ingestion contract in memory,
-  // without writing generated evidence or invoking the legacy workflow.
-  const result = suppliedResult === undefined
-    ? JSON.parse(fs.readFileSync(absoluteResult, "utf8"))
-    : suppliedResult;
-  const errors = validateReviewResult(result);
-  if (errors.length > 0) throw new Error(errors.join("; "));
-  const evidence = relative(root, absoluteResult);
-  return {
-    command: "./.aegis/bin/aegis",
-    args: [
-      "log",
-      "--target-dir",
-      ".",
-      "--handler",
-      `agent-skill:${result.skill}`,
-      "--event-class",
-      "verification",
-      "--evidence",
-      evidence,
-      "--note",
-      `Recorded advisory ${result.skill} review ${result.reviewId} with verdict ${result.verdict}`,
-    ],
-  };
-}
-
 const INGEST_ROUTE = {
   command: '/home/loucmane/gascity/bin/gc',
   city: '/home/loucmane/gascity/city',
@@ -660,6 +621,7 @@ function markdownCode(value) {
 export function buildBeadsIngestPlan({
   root = process.cwd(),
   resultPath,
+  result: suppliedResult,
   bead,
   worklog = `docs/worklog/${bead}.md`,
   city = INGEST_ROUTE.city,
@@ -678,9 +640,13 @@ export function buildBeadsIngestPlan({
     resultPath,
     'reports/agent-skills',
     'review result',
-    true,
+    suppliedResult === undefined,
   )
-  const bytes = fs.readFileSync(absoluteResult)
+  // Offline contract checks can plan an envelope without writing evidence.
+  // Its hash describes this serialization, not a persisted file or receipt.
+  const bytes = suppliedResult === undefined
+    ? fs.readFileSync(absoluteResult)
+    : Buffer.from(`${JSON.stringify(suppliedResult, null, 2)}\n`)
   const result = JSON.parse(bytes.toString('utf8'))
   const errors = validateReviewResult(result)
   if (errors.length) throw new Error(errors.join('; '))
@@ -787,6 +753,9 @@ export function ingestReviewResult({
   runner = spawnSync,
   ...options
 } = {}) {
+  if (Object.hasOwn(options, 'result')) {
+    throw new Error('ingestion requires file-backed evidence; in-memory results are for buildBeadsIngestPlan only')
+  }
   root = path.resolve(root)
   const plan = buildBeadsIngestPlan({ root, ...options })
   if (!execute) return { status: 'dry-run', ...plan }

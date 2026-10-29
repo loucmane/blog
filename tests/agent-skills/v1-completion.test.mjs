@@ -11,10 +11,11 @@ import {
 } from '../../scripts/agent-skills/check-v1-completion.mjs'
 import {
   baselineV1Paths,
+  baselineV2Paths,
   evaluateForward,
   evaluateRoutingV2,
 } from '../../scripts/agent-skills/evaluate-forward.mjs'
-import { buildAegisIngestCommand } from '../../scripts/agent-skills/lib.mjs'
+import { buildBeadsIngestPlan, validateReviewResult } from '../../scripts/agent-skills/lib.mjs'
 
 const repository = fileURLToPath(new URL('../../', import.meta.url))
 const readJson = (root, name) => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'))
@@ -163,6 +164,31 @@ test('criterion c rejects malformed review fixtures through the shared contract'
   assert.match(row.detail, /headSha/)
 })
 
+test('criterion c applies the Beads deterministic blocking allowlist', (t) => {
+  const root = fixture(t)
+  const fixturePath = 'tests/agent-skills/fixtures/reader-frontend.json'
+  editJson(root, fixturePath, (value) => {
+    value.reviewResult.findings[0].subjective = false
+    value.reviewResult.findings[0].blocking = true
+    value.reviewResult.findings[0].category = 'editorial-taste'
+  })
+  assert.deepEqual(validateReviewResult(readJson(root, fixturePath).reviewResult), [])
+  const row = criterion(root, 'c')
+  assert.equal(row.status, 'fail')
+  assert.match(row.detail, /deterministic allowlisted category/)
+})
+
+test('criterion c plans missing evidence files without creating reports or worklogs', (t) => {
+  const root = fixture(t)
+  for (const method of ['mkdirSync', 'writeFileSync', 'appendFileSync']) {
+    t.mock.method(fs, method, () => { throw new Error(`unexpected write: ${method}`) })
+  }
+  const row = criterion(root, 'c')
+  assert.equal(row.status, 'pass', row.detail)
+  assert.equal(fs.existsSync(path.join(root, 'reports')), false)
+  assert.equal(fs.existsSync(path.join(root, 'docs/worklog')), false)
+})
+
 test('criterion c cannot pass on an empty review-output collection', (t) => {
   const root = fixture(t)
   for (const name of fs.readdirSync(path.join(root, 'tests/agent-skills/fixtures'))) {
@@ -185,18 +211,21 @@ test('in-memory ingestion planning matches file ingestion without executing the 
   const root = fixture(t)
   const result = readJson(root, 'tests/agent-skills/fixtures/reader-frontend.json').reviewResult
   const resultPath = 'reports/agent-skills/example.json'
+  const options = { root, resultPath, bead: 'blog-v1-completion' }
+  const inMemory = buildBeadsIngestPlan({ ...options, result })
+  assert.equal(fs.existsSync(path.join(root, 'reports')), false)
   fs.mkdirSync(path.join(root, 'reports/agent-skills'), { recursive: true })
   writeJson(root, resultPath, result)
   assert.deepEqual(
-    buildAegisIngestCommand({ root, resultPath, result }),
-    buildAegisIngestCommand({ root, resultPath }),
+    inMemory,
+    buildBeadsIngestPlan(options),
   )
   assert.throws(
-    () => buildAegisIngestCommand({ root, resultPath: 'outside.json', result }),
+    () => buildBeadsIngestPlan({ ...options, resultPath: 'outside.json', result }),
     /beneath reports/,
   )
   assert.throws(
-    () => buildAegisIngestCommand({ root, resultPath, result: { ...result, mode: 'enforced' } }),
+    () => buildBeadsIngestPlan({ ...options, result: { ...result, mode: 'enforced' } }),
     /advisory/,
   )
 })
@@ -249,19 +278,20 @@ test('criterion d uses the evaluator with the supplied fixture root', (t) => {
   assert.equal(criterion(root, 'd').status, 'fail')
 })
 
-test('v1 replay is isolated from live routes while v2 measures their actual behavior', (t) => {
+test('v1 and v2 replay are isolated from live routes', (t) => {
   const root = fixture(t),
     url = pathToFileURL(`${root}/`)
   const before = evaluateForward({ root: url })
-  // Revert only the live map to v1: the new evaluation must recover the old misses.
+  const v2Before = evaluateRoutingV2({ root: url })
+  // Revert only the live map to v1: both frozen evaluations must stay unchanged.
   fs.copyFileSync(
     path.join(root, baselineV1Paths['config/agent-skills/review-map.yaml']),
     path.join(root, 'config/agent-skills/review-map.yaml'),
   )
   assert.deepEqual(evaluateForward({ root: url }), before)
   const revised = evaluateRoutingV2({ root: url })
-  assert.equal(revised.metrics.falseNegatives, 2)
-  assert.equal(revised.comparison.delta.recall, 0)
+  assert.deepEqual(revised, v2Before)
+  assert.equal(revised.metrics.falseNegatives, 0)
   assert.equal(criterion(root, 'd').status, 'pass')
   assert.equal(criterion(root, 'e').status, 'pass')
 })
@@ -298,15 +328,34 @@ test('a rewritten snapshot digest cannot certify code other than the loaded froz
   )
 })
 
-test('v2 refuses a changed decision denominator or code identity', (t) => {
+test('v2 ignores live mutations and refuses changed or unpinned snapshot inputs', (t) => {
   const root = fixture(t),
     url = pathToFileURL(`${root}/`)
-  const catalog = readJson(root, 'config/agent-skills/catalog.yaml')
+  const before = evaluateRoutingV2({ root: url })
   editJson(root, 'config/agent-skills/catalog.yaml', (v) => v.skills.pop())
-  assert.throws(() => evaluateRoutingV2({ root: url }), /same skill denominator/)
-  writeJson(root, 'config/agent-skills/catalog.yaml', catalog)
   fs.appendFileSync(path.join(root, 'scripts/agent-skills/routing.mjs'), '\n')
-  assert.throws(() => evaluateRoutingV2({ root: url }), /live router differs/)
+  assert.deepEqual(evaluateRoutingV2({ root: url }), before)
+  const manifestPath = 'docs/agent-skills/baseline-v2/freeze.json'
+  const manifest = readJson(root, manifestPath)
+  for (const [original, snapshot] of Object.entries(baselineV2Paths)) {
+    const target = path.join(root, snapshot),
+      bytes = fs.readFileSync(target)
+    fs.appendFileSync(target, '\n')
+    assert.throws(() => evaluateRoutingV2({ root: url }), /v2 snapshot changed/)
+    fs.writeFileSync(target, bytes)
+    editJson(root, manifestPath, (v) => delete v.files[original])
+    assert.throws(() => evaluateRoutingV2({ root: url }), /missing v2 snapshot/)
+    writeJson(root, manifestPath, manifest)
+  }
+  const original = 'scripts/agent-skills/routing.mjs',
+    snapshot = baselineV2Paths[original]
+  fs.appendFileSync(path.join(root, snapshot), '\n')
+  editJson(root, manifestPath, (v) => {
+    v.files[original].sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(root, snapshot)))
+      .digest('hex')
+  })
+  assert.throws(() => evaluateRoutingV2({ root: url }), /loaded snapshot module/)
 })
 
 test('criterion e rejects both Markdown drift and metrics drift', (t) => {

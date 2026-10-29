@@ -68,8 +68,10 @@ These checks establish structure, containment, classification and the identity o
 
 For the authorized host demonstration, use a reviewed result describing actual evidence, inspect the dry-run JSON, and then invoke the same command with `--execute`. Read back the metadata and note, inspect the appended worklog, and verify the result bytes against the recorded SHA-256. Repeat the identical execution to demonstrate `already ingested` with no additional note or append. Record this host receipt on the task before accepting completion.
 
-## Compatibility and follow-up
+## Offline completion checks
 
-`buildAegisIngestCommand` remains exported with unchanged behavior and a deprecation comment because `check-v1-completion.mjs` and its tests still consume that historical planning contract. The active CLI no longer calls it. Do not execute that deprecated command or mutate frozen Aegis or Taskmaster state.
+V1 completion criterion c validates recorded review envelopes through `buildBeadsIngestPlan` in memory with a synthetic bead ID. Its optional `result` input serializes the envelope as indented JSON plus a newline, applies the same validation and path checks, and builds a plan without requiring a result file, writing evidence, or calling Gas City. The plan hash describes that serialization; it is not a receipt for a persisted artifact.
 
-Repointing v1 completion criterion c is a follow-up. Updating the cross-agent skill guidance and catalog capability naming is separately admitted work. Neither the old completion report nor this change's injected-runner tests demonstrate a live ingestion receipt.
+`ingestReviewResult` rejects the in-memory `result` option, including for a CLI dry run. Ingestion always reads and hashes the actual result file bytes. Only the coordinator runs `node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id> --execute` on the host. The command without `--execute` remains a dry run.
+
+The deprecated Aegis builder has been removed. Do not mutate frozen Aegis or Taskmaster state. The completion report and injected-runner tests demonstrate contract acceptance, not a live ingestion receipt. The v1 gap manifest is preserved as historical proposals rather than a current open-work list.
