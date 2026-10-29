@@ -308,6 +308,8 @@ export function checkV1Completion({ root = defaultRoot } = {}) {
       const freeze = json(root, forward('freeze.json'))
       for (const name of frozenPaths)
         requireThat(/^[a-f0-9]{64}$/.test(freeze.sha256?.[name]), `missing frozen digest: ${name}`)
+      // The evaluator resolves the original freeze keys to baseline-v1 snapshots.
+      // Criteria b/f still validate the live routing configuration independently.
       const replay = evaluateForward({ root: pathToFileURL(`${root}${path.sep}`) })
       requireThat(
         isDeepStrictEqual(replay, json(root, forward('results.json'))),

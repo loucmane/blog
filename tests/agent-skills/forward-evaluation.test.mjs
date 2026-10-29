@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import fs from 'node:fs'
-import { scoreEvaluation } from '../../scripts/agent-skills/evaluation.mjs'
-import { renderReport } from '../../scripts/agent-skills/evaluation.mjs'
-import { evaluateForward } from '../../scripts/agent-skills/evaluate-forward.mjs'
+import {
+  scoreEvaluation,
+  scoreRoutingEvaluation,
+  renderReport,
+  renderRoutingRevisionReport,
+} from '../../scripts/agent-skills/evaluation.mjs'
+import { evaluateForward, evaluateRoutingV2 } from '../../scripts/agent-skills/evaluate-forward.mjs'
 
 const sample = () => ({
   skillIds: ['alpha', 'beta', 'gamma'],
@@ -165,4 +169,81 @@ test('five real PRs reproduce the recorded predictions, metrics and report witho
   assert.equal(result.provenance.labelsVisibleToReviewer, false)
   assert.deepEqual(JSON.parse(read('forward-results.json')), result)
   assert.equal(read('forward-report.md'), renderReport(result))
+})
+
+test('routing-only scoring shares decision counts without inventing blind advice', () => {
+  const { blind, ...input } = sample()
+  const predictions = {
+    schemaVersion: 1,
+    cases: blind.cases.map(({ number, merge, routing }) => ({ number, merge, routing })),
+  }
+  const result = scoreRoutingEvaluation({ ...input, predictions })
+  const baseline = scoreEvaluation({ ...input, blind })
+  for (const [key, value] of Object.entries(result.metrics))
+    assert.equal(value, baseline.metrics[key], key)
+  assert.equal(Object.hasOwn(result.metrics, 'assessedAdvice'), false)
+  assert.ok(result.cases.every((row) => !Object.hasOwn(row, 'advice')))
+  predictions.cases[0].routing.blocking = true
+  assert.throws(() => scoreRoutingEvaluation({ ...input, predictions }), /advisory/)
+})
+
+test('v2 corrects only the two quality misses and preserves original scopes and labels', () => {
+  const baseline = evaluateForward(),
+    result = evaluateRoutingV2()
+  assert.deepEqual(result.comparison.denominators, {
+    prs: 5,
+    skills: 12,
+    decisions: 60,
+    expectedPositives: 9,
+    expectedNegatives: 51,
+    selectedV1: 16,
+    selectedV2: 18,
+  })
+  assert.deepEqual(
+    [
+      'truePositives',
+      'falsePositives',
+      'falseNegatives',
+      'trueNegatives',
+      'precision',
+      'recall',
+    ].map((key) => [result.metrics[key], result.comparison.delta[key]]),
+    [
+      [9, 2],
+      [9, 0],
+      [0, -2],
+      [42, 0],
+      [0.5, 0.0625],
+      [1, 1 - 7 / 9],
+    ],
+  )
+  for (const row of result.cases) {
+    const before = baseline.cases.find(({ number }) => number === row.number)
+    assert.deepEqual(row.expected, before.expected)
+    assert.deepEqual(row.removed, [])
+    assert.deepEqual(row.falseNegatives, [])
+    assert.deepEqual(row.falsePositives, before.falsePositives)
+    assert.deepEqual(
+      row.added,
+      [130, 118].includes(row.number) ? ['quality-reliability-observability'] : [],
+    )
+    if (row.added.length)
+      assert.ok(
+        row.matches.some(
+          ({ skill, kind }) => skill === 'quality-reliability-observability' && kind === 'path',
+        ),
+      )
+  }
+  assert.equal(result.provenance.independentSample, false)
+  assert.equal(result.provenance.labelsVisibleDuringRevision, true)
+  assert.equal(result.provenance.labelsChanged, false)
+  assert.equal(Object.hasOwn(result.metrics, 'assessedAdvice'), false)
+  const read = (name) =>
+    fs.readFileSync(new URL(`../../docs/agent-skills/${name}`, import.meta.url), 'utf8')
+  assert.deepEqual(JSON.parse(read('routing-v2-results.json')), result)
+  assert.equal(read('routing-v2-report.md'), renderRoutingRevisionReport(result))
+  assert.match(
+    renderRoutingRevisionReport(result),
+    /not an independent sample or a generalization estimate/,
+  )
 })
