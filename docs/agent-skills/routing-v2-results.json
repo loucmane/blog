@@ -1,0 +1,791 @@
+{
+  "schemaVersion": 1,
+  "mode": "advisory",
+  "blocking": false,
+  "metrics": {
+    "cases": 5,
+    "decisions": 60,
+    "truePositives": 9,
+    "falsePositives": 9,
+    "falseNegatives": 0,
+    "trueNegatives": 42,
+    "precision": 0.5,
+    "recall": 1,
+    "falsePositiveRate": 0.17647058823529413,
+    "falseNegativeRate": 0,
+    "exactMatches": 0,
+    "missedRoutingCases": 0,
+    "whollyMissedCases": 0
+  },
+  "perSkill": [
+    {
+      "skill": "content-platform-backend",
+      "expected": 1,
+      "selected": 2,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "cross-agent-skill-platform",
+      "expected": 1,
+      "selected": 1,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "editorial-blocks",
+      "expected": 1,
+      "selected": 2,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "gas-city-coordinator",
+      "expected": 0,
+      "selected": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "magazine-product-discovery",
+      "expected": 0,
+      "selected": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "owner-publishing-ux",
+      "expected": 0,
+      "selected": 3,
+      "falsePositives": 3,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "quality-reliability-observability",
+      "expected": 3,
+      "selected": 3,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "reader-frontend",
+      "expected": 2,
+      "selected": 3,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "release-witness",
+      "expected": 0,
+      "selected": 1,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "security-identity-privacy",
+      "expected": 1,
+      "selected": 2,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "seo-distribution",
+      "expected": 0,
+      "selected": 1,
+      "falsePositives": 1,
+      "falseNegatives": 0
+    },
+    {
+      "skill": "stack-research-adr",
+      "expected": 0,
+      "selected": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0
+    }
+  ],
+  "cases": [
+    {
+      "number": 130,
+      "title": "fix(reader): keep retry focus intent through a suspended retry that fails again (blog-quly)",
+      "merge": "d67f2a4901e27c68890f5f59febe1e14eb605bb1",
+      "selectionReason": "Reader accessibility recovery spans a shared layout, private preview and a new route coverage contract.",
+      "expected": [
+        "quality-reliability-observability",
+        "reader-frontend"
+      ],
+      "selected": [
+        "owner-publishing-ux",
+        "quality-reliability-observability",
+        "reader-frontend",
+        "seo-distribution"
+      ],
+      "truePositives": [
+        "quality-reliability-observability",
+        "reader-frontend"
+      ],
+      "falsePositives": [
+        "owner-publishing-ux",
+        "seo-distribution"
+      ],
+      "falseNegatives": [],
+      "added": [
+        "quality-reliability-observability"
+      ],
+      "removed": [],
+      "matches": [
+        {
+          "skill": "owner-publishing-ux",
+          "route": "owner-publishing-ux",
+          "kind": "task-text",
+          "value": "accessibility"
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "route": "owner-publishing-ux",
+          "kind": "task-text",
+          "value": "preview"
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "route": "owner-publishing-ux",
+          "kind": "task-text",
+          "value": "recovery"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/app/recovery-marker.test.ts",
+          "pattern": "packages/web/src/app/recovery-marker.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader/components/failure-boundary.test.tsx",
+          "pattern": "packages/web/src/reader/components/failure-boundary.test.tsx"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/app/layout.tsx",
+          "pattern": "packages/web/src/app/layout.tsx"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader/components/failure-boundary.test.tsx",
+          "pattern": "packages/web/src/reader/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader/components/failure-boundary.tsx",
+          "pattern": "packages/web/src/reader/**"
+        },
+        {
+          "skill": "seo-distribution",
+          "route": "seo-distribution",
+          "kind": "path",
+          "value": "packages/web/src/app/layout.tsx",
+          "pattern": "packages/web/src/app/layout.tsx"
+        }
+      ]
+    },
+    {
+      "number": 128,
+      "title": "fix(content): reject duplicate ids for every collection in portable import (blog-zcx9)",
+      "merge": "40ff98db88acfb543bccfc1e2a0a5de7eb52aaa1",
+      "selectionReason": "A narrow portable-import consistency repair isolates backend data integrity from presentation and security policy.",
+      "expected": [
+        "content-platform-backend"
+      ],
+      "selected": [
+        "content-platform-backend",
+        "owner-publishing-ux"
+      ],
+      "truePositives": [
+        "content-platform-backend"
+      ],
+      "falsePositives": [
+        "owner-publishing-ux"
+      ],
+      "falseNegatives": [],
+      "added": [],
+      "removed": [],
+      "matches": [
+        {
+          "skill": "content-platform-backend",
+          "route": "content-platform-backend",
+          "kind": "path",
+          "value": "packages/web/src/server/content/portability.test.ts",
+          "pattern": "packages/web/src/server/**"
+        },
+        {
+          "skill": "content-platform-backend",
+          "route": "content-platform-backend",
+          "kind": "path",
+          "value": "packages/web/src/server/content/portability.ts",
+          "pattern": "packages/web/src/server/**"
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "route": "owner-publishing-ux",
+          "kind": "task-text",
+          "value": "revisions"
+        }
+      ]
+    },
+    {
+      "number": 125,
+      "title": "test(security): safe-URL bypass regressions, and reject email addresses with credentials (blog-hh6c)",
+      "merge": "28935cce6f6a22140ec6b3b33bfa2c6105159c30",
+      "selectionReason": "URL sanitization changes shared document validation without changing document node types or renderer behavior.",
+      "expected": [
+        "security-identity-privacy"
+      ],
+      "selected": [
+        "content-platform-backend",
+        "editorial-blocks",
+        "security-identity-privacy"
+      ],
+      "truePositives": [
+        "security-identity-privacy"
+      ],
+      "falsePositives": [
+        "content-platform-backend",
+        "editorial-blocks"
+      ],
+      "falseNegatives": [],
+      "added": [],
+      "removed": [],
+      "matches": [
+        {
+          "skill": "content-platform-backend",
+          "route": "content-platform-backend",
+          "kind": "path",
+          "value": "packages/web/src/server/content/document.ts",
+          "pattern": "packages/web/src/server/**"
+        },
+        {
+          "skill": "editorial-blocks",
+          "route": "editorial-blocks",
+          "kind": "path",
+          "value": "packages/web/src/server/content/document.ts",
+          "pattern": "packages/web/src/server/content/document.ts"
+        },
+        {
+          "skill": "security-identity-privacy",
+          "route": "security-identity-privacy",
+          "kind": "path",
+          "value": "packages/web/src/server/content/document.ts",
+          "pattern": "packages/web/src/server/content/document.ts"
+        }
+      ]
+    },
+    {
+      "number": 123,
+      "title": "feat(skills): quality, reliability and observability skill (blog-0060)",
+      "merge": "7970b23f520e795974e4e0f5e42c12d994862a70",
+      "selectionReason": "Skill registration and test-quality guidance exercise platform validation plus a domain-specific advisory review.",
+      "expected": [
+        "cross-agent-skill-platform",
+        "quality-reliability-observability"
+      ],
+      "selected": [
+        "cross-agent-skill-platform",
+        "owner-publishing-ux",
+        "quality-reliability-observability",
+        "reader-frontend",
+        "release-witness"
+      ],
+      "truePositives": [
+        "cross-agent-skill-platform",
+        "quality-reliability-observability"
+      ],
+      "falsePositives": [
+        "owner-publishing-ux",
+        "reader-frontend",
+        "release-witness"
+      ],
+      "falseNegatives": [],
+      "added": [],
+      "removed": [],
+      "matches": [
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": ".agents/skills/quality-reliability-observability",
+          "pattern": ".agents/skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": ".claude/skills/quality-reliability-observability/SKILL.md",
+          "pattern": ".claude/skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": ".claude/skills/quality-reliability-observability/agents/openai.yaml",
+          "pattern": ".claude/skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": ".claude/skills/quality-reliability-observability/references/quality-map.md",
+          "pattern": ".claude/skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": ".claude/skills/quality-reliability-observability/references/quality-reliability-observability-output-contract.md",
+          "pattern": ".claude/skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": "config/agent-skills/catalog.yaml",
+          "pattern": "config/agent-skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": "config/agent-skills/review-map.yaml",
+          "pattern": "config/agent-skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": "tests/agent-skills/fixtures/quality-reliability-observability.json",
+          "pattern": "tests/agent-skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": "tests/agent-skills/platform.test.mjs",
+          "pattern": "tests/agent-skills/**"
+        },
+        {
+          "skill": "cross-agent-skill-platform",
+          "route": "cross-agent-skill-platform",
+          "kind": "path",
+          "value": "tests/agent-skills/quality-reliability-observability.test.mjs",
+          "pattern": "tests/agent-skills/**"
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "route": "owner-publishing-ux",
+          "kind": "task-text",
+          "value": "accessibility"
+        },
+        {
+          "skill": "owner-publishing-ux",
+          "route": "owner-publishing-ux",
+          "kind": "task-text",
+          "value": "publishing"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "task-text",
+          "value": "accessibility automation"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "task-text",
+          "value": "core web vitals"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "task-text",
+          "value": "error reporting"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "task-text",
+          "value": "incident"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "task-text",
+          "value": "production verification"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "task-text",
+          "value": "structured logging"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "task-text",
+          "value": "test strategy"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "task-text",
+          "value": "core web vitals"
+        },
+        {
+          "skill": "release-witness",
+          "route": "release-witness",
+          "kind": "task-text",
+          "value": "rollback readiness"
+        }
+      ]
+    },
+    {
+      "number": 118,
+      "title": "perf(reader-lab): versioned direction font URLs with long immutable caching (blog-0044.37)",
+      "merge": "7c35a2b4365f07c4025bded2e52989f5b1535b0f",
+      "selectionReason": "Font caching combines reader performance, the shared direction contract and browser cache assertions.",
+      "expected": [
+        "editorial-blocks",
+        "quality-reliability-observability",
+        "reader-frontend"
+      ],
+      "selected": [
+        "editorial-blocks",
+        "quality-reliability-observability",
+        "reader-frontend",
+        "security-identity-privacy"
+      ],
+      "truePositives": [
+        "editorial-blocks",
+        "quality-reliability-observability",
+        "reader-frontend"
+      ],
+      "falsePositives": [
+        "security-identity-privacy"
+      ],
+      "falseNegatives": [],
+      "added": [
+        "quality-reliability-observability"
+      ],
+      "removed": [],
+      "matches": [
+        {
+          "skill": "editorial-blocks",
+          "route": "editorial-blocks",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/contract.ts",
+          "pattern": "packages/web/src/reader-directions/contract.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/contract.test.ts",
+          "pattern": "packages/web/src/reader-directions/contract.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/expressive-colour/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/literary-longread/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+          "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/swiss-index/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/*/fonts.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+          "pattern": "packages/web/src/reader-directions/*/*.e2e.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "packages/web/tests/framework/framework-contract.test.ts",
+          "pattern": "packages/web/tests/framework/framework-contract.test.ts"
+        },
+        {
+          "skill": "quality-reliability-observability",
+          "route": "quality-reliability-observability",
+          "kind": "path",
+          "value": "tests/e2e/reader-lab-cold-fonts.spec.ts",
+          "pattern": "tests/e2e/reader-lab-cold-fonts.spec.ts"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/public/reader-directions/cinematic-feature/fonts/README.md",
+          "pattern": "packages/web/public/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/public/reader-directions/expressive-colour/fonts/README.md",
+          "pattern": "packages/web/public/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/public/reader-directions/literary-longread/fonts/README.md",
+          "pattern": "packages/web/public/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/public/reader-directions/quiet-monograph/fonts/README.md",
+          "pattern": "packages/web/public/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/public/reader-directions/swiss-index/fonts/README.md",
+          "pattern": "packages/web/public/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/README.md",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/cinematic-feature/fonts.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/contract.test.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/contract.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/expressive-colour/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/expressive-colour/fonts.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/expressive-colour/prepare-fonts.py",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/literary-longread/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/literary-longread/fonts.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/quiet-monograph/fonts.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/swiss-index/fonts.test.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/swiss-index/fonts.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "reader-frontend",
+          "route": "reader-frontend",
+          "kind": "path",
+          "value": "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+          "pattern": "packages/web/src/reader-directions/**"
+        },
+        {
+          "skill": "security-identity-privacy",
+          "route": "security-identity-privacy",
+          "kind": "path",
+          "value": "packages/web/next.config.ts",
+          "pattern": "packages/web/next.config.ts"
+        }
+      ]
+    }
+  ],
+  "evaluation": "routing-v2",
+  "comparison": {
+    "baseline": {
+      "cases": 5,
+      "decisions": 60,
+      "truePositives": 7,
+      "falsePositives": 9,
+      "falseNegatives": 2,
+      "trueNegatives": 42,
+      "precision": 0.4375,
+      "recall": 0.7777777777777778,
+      "falsePositiveRate": 0.17647058823529413,
+      "falseNegativeRate": 0.2222222222222222,
+      "exactMatches": 0,
+      "missedRoutingCases": 2,
+      "whollyMissedCases": 0
+    },
+    "delta": {
+      "cases": 0,
+      "decisions": 0,
+      "truePositives": 2,
+      "falsePositives": 0,
+      "falseNegatives": -2,
+      "trueNegatives": 0,
+      "precision": 0.0625,
+      "recall": 0.2222222222222222,
+      "falsePositiveRate": 0,
+      "falseNegativeRate": -0.2222222222222222,
+      "exactMatches": 0,
+      "missedRoutingCases": -2,
+      "whollyMissedCases": 0
+    },
+    "denominators": {
+      "prs": 5,
+      "skills": 12,
+      "decisions": 60,
+      "expectedPositives": 9,
+      "expectedNegatives": 51,
+      "selectedV1": 16,
+      "selectedV2": 18
+    }
+  },
+  "provenance": {
+    "method": "Same five PRs informed this revision; this is not an independent sample or a generalization estimate.",
+    "labelsChanged": false,
+    "labelsVisibleDuringRevision": true,
+    "independentSample": false,
+    "adviceAssessment": "not performed; v1 blind advice remains unchanged and is not rescored for v2",
+    "baselinePaths": {
+      "config/agent-skills/catalog.yaml": "docs/agent-skills/baseline-v1/catalog.yaml",
+      "config/agent-skills/review-map.yaml": "docs/agent-skills/baseline-v1/review-map.yaml",
+      "scripts/agent-skills/routing.mjs": "docs/agent-skills/baseline-v1/routing.mjs"
+    },
+    "sha256": {
+      "config/agent-skills/catalog.yaml": "4a2df0efdb87c43bfc0371e72424b0c3c4bdf5fd3074c528a61ac3bc42b5e2d0",
+      "config/agent-skills/review-map.yaml": "5f4f4b0aed4f935f679022664141aaafdb69dd9a5d57f3853f0e21b8a93dbfa2",
+      "scripts/agent-skills/routing.mjs": "a8fa58f29c29f21f95d7518078503976f1a798cd250f56df4630814d8ccfe63b",
+      "docs/agent-skills/baseline-v1/catalog.yaml": "4a2df0efdb87c43bfc0371e72424b0c3c4bdf5fd3074c528a61ac3bc42b5e2d0",
+      "docs/agent-skills/baseline-v1/review-map.yaml": "97f958e0c6ed97f101f6ab39da2d52d2f2e9f464eaefe9610846ee4b14579dbb",
+      "docs/agent-skills/baseline-v1/routing.mjs": "a8fa58f29c29f21f95d7518078503976f1a798cd250f56df4630814d8ccfe63b",
+      "scripts/agent-skills/evaluate-forward.mjs": "ccec86fb82b4ce3cd05a176772561668d4d5d7cffe59d8a07caf65bf8ef2d04a",
+      "scripts/agent-skills/evaluation.mjs": "7e8d166433def76f7e8d6176c4ad7cec9920a7b5ec87050db447d92ebc394939",
+      "tests/agent-skills/fixtures/routing.json": "99e3401647f62e825f915d5c13c9e0084cfb5a6a05fcc102f5856d4741f03419",
+      "docs/agent-skills/forward-inputs.json": "cfeb91af4dddce7e2e4bd2fc54e8e1b59c66216ada3351e753bd0f1c4eacd242",
+      "docs/agent-skills/forward-labels.json": "82df2b9bfbdee256fb889ca3f92e26ec06b882a25edf533dd4e39e99403c4959",
+      "docs/agent-skills/forward-freeze.json": "9e587146c8614dedd4077b69082544440be54af31d96d2c952072b7a333eaf23",
+      "docs/agent-skills/forward-blind-review.json": "ff8ea11377d76959b1590f68b06426c9ca95c6c89a17960bff9bdead5fa11be8",
+      "docs/agent-skills/forward-results.json": "645f6813d00346735fb5f6210fb7f01117e2384848253215cb90518d18c26aed",
+      "docs/agent-skills/forward-report.md": "5e69b6b38934073ad04f37d53f53336fefe4a2198768d1c60473ba50517f05b8"
+    }
+  }
+}

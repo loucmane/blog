@@ -157,6 +157,13 @@
       "tests/setup/**",
       "tests/e2e/owner-workspace.spec.ts",
       "tests/e2e/accessibility-baseline.json",
+      "packages/web/src/app/recovery-marker.test.ts",
+      "packages/web/src/reader/components/failure-boundary.test.tsx",
+      "packages/web/src/reader-directions/*/fonts.test.ts",
+      "packages/web/src/reader-directions/contract.test.ts",
+      "packages/web/src/reader-directions/*/*.e2e.ts",
+      "packages/web/tests/framework/framework-contract.test.ts",
+      "tests/e2e/reader-lab-cold-fonts.spec.ts",
       "packages/web/src/reader-directions/*/playwright.config.ts",
       "packages/web/scripts/run-content-integration.mjs",
       "packages/web/tests/content/**",
@@ -177,7 +184,14 @@
       "packages/web/tests/content/docker-compose.yml",
       "docs/product/nonfunctional-requirements.md",
       "packages/web/src/app/api/health/route.ts",
-      "packages/web/src/server/observability/logger.ts"
+      "packages/web/src/server/observability/logger.ts",
+      "packages/web/src/app/recovery-marker.test.ts",
+      "packages/web/src/reader/components/failure-boundary.test.tsx",
+      "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+      "packages/web/src/reader-directions/contract.test.ts",
+      "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+      "packages/web/tests/framework/framework-contract.test.ts",
+      "tests/e2e/reader-lab-cold-fonts.spec.ts"
     ],
     "negativePaths": [
       "tests/e2e/homepage.spec.ts",
@@ -189,7 +203,6 @@
       "packages/web/playwright.config.ts",
       "playwright.config.ts.bak",
       "config/runtime.json",
-      "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
       "packages/web/src/server/content/backup.ts",
       "packages/web/src/app/api/healthz/route.ts",
       "packages/web/src/server/observability-old/logger.ts",
@@ -208,6 +221,18 @@
       ],
       "packages/web/src/server/observability/logger.ts": [
         "content-platform-backend"
+      ],
+      "packages/web/src/reader/components/failure-boundary.test.tsx": [
+        "reader-frontend"
+      ],
+      "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts": [
+        "reader-frontend"
+      ],
+      "packages/web/src/reader-directions/contract.test.ts": [
+        "reader-frontend"
+      ],
+      "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts": [
+        "reader-frontend"
       ]
     }
   },

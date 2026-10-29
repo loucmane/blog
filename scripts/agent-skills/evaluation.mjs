@@ -28,11 +28,20 @@ function skillSet(values, known, label) {
 }
 
 export function scoreEvaluation({ inputs, labels, blind, skillIds }) {
+  requireThat(blind?.labelsVisible === false, 'review must withhold expected labels')
+  return scoreDecisions({ inputs, labels, evidence: blind, skillIds, assessAdvice: true })
+}
+
+// Revision measurements score routing only; they are not new blind reviews.
+export function scoreRoutingEvaluation({ inputs, labels, predictions, skillIds }) {
+  return scoreDecisions({ inputs, labels, evidence: predictions, skillIds, assessAdvice: false })
+}
+
+function scoreDecisions({ inputs, labels, evidence, skillIds, assessAdvice }) {
   requireThat(
-    [inputs, labels, blind].every((value) => value?.schemaVersion === 1),
+    [inputs, labels, evidence].every((value) => value?.schemaVersion === 1),
     'unsupported evaluation schema',
   )
-  requireThat(blind.labelsVisible === false, 'review must withhold expected labels')
   const known = new Set(skillIds)
   requireThat(
     known.size > 0 && known.size === skillIds.length,
@@ -40,7 +49,7 @@ export function scoreEvaluation({ inputs, labels, blind, skillIds }) {
   )
   const source = indexed(inputs.cases, 'inputs')
   const expected = indexed(labels.cases, 'labels')
-  const reviews = indexed(blind.cases, 'blind review')
+  const reviews = indexed(evidence.cases, 'predictions')
   requireThat(
     source.size > 0 && source.size === expected.size && source.size === reviews.size,
     'case counts differ',
@@ -70,40 +79,42 @@ export function scoreEvaluation({ inputs, labels, blind, skillIds }) {
       'routing must remain advisory',
     )
     const selected = skillSet(review.routing.skills, known, 'selected')
-    requireThat(Array.isArray(review.advice), 'advice must be an array')
-    const assessed = skillSet(
-      review.advice.map(({ skill }) => skill),
-      known,
-      'advice',
-    )
-    requireThat(
-      assessed.size === selected.size && [...selected].every((id) => assessed.has(id)),
-      'advice coverage must exactly match selected skills',
-    )
-    for (const advice of review.advice) {
-      requireThat(
-        typeof advice.usable === 'boolean' &&
-          nonempty(advice.recommendation) &&
-          Array.isArray(advice.evidence) &&
-          advice.evidence.length > 0 &&
-          advice.evidence.every(nonempty),
-        'advice needs a usable classification, recommendation and evidence',
+    if (assessAdvice) {
+      requireThat(Array.isArray(review.advice), 'advice must be an array')
+      const assessed = skillSet(
+        review.advice.map(({ skill }) => skill),
+        known,
+        'advice',
       )
       requireThat(
-        Array.isArray(advice.findings) && (advice.usable || advice.findings.length > 0),
-        'unusable advice needs findings',
+        assessed.size === selected.size && [...selected].every((id) => assessed.has(id)),
+        'advice coverage must exactly match selected skills',
       )
-      for (const finding of advice.findings) {
+      for (const advice of review.advice) {
         requireThat(
-          finding.subjective === true &&
-            finding.blocking === false &&
-            nonempty(finding.category) &&
-            nonempty(finding.message) &&
-            Array.isArray(finding.evidence) &&
-            finding.evidence.length > 0 &&
-            finding.evidence.every(nonempty),
-          'advice findings must be evidenced, subjective and non-blocking',
+          typeof advice.usable === 'boolean' &&
+            nonempty(advice.recommendation) &&
+            Array.isArray(advice.evidence) &&
+            advice.evidence.length > 0 &&
+            advice.evidence.every(nonempty),
+          'advice needs a usable classification, recommendation and evidence',
         )
+        requireThat(
+          Array.isArray(advice.findings) && (advice.usable || advice.findings.length > 0),
+          'unusable advice needs findings',
+        )
+        for (const finding of advice.findings) {
+          requireThat(
+            finding.subjective === true &&
+              finding.blocking === false &&
+              nonempty(finding.category) &&
+              nonempty(finding.message) &&
+              Array.isArray(finding.evidence) &&
+              finding.evidence.length > 0 &&
+              finding.evidence.every(nonempty),
+            'advice findings must be evidenced, subjective and non-blocking',
+          )
+        }
       }
     }
     cases.push({
@@ -116,7 +127,7 @@ export function scoreEvaluation({ inputs, labels, blind, skillIds }) {
       truePositives: [...wanted].filter((id) => selected.has(id)).sort(),
       falsePositives: [...selected].filter((id) => !wanted.has(id)).sort(),
       falseNegatives: [...wanted].filter((id) => !selected.has(id)).sort(),
-      advice: review.advice,
+      ...(assessAdvice ? { advice: review.advice } : {}),
     })
   }
   const sum = (key) => cases.reduce((total, row) => total + row[key].length, 0)
@@ -125,7 +136,7 @@ export function scoreEvaluation({ inputs, labels, blind, skillIds }) {
     falseNegatives = sum('falseNegatives')
   const decisions = cases.length * known.size
   const trueNegatives = decisions - truePositives - falsePositives - falseNegatives
-  const advice = cases.flatMap((row) => row.advice)
+  const advice = assessAdvice ? cases.flatMap((row) => row.advice) : []
   const unusable = advice.filter((item) => !item.usable)
   return {
     schemaVersion: 1,
@@ -148,10 +159,14 @@ export function scoreEvaluation({ inputs, labels, blind, skillIds }) {
       missedRoutingCases: cases.filter((row) => row.falseNegatives.length > 0).length,
       whollyMissedCases: cases.filter((row) => row.expected.length > 0 && row.selected.length === 0)
         .length,
-      assessedAdvice: advice.length,
-      unusableAdvice: unusable.length,
-      unusableAdviceFindings: unusable.reduce((total, row) => total + row.findings.length, 0),
-      unusableAdviceRate: rate(unusable.length, advice.length),
+      ...(assessAdvice
+        ? {
+            assessedAdvice: advice.length,
+            unusableAdvice: unusable.length,
+            unusableAdviceFindings: unusable.reduce((total, row) => total + row.findings.length, 0),
+            unusableAdviceRate: rate(unusable.length, advice.length),
+          }
+        : {}),
     },
     perSkill: [...known].sort().map((skill) => ({
       skill,
@@ -162,6 +177,57 @@ export function scoreEvaluation({ inputs, labels, blind, skillIds }) {
     })),
     cases,
   }
+}
+
+export function renderRoutingRevisionReport(result) {
+  const m = result.metrics,
+    b = result.comparison.baseline,
+    d = result.comparison.delta
+  const counts = result.comparison.denominators
+  const pct = (value) => (value === null ? 'not assessed' : `${(100 * value).toFixed(1)}%`)
+  const names = (values) => (values.length ? values.join(', ') : 'none')
+  const signed = (value) => (value > 0 ? `+${value}` : String(value))
+  return [
+    '# Routing v2: recovery and font verification',
+    '',
+    'The live quality route now includes recovery coverage, Suspense retry regression, font digest and URL contracts, framework cache contracts, direction browser tests and the shared cold-font browser spec. Other routes and task-text matching are unchanged. Presentation-only negatives are labelled separately in the routing fixtures.',
+    '',
+    '**The same five PRs informed this revision. This is not an independent sample or a generalization estimate.** Their original expected labels are unchanged; the author knew the v1 misses. Fixture labels were written before executing the revised router. This is a routing-only comparison: no new blind review or advice-usefulness assessment was performed.',
+    '',
+    `Denominators: ${counts.prs} PRs × ${counts.skills} registered skills = ${counts.decisions} binary decisions; ${counts.expectedPositives} expected positives and ${counts.expectedNegatives} expected negatives. Selected scopes: v1 ${counts.selectedV1}, v2 ${counts.selectedV2}.`,
+    '',
+    '| Measurement | v1 | v2 | Change (v2 − v1) |',
+    '| --- | --- | --- | --- |',
+    ...['truePositives', 'falsePositives', 'falseNegatives', 'trueNegatives'].map(
+      (key) => `| ${key} | ${b[key]} | ${m[key]} | ${signed(d[key])} |`,
+    ),
+    `| Precision: TP/(TP+FP) | ${b.truePositives}/${counts.selectedV1} (${pct(b.precision)}) | ${m.truePositives}/${counts.selectedV2} (${pct(m.precision)}) | ${signed(Number((100 * d.precision).toFixed(1)))} percentage points |`,
+    `| Recall: TP/(TP+FN) | ${b.truePositives}/${counts.expectedPositives} (${pct(b.recall)}) | ${m.truePositives}/${counts.expectedPositives} (${pct(m.recall)}) | ${signed(Number((100 * d.recall).toFixed(1)))} percentage points |`,
+    `| False-positive rate: FP/(FP+TN) | ${b.falsePositives}/${counts.expectedNegatives} (${pct(b.falsePositiveRate)}) | ${m.falsePositives}/${counts.expectedNegatives} (${pct(m.falsePositiveRate)}) | ${signed(Number((100 * d.falsePositiveRate).toFixed(1)))} percentage points |`,
+    `| False-negative rate: FN/(TP+FN) | ${b.falseNegatives}/${counts.expectedPositives} (${pct(b.falseNegativeRate)}) | ${m.falseNegatives}/${counts.expectedPositives} (${pct(m.falseNegativeRate)}) | ${signed(Number((100 * d.falseNegativeRate).toFixed(1)))} percentage points |`,
+    `| PRs missing an expected scope | ${b.missedRoutingCases}/${counts.prs} | ${m.missedRoutingCases}/${counts.prs} | ${signed(d.missedRoutingCases)} |`,
+    `| Exact-match PRs | ${b.exactMatches}/${counts.prs} | ${m.exactMatches}/${counts.prs} | ${signed(d.exactMatches)} |`,
+    '',
+    '| PR | Expected | Selected in v2 | Added | Removed | False positives | False negatives |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    ...result.cases.map(
+      (row) =>
+        `| #${row.number} | ${names(row.expected)} | ${names(row.selected)} | ${names(row.added)} | ${names(row.removed)} | ${names(row.falsePositives)} | ${names(row.falseNegatives)} |`,
+    ),
+    '',
+    'The two quality misses are corrected without dropping any previously selected scope. The nine existing false positives remain; broader route precision and task-text noise are separate gaps. Additional unseen cases are required to measure generalization. All selections remain advisory and non-blocking.',
+    '',
+    '## Frozen evidence and reproduction',
+    '',
+    'The [v2 JSON](routing-v2-results.json) freezes SHA-256 digests for the live router, map, catalog, evaluator, scorer, labelled fixtures and original evaluation evidence. It includes per-skill counts and exact routing reasons. `--check` recomputes these digests and all results and rejects drift; omit it only when intentionally publishing a new reviewed measurement.',
+    '',
+    'The [v1 freeze](forward-freeze.json), [inputs](forward-inputs.json), [labels](forward-labels.json), [blind review](forward-blind-review.json), [results](forward-results.json) and [report](forward-report.md) retain their original bytes. v1 now loads the exact original [router](baseline-v1/routing.mjs), [map](baseline-v1/review-map.yaml) and [catalog](baseline-v1/catalog.yaml), verified against the original freeze keys; historical provenance still uses those original keys.',
+    '',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --check` reproduces v1.',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --routing-v2 --check` reproduces this comparison.',
+    '- `node scripts/agent-skills/check-v1-completion.mjs --check` verifies the completion contract, including the frozen replay.',
+    '',
+  ].join('\n')
 }
 
 export function renderReport(result) {
