@@ -247,7 +247,21 @@
           "deployment",
           "release verification"
         ]
-      }
+      },
+      "pathContext": [
+        {
+          "match": [
+            "packages/web/src/server/content/document.ts"
+          ],
+          "includeAny": [
+            "content domain model",
+            "backend data design",
+            "database schema",
+            "data integrity",
+            "portability"
+          ]
+        }
+      ]
     },
     {
       "id": "security-identity-privacy",
@@ -304,7 +318,39 @@
           "release verification",
           "about-page copy"
         ]
-      }
+      },
+      "pathContext": [
+        {
+          "match": [
+            "packages/web/src/server/content/document.ts"
+          ],
+          "includeAny": [
+            "security",
+            "sanitization",
+            "safe-url",
+            "safe url",
+            "unsafe",
+            "credentials",
+            "url schemes"
+          ]
+        },
+        {
+          "match": [
+            "packages/web/next.config.ts"
+          ],
+          "includeAny": [
+            "security",
+            "privacy",
+            "private",
+            "authentication",
+            "authorization",
+            "csp",
+            "content-security-policy",
+            "noindex",
+            "no-store"
+          ]
+        }
+      ]
     },
     {
       "id": "reader-frontend",
@@ -384,7 +430,22 @@
           "owner editing ux",
           "stack choices"
         ]
-      }
+      },
+      "pathContext": [
+        {
+          "match": [
+            "packages/web/src/server/content/document.ts"
+          ],
+          "includeAny": [
+            "node and mark types",
+            "node types",
+            "mark types",
+            "block contract",
+            "document schema",
+            "new block"
+          ]
+        }
+      ]
     },
     {
       "id": "seo-distribution",
@@ -425,7 +486,28 @@
           "backend data only",
           "security audit only"
         ]
-      }
+      },
+      "pathContext": [
+        {
+          "match": [
+            "packages/web/src/app/layout.tsx",
+            "packages/web/src/app/page.tsx",
+            "packages/web/src/app/stories/*/page.tsx",
+            "packages/web/src/app/sections/*/page.tsx"
+          ],
+          "includeAny": [
+            "metadata",
+            "canonical",
+            "opengraph",
+            "open graph",
+            "structured data",
+            "social cards",
+            "seo",
+            "indexing",
+            "robots"
+          ]
+        }
+      ]
     },
     {
       "id": "release-witness",

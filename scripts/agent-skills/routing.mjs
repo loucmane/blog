@@ -26,6 +26,8 @@ const validPath = (value) =>
   value.length > 0 &&
   !/^[/\\]|^[a-z]:|[\0\r\n]/i.test(value) &&
   !value.split('/').some((part) => !part || part === '..' || part === '.')
+const pathPatterns = (value) =>
+  strings(value) && value.every((pattern) => validPath(pattern) && !pattern.includes('\\'))
 
 export function validateRoutingConfig({ catalog, reviewMap } = {}) {
   const errors = []
@@ -68,11 +70,17 @@ export function validateRoutingConfig({ catalog, reviewMap } = {}) {
     if (route.mode !== 'advisory') errors.push(`${route.id}: mode must remain advisory`)
     if (!strings(route.skills) || route.skills.some((id) => !ids.has(id)))
       errors.push(`${route.id}: unknown or missing skills`)
-    if (
-      !strings(route.match) ||
-      route.match.some((pattern) => !validPath(pattern) || pattern.includes('\\'))
-    ) {
+    if (!pathPatterns(route.match)) {
       errors.push(`${route.id}: match requires repository-relative path globs`)
+    }
+    // Shared files need affirmative domain context; dedicated paths stay sufficient alone.
+    if (
+      route.pathContext !== undefined &&
+      (!Array.isArray(route.pathContext) ||
+        route.pathContext.length === 0 ||
+        route.pathContext.some((rule) => !pathPatterns(rule?.match) || !strings(rule?.includeAny)))
+    ) {
+      errors.push(`${route.id}: pathContext requires path globs and nonempty includeAny phrases`)
     }
     if (!strings(route.taskText?.includeAny) || !strings(route.taskText?.excludeAny, true)) {
       errors.push(`${route.id}: taskText requires nonempty includeAny and an excludeAny array`)
@@ -127,7 +135,21 @@ export function selectSkills({ paths = [], taskText = '' } = {}, config) {
     const evidence = []
     for (const pattern of unique(route.match)) {
       for (const file of files) {
-        if (matchesPath(pattern, file)) evidence.push({ kind: 'path', value: file, pattern })
+        if (!matchesPath(pattern, file)) continue
+        const contexts = (route.pathContext ?? []).filter((rule) =>
+          rule.match.some((glob) => matchesPath(glob, file)),
+        )
+        const phrases = contexts.map((rule) =>
+          unique(rule.includeAny.map(normalized)).filter((phrase) => matchesPhrase(text, phrase)),
+        )
+        // Every applicable context rule must be satisfied. No rule can create a path match.
+        if (phrases.some((matched) => matched.length === 0)) continue
+        evidence.push({
+          kind: 'path',
+          value: file,
+          pattern,
+          ...(contexts.length ? { context: unique(phrases.flat()) } : {}),
+        })
       }
     }
     if (!route.taskText.excludeAny.some((phrase) => matchesPhrase(text, phrase))) {

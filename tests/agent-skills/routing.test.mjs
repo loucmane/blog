@@ -62,7 +62,7 @@ test('path evidence survives text exclusions, with stable deduplicated reasons',
         './packages/web/src/server/content/document.ts',
         'packages\\web\\src\\server\\content\\document.ts',
       ],
-      taskText: 'Review backend data design and sanitization.',
+      taskText: 'Review backend data design, node and mark types, and rich-content sanitization.',
     },
     config,
   )
@@ -72,6 +72,71 @@ test('path evidence survives text exclusions, with stable deduplicated reasons',
     'security-identity-privacy',
   ])
   assert.equal(new Set(result.matches.map((m) => JSON.stringify(m))).size, result.matches.length)
+  assert.ok(
+    result.matches.filter(({ kind }) => kind === 'path').every(({ context }) => context.length > 0),
+  )
+})
+
+test('shared-path context is affirmative, scoped to its path and recorded as evidence', () => {
+  for (const route of config.reviewMap.routes.filter(({ pathContext }) => pathContext)) {
+    assert.deepEqual(json(`./fixtures/${route.id}.json`).pathContext, route.pathContext)
+  }
+  const shared = 'packages/web/src/server/content/document.ts'
+  assert.deepEqual(selectSkills({ paths: [shared] }, config).skills, [])
+  assert.deepEqual(
+    selectSkills({ paths: [shared], taskText: 'Tighten safe-url credentials checks.' }, config)
+      .skills,
+    ['security-identity-privacy'],
+  )
+  const route = config.reviewMap.routes.find(({ id }) => id === 'seo-distribution')
+  const scoped = {
+    ...config,
+    reviewMap: { ...config.reviewMap, routes: [route] },
+    catalog: {
+      ...config.catalog,
+      skills: config.catalog.skills.filter(({ id }) => id === 'seo-distribution'),
+    },
+  }
+  assert.deepEqual(selectSkills({ paths: ['README.md'], taskText: 'metadata' }, scoped).skills, [])
+  assert.deepEqual(
+    selectSkills({ paths: ['packages/web/src/app/layout.tsx'], taskText: 'metadatabase' }, scoped)
+      .skills,
+    [],
+  )
+  const result = selectSkills(
+    { paths: ['packages/web/src/app/layout.tsx'], taskText: 'METADATA' },
+    scoped,
+  )
+  assert.deepEqual(result.matches, [
+    {
+      skill: 'seo-distribution',
+      route: 'seo-distribution',
+      kind: 'path',
+      value: 'packages/web/src/app/layout.tsx',
+      pattern: 'packages/web/src/app/layout.tsx',
+      context: ['metadata'],
+    },
+  ])
+  assert.deepEqual(selectSkills({ paths: ['packages/web/public/robots.txt'] }, scoped).skills, [
+    'seo-distribution',
+  ])
+})
+
+test('overlapping context rules all apply regardless of config order', () => {
+  const custom = structuredClone(config)
+  const route = custom.reviewMap.routes.find(({ id }) => id === 'seo-distribution')
+  route.pathContext.push({
+    match: ['packages/web/src/app/**'],
+    includeAny: ['distribution change'],
+  })
+  const input = { paths: ['packages/web/src/app/layout.tsx'], taskText: 'metadata' }
+  assert.ok(!selectSkills(input, custom).skills.includes('seo-distribution'))
+  input.taskText += ' and distribution change'
+  const result = selectSkills(input, custom)
+  assert.ok(result.skills.includes('seo-distribution'))
+  route.pathContext.reverse()
+  route.pathContext.forEach(({ includeAny }) => includeAny.reverse())
+  assert.deepEqual(selectSkills(input, custom), result)
 })
 
 test('text matching uses phrase boundaries, whitespace folding and case folding', () => {
@@ -100,6 +165,19 @@ test('invalid input and malformed configuration fail closed', () => {
     assert.throws(() => selectSkills({ paths }, config), /paths/)
   }
   assert.throws(() => selectSkills({ taskText: null }, config), /taskText/)
+  for (const pathContext of [
+    null,
+    {},
+    [],
+    [null],
+    [{ match: ['../bad'], includeAny: ['metadata'] }],
+    [{ match: ['app/**'], includeAny: [] }],
+    [{ match: ['app/**'], includeAny: [''] }],
+  ]) {
+    const changed = structuredClone(config)
+    changed.reviewMap.routes[0].pathContext = pathContext
+    assert.throws(() => selectSkills({}, changed), /pathContext/)
+  }
   for (const mutate of [
     (c) => {
       c.reviewMap.routes[0].skills = ['unknown']

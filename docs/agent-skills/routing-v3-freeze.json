@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-29T17:42:41.979610+00:00",
+  "heldoutPredictionsRun": false,
+  "sha256": {
+    "docs/agent-skills/routing-v3-router.mjs": "2963d605c52f98ee8a6fba0d9774a225e14c891d0255f628f0a1b666336b5304",
+    "docs/agent-skills/routing-v3-map.yaml": "039749e0cb38ab3a7b26c8d0121b25e3ad5d3fdd019b56a1c8841dc25bd5e082",
+    "docs/agent-skills/routing-v3-catalog.yaml": "4a2df0efdb87c43bfc0371e72424b0c3c4bdf5fd3074c528a61ac3bc42b5e2d0",
+    "docs/agent-skills/heldout-freeze.json": "70a849c9adb8f3870f125f77151ff0dd09ec29af55914a2f21270b684d3249ab",
+    "scripts/agent-skills/evaluate-forward.mjs": "99233afaa423ad09ef77ed020fd503189a89b187e135326922b05dd8a9a4a56f",
+    "scripts/agent-skills/evaluation.mjs": "0bd9a9731f8771efebd000a07f848d058552085ad6aff4963a427b0cf4c659fc",
+    "tests/agent-skills/fixtures/routing.json": "17cd2f0b688a11fee28b0f975afb21d577e0d5e6b46860086a0101d330bd2c59"
+  }
+}
