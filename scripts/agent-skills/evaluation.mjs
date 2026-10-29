@@ -37,6 +37,104 @@ export function scoreRoutingEvaluation({ inputs, labels, predictions, skillIds }
   return scoreDecisions({ inputs, labels, evidence: predictions, skillIds, assessAdvice: false })
 }
 
+export function compareRoutingScores(before, after) {
+  const b = before.metrics,
+    a = after.metrics
+  requireThat(
+    JSON.stringify(before.cases.map(({ number, expected }) => [number, expected])) ===
+      JSON.stringify(after.cases.map(({ number, expected }) => [number, expected])) &&
+      JSON.stringify(before.perSkill.map(({ skill }) => skill)) ===
+        JSON.stringify(after.perSkill.map(({ skill }) => skill)),
+    'comparison requires identical cases, labels and skill denominator',
+  )
+  const accepted =
+    [b.precision, a.precision, b.recall, a.recall].every(Number.isFinite) &&
+    a.precision >= b.precision &&
+    a.recall >= b.recall
+  return {
+    denominators: {
+      prs: a.cases,
+      skills: after.perSkill.length,
+      decisions: a.decisions,
+      expectedPositives: a.truePositives + a.falseNegatives,
+      expectedNegatives: a.falsePositives + a.trueNegatives,
+      selectedV2: b.truePositives + b.falsePositives,
+      selectedV3: a.truePositives + a.falsePositives,
+    },
+    acceptance: {
+      rule: 'Accept only if held-out recall and precision do not drop; undefined rates do not pass.',
+      accepted,
+      disposition: accepted ? 'keep revision' : 'revert live routes to v2; retain this report',
+    },
+  }
+}
+
+export function renderRoutingV3Report(result) {
+  const { v2, v3, denominators: d, acceptance } = result.heldout
+  const b = v2.metrics,
+    a = v3.metrics,
+    original = result.originalFive.v3.metrics
+  const pct = (value) => (value === null ? 'undefined' : `${(100 * value).toFixed(1)}%`)
+  const names = (values) => (values.length ? values.join(', ') : 'none')
+  return [
+    '# Routing v3: contextual shared paths',
+    '',
+    `**${acceptance.accepted ? 'Accepted' : 'Rejected'} by the predeclared held-out bar: ${acceptance.disposition}.** ${acceptance.rule}`,
+    '',
+    'Shared layout/page paths require affirmative metadata or distribution context for SEO review. The document validator requires domain context separately for backend data, block contracts and sanitization. Framework configuration requires security/privacy context for security review. Dedicated paths and standalone task-text matching retain their previous behavior. Multiple justified domains can still match.',
+    '',
+    `Held-out denominators: ${d.prs} PRs × ${d.skills} skills = ${d.decisions} binary decisions; ${d.expectedPositives} expected positives, ${d.expectedNegatives} expected negatives. Selected scopes: v2 ${d.selectedV2}, v3 ${d.selectedV3}.`,
+    '',
+    '| Measurement | Frozen v2 | Candidate v3 |',
+    '| --- | --- | --- |',
+    ...['truePositives', 'falsePositives', 'falseNegatives', 'trueNegatives'].map(
+      (key) => `| ${key} | ${b[key]} | ${a[key]} |`,
+    ),
+    `| Precision: TP/(TP+FP) | ${b.truePositives}/${d.selectedV2} (${pct(b.precision)}) | ${a.truePositives}/${d.selectedV3} (${pct(a.precision)}) |`,
+    `| Recall: TP/(TP+FN) | ${b.truePositives}/${d.expectedPositives} (${pct(b.recall)}) | ${a.truePositives}/${d.expectedPositives} (${pct(a.recall)}) |`,
+    `| False-positive rate | ${b.falsePositives}/${d.expectedNegatives} (${pct(b.falsePositiveRate)}) | ${a.falsePositives}/${d.expectedNegatives} (${pct(a.falsePositiveRate)}) |`,
+    `| False-negative rate | ${b.falseNegatives}/${d.expectedPositives} (${pct(b.falseNegativeRate)}) | ${a.falseNegatives}/${d.expectedPositives} (${pct(a.falseNegativeRate)}) |`,
+    `| Exact-match PRs | ${b.exactMatches}/${d.prs} | ${a.exactMatches}/${d.prs} |`,
+    '',
+    '| PR | Expected | Selected v2 | Selected v3 | v3 FP | v3 FN |',
+    '| --- | --- | --- | --- | --- | --- |',
+    ...v3.cases.map((row) => {
+      const before = v2.cases.find(({ number }) => number === row.number)
+      return `| #${row.number} | ${names(row.expected)} | ${names(before.selected)} | ${names(row.selected)} | ${names(row.falsePositives)} | ${names(row.falseNegatives)} |`
+    }),
+    '',
+    '## Original five PRs (reference only)',
+    '',
+    `These five PRs informed the revision and do not decide acceptance. Labels are unchanged. Across ${original.cases} PRs and ${original.decisions} decisions, v3 has ${original.truePositives} TP, ${original.falsePositives} FP, ${original.falseNegatives} FN and ${original.trueNegatives} TN. Precision ${original.truePositives}/${original.truePositives + original.falsePositives} (${pct(original.precision)}); recall ${original.truePositives}/${original.truePositives + original.falseNegatives} (${pct(original.recall)}).`,
+    '',
+    '| PR | Expected | Selected v3 | FP | FN |',
+    '| --- | --- | --- | --- | --- |',
+    ...result.originalFive.v3.cases.map(
+      (row) =>
+        `| #${row.number} | ${names(row.expected)} | ${names(row.selected)} | ${names(row.falsePositives)} | ${names(row.falseNegatives)} |`,
+    ),
+    '',
+    '## Method and limits',
+    '',
+    'Eight real merged PRs were selected for diverse behavior from the coordinator-exported candidates, excluding the original five. Five have one expected skill. The same worker inspected their diffs and trigger contracts and sealed the expected labels before any routing. Labels were visible during implementation: this is a held-out prediction sample, not an independent blind review, random sample, or population accuracy estimate. No advice-usefulness review was performed.',
+    '',
+    `Label freeze: ${result.provenance.labelsFrozenAt}. Candidate freeze: ${result.provenance.candidateFrozenAt}. Both routers were measured once for the initial comparison. Subsequent --check executions only replay the sealed candidate and labels; no held-out-driven tuning or relabelling is permitted.`,
+    '',
+    `${a.falsePositives} held-out false positives and ${a.falseNegatives} false negatives remain. Context is inferred from title/body phrases, not parsed diffs: boilerplate, negation and historical mentions can still introduce noise. Dedicated broad reader/backend paths can still over-select on sanitization-only changes. The small sample does not exercise every conditional route; paired synthetic fixtures cover layout recovery/metadata and document sanitization/block-contract distinctions. Passing the non-regression bar does not establish that all overlap is justified. All selections remain advisory and non-blocking.`,
+    '',
+    '## Frozen evidence and replay',
+    '',
+    'The [v2 snapshot](baseline-v2/freeze.json) preserves the router, map, catalog and every historical report hash input. Original forward-* and routing-v2-* artifacts retain their bytes. The [held-out freeze](heldout-freeze.json) seals [inputs](heldout-inputs.json), [labels](heldout-labels.json) and [diff evidence](heldout-diff-evidence.json); its routersRun=false field records the time of freezing, not the current execution state.',
+    '',
+    'The [v3 freeze](routing-v3-freeze.json) seals exact copies of the candidate router/map/catalog plus the evaluator, scorer and paired fixtures before predictions. Keeping a candidate copy makes a rejected revision replayable after reverting live routes. The [v3 results](routing-v3-results.json) include both held-out per-skill counts and per-case match reasons, original-five reference results and SHA-256 provenance. --check also verifies that live router/map bytes agree with the keep/revert decision.',
+    '',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --check` replays v1.',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --routing-v2 --check` replays frozen v2.',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --routing-v3 --check` replays this comparison.',
+    '',
+  ].join('\n')
+}
+
 function scoreDecisions({ inputs, labels, evidence, skillIds, assessAdvice }) {
   requireThat(
     [inputs, labels, evidence].every((value) => value?.schemaVersion === 1),

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "method": "Single-worker pre-routing labels from local merged diffs and the catalog capabilities plus canonical skill trigger contracts at fadac1fcf606b250906204f07a13b686d9c5653c. Neither router has been run on these eight PRs. This is a purposive held-out sample, not an independent blind reviewer or a random sample.",
+  "labelPolicy": "Select a skill for changed behavior in its contract, not for every touched path or every topic mentioned in verification prose. Ordinary correctness tests inherit their domain; quality is additionally expected for substantial cross-layer test coverage, accessibility automation or runner reliability. Release witness is not expected merely because a PR body lists verification. Security-only sanitization does not imply a new block contract, backend design or reader presentation.",
+  "cases": [
+    {
+      "number": 80,
+      "selectionReason": "Sanitization crosses media persistence, owner input and reader projection without changing their domain contracts; tests a broad-path over-selection risk.",
+      "expected": [
+        {"skill": "security-identity-privacy", "rationale": "safeHref is extracted and applied to upload, import, media storage and the legacy asset-credit fallback; unsafe stored URLs become plain text. The change is URL sanitization, explicitly handed off by reader/editorial/backend skills."}
+      ]
+    },
+    {
+      "number": 89,
+      "selectionReason": "A genuine multi-domain feature must retain justified overlap: two reader routes, metadata, visibility-aware repositories, direction interfaces, privacy headers and parity coverage.",
+      "expected": [
+        {"skill": "content-platform-backend", "rationale": "Adds getAuthorBySlug to repository ports and both stores, and new visibility-aware author/topic reads through the publication cache."},
+        {"skill": "editorial-blocks", "rationale": "Extends Reader Lab registration with optional Author and Topic components and baseline fallbacks; updates their direction-neutral view contracts."},
+        {"skill": "quality-reliability-observability", "rationale": "Adds a real-PostgreSQL versus in-memory parity matrix across publication states and a route/cache/slug-boundary test layer, plus framework privacy-header coverage."},
+        {"skill": "reader-frontend", "rationale": "Adds author/topic pages, linked bylines, topic lists and responsive related-story presentation with public/owner direction fallbacks."},
+        {"skill": "security-identity-privacy", "rationale": "Extends private/no-store/noindex cookie-conditioned headers to author and topic routes; tests visitor versus owner lab presentation."},
+        {"skill": "seo-distribution", "rationale": "Adds canonical and Open Graph metadata for author/topic pages and author profile URLs to story metadata."}
+      ]
+    },
+    {
+      "number": 98,
+      "selectionReason": "Single-domain retirement of an unused vulnerable dependency tree; historical ADR annotations do not constitute a new stack choice.",
+      "expected": [
+        {"skill": "security-identity-privacy", "rationale": "Removes a retired standalone harness and its vulnerable pinned dependency graph; documents the security rationale and retained historical evidence. No production backend or test strategy changes."}
+      ]
+    },
+    {
+      "number": 113,
+      "selectionReason": "Reader motion behavior plus meaningful accessibility/browser regression coverage, with no metadata or block-contract change.",
+      "expected": [
+        {"skill": "reader-frontend", "rationale": "Scopes smooth viewport scrolling to baseline pages while preserving reduced-motion preferences and native direction behavior."},
+        {"skill": "quality-reliability-observability", "rationale": "Replaces reduced-motion workarounds with real normal-motion keyboard assertions, adds computed-CSS motion checks and a direction/mixed-root unit matrix."}
+      ]
+    },
+    {
+      "number": 117,
+      "selectionReason": "Shared renderer and direction contract evolve together with list accessibility and a cross-direction nested-image test matrix.",
+      "expected": [
+        {"skill": "editorial-blocks", "rationale": "ArticleBody accepts per-layout/inset size hints and defines nesting precedence; ReaderDirection validates and freezes the extended imageSizes contract."},
+        {"skill": "reader-frontend", "rationale": "Adds explicit list semantics for markerless checklists/galleries and responsive image size hints without changing existing direction output."},
+        {"skill": "quality-reliability-observability", "rationale": "Adds systematic coverage for every image slot, every inset, deep nesting and every registered direction, plus list semantics and invalid contract keys."}
+      ]
+    },
+    {
+      "number": 120,
+      "selectionReason": "Single backend portability change; ordinary domain tests and PR verification prose should not add owner UX or release review scopes.",
+      "expected": [
+        {"skill": "content-platform-backend", "rationale": "Exports/imports ordered article-author links, validates references and contiguous positions, preserves old bundles and transaction rollback, and serializes queries on one PostgreSQL client."}
+      ]
+    },
+    {
+      "number": 132,
+      "selectionReason": "Single security dependency update; version-pin assertions and evidence summaries do not introduce a new quality strategy or architecture decision.",
+      "expected": [
+        {"skill": "security-identity-privacy", "rationale": "Updates vulnerable direct/transitive dependencies, matching override pins, runtime digests and security-hotfix assertions; no new test harness, gate design or runtime architecture."}
+      ]
+    },
+    {
+      "number": 134,
+      "selectionReason": "Single quality-runner reliability fix, separate from backend data behavior and release evidence ingestion.",
+      "expected": [
+        {"skill": "quality-reliability-observability", "rationale": "Prevents a silent skipped integration suite by replacing import.meta.main with realpath entrypoint detection; covers direct, relative, symlink and import-only execution."}
+      ]
+    }
+  ]
+}

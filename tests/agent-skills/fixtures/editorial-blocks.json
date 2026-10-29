@@ -108,14 +108,26 @@
         "file": "packages/web/src/server/content/document.ts",
         "also": ["content-platform-backend", "security-identity-privacy"]
       },
-      { "file": "packages/web/src/reader/blocks.ts", "also": ["reader-frontend"] },
-      { "file": "packages/web/src/reader/views.ts", "also": ["reader-frontend"] },
+      {
+        "file": "packages/web/src/reader/blocks.ts",
+        "also": ["reader-frontend"]
+      },
+      {
+        "file": "packages/web/src/reader/views.ts",
+        "also": ["reader-frontend"]
+      },
       {
         "file": "packages/web/src/reader/components/article-body.tsx",
         "also": ["reader-frontend"]
       },
-      { "file": "packages/web/src/reader-directions/contract.ts", "also": ["reader-frontend"] },
-      { "file": "packages/web/src/reader-directions/registry.ts", "also": ["reader-frontend"] }
+      {
+        "file": "packages/web/src/reader-directions/contract.ts",
+        "also": ["reader-frontend"]
+      },
+      {
+        "file": "packages/web/src/reader-directions/registry.ts",
+        "also": ["reader-frontend"]
+      }
     ],
     "negative": [
       "packages/web/src/server/content/service.ts",
@@ -175,7 +187,12 @@
         "evidence": ["packages/web/src/reader/components/article-body.tsx"]
       }
     ],
-    "evidence": [{ "kind": "file", "path": "packages/web/src/reader/components/article-body.tsx" }]
+    "evidence": [
+      {
+        "kind": "file",
+        "path": "packages/web/src/reader/components/article-body.tsx"
+      }
+    ]
   },
   "deterministicExamples": [
     {
@@ -206,5 +223,19 @@
         ]
       }
     }
-  ]
+  ],
+  "pathContext": [
+    {
+      "match": ["packages/web/src/server/content/document.ts"],
+      "includeAny": [
+        "node and mark types",
+        "node types",
+        "mark types",
+        "block contract",
+        "document schema",
+        "new block"
+      ]
+    }
+  ],
+  "pathInventoryNote": "Existing path inventories describe candidate route.match coverage. Shared paths in pathContext also require affirmative task context; routing.json pins paired behavior and mixed-domain decisions without relabelling historical cases."
 }

@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "source": "gh pr view, exported by the coordinator 2026-10-29",
+  "candidateSha256": "97283bb543c54e65495d231ba6d4d45bd9b11a78b7926f4c7b380cd626223aae",
+  "selection": "Purposive diversity of changed behavior; five single-skill cases, one two-skill case, one three-skill case and one six-skill feature. Excludes historical five and skill-evaluation PRs. No routing used for selection.",
+  "cases": [
+    {
+      "number": 80,
+      "title": "fix(media): restrict asset credit URLs to safe schemes (blog-wmyj)",
+      "body": "## Summary\n\nFixes Bead blog-wmyj (P2, security), found in the review of PR #77. A media asset's own credit URL accepted any scheme (including `javascript:` and `data:`) at the owner upload contract, the portable import and the media service, and the reader's asset-credit fallback rendered it as a link without the safe-URL check that document credits use. Impact was limited (owner or import input only; React 19 blocks `javascript:` hrefs at runtime), but the reader must never link an unsafe stored value.\n\n- `packages/web/src/lib/safe-url.ts`: one shared rule, http, https and mailto (matching document links and credits).\n- Applied at every entry point: owner upload contract (owner-readable 422; an empty credit stays allowed), portable import schema, media service store.\n- Reader: `packages/web/src/reader/blocks.ts` uses the same rule for the asset-credit fallback, so a stored unsafe value renders as plain text; valid https credits stay links.\n- No migration. The worklog has a read-only SQL check for stored values (they could only come from the owner or an import).\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`: clean\n- Vitest: 764/764 (373/373 on the affected areas after merging `origin/main`)\n- `pnpm test:content:integration` (PostgreSQL plus S3 in Docker): 43/43\n- `git diff --check origin/main`: clean\n\n## Review\n\nImplemented by the Claude worker; cross-vendor security review by Codex (blog-18oy): PASS. It probed the helper with 1,717 rejection cases (case, whitespace, control characters, encoding, relative forms, backslashes, credentials, million-character strings, non-strings) and found every writer validated. Non-blocking: commit those bypass shapes as regression tests, filed as blog-hh6c.\n",
+      "merge": "eb949e10b043191c387093ed575c151efc4d94e2",
+      "mergedAt": "2026-10-19T17:18:45Z",
+      "files": [
+        "packages/web/src/lib/safe-url.test.ts",
+        "packages/web/src/lib/safe-url.ts",
+        "packages/web/src/reader/blocks.test.ts",
+        "packages/web/src/reader/blocks.ts",
+        "packages/web/src/server/content/media.test.ts",
+        "packages/web/src/server/content/media.ts",
+        "packages/web/src/server/content/portability.test.ts",
+        "packages/web/src/server/content/portability.ts",
+        "packages/web/src/server/owner/contracts.ts",
+        "packages/web/src/server/owner/owner-foundation.test.ts",
+        "packages/web/tests/reader/media-variant-routes.test.ts"
+      ]
+    },
+    {
+      "number": 89,
+      "title": "feat(reader): author and topic pages, bylines and related stories (blog-0044.22)",
+      "body": "## Summary\n\nReader Lab bake-off kit K1 (Bead blog-0044.22): the shared reader layer every direction builds on for the full magazine.\n\n- **Direction contract:** optional `Author` and `Topic` views with baseline fallbacks, so all five directions keep registering unchanged (`reader-directions/contract.ts`, README).\n- **Views and read model:** `AuthorView`, `TopicView`, and `ArticleView` author links, topics and an interim related list (same section, newest first, excludes the article, small fixed limit; marked as the seam blog-0045.7 replaces). Reads go through the repository port in memory and PostgreSQL (using K0's `article_authors`), with the reader's visibility rules: only publicly visible stories.\n- **Routes:** `/authors/[slug]` and `/topics/[slug]` through the publication-version reader cache (`reader/cache.ts`), with metadata and 404s. Author and topic slugs accept exactly what storage accepts (kebab-case, 1 to 200); the story and section rule is unchanged. The Reader Lab renders both in the active direction.\n- **Privacy:** both routes join the Reader Lab cookie's private, no-store, noindex header rule (`next.config.ts`, coordinator change, pinned by the framework test).\n- **Baseline** renders the new views and the article's byline, topics and related stories.\n\nNo migrations, packages or CI changes.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`: clean\n- Vitest: 828/828; framework contract 19/19\n- `pnpm test:content:integration` (PostgreSQL 18 plus S3 in Docker): 51/51, including 6 cases that compare the PostgreSQL author, topic, byline, topic-order and related reads with the in-memory results across published, withdrawn, deleted and scheduled stories, and one-character slugs\n- `git diff --check origin/main`: clean\n- Not yet run: the browser checks (axe, overflow at 390 and 1440 px, lab behaviour on the new routes, live response headers). I run these on the host before the merge.\n\n## Review\n\nImplemented by the Claude worker in three rounds: round 1 the kit; round 2 real-PostgreSQL integration cases for the new reads; round 3 the slug-length fix. Cross-vendor review by Codex (blog-0044.39): round 1 HOLD on the slug mismatch (a one-character or 181 to 200 character author or topic slug linked to a 404), otherwise clean on visibility, cache, privacy headers, SQL, ordering and tests; narrow re-review PASS.\n",
+      "merge": "8428bb14baba32e0c79d11d5f140ab7b3a9aba20",
+      "mergedAt": "2026-10-19T22:24:49Z",
+      "files": [
+        "packages/web/next.config.ts",
+        "packages/web/src/app/authors/[slug]/page.tsx",
+        "packages/web/src/app/stories/[slug]/page.tsx",
+        "packages/web/src/app/topics/[slug]/page.tsx",
+        "packages/web/src/reader-directions/README.md",
+        "packages/web/src/reader-directions/baseline/article.tsx",
+        "packages/web/src/reader-directions/baseline/author.tsx",
+        "packages/web/src/reader-directions/baseline/index.ts",
+        "packages/web/src/reader-directions/baseline/topic.tsx",
+        "packages/web/src/reader-directions/contract.test.ts",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader-directions/registry.test.ts",
+        "packages/web/src/reader/cache.test.ts",
+        "packages/web/src/reader/cache.ts",
+        "packages/web/src/reader/paths.test.ts",
+        "packages/web/src/reader/paths.ts",
+        "packages/web/src/reader/read-model.test.ts",
+        "packages/web/src/reader/read-model.ts",
+        "packages/web/src/reader/views.ts",
+        "packages/web/src/server/content/in-memory-repository.test.ts",
+        "packages/web/src/server/content/in-memory-repository.ts",
+        "packages/web/src/server/content/ports.ts",
+        "packages/web/src/server/database/postgres-content-repository.test.ts",
+        "packages/web/src/server/database/postgres-content-repository.ts",
+        "packages/web/src/server/database/postgres.integration.test.ts",
+        "packages/web/tests/framework/framework-contract.test.ts",
+        "packages/web/tests/reader/author-topic-routes.test.ts"
+      ]
+    },
+    {
+      "number": 98,
+      "title": "chore: retire the Task 37 research spike (blog-d1dx)",
+      "body": "## Summary\n\nRetire the Task 37 research spike (Bead blog-d1dx, operator decision 2026-10-20).\n\n`research/task37` was a disposable, standalone harness from PR #32 (`0fca7a8`). It sat outside the pnpm workspace with frozen, exact-pinned dependencies, and it was the source of **all 62 open Dependabot alerts** (6 critical, 24 high), via its own `package.json` and `pnpm-lock.yaml`. The shipped app was not affected: it is at or above every patched version.\n\n- Deletes the 27 tracked files under `research/task37/`.\n- ADR 0003 and `docs/research/task-37-architecture-spike-results.md` keep their evidence. Each gets a note that the harness is retired and preserved in git history (`git show 0fca7a8:research/task37/README.md`; restore with `git checkout 0fca7a8 -- research/task37`).\n\nNo product code, workspace, lockfile, CI or configuration changes: nothing referenced the folder.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint` and `pnpm format:check`: clean.\n- CI unit chain: 86 files, 906/906.\n- `node --test tests/agent-skills/*.test.mjs`, `node --test tests/ci/*.test.mjs` and `validate-platform`: pass.\n\n## Review\n\nWritten by the coordinator. The Codex read-only review passed. It confirmed:\n- nothing outside the folder depends on it (workflows, CI scripts, governance checks, configs, tests, skills);\n- zero newly broken doc links across 318;\n- the only remaining manifests are the root and `packages/web`, and they resolve none of the alerted versions;\n- the restore commands work.\n\nAfter merge, the coordinator confirms the Dependabot open-alert count drops to zero.\n",
+      "merge": "107f3dd4afef2dc0e47eeef8c9492d51f6453566",
+      "mergedAt": "2026-10-20T07:56:40Z",
+      "files": [
+        "docs/decisions/0003-structured-content-and-postgresql.md",
+        "docs/research/task-37-architecture-spike-results.md",
+        "research/task37/README.md",
+        "research/task37/docker-compose.yml",
+        "research/task37/fixtures/SHA256SUMS",
+        "research/task37/fixtures/article.v1.json",
+        "research/task37/framework-app/app/admin/preview/page.js",
+        "research/task37/framework-app/app/api/health/route.js",
+        "research/task37/framework-app/app/article/portable-editorial-story/page.js",
+        "research/task37/framework-app/app/layout.js",
+        "research/task37/framework-app/app/page.js",
+        "research/task37/framework-app/next.config.mjs",
+        "research/task37/framework-app/package.json",
+        "research/task37/package.json",
+        "research/task37/pnpm-lock.yaml",
+        "research/task37/pnpm-workspace.yaml",
+        "research/task37/scripts/framework-smoke.mjs",
+        "research/task37/scripts/run-integration.mjs",
+        "research/task37/scripts/verify-fixtures.mjs",
+        "research/task37/src/autosave.mjs",
+        "research/task37/src/document.mjs",
+        "research/task37/src/migrations.mjs",
+        "research/task37/src/persistence.mjs",
+        "research/task37/src/scheduler.mjs",
+        "research/task37/tests/autosave.unit.test.mjs",
+        "research/task37/tests/editor.unit.test.mjs",
+        "research/task37/tests/migrations.unit.test.mjs",
+        "research/task37/tests/persistence.integration.test.mjs",
+        "research/task37/tests/scheduler.unit.test.mjs"
+      ]
+    },
+    {
+      "number": 113,
+      "title": "fix(reader-lab): smooth scrolling only on the baseline site (blog-0044.57)",
+      "body": "## Summary\n\nShared Reader Lab fix (Bead blog-0044.57). `globals.css` set `html { scroll-behavior: smooth }` for every page. Reader Lab directions therefore scrolled smoothly against their specs; Quiet Monograph's spec forbids it. \"Back to top\" also stalled mid-scroll in browser tests, so those tests had switched to reduced motion.\n\n- **The rule:** smooth scrolling now applies only when no non-baseline direction root is on the page:\n  `html:not(:has([data-reader-direction]:not([data-reader-direction='baseline']))) { scroll-behavior: smooth }`\n  The public baseline site, owner pages and baseline frames on the compare page keep smooth scrolling. Direction pages get the browser default. The reduced-motion `!important` override still wins.\n- **Tests:**\n  - `app/globals.test.ts` covers baseline, directions, an unknown future direction, mixed roots and reduced motion. It fails if the change is reverted.\n  - Quiet Monograph and Swiss Index check Back to top under normal motion again: html computes `auto`, the page has scrolled first, then the fragment and `scrollY === 0` are asserted.\n  - The shared reader spec checks baseline motion preferences on home, article and section.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 105 files, 1,143 tests passed.\n- `pnpm test:browser`: 60/60, including the new baseline motion test.\n- Direction suites: Quiet Monograph 27/27 and Swiss Index 46/46, with Back to top under normal motion.\n\n## Review\n\nImplemented by the Codex worker. The Claude cross-vendor review passed. It confirmed:\n- the selector on the public site, owner pages, compare-page frames, and failure pages that upgrade client-side;\n- the cascade order;\n- that B, D and E don't need restoring, because none of them tests Back to top.\n\nNon-blocking note: a future direction that wants smooth scrolling opts in by being added to this shared selector.\n",
+      "merge": "5e4f5885d027c55925a831daf619dbc99e9c4bab",
+      "mergedAt": "2026-10-20T17:28:18Z",
+      "files": [
+        "packages/web/src/app/globals.css",
+        "packages/web/src/app/globals.test.ts",
+        "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
+        "packages/web/src/reader-directions/swiss-index/swiss-index.e2e.ts",
+        "tests/e2e/reader.spec.ts"
+      ]
+    },
+    {
+      "number": 117,
+      "title": "feat(reader-lab): list semantics and optional per-layout gallery size hints in the shared renderer (blog-0044.62)",
+      "body": "## Summary\n\nShared Reader Lab renderer change (Bead blog-0044.62).\n\n- **List semantics:** checklist and gallery lists in `reader/components/article-body.tsx` get `role=\"list\"`. Every direction removes their markers, and WebKit and VoiceOver then drop list semantics, so position (\"2 of 4\") was no longer announced. Ordered lists are unchanged.\n- **Per-layout gallery sizes:**\n  - `ArticleBody` accepts optional `sizes` hints for grid, diptych and carousel galleries and for nested insets. At render time they fall back to today's single gallery value.\n  - Directions can stop over-fetching on grids once they opt in, in a later Bead. Until then, every direction's output is byte-identical apart from the list roles.\n  - The contract validates the new keys, and the README documents them.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 105 files, 1,183 tests passed.\n- `pnpm test:browser`: 62/62.\n- Direction suites: Quiet Monograph 27/27, Literary Long-read 29/29, Swiss Index 46/46, Cinematic Feature 33/33, Expressive Colour 38/38.\n\n## Review\n\nImplemented by the Claude worker. The Codex cross-vendor review passed with no fixes. It rendered all six directions and the bare renderer independently, and confirmed the output is byte-identical to main apart from the intended list roles. It also confirmed that validation, nesting precedence and the README agree, and that a Quiet Monograph e2e selector still reaches the chrome list it targets.\n",
+      "merge": "addf9658c71ee977171526f26ae96fc9712579a1",
+      "mergedAt": "2026-10-20T19:45:22Z",
+      "files": [
+        "packages/web/src/reader-directions/README.md",
+        "packages/web/src/reader-directions/contract.test.ts",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader/components/article-body.test.tsx",
+        "packages/web/src/reader/components/article-body.tsx"
+      ]
+    },
+    {
+      "number": 120,
+      "title": "feat(content): include article-author links in portable export and import (blog-597f)",
+      "body": "## Summary\n\nContent portability fix (Bead blog-597f). Since K0 (migration 0005, `article_authors`), portable exports kept authors but not the article-author links. Bylines were lost on export, and an import couldn't restore them.\n\n- **Export and import:** both now carry `articleAuthors` (article id, author id, position). Validation is as strict as the database: unknown articles or authors, duplicate pairs, and duplicate or non-contiguous positions are all rejected. Links are written after both sides exist, inside the existing import transaction.\n- **Backward compatibility:** older exports without links still import, with empty bylines and none invented. The links are covered by the bundle digest, and the restore verification compares bylines.\n- **Coordinator fixes from review:**\n  - The export reads bylines and autosaves one query at a time. The single PostgreSQL transaction client must not run concurrent queries: pg 8 deprecates it and pg 9 removes it.\n  - Autosaves are appended one by one, because spreading a very large list into `push()` throws.\n  - A new test fails a byline write partway through an import and proves nothing is left behind.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 104 files, 1,217 tests passed. Portability tests: 23/23.\n\n## Review\n\nImplemented by the Codex worker. Its worklog is in the Bead notes, because the brief didn't list the worklog path in the write set; that is fixed for future briefs. The Claude cross-vendor review passed.\n\nTwo Codex narrow reviews covered the coordinator commits:\n- The first held on the `push(...list)` `RangeError`, reproduced with 130,000 autosaves.\n- The second passed after the fix.\n\nFollow-up, not in this PR: the bundle's duplicate-id check skips authors, taxonomies and reusable blocks. This predates the PR, and a separate Bead will cover it.\n",
+      "merge": "4d9316b9c844ea52e25762d354fc61cd991a9e6e",
+      "mergedAt": "2026-10-21T13:44:12Z",
+      "files": [
+        "packages/web/src/server/content/portability.test.ts",
+        "packages/web/src/server/content/portability.ts"
+      ]
+    },
+    {
+      "number": 132,
+      "title": "fix(deps): upgrade next, better-auth, undici, zod and vitest for new advisories (blog-b7rn)",
+      "body": "## Summary\n\nSecurity hotfix (Bead blog-b7rn, P0). npm published 21 new advisories on 2026-10-29: 3 critical, 8 high, 6 moderate and 3 low. The repository's dependency policy failed CI for every PR, first seen on #131.\n\n| Package | Advisories | From | To |\n|---|---|---|---|\n| next (+ `@next/eslint-plugin-next`) | 1 critical, 1 high | 16.3.8 | 16.4.1 |\n| better-auth, `@better-auth/passkey`, `@better-auth/drizzle-adapter` | 1 critical, 2 high, 3 low (incl. adapters) | 1.6.23 | 1.7.14 |\n| undici (workspace override) | 2 high, 2 moderate | 7.29.1 | 7.30.1 |\n| zod | 1 high | 4.4.3 | 4.6.6 |\n| vitest, `@vitest/coverage-v8` | 2 moderate | 4.1.11 | 4.1.12 |\n\n- **Overrides:** the workspace overrides keyed on `next@16.3.8` move to `next@16.4.1`, with the same postcss 8.5.23 and sharp 0.35.5 pins, which match Next 16.4.1's own ranges.\n- **Runtime contract (`config/runtime.json`):** the override map follows, and the lockfile, workspace, dependency-declaration and manifest-semantics digests are recomputed with the contract script's own functions.\n- **Framework contract test:** it now pins the new Next version.\n\n## Verification (host, Node 24.18)\n\n- Dependency policy: **0 advisories**. The approved `braces` exception is no longer needed.\n- Runtime contract: passed, with its tests at 13/13.\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, quality and capability contracts: clean.\n- `pnpm test:coverage`: 2,224 tests passed.\n- `pnpm test:browser`: 66/66, including owner sign-in and passkey journeys and the production build.\n- All five Reader Lab direction suites passed: 27, 29, 46, 33 and 38.\n- **Not run:** `pnpm test:content:integration`. Host Docker networking has been broken since the restart (iptables), and that suite isn't in CI (Bead blog-ued4).\n\n## Review\n\nCoordinator hotfix; the installs needed network access. The Codex review passed:\n- Every version resolves exactly, and the transitive changes follow from the upgrades.\n- All four digests recompute correctly.\n- Isolated better-auth probes passed: sessions, cookies, origin rejection, passkey registration and sign-out revocation.\n- Next accepts our config, and header matching passed.\n- One behaviour change: zod now requires seconds in timezone-qualified timestamps. Our own timestamps already include them.\n",
+      "merge": "199cf23464b524b768d0f2c4980479271a058e93",
+      "mergedAt": "2026-10-29T10:29:19Z",
+      "files": [
+        "config/runtime.json",
+        "package.json",
+        "packages/web/package.json",
+        "packages/web/tests/framework/framework-contract.test.ts",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "tests/ci/security-hotfix.test.mjs"
+      ]
+    },
+    {
+      "number": 134,
+      "title": "fix(web): run the content integration suite on Node without import.meta.main (blog-v05k)",
+      "body": "Bead: blog-v05k. Built by Codex; reviewed by the Claude coordinator.\n\n## Why\n`packages/web/scripts/run-content-integration.mjs` started only under `if (import.meta.main)`. Node 22 has no `import.meta.main`, so on a host whose default Node is 22, `pnpm test:content:integration` printed nothing and exited 0: a silent false pass. CI uses Node 24.18, so CI was not affected.\n\n## What\n- An exported `isEntrypoint(argv1, moduleUrl)` compares the real path of `process.argv[1]` with the module path; a missing argv[1] returns false.\n- Tests cover absolute, relative and symlinked paths, another module, a missing argument, that importing still starts nothing, and that direct invocation runs the expected Docker and Vitest sequence.\n\n## Verification (host)\n- Focused Vitest: 19/19.\n- Real `pnpm test:content:integration` with Docker: 51/51 under Node 24.18.0, and 51/51 under Node 22.16.0 (before this change it ran nothing there).\n- `pnpm test:capability unit`, `pnpm format:check`, eslint on both files, `git diff --check`: pass.\n",
+      "merge": "95d6421a3bc111b8d46a7179ecd251602c8b0302",
+      "mergedAt": "2026-10-29T11:31:10Z",
+      "files": [
+        "packages/web/scripts/run-content-integration.mjs",
+        "packages/web/scripts/run-content-integration.test.mjs"
+      ]
+    }
+  ]
+}

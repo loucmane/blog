@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "command": "git --no-optional-locks show --format= --no-ext-diff --unified=2 <merge>",
+  "cases": [
+    {
+      "number": 80,
+      "merge": "eb949e10b043191c387093ed575c151efc4d94e2",
+      "diffSha256": "5ab15b5d2269a7c78f0aa575e0881a2ac1b0637482c0f979c01a9fd5c8cbd679",
+      "filesVerified": true
+    },
+    {
+      "number": 89,
+      "merge": "8428bb14baba32e0c79d11d5f140ab7b3a9aba20",
+      "diffSha256": "acacfa5f79d0e64e06ea3b2d6225a08f44badb4edd98ebb7c82e787a44a1c9b2",
+      "filesVerified": true
+    },
+    {
+      "number": 98,
+      "merge": "107f3dd4afef2dc0e47eeef8c9492d51f6453566",
+      "diffSha256": "fadbbb513a62f603a26749b9151bdcbabf39c3999e3af01b2056c155c814e17b",
+      "filesVerified": true
+    },
+    {
+      "number": 113,
+      "merge": "5e4f5885d027c55925a831daf619dbc99e9c4bab",
+      "diffSha256": "e1a600e3ce0e10d0f2f9f903ac04693dd6ae885d3ed02b50858ee7da5ba22dd1",
+      "filesVerified": true
+    },
+    {
+      "number": 117,
+      "merge": "addf9658c71ee977171526f26ae96fc9712579a1",
+      "diffSha256": "2baab68adcbc80f4e6836e6835e6c50382f3236ae7646f7b8d1adf1a5b28fa54",
+      "filesVerified": true
+    },
+    {
+      "number": 120,
+      "merge": "4d9316b9c844ea52e25762d354fc61cd991a9e6e",
+      "diffSha256": "e3fa75354e4a630584e54a1823bd6e0a7a7a1b44b0b42d1c15c0e1850c2c3624",
+      "filesVerified": true
+    },
+    {
+      "number": 132,
+      "merge": "199cf23464b524b768d0f2c4980479271a058e93",
+      "diffSha256": "ab7d50199414774837860866a3eb32cd5555770a769872fd2c719dcbcc6580f4",
+      "filesVerified": true
+    },
+    {
+      "number": 134,
+      "merge": "95d6421a3bc111b8d46a7179ecd251602c8b0302",
+      "diffSha256": "d95524574bf0c1c2333075a35d1b1728cf63e738c0fd839e55f1d39e54c21583",
+      "filesVerified": true
+    }
+  ]
+}

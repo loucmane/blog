@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-29T17:26:53.211824+00:00",
+  "labelsBeforeRouting": true,
+  "routersRun": false,
+  "sha256": {
+    "docs/agent-skills/heldout-inputs.json": "0300281637677da4d83712744c73961a6e7a68b6cb0bfa07d7c882c5f4c19b61",
+    "docs/agent-skills/heldout-labels.json": "c9cb67dc1cb648e03ba780d9f6ff7c1af4e6f5686d2eff21a7534a31db99bbae",
+    "docs/agent-skills/heldout-diff-evidence.json": "b2b53f338fdfd0c0f7b19dff2ba09cee3613f6e945617eb0734b765afeae39c0",
+    "docs/agent-skills/baseline-v2/freeze.json": "3ba071d76a682e6f00b2d50e039a28e4ed6cc240c211fd4533c227d4f38e0a83"
+  }
+}

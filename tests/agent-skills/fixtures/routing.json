@@ -228,6 +228,18 @@
       "taskText": "Review data integrity. Review canonical urls.",
       "expected": ["content-platform-backend", "seo-distribution"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "documentContractNegative": {
+      "paths": ["packages/web/src/server/content/document.ts"],
+      "taskText": "Extend node and mark types for a new block.",
+      "expected": ["editorial-blocks"],
+      "rationale": "The same document path now changes node definitions without a security or persistence change."
+    },
+    "documentDataPositive": {
+      "paths": ["packages/web/src/server/content/document.ts"],
+      "taskText": "Review data integrity in the content domain model.",
+      "expected": ["content-platform-backend"],
+      "rationale": "An explicit data contract change still reaches backend review from the shared document path."
     }
   },
   "security-identity-privacy": {
@@ -266,6 +278,30 @@
       "taskText": "Review upload security. Review responsive images.",
       "expected": ["reader-frontend", "security-identity-privacy"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "documentContractNegative": {
+      "paths": ["packages/web/src/server/content/document.ts"],
+      "taskText": "Extend node and mark types for a new block.",
+      "expected": ["editorial-blocks"],
+      "rationale": "The same document path now changes node definitions without a security or persistence change."
+    },
+    "documentSanitizationPositive": {
+      "paths": ["packages/web/src/server/content/document.ts"],
+      "taskText": "Tighten safe-url credentials checks.",
+      "expected": ["security-identity-privacy"],
+      "rationale": "URL sanitization in the shared document validator does not change the block contract."
+    },
+    "fontCacheNegative": {
+      "paths": ["packages/web/next.config.ts"],
+      "taskText": "Cache versioned direction font bytes.",
+      "expected": [],
+      "rationale": "Font cache lifetimes alone do not change security policy in the shared framework config."
+    },
+    "privacyHeadersPositive": {
+      "paths": ["packages/web/next.config.ts"],
+      "taskText": "Update privacy headers for private previews.",
+      "expected": ["security-identity-privacy"],
+      "rationale": "Privacy behavior is affirmative security context for the same framework configuration path."
     }
   },
   "reader-frontend": {
@@ -342,6 +378,24 @@
       "taskText": "Review node and mark types. Review release evidence.",
       "expected": ["editorial-blocks", "release-witness"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "documentSanitizationNegative": {
+      "paths": ["packages/web/src/server/content/document.ts"],
+      "taskText": "Tighten safe-url credentials checks.",
+      "expected": ["security-identity-privacy"],
+      "rationale": "URL sanitization in the shared document validator does not change the block contract."
+    },
+    "documentContractPositive": {
+      "paths": ["packages/web/src/server/content/document.ts"],
+      "taskText": "Extend node and mark types for a new block.",
+      "expected": ["editorial-blocks"],
+      "rationale": "The same document path now changes node definitions without a security or persistence change."
+    },
+    "documentMixedAmbiguous": {
+      "paths": ["packages/web/src/server/content/document.ts"],
+      "taskText": "Review backend data design, node and mark types, and rich-content sanitization.",
+      "expected": ["content-platform-backend", "editorial-blocks", "security-identity-privacy"],
+      "rationale": "Independent explicit domain changes in one shared file retain all three scopes despite text exclusions."
     }
   },
   "seo-distribution": {
@@ -380,6 +434,18 @@
       "taskText": "Review canonical urls. Plan gas city dispatch.",
       "expected": ["gas-city-coordinator", "seo-distribution"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "layoutRecoveryNegative": {
+      "paths": ["packages/web/src/app/layout.tsx", "packages/web/src/app/recovery-marker.test.ts"],
+      "taskText": "Repair Suspense retry focus.",
+      "expected": ["reader-frontend", "quality-reliability-observability"],
+      "rationale": "A recovery change in the root layout has no metadata behavior; keep reader and quality overlap."
+    },
+    "layoutMetadataPositive": {
+      "paths": ["packages/web/src/app/layout.tsx", "packages/web/src/app/recovery-marker.test.ts"],
+      "taskText": "Change canonical metadata.",
+      "expected": ["reader-frontend", "quality-reliability-observability", "seo-distribution"],
+      "rationale": "The same shared paths carry an affirmative metadata change; retain all justified scopes."
     }
   },
   "release-witness": {
@@ -472,8 +538,8 @@
     "layoutPresentationNegative": {
       "paths": ["packages/web/src/app/layout.tsx"],
       "taskText": "Adjust the page frame spacing.",
-      "expected": ["reader-frontend", "seo-distribution"],
-      "rationale": "A layout source edit alone retains established reader and distribution routes without manufacturing quality scope."
+      "expected": ["reader-frontend"],
+      "rationale": "Layout spacing needs reader review; the shared path alone supplies neither metadata behavior nor a quality contract."
     },
     "fontPresentationNegative": {
       "paths": [
