@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -14,7 +13,7 @@ const repositoryRoot = path.resolve(
 );
 
 function copyFixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "blog-agent-skills-"));
+  const root = fs.mkdtempSync(new URL(".platform-", import.meta.url));
   for (const relativePath of [
     ".gitignore",
     ".prettierignore",
@@ -140,11 +139,22 @@ const fixtureGitEnvironment = Object.fromEntries(
 );
 
 function git(root, ...args) {
-  execFileSync("git", args, {
-    cwd: root,
-    env: fixtureGitEnvironment,
-    stdio: "pipe",
-  });
+  try {
+    execFileSync("git", args, {
+      cwd: root,
+      env: fixtureGitEnvironment,
+      // An unused pipe on stdin can report EPERM in managed workers even
+      // after Git exits successfully. Keep every real error visible.
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 5000,
+      killSignal: "SIGKILL",
+    });
+  } catch (error) {
+    throw new Error(
+      `fixture git ${args[0]} unavailable (${error.code ?? error.status}): ${error.message}; host verification required if sandbox restrictions persist`,
+      { cause: error },
+    );
+  }
 }
 
 function initRepository(root) {
@@ -180,7 +190,7 @@ const gasCityRuntimeErrors = [
   `unregistered Codex skill link: ${name}`,
 ]);
 
-function assertFailedClosed(report, reason) {
+function assertMissingGitEvidence(report, reason) {
   const unavailable = report.errors.filter((error) =>
     error.startsWith("skill roots cannot be checked against git ignore rules"),
   );
@@ -191,6 +201,24 @@ function assertFailedClosed(report, reason) {
     [...gasCityRuntimeErrors].sort(),
   );
   assert.equal(report.passed, false);
+}
+
+function withFakeGit(root, source, check) {
+  const bin = path.join(root, "fake-bin");
+  fs.mkdirSync(bin);
+  fs.writeFileSync(
+    path.join(bin, "git"),
+    `#!${process.execPath}\nconst fs = require("node:fs");\n${source}\n`,
+    { mode: 0o755 },
+  );
+  const searchPath = process.env.PATH;
+  process.env.PATH = bin;
+  try {
+    check();
+  } finally {
+    if (searchPath === undefined) delete process.env.PATH;
+    else process.env.PATH = searchPath;
+  }
 }
 
 test("validates the repository cross-agent platform", () => {
@@ -296,12 +324,34 @@ test("still rejects tracked skills that match an ignore pattern", (t) => {
   ]);
 });
 
+test("checks literal paths with whitespace, quotes, backslashes and Unicode", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  initRepository(root);
+  const names = [
+    "core.gc-space name",
+    "core.gc-line\nbreak",
+    'gascity."quoted"',
+    "gascity.back\\slash",
+    "gascity.日本語",
+  ];
+  for (const name of names) {
+    fs.mkdirSync(path.join(root, ".claude/skills", name));
+    fs.symlinkSync(`../../.claude/skills/${name}`, path.join(root, ".agents/skills", name));
+  }
+  // Tracked symlinks must remain unregistered even with an ignore match.
+  git(root, "add", "--force", `.agents/skills/${names[1]}`);
+  const report = validatePlatform({ root });
+  assert.equal(report.passed, false);
+  assert.deepEqual(report.errors, [`unregistered Codex skill link: ${names[1]}`]);
+});
+
 test("fails closed when the root is not a git work tree", (t) => {
   const root = copyFixture();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   installGasCityRuntimeSkills(root);
 
-  assertFailedClosed(validatePlatform({ root }), /\(.+\)$/);
+  assertMissingGitEvidence(validatePlatform({ root }), /\(.+\)$/);
 });
 
 test("fails closed when git is unavailable", (t) => {
@@ -316,9 +366,45 @@ test("fails closed when git is unavailable", (t) => {
   try {
     report = validatePlatform({ root });
   } finally {
-    process.env.PATH = searchPath;
+    if (searchPath === undefined) delete process.env.PATH;
+    else process.env.PATH = searchPath;
   }
-  assertFailedClosed(report, /\(spawnSync git ENOENT\)$/);
+  assertMissingGitEvidence(report, /\(spawnSync git ENOENT\)$/);
+});
+
+test("retains all candidate diagnostics when Git exits with an error", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  installGasCityRuntimeSkills(root);
+  withFakeGit(root, 'fs.writeSync(2, "probe unavailable\\n"); process.exitCode = 2;', () => {
+    const started = performance.now();
+    assertMissingGitEvidence(validatePlatform({ root }), /probe unavailable/);
+    assert.ok(performance.now() - started < 2000, "Git error must return promptly");
+  });
+});
+
+test("bounds an unresponsive Git and discards partial ignore evidence", (t) => {
+  const root = copyFixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  installGasCityRuntimeSkills(root);
+  const marker = path.join(root, "git-started");
+  withFakeGit(root, `
+    if (!fs.existsSync(${JSON.stringify(marker)})) {
+      fs.writeFileSync(${JSON.stringify(marker)}, "first probe answered");
+      setTimeout(() => {}, 3000);
+    } else {
+      fs.writeFileSync(${JSON.stringify(marker)}, "second probe hanging");
+      process.on("SIGTERM", () => {});
+      setInterval(() => {}, 1000);
+    }
+  `, () => {
+    const started = performance.now();
+    const report = validatePlatform({ root });
+    const elapsed = performance.now() - started;
+    assert.equal(fs.readFileSync(marker, "utf8"), "second probe hanging");
+    assertMissingGitEvidence(report, /ETIMEDOUT|timed out/);
+    assert.ok(elapsed >= 4500 && elapsed < 7500, `shared five-second Git budget took ${elapsed} ms`);
+  });
 });
 
 test("rejects enforced subjective review mode", (t) => {

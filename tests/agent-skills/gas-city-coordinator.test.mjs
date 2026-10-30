@@ -14,6 +14,37 @@ const read = (relativePath) => fs.readFileSync(path.join(repositoryRoot, relativ
 const normalizedAuthority = () =>
   `${read('AGENTS.md')}\n${read('CLAUDE.md')}`.toLowerCase().replace(/\s+/g, ' ')
 
+function runCatalogGuard(t, formula, input) {
+  const root = fs.mkdtempSync(new URL('.catalog-guard-', import.meta.url))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const inputPath = path.join(root, 'stdin')
+  const outputPath = path.join(root, 'stdout')
+  const errorPath = path.join(root, 'stderr')
+  fs.writeFileSync(inputPath, input)
+  const descriptors = []
+  let result
+  try {
+    for (const [file, mode] of [[inputPath, 'r'], [outputPath, 'w'], [errorPath, 'w']]) {
+      descriptors.push(fs.openSync(file, mode))
+    }
+    // Managed workers can lose Node pipe output. Exercise the actual CLI
+    // with regular descriptors, without changing its stdin/stdout contract.
+    result = spawnSync(
+      process.execPath,
+      ['scripts/agent-skills/formula-catalog-guard.mjs', '--formula', formula],
+      { cwd: repositoryRoot, stdio: descriptors, timeout: 5000, killSignal: 'SIGKILL' },
+    )
+  } finally {
+    for (const descriptor of descriptors) fs.closeSync(descriptor)
+  }
+  assert.equal(result.error, undefined, `catalog CLI unavailable: ${result.error?.message}; host verification required if sandbox restrictions persist`)
+  assert.equal(result.signal, null)
+  assert.equal(fs.readFileSync(errorPath, 'utf8'), '')
+  const output = fs.readFileSync(outputPath, 'utf8')
+  assert.notEqual(output, '', 'catalog CLI produced no evidence')
+  return { status: result.status, decision: JSON.parse(output) }
+}
+
 test('Claude and Codex resolve one canonical Gas City coordinator skill', () => {
   const canonical = path.join(repositoryRoot, '.claude/skills/gas-city-coordinator/SKILL.md')
   const codexLink = path.join(repositoryRoot, '.agents/skills/gas-city-coordinator')
@@ -150,23 +181,27 @@ test('formula discovery evidence cannot upgrade a non-catalog formula', () => {
   }
 })
 
-test('catalog guard CLI exits nonzero before a denied formula can continue', () => {
+test('catalog guard CLI exits nonzero before a denied formula can continue', (t) => {
   const fixture = JSON.parse(
     read('tests/agent-skills/fixtures/gas-city-formula-selection-failure.json'),
   )
-  const result = spawnSync(
-    process.execPath,
-    ['scripts/agent-skills/formula-catalog-guard.mjs', '--formula', fixture.requestedFormula],
-    {
-      cwd: repositoryRoot,
-      encoding: 'utf8',
-      input: JSON.stringify(fixture.catalog),
-    },
-  )
+  const result = runCatalogGuard(t, fixture.requestedFormula, JSON.stringify(fixture.catalog))
 
   assert.equal(result.status, 3)
-  assert.equal(result.stderr, '')
-  assert.deepEqual(JSON.parse(result.stdout), fixture.expectedDecision)
+  assert.deepEqual(result.decision, fixture.expectedDecision)
+})
+
+test('catalog guard CLI preserves allowed and malformed-input decisions', (t) => {
+  const formula = 'build-from-requirements'
+  const catalog = { schema_version: '1', ok: true, formulas: [{ name: formula }] }
+  const allowed = runCatalogGuard(t, formula, JSON.stringify(catalog))
+  assert.equal(allowed.status, 0)
+  assert.deepEqual(allowed.decision, evaluateFormulaEntrypoint({ requestedFormula: formula, catalog }))
+  for (const input of ['', '{']) {
+    const denied = runCatalogGuard(t, formula, input)
+    assert.equal(denied.status, 3)
+    assert.deepEqual(denied.decision, evaluateFormulaEntrypoint({ requestedFormula: formula }))
+  }
 })
 
 test('catalog guard allows exact entries and fails closed on malformed catalogs', () => {
