@@ -1,0 +1,21 @@
+{
+  "valid": false,
+  "reason": "Skills require hyphens, not underscores.",
+  "result": {
+    "schemaVersion": 1,
+    "reviewId": "corpus-review.1",
+    "skill": "skill_name",
+    "mode": "advisory",
+    "verdict": "pass",
+    "summary": "Synthetic structural validation case.",
+    "generatedAt": "2026-10-30T14:00:00Z",
+    "headSha": "0123456789abcdef0123456789abcdef01234567",
+    "findings": [],
+    "evidence": [
+      {
+        "kind": "command",
+        "path": "synthetic check; not executed"
+      }
+    ]
+  }
+}

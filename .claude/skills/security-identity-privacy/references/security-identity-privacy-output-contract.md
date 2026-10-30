@@ -88,6 +88,12 @@ Finding categories: `authentication-recovery`, `authorization`, `session-credent
 `privacy-retention`, `supply-chain`, `threat-model`, `implementation-assumption`, and
 `unresolved-security-decision`.
 
+Blocking findings must use a deterministic category from
+`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`; the shared validator
+and ingestion reject other blocking categories. Use `security` for reproduced secret
+scanner, authorization, dependency-policy or security-test failures. Keep the specific
+security concern in the message and evidence; topic categories stay non-blocking.
+
 Subjective findings remain advisory and non-blocking, including high-risk threat rankings,
 architectural preferences, speculative weaknesses and unapproved retention policies. Use
 `subjective: true`, `blocking: false`; severity (`info`, `warning`, `error`) alone never

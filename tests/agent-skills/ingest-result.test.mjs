@@ -71,6 +71,27 @@ function fixture(t, result = validResult()) {
   return { root, bead, resultPath, bytes }
 }
 
+const corpusRoot = path.join(repository, 'tests/agent-skills/review-result-corpus')
+for (const name of fs.readdirSync(corpusRoot).filter((name) => name.endsWith('.json')).sort()) {
+  const entry = JSON.parse(fs.readFileSync(path.join(corpusRoot, name), 'utf8'))
+  test(`ingestion honors the shared corpus: ${name}`, (t) => {
+    const input = fixture(t, entry.result)
+    if (entry.valid) {
+      const plan = library.buildBeadsIngestPlan(input)
+      assert.equal(plan.receipt.reviewId, entry.result.reviewId)
+    } else {
+      const calls = []
+      const runner = (...args) => {
+        calls.push(args)
+        throw new Error('invalid envelope reached the command runner')
+      }
+      assert.throws(() => library.ingestReviewResult({ ...input, execute: true, runner }))
+      assert.deepEqual(calls, [], entry.reason)
+    }
+    assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
+  })
+}
+
 test('plans an explicitly routed Beads update and append-only worklog receipt', (t) => {
   const input = fixture(t)
   const plan = library.buildBeadsIngestPlan(input)

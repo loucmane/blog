@@ -214,7 +214,7 @@
       "finding": {
         "id": "synthetic-contrast-failure",
         "severity": "error",
-        "category": "contrast",
+        "category": "accessibility",
         "message": "Synthetic failure example only: a declared body-text pair computes below the contract's 4.5:1 threshold.",
         "subjective": false,
         "blocking": true,

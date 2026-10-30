@@ -164,7 +164,7 @@
       "finding": {
         "id": "synthetic-result-failure",
         "severity": "error",
-        "category": "test-results",
+        "category": "test",
         "message": "Synthetic failure example only: the result validator reports skipped tests despite a claim that all executed.",
         "subjective": false,
         "blocking": true,

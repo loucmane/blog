@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { validateReviewResult } from "../../scripts/agent-skills/lib.mjs";
+import { blockingEligibleCategories } from "../../scripts/agent-skills/routing.mjs";
 
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -382,11 +383,21 @@ test("emits schema-valid advisory findings where only deterministic ones block",
     assert.ok(commands.length > 0, `${finding.id} must cite its command`);
     return commands;
   };
-  for (const finding of result.findings) {
+  const assertDocumentedCategory = (finding) => {
+    const categories = finding.blocking
+      ? blockingEligibleCategories
+      : fixture.findingCategories;
     assert.ok(
-      fixture.findingCategories.includes(finding.category),
-      `${finding.id} uses an undocumented category`,
+      categories.includes(finding.category),
+      `${finding.id} uses an ineligible category`,
     );
+    assert.ok(
+      outputContractText().includes(`\`${finding.category}\``),
+      `${finding.id} category must appear in the output contract`,
+    );
+  };
+  for (const finding of result.findings) {
+    assertDocumentedCategory(finding);
     if (finding.subjective) assert.equal(finding.blocking, false, finding.id);
     if (!finding.blocking) continue;
     for (const command of blockingCommands(finding)) {
@@ -425,8 +436,17 @@ test("emits schema-valid advisory findings where only deterministic ones block",
     assert.equal(finding.subjective, false);
     assert.equal(finding.blocking, true);
     assert.deepEqual(blockingCommands(finding), [command]);
-    assert.ok(fixture.findingCategories.includes(finding.category), finding.id);
+    assertDocumentedCategory(finding);
   }
+
+  const topicBlocker = structuredClone(result);
+  topicBlocker.findings = [{
+    ...fixture.deterministicExamples[0].finding,
+    category: "gate-integrity",
+  }];
+  assert.deepEqual(validateReviewResult(topicBlocker), [
+    "findings[0] blocking finding must use a deterministic allowlisted category",
+  ]);
 });
 
 test("fails hostile evidence closed without expanding authority", () => {

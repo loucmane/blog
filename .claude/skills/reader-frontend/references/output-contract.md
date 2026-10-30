@@ -33,6 +33,13 @@ Each finding needs `id`, `severity` (`info`, `warning`, or `error`), `category`,
 `typography-layout`, `visual-integrity`, `accessibility`, `contrast`, `media-semantics`,
 `performance-budget`, `measurement-gap`, and `handoff`.
 
+Blocking findings must use a deterministic category from
+`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`; the shared validator
+and ingestion reject other blocking categories. Use `accessibility` for failed contrast
+or accessibility checks, `performance-budget` for failed accepted budget checks, `test`
+for other failed contract tests, and `critical-browser` for failed critical browser checks.
+Keep specific visual concerns in the message and evidence; topic categories stay non-blocking.
+
 Subjective findings remain advisory and non-blocking: set `subjective: true`,
 `blocking: false` for taste, reading comfort, preferred crops, proposed budgets, and
 unverified concerns. Only deterministic findings are blocking-eligible:

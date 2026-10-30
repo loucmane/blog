@@ -1,0 +1,5 @@
+{
+  "valid": false,
+  "reason": "The envelope must be an object.",
+  "result": 1
+}

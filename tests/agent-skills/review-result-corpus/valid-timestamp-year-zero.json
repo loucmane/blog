@@ -1,0 +1,21 @@
+{
+  "valid": true,
+  "reason": "Timestamp profile requires a real date, seconds, explicit zone and no leap second.",
+  "result": {
+    "schemaVersion": 1,
+    "reviewId": "corpus-review.1",
+    "skill": "cross-agent-skill-platform",
+    "mode": "advisory",
+    "verdict": "pass",
+    "summary": "Synthetic structural validation case.",
+    "generatedAt": "0000-02-29T00:00:00Z",
+    "headSha": "0123456789abcdef0123456789abcdef01234567",
+    "findings": [],
+    "evidence": [
+      {
+        "kind": "command",
+        "path": "synthetic check; not executed"
+      }
+    ]
+  }
+}
