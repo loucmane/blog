@@ -78,7 +78,7 @@ test('all seven mechanical criteria pass on the complete offline fixture', (t) =
     ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((id) => [id, 'pass']),
   )
   assert.equal(result.v1Complete, true)
-  assert.equal(result.reviewOutputs.accepted, 10)
+  assert.equal(result.reviewOutputs.accepted, 12)
   assert.equal(result.dogfood.cases, 5)
   assert.deepEqual(checkV1Completion({ root }), result)
   assert.match(renderCompletionReport(result), /v1 complete: yes/)

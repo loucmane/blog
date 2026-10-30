@@ -1,0 +1,16 @@
+{
+  "synthetic": true,
+  "provenance": "Created as a synthetic schema example on 2026-10-30. generatedAt is the example creation time, not a historical review time; headSha identifies the source context, not a reviewed delivery. No check execution or ingestion is asserted.",
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "synthetic-cross-agent-skill-platform-example",
+    "skill": "cross-agent-skill-platform",
+    "mode": "advisory",
+    "verdict": "pass",
+    "summary": "Synthetic example only: a platform review would verify canonical sources, relative Codex links and the advisory result schema. This example reports no executed checks or actual review findings.",
+    "generatedAt": "2026-10-30T15:39:21Z",
+    "headSha": "45817eb8fd027c7db3dd1fa88cf900b31153ac3a",
+    "findings": [],
+    "evidence": [{ "kind": "file", "path": ".claude/skills/cross-agent-skill-platform/SKILL.md" }]
+  }
+}

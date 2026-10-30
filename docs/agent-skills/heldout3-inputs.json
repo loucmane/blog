@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "source": "gh pr view, exported by the coordinator 2026-10-29",
+  "cases": [
+    {
+      "number": 75,
+      "title": "fix(owner): keep the focal point of an uploaded image (blog-0043.3)",
+      "body": "## Summary\n\nFixes Bead blog-0043.3: an owner image upload ignored the focal point it was sent with. The upload route parsed `focalX` / `focalY`, but the media store reads `focalPoint`, so every image was stored at the default 0.5 / 0.5.\n\n- `packages/web/src/server/owner/contracts.ts`: the owner media contract maps the two form fields into `focalPoint { x, y }`. A missing value stays at the centre; a blank, non-numeric or out-of-range value is refused with an owner-readable message instead of being silently defaulted.\n- `packages/web/src/app/api/owner/media/route.ts`: validates before storage and answers a bad focal point with one owner error (HTTP 422).\n- Tests: the contract, the upload route reading the stored asset back, and the PostgreSQL round trip of `focal_x` / `focal_y`.\n\nNo backfill: the chosen values were never persisted, so there is nothing to recover. The owner UI has no focal-point picker yet; that is a separate follow-up. No migrations, packages, CI or UI changes.\n\n## Verification\n\n- Red first: the new tests failed on the old code (worklog).\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`: clean\n- Vitest: 740/740\n- `pnpm test:content:integration` (PostgreSQL plus S3 in Docker): 43/43\n- `git diff --check origin/main`: clean\n\nCross-vendor review (Codex, blog-sjxz): PASS. It checked the edge inputs (\"0\", \"1\", \" 0.5 \", \"1e-1\", \"-0\" accepted; blank, non-numeric, NaN, Infinity, a file and out-of-range refused) and that no other caller depends on the schema shape. Non-blocking, pre-existing: a wholly omitted alt or credit field still gets generic \"expected string\" text rather than the friendly message.\n",
+      "merge": "5e75f608d1ce103ea35ed0cf61e0bcc19e0b31df",
+      "mergedAt": "2026-10-19T10:19:59Z",
+      "files": [
+        "packages/web/src/app/api/owner/media/route.ts",
+        "packages/web/src/server/database/postgres.integration.test.ts",
+        "packages/web/src/server/owner/contracts.ts",
+        "packages/web/src/server/owner/owner-foundation.test.ts",
+        "packages/web/tests/reader/media-variant-routes.test.ts"
+      ]
+    },
+    {
+      "number": 76,
+      "title": "fix(skills): ignore git-ignored Gas City skills in the platform check (blog-xh28)",
+      "body": "## Summary\n\nFixes Bead blog-xh28. Gas City installs its own skills into `.claude/skills` and `.agents/skills` on every machine, and `.gitignore` keeps them out of the repository (since #73). The platform validator listed both roots from the filesystem, so every gc checkout reported 18 \"unregistered\" errors that CI never saw, which hid real failures from workers and coordinators.\n\n- `scripts/agent-skills/lib.mjs`: unregistered entries are checked against git in one `git check-ignore --stdin -z` call (argument array, no shell). Only ignored, untracked entries are excused. Unignored or tracked unregistered entries still fail. If git cannot answer, the validator reports that instead of excusing anything. Git is not called at all when nothing is unregistered, so a checkout without `.git` behaves as before.\n- `tests/agent-skills/platform.test.mjs`: temporary git fixtures for ignored (excused), unignored (still an error), tracked (still an error) and git unavailable (fails closed).\n\n## Verification\n\n- In a gc worktree with the runtime skills present: `validate-platform` passes with 0 errors (was 18).\n- `node --test tests/agent-skills/*.test.mjs`: 55/55, both in the gc worktree and on a clean export without `.git`.\n- `git diff --check origin/main`: clean. Only the two files above change.\n\nCross-vendor review (Codex, blog-qy74): PASS. Non-blocking suggestion: add dedicated linked-worktree, unusual-path and status-1-only fixtures.\n",
+      "merge": "554c23cf7346f59bf032a1ccc4fb683338c16289",
+      "mergedAt": "2026-10-19T10:49:40Z",
+      "files": [
+        "scripts/agent-skills/lib.mjs",
+        "tests/agent-skills/platform.test.mjs"
+      ]
+    },
+    {
+      "number": 79,
+      "title": "fix(lab): let PostgreSQL expire a stale hosted-seed lock holder (blog-0044.20)",
+      "body": "## Summary\n\nFixes Bead blog-0044.20 (non-blocking follow-up from the PR #69 review). The hosted Preview seed holds a session advisory lock on its own dedicated PostgreSQL connection. After a hard network partition or a suspended serverless worker, local transport cleanup cannot run, so the lock could stay held on the server until PostgreSQL noticed the dead session.\n\n- `packages/web/src/server/database/exclusive-postgres-session.ts`: the seed session now also sets `idle_session_timeout` (the remaining run budget) alongside the existing statement, lock and idle-in-transaction limits, so PostgreSQL ends an idle holder itself (57P05) and releases the lock. If a provider refuses a limit, the session is destroyed and the seed fails closed rather than holding an unbounded lock. The session keeps the first server error, so a later generic disconnect cannot hide the real cause.\n- Tests: unit tests for the settings, refusals and error preservation; a real-PostgreSQL integration case where a suspended holder gets 409 for a competing seed, then is expired by the server (57P05), then the second seed succeeds and the old callback never resumes its work; the owner-pool isolation check now also covers `idle_session_timeout`.\n\nNo migration; only this dedicated session is affected. The hosted setup already requires PostgreSQL 18 with a direct connection (the setting needs 14+).\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`: clean\n- Vitest: 748/748\n- `pnpm test:content:integration` (PostgreSQL 18 plus S3 in Docker): 44/44, including the new suspended-holder case\n- `git diff --check origin/main`: clean\n\n## Review\n\nImplemented by Codex in two rounds (round 2 preserved the server's 57P05 after the first host integration run showed a generic disconnect error instead). Cross-vendor review by Claude: PASS; timeouts cannot cut off a legitimate seed, failing closed is right, tests deterministic. Non-blocking follow-ups filed as blog-0044.31 (a pre-existing 30 s idle-in-transaction span around storage work, and a clearer owner error plus docs for a refused session limit).\n",
+      "merge": "efd9166e3e73c485991df47c5ca02693f4d3246e",
+      "mergedAt": "2026-10-19T16:59:58Z",
+      "files": [
+        "packages/web/src/server/database/exclusive-postgres-session.test.ts",
+        "packages/web/src/server/database/exclusive-postgres-session.ts",
+        "packages/web/src/server/database/lab-seed-concurrency-integration.ts",
+        "packages/web/src/server/database/lab-seed-database-integration.ts"
+      ]
+    },
+    {
+      "number": 82,
+      "title": "feat(skills): add SEO distribution and release witness skills (blog-0054)",
+      "body": "## Summary\n\nAdds two project-authored cross-agent skills (Bead blog-0054), the Task 54 skills in `docs/architecture/cross-agent-skill-system-v1-roadmap.md`:\n\n- `seo-distribution`: canonical URLs and slug redirects, structured data, social cards, feeds, sitemap, robots and index hygiene, and the search and newsletter integration points. Its code map describes today's code (`site-url.ts`, `public/robots.txt`, reader page metadata, slug redirects stored by `changeSlug`) and marks every planned feature as planned with its blog-0045 Bead id; tests enforce that.\n- `release-witness`: truthful release evidence: exact commands and counts, what was not run and why, security and accessibility signals, rollback readiness, and how CI (`ci.yml`, `auto-merge.yml`, `scripts/ci/*`) and host checks are reported without overstating them.\n\nBoth are registered in the catalog and review map with advisory routes and linked for Codex; intended route overlaps are recorded in the existing fixtures. Subjective findings stay advisory; only reproduced, parsed or runner-contradicted findings may block. No product code, packages, lockfile, CI or governance changes.\n\n## Verification (host)\n\n- `validate-platform`: 0 errors (11 skills, 11 routes)\n- `node --test tests/agent-skills/*.test.mjs`: 95/95 (also after merging `origin/main`)\n- `quick_validate.py`: valid for both\n- `git diff --check origin/main`: clean\n\n## Review\n\nImplemented by Codex (the coordinator created the two `.agents` links its sandbox could not); cross-vendor review by Claude: about 95 claims checked, none wrong, PASS. Advisory gaps filed as blog-oc3c (wording) and blog-ued4 (the CI step \"Unit and integration tests\" runs no integration tests).\n",
+      "merge": "501caab2035c1eaca4e4df31e45111fcbdc5f9ed",
+      "mergedAt": "2026-10-19T18:18:05Z",
+      "files": [
+        ".agents/skills/release-witness",
+        ".agents/skills/seo-distribution",
+        ".claude/skills/release-witness/SKILL.md",
+        ".claude/skills/release-witness/agents/openai.yaml",
+        ".claude/skills/release-witness/references/code-map.md",
+        ".claude/skills/release-witness/references/output-contract.md",
+        ".claude/skills/seo-distribution/SKILL.md",
+        ".claude/skills/seo-distribution/agents/openai.yaml",
+        ".claude/skills/seo-distribution/references/code-map.md",
+        ".claude/skills/seo-distribution/references/output-contract.md",
+        "config/agent-skills/catalog.yaml",
+        "config/agent-skills/review-map.yaml",
+        "tests/agent-skills/fixtures/content-platform-backend.json",
+        "tests/agent-skills/fixtures/reader-frontend.json",
+        "tests/agent-skills/fixtures/release-witness.json",
+        "tests/agent-skills/fixtures/security-identity-privacy.json",
+        "tests/agent-skills/fixtures/seo-distribution.json",
+        "tests/agent-skills/frontend-editorial-contract.mjs",
+        "tests/agent-skills/platform.test.mjs",
+        "tests/agent-skills/release-witness.test.mjs",
+        "tests/agent-skills/seo-distribution.test.mjs"
+      ]
+    },
+    {
+      "number": 88,
+      "title": "docs(reader-lab): Quiet Monograph developed-magazine spec (blog-0044.23)",
+      "body": "## Summary\n\nReader Lab bake-off, direction A (Quiet Monograph): the developed-magazine spec, `docs/design/reader-bakeoff/quiet-monograph.md` (Bead blog-0044.23). The operator decided on 2026-10-19 to develop all five Reader Lab directions in parallel and let the client choose; this spec guides direction A's three build batches.\n\nIt covers the thesis, every page type (home, section, article, author, topic, empty and failure states), typography (the body measure moves from 66ch, about 94 Jost characters, to 30em), grid, colour with contrast pairs, imagery that never crops (images shown whole, fitted inside plates; no focal points), editorial blocks, motion, accessibility, performance budgets, the delta in three batches, and open questions. It hands off what belongs elsewhere: author/topic views to the shared kit K1, failure views and image `sizes` hooks to K4, the private headers for the new reader routes to K1, and the font caching problem it found (direction font files served with `max-age=0`, filed as blog-0044.37). Documentation only.\n\n## Review\n\nWritten by Claude; cross-vendor review by Codex (blog-0044.38). Round 1 HOLD (P2): section 6 sized a directly nested `img`, but `ReaderImageView` renders `picture > img` and the contract requires descendant selectors, so the rule would match nothing. Coordinator fix `f0ea2ab` uses a direction-scoped descendant selector through the picture wrapper. Narrow re-review PASS: it matches both image shapes, and a 4:5 hero in the 928px box now renders at about 495 by 619px as the spec states. All six declared text pairs pass (minimum 5.22:1); cover and hang `sizes` match at nine widths.\n\n`git diff --check` clean; Prettier clean for the file.\n",
+      "merge": "e897f92b393ef70dab240c9b29fd482069523275",
+      "mergedAt": "2026-10-19T22:51:41Z",
+      "files": [
+        "docs/design/reader-bakeoff/quiet-monograph.md"
+      ]
+    },
+    {
+      "number": 90,
+      "title": "feat(reader-lab): owner-only compare page for the five directions (blog-0044.28)",
+      "body": "## Summary\n\nReader Lab bake-off kit K2 (Bead blog-0044.28): an owner-only compare page, so the client can choose between the five directions on the same real content.\n\n- **Route:** `/owner/reader-lab/compare`. The owner page guard runs before any data read. The page is private, no-store and noindex: the existing `/owner/:path*` header rule applies, and the page also sets noindex metadata. It is read-only, and the only write is the existing lab-view cookie.\n- **Choose a page:** home, a section, a story, an author or a topic. You can pick from a list built from published content, or enter a path. Paths must match `/`, or `/(stories|sections|authors|topics)/<slug>` with the storage slug rules; nothing else is accepted (no query, fragment, encoding tricks or owner paths). Only published content is shown; drafts and missing pages get a clear message.\n- **Panels:** the registry drives the list, so every registered direction (Baseline plus the five) renders the same loaded view, with no per-direction code. Each panel is a labelled, scriptless, same-origin `srcdoc` frame at a 390 px or 1440 px preset. React portals render into the frames, so each direction's fonts and styles load only in its own frame and the parent page loads none. The global CSP (`frame-ancestors 'none'`) is unchanged.\n- **Open in Reader Lab:** a per-direction button sets the existing lab cookie through the lab's own cookie policy and opens the exact page full-screen. It checks the same origin first, then the owner session (an expired session goes to sign-in), and only then reads.\n\nNew files only; no existing file changed. No migrations, packages or CI changes. Nothing links to the page yet: the Reader Lab page belongs to K4's write set, so the link is a follow-up.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`: clean\n- Vitest: 81 files, 853/853 (the compare suites have 25 tests: owner guard, headers and noindex, registry enumeration with a synthetic extra direction, published-only, path rejection including encoded, uppercase, backslash, trailing-slash and repeated values, cookie writes, frame font isolation, fragment links)\n- Production build: clean, route `ƒ /owner/reader-lab/compare`\n- Browser (Chromium, local lab, production build):\n  - anonymous requests get a 307 to sign-in with `private, no-store`, noindex and a same-origin referrer;\n  - signed in, all six frames render the same story with one h1 each and no broken images;\n  - each frame loads only its own direction's fonts, and the parent loads none;\n  - the 390 and 1440 presets set the frame viewport;\n  - seven hostile or invalid paths were refused;\n  - the Swiss Index handoff opened `/sections/architecture` in that direction with the lab bar;\n  - a signed-out handoff went to sign-in;\n  - axe (WCAG 2.2 AA plus best practice) found 0 violations at 390 and 1440 px;\n  - keyboard order is header, picker, path form, scroll region, then each panel's button and frame;\n  - there is no page-level horizontal scroll.\n- `pnpm test:browser` (Playwright, production build, Desktop and Pixel 7 Chromium): 58/58\n\n## Review\n\nImplemented by the Codex worker. Cross-vendor review by Claude: PASS, with no security, correctness or data-integrity defect. It confirmed the guard order, path validation, no open redirect, no XSS route through `srcdoc` (constant document, frames with no scripts), only one cookie write, and font isolation through the portals.\n\nThe coordinator then made two changes in `e8cf944`:\n1. Screen-reader labels in the scrolling panel list were positioned against the page and made it scroll sideways. The scroll region is now their containing block.\n2. The full-page action now checks origin and session before any read, matching the other lab actions. More path edge cases are tested.\n\nKnown nits, left as is:\n- the Next link prefetch inside frames;\n- the generic error page on a stale handoff.\n",
+      "merge": "511125a9010af464bd009bc2aa38ef9a0b445b09",
+      "mergedAt": "2026-10-19T23:20:45Z",
+      "files": [
+        "packages/web/src/app/owner/(workspace)/reader-lab/compare/page.tsx",
+        "packages/web/src/reader-lab/compare-actions.ts",
+        "packages/web/src/reader-lab/compare-data.ts",
+        "packages/web/src/reader-lab/compare-frames.test.tsx",
+        "packages/web/src/reader-lab/compare-frames.tsx",
+        "packages/web/src/reader-lab/compare-view.tsx",
+        "packages/web/src/reader-lab/compare.test.tsx"
+      ]
+    },
+    {
+      "number": 100,
+      "title": "fix(reader): typed list markers inline; reload faces before the capture font check (blog-0044.59)",
+      "body": "## Summary\n\nTwo shared reader fixes (Bead blog-0044.59), both found in the bake-off's b2 reviews. They sit outside every direction folder, so they ship separately.\n\n1. **Typed numbered-list markers, inline.** `ArticleBody` now gives each `<ol>` an inline `list-style-type` from its numbering: `1` decimal, `a` lower-alpha, `A` upper-alpha, `i` lower-roman, `I` upper-roman.\n   - Two things defeated stylesheets. HTML attribute selectors match `type` case-insensitively (`ol[type='a']` also matches `type=\"A\"`), and Tailwind's base layer resets `list-style` on every list. So no direction could tell a/A or i/I apart: lower-case lists rendered upper-case in all five directions.\n   - An inline value wins in every browser, and the CSP already allows inline styles.\n2. **The screenshot font gate reloads faces before checking them.** `capture-fonts.ts` `assertFonts` awaits `face.load()` for each family first.\n   - Chromium can recreate a stylesheet's FontFace objects after a full-page screenshot at a new width, and only faces in use reload. Diagnostics showed Literary Long-read's unused serif 600 face left unloaded, which failed the gate on home at 1440 px.\n   - A missing file still rejects the load. The CDP painted-face check still catches a fallback latched by `font-display: optional`.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`: clean\n- CI unit chain: 92 files, 995/995. The new test checks all five markers, case-preserved `type` and a non-default `start`.\n- `pnpm test:browser`: 58/58. The Cinematic Feature direction suite, which uses the capture helper: 19/19.\n\n## Review\n\nWritten by the coordinator. Codex review: PASS.\n- It found no CSP or direction-design conflict; all five directions intend these markers.\n- The test fails if the inline style is removed.\n- The font gate still fails on a missing family, a rejected load, a failed availability check and a CDP-reported fallback. It checked these five scenarios in memory with test doubles; the browser runs are the coordinator's host results above.\n",
+      "merge": "8c67b24e71f8c537e1c26e08a29a10d133a815b4",
+      "mergedAt": "2026-10-20T10:08:52Z",
+      "files": [
+        "packages/web/src/reader-directions/capture-fonts.ts",
+        "packages/web/src/reader/components/article-body.test.tsx",
+        "packages/web/src/reader/components/article-body.tsx"
+      ]
+    },
+    {
+      "number": 114,
+      "title": "feat(reader-lab): weighted and italic local fallback faces for every direction font (blog-0044.63)",
+      "body": "## Summary\n\nShared Reader Lab contract fix (Bead blog-0044.63). Direction web fonts use `font-display: optional`, so a cold first view often keeps the local fallback for the whole page view. The contract emitted one regular `local()` fallback face per family. Bold therefore painted as regular, because Chromium synthesises bold only at 600 or above, and italics were lost where a direction turned synthesis off.\n\n- **Fallback faces:** for each family, the contract now emits regular, bold, italic and bold-italic local faces, but only for the weights and styles that family's web faces declare. Each face:\n  - lists its full name, PostScript name and Liberation equivalent;\n  - keeps the metric overrides;\n  - belongs to the single fallback family.\n- **Weight 500:** where a family uses 500 as its emphasis weight, 500 maps to the bold face (Quiet Monograph, and the Swiss, Cinematic and Expressive mono families). Elsewhere it stays regular.\n- **Missing faces:** where a host has none of the faces, the browser falls through to the generic family, as before.\n- **Tests:**\n  - Pinned font CSS is updated in every direction, and each direction's `fonts.test.ts` checks its local faces.\n  - The README documents the faces, the weight boundary and the names.\n  - The new shared browser test `tests/e2e/reader-lab-cold-fonts.spec.ts` blocks each direction's web fonts and checks with CDP that `strong` and `em` paint a bold and an italic face. On hosts without the local faces it compares screenshots instead.\n- **Budgets (operator decision, 2026-10-20):** the faces add about 1.2 KB of font CSS per direction.\n  - Expressive Colour inline CSS: 24 KB → 25,500 B (measured 25,221).\n  - Literary Long-read generated CSS: 22,000 → 23,500 B (measured 23,214).\n  - Both specs are amended. The other three directions stay within their budgets.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`, `test:capability unit`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 105 files, 1,161 tests passed.\n- `pnpm test:browser`: 62/62, including the cold-font test on desktop and mobile.\n- Direction suites: Quiet Monograph 27/27, Literary Long-read 29/29, Swiss Index 46/46, Cinematic Feature 33/33, Expressive Colour 38/38.\n\n## Review\n\nImplemented by the Claude worker in two rounds. Round 1 stopped at the budget gate, as briefed, for the operator's decision. The Codex cross-vendor review passed. It confirmed:\n- the weight-500 boundary;\n- face selection and name order;\n- determinism, the pinned hashes and the budget amendments;\n- the browser test.\n\nIts one low finding was that a fallback family named like an `Object.prototype` key crashed generation. The coordinator fixed it in 476ea9a with an own-key guard and a regression test, and a narrow re-review passed it.\n\nStill to do: check cold-view captures on a Windows or macOS host, where Arial and Times New Roman are installed. Linux CI checks the Liberation equivalents.\n",
+      "merge": "8e76f875a851e2ca92e0c7563adae87c1c8b7404",
+      "mergedAt": "2026-10-20T18:29:04Z",
+      "files": [
+        "docs/design/reader-bakeoff/expressive-colour.md",
+        "docs/design/reader-bakeoff/literary-longread.md",
+        "packages/web/src/reader-directions/README.md",
+        "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+        "packages/web/src/reader-directions/cinematic-feature/static-font-regression.test.ts",
+        "packages/web/src/reader-directions/contract.test.ts",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader-directions/expressive-colour/fonts.test.ts",
+        "packages/web/src/reader-directions/expressive-colour/list-pages.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/b1.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/fonts.test.ts",
+        "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts",
+        "packages/web/src/reader-directions/swiss-index/fonts.test.ts",
+        "tests/e2e/reader-lab-cold-fonts.spec.ts"
+      ]
+    }
+  ]
+}

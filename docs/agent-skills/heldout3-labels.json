@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "method": "Eight real merged PRs selected from the 39 coordinator-exported unused candidates. Expected labels were assigned from local first-parent diffs and canonical trigger contracts at 45817eb before running predictions. The labeller is the implementation worker, independently of router output, not an independent second reviewer. Prospective prediction on retrospective changes; purposive, not random or population-representative.",
+  "labelPolicy": "Changed behavior determines scope. Routine tests inherit the domain; new test strategy, systematic contract matrices, capture gates and operational recovery coverage additionally select quality. Routine PR verification prose is not release-witness work. Skill maintenance selects cross-agent-skill-platform, not the domain described by the new skill. Direction styling and client presentation questions alone do not establish product discovery, stack research or Gas City coordination.",
+  "cases": [
+    {
+      "number": 75,
+      "selectionReason": "Previously absent owner UX scope: actionable upload validation, with an actual persistence correction.",
+      "expected": [
+        { "skill": "content-platform-backend", "rationale": "owner/contracts.ts transforms focalX/Y into the media service focalPoint shape, and persistence round trips assert the stored coordinates. This repairs the boundary between upload data and storage." },
+        { "skill": "owner-publishing-ux", "rationale": "The upload route now returns an owner-facing HTTP 422 error with the actionable focal-point range message; missing values keep their explicit centre default while blank and invalid values are refused. This changes media validation and error recovery even though no picker UI is added." }
+      ]
+    },
+    {
+      "number": 76,
+      "selectionReason": "Probe the missing coordinator scope without equating a Gas City mention with coordination work.",
+      "expected": [
+        { "skill": "cross-agent-skill-platform", "rationale": "lib.mjs changes discovery of unregistered skill entries to consult git ignore rules, with platform tests for tracked and untracked cases. No Beads state, dispatch plan, worker lifecycle or acceptance policy changes." }
+      ]
+    },
+    {
+      "number": 79,
+      "selectionReason": "Operational recovery and backend consistency; database-version and host-check prose do not create a stack or release decision.",
+      "expected": [
+        { "skill": "content-platform-backend", "rationale": "ExclusivePostgresSession bounds idle lock ownership with remaining-budget idle_session_timeout, destroys sessions on configuration refusal and preserves the first server error." },
+        { "skill": "quality-reliability-observability", "rationale": "Adds a real PostgreSQL suspended-holder recovery scenario that proves a competing seed succeeds before the original callback resumes, plus a refusal and resumption matrix and owner-pool isolation assertions." }
+      ]
+    },
+    {
+      "number": 82,
+      "selectionReason": "Probe release-witness and SEO mentions in skill authoring without falsely treating authored guidance as an executed domain review.",
+      "expected": [
+        { "skill": "cross-agent-skill-platform", "rationale": "Registers, links, documents and tests the release-witness and SEO skills. Every changed path is a skill source, catalog/map or skill test/fixture. It neither changes release gates nor reconciles evidence for a specific product release." }
+      ]
+    },
+    {
+      "number": 88,
+      "selectionReason": "Inspect a design document for discovery, research and coordination evidence; separate presentation requirements and test planning from those absent scopes.",
+      "expected": [
+        { "skill": "reader-frontend", "rationale": "The new Quiet Monograph spec defines typography, layout, full-image presentation, responsive pages, themes, interaction and accessibility. Existing block types receive visual treatments; no new document contract is proposed." },
+        { "skill": "quality-reliability-observability", "rationale": "Sections 9 and 10 specify automated and manual accessibility checks, measurements and proposed performance budgets, and section 11 maps those checks into build batches. These are planned tests, not claimed release execution." }
+      ]
+    },
+    {
+      "number": 90,
+      "selectionReason": "New owner preview workflow offers another genuine previously absent owner-UX positive, with frame rendering and an authorization boundary.",
+      "expected": [
+        { "skill": "owner-publishing-ux", "rationale": "The owner compare page adds published-page selection, mobile/desktop preview controls, explanations of preview versus public state, accessible labels, and unavailable/invalid/missing-page recovery messages." },
+        { "skill": "reader-frontend", "rationale": "CompareFrames renders the existing reader directions in isolated responsive preview viewports, synchronizes shared theme styles and preserves local skip-link focus and direction font isolation." },
+        { "skill": "security-identity-privacy", "rationale": "The new page checks the owner before reads, the handoff checks origin and session before data/cookie operations, paths are constrained to published routes and the srcdoc frame is scriptless with a restricted sandbox." }
+      ]
+    },
+    {
+      "number": 100,
+      "selectionReason": "Small mixed renderer and capture-gate change provides contrast with broad presentation PRs.",
+      "expected": [
+        { "skill": "editorial-blocks", "rationale": "ArticleBody maps every numbered-list numbering value to its matching inline marker while preserving start/type; this changes the shared projection of the structured list block." },
+        { "skill": "reader-frontend", "rationale": "Inline list-style-type restores visible case-sensitive list markers despite the CSS reset and HTML selector matching behavior." },
+        { "skill": "quality-reliability-observability", "rationale": "prepareFontCapture reloads recreated FontFace objects before asserting readiness, repairing the screenshot font gate while retaining missing-face and painted-face checks." }
+      ]
+    },
+    {
+      "number": 114,
+      "selectionReason": "Shared direction contract plus new browser measurement strategy, without converting budget or verification prose into release coverage.",
+      "expected": [
+        { "skill": "editorial-blocks", "rationale": "The shared direction contract generator changes its font projection to emit regular, bold, italic and bold-italic fallback faces according to declared web sources, including the weight-500 boundary." },
+        { "skill": "reader-frontend", "rationale": "Generated fallback CSS preserves typographic emphasis during cold reader views and retains metric overrides; direction CSS budgets and documentation are updated." },
+        { "skill": "quality-reliability-observability", "rationale": "A new shared Playwright spec blocks web fonts, inspects actually painted faces through CDP and uses a screenshot comparison for unavailable local faces; direction tests pin CSS and fallback combinations." }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-30T15:43:32Z",
+  "labelsBeforeRouting": true,
+  "routersRun": false,
+  "sourceHead": "45817eb8fd027c7db3dd1fa88cf900b31153ac3a",
+  "independentReviewer": false,
+  "labelMethod": "Labels assigned from diffs and trigger contracts by the worker before any heldout3 prediction, independently of router output; no separate blind label reviewer.",
+  "sha256": {
+    "docs/agent-skills/forward-inputs.json": "cfeb91af4dddce7e2e4bd2fc54e8e1b59c66216ada3351e753bd0f1c4eacd242",
+    "docs/agent-skills/forward-labels.json": "82df2b9bfbdee256fb889ca3f92e26ec06b882a25edf533dd4e39e99403c4959",
+    "docs/agent-skills/heldout-inputs.json": "0300281637677da4d83712744c73961a6e7a68b6cb0bfa07d7c882c5f4c19b61",
+    "docs/agent-skills/heldout-labels.json": "c9cb67dc1cb648e03ba780d9f6ff7c1af4e6f5686d2eff21a7534a31db99bbae",
+    "docs/agent-skills/heldout2-inputs.json": "17fe79fee3a7d5ae1277a6bbfe463a19e016b6b3c6a2ae94de573a84a3cdfc9d",
+    "docs/agent-skills/heldout2-labels.json": "301e0ee3823ae2bd4222eff69e338f94e1ff5da02eb2fee86b9816aaae710e73",
+    "docs/agent-skills/heldout3-inputs.json": "b5ac5c589539308fd013ce4e20be10321ac7279145899ac20535b25222339485",
+    "docs/agent-skills/heldout3-labels.json": "e4099e49979690afca17fdac68e651513be2a802dee2ab3c4b913bce258247d4",
+    "docs/agent-skills/heldout3-selection.json": "1f200aae5366ec145e6db7bb2cf2d43794b73ac093d0b0a0e19f25292fa21cdb",
+    "docs/agent-skills/heldout3-diff-evidence.json": "fe9ecd86ac7614afe9438e6e708e5949c83e6724913a80cc4d5ef4abf1efebe4",
+    "docs/agent-skills/routing-v4-router.mjs": "7bc0f4ea160032c0e27dd7f75c829e95f1b691208733f18271475cc2cfa19a92",
+    "docs/agent-skills/routing-v4-map.yaml": "def3bfe42646046a9878a3a772fdf08fe888c64cf3e6696bd7a7ff6fea753e88",
+    "docs/agent-skills/routing-v4-catalog.yaml": "a89a846b770a2c3c1d3939360b17b836f9f575cb8b2e3b0c7d86b55f184ad4f6",
+    "docs/agent-skills/routing-v4-freeze.json": "584dacd26521139ed462f2779831a69637d06eea7b40e06cff100351680ef2ff",
+    "docs/agent-skills/advice-v2-review.json": "7b72c7cb89a9c1e4f3a026614254271dbc51b8229facad783a4e9f34ba1e8e67",
+    "docs/agent-skills/forward-blind-review.json": "ff8ea11377d76959b1590f68b06426c9ca95c6c89a17960bff9bdead5fa11be8"
+  },
+  "labelContractSha256": {
+    ".claude/skills/cross-agent-skill-platform/SKILL.md": "a6674802c670091a2073f963626e7e37522a628280a8cfd3b2324249e28bf49d",
+    ".claude/skills/magazine-product-discovery/SKILL.md": "25f56576d46df269bb40a3111217786116e538d45e82dc2f90ded6b84656cb79",
+    ".claude/skills/stack-research-adr/SKILL.md": "0c2d34b3d3af0f08b73d27083c5ac4d8d1aa1a5aeaa43ecc93bbdf861e92f2b8",
+    ".claude/skills/owner-publishing-ux/SKILL.md": "c4232868906b0ef3a7c3895300be4220ebc4b14fb77a8d0b8704439abfdbec2f",
+    ".claude/skills/gas-city-coordinator/SKILL.md": "be5f401349b7a94a64b9fe41b63aeed6dcda28aabfc1a37ab0d9200f6aea70de",
+    ".claude/skills/content-platform-backend/SKILL.md": "69962ee5f01cb3aaa7b9be36baf5a65d18a7bcb885290431b8d5e7acc36462be",
+    ".claude/skills/security-identity-privacy/SKILL.md": "e274818017b20f60bdec2b5448b8259c406cd1ee7417150024a045f3acb548a3",
+    ".claude/skills/reader-frontend/SKILL.md": "2671eb13977d7b077c9d2544ff42b02926207c553f51a5149a0b5c3cff87c86e",
+    ".claude/skills/editorial-blocks/SKILL.md": "78ddf18f710a6eca4b763e424f8faf6a80869c8bb0e778a735919775e19057f4",
+    ".claude/skills/seo-distribution/SKILL.md": "4eefc7a9433b3780231dee8aebafcfdab5cb0daff233e746fe0bd3a78764d73f",
+    ".claude/skills/release-witness/SKILL.md": "1a757a811f93aae6c7b323646c532b9ba64306141bd81bd2c63d3bbadb8c9c25",
+    ".claude/skills/quality-reliability-observability/SKILL.md": "9ba0248b3bb94413c1747acb368ccde192fbfe1f1d8e9e2803a0c38b33911a74"
+  },
+  "liveAtFreezeSha256": {
+    "scripts/agent-skills/routing.mjs": "7bc0f4ea160032c0e27dd7f75c829e95f1b691208733f18271475cc2cfa19a92",
+    "config/agent-skills/review-map.yaml": "def3bfe42646046a9878a3a772fdf08fe888c64cf3e6696bd7a7ff6fea753e88",
+    "config/agent-skills/catalog.yaml": "a89a846b770a2c3c1d3939360b17b836f9f575cb8b2e3b0c7d86b55f184ad4f6"
+  }
+}

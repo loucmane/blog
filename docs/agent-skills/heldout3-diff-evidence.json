@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "method": "Read local first-parent diffs with git --no-optional-locks diff MERGE^1 MERGE; inspect implementation, tests, design sections and changed-path inventories against current trigger contracts. Merge hashes permit replay without trusting PR prose alone.",
+  "cases": [
+    {
+      "number": 75,
+      "merge": "5e75f608d1ce103ea35ed0cf61e0bcc19e0b31df",
+      "command": "git --no-optional-locks diff 5e75f608d1ce103ea35ed0cf61e0bcc19e0b31df^1 5e75f608d1ce103ea35ed0cf61e0bcc19e0b31df",
+      "changedPaths": [
+        "packages/web/src/app/api/owner/media/route.ts",
+        "packages/web/src/server/database/postgres.integration.test.ts",
+        "packages/web/src/server/owner/contracts.ts",
+        "packages/web/src/server/owner/owner-foundation.test.ts",
+        "packages/web/tests/reader/media-variant-routes.test.ts"
+      ],
+      "findings": [
+        "owner/contracts.ts transforms focalX/Y into the media service focalPoint shape, and persistence round trips assert the stored coordinates. This repairs the boundary between upload data and storage.",
+        "The upload route now returns an owner-facing HTTP 422 error with the actionable focal-point range message; missing values keep their explicit centre default while blank and invalid values are refused. This changes media validation and error recovery even though no picker UI is added."
+      ]
+    },
+    {
+      "number": 76,
+      "merge": "554c23cf7346f59bf032a1ccc4fb683338c16289",
+      "command": "git --no-optional-locks diff 554c23cf7346f59bf032a1ccc4fb683338c16289^1 554c23cf7346f59bf032a1ccc4fb683338c16289",
+      "changedPaths": [
+        "scripts/agent-skills/lib.mjs",
+        "tests/agent-skills/platform.test.mjs"
+      ],
+      "findings": [
+        "lib.mjs changes discovery of unregistered skill entries to consult git ignore rules, with platform tests for tracked and untracked cases. No Beads state, dispatch plan, worker lifecycle or acceptance policy changes."
+      ]
+    },
+    {
+      "number": 79,
+      "merge": "efd9166e3e73c485991df47c5ca02693f4d3246e",
+      "command": "git --no-optional-locks diff efd9166e3e73c485991df47c5ca02693f4d3246e^1 efd9166e3e73c485991df47c5ca02693f4d3246e",
+      "changedPaths": [
+        "packages/web/src/server/database/exclusive-postgres-session.test.ts",
+        "packages/web/src/server/database/exclusive-postgres-session.ts",
+        "packages/web/src/server/database/lab-seed-concurrency-integration.ts",
+        "packages/web/src/server/database/lab-seed-database-integration.ts"
+      ],
+      "findings": [
+        "ExclusivePostgresSession bounds idle lock ownership with remaining-budget idle_session_timeout, destroys sessions on configuration refusal and preserves the first server error.",
+        "Adds a real PostgreSQL suspended-holder recovery scenario that proves a competing seed succeeds before the original callback resumes, plus a refusal and resumption matrix and owner-pool isolation assertions."
+      ]
+    },
+    {
+      "number": 82,
+      "merge": "501caab2035c1eaca4e4df31e45111fcbdc5f9ed",
+      "command": "git --no-optional-locks diff 501caab2035c1eaca4e4df31e45111fcbdc5f9ed^1 501caab2035c1eaca4e4df31e45111fcbdc5f9ed",
+      "changedPaths": [
+        ".agents/skills/release-witness",
+        ".agents/skills/seo-distribution",
+        ".claude/skills/release-witness/SKILL.md",
+        ".claude/skills/release-witness/agents/openai.yaml",
+        ".claude/skills/release-witness/references/code-map.md",
+        ".claude/skills/release-witness/references/output-contract.md",
+        ".claude/skills/seo-distribution/SKILL.md",
+        ".claude/skills/seo-distribution/agents/openai.yaml",
+        ".claude/skills/seo-distribution/references/code-map.md",
+        ".claude/skills/seo-distribution/references/output-contract.md",
+        "config/agent-skills/catalog.yaml",
+        "config/agent-skills/review-map.yaml",
+        "tests/agent-skills/fixtures/content-platform-backend.json",
+        "tests/agent-skills/fixtures/reader-frontend.json",
+        "tests/agent-skills/fixtures/release-witness.json",
+        "tests/agent-skills/fixtures/security-identity-privacy.json",
+        "tests/agent-skills/fixtures/seo-distribution.json",
+        "tests/agent-skills/frontend-editorial-contract.mjs",
+        "tests/agent-skills/platform.test.mjs",
+        "tests/agent-skills/release-witness.test.mjs",
+        "tests/agent-skills/seo-distribution.test.mjs"
+      ],
+      "findings": [
+        "Registers, links, documents and tests the release-witness and SEO skills. Every changed path is a skill source, catalog/map or skill test/fixture. It neither changes release gates nor reconciles evidence for a specific product release."
+      ]
+    },
+    {
+      "number": 88,
+      "merge": "e897f92b393ef70dab240c9b29fd482069523275",
+      "command": "git --no-optional-locks diff e897f92b393ef70dab240c9b29fd482069523275^1 e897f92b393ef70dab240c9b29fd482069523275",
+      "changedPaths": [
+        "docs/design/reader-bakeoff/quiet-monograph.md"
+      ],
+      "findings": [
+        "The new Quiet Monograph spec defines typography, layout, full-image presentation, responsive pages, themes, interaction and accessibility. Existing block types receive visual treatments; no new document contract is proposed.",
+        "Sections 9 and 10 specify automated and manual accessibility checks, measurements and proposed performance budgets, and section 11 maps those checks into build batches. These are planned tests, not claimed release execution."
+      ]
+    },
+    {
+      "number": 90,
+      "merge": "511125a9010af464bd009bc2aa38ef9a0b445b09",
+      "command": "git --no-optional-locks diff 511125a9010af464bd009bc2aa38ef9a0b445b09^1 511125a9010af464bd009bc2aa38ef9a0b445b09",
+      "changedPaths": [
+        "packages/web/src/app/owner/(workspace)/reader-lab/compare/page.tsx",
+        "packages/web/src/reader-lab/compare-actions.ts",
+        "packages/web/src/reader-lab/compare-data.ts",
+        "packages/web/src/reader-lab/compare-frames.test.tsx",
+        "packages/web/src/reader-lab/compare-frames.tsx",
+        "packages/web/src/reader-lab/compare-view.tsx",
+        "packages/web/src/reader-lab/compare.test.tsx"
+      ],
+      "findings": [
+        "The owner compare page adds published-page selection, mobile/desktop preview controls, explanations of preview versus public state, accessible labels, and unavailable/invalid/missing-page recovery messages.",
+        "CompareFrames renders the existing reader directions in isolated responsive preview viewports, synchronizes shared theme styles and preserves local skip-link focus and direction font isolation.",
+        "The new page checks the owner before reads, the handoff checks origin and session before data/cookie operations, paths are constrained to published routes and the srcdoc frame is scriptless with a restricted sandbox."
+      ]
+    },
+    {
+      "number": 100,
+      "merge": "8c67b24e71f8c537e1c26e08a29a10d133a815b4",
+      "command": "git --no-optional-locks diff 8c67b24e71f8c537e1c26e08a29a10d133a815b4^1 8c67b24e71f8c537e1c26e08a29a10d133a815b4",
+      "changedPaths": [
+        "packages/web/src/reader-directions/capture-fonts.ts",
+        "packages/web/src/reader/components/article-body.test.tsx",
+        "packages/web/src/reader/components/article-body.tsx"
+      ],
+      "findings": [
+        "ArticleBody maps every numbered-list numbering value to its matching inline marker while preserving start/type; this changes the shared projection of the structured list block.",
+        "Inline list-style-type restores visible case-sensitive list markers despite the CSS reset and HTML selector matching behavior.",
+        "prepareFontCapture reloads recreated FontFace objects before asserting readiness, repairing the screenshot font gate while retaining missing-face and painted-face checks."
+      ]
+    },
+    {
+      "number": 114,
+      "merge": "8e76f875a851e2ca92e0c7563adae87c1c8b7404",
+      "command": "git --no-optional-locks diff 8e76f875a851e2ca92e0c7563adae87c1c8b7404^1 8e76f875a851e2ca92e0c7563adae87c1c8b7404",
+      "changedPaths": [
+        "docs/design/reader-bakeoff/expressive-colour.md",
+        "docs/design/reader-bakeoff/literary-longread.md",
+        "packages/web/src/reader-directions/README.md",
+        "packages/web/src/reader-directions/cinematic-feature/fonts.test.ts",
+        "packages/web/src/reader-directions/cinematic-feature/static-font-regression.test.ts",
+        "packages/web/src/reader-directions/contract.test.ts",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader-directions/expressive-colour/fonts.test.ts",
+        "packages/web/src/reader-directions/expressive-colour/list-pages.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/b1.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/fonts.test.ts",
+        "packages/web/src/reader-directions/quiet-monograph/fonts.test.ts",
+        "packages/web/src/reader-directions/swiss-index/fonts.test.ts",
+        "tests/e2e/reader-lab-cold-fonts.spec.ts"
+      ],
+      "findings": [
+        "The shared direction contract generator changes its font projection to emit regular, bold, italic and bold-italic fallback faces according to declared web sources, including the weight-500 boundary.",
+        "Generated fallback CSS preserves typographic emphasis during cold reader views and retains metric overrides; direction CSS budgets and documentation are updated.",
+        "A new shared Playwright spec blocks web fonts, inspects actually painted faces through CDP and uses a screenshot comparison for unavailable local faces; direction tests pin CSS and fallback combinations."
+      ]
+    }
+  ]
+}

@@ -45,7 +45,7 @@
         "docs/agent-skills/forward-blind-review.json",
         "docs/agent-skills/forward-results.json"
       ],
-      "detail": "10 recorded per-skill envelopes pass validation and in-memory Beads/worklog ingestion planning through buildBeadsIngestPlan. 5 forward containers are evaluation/provenance records, not ingestible per-skill envelopes; embedded blind advice passes the evaluation contract. The dry run used a synthetic bead ID; no Gas City call or evidence write was made. Skills without a persisted envelope: cross-agent-skill-platform, gas-city-coordinator.",
+      "detail": "12 recorded per-skill envelopes pass validation and in-memory Beads/worklog ingestion planning through buildBeadsIngestPlan. 5 forward containers are evaluation/provenance records, not ingestible per-skill envelopes; embedded blind advice passes the evaluation contract. The dry run used a synthetic bead ID; no Gas City call or evidence write was made. Skills without a persisted envelope: none.",
       "gaps": [
         "gap-unusable-advice",
         "gap-capability-coverage",
@@ -348,10 +348,12 @@
     }
   ],
   "reviewOutputs": {
-    "accepted": 10,
+    "accepted": 12,
     "sources": [
       "tests/agent-skills/fixtures/content-platform-backend.json#reviewResult",
+      "tests/agent-skills/fixtures/cross-agent-skill-platform.json#reviewResult",
       "tests/agent-skills/fixtures/editorial-blocks.json#reviewResult",
+      "tests/agent-skills/fixtures/gas-city-coordinator.json#reviewResult",
       "tests/agent-skills/fixtures/magazine-product-discovery.json#reviewResult",
       "tests/agent-skills/fixtures/owner-publishing-ux.json#reviewResult",
       "tests/agent-skills/fixtures/quality-reliability-observability.json#reviewResult",
@@ -368,10 +370,7 @@
       "docs/agent-skills/forward-labels.json",
       "docs/agent-skills/forward-results.json"
     ],
-    "skillsWithoutRecordedEnvelope": [
-      "cross-agent-skill-platform",
-      "gas-city-coordinator"
-    ]
+    "skillsWithoutRecordedEnvelope": []
   },
   "dogfood": {
     "cases": 5,
