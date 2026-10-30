@@ -37,7 +37,11 @@ export function scoreRoutingEvaluation({ inputs, labels, predictions, skillIds }
   return scoreDecisions({ inputs, labels, evidence: predictions, skillIds, assessAdvice: false })
 }
 
-export function compareRoutingScores(before, after) {
+export function compareRoutingScores(
+  before,
+  after,
+  { baselineVersion = 'v2', candidateVersion = 'v3' } = {},
+) {
   const b = before.metrics,
     a = after.metrics
   requireThat(
@@ -58,15 +62,97 @@ export function compareRoutingScores(before, after) {
       decisions: a.decisions,
       expectedPositives: a.truePositives + a.falseNegatives,
       expectedNegatives: a.falsePositives + a.trueNegatives,
-      selectedV2: b.truePositives + b.falsePositives,
-      selectedV3: a.truePositives + a.falsePositives,
+      [`selected${baselineVersion.toUpperCase()}`]: b.truePositives + b.falsePositives,
+      [`selected${candidateVersion.toUpperCase()}`]: a.truePositives + a.falsePositives,
     },
     acceptance: {
       rule: 'Accept only if held-out recall and precision do not drop; undefined rates do not pass.',
       accepted,
-      disposition: accepted ? 'keep revision' : 'revert live routes to v2; retain this report',
+      disposition: accepted
+        ? 'keep revision'
+        : `revert live routes to ${baselineVersion}; retain this report`,
     },
   }
+}
+
+export function renderRoutingV4Report(result) {
+  const { v3, v4, denominators: d, acceptance } = result.heldout2
+  const b = v3.metrics,
+    a = v4.metrics
+  const pct = (value) => (value === null ? 'undefined' : `${(value * 100).toFixed(1)}%`)
+  const names = (values) => (values.length ? values.join(', ') : 'none')
+  const caseTable = (score) => [
+    '| PR | Expected | Selected v4 | False positives | False negatives |',
+    '| --- | --- | --- | --- | --- |',
+    ...score.cases.map(
+      (row) =>
+        `| #${row.number} | ${names(row.expected)} | ${names(row.selected)} | ${names(row.falsePositives)} | ${names(row.falseNegatives)} |`,
+    ),
+  ]
+  return [
+    '# Routing v4: task intent and contextual noise',
+    '',
+    `**${acceptance.accepted ? 'Accepted' : 'Rejected'} by the predeclared heldout2 bar: ${acceptance.disposition}.** ${acceptance.rule}`,
+    '',
+    'The router extracts affirmative clauses from task prose. It ignores verification/review/history sections, fences, quotes and comments; scopes exclusions to one clause; and requires owner context for generic owner-UX words such as revisions, validation and recovery. Dedicated path routing is unchanged. Shared-path context also uses the filtered affirmative clauses. Full lexical semantics and limitations are documented beside taskIntentUnits in the router snapshot.',
+    '',
+    `Heldout2 denominators: ${d.prs} PRs × ${d.skills} skills = ${d.decisions} binary decisions; ${d.expectedPositives} expected positives and ${d.expectedNegatives} expected negatives. Selected: v3 ${d.selectedV3}, v4 ${d.selectedV4}.`,
+    '',
+    '| Measurement | Frozen v3 | Candidate v4 | Change |',
+    '| --- | --- | --- | --- |',
+    ...[
+      'truePositives',
+      'falsePositives',
+      'falseNegatives',
+      'trueNegatives',
+      'exactMatches',
+      'missedRoutingCases',
+      'whollyMissedCases',
+    ].map((key) => `| ${key} | ${b[key]} | ${a[key]} | ${a[key] - b[key]} |`),
+    `| Precision TP/(TP+FP) | ${b.truePositives}/${d.selectedV3} (${pct(b.precision)}) | ${a.truePositives}/${d.selectedV4} (${pct(a.precision)}) | ${pct(a.precision - b.precision)} points |`,
+    `| Recall TP/(TP+FN) | ${b.truePositives}/${d.expectedPositives} (${pct(b.recall)}) | ${a.truePositives}/${d.expectedPositives} (${pct(a.recall)}) | ${pct(a.recall - b.recall)} points |`,
+    `| False-positive rate FP/(FP+TN) | ${b.falsePositives}/${d.expectedNegatives} (${pct(b.falsePositiveRate)}) | ${a.falsePositives}/${d.expectedNegatives} (${pct(a.falsePositiveRate)}) | |`,
+    `| False-negative rate FN/(TP+FN) | ${b.falseNegatives}/${d.expectedPositives} (${pct(b.falseNegativeRate)}) | ${a.falseNegatives}/${d.expectedPositives} (${pct(a.falseNegativeRate)}) | |`,
+    '',
+    '| PR | Selected v3 | Selected v4 | Removed | Added |',
+    '| --- | --- | --- | --- | --- |',
+    ...v4.cases.map((row) => {
+      const previous = v3.cases.find(({ number }) => row.number === number)
+      return `| #${row.number} | ${names(previous.selected)} | ${names(row.selected)} | ${names(previous.selected.filter((skill) => !row.selected.includes(skill)))} | ${names(row.selected.filter((skill) => !previous.selected.includes(skill)))} |`
+    }),
+    '',
+    ...caseTable(v4),
+    '',
+    ...['originalFive', 'previousHeldoutEight'].flatMap((key) => {
+      const score = result.previouslySeen[key],
+        m = score.metrics
+      return [
+        `## ${key === 'originalFive' ? 'Original five PRs' : 'Previous held-out eight PRs'} — previously seen, reference only`,
+        '',
+        `These cases do not decide acceptance. Across ${m.cases} PRs and ${m.decisions} decisions: ${m.truePositives} TP, ${m.falsePositives} FP, ${m.falseNegatives} FN, ${m.trueNegatives} TN. Precision ${m.truePositives}/${m.truePositives + m.falsePositives} (${pct(m.precision)}); recall ${m.truePositives}/${m.truePositives + m.falseNegatives} (${pct(m.recall)}). Labels are unchanged.`,
+        '',
+        ...caseTable(score),
+        '',
+      ]
+    }),
+    '## Method, evidence and limits',
+    '',
+    'Eight real merged PRs were chosen from 47 coordinator-exported unused candidates to span different skill combinations. All carry verification prose; several reference earlier work. Labels were assigned from local merged diffs and catalog trigger contracts before either prediction, then frozen. The same worker labelled and implemented: labels were visible during revision. This is not an independent blind review, a random sample, or a population accuracy estimate. No advice-usefulness assessment was performed.',
+    '',
+    `Label freeze: ${result.provenance.labelsFrozenAt}. Candidate freeze: ${result.provenance.candidateFrozenAt}. Both routers ran once for the initial heldout2 measurement. Later --check calls replay the sealed inputs and candidate without retuning or relabelling.`,
+    '',
+    `${a.falsePositives} false positives and ${a.falseNegatives} false negatives remain on heldout2. Per-skill counts and every match reason are in the JSON. Broad path matches remain possible false positives; text matching does not parse diffs or understand arbitrary grammar. It can miss intent expressed only in ignored sections, indirect context, or unfamiliar wording. Clause-local exclusions deliberately retain independently stated domains. Passing this bar does not prove perfect routing or generalization. All routes remain advisory and non-blocking.`,
+    '',
+    'The [labels](heldout2-labels.json), [inputs](heldout2-inputs.json) and [label freeze](heldout2-freeze.json) precede the [candidate freeze](routing-v4-freeze.json), which pins the router, map and catalog snapshots. The [results](routing-v4-results.json) contain both predictions, denominators and reference samples. Evaluator/scorer/fixture digests record build provenance; snapshot and sample hashes govern replay. Freeze flags describe the time of sealing, not current execution state.',
+    '',
+    'All v1/v2/v3 artifacts retain their original bytes. Historical v3 report wording about checking the live disposition describes its original publication; its replay now verifies frozen snapshots only, as v1/v2 do. v4 --check verifies its recorded results and the current keep/revert disposition.',
+    '',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --check` replays v1.',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --routing-v2 --check` replays v2.',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --routing-v3 --check` replays v3.',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --routing-v4 --check` replays v4 and verifies live disposition.',
+    '',
+  ].join('\n')
 }
 
 export function renderRoutingV3Report(result) {

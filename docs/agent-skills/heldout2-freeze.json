@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-30T14:27:40.962706+00:00",
+  "labelsBeforeRouting": true,
+  "routersRun": false,
+  "acceptanceRule": "heldout2 precision and recall must both be defined and not drop versus frozen v3; otherwise revert live router/map and retain candidate report",
+  "sha256": {
+    "docs/agent-skills/heldout2-inputs.json": "17fe79fee3a7d5ae1277a6bbfe463a19e016b6b3c6a2ae94de573a84a3cdfc9d",
+    "docs/agent-skills/heldout2-labels.json": "301e0ee3823ae2bd4222eff69e338f94e1ff5da02eb2fee86b9816aaae710e73",
+    "docs/agent-skills/routing-v3-freeze.json": "b2e21510260ac62c91cfd0bf6d15a777575a329a53562bfef75388480b378533",
+    "config/agent-skills/catalog.yaml": "a89a846b770a2c3c1d3939360b17b836f9f575cb8b2e3b0c7d86b55f184ad4f6"
+  }
+}

@@ -10,14 +10,18 @@ import {
   renderRoutingRevisionReport,
   compareRoutingScores,
   renderRoutingV3Report,
+  renderRoutingV4Report,
 } from '../../scripts/agent-skills/evaluation.mjs'
 import {
   evaluateForward,
   evaluateRoutingV2,
   evaluateRoutingV3,
   verifyHeldoutFreeze,
-  verifyV3Disposition,
   routingV3Paths,
+  routingV4Paths,
+  evaluateRoutingV4,
+  verifyHeldout2Freeze,
+  verifyV4Disposition,
 } from '../../scripts/agent-skills/evaluate-forward.mjs'
 
 const sample = () => ({
@@ -247,7 +251,7 @@ function heldoutFixture(t) {
       .filter(
         (entry) =>
           ['baseline-v1', 'baseline-v2'].includes(entry.name) ||
-          (entry.isFile() && /^(forward-|heldout-|routing-v[23]-)/.test(entry.name)),
+          (entry.isFile() && /^(forward-|heldout2?-|routing-v[234]-)/.test(entry.name)),
       )
       .map(({ name }) => `docs/agent-skills/${name}`),
     'config/agent-skills',
@@ -284,7 +288,7 @@ test('held-out freeze rejects changed labels, inputs, missing digests and baseli
   assert.throws(() => verifyHeldoutFreeze({ root }), /v2 snapshot changed/)
 })
 
-test('v3 replays the sealed comparison and checks the live keep or revert disposition', () => {
+test('v3 replays the sealed comparison from snapshots alone', () => {
   const result = evaluateRoutingV3()
   const read = (name) =>
     fs.readFileSync(new URL(`../../docs/agent-skills/${name}`, import.meta.url), 'utf8')
@@ -297,7 +301,6 @@ test('v3 replays the sealed comparison and checks the live keep or revert dispos
   assert.equal(result.provenance.labelsChanged, false)
   assert.equal(Object.hasOwn(result.heldout.v3.metrics, 'assessedAdvice'), false)
   assert.match(renderRoutingV3Report(result), /not an independent blind review/)
-  verifyV3Disposition(result)
 })
 
 test('v3 rejects candidate drift, missing digests and a rewritten loaded-router identity', (t) => {
@@ -324,23 +327,132 @@ test('v3 rejects candidate drift, missing digests and a rewritten loaded-router 
   assert.throws(() => evaluateRoutingV3({ root }), /loaded snapshot module/)
 })
 
-test('v3 disposition refuses unreviewed live routes and supports replay after rejection', (t) => {
+test('v3 replay ignores changes to live routes, evaluator and fixtures', (t) => {
   const root = heldoutFixture(t)
-  const result = { heldout: { acceptance: { accepted: true } } }
-  for (const name of ['scripts/agent-skills/routing.mjs', 'config/agent-skills/review-map.yaml']) {
-    fs.copyFileSync(new URL(routingV3Paths[name], root), new URL(name, root))
+  const result = evaluateRoutingV3({ root })
+  for (const name of [
+    ...Object.keys(routingV3Paths),
+    'scripts/agent-skills/evaluate-forward.mjs',
+    'scripts/agent-skills/evaluation.mjs',
+    'tests/agent-skills/fixtures/routing.json',
+  ]) {
+    fs.writeFileSync(new URL(name, root), 'unrelated live revision\n')
   }
-  verifyV3Disposition(result, { root })
-  const name = 'config/agent-skills/review-map.yaml'
+  assert.deepEqual(evaluateRoutingV3({ root }), result)
+})
+
+test('v4 replays sealed predictions, reference samples, denominators and live disposition', () => {
+  const result = evaluateRoutingV4()
+  const read = (name) =>
+    fs.readFileSync(new URL(`../../docs/agent-skills/${name}`, import.meta.url), 'utf8')
+  assert.deepEqual(JSON.parse(read('routing-v4-results.json')), result)
+  assert.equal(read('routing-v4-report.md'), renderRoutingV4Report(result))
+  assert.deepEqual(result.heldout2.denominators, {
+    prs: 8,
+    skills: 12,
+    decisions: 96,
+    expectedPositives: 15,
+    expectedNegatives: 81,
+    selectedV3: 18,
+    selectedV4: 15,
+  })
+  assert.equal(result.heldout2.acceptance.accepted, true)
+  assert.equal(result.heldout2.v4.metrics.falsePositives, 2)
+  assert.equal(result.heldout2.v4.metrics.falseNegatives, 2)
+  assert.equal(result.previouslySeen.originalFive.metrics.cases, 5)
+  assert.equal(result.previouslySeen.previousHeldoutEight.metrics.cases, 8)
+  assert.equal(result.provenance.independentReviewer, false)
+  assert.equal(result.provenance.labelsChanged, false)
+  assert.equal(result.provenance.labelsVisibleDuringRevision, true)
+  assert.match(renderRoutingV4Report(result), /previously seen, reference only/)
+  for (const score of [
+    result.heldout2.v3,
+    result.heldout2.v4,
+    ...Object.values(result.previouslySeen),
+  ]) {
+    assert.equal(Object.hasOwn(score.metrics, 'assessedAdvice'), false)
+    for (const row of score.cases) {
+      assert.deepEqual([...new Set(row.matches.map(({ skill }) => skill))].sort(), row.selected)
+    }
+  }
+  verifyV4Disposition(result)
+})
+
+test('heldout2 freeze refuses modified inputs, missing hashes and overlap with either prior sample', (t) => {
+  const root = heldoutFixture(t)
+  const target = (name) => new URL(`docs/agent-skills/${name}`, root)
+  const read = (name) => JSON.parse(fs.readFileSync(target(name), 'utf8'))
+  const freeze = read('heldout2-freeze.json')
+  assert.equal(verifyHeldout2Freeze({ root }).labelsBeforeRouting, true)
+  for (const name of ['heldout2-inputs.json', 'heldout2-labels.json']) {
+    const bytes = fs.readFileSync(target(name))
+    fs.appendFileSync(target(name), '\n')
+    assert.throws(() => verifyHeldout2Freeze({ root }), /heldout2 input changed/)
+    fs.writeFileSync(target(name), bytes)
+  }
+  const missing = structuredClone(freeze)
+  delete missing.sha256['docs/agent-skills/heldout2-labels.json']
+  fs.writeFileSync(target('heldout2-freeze.json'), JSON.stringify(missing))
+  assert.throws(() => verifyHeldout2Freeze({ root }), /missing heldout2 digest/)
+  const inputs = read('heldout2-inputs.json')
+  for (const prefix of ['forward', 'heldout']) {
+    const changed = structuredClone(inputs)
+    changed.cases[0] = read(`${prefix}-inputs.json`).cases[0]
+    fs.writeFileSync(target('heldout2-inputs.json'), JSON.stringify(changed))
+    const rehashed = structuredClone(freeze)
+    rehashed.sha256['docs/agent-skills/heldout2-inputs.json'] = createHash('sha256')
+      .update(fs.readFileSync(target('heldout2-inputs.json')))
+      .digest('hex')
+    fs.writeFileSync(target('heldout2-freeze.json'), JSON.stringify(rehashed))
+    assert.throws(() => verifyHeldout2Freeze({ root }), /overlaps a previous sample/)
+  }
+})
+
+test('v4 rejects candidate drift, omitted pins, wrong freeze order and rewritten loaded code', (t) => {
+  const root = heldoutFixture(t)
+  for (const name of Object.values(routingV4Paths)) {
+    const target = new URL(name, root),
+      bytes = fs.readFileSync(target)
+    fs.appendFileSync(target, '\n')
+    assert.throws(() => evaluateRoutingV4({ root }), /v4 candidate changed|heldout2 input changed/)
+    fs.writeFileSync(target, bytes)
+  }
+  const target = new URL('docs/agent-skills/routing-v4-freeze.json', root)
+  const freeze = JSON.parse(fs.readFileSync(target, 'utf8'))
+  const name = routingV4Paths['scripts/agent-skills/routing.mjs']
+  const missing = structuredClone(freeze)
+  delete missing.sha256[name]
+  fs.writeFileSync(target, JSON.stringify(missing))
+  assert.throws(() => evaluateRoutingV4({ root }), /missing v4 digest/)
+  fs.writeFileSync(target, JSON.stringify({ ...freeze, frozenAt: '2020-01-01T00:00:00Z' }))
+  assert.throws(() => evaluateRoutingV4({ root }), /v4 freeze order/)
   fs.appendFileSync(new URL(name, root), '\n')
-  assert.throws(() => verifyV3Disposition(result, { root }), /live routes differ/)
-  result.heldout.acceptance.accepted = false
-  for (const [live, snapshot] of [
-    ['scripts/agent-skills/routing.mjs', 'routing.mjs'],
-    [name, 'review-map.yaml'],
-  ])
-    fs.copyFileSync(new URL(`docs/agent-skills/baseline-v2/${snapshot}`, root), new URL(live, root))
-  verifyV3Disposition(result, { root })
+  freeze.sha256[name] = createHash('sha256')
+    .update(fs.readFileSync(new URL(name, root)))
+    .digest('hex')
+  fs.writeFileSync(target, JSON.stringify(freeze))
+  assert.throws(() => evaluateRoutingV4({ root }), /loaded snapshot module/)
+})
+
+test('v4 snapshot replay is independent of live changes while disposition checks both outcomes', (t) => {
+  const root = heldoutFixture(t)
+  const result = evaluateRoutingV4({ root })
+  for (const name of Object.keys(routingV4Paths))
+    fs.writeFileSync(new URL(name, root), 'future live revision\n')
+  assert.deepEqual(evaluateRoutingV4({ root }), result)
+  assert.throws(() => verifyV4Disposition(result, { root }), /live routes differ/)
+  for (const accepted of [true, false]) {
+    for (const name of [
+      'scripts/agent-skills/routing.mjs',
+      'config/agent-skills/review-map.yaml',
+    ]) {
+      fs.copyFileSync(
+        new URL((accepted ? routingV4Paths : routingV3Paths)[name], root),
+        new URL(name, root),
+      )
+    }
+    verifyV4Disposition({ heldout2: { acceptance: { accepted } } }, { root })
+  }
 })
 
 test('v2 corrects only the two quality misses and preserves original scopes and labels', () => {

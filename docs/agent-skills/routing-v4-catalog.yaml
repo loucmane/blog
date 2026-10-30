@@ -1,0 +1,431 @@
+{
+  "schemaVersion": 1,
+  "canonicalRoot": ".claude/skills",
+  "codexRoot": ".agents/skills",
+  "reviewResultSchema": "schemas/agent-skills/review-result.schema.json",
+  "reportsRoot": "reports/agent-skills",
+  "policy": {
+    "subjectiveFindings": "advisory",
+    "deterministicFindings": "blocking-eligible",
+    "deterministicChecks": [
+      "agent-skills-schema",
+      "agent-skills-links",
+      "agent-skills-scripts",
+      "agent-skills-tests"
+    ],
+    "blockingEligibleCategories": [
+      "schema",
+      "link",
+      "script",
+      "test",
+      "build",
+      "typecheck",
+      "lint",
+      "security",
+      "accessibility",
+      "performance-budget",
+      "health",
+      "critical-browser"
+    ]
+  },
+  "skills": [
+    {
+      "id": "cross-agent-skill-platform",
+      "status": "active",
+      "entrypoint": ".claude/skills/cross-agent-skill-platform/SKILL.md",
+      "codexLink": ".agents/skills/cross-agent-skill-platform",
+      "provenance": {
+        "type": "project-authored",
+        "task": "49"
+      },
+      "capabilities": [
+        "skill-authoring",
+        "skill-link-validation",
+        "review-result-validation",
+        "beads-worklog-evidence-ingestion"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for skill-authoring, skill-link-validation; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for skill-authoring, skill-link-validation; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "magazine-product-discovery",
+      "status": "active",
+      "entrypoint": ".claude/skills/magazine-product-discovery/SKILL.md",
+      "codexLink": ".agents/skills/magazine-product-discovery",
+      "provenance": {
+        "type": "project-authored",
+        "task": "50"
+      },
+      "capabilities": [
+        "owner-discovery",
+        "reader-discovery",
+        "product-requirements",
+        "assumption-tracking",
+        "advisory-product-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for owner-discovery, reader-discovery; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for owner-discovery, reader-discovery; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "stack-research-adr",
+      "status": "active",
+      "entrypoint": ".claude/skills/stack-research-adr/SKILL.md",
+      "codexLink": ".agents/skills/stack-research-adr",
+      "provenance": {
+        "type": "project-authored",
+        "task": "51"
+      },
+      "capabilities": [
+        "primary-source-research",
+        "version-verification",
+        "architecture-decision-records",
+        "compatibility-risk",
+        "advisory-stack-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for primary-source-research, version-verification; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for primary-source-research, version-verification; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "owner-publishing-ux",
+      "status": "active",
+      "entrypoint": ".claude/skills/owner-publishing-ux/SKILL.md",
+      "codexLink": ".agents/skills/owner-publishing-ux",
+      "provenance": {
+        "type": "project-authored",
+        "task": "52"
+      },
+      "capabilities": [
+        "owner-publishing-journeys",
+        "authoring-recovery",
+        "publishing-lifecycle",
+        "media-accessibility",
+        "mobile-owner-ux",
+        "advisory-owner-ux-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for owner-publishing-journeys, authoring-recovery; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for owner-publishing-journeys, authoring-recovery; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "gas-city-coordinator",
+      "status": "active",
+      "entrypoint": ".claude/skills/gas-city-coordinator/SKILL.md",
+      "codexLink": ".agents/skills/gas-city-coordinator",
+      "provenance": {
+        "type": "project-authored",
+        "task": "pr-41-native-beads-onboarding"
+      },
+      "capabilities": [
+        "beads-task-authority",
+        "gas-city-dispatch-planning",
+        "managed-worker-coordination",
+        "formula-catalog-entrypoint-guard",
+        "worklog-evidence",
+        "acceptance-and-review-routing"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for beads-task-authority, gas-city-dispatch-planning; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for beads-task-authority, gas-city-dispatch-planning; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "content-platform-backend",
+      "status": "active",
+      "entrypoint": ".claude/skills/content-platform-backend/SKILL.md",
+      "codexLink": ".agents/skills/content-platform-backend",
+      "provenance": {
+        "type": "project-authored",
+        "task": "58"
+      },
+      "capabilities": [
+        "content-domain-model",
+        "publishing-state-machines",
+        "server-boundary-review",
+        "schema-migration-review",
+        "media-pipeline-review",
+        "background-jobs-scheduling",
+        "search-indexing",
+        "portability-backup-recovery",
+        "data-integrity-review",
+        "advisory-backend-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for content-domain-model, publishing-state-machines; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for content-domain-model, publishing-state-machines; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "security-identity-privacy",
+      "status": "active",
+      "entrypoint": ".claude/skills/security-identity-privacy/SKILL.md",
+      "codexLink": ".agents/skills/security-identity-privacy",
+      "provenance": {
+        "type": "project-authored",
+        "task": "59"
+      },
+      "capabilities": [
+        "owner-authentication-recovery",
+        "authorization-role-boundaries",
+        "session-credential-secret-review",
+        "rich-content-sanitization",
+        "upload-media-security",
+        "abuse-rate-limit-review",
+        "privacy-retention-review",
+        "dependency-supply-chain-review",
+        "structured-threat-model",
+        "advisory-security-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for owner-authentication-recovery, authorization-role-boundaries; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for owner-authentication-recovery, authorization-role-boundaries; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "reader-frontend",
+      "status": "active",
+      "entrypoint": ".claude/skills/reader-frontend/SKILL.md",
+      "codexLink": ".agents/skills/reader-frontend",
+      "provenance": {
+        "type": "project-authored",
+        "task": "53"
+      },
+      "capabilities": [
+        "reader-typography-layout",
+        "reader-accessibility",
+        "reader-performance",
+        "reader-media-semantics",
+        "advisory-reader-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for reader-typography-layout, reader-accessibility; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for reader-typography-layout, reader-accessibility; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "editorial-blocks",
+      "status": "active",
+      "entrypoint": ".claude/skills/editorial-blocks/SKILL.md",
+      "codexLink": ".agents/skills/editorial-blocks",
+      "provenance": {
+        "type": "project-authored",
+        "task": "53"
+      },
+      "capabilities": [
+        "structured-document-contract",
+        "editorial-block-rendering",
+        "reader-direction-contract",
+        "advisory-editorial-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for structured-document-contract, editorial-block-rendering; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for structured-document-contract, editorial-block-rendering; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "seo-distribution",
+      "status": "active",
+      "entrypoint": ".claude/skills/seo-distribution/SKILL.md",
+      "codexLink": ".agents/skills/seo-distribution",
+      "provenance": {
+        "type": "project-authored",
+        "task": "54"
+      },
+      "capabilities": [
+        "canonical-url-review",
+        "structured-data-review",
+        "feed-index-hygiene",
+        "distribution-integration-review",
+        "advisory-seo-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for canonical-url-review, structured-data-review; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for canonical-url-review, structured-data-review; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "release-witness",
+      "status": "active",
+      "entrypoint": ".claude/skills/release-witness/SKILL.md",
+      "codexLink": ".agents/skills/release-witness",
+      "provenance": {
+        "type": "project-authored",
+        "task": "54"
+      },
+      "capabilities": [
+        "verification-evidence-review",
+        "security-accessibility-signals",
+        "rollback-readiness",
+        "advisory-release-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for verification-evidence-review, security-accessibility-signals; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for verification-evidence-review, security-accessibility-signals; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    },
+    {
+      "id": "quality-reliability-observability",
+      "status": "active",
+      "entrypoint": ".claude/skills/quality-reliability-observability/SKILL.md",
+      "codexLink": ".agents/skills/quality-reliability-observability",
+      "provenance": {
+        "type": "project-authored",
+        "task": "60"
+      },
+      "capabilities": [
+        "test-strategy",
+        "owner-acceptance-journeys",
+        "accessibility-automation",
+        "performance-budgets",
+        "structured-logging-error-reporting",
+        "health-readiness-checks",
+        "production-verification",
+        "restore-drills",
+        "incident-rollback-readiness",
+        "advisory-quality-review"
+      ],
+      "resultSchema": "agent-skill-review-result-v1",
+      "lifecycle": {
+        "promotion": [
+          "Project owner accepts scope for test-strategy, owner-acceptance-journeys; canonical source, relative link and deterministic platform checks pass.",
+          "Positive, negative and ambiguous routing fixtures pass; a labelled real-change evaluation records precision, recall and usable advice before activation."
+        ],
+        "revision": [
+          "Reproduce any false positive, false negative, missed route or unusable guidance for test-strategy, owner-acceptance-journeys; add a fixture and refresh evidence before review.",
+          "Recheck repository references when the implementation, scope, dependencies or neighboring skill handoffs change; subjective advice stays non-blocking."
+        ],
+        "retirement": [
+          "Project owner confirms this scope is obsolete, duplicated or persistently unusable after revision, naming a replacement or explicit uncovered scope.",
+          "Set status retired to stop automatic selection, migrate callers and route expectations, and retain historical evaluations; retirement does not grant merge or policy authority."
+        ]
+      }
+    }
+  ]
+}

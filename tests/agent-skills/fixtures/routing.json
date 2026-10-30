@@ -71,8 +71,8 @@
     "textAmbiguous": {
       "paths": [],
       "taskText": "Review product discovery. Review stack research.",
-      "expected": ["magazine-product-discovery"],
-      "rationale": "Both domains are named, but the existing stack trigger excludes product discovery across the task text; preserve and expose that precedence."
+      "expected": ["magazine-product-discovery", "stack-research-adr"],
+      "rationale": "Independent clauses retain both scopes; an exclusion in another request cannot veto a route."
     }
   },
   "stack-research-adr": {
@@ -111,6 +111,36 @@
       "taskText": "Review compatibility matrix. Review skill routing.",
       "expected": ["cross-agent-skill-platform", "stack-research-adr"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "negatedExclusionPositive": {
+      "paths": [],
+      "taskText": "Review stack research, not product discovery.",
+      "expected": ["stack-research-adr"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "mixedExclusionPositive": {
+      "paths": [],
+      "taskText": "Implement the patch; review stack research.",
+      "expected": ["stack-research-adr"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "affirmativeExclusionNegative": {
+      "paths": [],
+      "taskText": "Implement stack research.",
+      "expected": [],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "negatedIntentNegative": {
+      "paths": [],
+      "taskText": "Do not review stack research.",
+      "expected": [],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "contractedExclusionPositive": {
+      "paths": [],
+      "taskText": "Review stack research, don't implement.",
+      "expected": ["stack-research-adr"],
+      "rationale": "Synthetic lexical-boundary control for task intent and verification prose."
     }
   },
   "owner-publishing-ux": {
@@ -149,6 +179,24 @@
       "taskText": "Review owner publishing ux. Review release evidence.",
       "expected": ["owner-publishing-ux", "release-witness"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "backendRevisionsNegative": {
+      "paths": [],
+      "taskText": "Export backend revisions and validation records.",
+      "expected": ["content-platform-backend"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "ownerRevisionsPositive": {
+      "paths": [],
+      "taskText": "Review revisions and validation for the owner.",
+      "expected": ["owner-publishing-ux"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "readerAccessibilityNegative": {
+      "paths": [],
+      "taskText": "Adjust reader accessibility and recovery.",
+      "expected": [],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
     }
   },
   "gas-city-coordinator": {
@@ -240,6 +288,24 @@
       "taskText": "Review data integrity in the content domain model.",
       "expected": ["content-platform-backend"],
       "rationale": "An explicit data contract change still reaches backend review from the shared document path."
+    },
+    "mixedDomainPositive": {
+      "paths": [],
+      "taskText": "Review backend data design; review owner publishing UX.",
+      "expected": ["content-platform-backend", "owner-publishing-ux"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "contrastPositive": {
+      "paths": [],
+      "taskText": "Review backend data design, but no deployment.",
+      "expected": ["content-platform-backend"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "inlineCodePositive": {
+      "paths": [],
+      "taskText": "Review `backend` data integrity.",
+      "expected": ["content-platform-backend"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
     }
   },
   "security-identity-privacy": {
@@ -396,6 +462,12 @@
       "taskText": "Review backend data design, node and mark types, and rich-content sanitization.",
       "expected": ["content-platform-backend", "editorial-blocks", "security-identity-privacy"],
       "rationale": "Independent explicit domain changes in one shared file retain all three scopes despite text exclusions."
+    },
+    "historicalReferenceNegative": {
+      "paths": [],
+      "taskText": "Review skill routing. Follow-up to blog-0055.1: gallery and block contract.\n## Earlier work\n- #101: direction contract\n## Changes\nReview canonical URLs.",
+      "expected": ["cross-agent-skill-platform", "seo-distribution"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
     }
   },
   "seo-distribution": {
@@ -446,6 +518,24 @@
       "taskText": "Change canonical metadata.",
       "expected": ["reader-frontend", "quality-reliability-observability", "seo-distribution"],
       "rationale": "The same shared paths carry an affirmative metadata change; retain all justified scopes."
+    },
+    "fencedHistoryNegative": {
+      "paths": [],
+      "taskText": "Review skill routing.\n```text\ncanonical URLs\n```\n> Previously: structured data\n<!-- social cards -->",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "wrappedPhrasePositive": {
+      "paths": [],
+      "taskText": "Review canonical\n URLs.",
+      "expected": ["seo-distribution"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "noStoreContextPositive": {
+      "paths": [],
+      "taskText": "Review no-store headers and canonical URLs.",
+      "expected": ["seo-distribution"],
+      "rationale": "Synthetic lexical-boundary control for task intent and verification prose."
     }
   },
   "release-witness": {
@@ -484,6 +574,18 @@
       "taskText": "Review release evidence. Review skill routing.",
       "expected": ["cross-agent-skill-platform", "release-witness"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "verificationBoilerplateNegative": {
+      "paths": [],
+      "taskText": "Review skill routing.\n\n## Verification (host)\nRelease evidence and recovery passed.\n### Details\nTest strategy passed.\n## Changes\nReview canonical URLs.",
+      "expected": ["cross-agent-skill-platform", "seo-distribution"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
+    },
+    "inlineVerificationNegative": {
+      "paths": [],
+      "taskText": "Review skill routing. Verification: release evidence passed. Production verification passed.",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "Synthetic lexical-boundary control for task intent and verification prose."
     }
   },
   "quality-reliability-observability": {
@@ -600,6 +702,12 @@
       "taskText": "Review test strategy. Review canonical urls.",
       "expected": ["quality-reliability-observability", "seo-distribution"],
       "rationale": "Two independent domain requests retain both advisory skills."
+    },
+    "hostChecksNegative": {
+      "paths": [],
+      "taskText": "Review skill routing.\n\nHost checks:\nTest strategy and restore drill verified.",
+      "expected": ["cross-agent-skill-platform"],
+      "rationale": "Synthetic task-intent regression: preserve affirmative scope and ignore contextual noise or local negation."
     }
   }
 }
