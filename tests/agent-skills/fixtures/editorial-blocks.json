@@ -200,7 +200,7 @@
       "finding": {
         "id": "synthetic-block-failure",
         "severity": "error",
-        "category": "block-projection",
+        "category": "test",
         "message": "Synthetic failure example only: the block conversion test loses ordered-list numbering.",
         "subjective": false,
         "blocking": true,
@@ -214,7 +214,7 @@
       "finding": {
         "id": "synthetic-direction-failure",
         "severity": "error",
-        "category": "direction-contract",
+        "category": "test",
         "message": "Synthetic failure example only: a duplicate direction id fails the registry contract.",
         "subjective": false,
         "blocking": true,

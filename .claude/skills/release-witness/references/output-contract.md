@@ -42,6 +42,13 @@ Findings require `id`, `severity` (`info`, `warning`, `error`), `category`, `mes
 `verification-integrity`, `security-signal`, `accessibility-signal`, `rollback-readiness`,
 `evidence-gap`, `handoff`.
 
+Blocking findings must use a deterministic category from
+`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`; the shared validator
+and ingestion reject other blocking categories. Use `test` for failed tests or test-result
+validation, `security` for failed security checks, `accessibility` for failed accessibility
+checks, and `health` for failed health or smoke checks. Keep the release concern in the
+message and evidence; topic categories stay non-blocking.
+
 Subjective findings remain advisory and non-blocking (`subjective: true`, `blocking: false`).
 Only deterministic findings are blocking-eligible (`subjective: false`): cite an executed
 check, the accepted rule it violated and safe output at the reviewed revision. A false

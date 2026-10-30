@@ -234,12 +234,14 @@ exactly `schemaVersion` (1), `reviewId`, `skill` (`quality-reliability-observabi
 Use these finding categories:
 
 - `test-strategy`;
+- `test` (for a failing deterministic test, result, capability, coverage, or restore check);
 - `acceptance-journey`;
 - `critical-browser` (only for a failing deterministic critical browser check that blocks);
 - `accessibility`;
 - `performance-budget`;
 - `observability`;
 - `health-readiness`;
+- `health` (for a failing deterministic health or smoke check);
 - `production-verification`;
 - `restore-drill`;
 - `incident-rollback`;
@@ -256,7 +258,13 @@ Use these finding categories:
 - Only deterministic findings are blocking-eligible. A deterministic finding uses
   `subjective: false`, cites its reproducing command in `evidence` as `command: <command>`,
   and repeats that command in the top-level `evidence` with `kind: "command"`.
-- A blocking finding must use a category from the catalog's deterministic allowlist (`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`); ingestion refuses any other blocking category. Topic categories stay advisory. A blocking browser or journey check uses `critical-browser`, not `acceptance-journey`.
+- A blocking finding must use a category from the catalog's deterministic allowlist
+  (`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`); the shared validator
+  and ingestion reject any other blocking category. Topic categories stay non-blocking.
+  Use `test` for failed test, result, capability, coverage or restore checks; `health` for
+  failed health or smoke checks; `critical-browser` for failed critical browser or journey
+  checks; `accessibility` for failed accessibility assertions; and `performance-budget`
+  for failed accepted budget checks. Preserve the specific concern in the message and evidence.
 
 | Check | Required evidence |
 | --- | --- |

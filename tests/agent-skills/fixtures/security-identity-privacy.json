@@ -299,7 +299,7 @@
       "finding": {
         "id": "synthetic-secret-detection",
         "severity": "error",
-        "category": "secret-handling",
+        "category": "security",
         "message": "Synthetic example only: a redacted scanner reports a secret in the reviewed change.",
         "subjective": false,
         "blocking": true,
@@ -311,7 +311,7 @@
       "finding": {
         "id": "synthetic-auth-regression",
         "severity": "error",
-        "category": "authorization",
+        "category": "security",
         "message": "Synthetic example only: a negative-access test reaches a protected handler without the required auth guard.",
         "subjective": false,
         "blocking": true,
@@ -325,7 +325,7 @@
       "finding": {
         "id": "synthetic-audit-failure",
         "severity": "error",
-        "category": "supply-chain",
+        "category": "security",
         "message": "Synthetic example only: dependency policy rejects an unexcepted vulnerability.",
         "subjective": false,
         "blocking": true,

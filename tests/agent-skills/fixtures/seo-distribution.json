@@ -235,7 +235,7 @@
       "finding": {
         "id": "synthetic-origin-failure",
         "severity": "error",
-        "category": "canonical-url",
+        "category": "test",
         "message": "Synthetic failure example only: canonical origin isolation assertion fails.",
         "subjective": false,
         "blocking": true,

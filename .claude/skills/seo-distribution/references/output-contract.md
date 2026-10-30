@@ -69,6 +69,13 @@ Each finding needs `id`, `severity` (`info`, `warning`, `error`), `category`, `m
 `slug-redirect`, `structured-data`, `social-card`, `feed-sitemap`, `index-hygiene`,
 `distribution-design`, `evidence-gap`, `handoff`.
 
+Blocking findings must use a deterministic category from
+`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`; the shared validator
+and ingestion reject other blocking categories. Use `test` for failed canonical-origin,
+redirect, feed or indexing assertions and `schema` for failed structured-data validation.
+Keep the specific distribution concern in the message and evidence; topic categories
+stay non-blocking.
+
 Subjective findings remain advisory and non-blocking (`subjective: true`, `blocking: false`).
 Only deterministic findings are blocking-eligible (`subjective: false`): cite the accepted
 rule and reproducing command for an incorrect/missing canonical or robots directive,

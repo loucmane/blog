@@ -473,7 +473,7 @@
       "finding": {
         "id": "synthetic-disabled-test",
         "severity": "error",
-        "category": "gate-integrity",
+        "category": "test",
         "message": "Synthetic failure example only: the capability check reports a skipped unit test through noDisabledUnitTests.",
         "subjective": false,
         "blocking": true,
@@ -485,7 +485,7 @@
       "finding": {
         "id": "synthetic-smoke-failure",
         "severity": "error",
-        "category": "production-verification",
+        "category": "health",
         "message": "Synthetic failure example only: the local production smoke receives HTTP 500 from the root page.",
         "subjective": false,
         "blocking": true,
@@ -497,7 +497,7 @@
       "finding": {
         "id": "synthetic-restore-mismatch",
         "severity": "error",
-        "category": "restore-drill",
+        "category": "test",
         "message": "Synthetic failure example only: restore verification fails because the restored canonical fingerprint differs.",
         "subjective": false,
         "blocking": true,

@@ -9,6 +9,21 @@ const SKILL_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const REVIEW_ID = /^[a-z0-9][a-z0-9._-]*$/;
 const SHA = /^[0-9a-f]{40}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
+// RFC 3339 profile shared with review-result.schema.json: explicit zone and
+// seconds, optional fractional seconds, no leap seconds (legacy compatibility).
+const REVIEW_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})[Tt](?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:[Zz]|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+
+function isReviewTimestamp(value) {
+  if (typeof value !== "string") return false;
+  const match = REVIEW_TIMESTAMP.exec(value);
+  if (!match) return false;
+  const [, year, month, day] = match.map(Number);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  // Date.parse normalizes impossible dates such as February 30; check the
+  // calendar directly, including years 0000..0099 and leap-century boundaries.
+  return month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1];
+}
 
 function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -161,11 +176,8 @@ export function validateReviewResult(result) {
   if (typeof result.summary !== "string" || result.summary.trim() === "") {
     errors.push("summary must be a non-empty string");
   }
-  if (
-    typeof result.generatedAt !== "string" ||
-    Number.isNaN(Date.parse(result.generatedAt))
-  ) {
-    errors.push("generatedAt must be an ISO-8601 timestamp");
+  if (!isReviewTimestamp(result.generatedAt)) {
+    errors.push("generatedAt must be an RFC 3339 timestamp with a valid date, seconds and timezone (no leap seconds)");
   }
   if (typeof result.headSha !== "string" || !SHA.test(result.headSha)) {
     errors.push("headSha must be a full lowercase Git SHA");
@@ -174,6 +186,9 @@ export function validateReviewResult(result) {
   if (!Array.isArray(result.findings)) {
     errors.push("findings must be an array");
   } else {
+    if (result.verdict === "not-applicable" && result.findings.length > 0) {
+      errors.push("not-applicable reviews must have no findings");
+    }
     result.findings.forEach((finding, index) => {
       const prefix = `findings[${index}]`;
       if (!isRecord(finding)) {
@@ -218,6 +233,9 @@ export function validateReviewResult(result) {
       if (finding.subjective === true && finding.blocking === true) {
         errors.push(`${prefix} cannot make a subjective finding blocking`);
       }
+      if (finding.blocking === true && !blockingEligibleCategories.includes(finding.category)) {
+        errors.push(`${prefix} blocking finding must use a deterministic allowlisted category`);
+      }
       if (
         !Array.isArray(finding.evidence) ||
         finding.evidence.some(
@@ -233,6 +251,13 @@ export function validateReviewResult(result) {
     errors.push("evidence must contain at least one item");
   } else {
     result.evidence.forEach((item, index) => {
+      if (isRecord(item)) {
+        for (const key of Object.keys(item)) {
+          if (key !== "kind" && key !== "path") {
+            errors.push(`evidence[${index}] has unexpected property: ${key}`);
+          }
+        }
+      }
       if (
         !isRecord(item) ||
         !["command", "file", "url"].includes(item.kind) ||
@@ -650,13 +675,6 @@ export function buildBeadsIngestPlan({
   const result = JSON.parse(bytes.toString('utf8'))
   const errors = validateReviewResult(result)
   if (errors.length) throw new Error(errors.join('; '))
-  for (const finding of result.findings) {
-    if (finding.blocking && !blockingEligibleCategories.includes(finding.category)) {
-      throw new Error(
-        `blocking finding ${finding.id} must use a deterministic allowlisted category`,
-      )
-    }
-  }
   const absoluteWorklog = ingestionPath(root, worklog, 'docs/worklog', 'worklog')
   const findings = { bySeverity: { info: 0, warning: 0, error: 0 }, blocking: 0, advisory: 0 }
   for (const finding of result.findings) {

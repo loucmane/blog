@@ -1,0 +1,32 @@
+{
+  "valid": false,
+  "reason": "Finding id is required.",
+  "result": {
+    "schemaVersion": 1,
+    "reviewId": "corpus-review.1",
+    "skill": "cross-agent-skill-platform",
+    "mode": "advisory",
+    "verdict": "pass",
+    "summary": "Synthetic structural validation case.",
+    "generatedAt": "2026-10-30T14:00:00Z",
+    "headSha": "0123456789abcdef0123456789abcdef01234567",
+    "findings": [
+      {
+        "severity": "error",
+        "category": "schema",
+        "message": "Synthetic deterministic finding.",
+        "subjective": false,
+        "blocking": true,
+        "evidence": [
+          "synthetic check"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "command",
+        "path": "synthetic check; not executed"
+      }
+    ]
+  }
+}

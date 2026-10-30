@@ -167,12 +167,15 @@ test('criterion c rejects malformed review fixtures through the shared contract'
 test('criterion c applies the Beads deterministic blocking allowlist', (t) => {
   const root = fixture(t)
   const fixturePath = 'tests/agent-skills/fixtures/reader-frontend.json'
+  assert.deepEqual(validateReviewResult(readJson(root, fixturePath).reviewResult), [])
   editJson(root, fixturePath, (value) => {
     value.reviewResult.findings[0].subjective = false
     value.reviewResult.findings[0].blocking = true
     value.reviewResult.findings[0].category = 'editorial-taste'
   })
-  assert.deepEqual(validateReviewResult(readJson(root, fixturePath).reviewResult), [])
+  assert.deepEqual(validateReviewResult(readJson(root, fixturePath).reviewResult), [
+    'findings[0] blocking finding must use a deterministic allowlisted category',
+  ])
   const row = criterion(root, 'c')
   assert.equal(row.status, 'fail')
   assert.match(row.detail, /deterministic allowlisted category/)

@@ -36,6 +36,12 @@ Each finding has `id`, `severity` (`info`, `warning`, or `error`), `category`, `
 `validation-quarantine`, `migration-compatibility`, `block-projection`, `editorial-semantics`,
 `media-semantics`, `direction-contract`, and `handoff`.
 
+Blocking findings must use a deterministic category from
+`scripts/agent-skills/routing.mjs` `blockingEligibleCategories`; the shared validator
+and ingestion reject other blocking categories. Use `test` for failed block projection
+or direction assertions and `schema` for failed document-schema checks. Keep the specific
+block or direction concern in the message and evidence; topic categories stay non-blocking.
+
 Subjective findings remain advisory and non-blocking: editorial meaning, preferred block
 variants, visual prominence, and proposed schema designs use `subjective: true` and
 `blocking: false`. Only deterministic findings are blocking-eligible: an executed
