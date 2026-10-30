@@ -103,42 +103,53 @@ function directoryEntryNames(directory, label, errors) {
   }
 }
 
-// Asks root's own repository, in one `git check-ignore` call, which of the
-// repository-relative paths it ignores; tracked paths never count as ignored.
-// When git cannot answer, nothing is excused and the reason becomes an error.
+// Ask root's own repository about each literal path. Quiet mode uses only
+// Git's status, so unusual filenames need no output decoding. Disconnecting
+// stdin avoids managed-worker pipe hangs; no writable scratch root is needed.
+// Tracked paths never count as ignored. Any missing answer discards the whole
+// result, and all calls share the original five-second budget.
 function gitIgnoredPaths(root, relativePaths, errors) {
   if (relativePaths.length === 0) return new Set();
   const workTree = path.resolve(root);
-  const result = spawnSync(
-    "git",
-    [
-      `--git-dir=${path.join(workTree, ".git")}`,
-      `--work-tree=${workTree}`,
-      "check-ignore",
-      "--stdin",
-      "-z",
-    ],
-    {
-      cwd: workTree,
-      encoding: "utf8",
-      input: relativePaths.map((relativePath) => `${relativePath}\0`).join(""),
-      // A missing/hung Git probe must become missing evidence, never an
-      // indefinitely stalled platform/completion report.
-      timeout: 5000,
-      killSignal: "SIGKILL",
-    },
-  );
-  // Exit status 1 means that none of the paths are ignored.
-  if (result.error || (result.status !== 0 && result.status !== 1)) {
-    const reason =
-      result.error?.message ??
-      (result.stderr.trim().split("\n")[0] || `git exited ${result.status}`);
+  const ignored = new Set();
+  const deadline = performance.now() + 5000;
+  const unavailable = (reason) => {
     errors.push(
       `skill roots cannot be checked against git ignore rules (${reason})`,
     );
     return new Set();
+  };
+  for (const relativePath of relativePaths) {
+    const timeout = Math.ceil(deadline - performance.now());
+    if (timeout <= 0) return unavailable("git ignore checks timed out");
+    const result = spawnSync(
+      "git",
+      [
+        `--git-dir=${path.join(workTree, ".git")}`,
+        `--work-tree=${workTree}`,
+        "check-ignore",
+        "--quiet",
+        "--",
+        relativePath,
+      ],
+      {
+        cwd: workTree,
+        encoding: "utf8",
+        stdio: ["ignore", "ignore", "pipe"],
+        timeout,
+        killSignal: "SIGKILL",
+      },
+    );
+    // Status 1 is a real answer (not ignored), never a subprocess error.
+    if (result.error || (result.status !== 0 && result.status !== 1)) {
+      return unavailable(
+        result.error?.message ??
+          (result.stderr?.trim().split("\n")[0] || `git exited ${result.status}`),
+      );
+    }
+    if (result.status === 0) ignored.add(relativePath);
   }
-  return new Set(result.stdout.split("\0").filter(Boolean));
+  return ignored;
 }
 
 export function validateReviewResult(result) {
