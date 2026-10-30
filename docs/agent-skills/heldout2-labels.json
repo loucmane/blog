@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "method": "Purposive eight-PR sample from the coordinator's 47 unused merged PRs. Labels made from local first-parent merged diffs, catalog capabilities and canonical trigger contracts at 730d998 before any prediction on this sample. The same worker labels and implements; this is not an independent blind review or a random sample.",
+  "labelPolicy": "Select changed behavior within the skill contract. Routine correctness tests inherit their domain; substantial accessibility automation, contract matrices, runner changes and operational diagnosis additionally need quality. PR verification prose alone is not release-witness scope. Skill maintenance selects cross-agent-skill-platform, not every domain named in skill documentation.",
+  "cases": [
+    {
+      "number": 84,
+      "selectionReason": "Backend relation and paired migration, with historical proof-cycle references and host verification prose.",
+      "expected": [
+        {"skill": "content-platform-backend", "rationale": "Migration 0005 adds ordered article_authors with foreign keys and unique positions; ports and both repositories implement atomic replacement and ordered reads. Domain/migration tests preserve consistency; no new test strategy or reader rendering."}
+      ]
+    },
+    {
+      "number": 91,
+      "selectionReason": "Multiple genuine scopes in shared reader and direction contracts, with long historical and verification sections.",
+      "expected": [
+        {"skill": "editorial-blocks", "rationale": "contract.ts adds optional failure views and a validated frozen imageSizes map; ArticleBody forwards sizes into nested figures and galleries."},
+        {"skill": "quality-reliability-observability", "rationale": "Adds eager-import graph guards, visitor/owner rendering tests and a contract matrix for fallbacks, invalid inputs, freezing and nested image sizes."},
+        {"skill": "reader-frontend", "rationale": "Creates reader failure boundaries and direction-specific presentation, keeps visitor fallbacks and static not-found rendering, and supplies responsive image hints."},
+        {"skill": "security-identity-privacy", "rationale": "New resolveErrorPresentation server action and lazy boundary enforce owner-only Lab presentation, exclude session/error details, and refuse visitor or stale resolution; visitor tests guard this new authorization boundary."}
+      ]
+    },
+    {
+      "number": 112,
+      "selectionReason": "Reader presentation and substantial accessibility/performance automation, with history of earlier APIs and routine checks.",
+      "expected": [
+        {"skill": "quality-reliability-observability", "rationale": "Adds forced-colour/keyboard axe checks, cold/warm first-view image inventories, selected-media byte budgets and viewport/DPR coverage."},
+        {"skill": "reader-frontend", "rationale": "Cinematic failure views, focus targets, print/forced-colour styling and eager first-row images change reader presentation. Existing direction hooks are consumed, not redefined."}
+      ]
+    },
+    {
+      "number": 119,
+      "selectionReason": "Dependency security fix mentioning a historical ADR and CI verification without a new architecture decision.",
+      "expected": [
+        {"skill": "security-identity-privacy", "rationale": "Updates Vite from 8.1.4 to 8.1.6 in package.json and lockfile for an advisory and refreshes three runtime digests; no new test runner or stack design."}
+      ]
+    },
+    {
+      "number": 124,
+      "selectionReason": "Test infrastructure only; backend service names in the runner do not imply backend data work.",
+      "expected": [
+        {"skill": "quality-reliability-observability", "rationale": "Moves Docker test service ports below the ephemeral range, adds pre-start availability probes and a matrix for cleanup, permission errors and startup races."}
+      ]
+    },
+    {
+      "number": 126,
+      "selectionReason": "Backend transaction safety plus operational diagnosis; explicit earlier-work and host-check sections.",
+      "expected": [
+        {"skill": "content-platform-backend", "rationale": "Moves object storage upload/verification outside idle-limited transactions; publishes only verified originals and retains idempotent recovery after uncertain commits."},
+        {"skill": "quality-reliability-observability", "rationale": "Adds classified session-limit failures with stable SQLSTATE logging and a runbook separating transient failures from configuration refusals, including bounded lock recovery."},
+        {"skill": "security-identity-privacy", "rationale": "New handled error response and logging deliberately expose only fixed messages and allowed SQLSTATE codes, retaining the raw database error as an internal cause; tests guard private error details."}
+      ]
+    },
+    {
+      "number": 127,
+      "selectionReason": "Skill maintenance containing numerous neighboring domain names and references to earlier reviews.",
+      "expected": [
+        {"skill": "cross-agent-skill-platform", "rationale": "Only canonical skill descriptions and code-map references change: handoffs, redirect documentation and CI evidence wording. No runtime backend, SEO or release implementation changes."}
+      ]
+    },
+    {
+      "number": 129,
+      "selectionReason": "Reader retry accessibility and systematic real-boundary regression coverage, with explicit follow-up and review history.",
+      "expected": [
+        {"skill": "quality-reliability-observability", "rationale": "Adds real Next ErrorBoundaryHandler tests across all directions, failed/successful retries, delayed Lab resolution and user focus movement."},
+        {"skill": "reader-frontend", "rationale": "Restores main focus after failed retries, cancels restoration after reader focus movement and preserves first-render/successful-retry behavior."}
+      ]
+    }
+  ]
+}

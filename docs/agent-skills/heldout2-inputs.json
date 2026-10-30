@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "source": "gh pr view, exported by the coordinator 2026-10-29",
+  "sourceSha256": "9319b05719f36a85f8b0fc1e2c5e1d65011a4f45dddc63e9691dcc508e2bfc0a",
+  "excluded": "v1 sample #118 #123 #125 #128 #130 and skill-evaluation PRs #133 #135 #136; the 8 blog-n4y6.2 held-out PRs #80, #89, #98, #113, #117, #120, #132, #134",
+  "cases": [
+    {
+      "number": 84,
+      "title": "feat(content): article-author linkage, migration 0005 (blog-0044.32)",
+      "body": "## Summary\n\nReader Lab bake-off kit K0 (Bead blog-0044.32): the article-author linkage the bake-off needs for real bylines and author pages. It ports the never-merged proof-cycle commit `13990b1` (blog-0045.4, based on an August `main`) onto today's `main`, as **migration 0005** because `main` has since used 0004.\n\n- `packages/web/migrations/0005_article_authors.sql` / `.down.sql`: `article_authors(article_id, author_id, position)`, primary key on article and author, unique article and position, non-negative position, article foreign key cascades, author foreign key restricts (a credited author cannot be deleted), index on `author_id`. The down migration drops only the table and its ledger row. Existing articles and authors are untouched.\n- `schema.ts`, `domain.ts`, `ports.ts`: the relation, a minimal type, and `listArticleAuthors`, `listAuthorArticles`, `setArticleAuthors` (atomic replacement, byline order).\n- In-memory and PostgreSQL repositories implement them identically. Visibility, locking, audit and publication-version changes stay with the caller (the reader kit K1, blog-0044.22).\n\n**Contains a migration**: deploying it runs 0005 against the hosted database (`pnpm` migration command); it only adds an empty table.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`: clean\n- Vitest: 783/783 (190/190 on `packages/web/src/server` after the review fix)\n- `pnpm test:content:integration` (PostgreSQL 18 plus S3 in Docker): 45/45, covering byline order, rollback, duplicate and foreign-key rejection, cascades, the restrict refusal (SQLSTATE 23001; the coordinator corrected the test's expected code from 23503) and down then up again on empty and populated databases\n- `git diff --check origin/main`: clean\n\n## Review\n\nImplemented by the Claude worker; cross-vendor review by Codex (blog-0044.35): PASS, no correctness, data-integrity or migration-safety findings. Its one wording fix (the port's preconditions) is in `2c12784`. Follow-up: portable export and import should carry article-author links (blog-597f).\n",
+      "merge": "094024ac5a99b63dd18c1669993abf3e69fb3134",
+      "mergedAt": "2026-10-19T20:26:41Z",
+      "files": [
+        "packages/web/migrations/0005_article_authors.down.sql",
+        "packages/web/migrations/0005_article_authors.sql",
+        "packages/web/src/server/content/article-authors.test.ts",
+        "packages/web/src/server/content/domain.ts",
+        "packages/web/src/server/content/in-memory-repository.ts",
+        "packages/web/src/server/content/ports.ts",
+        "packages/web/src/server/database/migrations.test.ts",
+        "packages/web/src/server/database/postgres-content-repository.ts",
+        "packages/web/src/server/database/postgres.integration.test.ts",
+        "packages/web/src/server/database/schema.ts"
+      ]
+    },
+    {
+      "number": 91,
+      "title": "feat(reader): per-direction failure views and image sizes hooks (blog-0044.34)",
+      "body": "## Summary\n\nReader Lab bake-off kit K4 (Bead blog-0044.34): per-direction failure pages and image `sizes` hooks. Every direction needs these from the shared layer.\n\n- **Direction contract:** optional `NotFound`, `Error` and `Unavailable` views. Each falls back to Baseline, like the optional `Author` and `Topic` views, and has a small view model (site name, navigation). The error view gets `reset` but never the error itself.\n- **Not-found and error pages:**\n  - `app/not-found.tsx` is a server component with no request APIs, so `/_not-found` and `/owner/recover` stay static. It renders Baseline on the server.\n  - `ReaderFailureBoundary`, a small client component, asks the read-only `resolveErrorPresentation` action whether the viewer is the owner in a Reader Lab direction. Only then does it lazy-load that direction's page, inside the direction root and with the Lab bar.\n  - Visitors, forged cookies, and failed or stale lookups keep Baseline.\n  - The Lab bar's Next, Previous and Exit take effect on an upgraded failure page.\n  - `app/error.tsx` uses the same boundary, with only the Baseline error view in its static graph.\n- **Unavailable home:** it renders through the selected direction's `Unavailable` view.\n- **Image sizes:** a direction may supply a validated, frozen `imageSizes` map for body figures and galleries. `ArticleBody` passes it to every responsive `<source>` and `<img>`, including nested blocks. Today's `(min-width: 768px) 42rem, 100vw` stays the default. No designed direction changes in this PR; they adopt the hooks in their b3 build batches.\n- The unused `ReaderUnavailable` component is removed. The README documents both hooks.\n\nNo migrations, packages or CI changes.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint` and `pnpm format:check` are clean, and so is `git diff --check`.\n- CI unit chain (`test:capability unit`, `test:quality-contract`, `test:coverage`): 84 files, 881/881.\n- Production build: `\u25cb /_not-found` and `\u25cb /owner/recover` are static, as on main. Story-page client JS: main 273,074 B raw / 87,004 B gzip, this PR 287,962 / 92,573. Most of the +5.6 KB gzip is a third copy of next/link's runtime that Turbopack puts in the error chunk. Follow-up blog-0044.55 removes it (plain links on failure pages).\n- `pnpm test:browser` (Playwright, production build, Desktop and Pixel 7 Chromium): 58/58.\n- Browser checks on the local lab:\n  - A visitor's 404 is Baseline: status 404, one h1, one main, no direction fonts, no error text.\n  - In the Lab, the 404 renders in each of the six directions with one h1, one main and only that direction's fonts.\n  - A missing story gives the same result.\n  - On an upgraded 404, Next, Previous and Exit lab switch the page and leave the Lab correctly.\n\n## Review\n\nImplemented by the Codex worker over three rounds. The Claude cross-vendor review went:\n- Round 1: HOLD. The root not-found read cookies, and Next 16 builds the root not-found for every request, so static routes turned dynamic and every page gained a session lookup.\n- Round 2 fixed that.\n- Round 3 moved the Baseline markup out of client JS.\n- The Claude re-review of rounds 2 and 3 then passed.\n\nIt raised one should-fix, which I reproduced in the browser and fixed in `be75ec3`: on an upgraded failure page, the Lab bar's actions did nothing visible until a reload. A Codex narrow re-review of `be75ec3` passed. It found no render loop, visitors and stale lookups are still guarded, the cost is one lookup per server re-render, and the regression test fails on the old code.\n",
+      "merge": "dd179abdffe7b682a8edabcd345f6aa8b21396d9",
+      "mergedAt": "2026-10-20T06:48:15Z",
+      "files": [
+        "packages/web/src/app/error.tsx",
+        "packages/web/src/app/failure-imports.test.ts",
+        "packages/web/src/app/failure-views.test.tsx",
+        "packages/web/src/app/failure-visitor.test.tsx",
+        "packages/web/src/app/not-found.tsx",
+        "packages/web/src/app/page.tsx",
+        "packages/web/src/reader-directions/README.md",
+        "packages/web/src/reader-directions/baseline/article.tsx",
+        "packages/web/src/reader-directions/baseline/error.tsx",
+        "packages/web/src/reader-directions/baseline/failure-frame.tsx",
+        "packages/web/src/reader-directions/baseline/failure.tsx",
+        "packages/web/src/reader-directions/contract.test.ts",
+        "packages/web/src/reader-directions/contract.ts",
+        "packages/web/src/reader-directions/registry.test.ts",
+        "packages/web/src/reader/components/article-body.test.tsx",
+        "packages/web/src/reader/components/article-body.tsx",
+        "packages/web/src/reader/components/failure-boundary.tsx",
+        "packages/web/src/reader/components/failure-view.ts",
+        "packages/web/src/reader/components/image-sizes.ts",
+        "packages/web/src/reader/components/lab-failure-page.tsx",
+        "packages/web/src/reader/components/reader-unavailable.tsx",
+        "packages/web/src/reader/components/resolve-error-presentation.ts",
+        "packages/web/src/reader/components/site-header-frame.tsx",
+        "packages/web/src/reader/components/site-header.tsx",
+        "packages/web/tests/reader/failure-views.test.ts"
+      ]
+    },
+    {
+      "number": 112,
+      "title": "feat(reader-lab): Cinematic Feature media, accessibility and page speed to the spec (blog-0044.51)",
+      "body": "## Summary\n\nReader Lab bake-off, direction D (Cinematic Feature), build batch b3 (Bead blog-0044.51): media, accessibility and page speed, to the spec `docs/design/reader-bakeoff/cinematic-feature.md`. All changes are inside `cinematic-feature/`.\n\n- **Failure pages:** Cinematic Feature's own NotFound, Error and Unavailable views through K4's contract hooks.\n  - The site name is shown in the masthead and footer.\n  - Each has one h1, one focusable `#cf-main` and no error details.\n  - Retry is offered only on Error, and \"All stories\" links home.\n  - The panel is 42rem wide with 44 px targets, and has forced-colour and print rules.\n- **Images:**\n  - Each page has exactly one preload and one high-priority image, both for the lead picture.\n  - After a text-only feature (Craft, Furniture, Timber), cards 2\u20133 sit in the first view and load at once at normal priority, through the shared `eager` option from #110.\n  - Every other image is lazy.\n  - Media fallbacks are covered: unknown dimensions, portrait, GIF and animated images, oversized originals, and lead bytes including JPEG.\n- **Accessibility:** inline mono stays upright in both mark orders while prose keeps synthesis. New computed-style, focus and forced-colour checks.\n- **Budgets:**\n  - Styles plus tokens are within the 24 KiB gate.\n  - Fonts are 142,924 B against 180,000 B.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 103 files, 1,116 tests passed.\n- `pnpm test:browser`: 58/58.\n- Cinematic Feature Playwright config: 33/33. Its first-view inventory now covers two text-first routes and asserts that no picture in the first view loads lazily, on every route.\n\n## Review\n\nImplemented by the Codex worker in two rounds. Round 1 stopped correctly: the brief named a shared API that wasn't on main yet.\n\nThe Claude cross-vendor review passed:\n- It computed the selected image candidates for every slot at 390 and 1440 px, DPR 1 and 2.\n- It computed contrast pairs in both themes; there are no AA failures.\n- It found one real gap: lazy first-row cards after a text-only feature. The coordinator fixed it in 90bf4b2, and a Codex narrow review passed it. Its two notes, a comment and a stronger fixture guard, were applied.\n\nRecorded, not fixed here:\n- The retry-focus unit test can't exercise real Next retry; that depends on the shared failure boundary.\n- The lead-bytes test records rather than asserts the chosen candidate.\n- Lighthouse medians and the manual checks are for the host pass.\n",
+      "merge": "491b3fcaffda4088ec324e95c225b7ad0dc9a727",
+      "mergedAt": "2026-10-20T16:35:18Z",
+      "files": [
+        "packages/web/src/reader-directions/cinematic-feature/b2.test.tsx",
+        "packages/web/src/reader-directions/cinematic-feature/b3.test.tsx",
+        "packages/web/src/reader-directions/cinematic-feature/capture.mjs",
+        "packages/web/src/reader-directions/cinematic-feature/cinematic-feature.e2e.ts",
+        "packages/web/src/reader-directions/cinematic-feature/collection.tsx",
+        "packages/web/src/reader-directions/cinematic-feature/failure.tsx",
+        "packages/web/src/reader-directions/cinematic-feature/index.ts",
+        "packages/web/src/reader-directions/cinematic-feature/layout.test.ts",
+        "packages/web/src/reader-directions/cinematic-feature/media-budget.test.ts",
+        "packages/web/src/reader-directions/cinematic-feature/section.tsx",
+        "packages/web/src/reader-directions/cinematic-feature/shell.tsx",
+        "packages/web/src/reader-directions/cinematic-feature/story-card.tsx",
+        "packages/web/src/reader-directions/cinematic-feature/styles.ts",
+        "packages/web/src/reader-directions/cinematic-feature/views.test.tsx"
+      ]
+    },
+    {
+      "number": 119,
+      "title": "fix(deps): bump vite 8.1.4 to 8.1.6 for npm advisory 1242624 (blog-1m7j)",
+      "body": "## Summary\n\nSecurity patch bump (Bead blog-1m7j). npm advisory 1242624 (moderate), published 2026-10-20, covers vite `>=8.0.0 <=8.1.5`, and the fix is in 8.1.6. The repository's dependency policy (`scripts/ci/check-dependency-security.mjs`) allows no advisory outside approved exceptions, so CI started failing for every PR (first seen on #118).\n\n- **Bump:** vite `8.1.4` \u2192 `8.1.6` in the root `devDependencies`. The lockfile changes are limited to vite's version, integrity and dependent peer references.\n- **Scope:** vite is test-only infrastructure for Vitest (ADR 0006). Nothing in the shipped site changes.\n- **Runtime contract (`config/runtime.json`):** the Task 38 contract pins the lockfile bytes, the dependency declarations and the package manifest semantics. The bump changes all three, so the PR updates exactly those three digests. They were computed with the contract script's own exported functions; the same method reproduces main's current values. No other pin changes: scripts, workspace file, trusted CI files and workflow semantics stay as they are.\n\n## Verification (host)\n\n- `node scripts/ci/check-dependency-security.mjs`: passes. Only the approved `braces` exception remains (expires 2026-11-04).\n- `node scripts/ci/check-runtime-contract.mjs` passes, and `node tests/ci/runtime-contract.test.mjs` passes 13/13.\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:capability unit`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 104 files, 1,185 tests passed.\n\n## Review\n\nCoordinator hotfix. Codex narrow reviews passed both commits. For the runtime pins, Codex recomputed the three digests independently and confirmed no other pin needed to change. It confirmed the lockfile diff is vite-only, the integrity matches the published 8.1.6 package, and Vitest 4.1.11 accepts it.\n",
+      "merge": "58989afb2e5d308b9de70f31eabbddf916b4d049",
+      "mergedAt": "2026-10-20T21:12:46Z",
+      "files": [
+        "config/runtime.json",
+        "package.json",
+        "pnpm-lock.yaml"
+      ]
+    },
+    {
+      "number": 124,
+      "title": "fix(tests): content integration ports outside the ephemeral range (blog-6uh9)",
+      "body": "## Summary\n\nTest tooling fix (Bead blog-6uh9). The content integration suite bound its PostgreSQL and S3 test services to host ports inside Linux's ephemeral range (32768\u201360999). A TIME-WAIT socket on one of those ports made `docker compose up` fail; that was seen three times on 2026-10-19.\n\n- **Ports:** the services move below 32768. `packages/web/tests/content/docker-compose.yml` and `scripts/run-content-integration.mjs` change together.\n- **Fail-fast check:** the runner fails fast with a clear message when a port is taken. Docker still owns a concurrent bind after the probe closes.\n- **Tests:** the runner's port logic has unit tests (`run-content-integration.test.mjs`).\n\n## Verification (host)\n\n- `pnpm test:content:integration` with Docker on the new ports: 51/51.\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean. `pnpm test:coverage`: 1,214 tests passed.\n\n## Review\n\nImplemented by the Codex worker. The Codex review passed. It confirmed the runner and compose file agree, that no repository port conflicts remain, and that probe cleanup and startup races are handled.",
+      "merge": "408069b3bccc505c5528884b276dec04a6c74934",
+      "mergedAt": "2026-10-21T14:19:20Z",
+      "files": [
+        "packages/web/scripts/run-content-integration.mjs",
+        "packages/web/scripts/run-content-integration.test.mjs",
+        "packages/web/tests/content/docker-compose.yml"
+      ]
+    },
+    {
+      "number": 126,
+      "title": "fix(lab): keep seed storage work out of the idle-limited transaction, and explain refused session limits (blog-0044.31)",
+      "body": "## Summary\n\nHosted Reader Lab seed follow-ups (Bead blog-0044.31), from the review of blog-0044.20.\n\n- **Storage outside the transaction:**\n  - Before, the seed's storage upload and verify ran inside one database transaction with no SQL between them. The session's `idle_in_transaction_session_timeout` is 30 s, so slow R2 storage could end the session mid-seed.\n  - The storage work now runs outside the transaction (`server/lab/media.ts`, `seed.ts`), and the transaction only records verified originals.\n  - Reruns stay idempotent: a failed upload or verify writes no row and deletes nothing, and the retry stores the same original.\n- **Clear error for refused limits:** if the provider refuses one of the seed's session limits (SQLSTATE 42704 or 42501), `/api/internal/lab-seed` returns a clear, fixed, non-secret error instead of a generic 500.\n- **Runbook:** `docs/deployment/reader-lab-preview.md` now separates configuration refusals (retrying can't help) from transient failures, and states the PostgreSQL 14+ requirement and the idle-session recovery.\n- **Coordinator commit:** one test parameter was named `fail`, which the repo's test-capability check reads as Vitest's `it.fail`. It's renamed.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract` (29/29 after the rename): clean.\n- `pnpm test:coverage`: 2,186 tests passed.\n- `pnpm test:content:integration` (PostgreSQL and S3 in Docker): 51/51.\n\n## Review\n\nImplemented by the Claude worker. The Codex review passed. Its in-memory probes confirmed safe retries after a rollback and after an uncertain commit, and that refusal responses and logs exclude raw database details.",
+      "merge": "cfced6d37dd3e15dfabd6f1a4bb0d52d242179b8",
+      "mergedAt": "2026-10-21T19:45:09Z",
+      "files": [
+        "docs/deployment/reader-lab-preview.md",
+        "packages/web/src/app/api/internal/lab-seed/route.ts",
+        "packages/web/src/server/lab/media.test.ts",
+        "packages/web/src/server/lab/media.ts",
+        "packages/web/src/server/lab/seed.test.ts",
+        "packages/web/src/server/lab/seed.ts",
+        "packages/web/tests/reader/lab-seed-route.test.ts"
+      ]
+    },
+    {
+      "number": 127,
+      "title": "docs(skills): wording follow-ups for seo-distribution, release-witness and content-platform-backend (blog-oc3c)",
+      "body": "## Summary\n\nWording-only skill updates (Bead blog-oc3c), from earlier skill reviews.\n\n- **seo-distribution:** documents the permanent `/blog/:slug` \u2192 `/stories/:slug` redirect, and states where `X-Robots-Tag` is sent and where `/preview` relies on robots metadata instead.\n- **release-witness:**\n  - adds the PR-only dependency-review job;\n  - uses the CI step \"Unit and integration tests\" as the worked example of an overstated label (the CI gap itself is Bead blog-ued4).\n- **content-platform-backend:** the hand-offs now name the skills that exist (security-identity-privacy, editorial-blocks, seo-distribution, release-witness, quality-reliability-observability), and the description no longer calls the security skill \"future\".\n\nNo routing or behaviour changes.\n\n## Verification (host)\n\n- `pnpm ci:agent-skills`: 105/105. All three skills pass the validator.\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean. `pnpm test:coverage`: 2,167 tests passed.\n\n## Review\n\nImplemented by the Codex worker. The Codex review passed. It confirmed every changed claim against main and that all five hand-off skills exist.",
+      "merge": "b87dd5584477ff9a4554f7bf5d0baa6f49a37079",
+      "mergedAt": "2026-10-21T19:53:07Z",
+      "files": [
+        ".claude/skills/content-platform-backend/SKILL.md",
+        ".claude/skills/release-witness/references/code-map.md",
+        ".claude/skills/seo-distribution/SKILL.md",
+        ".claude/skills/seo-distribution/references/code-map.md"
+      ]
+    },
+    {
+      "number": 129,
+      "title": "fix(reader): restore focus after a retry that fails again (blog-ysui)",
+      "body": "## Summary\n\nAccessibility fix in the shared failure boundary (Bead blog-ysui). When \"Try again\" on an error page re-renders and the render fails again, Next remounts the error page, and focus fell to `body`. Keyboard and screen-reader users lost their place.\n\n- **Restore focus:** `reader/components/failure-boundary.tsx` now moves focus to the failure view's `main` after a failed retry. That covers the baseline and every Reader Lab direction, including a delayed Lab replacement. The first error render keeps its behaviour, and a successful retry or an unrelated later error never takes focus.\n- **Respect the reader:** restoration is cancelled as soon as the reader moves focus anywhere else (a `focusin` check), even if the control they focused is replaced.\n- **Not fixed here:** a retry that suspends into a loading fallback and then fails loses its focus request. That needs a recovery scope outside this boundary (`app/layout.tsx`, `reader-page.tsx`) and is Bead blog-quly. Its regression case is prepared there; this PR guards only the recovery outcome.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean.\n- `pnpm test:coverage`: 2,180 tests passed.\n- `pnpm test:browser`: 66/66.\n\n## Review\n\nImplemented by the Codex worker in two rounds. The Codex review of round 1 held it with two reproduced edge cases. Round 2 fixed the first. The second moved to blog-quly, because the fix needs files outside this Bead. A narrow re-review passed: the regression fails against round 1, there's no new focus theft, and the scope split is stated honestly.",
+      "merge": "ba7889f11b99295fee176e849982e767e286d7b8",
+      "mergedAt": "2026-10-21T20:13:07Z",
+      "files": [
+        "packages/web/src/reader/components/failure-boundary.test.tsx",
+        "packages/web/src/reader/components/failure-boundary.tsx"
+      ]
+    }
+  ]
+}
