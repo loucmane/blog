@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "candidateCount": 31,
+  "sourceSha256": "f373b2baf4cc6f1b42c15d60a73215f78001734e917c98a5a1231fcf5542b4c8",
+  "method": "Purposive selection of eight distinct unused PRs across design, runtime, test infrastructure, content and skill authoring; no router output used. Route-change plan already recorded from heldout3.",
+  "selected": [
+    77,
+    81,
+    83,
+    92,
+    108,
+    115,
+    121,
+    122
+  ],
+  "candidates": [
+    {
+      "number": 74,
+      "merge": "297ce1f88696af918a37611df1a0ae82046d101f",
+      "title": "feat(skills): add content platform and backend skill (blog-0058)"
+    },
+    {
+      "number": 77,
+      "merge": "3aed4c266adce4d0a0e9e9113c99d12e73bdd771",
+      "title": "feat(skills): add security, identity and privacy skill (blog-0059)"
+    },
+    {
+      "number": 78,
+      "merge": "cc68039c8d83aae181426d4e44b70ca1a95f0afb",
+      "title": "feat(skills): add reader frontend and editorial blocks skills (blog-0053)"
+    },
+    {
+      "number": 81,
+      "merge": "cb6d081028f20a66a78811df3610e1f89e2243bf",
+      "title": "fix(media): never confirm a variant of an unmeasured original with 304 (blog-0044.10)"
+    },
+    {
+      "number": 83,
+      "merge": "bc3b7659dc44f98628099189ce7468c8ad513a4d",
+      "title": "docs(reader-lab): Swiss Index developed-magazine spec (blog-0044.25)"
+    },
+    {
+      "number": 85,
+      "merge": "bf17eb59459d9c9bc3955f8b0d4cd7a4aaeede17",
+      "title": "docs(reader-lab): Literary Long-read developed-magazine spec (blog-0044.24)"
+    },
+    {
+      "number": 86,
+      "merge": "85ea5ad8407420c82db50ddf3a58fe1e65fe0835",
+      "title": "docs(reader-lab): Cinematic Feature developed-magazine spec (blog-0044.26)"
+    },
+    {
+      "number": 87,
+      "merge": "59f7361fb6a7833aeb14a058d7960bb586afad60",
+      "title": "docs(reader-lab): Expressive Colour developed-magazine spec (blog-0044.27)"
+    },
+    {
+      "number": 92,
+      "merge": "8f802a770850c079eda8f9ae2a2d4c17ba44b8ca",
+      "title": "feat(lab): sample authors, topics and stories for every page type (blog-0044.29)"
+    },
+    {
+      "number": 93,
+      "merge": "24a4376c0527153e0df3035858bcc40c106adcef",
+      "title": "feat(reader-lab): Literary Long-read home and section to the spec (blog-0044.43)"
+    },
+    {
+      "number": 94,
+      "merge": "70e046ebcc2529fd40a26aee49992d2b08da3fc7",
+      "title": "feat(reader-lab): Quiet Monograph home and section to the spec (blog-0044.40)"
+    },
+    {
+      "number": 95,
+      "merge": "097b03cbef037b1e0779edb13f88028a94e21c3a",
+      "title": "feat(reader-lab): Cinematic Feature home and section to the spec (blog-0044.49)"
+    },
+    {
+      "number": 96,
+      "merge": "7e8f467236921e49a03ec3ba02197f4f50d9a45f",
+      "title": "feat(reader-lab): Expressive Colour home and section to the spec (blog-0044.52)"
+    },
+    {
+      "number": 97,
+      "merge": "671efb194c888dcd4e0dbd920bac3848120e8541",
+      "title": "feat(reader-lab): Swiss Index home and section to the spec (blog-0044.46)"
+    },
+    {
+      "number": 99,
+      "merge": "3ac5aa6ef32533ae0261fd8aeac263304696d433",
+      "title": "feat(reader-lab): genuine Quiet Monograph italics, no Jost 300 (blog-0044.56)"
+    },
+    {
+      "number": 101,
+      "merge": "bda0beb406de748490707af50d29503c31a485bb",
+      "title": "feat(reader-lab): Swiss Index article, author, topic and related to the spec (blog-0044.47)"
+    },
+    {
+      "number": 102,
+      "merge": "ee8cd26a12791828da8cfb67628eecb985651697",
+      "title": "feat(reader-lab): Expressive Colour article, author, topic and related to the spec (blog-0044.53)"
+    },
+    {
+      "number": 103,
+      "merge": "2169790c4a5152add1209faa39292976e506ea3c",
+      "title": "feat(reader-lab): Literary Long-read article, author, topic and related to the spec (blog-0044.44)"
+    },
+    {
+      "number": 104,
+      "merge": "1771fbc9843e5e77e473260b58eeee57f35d8778",
+      "title": "feat(reader-lab): Quiet Monograph article, author, topic and related to the spec (blog-0044.41)"
+    },
+    {
+      "number": 105,
+      "merge": "98298f9f225e929c7c7ccbe07ee0446b7d42f1ac",
+      "title": "feat(reader-lab): Cinematic Feature article, author, topic and related to the spec (blog-0044.50)"
+    },
+    {
+      "number": 106,
+      "merge": "73db1752dfd4d448f781b0f6cabb78e09a6025a7",
+      "title": "feat(reader-lab): Literary Long-read media, accessibility and page speed to the spec (blog-0044.45)"
+    },
+    {
+      "number": 107,
+      "merge": "c06af17f2f4f2631fc5cf7b66f6114f066f24b94",
+      "title": "feat(reader-lab): genuine Schibsted Grotesk 400 and 700 italics for Swiss Index (blog-0044.60)"
+    },
+    {
+      "number": 108,
+      "merge": "9bd7afc237c45db09f7833f6ee9c671628cdb30f",
+      "title": "fix(reader-lab): hold capture layout through an adopted stylesheet (blog-0044.65)"
+    },
+    {
+      "number": 109,
+      "merge": "d981d8350947da411a387c27f71aeba9e08c9a8a",
+      "title": "feat(reader-lab): Expressive Colour media, accessibility and page speed to the spec (blog-0044.54)"
+    },
+    {
+      "number": 110,
+      "merge": "52ac8ee37c68f593b00c28ac4e85ebfce7acfc5f",
+      "title": "feat(reader-lab): Quiet Monograph media, accessibility and page speed to the spec (blog-0044.42)"
+    },
+    {
+      "number": 111,
+      "merge": "c47a4a2fd01a36f63c556b3d11597322ffb30a95",
+      "title": "feat(reader-lab): Swiss Index media, accessibility and page speed to the spec (blog-0044.48)"
+    },
+    {
+      "number": 115,
+      "merge": "d9a5ec15b797c1ca4d6ea7282657792a1b203236",
+      "title": "perf(reader-lab): keep next/link out of the eager error and not-found chunks (blog-0044.55)"
+    },
+    {
+      "number": 116,
+      "merge": "a9fd9bc5d3e9c50de6338eccaa4bae00f80691fd",
+      "title": "test(reader-lab): pin each direction's font CSS in its own folder (blog-0044.61)"
+    },
+    {
+      "number": 121,
+      "merge": "0fbdf8939137fcaa737fc4d142452c2dd3b08a42",
+      "title": "fix(reader-lab): keep a compare frame's Theme menu inside its frame (blog-0044.58)"
+    },
+    {
+      "number": 122,
+      "merge": "d6d47ed1dd3b7f6af76466019e77a9825911ce09",
+      "title": "test(reader-lab): stricter Literary Long-read preload guards and a real retry rerender (blog-0044.64)"
+    },
+    {
+      "number": 131,
+      "merge": "b9114abb4d7008f0072e00c3f543c7f5048c61f0",
+      "title": "feat(skills): deterministic routing and a five-PR forward evaluation (blog-0055.1)"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "method": "Eight unused merged PRs from the coordinator export; labelled from local first-parent diffs and canonical skill trigger contracts before any heldout4 routing. Same worker labels and implements; not an independent blind review. Purposive selection, not a population estimate.",
+  "labelPolicy": "Changed behavior determines scope. Ordinary domain regression tests inherit their domain; test-harness repairs, systematic acceptance contracts and performance or accessibility plans additionally select quality. Skill authoring selects the platform, not the authored domain. Routine verification and review history do not select release-witness. Test-only capture infrastructure does not change reader presentation. No earlier labels are changed.",
+  "cases": [
+    {
+      "number": 77,
+      "selectionReason": "Single platform change with substantial security-domain vocabulary, to test over-selection.",
+      "expected": [
+        { "skill": "cross-agent-skill-platform", "rationale": "Adds the security skill source, link, catalog/map registration and platform fixtures/tests. The diff contains no product security implementation or applied security review." }
+      ]
+    },
+    {
+      "number": 81,
+      "selectionReason": "Backend media service plus public image revalidation semantics; visibility remains unchanged.",
+      "expected": [
+        { "skill": "content-platform-backend", "rationale": "serveVariant consults mediaVariantsRuledIn and a bounded remembered-variant set before confirming availability, with storage reads and eviction behavior covered by domain tests." },
+        { "skill": "reader-frontend", "rationale": "The public image delivery boundary now redirects unavailable variants to the original even under conditional requests, preserving correct reader image revalidation. Access-control ordering and sanitization are unchanged." }
+      ]
+    },
+    {
+      "number": 83,
+      "selectionReason": "Design-only reader specification with explicit quality planning, contrasted with implementation and test-only changes.",
+      "expected": [
+        { "skill": "reader-frontend", "rationale": "The new Swiss Index specification defines page layouts, typography, responsive images, themes, motion and accessibility using existing block contracts." },
+        { "skill": "quality-reliability-observability", "rationale": "Sections 9-11 specify automated and manual accessibility checks, performance budgets, cache conditions, Lighthouse methodology and per-batch test evidence. Open visual questions do not establish product discovery or stack decisions." }
+      ]
+    },
+    {
+      "number": 92,
+      "selectionReason": "Single backend content-seeding transaction change; incidental reader fixtures and owner references do not change their interfaces.",
+      "expected": [
+        { "skill": "content-platform-backend", "rationale": "Adds authors/topics/sample stories and performs article creation, filing, bylines and publication in one joined transaction. Replay preserves existing content. Failure-injection tests verify that domain atomicity; no new runner, operational recovery gate or reader UI is introduced." }
+      ]
+    },
+    {
+      "number": 108,
+      "selectionReason": "Single quality capture-harness repair inside a reader directory; distinguishes evidence tooling from runtime presentation.",
+      "expected": [
+        { "skill": "quality-reliability-observability", "rationale": "prepareFontCapture uses an adopted stylesheet to hold first layout through React root rendering, verifies the hold and removes it after loading. Diagnostics observe computed display. These are screenshot-only test helpers; runtime page rendering and fonts are unchanged." }
+      ]
+    },
+    {
+      "number": 115,
+      "selectionReason": "Reader performance correction with an explicit transitive import-graph regression gate.",
+      "expected": [
+        { "skill": "reader-frontend", "rationale": "Baseline failure frames use anchors and move the site-name constant out of the next/link import graph, reducing eager reader JavaScript while preserving recovery navigation." },
+        { "skill": "quality-reliability-observability", "rationale": "Adds a systematic static-graph invariant for both error and not-found entrypoints, rejecting next/link through any transitive static path; visitor tests also assert recovery links." }
+      ]
+    },
+    {
+      "number": 121,
+      "selectionReason": "Shared reader component repair in the owner preview workflow, with a cross-direction browser matrix.",
+      "expected": [
+        { "skill": "reader-frontend", "rationale": "ThemeMenu portals into the trigger document, keeping menu placement, focus and dismissal inside each responsive direction frame." },
+        { "skill": "owner-publishing-ux", "rationale": "The owner comparison workflow regains usable theme controls in mobile and desktop previews, including Escape dismissal and focus return. The accessibility of the preview controls is material owner UX." },
+        { "skill": "quality-reliability-observability", "rationale": "Adds a browser matrix over all directions and both viewport presets, checks menu ownership/geometry, dismissal/focus and theme propagation, plus cross-document unit coverage." }
+      ]
+    },
+    {
+      "number": 122,
+      "selectionReason": "Test-only repair of image preload and real retry-boundary contracts.",
+      "expected": [
+        { "skill": "quality-reliability-observability", "rationale": "Restores strict preload selectors and replaces a direction-only retry test with the real ErrorPage/shared-boundary rerender, preserving button identity and focus across asynchronous selection." },
+        { "skill": "reader-frontend", "rationale": "The tests encode reader image priority, preload absence and accessible retry-button focus for Literary Long-read. Their repaired assertions review concrete reader behavior rather than changing backend or document contracts." }
+      ]
+    }
+  ]
+}

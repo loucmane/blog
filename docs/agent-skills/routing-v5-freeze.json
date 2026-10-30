@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-30T17:06:50Z",
+  "heldoutPredictionsRun": false,
+  "method": "Map-only candidate based on heldout3 diagnosis and synthetic fixtures. No heldout4 router run has occurred. Recall must strictly rise and precision must not drop.",
+  "sha256": {
+    "docs/agent-skills/routing-v5-router.mjs": "7bc0f4ea160032c0e27dd7f75c829e95f1b691208733f18271475cc2cfa19a92",
+    "docs/agent-skills/routing-v5-map.yaml": "6e345670ed0c3761649d78dab95670352348440cd038692b41b6095d24e46cc3",
+    "docs/agent-skills/routing-v5-catalog.yaml": "a89a846b770a2c3c1d3939360b17b836f9f575cb8b2e3b0c7d86b55f184ad4f6",
+    "docs/agent-skills/heldout4-freeze.json": "48caabda4e3e89102cd426513e040c4e9928bab51a0de6d160f09110e71970f0"
+  },
+  "buildSha256": {
+    "scripts/agent-skills/evaluate-forward.mjs": "36adecd0f861518d227a34ce15256c75c8daff4f3e3118ea604f04f58855ddc0",
+    "scripts/agent-skills/evaluation.mjs": "30425e83551dd766502a5b92526e1b817e2afb3c03ee25419362d6a18395e69d",
+    "tests/agent-skills/forward-evaluation.test.mjs": "0527c737ec5d949ec08b5054def0219e80827ab8934d659782d6e25581c5edf4",
+    "tests/agent-skills/fixtures/routing.json": "e6bb178704228c292aab7aeb30d99181618ebaf3dbe84ee467c89de6ea8eac51"
+  }
+}

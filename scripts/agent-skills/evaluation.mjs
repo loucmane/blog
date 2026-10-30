@@ -170,7 +170,7 @@ export function renderCoverageReport(result) {
 export function compareRoutingScores(
   before,
   after,
-  { baselineVersion = 'v2', candidateVersion = 'v3' } = {},
+  { baselineVersion = 'v2', candidateVersion = 'v3', requireRecallGain = false } = {},
 ) {
   const b = before.metrics,
     a = after.metrics
@@ -184,7 +184,7 @@ export function compareRoutingScores(
   const accepted =
     [b.precision, a.precision, b.recall, a.recall].every(Number.isFinite) &&
     a.precision >= b.precision &&
-    a.recall >= b.recall
+    (requireRecallGain ? a.recall > b.recall : a.recall >= b.recall)
   return {
     denominators: {
       prs: a.cases,
@@ -196,13 +196,89 @@ export function compareRoutingScores(
       [`selected${candidateVersion.toUpperCase()}`]: a.truePositives + a.falsePositives,
     },
     acceptance: {
-      rule: 'Accept only if held-out recall and precision do not drop; undefined rates do not pass.',
+      rule: requireRecallGain
+        ? 'Accept only if held-out recall strictly rises and precision does not drop; undefined rates do not pass.'
+        : 'Accept only if held-out recall and precision do not drop; undefined rates do not pass.',
       accepted,
       disposition: accepted
         ? 'keep revision'
         : `revert live routes to ${baselineVersion}; retain this report`,
     },
   }
+}
+
+export function renderRoutingV5Report(result) {
+  const { v4, v5, denominators: d, acceptance } = result.heldout4
+  const pct = (value) => (value === null ? 'undefined' : `${(value * 100).toFixed(1)}%`)
+  const names = (values) => values.join(', ') || 'none'
+  const table = (score, version) => [
+    `| PR | Expected | Selected ${version} | False positives | False negatives |`,
+    '| --- | --- | --- | --- | --- |',
+    ...score.cases.map(
+      (row) =>
+        `| #${row.number} | ${names(row.expected)} | ${names(row.selected)} | ${names(row.falsePositives)} | ${names(row.falseNegatives)} |`,
+    ),
+  ]
+  const counts = (m) =>
+    `${m.truePositives} / ${m.falsePositives} / ${m.falseNegatives} / ${m.trueNegatives}`
+  return [
+    '# Routing v5: recover omitted review surfaces',
+    '',
+    'Classification: internal project documentation. All routing remains advisory and non-blocking.',
+    '',
+    `**${acceptance.accepted ? 'Accepted' : 'Rejected'} by the predeclared heldout4 bar: ${acceptance.disposition}.** ${acceptance.rule}`,
+    '',
+    'The candidate adds Reader Lab design and preview presentation paths, owner workspace pages and explicit owner-error wording, dedicated concurrency recovery and capture helpers, and lab security paths requiring affirmative guard/session/origin context. The v4 text parser, catalog and skill contracts are unchanged. The plan was recorded from heldout3 before selecting heldout4; synthetic positive and neighboring negative fixtures guided implementation.',
+    '',
+    `Heldout4: ${d.prs} PRs × ${d.skills} skills = ${d.decisions} decisions; ${d.expectedPositives} expected positives, ${d.expectedNegatives} expected negatives.`,
+    '',
+    '| Measurement | Frozen v4 | Candidate v5 |',
+    '| --- | --- | --- |',
+    `| TP / FP / FN / TN | ${counts(v4.metrics)} | ${counts(v5.metrics)} |`,
+    `| Selected scopes | ${d.selectedV4} | ${d.selectedV5} |`,
+    `| Precision TP/(TP+FP) | ${v4.metrics.truePositives}/${d.selectedV4} (${pct(v4.metrics.precision)}) | ${v5.metrics.truePositives}/${d.selectedV5} (${pct(v5.metrics.precision)}) |`,
+    `| Recall TP/(TP+FN) | ${v4.metrics.truePositives}/${d.expectedPositives} (${pct(v4.metrics.recall)}) | ${v5.metrics.truePositives}/${d.expectedPositives} (${pct(v5.metrics.recall)}) |`,
+    `| False-positive rate FP/(FP+TN) | ${v4.metrics.falsePositives}/${d.expectedNegatives} (${pct(v4.metrics.falsePositiveRate)}) | ${v5.metrics.falsePositives}/${d.expectedNegatives} (${pct(v5.metrics.falsePositiveRate)}) |`,
+    `| False-negative rate FN/(TP+FN) | ${v4.metrics.falseNegatives}/${d.expectedPositives} (${pct(v4.metrics.falseNegativeRate)}) | ${v5.metrics.falseNegatives}/${d.expectedPositives} (${pct(v5.metrics.falseNegativeRate)}) |`,
+    `| Exact matches | ${v4.metrics.exactMatches}/${d.prs} | ${v5.metrics.exactMatches}/${d.prs} |`,
+    '',
+    ...table(v4, 'v4'),
+    '',
+    ...table(v5, 'v5'),
+    '',
+    '| Skill | Expected | v4 TP / FP / FN / TN | v5 TP / FP / FN / TN |',
+    '| --- | --- | --- | --- |',
+    ...v5.perSkill.map(
+      (row, i) => `| ${row.skill} | ${row.expected} | ${counts(v4.perSkill[i])} | ${counts(row)} |`,
+    ),
+    '',
+    ...Object.entries(result.previouslySeen).flatMap(([name, score]) => {
+      const m = score.metrics
+      return [
+        `## ${name} — previously seen, reference only`,
+        '',
+        `${m.cases} PRs × ${score.perSkill.length} skills = ${m.decisions} decisions. TP / FP / FN / TN: ${counts(m)}. Precision ${m.truePositives}/${m.truePositives + m.falsePositives} (${pct(m.precision)}); recall ${m.truePositives}/${m.truePositives + m.falseNegatives} (${pct(m.recall)}). These unchanged labels do not decide acceptance.`,
+        '',
+        ...table(score, 'v5'),
+        '',
+      ]
+    }),
+    '## Method and limits',
+    '',
+    result.provenance.method,
+    '',
+    `Labels frozen: ${result.provenance.labelsFrozenAt}. Candidate frozen: ${result.provenance.candidateFrozenAt}. The initial measurement ran each frozen router once per heldout4 PR, receiving only paths and title/body. Subsequent --check executions are deterministic replays, not new trials. No retuning or relabelling followed the first measurement.`,
+    '',
+    `Positive-label gaps across all five samples: ${names(result.gaps.noPositiveAcrossAllSamples)}. No synthetic fixture fills these real-change gaps. A small purposive sample cannot establish general accuracy; broad path rules, unfamiliar wording and lexical negation remain limitations. Advice usefulness and provider comparisons were not measured.`,
+    '',
+    'All earlier artifacts remain byte-identical. Historical v4 report wording about live disposition describes its original publication: v4 --check now validates its snapshots and recorded outputs alone, as v1-v3 do. Coverage --check still uses frozen v4. Only v5 --check enforces the current accepted/rejected live disposition.',
+    '',
+    'The [label freeze](heldout4-freeze.json) pins inputs, labels, selection, diff evidence, v4 baseline, prior samples and historical artifacts. The [candidate freeze](routing-v5-freeze.json) pins snapshots and the label freeze. Build digests are provenance, not a requirement that future live evaluators stay unchanged. [Results](routing-v5-results.json) include all case matches and per-skill denominators. The [worklog](../worklog/blog-n4y6.12.md) records the diagnosis, red-first fixtures and freeze chronology.',
+    '',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --routing-v5 --check` replays v5 and verifies live disposition.',
+    '- Earlier replays: `--check`, `--routing-v2 --check`, `--routing-v3 --check`, `--routing-v4 --check`, `--coverage --check`.',
+    '',
+  ].join('\n')
 }
 
 export function renderRoutingV4Report(result) {
