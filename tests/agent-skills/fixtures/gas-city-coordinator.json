@@ -1,0 +1,16 @@
+{
+  "synthetic": true,
+  "provenance": "Created as a synthetic schema example on 2026-10-30. generatedAt is the example creation time, not a historical review time; headSha identifies the source context, not a reviewed delivery. No native control operation, dispatch or acceptance is asserted.",
+  "reviewResult": {
+    "schemaVersion": 1,
+    "reviewId": "synthetic-gas-city-coordinator-example",
+    "skill": "gas-city-coordinator",
+    "mode": "advisory",
+    "verdict": "pass",
+    "summary": "Synthetic example only: a coordination review would reconcile Beads scope, catalog-authorized dispatch and worklog evidence while retaining operator boundaries. This example grants no workflow or delivery authority.",
+    "generatedAt": "2026-10-30T15:39:21Z",
+    "headSha": "45817eb8fd027c7db3dd1fa88cf900b31153ac3a",
+    "findings": [],
+    "evidence": [{ "kind": "file", "path": ".claude/skills/gas-city-coordinator/SKILL.md" }]
+  }
+}

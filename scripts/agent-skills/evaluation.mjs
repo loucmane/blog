@@ -37,6 +37,136 @@ export function scoreRoutingEvaluation({ inputs, labels, predictions, skillIds }
   return scoreDecisions({ inputs, labels, evidence: predictions, skillIds, assessAdvice: false })
 }
 
+// Coverage uses one frozen router for all samples; historical scores stay intact.
+export function scoreCoverageSamples(samples, skillIds) {
+  const scored = Object.fromEntries(
+    Object.entries(samples).map(([name, sample]) => {
+      const result = scoreRoutingEvaluation({ ...sample, skillIds })
+      result.perSkill = result.perSkill.map((row) => ({
+        ...row,
+        decisions: result.metrics.cases,
+        truePositives: row.expected - row.falseNegatives,
+        trueNegatives: result.metrics.cases - row.expected - row.falsePositives,
+        precision: rate(row.expected - row.falseNegatives, row.selected),
+        recall: rate(row.expected - row.falseNegatives, row.expected),
+      }))
+      result.cases = result.cases.map((row) => ({
+        ...row,
+        matches: sample.predictions.cases.find(({ number }) => number === row.number).routing
+          .matches,
+      }))
+      return [name, result]
+    }),
+  )
+  const identities = Object.values(samples).flatMap(({ inputs }) => inputs.cases)
+  requireThat(
+    new Set(identities.map(({ number }) => number)).size === identities.length,
+    'coverage samples overlap by PR number',
+  )
+  requireThat(
+    new Set(identities.map(({ merge }) => merge)).size === identities.length,
+    'coverage samples overlap by merge SHA',
+  )
+  const perSkill = [...skillIds].sort().map((skill) => {
+    const rows = Object.values(scored).map((sample) =>
+      sample.perSkill.find((row) => row.skill === skill),
+    )
+    const counts = Object.fromEntries(
+      [
+        'decisions',
+        'expected',
+        'selected',
+        'truePositives',
+        'falsePositives',
+        'falseNegatives',
+        'trueNegatives',
+      ].map((key) => [key, rows.reduce((sum, row) => sum + row[key], 0)]),
+    )
+    return {
+      skill,
+      ...counts,
+      precision: rate(counts.truePositives, counts.selected),
+      recall: rate(counts.truePositives, counts.expected),
+    }
+  })
+  return { samples: scored, perSkill }
+}
+
+export function renderCoverageReport(result) {
+  const h = result.samples.heldout3.metrics
+  const names = (values) => (values.length ? values.join(', ') : 'none')
+  const pct = (value) =>
+    value === null ? 'undefined (no denominator)' : `${(value * 100).toFixed(1)}%`
+  return [
+    '# Persisted output and real-change routing coverage',
+    '',
+    'Classification: internal project documentation. Measurement only; all routing remains advisory and non-blocking. No routes were changed.',
+    '',
+    `${result.denominators.skills} registered skills have persisted schema-valid examples. Across all four samples, ${result.denominators.skills - result.gaps.noPositiveAcrossAllSamples.length}/${result.denominators.skills} skills have an expected positive. Remaining positive-label gaps: ${names(result.gaps.noPositiveAcrossAllSamples)}. These gaps remain open; there is no approved exception or claim of complete capability coverage.`,
+    '',
+    '## Heldout3 prediction',
+    '',
+    `The eight labels were sealed at ${result.provenance.labelsFrozenAt} before prediction. The first measurement used the unchanged live router, verified byte-identical to the frozen v4 router/map/catalog. Replays use that snapshot.`,
+    '',
+    `Denominators: ${h.cases} PRs × ${result.denominators.skills} skills = ${h.decisions} binary decisions; ${h.truePositives + h.falseNegatives} expected positives, ${h.falsePositives + h.trueNegatives} expected negatives, ${h.truePositives + h.falsePositives} selected scopes.`,
+    '',
+    '| Metric | Result |',
+    '| --- | --- |',
+    `| TP / FP / FN / TN | ${h.truePositives} / ${h.falsePositives} / ${h.falseNegatives} / ${h.trueNegatives} |`,
+    `| Precision TP/(TP+FP) | ${h.truePositives}/${h.truePositives + h.falsePositives} = ${pct(h.precision)} |`,
+    `| Recall TP/(TP+FN) | ${h.truePositives}/${h.truePositives + h.falseNegatives} = ${pct(h.recall)} |`,
+    `| False-positive rate FP/(FP+TN) | ${h.falsePositives}/${h.falsePositives + h.trueNegatives} = ${pct(h.falsePositiveRate)} |`,
+    `| False-negative rate FN/(TP+FN) | ${h.falseNegatives}/${h.truePositives + h.falseNegatives} = ${pct(h.falseNegativeRate)} |`,
+    `| Exact matches | ${h.exactMatches}/${h.cases} |`,
+    `| PRs missing at least one expected scope | ${h.missedRoutingCases}/${h.cases} |`,
+    '',
+    '| PR | Expected | Selected | False positives | False negatives |',
+    '| --- | --- | --- | --- | --- |',
+    ...result.samples.heldout3.cases.map(
+      (row) =>
+        `| #${row.number} | ${names(row.expected)} | ${names(row.selected)} | ${names(row.falsePositives)} | ${names(row.falseNegatives)} |`,
+    ),
+    '',
+    '## Per-skill counts across four samples',
+    '',
+    `All columns use the same frozen v4 router. The original five, heldout and heldout2 are previously seen reference cases, not new holdouts. Their original reports and labels are unchanged. Aggregate denominator: ${result.denominators.prs} distinct PRs × ${result.denominators.skills} skills = ${result.denominators.decisions} decisions; each skill has ${result.denominators.prs} decisions. Each cell below is TP / FP / FN / TN.`,
+    '',
+    '| Skill | v1 five (5) | heldout (8) | heldout2 (8) | heldout3 (8) | All (29) | Aggregate recall |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    ...result.perSkill.map((row) => {
+      const counts = (r) =>
+        `${r.truePositives} / ${r.falsePositives} / ${r.falseNegatives} / ${r.trueNegatives}`
+      const cells = Object.values(result.samples).map((sample) =>
+        counts(sample.perSkill.find(({ skill }) => skill === row.skill)),
+      )
+      return `| ${row.skill} | ${cells.join(' | ')} | ${counts(row)} | ${row.truePositives}/${row.expected} (${pct(row.recall)}) |`
+    }),
+    '',
+    '## Selection and remaining gaps',
+    '',
+    'The 39 supplied candidates were screened before routing. Owner UX was previously absent and is now expected for #75 (upload validation/error recovery) and #90 (private comparison workflow). Cross-agent-skill-platform already had positives in #123 and #127. New #76 and #82 probe domain-name noise. #88 tests a design document; #79, #100 and #114 broaden recovery, rendering and browser-measurement combinations.',
+    '',
+    ...Object.entries(result.provenance.remainingGapReasons).map(
+      ([skill, reason]) => `- **${skill}:** ${reason}`,
+    ),
+    '',
+    'Further samples need actual product discovery, technology decisions, native work coordination and release-evidence deliverables. A synthetic fixture or negative decision does not fill those positive-label gaps. No synthetic change was substituted for a real PR.',
+    '',
+    '## Evidence limits and replay',
+    '',
+    'Labels were assigned from diffs and trigger contracts by the same worker that implemented this measurement, before seeing predictions. They are independent of router output, but there was no independent second labeller or blind review. The purposive sample is prospective only with respect to prediction: its changes were already merged. It is not a population accuracy estimate, model/provider comparison or advice-usefulness assessment. A positive skill label does not test every catalog capability.',
+    '',
+    'The [inventory](coverage-inventory.md) records canonical paths, relative Codex links, capabilities, examples and expected-positive PRs. The [selection](heldout3-selection.json), [diff evidence](heldout3-diff-evidence.json), [labels](heldout3-labels.json), [inputs](heldout3-inputs.json) and [freeze](heldout3-freeze.json) retain provenance. The [results](coverage-results.json) include all denominators, per-skill counts and router match reasons. Freeze flags describe sealing time, not present execution state.',
+    '',
+    'Existing actual per-skill envelopes remain unchanged in `advice-v2-review.json`; their exact references and identities are indexed in the results. The older `forward-blind-review.json` remains a partial advice bundle. The two new persisted fixtures are explicitly synthetic and do not invent historical reviews. This measurement adds no advice scores or review identities.',
+    '',
+    '- `node scripts/agent-skills/coverage-inventory.mjs --check` verifies the live inventory.',
+    '- `node scripts/agent-skills/evaluate-forward.mjs --coverage --check` replays frozen coverage.',
+    '- Existing v1/v2/v3/v4 replay commands retain their historical outputs.',
+    '',
+  ].join('\n')
+}
+
 export function compareRoutingScores(
   before,
   after,
