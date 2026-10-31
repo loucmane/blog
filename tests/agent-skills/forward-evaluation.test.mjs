@@ -508,6 +508,68 @@ test('v5 replays the first measurement and all four previously-seen references',
   verifyV5Disposition(result)
 })
 
+test('v5 preserves its replay after edits to pinned non-evaluation documentation', (t) => {
+  const root = heldoutFixture(t)
+  const freezePath = new URL('docs/agent-skills/heldout4-freeze.json', root)
+  const freezeBytes = fs.readFileSync(freezePath)
+  const freeze = JSON.parse(freezeBytes)
+  const result = JSON.parse(
+    fs.readFileSync(new URL('docs/agent-skills/routing-v5-results.json', root)),
+  )
+  for (const name of [
+    'ingestion.md',
+    'lifecycle.md',
+    'platform-validation.md',
+    'review-result-contract.md',
+    'v1-gaps.json',
+    'advice-v2-brief.md',
+    'advice-v2-inputs.json',
+    'advice-v2-report.md',
+    'advice-v2-review.json',
+  ]) {
+    const path = `docs/agent-skills/${name}`
+    assert.ok(Object.hasOwn(freeze.historicalSha256, path))
+    fs.appendFileSync(new URL(path, root), '\n')
+    assert.deepEqual(evaluateRoutingV5({ root }), result, name)
+  }
+  assert.deepEqual(fs.readFileSync(freezePath), freezeBytes)
+})
+
+test('v5 still rejects changed historical artifacts in every evaluation family', (t) => {
+  const root = heldoutFixture(t)
+  for (const name of [
+    'forward-report.md',
+    'heldout-freeze.json',
+    'routing-v3-report.md',
+    'baseline-v1/routing.mjs',
+    'coverage-report.md',
+  ]) {
+    const path = `docs/agent-skills/${name}`
+    const target = new URL(path, root)
+    const bytes = fs.readFileSync(target)
+    fs.appendFileSync(target, '\n')
+    assert.throws(
+      () => evaluateRoutingV5({ root }),
+      (error) => error.message.split('\n')[0] === `historical artifact changed: ${path}`,
+    )
+    fs.writeFileSync(target, bytes)
+  }
+})
+
+test('heldout4 requires historical evaluation pins even when documentation pins remain', (t) => {
+  const root = heldoutFixture(t)
+  const target = new URL('docs/agent-skills/heldout4-freeze.json', root)
+  const freeze = JSON.parse(fs.readFileSync(target))
+  for (const historicalSha256 of [
+    undefined,
+    {},
+    { 'docs/agent-skills/ingestion.md': freeze.historicalSha256['docs/agent-skills/ingestion.md'] },
+  ]) {
+    fs.writeFileSync(target, JSON.stringify({ ...freeze, historicalSha256 }))
+    assert.throws(() => verifyHeldout4Freeze({ root }), /missing historical pins/)
+  }
+})
+
 test('heldout4 rejects altered inputs, missing pins, prediction-before-freeze and overlap', (t) => {
   const root = heldoutFixture(t)
   const target = (name) => new URL(`docs/agent-skills/${name}`, root)
