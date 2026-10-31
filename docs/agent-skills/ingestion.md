@@ -8,7 +8,7 @@ Run from the repository root with the pinned Node 24 runtime:
 node scripts/agent-skills/ingest-result.mjs reports/agent-skills/review.json --bead blog-example
 ```
 
-The JSON output contains `status: "dry-run"`, `gcArgv` (the exact update argument array), `metadataKey`, `receipt`, `summary`, and `worklog.path` / `worklog.entry`. Dry runs do not call Gas City, create directories, or write either sink. The caller must supply `--bead`; an old invocation without it is rejected.
+The JSON output contains `status: "dry-run"`, `gcArgv` (the exact update argument array), `metadataKey`, `receipt`, `summary`, `deterministicReceipts`, and `worklog.path` / `worklog.entry`. Dry runs verify cited deterministic receipts but do not execute checks, call Gas City, create directories, or write either sink. The caller must supply `--bead`; an old invocation without it is rejected.
 
 | Argument                 | Meaning                                                                                         |
 | ------------------------ | ----------------------------------------------------------------------------------------------- |
@@ -62,9 +62,11 @@ The sinks are not a shared transaction. If the update succeeds and the append fa
 
 ## Validation versus evidence truth
 
-Before any Gas City command or evidence write, ingestion parses the result and calls the existing `validateReviewResult`. Subjective findings cannot block. The new ingestion boundary additionally rejects blocking categories outside `blockingEligibleCategories` from `routing.mjs`. Eligible non-blocking findings remain non-blocking; counts do not promote advice into enforcement.
+Before any Gas City command or evidence write, ingestion parses the result and calls the existing `validateReviewResult`. Subjective findings cannot block, and blocking categories must be in `blockingEligibleCategories` from `routing.mjs`. Eligible non-blocking findings remain non-blocking; counts do not promote advice into enforcement.
 
-These checks establish structure, containment, classification and the identity of the recorded bytes. They do not prove that a command ran, a linked artifact exists, a claimed head was checked, or a finding is accurate. The supplied `headSha` is recorded without executing Git. The coordinator must verify those claims independently. Keep the ignored `reports/agent-skills/` evidence artifact in durable storage at the recorded repository-relative location; a receipt hash does not preserve the file itself. Do not commit generated review artifacts.
+Both dry-run and execute ingestion also require each blocking finding to cite `receipt:reports/agent-skills/receipts/<checkId>-<headSha>.json` in its own evidence array. Every cited receipt must name a registered deterministic check, permit the finding's category, match the registered argv and review head, and record a completed nonzero exit. Missing, malformed, stale or inconsistent receipts are refused before any Gas City call. Non-blocking findings require no receipt. `deterministicReceipts` lists the verified finding/check IDs, paths, receipt hashes and clean-tree flags, including dirty runs. This gate uses the same parsed review bytes that the plan hashes. See [deterministic check receipts](deterministic-receipts.md) for the registry, host runner, paths and execution contract.
+
+These are consistency checks, not cryptographic attestation or proof that a finding is accurate. The host runner records Git's head and dirty state; ingestion compares that recorded head to the supplied review head without executing Git itself. A dirty receipt remains dirty evidence, and the coordinator must inspect the actual diagnostic and trusted provenance. Keep ignored review and deterministic receipt artifacts, plus the reviewed plan, in durable storage; hashes do not preserve those files. Do not commit generated review artifacts.
 
 For the authorized host demonstration, use a reviewed result describing actual evidence, inspect the dry-run JSON, and then invoke the same command with `--execute`. Read back the metadata and note, inspect the appended worklog, and verify the result bytes against the recorded SHA-256. Repeat the identical execution to demonstrate `already ingested` with no additional note or append. Record this host receipt on the task before accepting completion.
 
@@ -72,6 +74,6 @@ For the authorized host demonstration, use a reviewed result describing actual e
 
 V1 completion criterion c validates recorded review envelopes through `buildBeadsIngestPlan` in memory with a synthetic bead ID. Its optional `result` input serializes the envelope as indented JSON plus a newline, applies the same validation and path checks, and builds a plan without requiring a result file, writing evidence, or calling Gas City. The plan hash describes that serialization; it is not a receipt for a persisted artifact.
 
-`ingestReviewResult` rejects the in-memory `result` option, including for a CLI dry run. Ingestion always reads and hashes the actual result file bytes. Only the coordinator runs `node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id> --execute` on the host. The command without `--execute` remains a dry run.
+`buildBeadsIngestPlan` is a structural planning API and does not verify deterministic execution receipts, even with a file-backed result. `ingestReviewResult` rejects the in-memory `result` option, including for a CLI dry run. Ingestion always reads and hashes the actual result file bytes and verifies receipts for blocking findings. Only the coordinator runs `node scripts/agent-skills/ingest-result.mjs reports/agent-skills/<result>.json --bead <id> --execute` on the host. The command without `--execute` remains a dry run.
 
 The deprecated Aegis builder has been removed. Do not mutate frozen Aegis or Taskmaster state. The completion report and injected-runner tests demonstrate contract acceptance, not a live ingestion receipt. The v1 gap manifest is preserved as historical proposals rather than a current open-work list.
