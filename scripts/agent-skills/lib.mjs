@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { blockingEligibleCategories, validateRoutingConfig } from "./routing.mjs";
+import { verifyBlockingReceipts } from "./receipts.mjs";
 
 const SKILL_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const REVIEW_ID = /^[a-z0-9][a-z0-9._-]*$/;
@@ -654,15 +655,22 @@ function markdownCode(value) {
   return `${ticks} ${value} ${ticks}`
 }
 
-export function buildBeadsIngestPlan({
-  root = process.cwd(),
-  resultPath,
-  result: suppliedResult,
-  bead,
-  worklog = `docs/worklog/${bead}.md`,
-  city = INGEST_ROUTE.city,
-  rig = INGEST_ROUTE.rig,
-} = {}) {
+export function buildBeadsIngestPlan(options) {
+  return buildIngestPlan(options)
+}
+
+function buildIngestPlan(
+  {
+    root = process.cwd(),
+    resultPath,
+    result: suppliedResult,
+    bead,
+    worklog = `docs/worklog/${bead}.md`,
+    city = INGEST_ROUTE.city,
+    rig = INGEST_ROUTE.rig,
+  } = {},
+  verifyEvidence = false,
+) {
   if (typeof bead !== 'string' || !/^[a-z0-9]+-[a-z0-9][a-z0-9._-]*$/.test(bead)) {
     throw new Error('--bead must be a valid bead ID')
   }
@@ -686,6 +694,9 @@ export function buildBeadsIngestPlan({
   const result = JSON.parse(bytes.toString('utf8'))
   const errors = validateReviewResult(result)
   if (errors.length) throw new Error(errors.join('; '))
+  // Verify the same parsed bytes used by the plan/hash, never a second read.
+  // The public offline builder remains structural for historical fixtures.
+  const deterministicReceipts = verifyEvidence ? verifyBlockingReceipts(result, { root }) : []
   const absoluteWorklog = ingestionPath(root, worklog, 'docs/worklog', 'worklog')
   const findings = { bySeverity: { info: 0, warning: 0, error: 0 }, blocking: 0, advisory: 0 }
   for (const finding of result.findings) {
@@ -712,6 +723,7 @@ export function buildBeadsIngestPlan({
     bead,
     metadataKey,
     receipt,
+    ...(verifyEvidence ? { deterministicReceipts } : {}),
     summary,
     gcArgv: [
       INGEST_ROUTE.command,
@@ -786,7 +798,7 @@ export function ingestReviewResult({
     throw new Error('ingestion requires file-backed evidence; in-memory results are for buildBeadsIngestPlan only')
   }
   root = path.resolve(root)
-  const plan = buildBeadsIngestPlan({ root, ...options })
+  const plan = buildIngestPlan({ root, ...options }, true)
   if (!execute) return { status: 'dry-run', ...plan }
 
   const showArgv = [...plan.gcArgv.slice(0, 5), 'bd', 'show', plan.bead, '--json']

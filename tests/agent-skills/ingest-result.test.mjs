@@ -11,6 +11,8 @@ import { blockingEligibleCategories } from '../../scripts/agent-skills/routing.m
 const repository = fileURLToPath(new URL('../../', import.meta.url))
 const bead = 'blog-n4y6.6'
 const resultPath = 'reports/agent-skills/receipt.json'
+const checkReceiptPath =
+  'reports/agent-skills/receipts/agent-skills-platform-0123456789abcdef0123456789abcdef01234567.json'
 const route = [
   '/home/loucmane/gascity/bin/gc',
   '--city',
@@ -46,7 +48,7 @@ function validResult() {
         message: 'Synthetic deterministic finding.',
         subjective: false,
         blocking: true,
-        evidence: ['synthetic schema check'],
+        evidence: [`receipt:${checkReceiptPath}`],
       },
       {
         id: 'test',
@@ -68,11 +70,34 @@ function fixture(t, result = validResult()) {
   fs.mkdirSync(path.join(root, 'reports/agent-skills'), { recursive: true })
   const bytes = `${JSON.stringify(result, null, 2)}\n`
   fs.writeFileSync(path.join(root, resultPath), bytes)
+  fs.mkdirSync(path.join(root, 'config/agent-skills'), { recursive: true })
+  fs.copyFileSync(
+    path.join(repository, 'config/agent-skills/deterministic-checks.json'),
+    path.join(root, 'config/agent-skills/deterministic-checks.json'),
+  )
+  fs.mkdirSync(path.join(root, 'reports/agent-skills/receipts'), { recursive: true })
+  fs.writeFileSync(
+    path.join(root, checkReceiptPath),
+    JSON.stringify({
+      schemaVersion: 1,
+      checkId: 'agent-skills-platform',
+      argv: ['node', 'scripts/agent-skills/validate-platform.mjs'],
+      headSha: validResult().headSha,
+      cleanTree: true,
+      exitCode: 1,
+      startedAt: '2026-10-29T13:58:00.000Z',
+      finishedAt: '2026-10-29T13:59:00.000Z',
+      outputSha256: createHash('sha256').update('synthetic schema diagnostic').digest('hex'),
+    }),
+  )
   return { root, bead, resultPath, bytes }
 }
 
 const corpusRoot = path.join(repository, 'tests/agent-skills/review-result-corpus')
-for (const name of fs.readdirSync(corpusRoot).filter((name) => name.endsWith('.json')).sort()) {
+for (const name of fs
+  .readdirSync(corpusRoot)
+  .filter((name) => name.endsWith('.json'))
+  .sort()) {
   const entry = JSON.parse(fs.readFileSync(path.join(corpusRoot, name), 'utf8'))
   test(`ingestion honors the shared corpus: ${name}`, (t) => {
     const input = fixture(t, entry.result)
@@ -137,6 +162,148 @@ function recordingRunner(record = { id: bead, metadata: {} }) {
     },
   }
 }
+
+test('blocking ingestion requires a deterministic receipt even for a dry run', (t) => {
+  const review = validResult()
+  review.findings[1].evidence = ['command: arbitrary caller-supplied check']
+  const input = fixture(t, review)
+  const fake = recordingRunner()
+  for (const execute of [false, true]) {
+    assert.throws(
+      () => library.ingestReviewResult({ ...input, execute, runner: fake.runner }),
+      /requires.*receipt/,
+    )
+  }
+  assert.deepEqual(fake.calls, [])
+  assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
+})
+
+for (const [label, mutate, reason] of [
+  [
+    'forged argv',
+    (v) => {
+      v.argv = ['node', 'unchecked.mjs']
+    },
+    /argv mismatch/,
+  ],
+  [
+    'stale receipt',
+    (v) => {
+      v.headSha = 'f'.repeat(40)
+    },
+    /headSha is stale/,
+  ],
+  [
+    'unregistered check',
+    (v) => {
+      v.checkId = 'unregistered'
+    },
+    /Unregistered/,
+  ],
+  [
+    'passing receipt',
+    (v) => {
+      v.exitCode = 0
+    },
+    /completed nonzero/,
+  ],
+]) {
+  test(`both ingestion modes reject ${label} before reading Beads or writing a worklog`, (t) => {
+    const input = fixture(t)
+    const receipt = JSON.parse(fs.readFileSync(path.join(input.root, checkReceiptPath), 'utf8'))
+    mutate(receipt)
+    fs.writeFileSync(path.join(input.root, checkReceiptPath), JSON.stringify(receipt))
+    const fake = recordingRunner()
+    for (const execute of [false, true]) {
+      assert.throws(
+        () => library.ingestReviewResult({ ...input, execute, runner: fake.runner }),
+        reason,
+      )
+    }
+    assert.deepEqual(fake.calls, [])
+    assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
+  })
+}
+
+test('both ingestion modes refuse missing receipt files and unpermitted check categories', (t) => {
+  const review = validResult()
+  review.findings[1].category = 'security'
+  const input = fixture(t, review)
+  const fake = recordingRunner()
+  for (const execute of [false, true]) {
+    assert.throws(
+      () => library.ingestReviewResult({ ...input, execute, runner: fake.runner }),
+      /does not permit category/,
+    )
+  }
+  review.findings[1].category = 'schema'
+  fs.writeFileSync(path.join(input.root, resultPath), JSON.stringify(review))
+  fs.unlinkSync(path.join(input.root, checkReceiptPath))
+  for (const execute of [false, true]) {
+    assert.throws(
+      () => library.ingestReviewResult({ ...input, execute, runner: fake.runner }),
+      /ENOENT/,
+    )
+  }
+  assert.deepEqual(fake.calls, [])
+  assert.equal(fs.existsSync(path.join(input.root, 'docs')), false)
+})
+
+test('both ingestion modes accept a matching completed failure and expose dirty state', (t) => {
+  const input = fixture(t)
+  const receipt = JSON.parse(fs.readFileSync(path.join(input.root, checkReceiptPath), 'utf8'))
+  receipt.cleanTree = false
+  const bytes = JSON.stringify(receipt)
+  fs.writeFileSync(path.join(input.root, checkReceiptPath), bytes)
+  const fake = recordingRunner()
+  for (const execute of [false, true]) {
+    const outcome = library.ingestReviewResult({ ...input, execute, runner: fake.runner })
+    assert.deepEqual(outcome.deterministicReceipts, [
+      {
+        findingId: 'schema',
+        path: checkReceiptPath,
+        checkId: 'agent-skills-platform',
+        cleanTree: false,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+      },
+    ])
+    assert.equal(outcome.receipt.findings.blocking, 1)
+    assert.equal(outcome.receipt.findings.advisory, 2)
+  }
+  assert.equal(fake.calls.length, 2)
+})
+
+test('non-blocking findings need no registry or receipt and remain advisory', (t) => {
+  const review = validResult()
+  review.findings[1].blocking = false
+  const input = fixture(t, review)
+  fs.unlinkSync(path.join(input.root, checkReceiptPath))
+  fs.unlinkSync(path.join(input.root, 'config/agent-skills/deterministic-checks.json'))
+  const fake = recordingRunner()
+  for (const execute of [false, true]) {
+    const outcome = library.ingestReviewResult({ ...input, execute, runner: fake.runner })
+    assert.deepEqual(outcome.deterministicReceipts, [])
+    assert.equal(outcome.receipt.findings.blocking, 0)
+    assert.equal(outcome.receipt.findings.advisory, 3)
+  }
+})
+
+test('ingestion checks the parsed bytes it hashes even if result changes during receipt verification', (t) => {
+  const input = fixture(t)
+  const originalRead = fs.readFileSync
+  t.mock.method(fs, 'readFileSync', (...args) => {
+    if (args[0] === path.join(input.root, checkReceiptPath)) {
+      const changed = validResult()
+      changed.headSha = 'f'.repeat(40)
+      fs.writeFileSync(path.join(input.root, resultPath), JSON.stringify(changed))
+    }
+    return originalRead(...args)
+  })
+  const outcome = library.ingestReviewResult(input)
+  assert.equal(outcome.receipt.headSha, validResult().headSha)
+  assert.equal(outcome.receipt.sha256, createHash('sha256').update(input.bytes).digest('hex'))
+  assert.equal(outcome.deterministicReceipts.length, 1)
+})
 
 test('defaults to a side-effect-free dry run, including the explicit dry-run alias', (t) => {
   const input = fixture(t)

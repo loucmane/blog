@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "checks": {
+    "agent-skills-platform": {
+      "argv": ["node", "scripts/agent-skills/validate-platform.mjs"],
+      "categories": ["schema", "link", "script"],
+      "timeoutMs": 60000
+    },
+    "agent-skills-ci": {
+      "argv": ["pnpm", "ci:agent-skills"],
+      "categories": ["schema", "link", "script", "test"],
+      "timeoutMs": 300000
+    },
+    "unit-capability": {
+      "argv": ["pnpm", "test:capability", "unit"],
+      "categories": ["test"],
+      "timeoutMs": 60000
+    },
+    "format-check": {
+      "argv": ["pnpm", "format:check"],
+      "categories": ["lint"],
+      "timeoutMs": 300000
+    },
+    "typecheck": {
+      "argv": ["pnpm", "typecheck"],
+      "categories": ["typecheck"],
+      "timeoutMs": 300000
+    },
+    "lint": {
+      "argv": ["pnpm", "lint"],
+      "categories": ["lint"],
+      "timeoutMs": 300000
+    }
+  }
+}
