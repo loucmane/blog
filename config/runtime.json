@@ -71,6 +71,7 @@
     "minimatch@>=3.0.0 <3.1.4": "3.1.4",
     "minimatch@>=5.0.0 <5.1.8": "5.1.8",
     "minimatch@>=9.0.0 <9.0.7": "9.0.7",
+    "minimatch@>=10.0.0 <11.0.1": "11.0.3",
     "nanoid@>=3.0.0 <3.3.18": "3.3.18",
     "next@16.4.1>postcss": "8.5.23",
     "next@16.4.1>sharp": "0.35.5",
@@ -301,8 +302,8 @@
   "packageScriptsSha256": "c741c04c9d8b9f59a8ff06cee5dd1ea9e091744ca8c3c957303848d36623b217",
   "dependencyDeclarationsSha256": "c0795cd17b169773a0aae6560873f759025924096c329e4c335f000d438a843a",
   "packageManifestSemanticsSha256": "91207ca7b2cd99c0a53f33b012ccbb6e8c037ed5456ce0853f460d9f18e992d0",
-  "lockfileSha256": "68fe9e90e693e26b0101422e2198c5ef274855ad354dfa597f73a1839fad2e40",
-  "workspaceFileSha256": "d9c0bef345b98bab1713e746b0d2250a18e13e818ffb8258be1ca224f935b146",
+  "lockfileSha256": "521f100f56512cc8bd2cf21ff3580d1263d64532d00b2705c69dd71c0ef4c81c",
+  "workspaceFileSha256": "f4674ae027b621ddc867857381628493bb7e91573143a0d99d24bd621f386edc",
   "actions": {
     "actions/checkout": {
       "release": "v7.0.0",
