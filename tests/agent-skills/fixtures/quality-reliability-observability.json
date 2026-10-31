@@ -127,10 +127,22 @@
     "docs/planning/phase-5-publishing-distribution.md"
   ],
   "plannedPaths": [
-    { "file": "packages/web/src/app/api/health/route.ts", "bead": "blog-0045.12" },
-    { "file": "packages/web/src/server/observability/logger.ts", "bead": "blog-0045.12" },
-    { "file": "packages/web/src/server/observability/jobs.ts", "bead": "blog-0045.12" },
-    { "file": "packages/web/src/app/api/vitals/route.ts", "bead": "blog-0045.11" }
+    {
+      "file": "packages/web/src/app/api/health/route.ts",
+      "bead": "blog-0045.12"
+    },
+    {
+      "file": "packages/web/src/server/observability/logger.ts",
+      "bead": "blog-0045.12"
+    },
+    {
+      "file": "packages/web/src/server/observability/jobs.ts",
+      "bead": "blog-0045.12"
+    },
+    {
+      "file": "packages/web/src/app/api/vitals/route.ts",
+      "bead": "blog-0045.11"
+    }
   ],
   "ciSteps": [
     "Unit and integration tests",
@@ -170,7 +182,10 @@
       "packages/web/tests/content/**",
       "docs/product/nonfunctional-requirements.md",
       "packages/web/src/app/api/health/**",
-      "packages/web/src/server/observability/**"
+      "packages/web/src/server/observability/**",
+      "docs/design/reader-bakeoff/*.md",
+      "packages/web/src/server/database/lab-seed-concurrency-integration.ts",
+      "packages/web/src/reader-directions/capture-fonts.ts"
     ],
     "positivePaths": [
       "playwright.config.ts",
@@ -192,7 +207,10 @@
       "packages/web/src/reader-directions/contract.test.ts",
       "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts",
       "packages/web/tests/framework/framework-contract.test.ts",
-      "tests/e2e/reader-lab-cold-fonts.spec.ts"
+      "tests/e2e/reader-lab-cold-fonts.spec.ts",
+      "docs/design/reader-bakeoff/quiet-monograph.md",
+      "packages/web/src/server/database/lab-seed-concurrency-integration.ts",
+      "packages/web/src/reader-directions/capture-fonts.ts"
     ],
     "negativePaths": [
       "tests/e2e/homepage.spec.ts",
@@ -233,6 +251,15 @@
         "reader-frontend"
       ],
       "packages/web/src/reader-directions/quiet-monograph/quiet-monograph.e2e.ts": [
+        "reader-frontend"
+      ],
+      "docs/design/reader-bakeoff/quiet-monograph.md": [
+        "reader-frontend"
+      ],
+      "packages/web/src/server/database/lab-seed-concurrency-integration.ts": [
+        "content-platform-backend"
+      ],
+      "packages/web/src/reader-directions/capture-fonts.ts": [
         "reader-frontend"
       ]
     }
@@ -421,7 +448,9 @@
         "message": "Choose the server error-reporting sink and its redaction contract before the first production deployment.",
         "subjective": true,
         "blocking": false,
-        "evidence": ["docs/deployment/target-platform.md"]
+        "evidence": [
+          "docs/deployment/target-platform.md"
+        ]
       }
     ],
     "evidence": [
@@ -477,7 +506,9 @@
         "message": "Synthetic failure example only: the capability check reports a skipped unit test through noDisabledUnitTests.",
         "subjective": false,
         "blocking": true,
-        "evidence": ["command: node scripts/ci/check-test-capability.mjs unit"]
+        "evidence": [
+          "command: node scripts/ci/check-test-capability.mjs unit"
+        ]
       }
     },
     {
@@ -489,7 +520,9 @@
         "message": "Synthetic failure example only: the local production smoke receives HTTP 500 from the root page.",
         "subjective": false,
         "blocking": true,
-        "evidence": ["command: node scripts/ci/web-production-smoke.mjs"]
+        "evidence": [
+          "command: node scripts/ci/web-production-smoke.mjs"
+        ]
       }
     },
     {

@@ -155,11 +155,15 @@
     "positive": [
       {
         "file": "packages/web/src/server/owner/auth.ts",
-        "also": ["content-platform-backend"]
+        "also": [
+          "content-platform-backend"
+        ]
       },
       {
         "file": "packages/web/src/server/owner/publication-worker.ts",
-        "also": ["content-platform-backend"]
+        "also": [
+          "content-platform-backend"
+        ]
       },
       {
         "file": "packages/web/src/app/api/owner/media/route.ts"
@@ -169,7 +173,9 @@
       },
       {
         "file": "packages/web/src/app/api/media/[id]/route.ts",
-        "also": ["reader-frontend"]
+        "also": [
+          "reader-frontend"
+        ]
       },
       {
         "file": "packages/web/src/lib/request-security.ts"
@@ -182,42 +188,61 @@
       },
       {
         "file": "packages/web/src/server/content/document.ts",
-        "also": ["content-platform-backend", "editorial-blocks"]
+        "also": [
+          "content-platform-backend",
+          "editorial-blocks"
+        ]
       },
       {
         "file": "packages/web/src/server/content/media.ts",
-        "also": ["content-platform-backend"]
+        "also": [
+          "content-platform-backend"
+        ]
       },
       {
         "file": "packages/web/src/server/content/media-variants.ts",
-        "also": ["content-platform-backend"]
+        "also": [
+          "content-platform-backend"
+        ]
       },
       {
         "file": "packages/web/src/server/content/media-variant-rules.ts",
-        "also": ["content-platform-backend"]
+        "also": [
+          "content-platform-backend"
+        ]
       },
       {
         "file": "packages/web/migrations/0002_owner_auth.sql",
-        "also": ["content-platform-backend"]
+        "also": [
+          "content-platform-backend"
+        ]
       },
       {
         "file": "packages/web/migrations/0002_owner_auth.down.sql",
-        "also": ["content-platform-backend"]
+        "also": [
+          "content-platform-backend"
+        ]
       },
       {
         "file": "scripts/ci/check-dependency-security.mjs",
-        "also": ["release-witness"]
+        "also": [
+          "release-witness"
+        ]
       },
       {
         "file": "tests/ci/security-hotfix.test.mjs",
-        "also": ["release-witness"]
+        "also": [
+          "release-witness"
+        ]
       },
       {
         "file": ".gitleaksignore"
       },
       {
         "file": ".github/workflows/ci.yml",
-        "also": ["release-witness"]
+        "also": [
+          "release-witness"
+        ]
       },
       {
         "file": "package.json"
@@ -230,6 +255,17 @@
       },
       {
         "file": "config/runtime.json"
+      },
+      {
+        "file": "packages/web/src/reader-lab/compare-actions.ts",
+        "also": []
+      },
+      {
+        "file": "packages/web/src/app/owner/(workspace)/reader-lab/compare/page.tsx",
+        "also": [
+          "owner-publishing-ux",
+          "reader-frontend"
+        ]
       }
     ],
     "negative": [
@@ -279,7 +315,9 @@
         "message": "Assess original-upload acceptance separately from variant decoder limits.",
         "subjective": true,
         "blocking": false,
-        "evidence": ["packages/web/src/server/content/media-variants.ts"]
+        "evidence": [
+          "packages/web/src/server/content/media-variants.ts"
+        ]
       }
     ],
     "evidence": [
@@ -303,7 +341,9 @@
         "message": "Synthetic example only: a redacted scanner reports a secret in the reviewed change.",
         "subjective": false,
         "blocking": true,
-        "evidence": ["command: gitleaks dir --redact ."]
+        "evidence": [
+          "command: gitleaks dir --redact ."
+        ]
       }
     },
     {
@@ -329,7 +369,9 @@
         "message": "Synthetic example only: dependency policy rejects an unexcepted vulnerability.",
         "subjective": false,
         "blocking": true,
-        "evidence": ["command: node scripts/ci/check-dependency-security.mjs"]
+        "evidence": [
+          "command: node scripts/ci/check-dependency-security.mjs"
+        ]
       }
     }
   ],
@@ -341,21 +383,27 @@
       {
         "id": "original-media",
         "description": "Original image bytes and private drafts referencing them.",
-        "evidence": ["packages/web/src/server/content/media.ts"]
+        "evidence": [
+          "packages/web/src/server/content/media.ts"
+        ]
       }
     ],
     "actors": [
       {
         "id": "owner-browser",
         "description": "Authenticated owner submitting untrusted file bytes.",
-        "evidence": ["packages/web/src/app/api/owner/media/route.ts"]
+        "evidence": [
+          "packages/web/src/app/api/owner/media/route.ts"
+        ]
       }
     ],
     "boundaries": [
       {
         "id": "upload-to-storage",
         "description": "Multipart input passes from browser through the owner route into object storage.",
-        "evidence": ["packages/web/src/app/api/owner/media/route.ts"]
+        "evidence": [
+          "packages/web/src/app/api/owner/media/route.ts"
+        ]
       }
     ],
     "threats": [
@@ -406,7 +454,9 @@
   ],
   "pathContext": [
     {
-      "match": ["packages/web/src/server/content/document.ts"],
+      "match": [
+        "packages/web/src/server/content/document.ts"
+      ],
       "includeAny": [
         "security",
         "sanitization",
@@ -418,7 +468,9 @@
       ]
     },
     {
-      "match": ["packages/web/next.config.ts"],
+      "match": [
+        "packages/web/next.config.ts"
+      ],
       "includeAny": [
         "security",
         "privacy",
@@ -429,6 +481,23 @@
         "content-security-policy",
         "noindex",
         "no-store"
+      ]
+    },
+    {
+      "match": [
+        "packages/web/src/reader-lab/**",
+        "packages/web/src/app/owner/(workspace)/reader-lab/**"
+      ],
+      "includeAny": [
+        "owner page guard",
+        "owner session",
+        "same origin",
+        "authorization",
+        "authentication",
+        "security",
+        "privacy",
+        "no-store",
+        "noindex"
       ]
     }
   ],

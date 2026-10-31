@@ -116,7 +116,10 @@
         "docs/product/content-workflow.md",
         "docs/product/owner-publishing/**",
         "docs/design/owner-publishing/**",
-        "docs/research/owner-publishing/**"
+        "docs/research/owner-publishing/**",
+        "packages/web/src/app/owner/(workspace)/page.tsx",
+        "packages/web/src/app/owner/(workspace)/**/page.tsx",
+        "packages/web/src/reader-lab/compare-view.tsx"
       ],
       "skills": [
         "owner-publishing-ux"
@@ -146,14 +149,17 @@
           "destructive actions",
           "accessibility",
           "mobile ergonomics",
-          "plain-language error handling"
+          "plain-language error handling",
+          "owner error",
+          "owner-readable message"
         ],
         "contextAny": [
           "owner",
           "authoring",
           "editor ux",
           "publishing journey",
-          "publishing workflow"
+          "publishing workflow",
+          "owner-readable"
         ],
         "excludeAny": [
           "product discovery",
@@ -292,7 +298,9 @@
         "package.json",
         "packages/web/package.json",
         "pnpm-lock.yaml",
-        "config/runtime.json"
+        "config/runtime.json",
+        "packages/web/src/reader-lab/**",
+        "packages/web/src/app/owner/(workspace)/reader-lab/**"
       ],
       "skills": [
         "security-identity-privacy"
@@ -356,6 +364,23 @@
             "noindex",
             "no-store"
           ]
+        },
+        {
+          "match": [
+            "packages/web/src/reader-lab/**",
+            "packages/web/src/app/owner/(workspace)/reader-lab/**"
+          ],
+          "includeAny": [
+            "owner page guard",
+            "owner session",
+            "same origin",
+            "authorization",
+            "authentication",
+            "security",
+            "privacy",
+            "no-store",
+            "noindex"
+          ]
         }
       ]
     },
@@ -375,7 +400,10 @@
         "packages/web/src/app/api/media/**",
         "scripts/lab-lighthouse.mjs",
         "tests/e2e/homepage.spec.ts",
-        "tests/e2e/reader.spec.ts"
+        "tests/e2e/reader.spec.ts",
+        "docs/design/reader-bakeoff/*.md",
+        "packages/web/src/reader-lab/*.tsx",
+        "packages/web/src/app/owner/(workspace)/reader-lab/**"
       ],
       "skills": [
         "reader-frontend"
@@ -570,7 +598,10 @@
         "packages/web/tests/content/**",
         "docs/product/nonfunctional-requirements.md",
         "packages/web/src/app/api/health/**",
-        "packages/web/src/server/observability/**"
+        "packages/web/src/server/observability/**",
+        "docs/design/reader-bakeoff/*.md",
+        "packages/web/src/server/database/lab-seed-concurrency-integration.ts",
+        "packages/web/src/reader-directions/capture-fonts.ts"
       ],
       "skills": [
         "quality-reliability-observability"

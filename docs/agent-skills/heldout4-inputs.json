@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "source": "gh pr view, exported by the coordinator 2026-10-29",
+  "cases": [
+    {
+      "number": 77,
+      "title": "feat(skills): add security, identity and privacy skill (blog-0059)",
+      "body": "## Summary\n\nAdds the project-authored cross-agent skill `security-identity-privacy` (Bead blog-0059), the Task 59 skill in `docs/architecture/cross-agent-skill-system-v1-roadmap.md`. It designs and reviews owner authentication and account recovery, authorization and future role boundaries, sessions, credentials and secrets, rich-content sanitization, upload and media security, abuse and rate limits, privacy and data retention, dependency and supply-chain risk, and produces a lightweight structured threat model.\n\n- `.claude/skills/security-identity-privacy/`: `SKILL.md`, `agents/openai.yaml`, `references/security-map.md` (the real security surface, separating protections that exist from ones that do not), `references/security-identity-privacy-output-contract.md`\n- `.agents/skills/security-identity-privacy`: relative symlink for Codex\n- `config/agent-skills/catalog.yaml` and `review-map.yaml`: registration and one advisory route for security paths; the one intended overlap with content-platform-backend (`publication-worker.ts`) is recorded in its fixture\n- `tests/agent-skills/security-identity-privacy.test.mjs` and fixture (positive, negative and deny-path routes, review result and threat-model examples); `platform.test.mjs` registers the seventh skill\n\nThreat-model risk ranking is advisory. Only deterministic security checks (secret scan, a reproduced missing guard, a parsed audit failure, failing security tests) are blocking-eligible. No product code, packages, lockfile, CI, `.taskmaster` or `.aegis` changes.\n\n## Verification\n\n- Red first (worker worklog), then: `validate-platform` 0 errors (7 skills, 7 routes); `node --test tests/agent-skills/*.test.mjs` 63/63; `quick_validate.py` valid; `git diff --check origin/main` clean.\n\n## Review\n\nImplemented by Codex; cross-vendor review by Claude: about 80 code claims checked against the source and every cited path exists, PASS. Two wording corrections were applied in `references/security-map.md`: reset-delivery failures are swallowed and logged by Better Auth (the endpoint still reports success), and the http/https/mailto protocol rule covers document links and credits only. The second surfaced a product gap, filed as blog-wmyj: a media asset's own `creditUrl` accepts any scheme and reaches a reader `href` without `safeHref`.\n",
+      "merge": "3aed4c266adce4d0a0e9e9113c99d12e73bdd771",
+      "mergedAt": "2026-10-19T15:27:59Z",
+      "files": [
+        ".agents/skills/security-identity-privacy",
+        ".claude/skills/security-identity-privacy/SKILL.md",
+        ".claude/skills/security-identity-privacy/agents/openai.yaml",
+        ".claude/skills/security-identity-privacy/references/security-identity-privacy-output-contract.md",
+        ".claude/skills/security-identity-privacy/references/security-map.md",
+        "config/agent-skills/catalog.yaml",
+        "config/agent-skills/review-map.yaml",
+        "tests/agent-skills/fixtures/content-platform-backend.json",
+        "tests/agent-skills/fixtures/security-identity-privacy.json",
+        "tests/agent-skills/platform.test.mjs",
+        "tests/agent-skills/security-identity-privacy.test.mjs"
+      ]
+    },
+    {
+      "number": 81,
+      "title": "fix(media): never confirm a variant of an unmeasured original with 304 (blog-0044.10)",
+      "body": "## Summary\n\nFixes Bead blog-0044.10 (P3, found in the Codex re-review of PR #54). The public media route answered `If-None-Match` before resolving whether a variant could be served. For an original that was never measured (animated flag null, uploaded before migration 0004), `If-None-Match: *` or a crafted v2 validator got a 304 for a variant that would never be served, instead of the 307 to the original. No image bytes were exposed and visibility still ran first; it was a correctness edge.\n\n- `packages/web/src/app/api/media/[id]/route.ts`: a 304 goes out at once only when the variant is known to be served without reading anything: the original was measured as a still within the pixel limit, or this process has already loaded that exact variant. Otherwise the variant is loaded first, so an unavailable one redirects (307) whatever the request's conditions. Visibility runs first, as before; caching headers and ETags unchanged.\n- `packages/web/src/server/content/media-variant-rules.ts`: `mediaVariantsRuledIn`.\n- `packages/web/src/server/content/media-variants.ts`: the service remembers up to 10,000 recently loaded variants (keyed by asset, original checksum, encoding revision, width and format, so a changed original can never be confirmed from a stale entry).\n- New `packages/web/tests/reader/media-variant-conditional.test.ts`.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`: clean\n- Vitest: 744/744 (new file 4/4, existing media-variant-routes 19/19); 187/187 on the affected areas after merging `origin/main`\n- `git diff --check origin/main`: clean\n\n## Review\n\nImplemented by the Claude worker; cross-vendor review by Codex (blog-ltox): PASS, no findings. It confirmed the early-304 rule, the remembered-key composition, bounded eviction and that the tests distinguish the old code.\n",
+      "merge": "cb6d081028f20a66a78811df3610e1f89e2243bf",
+      "mergedAt": "2026-10-19T17:34:21Z",
+      "files": [
+        "packages/web/src/app/api/media/[id]/route.ts",
+        "packages/web/src/server/content/media-variant-rules.ts",
+        "packages/web/src/server/content/media-variants.ts",
+        "packages/web/tests/reader/media-variant-conditional.test.ts"
+      ]
+    },
+    {
+      "number": 83,
+      "title": "docs(reader-lab): Swiss Index developed-magazine spec (blog-0044.25)",
+      "body": "## Summary\n\nReader Lab bake-off, direction C (Swiss Index): the developed-magazine spec, `docs/design/reader-bakeoff/swiss-index.md` (Bead blog-0044.25). The operator decided on 2026-10-19 to develop all five Reader Lab directions in parallel and let the client choose; this spec guides direction C's three build batches (home and section; article, author, topic and related; media, accessibility and Core Web Vitals).\n\nIt covers the thesis, every page type (home, section, article, author, topic, empty, not-found and error states), typography, grid, colour with contrast pairs, imagery, all editorial blocks, motion, accessibility, performance budgets, the delta from today's implementation in three batches, and three open questions for the client (masthead length, signal colour, author bios). Documentation only.\n\n## Review\n\nWritten by the Claude worker; cross-vendor review by Codex (blog-0044.33): PASS. Every contrast pair recomputed with `contrast.ts` (all at least 4.5:1); all 14 block kinds and six inline marks covered; claims and cited paths checked. Non-blocking: per-direction not-found/error presentation needs a shared contract hook, and gallery/body image `sizes` are shared-renderer work (both go to the shared kit); italic font availability and the performance budgets must be verified in the build batches.\n\n`git diff --check` clean; Prettier clean for the file.\n",
+      "merge": "bc3b7659dc44f98628099189ce7468c8ad513a4d",
+      "mergedAt": "2026-10-19T18:25:28Z",
+      "files": [
+        "docs/design/reader-bakeoff/swiss-index.md"
+      ]
+    },
+    {
+      "number": 92,
+      "title": "feat(lab): sample authors, topics and stories for every page type (blog-0044.29)",
+      "body": "## Summary\n\nReader Lab bake-off kit K3 (Bead blog-0044.29): sample content for every page type, so the five directions are judged on realistic author, topic, section and related pages.\n\n- **Sample:** the North House lab sample gains 5 authors (with short bios) and 7 topics (`tag` taxonomy). It grows from 8 to 12 stories, with four per section and original generated illustrations (13 images), in the existing North House voice. Every story has one to three authors in byline order and one to three topics. Each author and each topic has three or four stories, so related lists are real.\n- **Seeding stays safe:**\n  - Each story is created, filed, credited (`setArticleAuthors`), tagged and published in ONE repository transaction, in memory and in PostgreSQL. A failure leaves nothing, and the next run creates the story in full.\n  - Any story that already exists, finished or not, is left exactly as it is. That includes owner edits and a legacy draft from an older seed.\n  - Replays write nothing. Preview admission and the exclusive seed lock (blog-0044.20) are unchanged.\n  - The seed report gains author and topic counts.\n- **Tests outside the seed** that hard-coded the old sample size now derive it from `labStories` and `labImages`: the route tests, the reader route tests and the PostgreSQL integration suites.\n\nNo migrations, packages or CI changes.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check` and `git diff --check`: clean\n- CI unit chain (`test:capability unit`, `test:quality-contract`, `test:coverage`): 79 files, 841/841. The lab seed suite is 32/32, including failure injection at the section, author, topic and publish steps (each followed by a retry and a replay that writes nothing), plus four cases where an existing draft stays unchanged and unpublished.\n- `pnpm test:content:integration` (Docker PostgreSQL 18 plus S3): 51/51\n- `pnpm test:browser` (Playwright, production build, Desktop and Pixel 7 Chromium): 58/58\n- Local lab in the browser: 12 stories, 5 author pages and 7 topic pages (each with three or four stories), four stories per section, related lists on every story, no broken images, alt text on every image.\n\n## Review\n\nImplemented by the Claude worker in three rounds. The Codex cross-vendor review went:\n- Round 1: HOLD. An interrupted story creation never recovered: it stayed a draft with no authors.\n- Round 2 made creation atomic and added a resume path. The re-review returned HOLD again, because current state cannot prove a draft is untouched (bylines and topics can be added and removed without a trace).\n- Round 3 removed the resume path. Re-review: PASS.\n\nThe coordinator derived the sample counts in the four test files outside the seed's write set (`9970989`, `ad55b02`).\n",
+      "merge": "8f802a770850c079eda8f9ae2a2d4c17ba44b8ca",
+      "mergedAt": "2026-10-20T06:56:12Z",
+      "files": [
+        "packages/web/src/server/database/lab-seed-database-integration.ts",
+        "packages/web/src/server/database/lab-seed-integration.ts",
+        "packages/web/src/server/database/postgres.integration.test.ts",
+        "packages/web/src/server/lab/north-house.ts",
+        "packages/web/src/server/lab/seed.test.ts",
+        "packages/web/src/server/lab/seed.ts",
+        "packages/web/tests/reader/lab-seed-route.test.ts",
+        "packages/web/tests/reader/reader-routes.test.ts"
+      ]
+    },
+    {
+      "number": 108,
+      "title": "fix(reader-lab): hold capture layout through an adopted stylesheet (blog-0044.65)",
+      "body": "## Summary\n\nShared Reader Lab test helper fix (Bead blog-0044.65). `prepareFontCapture` holds layout until a capture document's faces load, so screenshots never latch an optional-font fallback. It did this with an inline `display: none` on `<html>`.\n\nOn the not-found page, React client-renders the document root and re-applies `<html>`'s attributes. A probe showed `setAttribute lang=en` at 70 ms, after which the style attribute was gone. That removed the hold before the faces loaded, and `goto` threw \"Capture font loading must precede the first layout\". This blocked Quiet Monograph's b3 not-found captures, and the C and D b3 failure-view captures would hit it too.\n\n- **Hold:** an adopted stylesheet (`html { display: none !important }`) set in the init script. React never touches adopted sheets. `goto` checks that the sheet is present and that `<html>` computes to `display: none`, then removes the sheet to reveal the page.\n- **Diagnostics:** Literary Long-read's capture diagnostics now record the computed display rather than the inline style.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `git diff --check`: clean.\n- Probe (not committed): with Literary Long-read selected, the gate held and `assertFonts` passed on the not-found page and on the long-table story, at 390 and 1440 px.\n- Literary Long-read Playwright config: 29/29, which covers both changed files.\n\n## Review\n\nFixed by the coordinator (Claude). The Codex narrow review passed. It confirmed the sheet is in place before `documentElement` exists, survives React's attribute resets, and is fully removed on reveal, and that nothing else depends on the inline style.\n",
+      "merge": "9bd7afc237c45db09f7833f6ee9c671628cdb30f",
+      "mergedAt": "2026-10-20T14:36:38Z",
+      "files": [
+        "packages/web/src/reader-directions/capture-fonts.ts",
+        "packages/web/src/reader-directions/literary-longread/capture-font-diagnostics.ts"
+      ]
+    },
+    {
+      "number": 115,
+      "title": "perf(reader-lab): keep next/link out of the eager error and not-found chunks (blog-0044.55)",
+      "body": "## Summary\n\nShared Reader Lab performance fix (Bead blog-0044.55). After K4, Turbopack gave the story page's eager error and not-found entries their own copy of `next/link`'s client runtime. The story page shipped it three times.\n\n- **Baseline failure frame:** its header and \"Return home\" use plain anchors, so a failure page recovers with a full page load. The header markup is identical to what `SiteHeaderFrame` rendered with empty navigation.\n- **Site name:** `siteName` now lives in `reader/components/failure-view.ts`. That module imported it from `site-header-frame.tsx`, which pulls in `next/link`. `site-header-frame.tsx` imports and re-exports it, so normal headers keep their API and their `Link`.\n- **Tests:** `app/failure-imports.test.ts` asserts that `next/link` is in neither eager failure graph, through any static path. The visitor test checks the failure header's links.\n\n## Measured (host production build vs main 8e76f87)\n\n| | main | this PR |\n|---|---|---|\n| Story page client JS (raw / gzip) | 287,968 / 92,573 B | 267,249 / 84,916 B |\n| Not-found client chunks (raw) | 45,519 B | 24,800 B |\n\nThe story page is now below its pre-K4 size (273,074 B raw).\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract` (29/29): clean.\n- `pnpm test:coverage`: 105 files, 1,164 tests passed.\n- `pnpm test:browser`: 62/62.\n\n## Review\n\nImplemented by the Codex worker. It stopped correctly when the remaining dependency, `failure-view.ts`, fell outside its write set, and proposed the fix that the coordinator applied (f908742).\n- **Claude review of the worker's commit:** passed. It confirmed markup parity and that the import-graph tests catch transitive paths. Its low note, that the frame ignores navigation (always empty today), is now a comment in the code.\n- **Codex review of the coordinator commit:** passed. No cycle, the same value for every importer, and the eager graphs are clean.\n",
+      "merge": "d9a5ec15b797c1ca4d6ea7282657792a1b203236",
+      "mergedAt": "2026-10-20T19:29:27Z",
+      "files": [
+        "packages/web/src/app/failure-imports.test.ts",
+        "packages/web/src/app/failure-visitor.test.tsx",
+        "packages/web/src/reader-directions/baseline/failure-frame.tsx",
+        "packages/web/src/reader/components/failure-view.ts",
+        "packages/web/src/reader/components/site-header-frame.tsx"
+      ]
+    },
+    {
+      "number": 121,
+      "title": "fix(reader-lab): keep a compare frame's Theme menu inside its frame (blog-0044.58)",
+      "body": "## Summary\n\nCompare page fix (Bead blog-0044.58). On `/owner/reader-lab/compare`, each direction renders into a same-origin srcdoc frame through a React portal. The shared Theme menu (Base UI) portalled its popup into the parent document's `body`, so a frame's Theme menu opened in the parent page at the wrong position.\n\n- **Theme menu:** `components/theme-menu.tsx` portals the popup into the document that owns its trigger whenever that isn't the global document. On normal pages, Base UI's default is unchanged. `compare-frames.tsx` is unchanged.\n- **Tests:** unit tests cover both documents. A new compare-page browser test in `tests/e2e/reader-lab.spec.ts` asserts that the popup sits inside the frame's own document and within its viewport.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean.\n- `pnpm test:coverage`: 1,204 tests passed.\n- `pnpm test:browser`: 66/66, including the new compare-page test on desktop and mobile Chromium.\n\n## Review\n\nImplemented by the Claude worker. The Codex review passed. It confirmed SSR safety, frame remounting, the portal's lifetime, focus and dismissal, and the browser assertions.",
+      "merge": "0fbdf8939137fcaa737fc4d142452c2dd3b08a42",
+      "mergedAt": "2026-10-21T13:54:14Z",
+      "files": [
+        "packages/web/src/components/theme-menu.test.tsx",
+        "packages/web/src/components/theme-menu.tsx",
+        "packages/web/src/reader-lab/compare-frames.test.tsx",
+        "tests/e2e/reader-lab.spec.ts"
+      ]
+    },
+    {
+      "number": 122,
+      "title": "test(reader-lab): stricter Literary Long-read preload guards and a real retry rerender (blog-0044.64)",
+      "body": "## Summary\n\nLiterary Long-read follow-ups from the b3 review (Bead blog-0044.64). Only test files change.\n\n- **(1) CSS budget assertion:** already on main since #114 (23,500 B). Measured 23,347 B.\n- **(2) Preload selectors:** the unnarrowed selectors are restored in `b1.test.tsx`, `views.test.tsx` and `b3.test.tsx`, so the \"exactly one\" and \"no preload\" guards are strict again. This direction renders no href-less image link. A mutation check showed the narrowed selectors missed an injected one, and the restored ones catch it.\n- **(3) Retry test:** it now rerenders the real app error page with new children through the shared failure boundary.\n- **Recorded, not fixed here:**\n  - Focus after a retry that fails again belongs to the shared boundary: Bead blog-ysui.\n  - Real-photo bytes and the VoiceOver/NVDA checks are procedures in the worklog.\n\n## Verification (host)\n\n- `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `test:quality-contract`: clean.\n- `pnpm test:coverage`: 1,201 tests passed.\n\n## Review\n\nImplemented by the Claude worker. The Codex review passed. It confirmed the selectors match the markup, that the retry test exercises the shared boundary, and that nothing was weakened.",
+      "merge": "d6d47ed1dd3b7f6af76466019e77a9825911ce09",
+      "mergedAt": "2026-10-21T14:02:17Z",
+      "files": [
+        "packages/web/src/reader-directions/literary-longread/b1.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/b3.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/views.test.tsx"
+      ]
+    }
+  ]
+}

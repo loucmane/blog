@@ -11,14 +11,15 @@ import {
   compareRoutingScores,
   renderRoutingV3Report,
   renderRoutingV4Report,
+  renderRoutingV5Report,
   scoreCoverageSamples,
   renderCoverageReport,
 } from './evaluation.mjs'
-import { selectSkills as selectLiveSkills } from './routing.mjs'
 import { selectSkills as selectBaselineSkills } from '../../docs/agent-skills/baseline-v1/routing.mjs'
 import { selectSkills as selectV2Skills } from '../../docs/agent-skills/baseline-v2/routing.mjs'
 import { selectSkills as selectV3Skills } from '../../docs/agent-skills/routing-v3-router.mjs'
 import { selectSkills as selectV4Skills } from '../../docs/agent-skills/routing-v4-router.mjs'
+import { selectSkills as selectV5Skills } from '../../docs/agent-skills/routing-v5-router.mjs'
 
 const root = new URL('../../', import.meta.url)
 const read = (name) => fs.readFileSync(new URL(name, root), 'utf8')
@@ -54,7 +55,15 @@ export const routingV4Paths = Object.freeze(
   ),
 )
 const loadedV4Digest = digest(read(routingV4Paths['scripts/agent-skills/routing.mjs']))
-const loadedLiveDigest = digest(read('scripts/agent-skills/routing.mjs'))
+export const routingV5Paths = Object.freeze(
+  Object.fromEntries(
+    Object.entries(routingV4Paths).map(([live, snapshot]) => [
+      live,
+      snapshot.replace('v4-', 'v5-'),
+    ]),
+  ),
+)
+const loadedV5Digest = digest(read(routingV5Paths['scripts/agent-skills/routing.mjs']))
 const coverageSampleNames = ['forward', 'heldout', 'heldout2', 'heldout3']
 const coveragePinnedPaths = [
   ...coverageSampleNames.flatMap((name) =>
@@ -160,7 +169,7 @@ export function verifyHeldout3Freeze({ root: inputRoot = root } = {}) {
   return freeze
 }
 
-export function evaluateCoverage({ root: inputRoot = root, live = false } = {}) {
+export function evaluateCoverage({ root: inputRoot = root } = {}) {
   const read = (name) => fs.readFileSync(new URL(name, inputRoot), 'utf8')
   const json = (name) => JSON.parse(read(name))
   const freeze = verifyHeldout3Freeze({ root: inputRoot })
@@ -168,28 +177,19 @@ export function evaluateCoverage({ root: inputRoot = root, live = false } = {}) 
     catalog: json(routingV4Paths['config/agent-skills/catalog.yaml']),
     reviewMap: json(routingV4Paths['config/agent-skills/review-map.yaml']),
   }
-  if (live) {
-    for (const [name, snapshot] of Object.entries(routingV4Paths))
-      assert.equal(read(name), read(snapshot), `live coverage router/config changed: ${name}`)
-    assert.equal(
-      digest(read('scripts/agent-skills/routing.mjs')),
-      loadedLiveDigest,
-      'live coverage router differs from loaded module',
-    )
-  }
   const skillIds = config.catalog.skills.map(({ id }) => id).sort()
   // Prediction takes only PR paths and title/body. Labels never reach either router.
-  // First publication uses live v4 once per heldout3 PR; --check uses the frozen module.
+  // The original publication used live v4. All later publication/check replays
+  // use its snapshot, allowing the live router to evolve without rewriting history.
   const samples = Object.fromEntries(
     coverageSampleNames.map((name) => {
       const inputs = json(`docs/agent-skills/${name}-inputs.json`)
-      const select = live && name === 'heldout3' ? selectLiveSkills : selectV4Skills
       const predictions = {
         schemaVersion: 1,
         cases: inputs.cases.map((pr) => ({
           number: pr.number,
           merge: pr.merge,
-          routing: select({ paths: pr.files, taskText: `${pr.title}\n${pr.body}` }, config),
+          routing: selectV4Skills({ paths: pr.files, taskText: `${pr.title}\n${pr.body}` }, config),
         })),
       }
       return [name, { inputs, labels: json(`docs/agent-skills/${name}-labels.json`), predictions }]
@@ -516,13 +516,232 @@ export function evaluateRoutingV4({ root: inputRoot = root } = {}) {
   }
 }
 
-export function verifyV4Disposition(result, { root: inputRoot = root } = {}) {
+export function verifyHeldout4Freeze({ root: inputRoot = root } = {}) {
+  const read = (name) => fs.readFileSync(new URL(name, inputRoot), 'utf8')
+  const json = (name) => JSON.parse(read(name))
+  const freeze = json('docs/agent-skills/heldout4-freeze.json')
+  assert.equal(freeze.schemaVersion, 1)
+  assert.equal(freeze.labelsBeforeRouting, true)
+  assert.equal(freeze.routersRun, false, 'heldout4 freeze must precede prediction')
+  assert.ok(Number.isFinite(Date.parse(freeze.frozenAt)), 'invalid heldout4 freeze time')
+  assert.ok(
+    Date.parse(freeze.frozenAt) >
+      Date.parse(json('docs/agent-skills/heldout3-freeze.json').frozenAt),
+    'heldout4 freeze order',
+  )
+  assert.deepEqual(
+    freeze.acceptance,
+    {
+      recall: 'strictly-greater',
+      precision: 'greater-or-equal',
+      undefinedRates: 'reject',
+    },
+    'heldout4 acceptance bar changed',
+  )
+  const required = [
+    ...['inputs', 'labels', 'selection', 'diff-evidence'].map(
+      (kind) => `docs/agent-skills/heldout4-${kind}.json`,
+    ),
+    ...Object.values(routingV4Paths),
+    'docs/agent-skills/routing-v4-freeze.json',
+    ...coverageSampleNames.flatMap((name) =>
+      ['inputs', 'labels'].map((kind) => `docs/agent-skills/${name}-${kind}.json`),
+    ),
+  ]
+  for (const name of required) {
+    assert.match(freeze.sha256?.[name] ?? '', /^[a-f0-9]{64}$/, `missing heldout4 digest: ${name}`)
+    assert.equal(digest(read(name)), freeze.sha256[name], `heldout4 input changed: ${name}`)
+  }
+  assert.equal(
+    digest(read(routingV4Paths['scripts/agent-skills/routing.mjs'])),
+    loadedV4Digest,
+    'heldout4 baseline differs from loaded v4 snapshot',
+  )
+  // Historical replay enforces only forward-*, heldout{N}-*, routing-v{N}-*,
+  // baseline-v{N}/** and coverage-* evaluation artifacts. Other historical pins
+  // remain recorded in the sealed freeze but are not enforced, so ordinary
+  // documentation can evolve without rewriting that pre-prediction evidence.
+  const evaluationArtifact =
+    /^docs\/agent-skills\/(?:forward-|heldout\d*-|routing-v\d+-|baseline-v\d+\/|coverage-)/
+  const historicalPins = Object.entries(freeze.historicalSha256 ?? {}).filter(([name]) =>
+    evaluationArtifact.test(name),
+  )
+  assert.ok(historicalPins.length > 0, 'missing historical pins')
+  for (const [name, expected] of historicalPins)
+    assert.equal(digest(read(name)), expected, `historical artifact changed: ${name}`)
+  for (const { entrypoint } of json(routingV4Paths['config/agent-skills/catalog.yaml']).skills)
+    assert.match(
+      freeze.labelContractSha256?.[entrypoint] ?? '',
+      /^[a-f0-9]{64}$/,
+      `missing label contract provenance: ${entrypoint}`,
+    )
+  const prior = coverageSampleNames.flatMap(
+    (name) => json(`docs/agent-skills/${name}-inputs.json`).cases,
+  )
+  const current = json('docs/agent-skills/heldout4-inputs.json').cases
+  assert.equal(current.length, 8, 'heldout4 requires eight PRs')
+  for (const key of ['number', 'merge']) {
+    assert.equal(new Set(current.map((row) => row[key])).size, 8, `duplicate heldout4 ${key}`)
+    assert.ok(
+      current.every((row) => !prior.some((old) => old[key] === row[key])),
+      'heldout4 overlaps a previous sample',
+    )
+  }
+  const selection = json('docs/agent-skills/heldout4-selection.json')
+  assert.equal(selection.candidateCount, 31)
+  assert.equal(selection.candidates.length, 31)
+  assert.match(selection.sourceSha256, /^[a-f0-9]{64}$/)
+  for (const key of ['number', 'merge']) {
+    assert.equal(
+      new Set(selection.candidates.map((row) => row[key])).size,
+      31,
+      `duplicate heldout4 candidate ${key}`,
+    )
+    assert.ok(
+      selection.candidates.every((row) => !prior.some((old) => old[key] === row[key])),
+      'heldout4 candidate overlaps a previous sample',
+    )
+  }
+  assert.deepEqual(
+    selection.selected,
+    current.map(({ number }) => number),
+    'heldout4 selection differs',
+  )
+  const evidence = json('docs/agent-skills/heldout4-diff-evidence.json')
+  assert.deepEqual(
+    evidence.cases.map(({ number }) => number),
+    selection.selected,
+    'heldout4 diff inventory differs',
+  )
+  assert.deepEqual(
+    json('docs/agent-skills/heldout4-labels.json').cases.map(({ number }) => number),
+    selection.selected,
+    'heldout4 label inventory differs',
+  )
+  for (const row of current) {
+    assert.ok(
+      selection.candidates.some(
+        ({ number, merge }) => number === row.number && merge === row.merge,
+      ),
+      `PR ${row.number} not in heldout4 pool`,
+    )
+    const diff = evidence.cases.find(({ number }) => number === row.number)
+    assert.equal(diff.merge, row.merge, 'heldout4 diff merge differs')
+    assert.deepEqual(diff.changedPaths, row.files, 'heldout4 diff paths differ')
+    assert.match(diff.parent, /^[a-f0-9]{40}$/)
+    assert.match(diff.diffSha256, /^[a-f0-9]{64}$/)
+    assert.ok(
+      Number.isSafeInteger(diff.diffBytes) && diff.diffBytes > 0,
+      'invalid heldout4 diff size',
+    )
+  }
+  return freeze
+}
+
+export function evaluateRoutingV5({ root: inputRoot = root } = {}) {
+  const read = (name) => fs.readFileSync(new URL(name, inputRoot), 'utf8')
+  const json = (name) => JSON.parse(read(name))
+  const labelsFreeze = verifyHeldout4Freeze({ root: inputRoot })
+  const freeze = json('docs/agent-skills/routing-v5-freeze.json')
+  assert.equal(freeze.schemaVersion, 1)
+  assert.equal(freeze.heldoutPredictionsRun, false, 'v5 freeze must precede prediction')
+  assert.ok(Date.parse(freeze.frozenAt) > Date.parse(labelsFreeze.frozenAt), 'v5 freeze order')
+  for (const name of [...Object.values(routingV5Paths), 'docs/agent-skills/heldout4-freeze.json']) {
+    assert.match(freeze.sha256?.[name] ?? '', /^[a-f0-9]{64}$/, `missing v5 digest: ${name}`)
+    assert.equal(digest(read(name)), freeze.sha256[name], `v5 candidate changed: ${name}`)
+  }
+  assert.equal(
+    digest(read(routingV5Paths['scripts/agent-skills/routing.mjs'])),
+    loadedV5Digest,
+    'v5 router differs from loaded snapshot module',
+  )
+  const config = (paths) => ({
+    catalog: json(paths['config/agent-skills/catalog.yaml']),
+    reviewMap: json(paths['config/agent-skills/review-map.yaml']),
+  })
+  const v4Config = config(routingV4Paths),
+    v5Config = config(routingV5Paths)
+  const skillIds = v4Config.catalog.skills.map(({ id }) => id).sort()
+  assert.deepEqual(
+    v5Config.catalog.skills.map(({ id }) => id).sort(),
+    skillIds,
+    'v5 skill denominator changed',
+  )
+  const sample = (name, select, config) => {
+    const inputs = json(`docs/agent-skills/${name}-inputs.json`)
+    // Only paths and title/body enter prediction. Each router runs once per PR.
+    const predictions = {
+      schemaVersion: 1,
+      cases: inputs.cases.map((pr) => ({
+        number: pr.number,
+        merge: pr.merge,
+        routing: select({ paths: pr.files, taskText: `${pr.title}\n${pr.body}` }, config),
+      })),
+    }
+    return { inputs, predictions, labels: json(`docs/agent-skills/${name}-labels.json`) }
+  }
+  const v4 = scoreCoverageSamples(
+    { heldout4: sample('heldout4', selectV4Skills, v4Config) },
+    skillIds,
+  ).samples.heldout4
+  const candidate = scoreCoverageSamples(
+    Object.fromEntries(
+      ['heldout4', ...coverageSampleNames].map((name) => [
+        name,
+        sample(name, selectV5Skills, v5Config),
+      ]),
+    ),
+    skillIds,
+  )
+  const { heldout4: v5, ...previouslySeen } = candidate.samples
+  return {
+    schemaVersion: 1,
+    evaluation: 'routing-v5',
+    mode: 'advisory',
+    blocking: false,
+    heldout4: {
+      v4,
+      v5,
+      ...compareRoutingScores(v4, v5, {
+        baselineVersion: 'v4',
+        candidateVersion: 'v5',
+        requireRecallGain: true,
+      }),
+    },
+    previouslySeen,
+    gaps: {
+      noPositiveAcrossAllSamples: candidate.perSkill
+        .filter(({ expected }) => expected === 0)
+        .map(({ skill }) => skill),
+    },
+    provenance: {
+      method:
+        'Eight purposively selected unused PRs were labelled from local merged diffs and canonical trigger contracts before either prediction. The same worker labelled and implemented; labels were visible during revision. This is not an independent blind review, a random sample or a population accuracy estimate. Route changes were planned from heldout3 and tested with synthetic fixtures; heldout4 was not used for tuning.',
+      labelsChanged: false,
+      independentReviewer: false,
+      labelsVisibleDuringRevision: true,
+      adviceAssessment: 'not performed; routing-only comparison',
+      labelsFrozenAt: labelsFreeze.frozenAt,
+      candidateFrozenAt: freeze.frozenAt,
+      buildSha256: freeze.buildSha256,
+      sha256: {
+        ...labelsFreeze.sha256,
+        ...freeze.sha256,
+        'docs/agent-skills/routing-v5-freeze.json': digest(
+          read('docs/agent-skills/routing-v5-freeze.json'),
+        ),
+      },
+    },
+  }
+}
+
+export function verifyV5Disposition(result, { root: inputRoot = root } = {}) {
   for (const name of ['scripts/agent-skills/routing.mjs', 'config/agent-skills/review-map.yaml']) {
-    const expected = (result.heldout2.acceptance.accepted ? routingV4Paths : routingV3Paths)[name]
+    const expected = (result.heldout4.acceptance.accepted ? routingV5Paths : routingV4Paths)[name]
     assert.equal(
       fs.readFileSync(new URL(name, inputRoot), 'utf8'),
       fs.readFileSync(new URL(expected, inputRoot), 'utf8'),
-      `live routes differ from v4 disposition: ${name}`,
+      `live routes differ from v5 disposition: ${name}`,
     )
   }
 }
@@ -713,49 +932,64 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     assert.ok(
       new Set(args).size === args.length &&
         args.every((arg) =>
-          ['--check', '--routing-v2', '--routing-v3', '--routing-v4', '--coverage'].includes(arg),
+          [
+            '--check',
+            '--routing-v2',
+            '--routing-v3',
+            '--routing-v4',
+            '--routing-v5',
+            '--coverage',
+          ].includes(arg),
         ) &&
         args.filter((arg) => arg.startsWith('--routing-') || arg === '--coverage').length <= 1,
-      'usage: evaluate-forward.mjs [--routing-v2 | --routing-v3 | --routing-v4 | --coverage] [--check]',
+      'usage: evaluate-forward.mjs [--routing-v2 | --routing-v3 | --routing-v4 | --routing-v5 | --coverage] [--check]',
     )
     const v2 = args.includes('--routing-v2')
     const v3 = args.includes('--routing-v3')
     const v4 = args.includes('--routing-v4')
+    const v5 = args.includes('--routing-v5')
     const coverage = args.includes('--coverage')
-    const result = coverage
-      ? evaluateCoverage({ live: !args.includes('--check') })
-      : v4
-        ? evaluateRoutingV4()
-        : v3
-          ? evaluateRoutingV3()
-          : v2
-            ? evaluateRoutingV2()
-            : evaluateForward()
-    if (v4 && args.includes('--check')) verifyV4Disposition(result)
-    const outputs = coverage
+    const result = v5
+      ? evaluateRoutingV5()
+      : coverage
+        ? evaluateCoverage()
+        : v4
+          ? evaluateRoutingV4()
+          : v3
+            ? evaluateRoutingV3()
+            : v2
+              ? evaluateRoutingV2()
+              : evaluateForward()
+    if (v5 && args.includes('--check')) verifyV5Disposition(result)
+    const outputs = v5
       ? {
-          'docs/agent-skills/coverage-results.json': `${JSON.stringify(result, null, 2)}\n`,
-          'docs/agent-skills/coverage-report.md': renderCoverageReport(result),
+          'docs/agent-skills/routing-v5-results.json': `${JSON.stringify(result, null, 2)}\n`,
+          'docs/agent-skills/routing-v5-report.md': renderRoutingV5Report(result),
         }
-      : v4
+      : coverage
         ? {
-            'docs/agent-skills/routing-v4-results.json': `${JSON.stringify(result, null, 2)}\n`,
-            'docs/agent-skills/routing-v4-report.md': renderRoutingV4Report(result),
+            'docs/agent-skills/coverage-results.json': `${JSON.stringify(result, null, 2)}\n`,
+            'docs/agent-skills/coverage-report.md': renderCoverageReport(result),
           }
-        : v3
+        : v4
           ? {
-              'docs/agent-skills/routing-v3-results.json': `${JSON.stringify(result, null, 2)}\n`,
-              'docs/agent-skills/routing-v3-report.md': renderRoutingV3Report(result),
+              'docs/agent-skills/routing-v4-results.json': `${JSON.stringify(result, null, 2)}\n`,
+              'docs/agent-skills/routing-v4-report.md': renderRoutingV4Report(result),
             }
-          : v2
+          : v3
             ? {
-                'docs/agent-skills/routing-v2-results.json': `${JSON.stringify(result, null, 2)}\n`,
-                'docs/agent-skills/routing-v2-report.md': renderRoutingRevisionReport(result),
+                'docs/agent-skills/routing-v3-results.json': `${JSON.stringify(result, null, 2)}\n`,
+                'docs/agent-skills/routing-v3-report.md': renderRoutingV3Report(result),
               }
-            : {
-                'docs/agent-skills/forward-results.json': `${JSON.stringify(result, null, 2)}\n`,
-                'docs/agent-skills/forward-report.md': renderReport(result),
-              }
+            : v2
+              ? {
+                  'docs/agent-skills/routing-v2-results.json': `${JSON.stringify(result, null, 2)}\n`,
+                  'docs/agent-skills/routing-v2-report.md': renderRoutingRevisionReport(result),
+                }
+              : {
+                  'docs/agent-skills/forward-results.json': `${JSON.stringify(result, null, 2)}\n`,
+                  'docs/agent-skills/forward-report.md': renderReport(result),
+                }
     for (const [name, content] of Object.entries(outputs)) {
       if (args.includes('--check'))
         assert.equal(read(name), content, `stale evaluation artifact: ${name}`)
@@ -763,21 +997,27 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     }
     console.log(
       JSON.stringify(
-        coverage
-          ? result.samples.heldout3.metrics
-          : v4
-            ? {
-                v3: result.heldout2.v3.metrics,
-                v4: result.heldout2.v4.metrics,
-                acceptance: result.heldout2.acceptance,
-              }
-            : v3
+        v5
+          ? {
+              v4: result.heldout4.v4.metrics,
+              v5: result.heldout4.v5.metrics,
+              acceptance: result.heldout4.acceptance,
+            }
+          : coverage
+            ? result.samples.heldout3.metrics
+            : v4
               ? {
-                  v2: result.heldout.v2.metrics,
-                  v3: result.heldout.v3.metrics,
-                  acceptance: result.heldout.acceptance,
+                  v3: result.heldout2.v3.metrics,
+                  v4: result.heldout2.v4.metrics,
+                  acceptance: result.heldout2.acceptance,
                 }
-              : result.metrics,
+              : v3
+                ? {
+                    v2: result.heldout.v2.metrics,
+                    v3: result.heldout.v3.metrics,
+                    acceptance: result.heldout.acceptance,
+                  }
+                : result.metrics,
         null,
         2,
       ),

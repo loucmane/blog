@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "diffCommand": [
+    "git",
+    "--no-optional-locks",
+    "diff",
+    "--no-ext-diff",
+    "--no-renames",
+    "--unified=3",
+    "<merge>^1",
+    "<merge>"
+  ],
+  "cases": [
+    {
+      "number": 77,
+      "merge": "3aed4c266adce4d0a0e9e9113c99d12e73bdd771",
+      "parent": "554c23cf7346f59bf032a1ccc4fb683338c16289",
+      "changedPaths": [
+        ".agents/skills/security-identity-privacy",
+        ".claude/skills/security-identity-privacy/SKILL.md",
+        ".claude/skills/security-identity-privacy/agents/openai.yaml",
+        ".claude/skills/security-identity-privacy/references/security-identity-privacy-output-contract.md",
+        ".claude/skills/security-identity-privacy/references/security-map.md",
+        "config/agent-skills/catalog.yaml",
+        "config/agent-skills/review-map.yaml",
+        "tests/agent-skills/fixtures/content-platform-backend.json",
+        "tests/agent-skills/fixtures/security-identity-privacy.json",
+        "tests/agent-skills/platform.test.mjs",
+        "tests/agent-skills/security-identity-privacy.test.mjs"
+      ],
+      "diffSha256": "30c69e6a98a946958d64be9969bb4de8061f437dbfab9eec8d42f397cd0ddee7",
+      "diffBytes": 67952,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    },
+    {
+      "number": 81,
+      "merge": "cb6d081028f20a66a78811df3610e1f89e2243bf",
+      "parent": "eb949e10b043191c387093ed575c151efc4d94e2",
+      "changedPaths": [
+        "packages/web/src/app/api/media/[id]/route.ts",
+        "packages/web/src/server/content/media-variant-rules.ts",
+        "packages/web/src/server/content/media-variants.ts",
+        "packages/web/tests/reader/media-variant-conditional.test.ts"
+      ],
+      "diffSha256": "3e5428f7bbc22041156a5056157b206876e883fed30a19399ad91d203bf9a1b3",
+      "diffBytes": 22693,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    },
+    {
+      "number": 83,
+      "merge": "bc3b7659dc44f98628099189ce7468c8ad513a4d",
+      "parent": "501caab2035c1eaca4e4df31e45111fcbdc5f9ed",
+      "changedPaths": [
+        "docs/design/reader-bakeoff/swiss-index.md"
+      ],
+      "diffSha256": "698ff2afe028f46ec64afba8b9db39e81864d596b327c9e5426e9b665b7df1f9",
+      "diffBytes": 44789,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    },
+    {
+      "number": 92,
+      "merge": "8f802a770850c079eda8f9ae2a2d4c17ba44b8ca",
+      "parent": "dd179abdffe7b682a8edabcd345f6aa8b21396d9",
+      "changedPaths": [
+        "packages/web/src/server/database/lab-seed-database-integration.ts",
+        "packages/web/src/server/database/lab-seed-integration.ts",
+        "packages/web/src/server/database/postgres.integration.test.ts",
+        "packages/web/src/server/lab/north-house.ts",
+        "packages/web/src/server/lab/seed.test.ts",
+        "packages/web/src/server/lab/seed.ts",
+        "packages/web/tests/reader/lab-seed-route.test.ts",
+        "packages/web/tests/reader/reader-routes.test.ts"
+      ],
+      "diffSha256": "5cce6ac01ee5f17be98e2d9f543e317a60bef24a16a6dc527c9f5a281468a15a",
+      "diffBytes": 73265,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    },
+    {
+      "number": 108,
+      "merge": "9bd7afc237c45db09f7833f6ee9c671628cdb30f",
+      "parent": "73db1752dfd4d448f781b0f6cabb78e09a6025a7",
+      "changedPaths": [
+        "packages/web/src/reader-directions/capture-fonts.ts",
+        "packages/web/src/reader-directions/literary-longread/capture-font-diagnostics.ts"
+      ],
+      "diffSha256": "607ad9b38dbc3fa5853bd6e55610044a7a5b602809e5da8cba2807ac16987a9f",
+      "diffBytes": 3832,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    },
+    {
+      "number": 115,
+      "merge": "d9a5ec15b797c1ca4d6ea7282657792a1b203236",
+      "parent": "8e76f875a851e2ca92e0c7563adae87c1c8b7404",
+      "changedPaths": [
+        "packages/web/src/app/failure-imports.test.ts",
+        "packages/web/src/app/failure-visitor.test.tsx",
+        "packages/web/src/reader-directions/baseline/failure-frame.tsx",
+        "packages/web/src/reader/components/failure-view.ts",
+        "packages/web/src/reader/components/site-header-frame.tsx"
+      ],
+      "diffSha256": "6334e0889b857cc0e08bfb1a9335bbec6178c3f4c59291edcb9791d40c2c791b",
+      "diffBytes": 5276,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    },
+    {
+      "number": 121,
+      "merge": "0fbdf8939137fcaa737fc4d142452c2dd3b08a42",
+      "parent": "4d9316b9c844ea52e25762d354fc61cd991a9e6e",
+      "changedPaths": [
+        "packages/web/src/components/theme-menu.test.tsx",
+        "packages/web/src/components/theme-menu.tsx",
+        "packages/web/src/reader-lab/compare-frames.test.tsx",
+        "tests/e2e/reader-lab.spec.ts"
+      ],
+      "diffSha256": "d3ee8345a3d72a5cbc688709f8ddc7afe3a157d92b2320143f8e1a003f40d216",
+      "diffBytes": 11275,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    },
+    {
+      "number": 122,
+      "merge": "d6d47ed1dd3b7f6af76466019e77a9825911ce09",
+      "parent": "0fbdf8939137fcaa737fc4d142452c2dd3b08a42",
+      "changedPaths": [
+        "packages/web/src/reader-directions/literary-longread/b1.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/b3.test.tsx",
+        "packages/web/src/reader-directions/literary-longread/views.test.tsx"
+      ],
+      "diffSha256": "0e9b28279fb7762239d3d92f8ae4e5a4fe9cb20ab469b919e75f5d0562f5c98e",
+      "diffBytes": 7919,
+      "inspection": "First-parent changed paths and substantive diff hunks inspected locally; rationale recorded in heldout4-labels.json. No network attestation."
+    }
+  ]
+}

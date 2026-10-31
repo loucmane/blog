@@ -33,7 +33,12 @@
     "inp"
   ],
   "triggerSignals": {
-    "include": ["premium typography", "responsive images", "core web vitals", "visual hierarchy"],
+    "include": [
+      "premium typography",
+      "responsive images",
+      "core web vitals",
+      "visual hierarchy"
+    ],
     "exclude": [
       "persisted node",
       "database persistence",
@@ -109,39 +114,125 @@
     "packages/web/src/app/api/media/**",
     "scripts/lab-lighthouse.mjs",
     "tests/e2e/homepage.spec.ts",
-    "tests/e2e/reader.spec.ts"
+    "tests/e2e/reader.spec.ts",
+    "docs/design/reader-bakeoff/*.md",
+    "packages/web/src/reader-lab/*.tsx",
+    "packages/web/src/app/owner/(workspace)/reader-lab/**"
   ],
   "paths": {
     "positive": [
-      { "file": "packages/web/src/app/page.tsx", "also": ["seo-distribution"] },
-      { "file": "packages/web/src/app/layout.tsx", "also": ["seo-distribution"] },
-      { "file": "packages/web/src/app/globals.css" },
-      { "file": "packages/web/src/app/stories/[slug]/page.tsx", "also": ["seo-distribution"] },
-      { "file": "packages/web/src/app/sections/[slug]/page.tsx", "also": ["seo-distribution"] },
-      { "file": "packages/web/src/app/not-found.tsx" },
-      { "file": "packages/web/src/app/error.tsx" },
-      { "file": "packages/web/src/reader/components/reader-image.tsx" },
-      { "file": "packages/web/src/reader/components/story-card.tsx" },
-      { "file": "packages/web/src/reader/blocks.ts", "also": ["editorial-blocks"] },
-      { "file": "packages/web/src/reader/views.ts", "also": ["editorial-blocks"] },
+      {
+        "file": "packages/web/src/app/page.tsx",
+        "also": [
+          "seo-distribution"
+        ]
+      },
+      {
+        "file": "packages/web/src/app/layout.tsx",
+        "also": [
+          "seo-distribution"
+        ]
+      },
+      {
+        "file": "packages/web/src/app/globals.css"
+      },
+      {
+        "file": "packages/web/src/app/stories/[slug]/page.tsx",
+        "also": [
+          "seo-distribution"
+        ]
+      },
+      {
+        "file": "packages/web/src/app/sections/[slug]/page.tsx",
+        "also": [
+          "seo-distribution"
+        ]
+      },
+      {
+        "file": "packages/web/src/app/not-found.tsx"
+      },
+      {
+        "file": "packages/web/src/app/error.tsx"
+      },
+      {
+        "file": "packages/web/src/reader/components/reader-image.tsx"
+      },
+      {
+        "file": "packages/web/src/reader/components/story-card.tsx"
+      },
+      {
+        "file": "packages/web/src/reader/blocks.ts",
+        "also": [
+          "editorial-blocks"
+        ]
+      },
+      {
+        "file": "packages/web/src/reader/views.ts",
+        "also": [
+          "editorial-blocks"
+        ]
+      },
       {
         "file": "packages/web/src/reader/components/article-body.tsx",
-        "also": ["editorial-blocks"]
+        "also": [
+          "editorial-blocks"
+        ]
       },
-      { "file": "packages/web/src/reader-directions/contract.ts", "also": ["editorial-blocks"] },
-      { "file": "packages/web/src/reader-directions/registry.ts", "also": ["editorial-blocks"] },
-      { "file": "packages/web/src/reader-directions/quiet-monograph/styles.ts" },
-      { "file": "packages/web/src/reader-directions/literary-longread/fonts.ts" },
+      {
+        "file": "packages/web/src/reader-directions/contract.ts",
+        "also": [
+          "editorial-blocks"
+        ]
+      },
+      {
+        "file": "packages/web/src/reader-directions/registry.ts",
+        "also": [
+          "editorial-blocks"
+        ]
+      },
+      {
+        "file": "packages/web/src/reader-directions/quiet-monograph/styles.ts"
+      },
+      {
+        "file": "packages/web/src/reader-directions/literary-longread/fonts.ts"
+      },
       {
         "file": "packages/web/public/reader-directions/quiet-monograph/fonts/jost-latin-400-normal.woff2"
       },
       {
         "file": "packages/web/src/app/api/media/[id]/route.ts",
-        "also": ["security-identity-privacy"]
+        "also": [
+          "security-identity-privacy"
+        ]
       },
-      { "file": "scripts/lab-lighthouse.mjs" },
-      { "file": "tests/e2e/homepage.spec.ts" },
-      { "file": "tests/e2e/reader.spec.ts" }
+      {
+        "file": "scripts/lab-lighthouse.mjs"
+      },
+      {
+        "file": "tests/e2e/homepage.spec.ts"
+      },
+      {
+        "file": "tests/e2e/reader.spec.ts"
+      },
+      {
+        "file": "docs/design/reader-bakeoff/quiet-monograph.md",
+        "also": [
+          "quality-reliability-observability"
+        ]
+      },
+      {
+        "file": "packages/web/src/reader-lab/compare-frames.tsx",
+        "also": [
+          "security-identity-privacy"
+        ]
+      },
+      {
+        "file": "packages/web/src/app/owner/(workspace)/reader-lab/compare/page.tsx",
+        "also": [
+          "owner-publishing-ux",
+          "security-identity-privacy"
+        ]
+      }
     ],
     "negative": [
       "packages/web/src/app/owner/(workspace)/page.tsx",
@@ -201,11 +292,16 @@
         "message": "Compare long titles and body measure on a narrow screen before choosing this visual direction.",
         "subjective": true,
         "blocking": false,
-        "evidence": ["packages/web/src/reader-directions/literary-longread/styles.ts"]
+        "evidence": [
+          "packages/web/src/reader-directions/literary-longread/styles.ts"
+        ]
       }
     ],
     "evidence": [
-      { "kind": "file", "path": "packages/web/src/reader-directions/literary-longread/styles.ts" }
+      {
+        "kind": "file",
+        "path": "packages/web/src/reader-directions/literary-longread/styles.ts"
+      }
     ]
   },
   "deterministicExamples": [

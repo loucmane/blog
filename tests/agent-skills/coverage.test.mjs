@@ -139,6 +139,21 @@ test('coverage replay matches persisted results and keeps prior review identitie
   }
 })
 
+test('coverage publication ignores live revisions and the legacy live option', (t) => {
+  const fixture = fixtureRoot(t)
+  fs.mkdirSync(new URL('scripts/agent-skills/', fixture), { recursive: true })
+  for (const name of [
+    'scripts/agent-skills/routing.mjs',
+    'config/agent-skills/catalog.yaml',
+    'config/agent-skills/review-map.yaml',
+  ])
+    fs.writeFileSync(new URL(name, fixture), 'future live revision\n')
+  assert.deepEqual(
+    evaluateCoverage({ root: fixture, live: true }),
+    json('docs/agent-skills/coverage-results.json'),
+  )
+})
+
 test('coverage freeze rejects changed evidence and missing required digests', (t) => {
   const fixture = fixtureRoot(t)
   const freezePath = 'docs/agent-skills/heldout3-freeze.json'

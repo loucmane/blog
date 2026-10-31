@@ -11,6 +11,7 @@ import {
   compareRoutingScores,
   renderRoutingV3Report,
   renderRoutingV4Report,
+  renderRoutingV5Report,
 } from '../../scripts/agent-skills/evaluation.mjs'
 import {
   evaluateForward,
@@ -21,7 +22,10 @@ import {
   routingV4Paths,
   evaluateRoutingV4,
   verifyHeldout2Freeze,
-  verifyV4Disposition,
+  routingV5Paths,
+  evaluateRoutingV5,
+  verifyHeldout4Freeze,
+  verifyV5Disposition,
 } from '../../scripts/agent-skills/evaluate-forward.mjs'
 
 const sample = () => ({
@@ -220,6 +224,14 @@ test('held-out acceptance requires both precision and recall without undefined r
   const better = score([['alpha', 'beta'], ['gamma']])
   assert.equal(compareRoutingScores(baseline, better).acceptance.accepted, true)
   assert.equal(compareRoutingScores(baseline, baseline).acceptance.accepted, true)
+  assert.equal(
+    compareRoutingScores(baseline, baseline, { requireRecallGain: true }).acceptance.accepted,
+    false,
+  )
+  assert.equal(
+    compareRoutingScores(baseline, better, { requireRecallGain: true }).acceptance.accepted,
+    true,
+  )
   // Each regression is rejected even when the other metric improves.
   assert.equal(compareRoutingScores(baseline, score([['alpha'], []])).acceptance.accepted, false)
   assert.equal(
@@ -248,11 +260,7 @@ function heldoutFixture(t) {
   for (const name of [
     ...fs
       .readdirSync(docs, { withFileTypes: true })
-      .filter(
-        (entry) =>
-          ['baseline-v1', 'baseline-v2'].includes(entry.name) ||
-          (entry.isFile() && /^(forward-|heldout2?-|routing-v[234]-)/.test(entry.name)),
-      )
+      .filter((entry) => entry.isFile() || ['baseline-v1', 'baseline-v2'].includes(entry.name))
       .map(({ name }) => `docs/agent-skills/${name}`),
     'config/agent-skills',
     'scripts/agent-skills/evaluate-forward.mjs',
@@ -341,7 +349,7 @@ test('v3 replay ignores changes to live routes, evaluator and fixtures', (t) => 
   assert.deepEqual(evaluateRoutingV3({ root }), result)
 })
 
-test('v4 replays sealed predictions, reference samples, denominators and live disposition', () => {
+test('v4 replays sealed predictions, reference samples and denominators', () => {
   const result = evaluateRoutingV4()
   const read = (name) =>
     fs.readFileSync(new URL(`../../docs/agent-skills/${name}`, import.meta.url), 'utf8')
@@ -375,7 +383,6 @@ test('v4 replays sealed predictions, reference samples, denominators and live di
       assert.deepEqual([...new Set(row.matches.map(({ skill }) => skill))].sort(), row.selected)
     }
   }
-  verifyV4Disposition(result)
 })
 
 test('heldout2 freeze refuses modified inputs, missing hashes and overlap with either prior sample', (t) => {
@@ -434,25 +441,208 @@ test('v4 rejects candidate drift, omitted pins, wrong freeze order and rewritten
   assert.throws(() => evaluateRoutingV4({ root }), /loaded snapshot module/)
 })
 
-test('v4 snapshot replay is independent of live changes while disposition checks both outcomes', (t) => {
+test('v4 snapshot replay remains independent of future live changes', (t) => {
   const root = heldoutFixture(t)
   const result = evaluateRoutingV4({ root })
   for (const name of Object.keys(routingV4Paths))
     fs.writeFileSync(new URL(name, root), 'future live revision\n')
   assert.deepEqual(evaluateRoutingV4({ root }), result)
-  assert.throws(() => verifyV4Disposition(result, { root }), /live routes differ/)
+})
+
+test('v5 disposition checks both outcomes without coupling historical v4 replay to live routes', (t) => {
+  const root = heldoutFixture(t)
+  const result = evaluateRoutingV5({ root })
+  for (const name of Object.keys(routingV5Paths))
+    fs.writeFileSync(new URL(name, root), 'future live revision\n')
+  assert.deepEqual(evaluateRoutingV5({ root }), result)
+  assert.throws(() => verifyV5Disposition(result, { root }), /live routes differ/)
   for (const accepted of [true, false]) {
     for (const name of [
       'scripts/agent-skills/routing.mjs',
       'config/agent-skills/review-map.yaml',
     ]) {
       fs.copyFileSync(
-        new URL((accepted ? routingV4Paths : routingV3Paths)[name], root),
+        new URL((accepted ? routingV5Paths : routingV4Paths)[name], root),
         new URL(name, root),
       )
     }
-    verifyV4Disposition({ heldout2: { acceptance: { accepted } } }, { root })
+    verifyV5Disposition({ heldout4: { acceptance: { accepted } } }, { root })
   }
+})
+
+test('v5 replays the first measurement and all four previously-seen references', () => {
+  const result = evaluateRoutingV5()
+  const read = (name) =>
+    fs.readFileSync(new URL(`../../docs/agent-skills/${name}`, import.meta.url), 'utf8')
+  assert.deepEqual(JSON.parse(read('routing-v5-results.json')), result)
+  assert.equal(read('routing-v5-report.md'), renderRoutingV5Report(result))
+  assert.deepEqual(Object.keys(result.previouslySeen), [
+    'forward',
+    'heldout',
+    'heldout2',
+    'heldout3',
+  ])
+  assert.equal(result.heldout4.denominators.prs, 8)
+  assert.equal(result.heldout4.denominators.decisions, 96)
+  assert.equal(result.provenance.labelsChanged, false)
+  assert.equal(result.provenance.independentReviewer, false)
+  assert.match(renderRoutingV5Report(result), /not an independent blind review/)
+  assert.match(renderRoutingV5Report(result), /strictly rises/)
+  assert.doesNotMatch(renderRoutingV5Report(result), /undefined \/|NaN/)
+  for (const score of [
+    result.heldout4.v4,
+    result.heldout4.v5,
+    ...Object.values(result.previouslySeen),
+  ]) {
+    assert.equal(Object.hasOwn(score.metrics, 'assessedAdvice'), false)
+    for (const row of score.perSkill) {
+      assert.equal(row.truePositives + row.falseNegatives, row.expected)
+      assert.equal(
+        row.truePositives + row.falsePositives + row.falseNegatives + row.trueNegatives,
+        score.metrics.cases,
+      )
+    }
+    for (const row of score.cases)
+      assert.deepEqual([...new Set(row.matches.map(({ skill }) => skill))].sort(), row.selected)
+  }
+  verifyV5Disposition(result)
+})
+
+test('v5 preserves its replay after edits to pinned non-evaluation documentation', (t) => {
+  const root = heldoutFixture(t)
+  const freezePath = new URL('docs/agent-skills/heldout4-freeze.json', root)
+  const freezeBytes = fs.readFileSync(freezePath)
+  const freeze = JSON.parse(freezeBytes)
+  const result = JSON.parse(
+    fs.readFileSync(new URL('docs/agent-skills/routing-v5-results.json', root)),
+  )
+  for (const name of [
+    'ingestion.md',
+    'lifecycle.md',
+    'platform-validation.md',
+    'review-result-contract.md',
+    'v1-gaps.json',
+    'advice-v2-brief.md',
+    'advice-v2-inputs.json',
+    'advice-v2-report.md',
+    'advice-v2-review.json',
+  ]) {
+    const path = `docs/agent-skills/${name}`
+    assert.ok(Object.hasOwn(freeze.historicalSha256, path))
+    fs.appendFileSync(new URL(path, root), '\n')
+    assert.deepEqual(evaluateRoutingV5({ root }), result, name)
+  }
+  assert.deepEqual(fs.readFileSync(freezePath), freezeBytes)
+})
+
+test('v5 still rejects changed historical artifacts in every evaluation family', (t) => {
+  const root = heldoutFixture(t)
+  for (const name of [
+    'forward-report.md',
+    'heldout-freeze.json',
+    'routing-v3-report.md',
+    'baseline-v1/routing.mjs',
+    'coverage-report.md',
+  ]) {
+    const path = `docs/agent-skills/${name}`
+    const target = new URL(path, root)
+    const bytes = fs.readFileSync(target)
+    fs.appendFileSync(target, '\n')
+    assert.throws(
+      () => evaluateRoutingV5({ root }),
+      (error) => error.message.split('\n')[0] === `historical artifact changed: ${path}`,
+    )
+    fs.writeFileSync(target, bytes)
+  }
+})
+
+test('heldout4 requires historical evaluation pins even when documentation pins remain', (t) => {
+  const root = heldoutFixture(t)
+  const target = new URL('docs/agent-skills/heldout4-freeze.json', root)
+  const freeze = JSON.parse(fs.readFileSync(target))
+  for (const historicalSha256 of [
+    undefined,
+    {},
+    { 'docs/agent-skills/ingestion.md': freeze.historicalSha256['docs/agent-skills/ingestion.md'] },
+  ]) {
+    fs.writeFileSync(target, JSON.stringify({ ...freeze, historicalSha256 }))
+    assert.throws(() => verifyHeldout4Freeze({ root }), /missing historical pins/)
+  }
+})
+
+test('heldout4 rejects altered inputs, missing pins, prediction-before-freeze and overlap', (t) => {
+  const root = heldoutFixture(t)
+  const target = (name) => new URL(`docs/agent-skills/${name}`, root)
+  const original = fs.readFileSync(target('heldout4-freeze.json'))
+  const freeze = JSON.parse(original)
+  const hash = (name) =>
+    createHash('sha256')
+      .update(fs.readFileSync(new URL(name, root)))
+      .digest('hex')
+  assert.equal(verifyHeldout4Freeze({ root }).routersRun, false)
+  for (const name of Object.keys(freeze.sha256)) {
+    const file = new URL(name, root),
+      bytes = fs.readFileSync(file)
+    fs.appendFileSync(file, '\n')
+    assert.throws(() => verifyHeldout4Freeze({ root }), /heldout4 input changed/)
+    fs.writeFileSync(file, bytes)
+    const missing = structuredClone(freeze)
+    delete missing.sha256[name]
+    fs.writeFileSync(target('heldout4-freeze.json'), JSON.stringify(missing))
+    assert.throws(() => verifyHeldout4Freeze({ root }), /missing heldout4 digest/)
+    fs.writeFileSync(target('heldout4-freeze.json'), original)
+  }
+  for (const change of [
+    { routersRun: true },
+    { labelsBeforeRouting: false },
+    { frozenAt: 'invalid' },
+    { frozenAt: '2020-01-01T00:00:00Z' },
+    { acceptance: { recall: 'greater-or-equal' } },
+  ]) {
+    fs.writeFileSync(target('heldout4-freeze.json'), JSON.stringify({ ...freeze, ...change }))
+    assert.throws(() => verifyHeldout4Freeze({ root }))
+  }
+  fs.writeFileSync(target('heldout4-freeze.json'), original)
+  const inputs = JSON.parse(fs.readFileSync(target('heldout4-inputs.json')))
+  for (const name of ['forward', 'heldout', 'heldout2', 'heldout3']) {
+    const changed = structuredClone(inputs)
+    changed.cases[0] = JSON.parse(fs.readFileSync(target(`${name}-inputs.json`))).cases[0]
+    fs.writeFileSync(target('heldout4-inputs.json'), JSON.stringify(changed))
+    const rehashed = structuredClone(freeze)
+    rehashed.sha256['docs/agent-skills/heldout4-inputs.json'] = hash(
+      'docs/agent-skills/heldout4-inputs.json',
+    )
+    fs.writeFileSync(target('heldout4-freeze.json'), JSON.stringify(rehashed))
+    assert.throws(() => verifyHeldout4Freeze({ root }), /overlaps a previous sample/)
+  }
+})
+
+test('v5 rejects snapshot drift, missing pins, bad chronology and rewritten loaded code', (t) => {
+  const root = heldoutFixture(t)
+  for (const name of Object.values(routingV5Paths)) {
+    const file = new URL(name, root),
+      bytes = fs.readFileSync(file)
+    fs.appendFileSync(file, '\n')
+    assert.throws(() => evaluateRoutingV5({ root }), /v5 candidate changed/)
+    fs.writeFileSync(file, bytes)
+  }
+  const target = new URL('docs/agent-skills/routing-v5-freeze.json', root)
+  const freeze = JSON.parse(fs.readFileSync(target))
+  const name = routingV5Paths['scripts/agent-skills/routing.mjs']
+  const missing = structuredClone(freeze)
+  delete missing.sha256[name]
+  fs.writeFileSync(target, JSON.stringify(missing))
+  assert.throws(() => evaluateRoutingV5({ root }), /missing v5 digest/)
+  fs.writeFileSync(target, JSON.stringify({ ...freeze, frozenAt: '2020-01-01T00:00:00Z' }))
+  assert.throws(() => evaluateRoutingV5({ root }), /v5 freeze order/)
+  fs.writeFileSync(target, JSON.stringify({ ...freeze, heldoutPredictionsRun: true }))
+  assert.throws(() => evaluateRoutingV5({ root }), /v5 freeze must precede/)
+  fs.appendFileSync(new URL(name, root), '\n')
+  freeze.sha256[name] = createHash('sha256')
+    .update(fs.readFileSync(new URL(name, root)))
+    .digest('hex')
+  fs.writeFileSync(target, JSON.stringify(freeze))
+  assert.throws(() => evaluateRoutingV5({ root }), /loaded snapshot module/)
 })
 
 test('v2 corrects only the two quality misses and preserves original scopes and labels', () => {
