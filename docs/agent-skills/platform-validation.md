@@ -76,7 +76,7 @@ node scripts/agent-skills/check-v1-completion.mjs --check
 node scripts/agent-skills/evaluate-forward.mjs --check
 ```
 
-The first two checks are the components of `pnpm ci:agent-skills`. Retain the
+These four checks, plus the routing-v2 to v5 and coverage replays, are the components of `pnpm ci:agent-skills` and of the governance CI step. Retain the
 full validator JSON, test summary, tree/commit identity and any diagnostics in
 the bead's worklog. Do not present worker evidence as an independent host run.
 If completion artifacts are stale, regenerate them only within the authorized

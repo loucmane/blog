@@ -145,7 +145,8 @@
     }
   ],
   "ciSteps": [
-    "Unit and integration tests",
+    "Unit tests",
+    "Content integration (PostgreSQL + S3 in Docker)",
     "Accessibility baseline ratchet",
     "Playwright and accessibility",
     "Production web smoke",

@@ -103,7 +103,7 @@
   "ci": {
     "workflowSemanticsSha256": {
       ".github/workflows/auto-merge.yml": "22d891fb034f3f9449a4071db169ee8f55b3f6d1601747c43ba44f45f07db13d",
-      ".github/workflows/ci.yml": "3ab84608069144da282f12702f21dd8eaa619fb3e479687837a60388b4b4c8eb"
+      ".github/workflows/ci.yml": "0732dbbef1b6d890d3d7accfda159b952c3f8af9fa1f9c5a58b1568991360969"
     },
     "trustedFileSha256": {
       "scripts/ci/check-accessibility-baseline.mjs": "6dcde3094d520407572e4a404dab5d2746fdc3dc903fa48d2e13d308d88e9cda",
@@ -114,7 +114,7 @@
       "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "2186a655bc706f191189c21dc0919c12584714719239209304f19879e78f3170",
       "tests/ci/runtime-contract.test.mjs": "a4e83110d0d6f17c30ab16a97c30a0d61137049e0bcff6c7fedfc0f5b0702be1",
-      "tests/ci/security-hotfix.test.mjs": "a11823b6103937910e3a02a9457a8f05c706bdfb606811c2186004de671e3923",
+      "tests/ci/security-hotfix.test.mjs": "5fe36b92ef02db39d27d854a5783c33eddcd9937fb02cf5113245ac77fda8546",
       "tests/ci/test-capability.test.mjs": "d15f5278ba272de4fe73175102a54de15608277f3b97f72a2cba3dc2b0e361c9",
       "tests/ci/test-results.test.mjs": "0edea1509359b9914a9b553d4ed61eedd5f1eca96456c631aa31f39307ef4fbe"
     },
@@ -264,6 +264,7 @@
         "LINT": "${{ steps.lint.outcome }}",
         "FORMAT": "${{ steps.format.outcome }}",
         "UNIT_TESTS": "${{ steps.unit_tests.outcome }}",
+        "CONTENT_INTEGRATION": "${{ steps.content_integration.outcome }}",
         "BROWSER_INSTALL": "${{ steps.browser_install.outcome }}",
         "ACCESSIBILITY_BASELINE": "${{ steps.accessibility_baseline.outcome }}",
         "BROWSER_TESTS": "${{ steps.browser_tests.outcome }}",
@@ -279,6 +280,7 @@
         "LINT",
         "FORMAT",
         "UNIT_TESTS",
+        "CONTENT_INTEGRATION",
         "BUILD",
         "BROWSER_INSTALL",
         "ACCESSIBILITY_BASELINE",
@@ -287,7 +289,7 @@
       ],
       "runLines": [
         "failed=0",
-        "for stage in RUNTIME_BOOTSTRAP RUNTIME_CONTRACT INSTALL DEPENDENCY_SECURITY TYPECHECK LINT FORMAT UNIT_TESTS BUILD BROWSER_INSTALL ACCESSIBILITY_BASELINE BROWSER_TESTS PRODUCTION_SMOKE; do",
+        "for stage in RUNTIME_BOOTSTRAP RUNTIME_CONTRACT INSTALL DEPENDENCY_SECURITY TYPECHECK LINT FORMAT UNIT_TESTS CONTENT_INTEGRATION BUILD BROWSER_INSTALL ACCESSIBILITY_BASELINE BROWSER_TESTS PRODUCTION_SMOKE; do",
         "  value=\"${!stage}\"",
         "  printf '%s=%s\\n' \"$stage\" \"$value\"",
         "  if [ \"$value\" != \"success\" ]; then",
@@ -298,8 +300,8 @@
       ]
     }
   },
-  "rootScriptsSha256": "311611205ea7a62b52d7f75fa9d3660785b32bcc38bc7e7c8c3ecceb524b48de",
-  "packageScriptsSha256": "c741c04c9d8b9f59a8ff06cee5dd1ea9e091744ca8c3c957303848d36623b217",
+  "rootScriptsSha256": "511d97fa00bf48a96b89d4218c217636905fd64889fa679cdbb7eec3215c64bd",
+  "packageScriptsSha256": "f36d304a329c9e3125b4c1ef92a148ee6c833ddcd8b1857a01d0dc75cefe75a4",
   "dependencyDeclarationsSha256": "c0795cd17b169773a0aae6560873f759025924096c329e4c335f000d438a843a",
   "packageManifestSemanticsSha256": "91207ca7b2cd99c0a53f33b012ccbb6e8c037ed5456ce0853f460d9f18e992d0",
   "lockfileSha256": "521f100f56512cc8bd2cf21ff3580d1263d64532d00b2705c69dd71c0ef4c81c",

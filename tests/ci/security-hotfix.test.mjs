@@ -473,7 +473,8 @@ test('multi-command CI stages use fail-closed shell semantics', () => {
   )
   for (const [name, nextName] of [
     ['Dependency security policy', 'Lint'],
-    ['Unit and integration tests', 'Package and application builds'],
+    ['Unit tests', 'Content integration (PostgreSQL + S3 in Docker)'],
+    ['Content integration (PostgreSQL + S3 in Docker)', 'Package and application builds'],
     ['Playwright and accessibility', 'Production web smoke'],
   ]) {
     const start = workflow.indexOf(`      - name: ${name}\n`)
