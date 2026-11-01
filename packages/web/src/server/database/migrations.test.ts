@@ -185,6 +185,42 @@ describe('content database migrations', () => {
     )
   })
 
+  it('preflights pg_trgm, names it in public, and reverses the search query migration', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0006_search_query_support.sql'),
+      'utf8',
+    )
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0006_search_query_support.down.sql'),
+      'utf8',
+    )
+
+    // Indexes only: the Drizzle projection checked above needs no new table or column.
+    expect(sql).not.toMatch(/CREATE TABLE|ADD COLUMN/)
+    // The preflight runs before anything needs the extension, and every refusal says why.
+    expect(sql.indexOf('DO $preflight$')).toBeLessThan(sql.indexOf('CREATE INDEX'))
+    expect(sql).toContain('CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;')
+    for (const reason of [
+      'but it is installed in schema %.',
+      'this PostgreSQL server does not provide it.',
+      'this migration could not create it: %',
+    ]) {
+      expect(sql).toContain(reason)
+    }
+    expect(sql).toContain('USING ERRCODE = SQLSTATE')
+    expect(sql).toContain('ON article_search_documents USING gin (title public.gin_trgm_ops);')
+    expect(sql).toMatch(
+      /ON article_search_documents \(published_at DESC\)\s+INCLUDE \(article_id, slug, title\);/,
+    )
+    expect(downSql).toContain('DROP INDEX IF EXISTS article_search_documents_title_trgm_idx;')
+    expect(downSql).toContain('DROP INDEX IF EXISTS article_search_documents_published_at_idx;')
+    expect(downSql).toContain('DROP EXTENSION IF EXISTS pg_trgm;')
+    expect(downSql).toContain('WHEN dependent_objects_still_exist OR insufficient_privilege')
+    expect(downSql).toContain(
+      "DELETE FROM content_schema_migrations WHERE id = '0006_search_query_support'",
+    )
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
@@ -198,6 +234,7 @@ describe('content database migrations', () => {
         '0003_publication_version',
         '0004_media_asset_animation',
         '0005_article_authors',
+        '0006_search_query_support',
       ],
       skipped: [],
     })
@@ -217,6 +254,7 @@ describe('content database migrations', () => {
         '0003_publication_version',
         '0004_media_asset_animation',
         '0005_article_authors',
+        '0006_search_query_support',
       ],
     })
   })
