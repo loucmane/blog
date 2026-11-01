@@ -576,7 +576,7 @@ export function validatePlatform({ root = process.cwd() } = {}) {
   const packageJson = load("package.json");
   if (
     packageJson?.scripts?.["ci:agent-skills"] !==
-    "node scripts/agent-skills/validate-platform.mjs && node --test tests/agent-skills/*.test.mjs"
+    "node scripts/agent-skills/validate-platform.mjs && node --test tests/agent-skills/*.test.mjs && node scripts/agent-skills/evaluate-forward.mjs --check && node scripts/agent-skills/evaluate-forward.mjs --routing-v2 --check && node scripts/agent-skills/evaluate-forward.mjs --routing-v3 --check && node scripts/agent-skills/evaluate-forward.mjs --routing-v4 --check && node scripts/agent-skills/evaluate-forward.mjs --routing-v5 --check && node scripts/agent-skills/evaluate-forward.mjs --coverage --check && node scripts/agent-skills/check-v1-completion.mjs --check"
   ) {
     errors.push(
       "package.json must expose the deterministic ci:agent-skills command",

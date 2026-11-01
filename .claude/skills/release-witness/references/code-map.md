@@ -22,7 +22,7 @@ other entries retain the original snapshot scope.
 | `scripts/ci/check-accessibility-baseline.mjs` | Reads exact Git objects and compares the protected predecessor baseline; forbids new or rewritten accepted serious-violation fingerprints and metadata/project drift. Bootstrap uses an exact digest. This is an anti-regression check, not an accessibility audit. |
 | `scripts/ci/check-dependency-security.mjs` | Runs pnpm audit JSON, validates counts and reviewed exceptions, and uses registry version evidence when evaluating exceptions. No unexcepted vulnerabilities at any severity are allowed. An unavailable audit or version lookup is not a zero-vulnerability result; offline unit fixtures do not replace it. |
 | `scripts/ci/web-production-smoke.mjs` | Starts a local production Next server and requests `/`; asserts HTTP 200, text/html, a body length of at least 512 characters and html delimiters. The report separately records byte length. It does not establish owner sign-in, publication, full reader journeys, deployed health or rollback success. |
-| `package.json` | test/test:coverage and test:browser chain runners to their result validators. ci:agent-skills chains platform validation to Node contract tests. Inspect exact scripts before using a shorthand command as evidence. |
+| `package.json` | test/test:coverage and test:browser chain runners to their result validators. ci:agent-skills chains platform validation, the Node contract tests, the forward, routing and coverage replay checks, and the v1 completion check. Inspect exact scripts before using a shorthand command as evidence. |
 
 `tests/ci/test-results.test.mjs`, `tests/ci/test-capability.test.mjs`,
 `tests/ci/accessibility-baseline.test.mjs`, `tests/ci/security-hotfix.test.mjs`,
@@ -32,13 +32,14 @@ browser journeys or a live vulnerability scan.
 
 ## Worked example: an overstated CI label
 
-The step named **Unit and integration tests** runs `pnpm test:capability unit`,
-`pnpm test:quality-contract`, and `pnpm test:coverage`. The default Vitest configuration
-excludes `*.integration.test.ts`; database integration selection requires
-`TASK42_CONTENT_INTEGRATION=1`, which the separate `test:content:integration` runner
-sets. This CI step does not invoke that runner. Report the commands and their actual
-results, with database integration execution unproven by this step, even if the step
-is green. Bead `blog-ued4` tracks the CI gap; the label alone is not coverage evidence.
+Until blog-ued4, the step named **Unit and integration tests** ran only
+`pnpm test:capability unit`, `pnpm test:quality-contract`, and `pnpm test:coverage`. The
+default Vitest configuration excludes `*.integration.test.ts`; database integration
+selection requires `TASK42_CONTENT_INTEGRATION=1`, which only the separate
+`test:content:integration` runner sets, so the green step proved no database integration.
+The step is now named **Unit tests**, and **Content integration (PostgreSQL + S3 in
+Docker)** runs that runner. Report each step's commands and actual results; a label alone
+is not coverage evidence.
 
 ## Deployment and recovery: requirements versus proof
 
