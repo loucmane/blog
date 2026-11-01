@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { realpathSync } from 'node:fs'
+import { closeSync, mkdirSync, openSync, realpathSync } from 'node:fs'
 import { createServer } from 'node:net'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,6 +7,11 @@ import { fileURLToPath } from 'node:url'
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const projectRoot = path.resolve(webRoot, '../..')
 const composeFile = path.join(webRoot, 'tests/content/docker-compose.yml')
+// CI uploads ci-artifacts/ when the workspace job fails.
+export const defaultServicesLog = path.join(
+  projectRoot,
+  'ci-artifacts/content-integration-services.log',
+)
 // Keep these in sync with Compose, below Linux's default ephemeral range (32768–60999).
 const ports = { postgres: 25442, 's3-primary': 27042, 's3-restore': 27043 }
 const s3Primary = `http://127.0.0.1:${ports['s3-primary']}`
@@ -59,7 +64,33 @@ async function waitFor(url) {
   throw new Error(`${url} did not become ready`)
 }
 
-export async function runContentIntegration() {
+// Runs after a failure, before teardown removes the containers and their logs. It only reports
+// its own problems, so the original error and the teardown still happen.
+function saveServiceLogs(compose, file) {
+  try {
+    mkdirSync(path.dirname(file), { recursive: true })
+    const output = openSync(file, 'w')
+    let result
+    try {
+      result = spawnSync('docker', [...compose, 'logs', '--no-color', '--timestamps'], {
+        cwd: projectRoot,
+        stdio: ['ignore', output, output],
+        timeout: 60_000,
+      })
+    } finally {
+      closeSync(output)
+    }
+    if (result.error) throw result.error
+    if (result.status !== 0) {
+      throw new Error(`docker compose logs failed with ${result.status ?? result.signal}`)
+    }
+    console.error(`Docker service logs saved to ${file}`)
+  } catch (error) {
+    console.error(`Could not save the Docker service logs to ${file}: ${error.message}`)
+  }
+}
+
+export async function runContentIntegration({ servicesLog = defaultServicesLog } = {}) {
   const compose = ['compose', '--file', composeFile]
   run('docker', [...compose, 'down', '--volumes', '--remove-orphans'])
   // Release stale containers before probing. Docker still handles a competing bind
@@ -83,6 +114,9 @@ export async function runContentIntegration() {
         },
       },
     )
+  } catch (error) {
+    saveServiceLogs(compose, servicesLog)
+    throw error
   } finally {
     run('docker', [...compose, 'down', '--volumes', '--remove-orphans'])
   }
