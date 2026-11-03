@@ -165,3 +165,29 @@ export interface SearchProjection {
     title: string
   }): Promise<void>
 }
+
+/** One published article that a search found. */
+export interface SearchHit {
+  readonly articleId: string
+  /** Higher is better. Ranks compare only within one search, never across searches. */
+  readonly rank: number
+  readonly slug: string
+  /** Plain text from the article's published search text: no markup, and never draft text. */
+  readonly snippet: string
+  readonly title: string
+}
+
+/** One page of hits, best first, and how many published articles matched in all. */
+export interface SearchResultPage {
+  readonly items: readonly SearchHit[]
+  readonly total: number
+}
+
+/**
+ * The read side of search; `SearchProjection` stays write-only. It finds published articles only,
+ * by construction: the projection is the one writer of search documents, and it is given
+ * published articles alone.
+ */
+export interface SearchQuery {
+  search(input: { query: string; limit: number; offset: number }): Promise<SearchResultPage>
+}

@@ -40,6 +40,7 @@ import { seedLabContent } from '../lab/seed'
 import { applyContentMigrations, readContentMigrations } from './migrations'
 import { PostgresContentRepository } from './postgres-content-repository'
 import { PostgresSearchProjection } from './postgres-search-projection'
+import { PostgresSearchQuery } from './postgres-search-query'
 import { S3MediaVariantStore } from './s3-media-variant-store'
 import { S3OriginalObjectStore } from './s3-original-object-store'
 import { ownerSetupIntegrationTests } from './owner-setup-integration'
@@ -144,6 +145,7 @@ describe('PostgreSQL and media persistence integration', () => {
       '0003_publication_version',
       '0004_media_asset_animation',
       '0005_article_authors',
+      '0006_search_query_support',
     ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: migrationIds,
@@ -463,6 +465,7 @@ describe('PostgreSQL and media persistence integration', () => {
         '0003_publication_version',
         '0004_media_asset_animation',
         '0005_article_authors',
+        '0006_search_query_support',
       ],
     })
 
@@ -1225,5 +1228,357 @@ describe('author, topic and related-story reads on real PostgreSQL', () => {
     expect(article).toEqual(await readArticleView(memory, 'brief'))
     expect(author).toEqual(await readAuthorView(memory, 'j'))
     expect(topic).toEqual(await readTopicView(memory, 'c'))
+  }, 30_000)
+})
+
+/** A story for the search cases: one paragraph under its title. */
+interface SearchStory {
+  readonly publishedAt: string
+  readonly slug: string
+  readonly text: string
+  readonly title: string
+}
+
+const searchStories = {
+  architecture: {
+    publishedAt: '2026-06-01T07:00:00.000Z',
+    slug: 'architecture-of-winter-light',
+    text: 'Low winter light crosses the floor of each small room.',
+    title: 'The architecture of winter light',
+  },
+  kitchens: {
+    publishedAt: '2026-06-02T07:00:00.000Z',
+    slug: 'kitchens-after-dark',
+    text: 'One lamp and the last of the winter light.',
+    title: 'Kitchens after dark',
+  },
+  terraces: {
+    publishedAt: '2026-06-03T07:00:00.000Z',
+    slug: 'summer-terraces',
+    text: 'Bright light on warm stone.',
+    title: 'Summer terraces',
+  },
+} satisfies Record<string, SearchStory>
+
+function searchDocument(articleId: string, title: string, text: string): ContentDocument {
+  return {
+    articleId,
+    document: {
+      content: [{ content: [{ text, type: 'text' }], type: 'paragraph' }],
+      type: 'doc',
+    },
+    migrationProvenance: [],
+    schemaVersion: CURRENT_CONTENT_DOCUMENT_VERSION,
+    title,
+  }
+}
+
+/**
+ * Publishes a story, then projects its published revision into the search documents, as the
+ * search.upsert outbox handler will.
+ */
+async function publishForSearch(pool: Pool, story: SearchStory) {
+  const service = new ContentService(new PostgresContentRepository(pool), {
+    now: () => new Date(story.publishedAt),
+  })
+  const articleId = `article-${story.slug}`
+  const created = await service.createArticle({
+    dek: `Summary of ${story.slug}`,
+    document: searchDocument(articleId, story.title, story.text),
+    id: articleId,
+    idempotencyKey: `create-${story.slug}`,
+    slug: story.slug,
+    title: story.title,
+  })
+  const { article } = await service.publish({
+    articleId,
+    expectedVersion: created.article.version,
+    idempotencyKey: `publish-${story.slug}`,
+    revisionId: created.revision.id,
+  })
+  const searchText = extractContentText(created.revision.document)
+  await new PostgresSearchProjection(pool).upsertPublishedArticle({
+    articleId,
+    publishedAt: story.publishedAt,
+    searchText,
+    slug: story.slug,
+    title: story.title,
+  })
+  return { article, searchText, service }
+}
+
+describe('reader search on real PostgreSQL', () => {
+  // Each case gets a new schema with every content migration applied, so it sees only its own
+  // search documents. pg_trgm is installed once for the whole database, in public, where the
+  // adapter names it; so the search_path here holds the case's schema alone.
+  let schema: string
+  let admin: Pool
+  let pool: Pool
+
+  beforeEach(async () => {
+    schema = `search_query_${randomUUID().replaceAll('-', '')}`
+    admin = new Pool({ connectionString: databaseUrl, max: 1 })
+    await admin.query(`CREATE SCHEMA "${schema}"`)
+    pool = new Pool({ connectionString: databaseUrl, max: 2, options: `-c search_path=${schema}` })
+    await applyContentMigrations(pool, await readContentMigrations())
+  })
+
+  afterEach(async () => {
+    await pool.end()
+    await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
+    await admin.end()
+  })
+
+  const find = (query: string, limit = 10, offset = 0) =>
+    new PostgresSearchQuery(pool).search({ limit, offset, query })
+
+  async function fullTextMatches(query: string) {
+    const result = await pool.query(
+      "SELECT count(*)::int AS count FROM article_search_documents WHERE document @@ websearch_to_tsquery('english', $1)",
+      [query],
+    )
+    return result.rows[0]?.count
+  }
+
+  it('ranks published stories by their words, pages them and keeps the total', async () => {
+    const { architecture, kitchens, terraces } = searchStories
+    const searchTexts = new Map<string, string>()
+    for (const story of [architecture, kitchens, terraces]) {
+      searchTexts.set(story.slug, (await publishForSearch(pool, story)).searchText)
+    }
+
+    const page = await find('winter light')
+
+    // Both words in the title (weight A) rank above both words in the text alone (weight B), and
+    // the terraces story, without 'winter', is not a match.
+    expect(page.total).toBe(2)
+    expect(page.items.map(({ slug }) => slug)).toEqual([architecture.slug, kitchens.slug])
+    expect(page.items[0]).toMatchObject({
+      articleId: `article-${architecture.slug}`,
+      title: architecture.title,
+    })
+    expect(page.items[0]!.rank).toBeGreaterThan(page.items[1]!.rank)
+    for (const { slug, snippet } of page.items) {
+      expect(snippet).toContain('winter light')
+      expect(snippet).not.toMatch(/[<>]/)
+      expect(searchTexts.get(slug)).toContain(snippet.trim())
+    }
+    expect(await find('winter light', 1, 1)).toEqual({ items: [page.items[1]], total: 2 })
+    expect(await find('winter light', 10, 5)).toEqual({ items: [], total: 2 })
+  }, 30_000)
+
+  it('falls back to title similarity for a one-letter typo the full-text query misses', async () => {
+    const { architecture, kitchens, terraces } = searchStories
+    for (const story of [architecture, kitchens, terraces]) await publishForSearch(pool, story)
+
+    // 'wimter' is one letter away from 'winter', and full text finds nothing for it.
+    expect(await fullTextMatches('wimter')).toBe(0)
+    const typo = await find('wimter')
+    expect(typo).toMatchObject({
+      items: [{ slug: architecture.slug, title: architecture.title }],
+      total: 1,
+    })
+    expect(typo.items[0]!.rank).toBeGreaterThan(0.3)
+    // A partial word is found the same way.
+    expect(await fullTextMatches('archit')).toBe(0)
+    expect(await find('archit')).toMatchObject({ items: [{ slug: architecture.slug }], total: 1 })
+    // Words that are far from every title leave the empty page.
+    expect(await find('qzxv')).toEqual({ items: [], total: 0 })
+  }, 30_000)
+
+  it('excerpts snippets from the published search text, never from a draft revision', async () => {
+    for (const story of Object.values(searchStories)) await publishForSearch(pool, story)
+    const lantern = await publishForSearch(pool, {
+      publishedAt: '2026-06-04T07:00:00.000Z',
+      slug: 'lantern-glass',
+      text: 'Published notes on lantern glass.',
+      title: 'Lantern glass',
+    })
+    // A newer draft holds words that were never published, in its text and its title.
+    await lantern.service.saveDraft({
+      articleId: lantern.article.id,
+      document: searchDocument(
+        lantern.article.id,
+        'Quarantined headline',
+        'Lantern secretmarker draft notes.',
+      ),
+      expectedVersion: lantern.article.version,
+      idempotencyKey: 'save-lantern-glass-draft',
+      title: 'Quarantined headline',
+    })
+    // The draft is stored, under the article's new working title.
+    expect(
+      (
+        await pool.query(
+          "SELECT count(*)::int AS count FROM article_revisions WHERE document::text LIKE '%secretmarker%'",
+        )
+      ).rows[0]?.count,
+    ).toBe(1)
+    expect(
+      (await pool.query('SELECT title FROM articles WHERE id = $1', [lantern.article.id])).rows[0]
+        ?.title,
+    ).toBe('Quarantined headline')
+
+    const hit = await find('lantern')
+
+    expect(hit).toMatchObject({
+      items: [{ slug: 'lantern-glass', title: 'Lantern glass' }],
+      total: 1,
+    })
+    expect(lantern.searchText).toContain(hit.items[0]!.snippet.trim())
+    expect(hit.items[0]!.snippet).not.toMatch(/secretmarker|Quarantined/)
+    for (const query of ['secretmarker', 'Quarantined headline']) {
+      expect(await find(query)).toEqual({ items: [], total: 0 })
+    }
+  }, 30_000)
+})
+
+describe('search migration 0006 on a database of its own', () => {
+  // pg_trgm is installed once per database and the shared database already has it, so each case
+  // starts from a new database without it.
+  const searchMigrationId = '0006_search_query_support'
+  const added = {
+    extension: 'public',
+    published_index: 'article_search_documents_published_at_idx',
+    recorded: true,
+    title_index: 'article_search_documents_title_trgm_idx',
+  }
+  const removed = { extension: null, published_index: null, recorded: false, title_index: null }
+  let name: string
+  let admin: Pool
+  let pool: Pool
+
+  beforeEach(async () => {
+    name = `search_migration_${randomUUID().replaceAll('-', '')}`
+    admin = new Pool({ connectionString: databaseUrl, max: 1 })
+    await admin.query(`CREATE DATABASE "${name}"`)
+    const target = new URL(databaseUrl)
+    target.pathname = `/${name}`
+    pool = new Pool({ connectionString: target.href, max: 2 })
+  })
+
+  afterEach(async () => {
+    await pool.end()
+    await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`)
+    await admin.end()
+  })
+
+  async function searchMigrations() {
+    const migrations = await readContentMigrations()
+    const search = migrations.find(({ id }) => id === searchMigrationId)
+    if (!search) throw new Error(`Migration ${searchMigrationId} is missing.`)
+    return {
+      before: migrations.filter(({ id }) => id < searchMigrationId),
+      search,
+      upToSearch: migrations.filter(({ id }) => id <= searchMigrationId),
+    }
+  }
+
+  async function trigramState() {
+    const result = await pool.query(
+      `SELECT
+        (SELECT extnamespace::regnamespace::text FROM pg_extension WHERE extname = 'pg_trgm')
+          AS extension,
+        to_regclass('article_search_documents_title_trgm_idx')::text AS title_index,
+        to_regclass('article_search_documents_published_at_idx')::text AS published_index,
+        EXISTS (SELECT FROM content_schema_migrations WHERE id = $1) AS recorded`,
+      [searchMigrationId],
+    )
+    return result.rows[0]
+  }
+
+  it('stops with a readable reason when pg_trgm cannot be created, and changes nothing', async () => {
+    const { before, search } = await searchMigrations()
+    await applyContentMigrations(pool, before)
+    // Roles belong to the whole server. This one has no CREATE privilege on the new database,
+    // which even a trusted extension such as pg_trgm requires.
+    const role = `search_preflight_${randomUUID().replaceAll('-', '')}`
+    await admin.query(`CREATE ROLE "${role}" NOLOGIN`)
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      await client.query(`SET LOCAL ROLE "${role}"`)
+      await expect(client.query(search.sql)).rejects.toMatchObject({
+        code: '42501',
+        hint: 'Ask a database administrator to run CREATE EXTENSION pg_trgm WITH SCHEMA public in this database, then run the migrations again.',
+        message: expect.stringMatching(
+          /^Search needs the PostgreSQL extension pg_trgm, and this migration could not create it: permission denied/,
+        ),
+      })
+    } finally {
+      await client.query('ROLLBACK')
+      client.release()
+      await admin.query(`DROP ROLE IF EXISTS "${role}"`)
+    }
+    expect(await trigramState()).toEqual(removed)
+
+    // An extension already installed in another schema is named, not used.
+    await pool.query('CREATE SCHEMA trigram_elsewhere')
+    await pool.query('CREATE EXTENSION pg_trgm WITH SCHEMA trigram_elsewhere')
+    await expect(pool.query(search.sql)).rejects.toMatchObject({
+      hint: 'Move it with ALTER EXTENSION pg_trgm SET SCHEMA public, then run the migrations again.',
+      message:
+        'Search needs the PostgreSQL extension pg_trgm in schema public, but it is installed in schema trigram_elsewhere.',
+    })
+    await pool.query('DROP EXTENSION pg_trgm')
+    await pool.query('DROP SCHEMA trigram_elsewhere')
+    expect(await trigramState()).toEqual(removed)
+  }, 30_000)
+
+  it('applies and reverses cleanly on an empty database and then a populated one', async () => {
+    const { before, upToSearch } = await searchMigrations()
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0006_search_query_support.down.sql'),
+      'utf8',
+    )
+    const apply = async () =>
+      expect(await applyContentMigrations(pool, upToSearch)).toEqual({
+        applied: [searchMigrationId],
+        skipped: before.map(({ id }) => id),
+      })
+
+    // Empty: up, down, and up again.
+    await applyContentMigrations(pool, before)
+    expect(await trigramState()).toEqual(removed)
+    await apply()
+    expect(await trigramState()).toEqual(added)
+    const definitions = new Map(
+      (
+        await pool.query(
+          "SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'article_search_documents'",
+        )
+      ).rows.map(({ indexdef, indexname }): [string, string] => [indexname, indexdef]),
+    )
+    expect(definitions.get('article_search_documents_title_trgm_idx')).toMatch(
+      /USING gin \(title (?:public\.)?gin_trgm_ops\)$/,
+    )
+    expect(definitions.get('article_search_documents_published_at_idx')).toMatch(
+      /USING btree \(published_at DESC\) INCLUDE \(article_id, slug, title\)$/,
+    )
+    await pool.query(downSql)
+    expect(await trigramState()).toEqual(removed)
+    await apply()
+    expect(await trigramState()).toEqual(added)
+
+    // Populated: the search documents survive down and up, and the indexes are built over them.
+    const { architecture } = searchStories
+    const { searchText } = await publishForSearch(pool, architecture)
+    const documents = async () =>
+      (
+        await pool.query(
+          'SELECT article_id, slug, title, search_text, published_at FROM article_search_documents ORDER BY article_id',
+        )
+      ).rows
+    const projected = await documents()
+    expect(projected).toMatchObject([{ search_text: searchText, slug: architecture.slug }])
+    await pool.query(downSql)
+    expect(await trigramState()).toEqual(removed)
+    expect(await documents()).toEqual(projected)
+    await apply()
+    expect(await trigramState()).toEqual(added)
+    expect(await documents()).toEqual(projected)
+    expect(
+      await new PostgresSearchQuery(pool).search({ limit: 10, offset: 0, query: 'wimter' }),
+    ).toMatchObject({ items: [{ slug: architecture.slug }], total: 1 })
   }, 30_000)
 })
