@@ -62,16 +62,17 @@ function payloadSlug(event: OutboxEvent, field: string): string {
 
 /**
  * Acknowledge-only: it records the publication's event as completed and does nothing else, so a
- * drain does not dead-letter every publication as an unsupported type. The feed and email slices
- * (blog-0045.5, blog-0045.10) replace it with the publication's effects.
+ * drain does not dead-letter every publication as an unsupported type. The email slice
+ * (blog-0045.10) replaces it with the publication's email. The feed and the sitemap need no effect
+ * here: the same publication's `cache.revalidate` event expires them.
  */
 const acknowledgePublication: OutboxHandler = async () => undefined
 
 /**
  * The handlers this phase registers. Search events and removals all bring the article's search
- * document in line with what readers see; cache events expire the reader views of the event's
- * story; a slug change does both, for the old slug and the new one; a publication is only
- * acknowledged.
+ * document in line with what readers see; cache events expire the cached views of the event's story
+ * and every cached listing that may show it, the feed and the sitemap among them; a slug change
+ * does both, for the old slug and the new one; a publication is only acknowledged.
  */
 export function createOutboxHandlers(dependencies: OutboxHandlerDependencies): OutboxHandlers {
   const syncSearch: OutboxHandler = (event) => syncSearchDocument(dependencies, event.aggregateId)
