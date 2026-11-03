@@ -320,7 +320,7 @@ test('shows owner-published stories on the next request, removes unpublished one
     }),
   )
   const unpublishedPage = await page.goto(storyPath)
-  expect(unpublishedPage?.status()).toBe(404)
+  expect(unpublishedPage?.status()).toBe(410)
   expect(unpublishedPage?.headers()['cache-control']).toContain('no-store')
   const revokedImage = await context.request.get(imagePath, cachedImage)
   expect(revokedImage.status()).toBe(404)

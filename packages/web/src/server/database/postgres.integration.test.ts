@@ -1582,3 +1582,239 @@ describe('search migration 0006 on a database of its own', () => {
     ).toMatchObject({ items: [{ slug: architecture.slug }], total: 1 })
   }, 30_000)
 })
+
+describe('slug resolution on real PostgreSQL', () => {
+  // Each case gets a new schema with every content migration applied. Where the in-memory store
+  // can hold the same stories, they go into both, and the PostgreSQL slug history must answer as
+  // the repository history does. The slice's modules load here, so this block stays self-contained.
+  const loadSlugResolution = async () => ({
+    ...(await import('../distribution/repository-slug-history')),
+    ...(await import('../distribution/slug-resolution')),
+    ...(await import('../distribution/slug-resolution-cache')),
+    ...(await import('./postgres-slug-resolution')),
+  })
+  let slugs: Awaited<ReturnType<typeof loadSlugResolution>>
+  let schema: string
+  let admin: Pool
+  let pool: Pool
+  let postgres: PostgresContentRepository
+
+  beforeEach(async () => {
+    slugs = await loadSlugResolution()
+    schema = `slug_resolution_${randomUUID().replaceAll('-', '')}`
+    admin = new Pool({ connectionString: databaseUrl, max: 1 })
+    await admin.query(`CREATE SCHEMA "${schema}"`)
+    pool = new Pool({ connectionString: databaseUrl, max: 2, options: `-c search_path=${schema}` })
+    await applyContentMigrations(pool, await readContentMigrations())
+    postgres = new PostgresContentRepository(pool)
+  })
+
+  afterEach(async () => {
+    await pool.end()
+    await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
+    await admin.end()
+  })
+
+  /** Story changes made through the content service of one store. */
+  function newsroom(repository: ContentRepository) {
+    const service = new ContentService(repository, clock, new Identifiers())
+    let keys = 0
+    const key = (action: string) => `${action}-${(keys += 1)}`
+    const edit = async (id: string) => {
+      const article = await repository.transaction((transaction) => transaction.getArticle(id))
+      if (!article) throw new Error(`Article ${id} is missing.`)
+      return {
+        articleId: id,
+        expectedVersion: article.version,
+        revisionId: article.currentDraftRevisionId,
+      }
+    }
+    return {
+      async create(id: string, slug: string) {
+        await service.createArticle({
+          dek: `Summary of ${slug}`,
+          document: document(id),
+          id,
+          idempotencyKey: key('create'),
+          slug,
+          title: `Title of ${slug}`,
+        })
+      },
+      async publish(id: string) {
+        await service.publish({ ...(await edit(id)), idempotencyKey: key('publish') })
+      },
+      async remove(id: string) {
+        const { articleId, expectedVersion } = await edit(id)
+        await service.softDelete({ articleId, expectedVersion, idempotencyKey: key('delete') })
+      },
+      async rename(id: string, slug: string) {
+        const { articleId, expectedVersion } = await edit(id)
+        await service.changeSlug({
+          articleId,
+          expectedVersion,
+          idempotencyKey: key('rename'),
+          slug,
+        })
+      },
+      async unpublish(id: string) {
+        const { articleId, expectedVersion } = await edit(id)
+        await service.unpublish({
+          articleId,
+          expectedVersion,
+          idempotencyKey: key('unpublish'),
+          reason: 'Integration check',
+        })
+      },
+    }
+  }
+
+  /**
+   * Resolves slugs as the proxy does: PostgreSQL through its adapter, the in-memory store through
+   * its repository.
+   */
+  function resolver(repository: ContentRepository) {
+    const history =
+      repository === postgres
+        ? new slugs.PostgresSlugHistory(pool)
+        : new slugs.RepositorySlugHistory(repository)
+    return {
+      history,
+      resolve: (slug: string) =>
+        slugs.resolveSlug(slug, {
+          history,
+          visibleArticleAt: async (candidate) =>
+            (await slugs.readVisibleSlugs(repository)).get(candidate) ?? null,
+        }),
+    }
+  }
+
+  it('reads the slug history and resolves every slug as the in-memory repository does', async () => {
+    const memory = new InMemoryContentRepository()
+    for (const repository of [memory, postgres]) {
+      const desk = newsroom(repository)
+      // A story renamed twice while published (AC-07), one renamed and then withdrawn, one
+      // deleted, and a draft renamed before anyone saw it.
+      await desk.create('article-chain', 'chain-first')
+      await desk.publish('article-chain')
+      await desk.rename('article-chain', 'chain-second')
+      await desk.rename('article-chain', 'chain-third')
+      await desk.create('article-withdrawn', 'withdrawn-first')
+      await desk.publish('article-withdrawn')
+      await desk.rename('article-withdrawn', 'withdrawn-second')
+      await desk.unpublish('article-withdrawn')
+      await desk.create('article-deleted', 'deleted-story')
+      await desk.publish('article-deleted')
+      await desk.remove('article-deleted')
+      await desk.create('article-draft', 'draft-first')
+      await desk.rename('article-draft', 'draft-second')
+      // Two stories that left a slug another story then took: once published there and
+      // withdrawn, the slug is the new owner's 410; while the new owner is a draft, the old
+      // redirect holds.
+      await desk.create('article-moved-on', 'owner-old')
+      await desk.publish('article-moved-on')
+      await desk.rename('article-moved-on', 'owner-new')
+      await desk.create('article-new-owner', 'owner-old')
+      await desk.publish('article-new-owner')
+      await desk.unpublish('article-new-owner')
+      await desk.create('article-kept', 'kept-old')
+      await desk.publish('article-kept')
+      await desk.rename('article-kept', 'kept-new')
+      await desk.create('article-draft-owner', 'kept-old')
+    }
+    const { history: postgresHistory, resolve: resolvePostgres } = resolver(postgres)
+    const { history: memoryHistory, resolve: resolveMemory } = resolver(memory)
+
+    const expected = {
+      'chain-first': { kind: 'redirect', slug: 'chain-third' },
+      'chain-second': { kind: 'redirect', slug: 'chain-third' },
+      'chain-third': { kind: 'current' },
+      'deleted-story': { kind: 'gone' },
+      'draft-first': { kind: 'unknown' },
+      'draft-second': { kind: 'unknown' },
+      'kept-new': { kind: 'current' },
+      'kept-old': { kind: 'redirect', slug: 'kept-new' },
+      'never-written': { kind: 'unknown' },
+      'owner-new': { kind: 'current' },
+      'owner-old': { kind: 'gone' },
+      'withdrawn-first': { kind: 'gone' },
+      'withdrawn-second': { kind: 'gone' },
+    }
+    for (const [slug, resolution] of Object.entries(expected)) {
+      expect(await resolvePostgres(slug), slug).toEqual(resolution)
+      expect(await resolveMemory(slug), slug).toEqual(resolution)
+      expect(await postgresHistory.redirectFrom(slug), slug).toEqual(
+        await memoryHistory.redirectFrom(slug),
+      )
+      expect(await postgresHistory.articlesAt(slug), slug).toEqual(
+        await memoryHistory.articlesAt(slug),
+      )
+    }
+    for (const id of ['article-chain', 'article-deleted', 'article-draft', 'article-missing']) {
+      expect(await postgresHistory.article(id), id).toEqual(await memoryHistory.article(id))
+    }
+    // A deleted story keeps its slug, and the history still knows it was published.
+    expect(await postgresHistory.articlesAt('deleted-story')).toEqual([
+      { deleted: true, id: 'article-deleted', published: true, slug: 'deleted-story' },
+    ])
+  }, 30_000)
+
+  it('follows only the renaming story across a slug another story took after a deletion', async () => {
+    // PostgreSQL lets a new story take a deleted story's slug; the in-memory store does not.
+    const desk = newsroom(postgres)
+    await desk.create('article-left', 'cross-first')
+    await desk.publish('article-left')
+    await desk.rename('article-left', 'cross-second')
+    await desk.remove('article-left')
+    await desk.create('article-took', 'cross-second')
+    await desk.publish('article-took')
+    const { resolve } = resolver(postgres)
+
+    expect(await resolve('cross-second')).toEqual({ kind: 'current' })
+    expect(await resolve('cross-first')).toEqual({ kind: 'gone' })
+
+    await desk.rename('article-took', 'cross-third')
+    expect(await resolve('cross-second')).toEqual({ kind: 'redirect', slug: 'cross-third' })
+    expect(await resolve('cross-third')).toEqual({ kind: 'current' })
+    // cross-first was the deleted story's URL: it never leads to the story that took its slug.
+    expect(await resolve('cross-first')).toEqual({ kind: 'gone' })
+  }, 30_000)
+
+  it('stops at a cyclic redirect history instead of looping (AC-07)', async () => {
+    const desk = newsroom(postgres)
+    await desk.create('article-cycle', 'cycle-settled')
+    await desk.publish('article-cycle')
+    await pool.query(
+      `INSERT INTO slug_redirects (id, article_id, from_slug, to_slug, created_at)
+       VALUES ('redirect-loop-a', 'article-cycle', 'loop-a', 'loop-b', $1),
+              ('redirect-loop-b', 'article-cycle', 'loop-b', 'loop-a', $1)`,
+      [clock.now().toISOString()],
+    )
+    const { resolve } = resolver(postgres)
+
+    expect(await resolve('loop-a')).toEqual({ kind: 'unknown' })
+    expect(await resolve('loop-b')).toEqual({ kind: 'unknown' })
+    expect(await resolve('cycle-settled')).toEqual({ kind: 'current' })
+  }, 30_000)
+
+  it('answers each change on the next request through the publication version', async () => {
+    const desk = newsroom(postgres)
+    await desk.create('article-cached', 'cached-first')
+    await desk.publish('article-cached')
+    const cache = new slugs.SlugResolutionCache()
+    const store = {
+      history: new slugs.PostgresSlugHistory(pool),
+      readPublicationVersion: () => postgres.readPublicationVersion(),
+      readVisibleSlugs: () => slugs.readVisibleSlugs(postgres),
+    }
+
+    expect(await cache.resolve('cached-first', store)).toEqual({ kind: 'current' })
+    await desk.rename('article-cached', 'cached-second')
+    expect(await cache.resolve('cached-first', store)).toEqual({
+      kind: 'redirect',
+      slug: 'cached-second',
+    })
+    await desk.unpublish('article-cached')
+    expect(await cache.resolve('cached-second', store)).toEqual({ kind: 'gone' })
+    expect(await cache.resolve('cached-first', store)).toEqual({ kind: 'gone' })
+  }, 30_000)
+})
