@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events'
-import { writeSync } from 'node:fs'
+import { readdirSync, writeSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -23,6 +23,20 @@ let probes
 let scratch
 let servicesLog
 let errors
+
+// Every integration suite in the database folder, which Vitest runs one file at a time.
+// Read independently of the runner, so a new integration suite needs no edit here.
+const databaseFolder = fileURLToPath(new URL('../src/server/database/', import.meta.url))
+const suites = readdirSync(databaseFolder)
+  .filter((file) => file.endsWith('.integration.test.ts'))
+  .sort()
+  .map((file) => `packages/web/src/server/database/${file}`)
+const vitestRun = ['--no-file-parallelism', ...suites]
+
+// Each docker call by its Compose subcommand, and the pnpm call by what it hands Vitest.
+function step([command, args]) {
+  return [command, command === 'pnpm' ? args.slice(3) : args[3]]
+}
 
 beforeAll(async () => {
   vi.stubGlobal('fetch', mocks.fetch)
@@ -112,10 +126,10 @@ describe('content integration entrypoint', () => {
       process.argv = [process.execPath, modulePath]
       vi.resetModules()
       await import('./run-content-integration.mjs')
-      expect(mocks.spawnSync.mock.calls.map(([command, args]) => [command, args[3]])).toEqual([
+      expect(mocks.spawnSync.mock.calls.map(step)).toEqual([
         ['docker', 'down'],
         ['docker', 'up'],
-        ['pnpm', 'packages/web/src/server/database/postgres.integration.test.ts'],
+        ['pnpm', vitestRun],
         ['docker', 'down'],
       ])
     } finally {
@@ -216,12 +230,13 @@ describe('content integration ports', () => {
     })
     await runner.runContentIntegration()
     const calls = mocks.spawnSync.mock.calls
-    expect(calls.map(([command, args]) => [command, args[3]])).toEqual([
+    expect(calls.map(step)).toEqual([
       ['docker', 'down'],
       ['docker', 'up'],
-      ['pnpm', 'packages/web/src/server/database/postgres.integration.test.ts'],
+      ['pnpm', vitestRun],
       ['docker', 'down'],
     ])
+    expect(calls[2][1]).toEqual(['exec', 'vitest', 'run', ...vitestRun])
     expect(mocks.spawnSync.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.createServer.mock.invocationCallOrder[0],
     )
@@ -254,12 +269,40 @@ describe('content integration ports', () => {
   })
 })
 
+describe('content integration suites', () => {
+  it('runs every integration suite in the database folder', () => {
+    expect(runner.contentIntegrationSuites()).toEqual(suites)
+  })
+
+  it('takes only integration suites, in name order, named from the repository root', async () => {
+    const fixtureRoot = new URL('../../../ci-artifacts/', import.meta.url)
+    await mkdir(fixtureRoot, { recursive: true })
+    const folder = await mkdtemp(path.join(fileURLToPath(fixtureRoot), 'content-suites-'))
+    try {
+      for (const file of [
+        'b.integration.test.ts',
+        'a.integration.test.ts',
+        'seed-integration.ts',
+        'unit.test.ts',
+      ]) {
+        await writeFile(path.join(folder, file), '')
+      }
+      const relative = `ci-artifacts/${path.basename(folder)}`
+      expect(runner.contentIntegrationSuites(folder)).toEqual([
+        `${relative}/a.integration.test.ts`,
+        `${relative}/b.integration.test.ts`,
+      ])
+    } finally {
+      await rm(folder, { recursive: true, force: true })
+    }
+  })
+})
+
 describe('content integration service logs', () => {
   const composeFile = fileURLToPath(new URL('../tests/content/docker-compose.yml', import.meta.url))
-  const suite = 'packages/web/src/server/database/postgres.integration.test.ts'
   const failures = {
     up: `docker compose --file ${composeFile} up --detach --wait failed with 1`,
-    pnpm: `pnpm exec vitest run ${suite} failed with 1`,
+    pnpm: `pnpm exec vitest run ${vitestRun.join(' ')} failed with 1`,
   }
   const serviceOutput = 'postgres-1  | 2026-11-01T17:00:00.000000000Z database system is ready\n'
 
@@ -274,7 +317,7 @@ describe('content integration service logs', () => {
   }
 
   function steps() {
-    return mocks.spawnSync.mock.calls.map(([command, args]) => [command, args[3]])
+    return mocks.spawnSync.mock.calls.map(step)
   }
 
   it('defaults to the ci-artifacts folder that CI uploads after a failure', () => {
@@ -291,7 +334,7 @@ describe('content integration service logs', () => {
       'pnpm',
       [
         ['docker', 'up'],
-        ['pnpm', suite],
+        ['pnpm', vitestRun],
       ],
     ],
   ])('saves the service logs before teardown when %s fails', async (failing, started) => {

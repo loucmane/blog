@@ -146,6 +146,7 @@ describe('PostgreSQL and media persistence integration', () => {
       '0004_media_asset_animation',
       '0005_article_authors',
       '0006_search_query_support',
+      '0007_outbox_retry_state',
     ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: migrationIds,
@@ -466,6 +467,7 @@ describe('PostgreSQL and media persistence integration', () => {
         '0004_media_asset_animation',
         '0005_article_authors',
         '0006_search_query_support',
+        '0007_outbox_retry_state',
       ],
     })
 
@@ -1455,13 +1457,18 @@ describe('search migration 0006 on a database of its own', () => {
     const target = new URL(databaseUrl)
     target.pathname = `/${name}`
     pool = new Pool({ connectionString: target.href, max: 2 })
-  })
+    // DROP DATABASE … WITH (FORCE) in afterEach ends this pool's idle connections (57P01);
+    // without a listener that surfaces as an uncaught error. Anything else is a real failure.
+    pool.on('error', (error: Error & { code?: string }) => {
+      if (error.code !== '57P01') throw error
+    })
+  }, 60_000)
 
   afterEach(async () => {
     await pool.end()
     await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`)
     await admin.end()
-  })
+  }, 60_000)
 
   async function searchMigrations() {
     const migrations = await readContentMigrations()

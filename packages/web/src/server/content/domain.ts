@@ -8,7 +8,8 @@ export const publicationJobStatuses = [
   'pending',
   'superseded',
 ] as const
-export const outboxStatuses = ['completed', 'failed', 'pending'] as const
+/** A dead letter is an event the dispatcher set aside for the owner; it is never tried again. */
+export const outboxStatuses = ['completed', 'dead_letter', 'failed', 'pending'] as const
 
 export type ArticleStatus = (typeof articleStatuses)[number]
 export type PublicationJobStatus = (typeof publicationJobStatuses)[number]
