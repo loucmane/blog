@@ -4,6 +4,7 @@ import path from 'node:path'
 import { getTableColumns, getTableName } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 
+import { outboxStatuses } from '../content/domain'
 import { applyContentMigrations, readContentMigrations, type MigrationClient } from './migrations'
 import {
   articleAuthors,
@@ -221,6 +222,42 @@ describe('content database migrations', () => {
     )
   })
 
+  it('adds the outbox retry state, admits every outbox status, and reverses', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0007_outbox_retry_state.sql'),
+      'utf8',
+    )
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0007_outbox_retry_state.down.sql'),
+      'utf8',
+    )
+    const checkedStatuses = (statements: string) =>
+      [...statements.matchAll(/CHECK \(status IN \(([^)]*)\)\)/g)].map((match) =>
+        (match[1] ?? '').split(',').map((status) => status.trim().replaceAll("'", '')),
+      )
+
+    expect(sql).not.toMatch(/CREATE TABLE/)
+    expect(sql).toContain('ALTER TABLE outbox_events ADD COLUMN next_attempt_at timestamptz;')
+    expect(sql).toContain('ALTER TABLE outbox_events ADD COLUMN dead_lettered_at timestamptz;')
+    // The widened check admits exactly the statuses the domain names.
+    expect(sql).toContain('ALTER TABLE outbox_events DROP CONSTRAINT outbox_events_status_check;')
+    expect(checkedStatuses(sql)).toEqual([[...outboxStatuses]])
+
+    // Down turns dead letters back into failed events before it narrows the check again.
+    expect(downSql.indexOf("SET status = 'failed' WHERE status = 'dead_letter'")).toBeGreaterThan(
+      -1,
+    )
+    expect(downSql.indexOf("SET status = 'failed' WHERE status = 'dead_letter'")).toBeLessThan(
+      downSql.indexOf('ADD CONSTRAINT outbox_events_status_check'),
+    )
+    expect(checkedStatuses(downSql)).toEqual([['completed', 'failed', 'pending']])
+    expect(downSql).toContain('ALTER TABLE outbox_events DROP COLUMN IF EXISTS next_attempt_at;')
+    expect(downSql).toContain('ALTER TABLE outbox_events DROP COLUMN IF EXISTS dead_lettered_at;')
+    expect(downSql).toContain(
+      "DELETE FROM content_schema_migrations WHERE id = '0007_outbox_retry_state'",
+    )
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
@@ -235,6 +272,7 @@ describe('content database migrations', () => {
         '0004_media_asset_animation',
         '0005_article_authors',
         '0006_search_query_support',
+        '0007_outbox_retry_state',
       ],
       skipped: [],
     })
@@ -255,6 +293,7 @@ describe('content database migrations', () => {
         '0004_media_asset_animation',
         '0005_article_authors',
         '0006_search_query_support',
+        '0007_outbox_retry_state',
       ],
     })
   })

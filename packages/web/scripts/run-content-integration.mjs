@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { closeSync, mkdirSync, openSync, realpathSync } from 'node:fs'
+import { closeSync, mkdirSync, openSync, readdirSync, realpathSync } from 'node:fs'
 import { createServer } from 'node:net'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const projectRoot = path.resolve(webRoot, '../..')
 const composeFile = path.join(webRoot, 'tests/content/docker-compose.yml')
+const databaseFolder = path.join(webRoot, 'src/server/database')
 // CI uploads ci-artifacts/ when the workspace job fails.
 export const defaultServicesLog = path.join(
   projectRoot,
@@ -90,6 +91,17 @@ function saveServiceLogs(compose, file) {
   }
 }
 
+/**
+ * Every integration suite in the database folder, from the repository root, in name order: the
+ * files vitest.config.ts includes when TASK42_CONTENT_INTEGRATION is set.
+ */
+export function contentIntegrationSuites(folder = databaseFolder) {
+  return readdirSync(folder)
+    .filter((file) => file.endsWith('.integration.test.ts'))
+    .sort()
+    .map((file) => path.relative(projectRoot, path.join(folder, file)).split(path.sep).join('/'))
+}
+
 export async function runContentIntegration({ servicesLog = defaultServicesLog } = {}) {
   const compose = ['compose', '--file', composeFile]
   run('docker', [...compose, 'down', '--volumes', '--remove-orphans'])
@@ -99,21 +111,18 @@ export async function runContentIntegration({ servicesLog = defaultServicesLog }
   try {
     run('docker', [...compose, 'up', '--detach', '--wait'])
     await Promise.all([waitFor(`${s3Primary}/health`), waitFor(`${s3Restore}/health`)])
-    run(
-      'pnpm',
-      ['exec', 'vitest', 'run', 'packages/web/src/server/database/postgres.integration.test.ts'],
-      {
-        env: {
-          ...process.env,
-          TASK42_CONTENT_INTEGRATION: '1',
-          TASK42_COMPOSE_FILE: composeFile,
-          TASK42_DATABASE_URL: `postgresql://task42:task42-local-password@127.0.0.1:${ports.postgres}/magazine`,
-          TASK42_RESTORE_DATABASE_URL: `postgresql://task42:task42-local-password@127.0.0.1:${ports.postgres}/magazine_restore`,
-          TASK42_S3_PRIMARY: s3Primary,
-          TASK42_S3_RESTORE: s3Restore,
-        },
+    // The suites share one PostgreSQL server and both S3 services, so they run one at a time.
+    run('pnpm', ['exec', 'vitest', 'run', '--no-file-parallelism', ...contentIntegrationSuites()], {
+      env: {
+        ...process.env,
+        TASK42_CONTENT_INTEGRATION: '1',
+        TASK42_COMPOSE_FILE: composeFile,
+        TASK42_DATABASE_URL: `postgresql://task42:task42-local-password@127.0.0.1:${ports.postgres}/magazine`,
+        TASK42_RESTORE_DATABASE_URL: `postgresql://task42:task42-local-password@127.0.0.1:${ports.postgres}/magazine_restore`,
+        TASK42_S3_PRIMARY: s3Primary,
+        TASK42_S3_RESTORE: s3Restore,
       },
-    )
+    })
   } catch (error) {
     saveServiceLogs(compose, servicesLog)
     throw error
