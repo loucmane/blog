@@ -58,6 +58,13 @@ export interface OutboxStore {
 /** What a handler is given with its event. */
 export interface OutboxHandlerContext {
   /**
+   * The id that ties this delivery to the request that wrote the event and to the other jobs of
+   * the same change (`eventCorrelationId`). Handlers log under it, and an adapter hands it to its
+   * provider where the provider takes one. The dispatcher always sets it; it is optional only so
+   * that a handler can be called directly without one.
+   */
+  readonly correlationId?: string
+  /**
    * The key an adapter hands on so that a repeated delivery has no second effect. It is derived
    * from the event id, so every retry and replay of the event carries the same key.
    */
