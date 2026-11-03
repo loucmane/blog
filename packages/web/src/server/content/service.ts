@@ -671,6 +671,10 @@ export class ContentService {
       await transaction.saveRedirect(redirect)
       await transaction.saveArticle(article, current.version)
       transaction.recordPublicationChange()
+      await this.saveOutbox(transaction, article.id, 'article.slug-changed', now, {
+        fromSlug: redirect.fromSlug,
+        toSlug: redirect.toSlug,
+      })
       await this.audit(
         transaction,
         article.id,

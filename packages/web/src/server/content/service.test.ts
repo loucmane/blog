@@ -590,6 +590,51 @@ describe('content service', () => {
     })
   })
 
+  it('queues article.slug-changed with both slugs in the commit that changes the slug', async () => {
+    const { repository, service } = setup()
+    const created = await service.createArticle({
+      dek: 'Slug change proof',
+      document: document('article-slug-change'),
+      id: 'article-slug-change',
+      idempotencyKey: 'create-slug-change',
+      slug: 'old-slug',
+      title: 'Slug change proof',
+    })
+    const rename = {
+      articleId: created.article.id,
+      expectedVersion: created.article.version,
+      idempotencyKey: 'rename-slug-change',
+      slug: 'new-slug',
+    }
+    const renamed = await service.changeSlug(rename)
+    // A replay returns the first result and queues nothing more.
+    expect(await service.changeSlug(rename)).toEqual(renamed)
+    // A refused change rolls back with nothing queued.
+    await expect(
+      service.changeSlug({
+        ...rename,
+        expectedVersion: renamed.article.version,
+        idempotencyKey: 'same',
+      }),
+    ).rejects.toThrow(/must differ/)
+
+    expect(
+      await repository.inspect((transaction) => transaction.listOutboxEvents(created.article.id)),
+    ).toEqual([
+      {
+        aggregateId: created.article.id,
+        attempts: 0,
+        createdAt: renamed.article.updatedAt,
+        id: expect.any(String),
+        lastError: null,
+        payload: { fromSlug: 'old-slug', toSlug: 'new-slug' },
+        status: 'pending',
+        type: 'article.slug-changed',
+        updatedAt: renamed.article.updatedAt,
+      },
+    ])
+  })
+
   it('retains redirects and supports recoverable deletion without permanent loss', async () => {
     const { repository, service } = setup()
     const created = await service.createArticle({

@@ -92,7 +92,7 @@ interface PublicationJobRow extends QueryResultRow {
   updated_at: Date | string
 }
 
-interface OutboxRow extends QueryResultRow {
+export interface OutboxRow extends QueryResultRow {
   aggregate_id: string
   attempts: number
   created_at: Date | string
@@ -241,7 +241,8 @@ function mapJob(row: PublicationJobRow): PublicationJob {
   }
 }
 
-function mapOutbox(row: OutboxRow): OutboxEvent {
+/** The stored event, without the retry state of migration 0007, which only the outbox store reads. */
+export function mapOutbox(row: OutboxRow): OutboxEvent {
   return {
     aggregateId: row.aggregate_id,
     attempts: row.attempts,
@@ -1038,6 +1039,17 @@ export class PostgresContentRepository implements ContentRepository {
   }
 
   async transaction<T>(work: (transaction: ContentTransaction) => Promise<T>): Promise<T> {
+    return this.transactionOnConnection((transaction) => work(transaction))
+  }
+
+  /**
+   * Runs `work` in one transaction, exactly as `transaction` does, and also hands it the
+   * transaction's connection, for statements outside the content port that must commit or roll
+   * back with it: the outbox store claims and schedules events this way.
+   */
+  async transactionOnConnection<T>(
+    work: (transaction: ContentTransaction, connection: PostgresQueries) => Promise<T>,
+  ): Promise<T> {
     const pooledClient = this.lockedClient ? undefined : await this.pool.connect()
     const client: PostgresQueries = this.lockedClient ?? pooledClient!
     try {
@@ -1046,7 +1058,7 @@ export class PostgresContentRepository implements ContentRepository {
       await client.query('BEGIN')
       await client.query('SET CONSTRAINTS ALL DEFERRED')
       const transaction = new PostgresContentTransaction(client)
-      const result = await work(transaction)
+      const result = await work(transaction, client)
       if (transaction.publicationChanged) {
         // Run last, so the counter's row lock comes after every other lock this change needs and
         // is held only until the commit.
