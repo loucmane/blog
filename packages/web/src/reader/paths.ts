@@ -1,16 +1,19 @@
-export type StoryPath = `/stories/${string}`
-export type SectionPath = `/sections/${string}`
-export type AuthorPath = `/authors/${string}`
-export type TopicPath = `/topics/${string}`
-export type PublicMediaPath = `/api/media/${string}`
-
-export function storyPath(slug: string): StoryPath {
-  return `/stories/${slug}`
-}
-
-export function sectionPath(slug: string): SectionPath {
-  return `/sections/${slug}`
-}
+/*
+ * The reader's path builders. They are defined once, in server/distribution/canonical.ts, the
+ * single source of every public URL, and re-exported here under the names reader code imports.
+ */
+export {
+  authorPath,
+  publicMediaPath,
+  sectionPath,
+  storyPath,
+  topicPath,
+  type AuthorPath,
+  type PublicMediaPath,
+  type SectionPath,
+  type StoryPath,
+  type TopicPath,
+} from '@/server/distribution/canonical'
 
 const authorOrTopicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
@@ -35,22 +38,4 @@ export function normalizeAuthorOrTopicSlug(value: unknown): string | null {
     return null
   }
   return value
-}
-
-/**
- * The author route resolves every slug `normalizeAuthorOrTopicSlug` accepts. The slug is encoded
- * anyway: the in-memory store does not check slugs, and an unchecked one must stay inside its own
- * path segment, where the route turns it away.
- */
-export function authorPath(slug: string): AuthorPath {
-  return `/authors/${encodeURIComponent(slug)}`
-}
-
-/** Encodes the slug, like `authorPath`; the topic route accepts the same slugs. */
-export function topicPath(slug: string): TopicPath {
-  return `/topics/${encodeURIComponent(slug)}`
-}
-
-export function publicMediaPath(mediaId: string): PublicMediaPath {
-  return `/api/media/${encodeURIComponent(mediaId)}`
 }

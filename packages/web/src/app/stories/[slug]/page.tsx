@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 
-import { resolveCanonicalSiteUrl } from '@/lib/site-url'
 import { loadArticleView } from '@/reader/cache'
 import { normalizeReaderSlug } from '@/reader/slug'
 import { resolveReaderPresentation } from '@/reader-lab/presentation'
 import { ReaderPage } from '@/reader-lab/reader-page'
+import { canonicalArticleUrl } from '@/server/distribution/canonical'
 
 interface StoryPageProps {
   params: Promise<{ slug: string }>
@@ -25,6 +25,8 @@ export async function generateMetadata({ params }: StoryPageProps): Promise<Meta
   if (!article) return {}
   const { view } = article
   return {
+    // The canonical path (canonical.ts, through the view); Next makes it absolute on metadataBase,
+    // the same configured canonical origin canonicalArticleUrl uses.
     alternates: {
       canonical: view.href,
     },
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: StoryPageProps): Promise<Meta
       publishedTime: view.publishedAt,
       title: view.title,
       type: 'article',
-      url: new URL(view.href, resolveCanonicalSiteUrl()),
+      url: canonicalArticleUrl(view.slug),
     },
     title: view.title,
   }

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import * as canonical from '@/server/distribution/canonical'
+
 import {
   authorPath,
   maxAuthorOrTopicSlugLength,
@@ -11,6 +13,14 @@ import {
 } from './paths'
 
 describe('reader paths', () => {
+  it('are the canonical path builders, the single source of public URLs', () => {
+    expect(storyPath).toBe(canonical.storyPath)
+    expect(sectionPath).toBe(canonical.sectionPath)
+    expect(authorPath).toBe(canonical.authorPath)
+    expect(topicPath).toBe(canonical.topicPath)
+    expect(publicMediaPath).toBe(canonical.publicMediaPath)
+  })
+
   it('builds story, section, author, and topic paths from reader slugs', () => {
     expect(storyPath('winter-light')).toBe('/stories/winter-light')
     expect(sectionPath('interiors')).toBe('/sections/interiors')
