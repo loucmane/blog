@@ -87,7 +87,6 @@
   ],
   "routePatterns": [
     "packages/web/src/lib/site-url.ts",
-    "packages/web/public/robots.txt",
     "packages/web/src/app/layout.tsx",
     "packages/web/src/app/page.tsx",
     "packages/web/src/app/stories/*/page.tsx",
@@ -102,9 +101,6 @@
     "positive": [
       {
         "file": "packages/web/src/lib/site-url.ts"
-      },
-      {
-        "file": "packages/web/public/robots.txt"
       },
       {
         "file": "packages/web/src/app/layout.tsx",
@@ -157,22 +153,6 @@
   },
   "plannedPaths": [
     {
-      "file": "packages/web/src/app/feed.xml/route.ts",
-      "bead": "blog-0045.5"
-    },
-    {
-      "file": "packages/web/src/app/sitemap.xml/route.ts",
-      "bead": "blog-0045.5"
-    },
-    {
-      "file": "packages/web/src/app/sitemaps/[page]/route.ts",
-      "bead": "blog-0045.5"
-    },
-    {
-      "file": "packages/web/src/app/robots.txt/route.ts",
-      "bead": "blog-0045.5"
-    },
-    {
       "file": "packages/web/src/server/distribution/canonical.ts",
       "bead": "blog-0045.3"
     }
@@ -180,7 +160,7 @@
   "groundingPaths": [
     "packages/web/src/lib/site-url.ts",
     "packages/web/src/lib/site-url.test.ts",
-    "packages/web/public/robots.txt",
+    "packages/web/src/app/robots.txt/route.ts",
     "packages/web/src/app/layout.tsx",
     "packages/web/src/app/stories/[slug]/page.tsx",
     "packages/web/src/app/sections/[slug]/page.tsx",

@@ -486,7 +486,6 @@
       "id": "seo-distribution",
       "match": [
         "packages/web/src/lib/site-url.ts",
-        "packages/web/public/robots.txt",
         "packages/web/src/app/layout.tsx",
         "packages/web/src/app/page.tsx",
         "packages/web/src/app/stories/*/page.tsx",

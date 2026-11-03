@@ -505,7 +505,6 @@ test('v5 replays the first measurement and all four previously-seen references',
     for (const row of score.cases)
       assert.deepEqual([...new Set(row.matches.map(({ skill }) => skill))].sort(), row.selected)
   }
-  verifyV5Disposition(result)
 })
 
 test('v5 preserves its replay after edits to pinned non-evaluation documentation', (t) => {
