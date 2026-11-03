@@ -1,5 +1,7 @@
 import { EventEmitter } from 'node:events'
-import { mkdir, mkdtemp, readFile, rm, symlink } from 'node:fs/promises'
+import { writeSync } from 'node:fs'
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -18,6 +20,9 @@ let runner
 let importCalls
 let bindings
 let probes
+let scratch
+let servicesLog
+let errors
 
 beforeAll(async () => {
   vi.stubGlobal('fetch', mocks.fetch)
@@ -30,8 +35,13 @@ beforeAll(async () => {
     const [host, port] = config.ports[0].split(':')
     return { service, host, port: Number(port) }
   })
+  // Failing runs save their service logs here, never in the repository's ci-artifacts/.
+  scratch = await mkdtemp(path.join(os.tmpdir(), 'content-integration-'))
 })
-afterAll(() => vi.unstubAllGlobals())
+afterAll(async () => {
+  vi.unstubAllGlobals()
+  await rm(scratch, { recursive: true, force: true })
+})
 
 function probe(error) {
   const server = new EventEmitter()
@@ -47,8 +57,14 @@ function probe(error) {
   return server
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   probes = []
+  // The ci-artifacts/ folder is missing until the runner creates it.
+  servicesLog = path.join(
+    await mkdtemp(path.join(scratch, 'run-')),
+    'ci-artifacts/content-integration-services.log',
+  )
+  errors = vi.spyOn(console, 'error').mockImplementation(() => {})
   mocks.spawnSync.mockReset().mockReturnValue({ status: 0 })
   mocks.fetch.mockReset().mockResolvedValue({ ok: true })
   mocks.createServer.mockReset().mockImplementation(() => probe())
@@ -230,10 +246,139 @@ describe('content integration ports', () => {
     mocks.spawnSync.mockImplementation((command, args) => ({
       status: command === failure || args[3] === failure ? 1 : 0,
     }))
-    await expect(runner.runContentIntegration()).rejects.toThrow('failed with 1')
+    await expect(runner.runContentIntegration({ servicesLog })).rejects.toThrow('failed with 1')
     expect(mocks.spawnSync.mock.calls.at(-1).slice(0, 2)).toEqual([
       'docker',
       ['compose', '--file', expect.any(String), 'down', '--volumes', '--remove-orphans'],
     ])
+  })
+})
+
+describe('content integration service logs', () => {
+  const composeFile = fileURLToPath(new URL('../tests/content/docker-compose.yml', import.meta.url))
+  const suite = 'packages/web/src/server/database/postgres.integration.test.ts'
+  const failures = {
+    up: `docker compose --file ${composeFile} up --detach --wait failed with 1`,
+    pnpm: `pnpm exec vitest run ${suite} failed with 1`,
+  }
+  const serviceOutput = 'postgres-1  | 2026-11-01T17:00:00.000000000Z database system is ready\n'
+
+  // `failing` exits with 1. Like the real command, `docker compose logs` prints to the file
+  // descriptor it is handed, then returns `capture`.
+  function stubCommands(failing, capture = { status: 0 }) {
+    mocks.spawnSync.mockImplementation((command, args, options) => {
+      if (args[3] !== 'logs') return { status: command === failing || args[3] === failing ? 1 : 0 }
+      writeSync(options.stdio[1], serviceOutput)
+      return capture
+    })
+  }
+
+  function steps() {
+    return mocks.spawnSync.mock.calls.map(([command, args]) => [command, args[3]])
+  }
+
+  it('defaults to the ci-artifacts folder that CI uploads after a failure', () => {
+    expect(runner.defaultServicesLog).toBe(
+      fileURLToPath(
+        new URL('../../../ci-artifacts/content-integration-services.log', import.meta.url),
+      ),
+    )
+  })
+
+  it.each([
+    ['up', [['docker', 'up']]],
+    [
+      'pnpm',
+      [
+        ['docker', 'up'],
+        ['pnpm', suite],
+      ],
+    ],
+  ])('saves the service logs before teardown when %s fails', async (failing, started) => {
+    stubCommands(failing)
+    const error = await runner.runContentIntegration({ servicesLog }).catch((cause) => cause)
+    expect(error.message).toBe(failures[failing])
+    expect(steps()).toEqual([
+      ['docker', 'down'],
+      ...started,
+      ['docker', 'logs'],
+      ['docker', 'down'],
+    ])
+    const [command, args, options] = mocks.spawnSync.mock.calls.at(-2)
+    expect([command, args]).toEqual([
+      'docker',
+      ['compose', '--file', composeFile, 'logs', '--no-color', '--timestamps'],
+    ])
+    expect(options.stdio).toEqual(['ignore', expect.any(Number), expect.any(Number)])
+    expect(options.timeout).toBeGreaterThan(0)
+    expect(options).not.toHaveProperty('shell')
+    expect(await readFile(servicesLog, 'utf8')).toBe(serviceOutput)
+    expect(errors).toHaveBeenCalledWith(`Docker service logs saved to ${servicesLog}`)
+  })
+
+  it('saves the service logs before teardown when a health check never passes', async () => {
+    vi.useFakeTimers()
+    try {
+      stubCommands()
+      mocks.fetch.mockResolvedValue({ ok: false })
+      const running = runner.runContentIntegration({ servicesLog }).catch((cause) => cause)
+      await vi.runAllTimersAsync()
+      const error = await running
+      const primary = bindings.find(({ service }) => service === 's3-primary')
+      expect(error.message).toBe(
+        `http://${primary.host}:${primary.port}/health did not become ready`,
+      )
+      expect(steps()).toEqual([
+        ['docker', 'down'],
+        ['docker', 'up'],
+        ['docker', 'logs'],
+        ['docker', 'down'],
+      ])
+      expect(await readFile(servicesLog, 'utf8')).toBe(serviceOutput)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('writes no service log when the run passes', async () => {
+    await runner.runContentIntegration({ servicesLog })
+    expect(steps()).not.toContainEqual(['docker', 'logs'])
+    await expect(stat(path.dirname(servicesLog))).rejects.toMatchObject({ code: 'ENOENT' })
+    expect(errors).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [
+      'docker compose logs exits with 1',
+      () => stubCommands('pnpm', { status: 1 }),
+      'docker compose logs failed with 1',
+    ],
+    [
+      'docker compose logs times out',
+      () =>
+        stubCommands('pnpm', {
+          status: null,
+          signal: 'SIGTERM',
+          error: Object.assign(new Error('spawnSync docker ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+        }),
+      'spawnSync docker ETIMEDOUT',
+    ],
+    [
+      'the log folder cannot be created',
+      async () => {
+        stubCommands('pnpm')
+        await writeFile(path.dirname(servicesLog), 'a file in the way')
+      },
+      'EEXIST',
+    ],
+  ])('still tears down and rethrows the original error when %s', async (_case, arrange, reason) => {
+    await arrange()
+    const error = await runner.runContentIntegration({ servicesLog }).catch((cause) => cause)
+    expect(error.message).toBe(failures.pnpm)
+    expect(steps().at(-1)).toEqual(['docker', 'down'])
+    expect(errors).toHaveBeenCalledOnce()
+    const [note] = errors.mock.calls[0]
+    expect(note).toContain(`Could not save the Docker service logs to ${servicesLog}: `)
+    expect(note).toContain(reason)
   })
 })
