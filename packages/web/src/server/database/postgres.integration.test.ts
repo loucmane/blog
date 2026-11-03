@@ -1457,6 +1457,11 @@ describe('search migration 0006 on a database of its own', () => {
     const target = new URL(databaseUrl)
     target.pathname = `/${name}`
     pool = new Pool({ connectionString: target.href, max: 2 })
+    // DROP DATABASE … WITH (FORCE) in afterEach ends this pool's idle connections (57P01);
+    // without a listener that surfaces as an uncaught error. Anything else is a real failure.
+    pool.on('error', (error: Error & { code?: string }) => {
+      if (error.code !== '57P01') throw error
+    })
   }, 60_000)
 
   afterEach(async () => {
