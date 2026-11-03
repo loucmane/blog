@@ -81,6 +81,7 @@ export default defineConfig({
         'packages/web/src/server/distribution/slug-resolution-cache.ts',
         'packages/web/src/server/distribution/slug-resolution.ts',
         'packages/web/src/server/distribution/story-requests.ts',
+        'packages/web/src/server/distribution/structured-data.ts',
         'packages/web/src/server/lab/illustrations.ts',
         'packages/web/src/server/lab/seed.ts',
         'packages/web/src/server/outbox/dispatcher.ts',
