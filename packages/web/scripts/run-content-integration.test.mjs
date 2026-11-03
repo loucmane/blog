@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events'
-import { writeSync } from 'node:fs'
+import { readdirSync, writeSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -25,10 +25,12 @@ let servicesLog
 let errors
 
 // Every integration suite in the database folder, which Vitest runs one file at a time.
-const suites = [
-  'packages/web/src/server/database/outbox.integration.test.ts',
-  'packages/web/src/server/database/postgres.integration.test.ts',
-]
+// Read independently of the runner, so a new integration suite needs no edit here.
+const databaseFolder = fileURLToPath(new URL('../src/server/database/', import.meta.url))
+const suites = readdirSync(databaseFolder)
+  .filter((file) => file.endsWith('.integration.test.ts'))
+  .sort()
+  .map((file) => `packages/web/src/server/database/${file}`)
 const vitestRun = ['--no-file-parallelism', ...suites]
 
 // Each docker call by its Compose subcommand, and the pnpm call by what it hands Vitest.
