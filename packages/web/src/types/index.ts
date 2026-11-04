@@ -6,14 +6,8 @@ export * from './content'
 // Trauma-informed content handling
 export * from './trauma-informed'
 
-// Donor and trust-building types
-export * from './donor'
-
 // Emergency appeal system
 export * from './emergency'
-
-// Analytics and tracking
-export * from './analytics'
 
 // UI and component types
 export * from './ui'

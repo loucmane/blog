@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { ThemeProvider } from '@/components/theme-provider'
+import { PublicReaderTelemetry } from '@/components/web-vitals-beacon'
 import { resolveCanonicalSiteUrl } from '@/lib/site-url'
 import { ReaderRecoveryScope } from '@/reader/components/failure-boundary'
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
+          <PublicReaderTelemetry />
           <ReaderRecoveryScope>{children}</ReaderRecoveryScope>
         </ThemeProvider>
       </body>

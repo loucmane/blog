@@ -333,6 +333,7 @@ describe('content database migrations', () => {
         '0006_search_query_support',
         '0007_outbox_retry_state',
         '0008_subscribers_consent',
+        '0009_distribution_telemetry',
       ],
       skipped: [],
     })
@@ -355,6 +356,7 @@ describe('content database migrations', () => {
         '0006_search_query_support',
         '0007_outbox_retry_state',
         '0008_subscribers_consent',
+        '0009_distribution_telemetry',
       ],
     })
   })
