@@ -6,6 +6,7 @@ import {
   secureTokenMatches,
 } from '@/lib/request-security'
 import { expirePublicReader } from '@/reader/cache'
+import { observeRequest } from '@/server/observability/request'
 import {
   LabSeedBusyError,
   LabSeedSessionLimitsError,
@@ -26,52 +27,57 @@ const headers = { 'cache-control': 'private, no-store' }
  * MAGAZINE_LAB_SEED_TOKEN; `pnpm --filter web lab:seed` calls it. Local labs also use it.
  */
 export async function POST(request: Request) {
-  const token = process.env.MAGAZINE_LAB_SEED_TOKEN
-  if (
-    !labSeedAllowed() ||
-    !configuredSecretIsStrong(token) ||
-    !secureTokenMatches(readBearerToken(request.headers.get('authorization')), token)
-  ) {
-    return NextResponse.json({ error: 'The lab seed is not available.' }, { headers, status: 404 })
-  }
-
-  let ownerRuntime: OwnerRuntime
-  try {
-    ownerRuntime = getOwnerRuntime()
-  } catch (error) {
-    if (error instanceof OwnerConfigurationError) {
+  return observeRequest(request, async ({ recordFailure }) => {
+    const token = process.env.MAGAZINE_LAB_SEED_TOKEN
+    if (
+      !labSeedAllowed() ||
+      !configuredSecretIsStrong(token) ||
+      !secureTokenMatches(readBearerToken(request.headers.get('authorization')), token)
+    ) {
       return NextResponse.json(
-        { error: 'No content store is configured for this server.' },
+        { error: 'The lab seed is not available.' },
+        { headers, status: 404 },
+      )
+    }
+
+    let ownerRuntime: OwnerRuntime
+    try {
+      ownerRuntime = getOwnerRuntime()
+    } catch (error) {
+      if (error instanceof OwnerConfigurationError) {
+        return NextResponse.json(
+          { error: 'No content store is configured for this server.' },
+          { headers, status: 503 },
+        )
+      }
+      throw error
+    }
+
+    if (process.env.MAGAZINE_DEPLOYMENT_ENVIRONMENT === 'preview' && !ownerRuntime.objects) {
+      return NextResponse.json(
+        { error: 'Media storage is required for the Preview lab seed.' },
         { headers, status: 503 },
       )
     }
-    throw error
-  }
 
-  if (process.env.MAGAZINE_DEPLOYMENT_ENVIRONMENT === 'preview' && !ownerRuntime.objects) {
-    return NextResponse.json(
-      { error: 'Media storage is required for the Preview lab seed.' },
-      { headers, status: 503 },
-    )
-  }
-
-  try {
-    const report = await seedLabContent({
-      objects: ownerRuntime.objects,
-      repository: ownerRuntime.repository,
-    })
-    expirePublicReader()
-    return NextResponse.json(report, { headers })
-  } catch (error) {
-    if (error instanceof LabSeedBusyError) {
-      return NextResponse.json({ error: error.message }, { headers, status: 409 })
+    try {
+      const report = await seedLabContent({
+        objects: ownerRuntime.objects,
+        repository: ownerRuntime.repository,
+      })
+      expirePublicReader()
+      return NextResponse.json(report, { headers })
+    } catch (error) {
+      if (error instanceof LabSeedBusyError) {
+        return NextResponse.json({ error: error.message }, { headers, status: 409 })
+      }
+      // A configuration problem like a missing store: retrying cannot fix it. The fixed message
+      // names the SQLSTATE, never the database's own error text, in the response and the log.
+      if (error instanceof LabSeedSessionLimitsError) {
+        recordFailure(error.message)
+        return NextResponse.json({ error: error.message }, { headers, status: 503 })
+      }
+      throw error
     }
-    // A configuration problem like a missing store: retrying cannot fix it. The fixed message
-    // names the SQLSTATE, never the database's own error text, in the response and the log.
-    if (error instanceof LabSeedSessionLimitsError) {
-      console.error(error.message)
-      return NextResponse.json({ error: error.message }, { headers, status: 503 })
-    }
-    throw error
-  }
+  })
 }

@@ -23,6 +23,7 @@ import {
   type MediaVariantService,
 } from '@/server/content/media-variants'
 import type { OriginalObjectStore } from '@/server/content/ports'
+import { observeRequest, type RequestObservation } from '@/server/observability/request'
 
 export const runtime = 'nodejs'
 
@@ -50,8 +51,8 @@ function badRequestResponse() {
  * A visible image that could not be served, for example because storage failed. It is logged and
  * answered as a server error, never as a not-found, which would look like a revoked image.
  */
-function serverErrorResponse(mediaId: string, error: unknown) {
-  console.error(`Public media ${mediaId} could not be served.`, error)
+function serverErrorResponse(error: unknown, recordFailure: RequestObservation['recordFailure']) {
+  recordFailure(error)
   return NextResponse.json(
     { error: 'That image could not be loaded.' },
     { headers: { 'cache-control': 'no-store' }, status: 500 },
@@ -86,6 +87,7 @@ async function serveOriginal(
   request: Request,
   objects: OriginalObjectStore,
   asset: MediaAsset,
+  recordFailure: RequestObservation['recordFailure'],
 ): Promise<Response> {
   const entityTag = mediaEntityTag(asset)
   const headers = revalidatedHeaders(entityTag)
@@ -94,7 +96,7 @@ async function serveOriginal(
   try {
     body = await objects.getOriginal(asset.originalKey)
   } catch (error) {
-    return serverErrorResponse(asset.id, error)
+    return serverErrorResponse(error, recordFailure)
   }
   return new Response(Uint8Array.from(body).buffer, {
     headers: { ...headers, 'content-type': asset.contentType },
@@ -106,6 +108,7 @@ async function serveVariant(
   variants: MediaVariantService,
   asset: MediaAsset,
   variant: MediaVariant,
+  recordFailure: RequestObservation['recordFailure'],
 ): Promise<Response> {
   if (!mediaVariantFormatsFor(asset.contentType).includes(variant.format)) {
     return badRequestResponse()
@@ -128,7 +131,7 @@ async function serveVariant(
   try {
     body = await variants.load(asset, variant)
   } catch (error) {
-    if (!isMediaVariantUnavailable(error)) return serverErrorResponse(asset.id, error)
+    if (!isMediaVariantUnavailable(error)) return serverErrorResponse(error, recordFailure)
     // An original that cannot be resized safely is still public: send the reader to it, as
     // before variants existed.
     return originalRedirectResponse(asset.id)
@@ -152,17 +155,19 @@ async function serveVariant(
  * server error, never a not-found.
  */
 export async function GET(request: Request, context: RouteContext): Promise<Response> {
-  const { id } = await context.params
-  if (!mediaIdPattern.test(id)) return notFoundResponse()
-  const publicMedia = await loadPublicMediaIds()
-  if (publicMedia.status !== 'ready' || !publicMedia.view.includes(id)) return notFoundResponse()
-  const store = resolveReaderStore()
-  if (!store?.objects || !store.variants) return notFoundResponse()
-  const asset = await store.repository.transaction((transaction) => transaction.getMediaAsset(id))
-  if (!asset) return notFoundResponse()
-  const query = parseMediaRequest(new URL(request.url).searchParams)
-  if (query.kind === 'invalid') return badRequestResponse()
-  return query.kind === 'original'
-    ? serveOriginal(request, store.objects, asset)
-    : serveVariant(request, store.variants, asset, query.variant)
+  return observeRequest(request, async ({ recordFailure }) => {
+    const { id } = await context.params
+    if (!mediaIdPattern.test(id)) return notFoundResponse()
+    const publicMedia = await loadPublicMediaIds()
+    if (publicMedia.status !== 'ready' || !publicMedia.view.includes(id)) return notFoundResponse()
+    const store = resolveReaderStore()
+    if (!store?.objects || !store.variants) return notFoundResponse()
+    const asset = await store.repository.transaction((transaction) => transaction.getMediaAsset(id))
+    if (!asset) return notFoundResponse()
+    const query = parseMediaRequest(new URL(request.url).searchParams)
+    if (query.kind === 'invalid') return badRequestResponse()
+    return query.kind === 'original'
+      ? serveOriginal(request, store.objects, asset, recordFailure)
+      : serveVariant(request, store.variants, asset, query.variant, recordFailure)
+  })
 }

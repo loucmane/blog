@@ -1,6 +1,7 @@
 import { MAX_MEDIA_ORIGINAL_BYTES } from '@/server/content/media'
 import { measureMediaOriginal } from '@/server/content/media-variants'
 import { InvalidContentTransitionError } from '@/server/content/errors'
+import { observeRequest } from '@/server/observability/request'
 import { assertOwnerMutationRequest, ownerErrorResponse, withOwner } from '@/server/owner/api'
 import { ownerMediaMetadataSchema } from '@/server/owner/contracts'
 import { getOwnerRuntime } from '@/server/owner/runtime'
@@ -11,56 +12,60 @@ export const runtime = 'nodejs'
 const maxMultipartBytes = MAX_MEDIA_ORIGINAL_BYTES + 64 * 1024
 
 export async function GET(request: Request) {
-  return withOwner(request, async () => ({ media: await getOwnerRuntime().workspace.listMedia() }))
+  return observeRequest(request, async () =>
+    withOwner(request, async () => ({ media: await getOwnerRuntime().workspace.listMedia() })),
+  )
 }
 
 export async function POST(request: Request) {
-  try {
-    assertOwnerMutationRequest(request)
-    const ownerResponse = await withOwner(request, async () => {
-      const declared = request.headers.get('content-length')
-      if (!declared || !/^\d+$/.test(declared) || Number(declared) > maxMultipartBytes) {
-        throw new InvalidContentTransitionError('This image upload is too large or incomplete.')
-      }
-      const form = await request.formData()
-      const file = form.get('file')
-      if (!(file instanceof File))
-        throw new InvalidContentTransitionError('Choose an image to upload.')
-      if (file.size < 1 || file.size > MAX_MEDIA_ORIGINAL_BYTES) {
-        throw new InvalidContentTransitionError('This image upload is too large or incomplete.')
-      }
-      const parsed = ownerMediaMetadataSchema.safeParse({
-        alt: form.get('alt'),
-        caption: form.get('caption') ?? '',
-        creditName: form.get('creditName'),
-        creditUrl: form.get('creditUrl') ?? '',
-        focalX: form.get('focalX') ?? undefined,
-        focalY: form.get('focalY') ?? undefined,
+  return observeRequest(request, async () => {
+    try {
+      assertOwnerMutationRequest(request)
+      const ownerResponse = await withOwner(request, async () => {
+        const declared = request.headers.get('content-length')
+        if (!declared || !/^\d+$/.test(declared) || Number(declared) > maxMultipartBytes) {
+          throw new InvalidContentTransitionError('This image upload is too large or incomplete.')
+        }
+        const form = await request.formData()
+        const file = form.get('file')
+        if (!(file instanceof File))
+          throw new InvalidContentTransitionError('Choose an image to upload.')
+        if (file.size < 1 || file.size > MAX_MEDIA_ORIGINAL_BYTES) {
+          throw new InvalidContentTransitionError('This image upload is too large or incomplete.')
+        }
+        const parsed = ownerMediaMetadataSchema.safeParse({
+          alt: form.get('alt'),
+          caption: form.get('caption') ?? '',
+          creditName: form.get('creditName'),
+          creditUrl: form.get('creditUrl') ?? '',
+          focalX: form.get('focalX') ?? undefined,
+          focalY: form.get('focalY') ?? undefined,
+        })
+        if (!parsed.success) {
+          throw new InvalidContentTransitionError(
+            parsed.error.issues[0]?.message ?? 'Check the form.',
+          )
+        }
+        const metadata = parsed.data
+        const mediaService = getOwnerRuntime().media
+        if (!mediaService) {
+          throw new InvalidContentTransitionError('Image storage is not configured yet.')
+        }
+        const body = new Uint8Array(await file.arrayBuffer())
+        // The browser sends no dimensions, so they are read from the image itself, with whether it
+        // is animated. Readers' variants and width descriptors depend on both.
+        const asset = await mediaService.store({
+          ...metadata,
+          ...(await measureMediaOriginal(file.type, body)),
+          body,
+          contentType: file.type,
+          creditUrl: metadata.creditUrl || null,
+        })
+        return { asset, previewUrl: `/api/owner/media/${asset.id}` }
       })
-      if (!parsed.success) {
-        throw new InvalidContentTransitionError(
-          parsed.error.issues[0]?.message ?? 'Check the form.',
-        )
-      }
-      const metadata = parsed.data
-      const mediaService = getOwnerRuntime().media
-      if (!mediaService) {
-        throw new InvalidContentTransitionError('Image storage is not configured yet.')
-      }
-      const body = new Uint8Array(await file.arrayBuffer())
-      // The browser sends no dimensions, so they are read from the image itself, with whether it
-      // is animated. Readers' variants and width descriptors depend on both.
-      const asset = await mediaService.store({
-        ...metadata,
-        ...(await measureMediaOriginal(file.type, body)),
-        body,
-        contentType: file.type,
-        creditUrl: metadata.creditUrl || null,
-      })
-      return { asset, previewUrl: `/api/owner/media/${asset.id}` }
-    })
-    return ownerResponse
-  } catch (error) {
-    return ownerErrorResponse(error)
-  }
+      return ownerResponse
+    } catch (error) {
+      return ownerErrorResponse(error)
+    }
+  })
 }

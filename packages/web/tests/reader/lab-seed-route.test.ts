@@ -215,7 +215,17 @@ describe('hosted lab seed admission', () => {
       expect(body.error).not.toContain('fixture database detail')
       expect(body.error).not.toContain(token)
       // Function logs get the same fixed message, so the cause stays visible to the operator.
-      expect(logged).toHaveBeenCalledExactlyOnceWith(body.error)
+      expect(logged).toHaveBeenCalledTimes(1)
+      expect(logged.mock.calls[0]).toHaveLength(1)
+      expect(response.headers.get('x-correlation-id')).toMatch(/^[\da-f-]{36}$/)
+      expect(JSON.parse(String(logged.mock.calls[0]?.[0]))).toMatchObject({
+        correlationId: response.headers.get('x-correlation-id'),
+        level: 'error',
+        message: 'request.failed',
+        error: body.error,
+      })
+      expect(String(logged.mock.calls[0]?.[0])).not.toContain('fixture database detail')
+      expect(String(logged.mock.calls[0]?.[0])).not.toContain(token)
       expect(expirePublicReader).not.toHaveBeenCalled()
     },
   )
@@ -225,10 +235,32 @@ describe('hosted lab seed admission', () => {
     runtimeSpy.mockReturnValue(owner)
     const failure = Object.assign(new Error('permission denied for table taxonomies'), {
       code: '42501',
+      token: ['fixture', 'database', 'credential'].join('-'),
+      email: 'owner@example.test',
+      document: 'private database draft',
     })
     vi.spyOn(owner.repository, 'tryExclusive').mockRejectedValueOnce(failure)
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
-    await expect(POST(request())).rejects.toBe(failure)
+    const response = await POST(request())
+    expect(response.status).toBe(500)
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect(response.headers.get('x-correlation-id')).toMatch(/^[\da-f-]{36}$/)
+    expect(await response.json()).toEqual({
+      correlationId: response.headers.get('x-correlation-id'),
+      error: 'Something went wrong. Quote this reference to a maintainer.',
+    })
+    expect(logged).toHaveBeenCalledTimes(1)
+    expect(logged.mock.calls[0]).toHaveLength(1)
+    expect(JSON.parse(String(logged.mock.calls[0]?.[0]))).toMatchObject({
+      correlationId: response.headers.get('x-correlation-id'),
+      level: 'error',
+      message: 'request.failed',
+      error: { code: '42501' },
+    })
+    for (const value of [failure.token, failure.email, failure.document]) {
+      expect(String(logged.mock.calls[0]?.[0])).not.toContain(value)
+    }
     expect(expirePublicReader).not.toHaveBeenCalled()
   })
 })

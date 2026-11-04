@@ -49,6 +49,134 @@ function setup() {
 }
 
 describe('content service', () => {
+  it('carries request correlation through every publish event and retains it on replay', async () => {
+    const { repository, service } = setup()
+    const created = await service.createArticle({
+      dek: 'Correlation proof',
+      document: document('article-trace'),
+      id: 'article-trace',
+      idempotencyKey: 'create-trace',
+      slug: 'correlation-proof',
+      title: 'Correlation proof',
+    })
+    const input = {
+      articleId: created.article.id,
+      expectedVersion: 1,
+      idempotencyKey: 'publish-trace',
+      revisionId: created.revision.id,
+      correlationId: 'request-publish-0001',
+    }
+    const published = await service.publish(input)
+    expect(await service.publish({ ...input, correlationId: 'request-retry-0002' })).toEqual(
+      published,
+    )
+    await repository.inspect(async (transaction) => {
+      const events = await transaction.listOutboxEvents()
+      expect(events.map(({ type }) => type).sort()).toEqual([
+        'article.published',
+        'cache.revalidate',
+        'search.upsert',
+      ])
+      expect(events.map(({ payload }) => payload.correlationId)).toEqual(
+        Array(3).fill(input.correlationId),
+      )
+    })
+    const renamed = await service.changeSlug({
+      articleId: created.article.id,
+      expectedVersion: 2,
+      idempotencyKey: 'rename-trace',
+      slug: 'renamed-proof',
+      correlationId: 'request-rename-0003',
+    })
+    const unpublished = await service.unpublish({
+      articleId: created.article.id,
+      expectedVersion: renamed.article.version,
+      idempotencyKey: 'unpublish-trace',
+      reason: 'Editorial update',
+      correlationId: 'request-unpublish-0004',
+    })
+    await service.softDelete({
+      articleId: created.article.id,
+      expectedVersion: unpublished.version,
+      idempotencyKey: 'delete-trace',
+      correlationId: 'request-delete-0005',
+    })
+    await repository.inspect(async (transaction) => {
+      const events = await transaction.listOutboxEvents()
+      for (const [type, correlationId] of [
+        ['article.slug-changed', 'request-rename-0003'],
+        ['article.unpublished', 'request-unpublish-0004'],
+        ['article.deleted', 'request-delete-0005'],
+      ]) {
+        expect(events.find((event) => event.type === type)?.payload.correlationId).toBe(
+          correlationId,
+        )
+      }
+    })
+  })
+
+  it.each([undefined, 'request-schedule-0002'])(
+    'carries the active schedule correlation %s through completion and replay',
+    async (correlationId) => {
+      const { clock, repository, service } = setup()
+      const created = await service.createArticle({
+        dek: 'Schedule trace',
+        document: document('article-schedule-trace'),
+        id: 'article-schedule-trace',
+        idempotencyKey: 'create-schedule-trace',
+        slug: 'schedule-trace',
+        title: 'Schedule trace',
+      })
+      const schedule = {
+        articleId: created.article.id,
+        revisionId: created.revision.id,
+        runAt: '2026-07-17T20:01:00.000Z',
+        timeZone: 'UTC',
+      }
+      await service.schedulePublication({
+        ...schedule,
+        expectedVersion: 1,
+        idempotencyKey: 'schedule-trace-first',
+        correlationId: 'request-superseded-0001',
+      })
+      const active = await service.schedulePublication({
+        ...schedule,
+        expectedVersion: 2,
+        idempotencyKey: 'schedule-trace-second',
+        correlationId,
+      })
+      expect(
+        await service.schedulePublication({
+          ...schedule,
+          expectedVersion: 2,
+          idempotencyKey: 'schedule-trace-second',
+          correlationId: 'request-schedule-retry',
+        }),
+      ).toEqual(active)
+      clock.advance(60_000)
+      const claimed = await service.claimDuePublication({
+        leaseMilliseconds: 30_000,
+        workerId: 'worker-1',
+      })
+      expect(claimed?.id).toBe(active.job.id)
+      await service.completeScheduledPublication({ jobId: active.job.id, workerId: 'worker-1' })
+      expect(
+        (await service.completeScheduledPublication({ jobId: active.job.id, workerId: 'worker-1' }))
+          .duplicate,
+      ).toBe(true)
+      await repository.inspect(async (transaction) => {
+        const events = await transaction.listOutboxEvents()
+        expect(events).toHaveLength(3)
+        expect(events.map(({ payload }) => payload.correlationId)).toEqual(
+          Array(3).fill(correlationId),
+        )
+        if (correlationId === undefined) {
+          for (const event of events) expect(event.payload).not.toHaveProperty('correlationId')
+        }
+      })
+    },
+  )
+
   it('creates immutable revisions, autosaves optimistically, and replays idempotently', async () => {
     const { repository, service } = setup()
     const created = await service.createArticle({

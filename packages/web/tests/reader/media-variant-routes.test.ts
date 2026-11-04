@@ -666,9 +666,14 @@ describe('public media variants', () => {
     await publishStoryWithImages()
     const objects = getOwnerRuntime().objects
     if (!objects) throw new Error('The test runtime should store media in memory.')
-    const failure = new Error('The media bucket is unreachable.')
+    const failure = Object.assign(new Error('The media bucket is unreachable.'), {
+      document: 'private media draft',
+      email: 'owner@example.test',
+      token: ['fixture', 'private', 'credential'].join('-'),
+    })
     vi.spyOn(objects, 'getOriginal').mockRejectedValue(failure)
     const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const correlationIds: string[] = []
 
     for (const search of ['', 'w=640&fm=webp']) {
       const response = await requestMedia('media-photo', search)
@@ -676,12 +681,26 @@ describe('public media variants', () => {
       expect(response.status, search).toBe(500)
       expect(response.headers.get('cache-control'), search).toBe('no-store')
       expect(response.headers.get('etag'), search).toBeNull()
+      const correlationId = response.headers.get('x-correlation-id')
+      expect(correlationId).toMatch(/^[\da-f-]{36}$/)
+      correlationIds.push(correlationId!)
       await expect(response.json(), search).resolves.toEqual({
         error: 'That image could not be loaded.',
       })
     }
     expect(logged).toHaveBeenCalledTimes(2)
-    expect(logged).toHaveBeenCalledWith('Public media media-photo could not be served.', failure)
+    logged.mock.calls.forEach((args, index) => {
+      expect(args).toHaveLength(1)
+      expect(JSON.parse(String(args[0]))).toMatchObject({
+        correlationId: correlationIds[index],
+        level: 'error',
+        message: 'request.failed',
+        error: { message: failure.message },
+      })
+      expect(String(args[0])).not.toContain(failure.token)
+      expect(String(args[0])).not.toContain(failure.email)
+      expect(String(args[0])).not.toContain(failure.document)
+    })
     expect(storedVariantKeys()).toEqual([])
   })
 

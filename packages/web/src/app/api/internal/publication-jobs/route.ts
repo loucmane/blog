@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { readBearerToken, secureTokenMatches } from '@/lib/request-security'
 import { expirePublicReader } from '@/reader/cache'
+import { observeRequest } from '@/server/observability/request'
 import {
   resolveOwnerFixtureConfiguration,
   resolvePublicationWorkerToken,
@@ -14,30 +15,32 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  let expectedToken: string
-  try {
-    expectedToken = resolvePublicationWorkerToken()
-  } catch {
-    return NextResponse.json({ error: 'Publication worker is unavailable.' }, { status: 503 })
-  }
-  const provided = readBearerToken(request.headers.get('authorization'))
-  if (!secureTokenMatches(provided, expectedToken)) {
-    return NextResponse.json({ error: 'Publication worker is unavailable.' }, { status: 404 })
-  }
+  return observeRequest(request, async () => {
+    let expectedToken: string
+    try {
+      expectedToken = resolvePublicationWorkerToken()
+    } catch {
+      return NextResponse.json({ error: 'Publication worker is unavailable.' }, { status: 503 })
+    }
+    const provided = readBearerToken(request.headers.get('authorization'))
+    if (!secureTokenMatches(provided, expectedToken)) {
+      return NextResponse.json({ error: 'Publication worker is unavailable.' }, { status: 404 })
+    }
 
-  const requestedEvaluationTime = request.headers.get('x-magazine-test-now') ?? undefined
-  const fixture = resolveOwnerFixtureConfiguration()
-  if (requestedEvaluationTime && !fixture) {
-    return NextResponse.json({ error: 'Publication worker request is invalid.' }, { status: 400 })
-  }
+    const requestedEvaluationTime = request.headers.get('x-magazine-test-now') ?? undefined
+    const fixture = resolveOwnerFixtureConfiguration()
+    if (requestedEvaluationTime && !fixture) {
+      return NextResponse.json({ error: 'Publication worker request is invalid.' }, { status: 400 })
+    }
 
-  const report = await runDuePublicationJobs(getOwnerRuntime().content, {
-    ...(requestedEvaluationTime ? { evaluationTime: requestedEvaluationTime } : {}),
-    workerId: `publication-worker-${randomUUID()}`,
-  })
-  // A completed scheduled publication changes what readers see.
-  if (report.processed > 0) expirePublicReader()
-  return NextResponse.json(report, {
-    headers: { 'cache-control': 'private, no-store' },
+    const report = await runDuePublicationJobs(getOwnerRuntime().content, {
+      ...(requestedEvaluationTime ? { evaluationTime: requestedEvaluationTime } : {}),
+      workerId: `publication-worker-${randomUUID()}`,
+    })
+    // A completed scheduled publication changes what readers see.
+    if (report.processed > 0) expirePublicReader()
+    return NextResponse.json(report, {
+      headers: { 'cache-control': 'private, no-store' },
+    })
   })
 }

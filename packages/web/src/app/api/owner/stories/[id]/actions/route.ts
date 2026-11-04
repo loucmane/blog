@@ -1,5 +1,6 @@
 import { expirePublicReader } from '@/reader/cache'
 import { InvalidContentTransitionError } from '@/server/content/errors'
+import { observeRequest } from '@/server/observability/request'
 import { assertOwnerMutationRequest, readOwnerJson, withOwner } from '@/server/owner/api'
 import { ownerStoryActionSchema } from '@/server/owner/contracts'
 import { publicationReadiness } from '@/server/owner/document'
@@ -32,7 +33,12 @@ async function requireReady(articleId: string, revisionId: string) {
   return workspace
 }
 
-async function applyStoryAction(request: Request, context: RouteContext, owner: OwnerSession) {
+async function applyStoryAction(
+  request: Request,
+  context: RouteContext,
+  owner: OwnerSession,
+  correlationId: string,
+) {
   assertOwnerMutationRequest(request)
   const { id } = await context.params
   const input = await readOwnerJson(request, ownerStoryActionSchema)
@@ -41,6 +47,7 @@ async function applyStoryAction(request: Request, context: RouteContext, owner: 
     case 'publish':
       await requireReady(id, input.revisionId)
       return runtime.content.publish({
+        correlationId,
         actorId: owner.id,
         articleId: id,
         expectedVersion: input.expectedVersion,
@@ -51,6 +58,7 @@ async function applyStoryAction(request: Request, context: RouteContext, owner: 
       await requireReady(id, input.revisionId)
       const timeZone = validateTimeZone(input.timeZone)
       return runtime.content.schedulePublication({
+        correlationId,
         actorId: owner.id,
         articleId: id,
         expectedVersion: input.expectedVersion,
@@ -72,6 +80,7 @@ async function applyStoryAction(request: Request, context: RouteContext, owner: 
       })
     case 'unpublish':
       return runtime.content.unpublish({
+        correlationId,
         actorId: owner.id,
         articleId: id,
         expectedVersion: input.expectedVersion,
@@ -80,6 +89,7 @@ async function applyStoryAction(request: Request, context: RouteContext, owner: 
       })
     case 'delete':
       return runtime.content.softDelete({
+        correlationId,
         actorId: owner.id,
         articleId: id,
         expectedVersion: input.expectedVersion,
@@ -113,10 +123,12 @@ async function applyStoryAction(request: Request, context: RouteContext, owner: 
 }
 
 export async function POST(request: Request, context: RouteContext) {
-  return withOwner(request, async (owner) => {
-    const result = await applyStoryAction(request, context, owner)
-    // Lifecycle actions change what readers may see, so cached reader views expire at once.
-    expirePublicReader()
-    return result
-  })
+  return observeRequest(request, async ({ correlationId }) =>
+    withOwner(request, async (owner) => {
+      const result = await applyStoryAction(request, context, owner, correlationId)
+      // Lifecycle actions change what readers may see, so cached reader views expire at once.
+      expirePublicReader()
+      return result
+    }),
+  )
 }

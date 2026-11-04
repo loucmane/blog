@@ -54,6 +54,7 @@ export interface SaveDraftInput {
 export interface PublishInput {
   readonly actorId?: string | null
   readonly articleId: string
+  readonly correlationId?: string
   readonly expectedVersion: number
   readonly idempotencyKey: string
   readonly revisionId: string
@@ -332,7 +333,7 @@ export class ContentService {
       await this.cancelPendingJobs(transaction, article.id, now)
       await transaction.saveArticle(article, current.version)
       transaction.recordPublicationChange()
-      await this.publicationOutbox(transaction, article, revision, now)
+      await this.publicationOutbox(transaction, article, revision, now, input.correlationId)
       await this.audit(transaction, article.id, 'article.published', input.actorId ?? null, now, {
         revisionId: revision.id,
       })
@@ -401,6 +402,7 @@ export class ContentService {
       await transaction.saveArticle(article, current.version)
       transaction.recordPublicationChange()
       await this.audit(transaction, article.id, 'article.scheduled', input.actorId ?? null, now, {
+        ...(input.correlationId === undefined ? {} : { correlationId: input.correlationId }),
         jobId: job.id,
         revisionId: revision.id,
         runAt: job.runAt,
@@ -575,7 +577,19 @@ export class ContentService {
       await transaction.saveArticle(article, existingArticle.version)
       await transaction.savePublicationJob(completed)
       transaction.recordPublicationChange()
-      await this.publicationOutbox(transaction, article, revision, now)
+      // The scheduling request owns the trace, even when another request later runs the job.
+      // Match its immutable audit record by job ID: reschedules can share a revision and time.
+      const schedule = (await transaction.listAuditEvents(article.id)).find(
+        (event) => event.action === 'article.scheduled' && event.metadata.jobId === currentJob.id,
+      )
+      const correlationId = schedule?.metadata.correlationId
+      await this.publicationOutbox(
+        transaction,
+        article,
+        revision,
+        now,
+        typeof correlationId === 'string' ? correlationId : undefined,
+      )
       await this.audit(transaction, article.id, 'article.scheduled-publish-completed', null, now, {
         jobId: completed.id,
         revisionId: revision.id,
@@ -587,6 +601,7 @@ export class ContentService {
   async unpublish(input: {
     actorId?: string | null
     articleId: string
+    correlationId?: string
     expectedVersion: number
     idempotencyKey: string
     reason: string
@@ -622,9 +637,16 @@ export class ContentService {
       await this.cancelPendingJobs(transaction, article.id, now)
       await transaction.saveArticle(article, current.version)
       transaction.recordPublicationChange()
-      await this.saveOutbox(transaction, article.id, 'article.unpublished', now, {
-        publishedRevisionId: article.publishedRevisionId,
-      })
+      await this.saveOutbox(
+        transaction,
+        article.id,
+        'article.unpublished',
+        now,
+        {
+          publishedRevisionId: article.publishedRevisionId,
+        },
+        input.correlationId,
+      )
       await this.audit(transaction, article.id, 'article.unpublished', input.actorId ?? null, now, {
         reason,
       })
@@ -636,6 +658,7 @@ export class ContentService {
   async changeSlug(input: {
     actorId?: string | null
     articleId: string
+    correlationId?: string
     expectedVersion: number
     idempotencyKey: string
     slug: string
@@ -671,10 +694,17 @@ export class ContentService {
       await transaction.saveRedirect(redirect)
       await transaction.saveArticle(article, current.version)
       transaction.recordPublicationChange()
-      await this.saveOutbox(transaction, article.id, 'article.slug-changed', now, {
-        fromSlug: redirect.fromSlug,
-        toSlug: redirect.toSlug,
-      })
+      await this.saveOutbox(
+        transaction,
+        article.id,
+        'article.slug-changed',
+        now,
+        {
+          fromSlug: redirect.fromSlug,
+          toSlug: redirect.toSlug,
+        },
+        input.correlationId,
+      )
       await this.audit(
         transaction,
         article.id,
@@ -695,6 +725,7 @@ export class ContentService {
   async softDelete(input: {
     actorId?: string | null
     articleId: string
+    correlationId?: string
     expectedVersion: number
     idempotencyKey: string
   }): Promise<Article> {
@@ -722,7 +753,14 @@ export class ContentService {
       await this.cancelPendingJobs(transaction, article.id, now)
       await transaction.saveArticle(article, current.version)
       transaction.recordPublicationChange()
-      await this.saveOutbox(transaction, article.id, 'article.deleted', now, {})
+      await this.saveOutbox(
+        transaction,
+        article.id,
+        'article.deleted',
+        now,
+        {},
+        input.correlationId,
+      )
       await this.audit(
         transaction,
         article.id,
@@ -828,13 +866,21 @@ export class ContentService {
     article: Article,
     revision: ArticleRevision,
     now: string,
+    correlationId?: string,
   ) {
     for (const type of ['cache.revalidate', 'search.upsert', 'article.published']) {
-      await this.saveOutbox(transaction, article.id, type, now, {
-        articleVersion: article.version,
-        revisionId: revision.id,
-        slug: article.slug,
-      })
+      await this.saveOutbox(
+        transaction,
+        article.id,
+        type,
+        now,
+        {
+          articleVersion: article.version,
+          revisionId: revision.id,
+          slug: article.slug,
+        },
+        correlationId,
+      )
     }
   }
 
@@ -854,6 +900,7 @@ export class ContentService {
     type: string,
     createdAt: string,
     payload: Readonly<Record<string, unknown>>,
+    correlationId?: string,
   ) {
     const event: OutboxEvent = {
       aggregateId,
@@ -861,7 +908,7 @@ export class ContentService {
       createdAt,
       id: this.identifiers.next('outbox'),
       lastError: null,
-      payload,
+      payload: { ...payload, ...(correlationId === undefined ? {} : { correlationId }) },
       status: 'pending',
       type,
       updatedAt: createdAt,
