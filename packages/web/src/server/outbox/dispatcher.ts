@@ -1,6 +1,14 @@
+import { createHash } from 'node:crypto'
+
 import type { OutboxEvent } from '../content/domain'
 import type { Clock, ContentRepository, ContentTransaction } from '../content/ports'
 import { ContentService, SystemClock } from '../content/service'
+import {
+  createLogger,
+  isCorrelationId,
+  newCorrelationId,
+  type Logger,
+} from '../observability/logger'
 import type { OutboxClaim, OutboxHandlers, OutboxStore, QueuedOutboxEvent } from './ports'
 import { outboxRetryDelayMs } from './retry'
 
@@ -26,6 +34,12 @@ export interface OutboxDispatcherOptions {
   readonly handlers: OutboxHandlers
   /** How long one handler may run before its event is recorded as failed. */
   readonly handlerTimeoutMs?: number
+  /**
+   * Where each event's outcome is logged once it is recorded, under the event's correlation id: a
+   * completion as info, a failure that will be retried as a warning, a dead letter or an outcome
+   * that could not be recorded as an error. A console logger unless given.
+   */
+  readonly logger?: Logger
   readonly store: OutboxStore
 }
 
@@ -33,6 +47,46 @@ interface Failure {
   readonly reason: string
   /** False when trying again cannot help, so the event is dead-lettered at once. */
   readonly retryable: boolean
+}
+
+/** The logger of the event a dispatch claimed, set once it has claimed one. */
+interface ClaimedEventLogger {
+  logger?: Logger
+}
+
+/** One recorded dispatch, with what its outcome is logged with once the claim commits. */
+interface RecordedDispatch {
+  readonly dispatched: DispatchedOutboxEvent
+  readonly durationMs: number
+  readonly logger: Logger
+}
+
+/**
+ * The correlation id an event's handler and log lines carry (BR-12). An event that recorded the id
+ * of the request that wrote it, as `payload.correlationId`, carries that id. Any other event
+ * carries an id derived from what all the events of one content change share, their story and the
+ * instant they were written: the jobs of one publication, and every retry of each, share one id.
+ */
+export function eventCorrelationId(
+  event: Pick<OutboxEvent, 'aggregateId' | 'createdAt' | 'payload'>,
+): string {
+  const recorded = event.payload.correlationId
+  if (isCorrelationId(recorded)) return recorded
+  const change = createHash('sha256').update(`${event.aggregateId}\n${event.createdAt}`)
+  return `outbox-${change.digest('hex').slice(0, 32)}`
+}
+
+/**
+ * When a failed event is due again: its last failure plus the backoff for the failures it has had.
+ * Null for an event that has not failed, or whose retries are spent. The dispatcher records this as
+ * the event's retry state; the owner job view shows it.
+ */
+export function retryDueAt(
+  event: Pick<OutboxEvent, 'attempts' | 'status' | 'updatedAt'>,
+): string | null {
+  if (event.status !== 'failed') return null
+  const delay = outboxRetryDelayMs(event.attempts)
+  return delay === null ? null : new Date(Date.parse(event.updatedAt) + delay).toISOString()
 }
 
 function recordedReason(reason: string): string {
@@ -60,15 +114,18 @@ export function claimRepository(transaction: ContentTransaction): ContentReposit
  * Delivers outbox events through the handler registered for each event type. Every event is
  * claimed, handled and recorded on its own, so a failing, unsupported or slow event never stops
  * the events after it: a handler that throws or runs past its time limit leaves its event to be
- * retried after a backoff, and an event without a handler is dead-lettered at once.
+ * retried after a backoff, and an event without a handler is dead-lettered at once. Each handler
+ * is given the event's correlation id, and each outcome is logged under it.
  */
 export class OutboxDispatcher {
   private readonly clock: Clock
   private readonly handlerTimeoutMs: number
+  private readonly logger: Logger
 
   constructor(private readonly options: OutboxDispatcherOptions) {
     this.clock = options.clock ?? new SystemClock()
     this.handlerTimeoutMs = options.handlerTimeoutMs ?? defaultOutboxHandlerTimeoutMs
+    this.logger = options.logger ?? createLogger({ correlationId: newCorrelationId() })
   }
 
   /** Dispatches due events, one at a time, until none is due or `limit` have been dispatched. */
@@ -89,22 +146,66 @@ export class OutboxDispatcher {
     return { completed, deadLettered, retrying }
   }
 
-  /** Claims, handles and records the oldest due event; null when no event is due. */
+  /**
+   * Claims, handles and records the oldest due event; null when no event is due. Its outcome is
+   * logged once the claim has committed it; when it could not be recorded, the event stays due
+   * and that is logged instead.
+   */
   async dispatchNext(): Promise<DispatchedOutboxEvent | null> {
-    const claimed = await this.options.store.claimNextDue(
-      this.clock.now().toISOString(),
-      async (claim) => this.record(claim, await this.handle(claim.event)),
-    )
-    return claimed.claimed ? claimed.value : null
+    const holder: ClaimedEventLogger = {}
+    let claimed: { claimed: false } | { claimed: true; value: RecordedDispatch }
+    try {
+      claimed = await this.options.store.claimNextDue(this.clock.now().toISOString(), (claim) =>
+        this.dispatch(claim, holder),
+      )
+    } catch (error) {
+      if (holder.logger) holder.logger.error('outbox.event.unrecorded', { error })
+      else this.logger.error('outbox.claim.failed', { error })
+      throw error
+    }
+    if (!claimed.claimed) return null
+    const { dispatched, durationMs, logger } = claimed.value
+    this.logOutcome(logger, dispatched, durationMs)
+    return dispatched
   }
 
-  private async handle(event: QueuedOutboxEvent): Promise<Failure | null> {
+  /** Handles and records one claimed event, under a logger bound to its correlation id. */
+  private async dispatch(
+    claim: OutboxClaim,
+    holder: ClaimedEventLogger,
+  ): Promise<RecordedDispatch> {
+    const { event } = claim
+    const correlationId = eventCorrelationId(event)
+    const logger = this.logger.child({
+      correlationId,
+      fields: { aggregateId: event.aggregateId, eventId: event.id, eventType: event.type },
+    })
+    holder.logger = logger
+    const started = this.clock.now().valueOf()
+    const failure = await this.handle(event, correlationId)
+    const durationMs = this.clock.now().valueOf() - started
+    return { dispatched: await this.record(claim, failure), durationMs, logger }
+  }
+
+  private logOutcome(logger: Logger, dispatched: DispatchedOutboxEvent, durationMs: number) {
+    const { attempts, lastError } = dispatched.event
+    if (dispatched.outcome === 'completed') {
+      logger.info('outbox.event.completed', { attempts, durationMs })
+    } else if (dispatched.outcome === 'retrying') {
+      const { nextAttemptAt } = dispatched
+      logger.warn('outbox.event.retrying', { attempts, durationMs, lastError, nextAttemptAt })
+    } else {
+      logger.error('outbox.event.dead-lettered', { attempts, durationMs, lastError })
+    }
+  }
+
+  private async handle(event: QueuedOutboxEvent, correlationId: string): Promise<Failure | null> {
     const handler = this.options.handlers.get(event.type)
     if (!handler) return { reason: `unsupported event type: ${event.type}`, retryable: false }
     const controller = new AbortController()
     let timer: ReturnType<typeof setTimeout> | undefined
     const handled = Promise.resolve().then(() =>
-      handler(event, { idempotencyKey: event.id, signal: controller.signal }),
+      handler(event, { correlationId, idempotencyKey: event.id, signal: controller.signal }),
     )
     // A handler that outlives its time limit is abandoned, and its late failure is not unhandled.
     handled.catch(() => undefined)
@@ -141,14 +242,13 @@ export class OutboxDispatcher {
         await recording.saveRetryState({ deadLetteredAt: null, nextAttemptAt: null })
         return { event: recorded, outcome: 'completed' }
       }
-      const delay = failure.retryable ? outboxRetryDelayMs(recorded.attempts) : null
-      if (delay === null) {
+      const nextAttemptAt = failure.retryable ? retryDueAt(recorded) : null
+      if (nextAttemptAt === null) {
         const deadLetter: OutboxEvent = { ...recorded, status: 'dead_letter' }
         await recording.content.saveOutboxEvent(deadLetter)
         await recording.saveRetryState({ deadLetteredAt: recorded.updatedAt, nextAttemptAt: null })
         return { event: deadLetter, outcome: 'dead-lettered' }
       }
-      const nextAttemptAt = new Date(Date.parse(recorded.updatedAt) + delay).toISOString()
       await recording.saveRetryState({ deadLetteredAt: null, nextAttemptAt })
       return { event: recorded, nextAttemptAt, outcome: 'retrying' }
     })

@@ -7,15 +7,25 @@ import type { Clock, IdentifierSource } from '../content/ports'
 import { ContentReader, listPublishedStories } from '../content/reader'
 import { ContentService } from '../content/service'
 import { InMemorySearch } from '../discovery/in-memory-search'
+import { createLogger } from '../observability/logger'
+import { redactedEmail, redactedSecret } from '../observability/redact'
 import {
   claimRepository,
   defaultOutboxHandlerTimeoutMs,
+  eventCorrelationId,
   maxOutboxBatchSize,
   OutboxDispatcher,
+  retryDueAt,
 } from './dispatcher'
 import { createOutboxHandlers } from './handlers'
 import { InMemoryOutboxStore } from './in-memory-outbox-store'
-import type { CacheRevalidator, OutboxHandler, OutboxHandlers } from './ports'
+import type {
+  CacheRevalidator,
+  OutboxHandler,
+  OutboxHandlerContext,
+  OutboxHandlers,
+  OutboxStore,
+} from './ports'
 import { outboxRetryDelayMs, outboxRetryDelaysMs } from './retry'
 
 const minute = 60_000
@@ -80,10 +90,32 @@ function setup(options: { handlerTimeoutMs?: number } = {}) {
   const revalidator: CacheRevalidator = {
     revalidate: ({ idempotencyKey, slugs }) => cache.deliver(idempotencyKey, slugs.join(' ')),
   }
-  const dispatcherWith = (handlers: OutboxHandlers) =>
-    new OutboxDispatcher({ clock, handlers, store, ...options })
+  const logs: Record<string, unknown>[] = []
+  // The logger a drain request gives its dispatcher, under the drain's own correlation id.
+  const logger = createLogger({
+    clock,
+    correlationId: 'drain-request-0001',
+    sink: (line) => logs.push(JSON.parse(line)),
+  })
+  const dispatcherWith = (handlers: OutboxHandlers, outboxStore: OutboxStore = store) =>
+    new OutboxDispatcher({ clock, handlers, logger, store: outboxStore, ...options })
   const phaseHandlers = createOutboxHandlers({ cache: revalidator, content: repository, search })
-  return { cache, clock, content, dispatcherWith, phaseHandlers, repository, search, store }
+  return { cache, clock, content, dispatcherWith, logs, phaseHandlers, repository, search, store }
+}
+
+/** Handlers that record the context each event was handed, by event id, before running. */
+function recordingContexts(handlers: OutboxHandlers) {
+  const contexts = new Map<string, OutboxHandlerContext[]>()
+  const recorded = new Map<string, OutboxHandler>(
+    [...handlers].map(([type, handler]) => [
+      type,
+      async (event, context) => {
+        contexts.set(event.id, [...(contexts.get(event.id) ?? []), context])
+        await handler(event, context)
+      },
+    ]),
+  )
+  return { contexts, recorded }
 }
 
 async function publishStory(content: ContentService, slug: string) {
@@ -399,7 +431,7 @@ describe('outbox dispatcher', () => {
     expect(reasons[2]?.endsWith('…')).toBe(true)
   })
 
-  it('passes each handler its event, the key derived from the event id, and an abort signal', async () => {
+  it('passes each handler its event, the key derived from the event id, its correlation id, and an abort signal', async () => {
     const { dispatcherWith, repository } = setup()
     const handler = vi.fn(async () => undefined)
     await seedEvent(repository, {
@@ -413,8 +445,242 @@ describe('outbox dispatcher', () => {
 
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'outbox-context', payload: { slug: 'context-story' } }),
-      { idempotencyKey: 'outbox-context', signal: expect.any(AbortSignal) },
+      {
+        correlationId: eventCorrelationId({
+          aggregateId: 'article-seeded',
+          createdAt: '2026-11-03T08:00:00.000Z',
+          payload: {},
+        }),
+        idempotencyKey: 'outbox-context',
+        signal: expect.any(AbortSignal),
+      },
     )
+  })
+
+  it('gives every job of one publication, and every retry of each, one correlation id (BR-12)', async () => {
+    const { cache, clock, content, dispatcherWith, logs, phaseHandlers, repository } = setup()
+    const { contexts, recorded } = recordingContexts(phaseHandlers)
+    const dispatcher = dispatcherWith(recorded)
+
+    await publishStory(content, 'shared-id')
+    const first = await outbox(repository)
+    // The cache adapter is down for the first drain, so its event is handed over twice.
+    await dispatcher.drain()
+    cache.down = false
+    clock.advance(minute)
+    await dispatcher.drain()
+    clock.advance(minute)
+    await publishStory(content, 'another-story')
+    await dispatcher.drain()
+
+    const shared = eventCorrelationId(first[0]!)
+    const handedOver = first.flatMap(({ id }) => contexts.get(id) ?? [])
+    expect(first).toHaveLength(3)
+    expect(handedOver).toHaveLength(4)
+    expect(new Set(handedOver.map(({ correlationId }) => correlationId))).toEqual(new Set([shared]))
+    expect(shared).toMatch(/^outbox-[\da-f]{32}$/)
+    // Each outcome is logged under the publication's id, not the drain's.
+    const forFirst = logs.filter(({ eventId }) => first.some(({ id }) => id === eventId))
+    expect(forFirst.map(({ correlationId, message }) => [message, correlationId])).toEqual([
+      ['outbox.event.retrying', shared],
+      ['outbox.event.completed', shared],
+      ['outbox.event.completed', shared],
+      ['outbox.event.completed', shared],
+    ])
+    // Another publication's jobs share an id of their own.
+    const second = (await outbox(repository)).filter(
+      ({ aggregateId }) => aggregateId === 'article-another-story',
+    )
+    const secondIds = second.flatMap(({ id }) => contexts.get(id) ?? []).map((c) => c.correlationId)
+    expect(new Set(secondIds).size).toBe(1)
+    expect(secondIds[0]).not.toBe(shared)
+  })
+
+  it('carries the correlation id the request that wrote an event recorded on it', async () => {
+    const { dispatcherWith, logs, repository } = setup()
+    const handler = vi.fn(async () => undefined)
+    await seedEvent(repository, {
+      createdAt: '2026-11-03T08:00:00.000Z',
+      id: 'outbox-recorded',
+      payload: { correlationId: 'publish-request-0001' },
+      type: 'context.effect',
+    })
+    await seedEvent(repository, {
+      createdAt: '2026-11-03T08:00:01.000Z',
+      id: 'outbox-malformed',
+      payload: { correlationId: 'not an id' },
+      type: 'context.effect',
+    })
+
+    await dispatcherWith(new Map([['context.effect', handler]])).drain()
+
+    const handed = handler.mock.calls.map((call) => (call as unknown[])[1] as OutboxHandlerContext)
+    expect(handed.map(({ correlationId }) => correlationId)).toEqual([
+      'publish-request-0001',
+      eventCorrelationId({
+        aggregateId: 'article-seeded',
+        createdAt: '2026-11-03T08:00:01.000Z',
+        payload: {},
+      }),
+    ])
+    expect(logs[0]).toMatchObject({
+      correlationId: 'publish-request-0001',
+      eventId: 'outbox-recorded',
+      message: 'outbox.event.completed',
+    })
+  })
+
+  it('logs each outcome under its event’s correlation id, redacted, once it is recorded', async () => {
+    const { dispatcherWith, logs, repository } = setup()
+    for (const [index, type] of ['ok.effect', 'flaky.effect', 'missing.effect'].entries()) {
+      await seedEvent(repository, {
+        aggregateId: `article-${index}`,
+        createdAt: `2026-11-03T08:00:0${index}.000Z`,
+        id: `outbox-${type}`,
+        type,
+      })
+    }
+    const dispatcher = dispatcherWith(
+      new Map<string, OutboxHandler>([
+        ['ok.effect', async () => undefined],
+        [
+          'flaky.effect',
+          async () => {
+            throw new Error('provider rejected owner@magazine.example: token=tok_live_123')
+          },
+        ],
+      ]),
+    )
+
+    await dispatcher.drain()
+
+    const correlationOf = (index: number, createdAt: string) =>
+      eventCorrelationId({ aggregateId: `article-${index}`, createdAt, payload: {} })
+    expect(logs).toEqual([
+      {
+        aggregateId: 'article-0',
+        attempts: 1,
+        correlationId: correlationOf(0, '2026-11-03T08:00:00.000Z'),
+        durationMs: 0,
+        eventId: 'outbox-ok.effect',
+        eventType: 'ok.effect',
+        level: 'info',
+        message: 'outbox.event.completed',
+        time: '2026-11-03T09:00:00.000Z',
+      },
+      {
+        aggregateId: 'article-1',
+        attempts: 1,
+        correlationId: correlationOf(1, '2026-11-03T08:00:01.000Z'),
+        durationMs: 0,
+        eventId: 'outbox-flaky.effect',
+        eventType: 'flaky.effect',
+        lastError: `provider rejected ${redactedEmail}: token=${redactedSecret}`,
+        level: 'warn',
+        message: 'outbox.event.retrying',
+        nextAttemptAt: '2026-11-03T09:01:00.000Z',
+        time: '2026-11-03T09:00:00.000Z',
+      },
+      {
+        aggregateId: 'article-2',
+        attempts: 1,
+        correlationId: correlationOf(2, '2026-11-03T08:00:02.000Z'),
+        durationMs: 0,
+        eventId: 'outbox-missing.effect',
+        eventType: 'missing.effect',
+        lastError: 'unsupported event type: missing.effect',
+        level: 'error',
+        message: 'outbox.event.dead-lettered',
+        time: '2026-11-03T09:00:00.000Z',
+      },
+    ])
+    // What is stored for the maintainer is the handler's own message; only the log is redacted.
+    expect((await outbox(repository))[1]?.lastError).toBe(
+      'provider rejected owner@magazine.example: token=tok_live_123',
+    )
+  })
+
+  it('logs an outcome it could not record and leaves the event due, and a claim that failed', async () => {
+    const { dispatcherWith, logs, repository, store } = setup()
+    await seedEvent(repository, {
+      createdAt: '2026-11-03T08:00:00.000Z',
+      id: 'outbox-unrecorded',
+      type: 'ok.effect',
+    })
+    const unrecording: OutboxStore = {
+      claimNextDue: (now, work) =>
+        store.claimNextDue(now, (claim) =>
+          work({
+            ...claim,
+            record: () =>
+              Promise.reject(new Error('lost postgres://magazine:hunter2@db.internal/magazine')),
+          }),
+        ),
+      listDeadLetters: () => store.listDeadLetters(),
+    }
+    const unreachable: OutboxStore = {
+      claimNextDue: () => Promise.reject(new Error('connection refused')),
+      listDeadLetters: () => store.listDeadLetters(),
+    }
+    const handlers = new Map([['ok.effect', async () => undefined]])
+
+    await expect(dispatcherWith(handlers, unrecording).dispatchNext()).rejects.toThrow(/^lost/)
+    await expect(dispatcherWith(handlers, unreachable).dispatchNext()).rejects.toThrow(
+      'connection refused',
+    )
+
+    expect(logs).toEqual([
+      expect.objectContaining({
+        correlationId: eventCorrelationId({
+          aggregateId: 'article-seeded',
+          createdAt: '2026-11-03T08:00:00.000Z',
+          payload: {},
+        }),
+        error: expect.objectContaining({
+          message: `lost postgres://${redactedSecret}@db.internal/magazine`,
+        }),
+        eventId: 'outbox-unrecorded',
+        level: 'error',
+        message: 'outbox.event.unrecorded',
+      }),
+      expect.objectContaining({
+        correlationId: 'drain-request-0001',
+        error: expect.objectContaining({ message: 'connection refused' }),
+        level: 'error',
+        message: 'outbox.claim.failed',
+      }),
+    ])
+    expect((await outbox(repository))[0]).toMatchObject({ attempts: 0, status: 'pending' })
+  })
+
+  it('puts a failed event’s next try at its last failure plus the backoff, and none once its retries are spent', () => {
+    const failed = { attempts: 1, status: 'failed', updatedAt: '2026-11-03T09:00:00.000Z' } as const
+
+    expect(retryDueAt(failed)).toBe('2026-11-03T09:01:00.000Z')
+    expect(retryDueAt({ ...failed, attempts: 5 })).toBe('2026-11-03T21:00:00.000Z')
+    expect(retryDueAt({ ...failed, attempts: 6 })).toBeNull()
+    expect(retryDueAt({ ...failed, status: 'pending' })).toBeNull()
+  })
+
+  it('logs to the console under an id of its own when given no logger', async () => {
+    const { clock, repository, store } = setup()
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    await seedEvent(repository, {
+      createdAt: '2026-11-03T08:00:00.000Z',
+      id: 'outbox-console',
+      type: 'ok.effect',
+    })
+
+    await new OutboxDispatcher({
+      clock,
+      handlers: new Map([['ok.effect', async () => undefined]]),
+      store,
+    }).drain()
+
+    expect(JSON.parse(String(log.mock.calls[0]?.[0]))).toMatchObject({
+      eventId: 'outbox-console',
+      message: 'outbox.event.completed',
+    })
   })
 
   it('drains at most the requested number of events and refuses an unusable limit', async () => {
