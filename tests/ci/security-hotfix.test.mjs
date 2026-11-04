@@ -368,14 +368,15 @@ test('dependency exceptions cannot cover advisories the audit counts but does no
   assert.match(uncounted.errors.join('\n'), /counts do not account for every excepted advisory/)
 })
 
-test('the approved braces exception is pinned and covers only the current audit', () => {
+test('no dependency exception is active', () => {
+  // The braces exception (GHSA-vfj7-8cjw-p6xm) expired on 2026-11-04 and the audit no longer
+  // reports that advisory, so it was removed (blog-wuya). The tests above keep exercising how an
+  // exception passes, expires and fails closed.
   const runtime = JSON.parse(fs.readFileSync(new URL('../../config/runtime.json', import.meta.url)))
-  const exceptions = runtime.dependencySecurityExceptions
-
-  assert.deepEqual(exceptions, [bracesException()])
-  assert.equal(evaluateWithExceptions(bracesAudit(), { exceptions }).status, 'passed')
+  assert.deepEqual(runtime.dependencySecurityExceptions, [])
   assert.equal(
-    evaluateWithExceptions(bracesAudit(), { exceptions, now: expiryDate }).status,
+    evaluateWithExceptions(bracesAudit(), { exceptions: [bracesException()], now: expiryDate })
+      .status,
     'failed',
   )
 })
