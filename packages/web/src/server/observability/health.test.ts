@@ -42,6 +42,28 @@ afterEach(() => {
 })
 
 describe('health checks', () => {
+  it('identifies a development adapter without sending or claiming production readiness', async () => {
+    const run = vi.fn(async () => undefined)
+    const report = await checkHealth(probes({ email: { mode: 'development', run } }), {
+      elapsed: () => 0,
+      logger: capturingLogger().logger,
+    })
+    expect(report.checks.email).toEqual({ durationMs: 0, status: 'configured_for_development' })
+    expect(report.status).toBe('ok')
+    expect(run).toHaveBeenCalledOnce()
+    const broken = await checkHealth(
+      probes({
+        email: {
+          mode: 'development',
+          run: async () => {
+            throw new Error('unavailable')
+          },
+        },
+      }),
+      capturingLogger(),
+    )
+    expect(broken.checks.email).toMatchObject({ status: 'down', reason: 'unavailable' })
+  })
   it('reports all four subsystems, and is ok when every configured one answers in time', async () => {
     const { logger, records } = capturingLogger()
 

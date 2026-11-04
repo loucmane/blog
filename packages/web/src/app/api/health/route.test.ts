@@ -70,7 +70,7 @@ describe('GET /api/health', () => {
       checkedAt: expect.any(String),
       checks: {
         database: { durationMs: expect.any(Number), status: 'up' },
-        email: { status: 'not_configured' },
+        email: { durationMs: expect.any(Number), status: 'configured_for_development' },
         jobQueue: { durationMs: expect.any(Number), status: 'up' },
         search: { status: 'not_configured' },
       },
@@ -93,7 +93,7 @@ describe('GET /api/health', () => {
     expect(report).toMatchObject({
       checks: {
         database: { reason: 'unavailable', status: 'down' },
-        email: { status: 'not_configured' },
+        email: { status: 'configured_for_development' },
         jobQueue: { reason: 'unavailable', status: 'down' },
         search: { reason: 'unavailable', status: 'down' },
       },

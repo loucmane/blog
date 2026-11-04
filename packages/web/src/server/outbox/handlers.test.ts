@@ -119,6 +119,8 @@ describe('outbox handlers', () => {
       'article.slug-changed',
       'article.unpublished',
       'cache.revalidate',
+      'email.issue',
+      'email.subscription-confirm',
       'search.upsert',
     ])
   })
