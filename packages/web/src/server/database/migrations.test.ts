@@ -5,7 +5,14 @@ import { getTableColumns, getTableName } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 
 import { outboxStatuses } from '../content/domain'
+import {
+  subscriberStatuses,
+  subscriptionEventTypes,
+  subscriptionTokenPurposes,
+} from '../subscriptions/domain'
+import { subscriptionConfirmEventType } from '../subscriptions/service'
 import { applyContentMigrations, readContentMigrations, type MigrationClient } from './migrations'
+import { subscriptionTableColumns } from './postgres-subscriptions'
 import {
   articleAuthors,
   contentPublicationState,
@@ -258,6 +265,58 @@ describe('content database migrations', () => {
     )
   })
 
+  it('adds the subscription tables the adapter writes, keeps their history append-only, and reverses', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0008_subscribers_consent.sql'),
+      'utf8',
+    )
+    const downSql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0008_subscribers_consent.down.sql'),
+      'utf8',
+    )
+    const block = (table: string) =>
+      sql.match(new RegExp(`CREATE TABLE ${table} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? ''
+    const columns = (table: string) =>
+      [...block(table).matchAll(/^ {2}([a-z_]+) [a-z]/gm)].map((match) => match[1])
+    const checked = (column: string) =>
+      [...sql.matchAll(new RegExp(`CHECK \\(${column} IN \\(([^)]*)\\)\\)`, 'g'))].map((match) =>
+        (match[1] ?? '').split(',').map((value) => value.trim().replaceAll("'", '')),
+      )
+
+    // Exactly the tables and columns the adapter writes; every key is the application's own.
+    expect([...sql.matchAll(/CREATE TABLE ([a-z_]+)/g)].map((match) => match[1]).sort()).toEqual(
+      Object.keys(subscriptionTableColumns).sort(),
+    )
+    for (const [table, expected] of Object.entries(subscriptionTableColumns)) {
+      expect(columns(table), table).toEqual(expected)
+    }
+    expect(block('subscribers')).toContain('id text PRIMARY KEY,')
+    expect(block('subscribers')).toContain('email_canonical text UNIQUE,')
+    expect(block('subscription_tokens')).toContain(
+      "token_hash text PRIMARY KEY CHECK (token_hash ~ '^[0-9a-f]{64}$')",
+    )
+    // The checks admit exactly the states, purposes and history the domain names.
+    expect(checked('status')).toEqual([[...subscriberStatuses]])
+    expect(checked('purpose')).toEqual([[...subscriptionTokenPurposes]])
+    expect(checked('type')).toEqual([[...subscriptionEventTypes]])
+    expect(sql).toMatch(
+      /BEFORE UPDATE OR DELETE ON subscription_events\s+FOR EACH ROW EXECUTE FUNCTION subscription_events_append_only\(\);/,
+    )
+    expect(sql).toContain("USING ERRCODE = 'restrict_violation'")
+
+    // Down drops what references another table first, and the confirmation emails still queued.
+    expect(
+      [...downSql.matchAll(/DROP TABLE IF EXISTS ([a-z_]+);/g)].map((match) => match[1]),
+    ).toEqual(['subscription_tokens', 'subscription_events', 'subscriber_consents', 'subscribers'])
+    expect(downSql).toContain('DROP FUNCTION IF EXISTS subscription_events_append_only();')
+    expect(downSql).toContain(
+      `DELETE FROM outbox_events WHERE type = '${subscriptionConfirmEventType}';`,
+    )
+    expect(downSql).toContain(
+      "DELETE FROM content_schema_migrations WHERE id = '0008_subscribers_consent'",
+    )
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
@@ -273,6 +332,7 @@ describe('content database migrations', () => {
         '0005_article_authors',
         '0006_search_query_support',
         '0007_outbox_retry_state',
+        '0008_subscribers_consent',
       ],
       skipped: [],
     })
@@ -294,6 +354,7 @@ describe('content database migrations', () => {
         '0005_article_authors',
         '0006_search_query_support',
         '0007_outbox_retry_state',
+        '0008_subscribers_consent',
       ],
     })
   })

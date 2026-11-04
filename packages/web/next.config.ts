@@ -72,6 +72,11 @@ export function createPreviewPrivacyHeaders() {
   ]
 }
 
+/** Previews and API routes are never indexed, whatever links to them (TS-08). */
+export function createNoIndexHeaders() {
+  return [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }]
+}
+
 export function createOwnerPrivacyHeaders() {
   return [
     {
@@ -139,6 +144,10 @@ const nextConfig: NextConfig = {
         headers: createSecurityHeaders({ development: process.env.NODE_ENV !== 'production' }),
         source: '/:path*',
       },
+      // Before the owner rules: a later rule's header wins, so owner routes keep `noarchive`.
+      // Public media stays indexable (robots.txt allows /api/media/).
+      { headers: createNoIndexHeaders(), source: '/api/:path((?!media/).*)' },
+      { headers: createNoIndexHeaders(), source: '/preview/:path*' },
       {
         headers: createPreviewPrivacyHeaders(),
         source: '/api/preview',

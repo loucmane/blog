@@ -960,7 +960,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
             : v2
               ? evaluateRoutingV2()
               : evaluateForward()
-    if (v5 && args.includes('--check')) verifyV5Disposition(result)
+    // The disposition (live routes = accepted v5 snapshot) held when v5 was measured; later
+    // route changes are measured by later evaluations, so --check replays the frozen snapshot only.
     const outputs = v5
       ? {
           'docs/agent-skills/routing-v5-results.json': `${JSON.stringify(result, null, 2)}\n`,

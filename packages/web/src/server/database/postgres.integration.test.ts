@@ -147,6 +147,7 @@ describe('PostgreSQL and media persistence integration', () => {
       '0005_article_authors',
       '0006_search_query_support',
       '0007_outbox_retry_state',
+      '0008_subscribers_consent',
     ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: migrationIds,
@@ -468,6 +469,7 @@ describe('PostgreSQL and media persistence integration', () => {
         '0005_article_authors',
         '0006_search_query_support',
         '0007_outbox_retry_state',
+        '0008_subscribers_consent',
       ],
     })
 

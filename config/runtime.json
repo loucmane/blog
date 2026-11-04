@@ -87,19 +87,7 @@
     "yaml@>=1.0.0 <1.10.3": "1.10.3",
     "yaml@>=2.0.0 <2.8.3": "2.9.0"
   },
-  "dependencySecurityExceptions": [
-    {
-      "advisory": "GHSA-vfj7-8cjw-p6xm",
-      "module": "braces",
-      "versions": ["3.0.3"],
-      "allowedPathPrefix": ".>@next/eslint-plugin-next>",
-      "devOnly": true,
-      "expires": "2026-11-04",
-      "reason": "No patched braces release exists (first_patched_version null). Reachable only via the dev-time @next/eslint-plugin-next lint plugin; never shipped to the site.",
-      "approvedBy": "operator",
-      "approvedOn": "2026-10-05"
-    }
-  ],
+  "dependencySecurityExceptions": [],
   "ci": {
     "workflowSemanticsSha256": {
       ".github/workflows/auto-merge.yml": "22d891fb034f3f9449a4071db169ee8f55b3f6d1601747c43ba44f45f07db13d",
@@ -114,7 +102,7 @@
       "tests/ci/accessibility-baseline.test.mjs": "6946e1b279a723bd2f3707f6c57cfe74b9c9135db32ec6352ff1f1573035b488",
       "tests/ci/eslint-contract.test.mjs": "2186a655bc706f191189c21dc0919c12584714719239209304f19879e78f3170",
       "tests/ci/runtime-contract.test.mjs": "a4e83110d0d6f17c30ab16a97c30a0d61137049e0bcff6c7fedfc0f5b0702be1",
-      "tests/ci/security-hotfix.test.mjs": "5fe36b92ef02db39d27d854a5783c33eddcd9937fb02cf5113245ac77fda8546",
+      "tests/ci/security-hotfix.test.mjs": "8d41f2acd6918c0fd6866f67786267dd1d07b4e521698044f4c0e4beea264a3e",
       "tests/ci/test-capability.test.mjs": "d15f5278ba272de4fe73175102a54de15608277f3b97f72a2cba3dc2b0e361c9",
       "tests/ci/test-results.test.mjs": "0edea1509359b9914a9b553d4ed61eedd5f1eca96456c631aa31f39307ef4fbe"
     },
