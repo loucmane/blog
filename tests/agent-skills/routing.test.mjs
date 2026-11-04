@@ -122,7 +122,7 @@ test('shared-path context is affirmative, scoped to its path and recorded as evi
       contextEvidence: [{ text: 'metadata', section: 'task', line: 1 }],
     },
   ])
-  assert.deepEqual(selectSkills({ paths: ['packages/web/public/robots.txt'] }, scoped).skills, [
+  assert.deepEqual(selectSkills({ paths: ['packages/web/src/app/robots.txt/route.ts'] }, scoped).skills, [
     'seo-distribution',
   ])
 })

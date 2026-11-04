@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
+import nextConfig, {
   createContentSecurityPolicy,
   createPreviewPrivacyHeaders,
   createSecurityHeaders,
@@ -38,5 +38,24 @@ describe('framework security headers', () => {
       { key: 'Cache-Control', value: 'private, no-store' },
       { key: 'Referrer-Policy', value: 'same-origin' },
     ])
+  })
+
+  it('keeps previews and API routes out of search indexes, except public media', async () => {
+    const rules = (await nextConfig.headers?.()) ?? []
+    const robotsTag = (source: string) =>
+      rules
+        .filter((rule) => rule.source === source)
+        .flatMap((rule) => rule.headers)
+        .find(({ key }) => key === 'X-Robots-Tag')?.value
+    expect(robotsTag('/api/:path((?!media/).*)')).toBe('noindex, nofollow')
+    expect(robotsTag('/preview/:path*')).toBe('noindex, nofollow')
+    expect(robotsTag('/api/owner/:path*')).toBe('noindex, nofollow, noarchive')
+    const sources = rules.map(({ source }) => source)
+    expect(sources.indexOf('/api/owner/:path*')).toBeGreaterThan(
+      sources.indexOf('/api/:path((?!media/).*)'),
+    )
+    const apiNoIndex = new RegExp(`^/api/${'(?!media/).*'}$`)
+    expect(apiNoIndex.test('/api/media/media-1')).toBe(false)
+    expect(apiNoIndex.test('/api/owner/stories')).toBe(true)
   })
 })
