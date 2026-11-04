@@ -172,6 +172,8 @@ describe('Next and React migration contract', () => {
 
     expect(sources).toEqual([
       '/:path*',
+      '/api/:path((?!media/).*)',
+      '/preview/:path*',
       '/api/preview',
       '/api/preview/:path*',
       '/preview/:path*',

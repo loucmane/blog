@@ -9,10 +9,17 @@ import {
   authorPath,
   canonicalArticleUrl,
   canonicalAuthorUrl,
+  canonicalFeedUrl,
+  canonicalHomeUrl,
   canonicalSectionUrl,
+  canonicalSitemapIndexUrl,
+  canonicalSitemapPageUrl,
   canonicalTopicUrl,
+  feedPath,
   publicMediaPath,
   sectionPath,
+  sitemapIndexPath,
+  sitemapPagePath,
   storyPath,
   topicPath,
 } from './canonical'
@@ -47,6 +54,28 @@ describe('canonical URLs', () => {
     expect(absolute('/feed.xml?format=rss')).toBe('https://magazine.example/feed.xml?format=rss')
   })
 
+  it('builds the feed, its archive pages and the sitemap on the canonical origin', () => {
+    expect(feedPath()).toBe('/feed.xml')
+    expect(feedPath('2026-11-03T09:00:00.000Z_article-1')).toBe(
+      '/feed.xml?before=2026-11-03T09%3A00%3A00.000Z_article-1',
+    )
+    // An archive key stays one query value, whatever it holds.
+    expect(feedPath('a&b=c#d')).toBe('/feed.xml?before=a%26b%3Dc%23d')
+    expect(sitemapIndexPath()).toBe('/sitemap.xml')
+    expect(sitemapPagePath(1)).toBe('/sitemaps/1.xml')
+    expect(sitemapPagePath(12)).toBe('/sitemaps/12.xml')
+
+    expect(canonicalHomeUrl()).toBe('https://magazine.example/')
+    expect(canonicalFeedUrl()).toBe('https://magazine.example/feed.xml')
+    expect(canonicalFeedUrl('key')).toBe('https://magazine.example/feed.xml?before=key')
+    expect(canonicalSitemapIndexUrl()).toBe('https://magazine.example/sitemap.xml')
+    expect(canonicalSitemapPageUrl(2)).toBe('https://magazine.example/sitemaps/2.xml')
+  })
+
+  it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])('has no sitemap page %d', (page) => {
+    expect(() => sitemapPagePath(page)).toThrow(RangeError)
+  })
+
   it('fails closed to the unconfigured origin when production has no valid HTTPS origin', () => {
     vi.stubEnv('NODE_ENV', 'production')
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'http://magazine.example')
@@ -73,7 +102,7 @@ const sourceRoot = path.resolve('packages/web/src')
 const applicationRoots = ['app', 'reader', 'server']
 const canonicalFile = 'server/distribution/canonical.ts'
 
-const publicRoute = String.raw`(?:stories|sections|authors|topics|api\/media)\/`
+const publicRoute = String.raw`(?:(?:stories|sections|authors|topics|api\/media|sitemaps)\/|feed\.xml\?)`
 /** A literal that starts a public path, alone or after an origin. */
 const startsPublicPath = new RegExp(
   String.raw`^(?:[a-z][a-z\d+.-]*:\/\/[^/]*)?\/${publicRoute}`,
@@ -142,6 +171,9 @@ describe('no hand-built public URL', () => {
       'const href = `/authors/${slug}`',
       'const href = `/topics/${slug}`',
       'const src = `/api/media/${id}`',
+      'const page = `/sitemaps/${page}.xml`',
+      'const archive = `/feed.xml?before=${key}`',
+      "const archive = origin + '/feed.xml?before=' + key",
     ]) {
       expect(handBuiltPublicPaths(built), built).toHaveLength(1)
     }
@@ -155,6 +187,8 @@ describe('no hand-built public URL', () => {
       'const preview = `/preview/stories/${slug}`',
       'const action = `/api/owner/stories/${id}/actions`',
       'const variant = `${publicMediaPath(id)}?w=${width}`',
+      "const feed = '/feed.xml'",
+      'const url = canonicalSitemapPageUrl(page)',
     ]) {
       expect(handBuiltPublicPaths(notBuilt), notBuilt).toEqual([])
     }

@@ -7,6 +7,7 @@ import { normalizeReaderSlug } from '@/reader/slug'
 import { resolveReaderPresentation } from '@/reader-lab/presentation'
 import { ReaderPage } from '@/reader-lab/reader-page'
 import { canonicalArticleUrl } from '@/server/distribution/canonical'
+import { serializeJsonLd, storyStructuredData } from '@/server/distribution/structured-data'
 
 interface StoryPageProps {
   params: Promise<{ slug: string }>
@@ -63,8 +64,15 @@ export default async function StoryPage({ params }: StoryPageProps) {
   const { Article } = presentation.direction
 
   return (
-    <ReaderPage cacheGeneration={article.cacheGeneration} presentation={presentation}>
-      <Article view={article.view} />
-    </ReaderPage>
+    <>
+      <ReaderPage cacheGeneration={article.cacheGeneration} presentation={presentation}>
+        <Article view={article.view} />
+      </ReaderPage>
+      {/* schema.org data for this published story, after the direction root so no reader style
+          can match it. Previews and owner pages never render this route. */}
+      <script type="application/ld+json">
+        {serializeJsonLd(storyStructuredData(article.view))}
+      </script>
+    </>
   )
 }
