@@ -1,13 +1,30 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { GET as getFeed } from '@/app/feed.xml/route'
+import { GET as getSitemapPage } from '@/app/sitemaps/[page]/route'
+import { expirePublicReader } from '@/reader/cache'
+import { resolveReaderStore } from '@/reader/store'
+
+import { dataCache } from '../../../tests/support/data-cache'
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentDocument } from '../content/document'
 import type { OutboxEvent } from '../content/domain'
 import { InMemoryContentRepository } from '../content/in-memory-repository'
-import type { Clock, IdentifierSource, SearchProjection } from '../content/ports'
+import type { Clock, ContentRepository, IdentifierSource, SearchProjection } from '../content/ports'
 import { ContentService } from '../content/service'
 import { InMemorySearch } from '../discovery/in-memory-search'
 import { createOutboxHandlers, syncSearchDocument } from './handlers'
 import type { CacheRevalidator } from './ports'
+
+vi.mock('next/cache', async () => {
+  const { dataCache: standIn } = await import('../../../tests/support/data-cache')
+  return {
+    revalidatePath: vi.fn(),
+    revalidateTag: vi.fn((tag: string) => standIn.expireTag(tag)),
+    unstable_cache: standIn.cache,
+  }
+})
+
+vi.mock('@/reader/store', () => ({ resolveReaderStore: vi.fn() }))
 
 class TestClock implements Clock {
   constructor(private value: Date) {}
@@ -287,5 +304,89 @@ describe('outbox handlers', () => {
       run(handlers, event('article.slug-changed', { fromSlug: 'lantern-glass' })),
     ).rejects.toThrow('The article.slug-changed event carries no toSlug.')
     expect(revalidate).not.toHaveBeenCalled()
+  })
+})
+
+describe('outbox cache events and the cached feed and sitemap', () => {
+  /** The cache port as `/api/revalidate` expires a story: its own views and every reader listing. */
+  const readerExpiry: CacheRevalidator = {
+    revalidate: async ({ slugs }) => {
+      for (const slug of slugs) expirePublicReader(slug)
+    },
+  }
+
+  beforeEach(() => {
+    dataCache.reset()
+  })
+
+  async function published() {
+    const { content, repository, search } = setup()
+    vi.mocked(resolveReaderStore).mockReturnValue({
+      mediaAvailable: false,
+      objects: null,
+      repository,
+      variants: null,
+    })
+    await publishStory(content)
+    const handlers = createOutboxHandlers({ cache: readerExpiry, content: repository, search })
+    return { handlers, repository }
+  }
+
+  async function documents() {
+    const feed = await getFeed(new Request('http://localhost/feed.xml'))
+    const sitemap = await getSitemapPage(new Request('http://localhost/sitemaps/1.xml'), {
+      params: Promise.resolve({ page: '1.xml' }),
+    })
+    return { feed: await feed.text(), sitemap: await sitemap.text() }
+  }
+
+  /**
+   * Renames the story without recording a publication change, as a change made outside the content
+   * services would: the cache key stays, so only an expiry can bring the documents up to date.
+   */
+  async function renameUnrecorded(repository: ContentRepository, slug: string) {
+    await repository.transaction(async (transaction) => {
+      const article = await transaction.getArticle('article-lantern')
+      if (!article) throw new Error('The lantern story is missing.')
+      await transaction.saveArticle(
+        { ...article, slug, version: article.version + 1 },
+        article.version,
+      )
+    })
+  }
+
+  it('expires the cached feed and sitemap when a slug change is dispatched', async () => {
+    const { handlers, repository } = await published()
+    const cached = await documents()
+    expect(cached.feed).toContain('/stories/lantern-glass</link>')
+    expect(cached.sitemap).toContain('/stories/lantern-glass</loc>')
+
+    await renameUnrecorded(repository, 'lantern-glass-notes')
+    expect(await documents()).toEqual(cached)
+
+    await run(
+      handlers,
+      event('article.slug-changed', { fromSlug: 'lantern-glass', toSlug: 'lantern-glass-notes' }),
+    )
+
+    const refreshed = await documents()
+    expect(refreshed.feed).toContain('/stories/lantern-glass-notes</link>')
+    expect(refreshed.feed).not.toContain('/stories/lantern-glass</link>')
+    expect(refreshed.sitemap).toContain('/stories/lantern-glass-notes</loc>')
+    expect(refreshed.sitemap).not.toContain('/stories/lantern-glass</loc>')
+  })
+
+  it('expires the cached feed and sitemap when a cache event is dispatched', async () => {
+    const { handlers, repository } = await published()
+    const cached = await documents()
+
+    await renameUnrecorded(repository, 'lantern-glass-notes')
+    expect(await documents()).toEqual(cached)
+
+    await run(handlers, event('cache.revalidate', { slug: 'lantern-glass-notes' }))
+
+    const refreshed = await documents()
+    expect(refreshed.feed).toContain('/stories/lantern-glass-notes</link>')
+    expect(refreshed.sitemap).toContain('/stories/lantern-glass-notes</loc>')
   })
 })

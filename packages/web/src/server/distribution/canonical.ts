@@ -12,6 +12,8 @@ export type SectionPath = `/sections/${string}`
 export type AuthorPath = `/authors/${string}`
 export type TopicPath = `/topics/${string}`
 export type PublicMediaPath = `/api/media/${string}`
+export type FeedPath = '/feed.xml' | `/feed.xml?${string}`
+export type SitemapPagePath = `/sitemaps/${number}.xml`
 
 /** Story slugs pass the content model's slug rule (`assertValidSlug`), so they need no encoding. */
 export function storyPath(slug: string): StoryPath {
@@ -42,6 +44,28 @@ export function publicMediaPath(mediaId: string): PublicMediaPath {
 }
 
 /**
+ * The feed, or with `before` one page of its dated archive: the stories listed after the story that
+ * archive key names (server/distribution/feed.ts).
+ */
+export function feedPath(before?: string): FeedPath {
+  return before === undefined
+    ? '/feed.xml'
+    : `/feed.xml?${new URLSearchParams({ before }).toString()}`
+}
+
+export function sitemapIndexPath(): '/sitemap.xml' {
+  return '/sitemap.xml'
+}
+
+/** Sitemap pages count from 1. */
+export function sitemapPagePath(page: number): SitemapPagePath {
+  if (!Number.isSafeInteger(page) || page < 1) {
+    throw new RangeError(`${page} is not a sitemap page number.`)
+  }
+  return `/sitemaps/${page}.xml`
+}
+
+/**
  * A site path as an absolute URL on the canonical origin (`NEXT_PUBLIC_SITE_URL`, through
  * `resolveCanonicalSiteUrl`). Only a path on the site is accepted: anything that would resolve to
  * another origin, such as `//host`, `/\host` or a full URL, throws instead of leaving the site.
@@ -69,4 +93,20 @@ export function canonicalAuthorUrl(slug: string): string {
 
 export function canonicalTopicUrl(slug: string): string {
   return absolute(topicPath(slug))
+}
+
+export function canonicalHomeUrl(): string {
+  return absolute('/')
+}
+
+export function canonicalFeedUrl(before?: string): string {
+  return absolute(feedPath(before))
+}
+
+export function canonicalSitemapIndexUrl(): string {
+  return absolute(sitemapIndexPath())
+}
+
+export function canonicalSitemapPageUrl(page: number): string {
+  return absolute(sitemapPagePath(page))
 }
