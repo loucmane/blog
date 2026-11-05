@@ -9,7 +9,8 @@ export type HealthCheckName = (typeof healthCheckNames)[number]
  * `down` does not work: it failed or did not answer in time. `not_configured` is neither: this
  * site has not set the subsystem up.
  */
-export type HealthCheckStatus = 'degraded' | 'down' | 'not_configured' | 'up'
+export type HealthCheckStatus =
+  'configured_for_development' | 'degraded' | 'down' | 'not_configured' | 'up'
 export type OverallHealthStatus = 'degraded' | 'down' | 'ok'
 
 /**
@@ -35,6 +36,8 @@ export interface HealthReport {
 }
 
 export interface HealthProbe {
+  /** A successful simulation is explicitly distinct from a production transport being up. */
+  readonly mode?: 'development'
   /**
    * Uses the subsystem once. It throws when the subsystem cannot be reached or used, and resolves
    * with a finding when it works but something about it is wrong.
@@ -95,7 +98,10 @@ async function runCheck(
     }
     if (outcome.finding) return { durationMs, reason: outcome.finding, status: 'degraded' }
     if (durationMs >= slowMs) return { durationMs, reason: 'slow', status: 'degraded' }
-    return { durationMs, status: 'up' }
+    return {
+      durationMs,
+      status: probe.mode === 'development' ? 'configured_for_development' : 'up',
+    }
   } catch (error) {
     const durationMs = took()
     const misconfigured = error instanceof HealthCheckConfigurationError

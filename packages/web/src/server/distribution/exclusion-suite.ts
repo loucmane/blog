@@ -19,7 +19,7 @@ import {
   type RelatedStoryCandidates,
 } from '../discovery/related'
 import { maxSearchPageSize, SearchService } from '../discovery/search-service'
-import { syncSearchDocument } from '../outbox/handlers'
+import { syncSearchDocument } from '../outbox/search-sync'
 
 const states = [
   { state: 'published', visible: true, everPublished: true },

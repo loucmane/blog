@@ -2,6 +2,7 @@ import type { Clock, ContentRepository } from '../content/ports'
 import { PostgresContentRepository } from '../database/postgres-content-repository'
 import { PostgresOutboxStore } from '../database/postgres-outbox-store'
 import { PostgresSearchQuery } from '../database/postgres-search-query'
+import { consoleEmailHealthProbe } from '../email/console'
 import { InMemoryOutboxStore } from '../outbox/in-memory-outbox-store'
 import type { OutboxStore } from '../outbox/ports'
 import { OwnerConfigurationError, resolveOwnerTimeZone } from '../owner/config'
@@ -54,8 +55,8 @@ export async function ownerJobViewFor(
  * The health probes of a runtime. The database answers with its publication version, one query
  * that also proves the content migrations ran. Search runs the PostgreSQL search; the in-memory
  * runtime of owner test mode has none, so it is not configured there. The job queue is read as the
- * owner job view reads it. No email adapter exists yet (blog-0045.10), so email is not configured:
- * that slice adds its probe here.
+ * owner job view reads it. Email is a development console simulation; its probe never sends and
+ * never reports that a production email transport is up.
  */
 export function healthProbesFor(
   runtime: Pick<OwnerRuntime, 'pool' | 'repository'>,
@@ -69,7 +70,7 @@ export function healthProbesFor(
         await runtime.repository.readPublicationVersion()
       },
     },
-    email: null,
+    email: consoleEmailHealthProbe,
     jobQueue: {
       run: async () => {
         const now = clock?.now() ?? new Date()
