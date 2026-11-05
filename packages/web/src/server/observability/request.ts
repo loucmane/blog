@@ -9,6 +9,8 @@ export const defaultSlowRequestMs = 1_000
 export interface RequestObservation {
   readonly correlationId: string
   readonly logger: Logger
+  /** Records a caught failure while letting the route keep its existing safe response. */
+  readonly recordFailure: (error: unknown) => void
 }
 
 export interface ObserveRequestOptions {
@@ -36,8 +38,10 @@ function withCorrelationId(response: Response, correlationId: string): Response 
  * `x-request-id` header or made for it, and returns that id in `x-correlation-id` (BR-12). A
  * request that throws is logged as `request.failed`, redacted, and answered with a 500 that quotes
  * the id and nothing of the error; Next's own redirects and not-found signals pass through. A
- * request that takes `slowRequestMs` or longer is logged as `request.slow`. Lines name the method
- * and path, never the query string.
+ * handled 5xx response is also logged, without inspecting its body. A route can record a caught
+ * failure with `recordFailure` to include redacted details without logging it twice. A request
+ * that takes `slowRequestMs` or longer is logged as `request.slow`. Lines name the method and
+ * path, never the query string.
  */
 export async function observeRequest(
   request: Request,
@@ -50,18 +54,27 @@ export async function observeRequest(
   const slowRequestMs = options.slowRequestMs ?? defaultSlowRequestMs
   const started = elapsed()
   const route = { method: request.method, path: new URL(request.url).pathname }
+  let failureRecorded = false
+  const recordFailure = (error: unknown) => {
+    if (failureRecorded) return
+    failureRecorded = true
+    logger.error('request.failed', { ...route, durationMs: Math.round(elapsed() - started), error })
+  }
   let response: Response
   try {
-    response = await handle({ correlationId, logger })
+    response = await handle({ correlationId, logger, recordFailure })
   } catch (error) {
     unstable_rethrow(error)
-    logger.error('request.failed', { ...route, durationMs: Math.round(elapsed() - started), error })
+    recordFailure(error)
     response = Response.json(
       { correlationId, error: 'Something went wrong. Quote this reference to a maintainer.' },
       { headers: { 'cache-control': 'no-store' }, status: 500 },
     )
   }
   const durationMs = Math.round(elapsed() - started)
+  if (response.status >= 500 && !failureRecorded) {
+    logger.error('request.failed', { ...route, durationMs, status: response.status })
+  }
   if (durationMs >= slowRequestMs) {
     logger.warn('request.slow', { ...route, durationMs, status: response.status })
   }
