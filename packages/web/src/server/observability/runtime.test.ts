@@ -103,7 +103,7 @@ describe('observability runtime', () => {
     expect(fallback.view.counts['waiting-to-send']).toBe(1)
   })
 
-  it('checks the database and the job queue of owner test mode, which has no search or email', async () => {
+  it('checks the database and job queue of owner test mode with console email and no search', async () => {
     const repository = new InMemoryContentRepository()
     const { logger } = silentLogger()
     const clock = { now: () => now }
@@ -117,7 +117,7 @@ describe('observability runtime', () => {
     expect(fresh.status).toBe('ok')
     expect(fresh.checks).toMatchObject({
       database: { status: 'up' },
-      email: { status: 'not_configured' },
+      email: { status: 'configured_for_development' },
       jobQueue: { status: 'up' },
       search: { status: 'not_configured' },
     })
@@ -138,7 +138,7 @@ describe('observability runtime', () => {
     expect(report.status).toBe('ok')
     expect(report.checks).toMatchObject({
       database: { status: 'up' },
-      email: { status: 'not_configured' },
+      email: { status: 'configured_for_development' },
       jobQueue: { status: 'up' },
       search: { status: 'up' },
     })
@@ -159,7 +159,7 @@ describe('observability runtime', () => {
     const probes = resolveHealthProbes()
 
     expect(probes.search).toBeNull()
-    expect(probes.email).toBeNull()
+    expect(probes.email).toMatchObject({ mode: 'development', run: expect.any(Function) })
     expect((await checkHealth(probes, silentLogger())).status).toBe('ok')
   })
 

@@ -136,7 +136,7 @@ test('reports the health of the stores and the job queue, uncached and without s
   expect(JSON.parse(body)).toMatchObject({
     checks: {
       database: { status: 'up' },
-      email: { status: 'not_configured' },
+      email: { status: 'configured_for_development' },
       jobQueue: { status: expect.stringMatching(/^(up|degraded)$/) },
       search: { status: 'not_configured' },
     },

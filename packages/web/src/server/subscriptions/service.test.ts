@@ -473,14 +473,15 @@ describe('the confirmation email in the outbox', () => {
     const env = setup()
     await env.request()
     const [queued] = await env.outbox()
-    const { dispatcher, store } = dispatcherFor(
-      env,
+    const historicalHandlers = new Map(
       createOutboxHandlers({
         cache: { revalidate: async () => undefined },
         content: env.repository,
         search: new InMemorySearch(),
       }),
     )
+    historicalHandlers.delete(subscriptionConfirmEventType)
+    const { dispatcher, store } = dispatcherFor(env, historicalHandlers)
 
     expect(await dispatcher.drain()).toEqual({
       completed: [],

@@ -33,6 +33,24 @@ function recordingPool(rows: readonly object[]) {
 }
 
 describe('PostgreSQL outbox store', () => {
+  it('requeues only historical unsupported confirmations in one transaction, retaining their IDs', async () => {
+    const query = vi.fn(async (text: string, _values?: readonly unknown[]) => ({
+      rows: text.startsWith('UPDATE outbox_events') ? [{ id: 'outbox-b' }, { id: 'outbox-a' }] : [],
+    }))
+    const release = vi.fn()
+    const pool = { connect: async () => ({ query, release }) } as unknown as Pool
+    const store = new PostgresOutboxStore(new PostgresContentRepository(pool))
+    expect(await store.requeueUnsupportedConfirmations(now)).toEqual(['outbox-a', 'outbox-b'])
+    const [sql, values] = query.mock.calls[2] ?? []
+    expect(sql).toContain("WHERE status = 'dead_letter' AND type = 'email.subscription-confirm'")
+    expect(sql).toContain("AND last_error = 'unsupported event type: email.subscription-confirm'")
+    expect(sql).toContain("SET status = 'pending', attempts = 0, last_error = NULL")
+    expect(sql).toContain('next_attempt_at = NULL, dead_lettered_at = NULL, updated_at = $1')
+    expect(values).toEqual([now])
+    expect(query.mock.calls.at(-1)).toEqual(['COMMIT'])
+    expect(release).toHaveBeenCalledOnce()
+  })
+
   it('claims the oldest due event with SKIP LOCKED and records it in the same transaction', async () => {
     const { query, release, store } = recordingPool([pendingRow])
     const revalidate = vi.fn(async () => undefined)

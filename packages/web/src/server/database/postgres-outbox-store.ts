@@ -43,6 +43,26 @@ ORDER BY set_aside_at, id`
 export class PostgresOutboxStore implements OutboxStore {
   constructor(private readonly repository: PostgresContentRepository) {}
 
+  /**
+   * Explicit rollout repair for confirmations set aside before their handler existed. Atomic and
+   * idempotent, including concurrent callers. Other dead letters keep their failure and budget.
+   * Existing IDs/payloads survive so sender deduplication still applies. Never run automatically.
+   */
+  async requeueUnsupportedConfirmations(now: string): Promise<readonly string[]> {
+    return this.repository.transactionOnConnection(async (_content, connection) => {
+      const result = await connection.query<{ id: string }>(
+        `UPDATE outbox_events
+         SET status = 'pending', attempts = 0, last_error = NULL,
+             next_attempt_at = NULL, dead_lettered_at = NULL, updated_at = $1
+         WHERE status = 'dead_letter' AND type = 'email.subscription-confirm'
+           AND last_error = 'unsupported event type: email.subscription-confirm'
+         RETURNING id`,
+        [now],
+      )
+      return result.rows.map(({ id }) => id).sort()
+    })
+  }
+
   async claimNextDue<T>(
     now: string,
     work: (claim: OutboxClaim) => Promise<T>,

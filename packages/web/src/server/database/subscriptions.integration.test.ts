@@ -503,13 +503,17 @@ describe('subscriptions on real PostgreSQL', () => {
     const env = harness(pool)
     await env.request()
     const store = new PostgresOutboxStore(env.repository)
-    const dispatcher = new OutboxDispatcher({
-      clock: env.clock,
-      handlers: createOutboxHandlers({
+    const historicalHandlers = new Map(
+      createOutboxHandlers({
         cache: { revalidate: async () => undefined },
         content: env.repository,
         search: new PostgresSearchProjection(pool),
       }),
+    )
+    historicalHandlers.delete(subscriptionConfirmEventType)
+    const dispatcher = new OutboxDispatcher({
+      clock: env.clock,
+      handlers: historicalHandlers,
       store,
     })
 
