@@ -1,10 +1,11 @@
+import { randomBytes } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createLogger } from '../observability/logger'
 import { maxOutboxBatchSize, type OutboxDrainReport } from './dispatcher'
 import { answerOutboxDrainRequest } from './drain'
 
-const secret = 'outbox-drain-secret-with-at-least-32-bytes'
+const secret = randomBytes(32).toString('hex')
 const report: OutboxDrainReport = {
   completed: ['outbox-1'],
   deadLettered: [],
@@ -35,13 +36,13 @@ describe('outbox drain request', () => {
 
     const response = await answerOutboxDrainRequest(drainRequest(), {
       createLogger: capturingLogs().factory,
-      dispatcher: outbox,
+      createDispatcher: () => outbox,
       secret,
     })
 
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
-    expect(await response.json()).toEqual(report)
+    expect(await response.json()).toEqual({ completed: 1, deadLettered: 0, retrying: 1 })
     expect(outbox.drain).toHaveBeenCalledWith({})
   })
 
@@ -50,7 +51,7 @@ describe('outbox drain request', () => {
 
     const response = await answerOutboxDrainRequest(
       drainRequest('', secret, { 'x-correlation-id': 'scheduler-run-0001' }),
-      { createLogger: factory, dispatcher: dispatcher(), secret },
+      { createLogger: factory, createDispatcher: dispatcher, secret },
     )
 
     expect(response.headers.get('x-correlation-id')).toBe('scheduler-run-0001')
@@ -76,7 +77,7 @@ describe('outbox drain request', () => {
 
     const response = await answerOutboxDrainRequest(
       drainRequest('', secret, { 'x-correlation-id': 'scheduler-run-0002' }),
-      { createLogger: factory, dispatcher: outbox, secret },
+      { createLogger: factory, createDispatcher: () => outbox, secret },
     )
 
     const body = await response.text()
@@ -95,20 +96,20 @@ describe('outbox drain request', () => {
     ])
   })
 
-  it('adds no correlation id to a refusal, which must look like any unknown route', async () => {
+  it('correlates refusals and unavailable configuration', async () => {
     const wrongToken = await answerOutboxDrainRequest(drainRequest('', 'wrong-token'), {
-      dispatcher: dispatcher(),
+      createDispatcher: dispatcher,
       secret,
     })
     const unconfigured = await answerOutboxDrainRequest(drainRequest(), {
-      dispatcher: dispatcher(),
+      createDispatcher: dispatcher,
       secret: undefined,
     })
 
-    expect(wrongToken.status).toBe(404)
-    expect(wrongToken.headers.has('x-correlation-id')).toBe(false)
+    expect(wrongToken.status).toBe(401)
+    expect(wrongToken.headers.has('x-correlation-id')).toBe(true)
     expect(unconfigured.status).toBe(503)
-    expect(unconfigured.headers.has('x-correlation-id')).toBe(false)
+    expect(unconfigured.headers.has('x-correlation-id')).toBe(true)
   })
 
   it('passes a requested batch size on', async () => {
@@ -116,11 +117,69 @@ describe('outbox drain request', () => {
 
     await answerOutboxDrainRequest(drainRequest(`?limit=${maxOutboxBatchSize}`), {
       createLogger: capturingLogs().factory,
-      dispatcher: outbox,
+      createDispatcher: () => outbox,
       secret,
     })
 
     expect(outbox.drain).toHaveBeenCalledWith({ limit: maxOutboxBatchSize })
+  })
+
+  it('passes its correlated logger to the dispatcher factory and drains only once', async () => {
+    const outbox = dispatcher()
+    const createDispatcher = vi.fn(() => outbox)
+    const response = await answerOutboxDrainRequest(
+      drainRequest('', secret, { 'x-correlation-id': 'scheduler-factory-0001' }),
+      { createDispatcher, createLogger: capturingLogs().factory, secret },
+    )
+
+    expect(response.status).toBe(200)
+    expect(createDispatcher).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ correlationId: 'scheduler-factory-0001' }),
+    )
+    expect(outbox.drain).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    ['no bearer token', null, secret, '', 401],
+    ['wrong bearer token', randomBytes(32).toString('hex'), secret, '', 401],
+    ['no configuration', null, undefined, '', 503],
+    ['invalid batch', secret, secret, '?limit=invalid', 400],
+  ])('does not construct a dispatcher for %s', async (_case, token, configured, query, status) => {
+    const outbox = dispatcher()
+    const createDispatcher = vi.fn(() => outbox)
+    const { factory, logs } = capturingLogs()
+    const response = await answerOutboxDrainRequest(drainRequest(query, token), {
+      createDispatcher,
+      createLogger: factory,
+      secret: configured,
+    })
+
+    expect(response.status).toBe(status)
+    const body = await response.text()
+    if (status === 401) expect(JSON.parse(body)).toEqual({ error: 'Unauthorized.' })
+    expect(createDispatcher).not.toHaveBeenCalled()
+    expect(outbox.drain).not.toHaveBeenCalled()
+    expect(body).not.toContain(secret)
+    expect(JSON.stringify(logs)).not.toContain(secret)
+    if (token) expect(JSON.stringify(logs)).not.toContain(token)
+  })
+
+  it('observes construction errors and redacts bearer credentials', async () => {
+    const { factory, logs } = capturingLogs()
+    const response = await answerOutboxDrainRequest(drainRequest(), {
+      createDispatcher: () => {
+        throw new Error(`Authorization: Bearer ${secret}`)
+      },
+      createLogger: factory,
+      secret,
+    })
+
+    expect(response.status).toBe(500)
+    expect(response.headers.get('cache-control')).toContain('no-store')
+    expect(response.headers.get('x-correlation-id')).toBeTruthy()
+    expect(await response.text()).not.toContain(secret)
+    expect(JSON.stringify(logs)).not.toContain(secret)
+    expect(logs).toContainEqual(expect.objectContaining({ message: 'request.failed' }))
   })
 
   it.each([
@@ -133,7 +192,7 @@ describe('outbox drain request', () => {
     const outbox = dispatcher()
 
     const response = await answerOutboxDrainRequest(drainRequest(query), {
-      dispatcher: outbox,
+      createDispatcher: () => outbox,
       secret,
     })
 
@@ -147,15 +206,15 @@ describe('outbox drain request', () => {
   it.each([
     ['no token', null],
     ['a wrong token', `${secret}-wrong`],
-  ])('answers %s like an unknown route', async (_case, token) => {
+  ])('answers %s with a generic unauthorized response', async (_case, token) => {
     const outbox = dispatcher()
 
     const response = await answerOutboxDrainRequest(drainRequest('', token), {
-      dispatcher: outbox,
+      createDispatcher: () => outbox,
       secret,
     })
 
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(401)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
     expect(outbox.drain).not.toHaveBeenCalled()
   })
@@ -167,7 +226,7 @@ describe('outbox drain request', () => {
     const outbox = dispatcher()
 
     const response = await answerOutboxDrainRequest(drainRequest('', configured ?? null), {
-      dispatcher: outbox,
+      createDispatcher: () => outbox,
       secret: configured,
     })
 
