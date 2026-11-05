@@ -1,10 +1,9 @@
 import type { OutboxEvent } from '../content/domain'
 import type { ContentRepository, SearchProjection } from '../content/ports'
-import { loadPublishedStory } from '../content/reader'
-import { searchDocumentFor, type SearchDocument } from '../discovery/reindex'
 import { confirmationMessage, issueMessage } from '../email/messages'
 import { emailDeliveryFor, type EmailDeliveryDependencies } from '../email/runtime'
 import type { CacheRevalidator, OutboxHandler, OutboxHandlers } from './ports'
+import { syncSearchDocument } from './search-sync'
 
 export interface OutboxHandlerDependencies {
   readonly cache: CacheRevalidator
@@ -15,46 +14,8 @@ export interface OutboxHandlerDependencies {
   readonly search: SearchProjection
 }
 
-const maxSearchSyncPasses = 3
-
-async function readSearchDocument(
-  content: ContentRepository,
-  articleId: string,
-): Promise<{ readonly document: SearchDocument | null; readonly version: number | null }> {
-  return content.transaction(async (transaction) => {
-    const article = await transaction.getArticle(articleId)
-    if (!article) return { document: null, version: null }
-    const story = await loadPublishedStory(transaction, article.slug)
-    if (story?.article.id !== articleId) return { document: null, version: article.version }
-    return { document: searchDocumentFor(story), version: story.article.version }
-  })
-}
-
-async function articleVersion(content: ContentRepository, articleId: string) {
-  return content.transaction(
-    async (transaction) => (await transaction.getArticle(articleId))?.version ?? null,
-  )
-}
-
-/**
- * Brings one article's search document in line with what readers may see: its published copy
- * while the article is publicly visible, and no document otherwise. Every event that can change
- * that runs it, so a late, repeated or out-of-order event leaves the right document behind. A
- * dispatcher running another event of the same article may write after this one; so when the
- * article changed while its document was written, the document is written again.
- */
-export async function syncSearchDocument(
-  dependencies: Pick<OutboxHandlerDependencies, 'content' | 'search'>,
-  articleId: string,
-): Promise<void> {
-  for (let pass = 0; pass < maxSearchSyncPasses; pass += 1) {
-    const read = await readSearchDocument(dependencies.content, articleId)
-    if (read.document) await dependencies.search.upsertPublishedArticle(read.document)
-    else await dependencies.search.removeArticle(articleId)
-    if ((await articleVersion(dependencies.content, articleId)) === read.version) return
-  }
-  throw new Error(`Article ${articleId} kept changing while its search document was written.`)
-}
+// Re-exported so existing importers keep working; new code imports ./search-sync directly.
+export { syncSearchDocument }
 
 function payloadSlug(event: OutboxEvent, field: string): string {
   const value = event.payload[field]

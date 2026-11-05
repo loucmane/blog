@@ -108,6 +108,7 @@ export default defineConfig({
         'packages/web/src/server/outbox/handlers.ts',
         'packages/web/src/server/outbox/in-memory-outbox-store.ts',
         'packages/web/src/server/outbox/retry.ts',
+        'packages/web/src/server/outbox/search-sync.ts',
         'packages/web/src/server/subscriptions/consent.ts',
         'packages/web/src/server/subscriptions/domain.ts',
         'packages/web/src/server/subscriptions/in-memory-store.ts',
