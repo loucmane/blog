@@ -12,6 +12,8 @@ export const subscriptionEventTypes = [
   'confirmation-requested',
   'confirmed',
   'unsubscribed',
+  'exported',
+  'erased',
 ] as const
 
 export type SubscriberStatus = (typeof subscriberStatuses)[number]
@@ -49,7 +51,7 @@ export interface SubscriberConsent {
 }
 
 export interface SubscriptionEvent {
-  /** The consent a request recorded or a confirmation confirmed; null for an unsubscription. */
+  /** The consent requested or confirmed; null for unsubscription and privacy operations. */
   readonly consentId: string | null
   readonly createdAt: string
   readonly id: string
@@ -67,6 +69,14 @@ export interface SubscriptionToken {
   readonly purpose: SubscriptionTokenPurpose
   readonly subscriberId: string
   readonly tokenHash: string
+}
+
+/** Aggregate information only: no addresses or subscriber identifiers. */
+export interface SubscriberSummary {
+  readonly confirmed: number
+  readonly pending: number
+  readonly unsubscribed: number
+  readonly newestSubscriptionAt: string | null
 }
 
 const maxAddressLength = 254

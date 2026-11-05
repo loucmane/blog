@@ -50,6 +50,73 @@ function recordingPool(answer: (text: string) => Answer = () => undefined) {
 }
 
 describe('PostgreSQL subscription store', () => {
+  it('reads an aggregate-only summary and maps whole-store snapshots without filtering identities', async () => {
+    const { store, statements } = recordingPool((text) => {
+      if (text.includes('count(*) FILTER'))
+        return { rows: [{ confirmed: 2, pending: 1, unsubscribed: 3, newest: new Date(at) }] }
+      if (text.startsWith('SELECT * FROM subscribers')) return { rows: [subscriberRow] }
+      return undefined
+    })
+    expect(await store.transaction((tx) => tx.subscriberSummary())).toEqual({
+      confirmed: 2,
+      pending: 1,
+      unsubscribed: 3,
+      newestSubscriptionAt: at,
+    })
+    expect(
+      await store.transaction(
+        async (tx) => ({
+          subscribers: await tx.listSubscribers(),
+          consents: await tx.listConsents(),
+          events: await tx.listEvents(),
+        }),
+        { snapshot: true },
+      ),
+    ).toEqual({ subscribers: [subscriber], consents: [], events: [] })
+    expect(statements()).toContainEqual([
+      'SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY',
+      undefined,
+    ])
+    expect(statements()).toContainEqual([
+      'SELECT * FROM subscriber_consents ORDER BY granted_at, id',
+      [],
+    ])
+    expect(statements()).toContainEqual([
+      'SELECT * FROM subscription_events ORDER BY created_at, id',
+      [],
+    ])
+    const empty = recordingPool((text) =>
+      text.includes('count(*) FILTER')
+        ? { rows: [{ confirmed: 0, pending: 0, unsubscribed: 0, newest: null }] }
+        : undefined,
+    )
+    expect(await empty.store.transaction((tx) => tx.subscriberSummary())).toMatchObject({
+      newestSubscriptionAt: null,
+    })
+  })
+
+  it('inserts anonymized portable identities and deletes every token in the same transaction', async () => {
+    const { store, statements, connect } = recordingPool()
+    await store.transaction(async (tx) => {
+      await tx.insertSubscriber({
+        ...subscriber,
+        emailCanonical: null,
+        status: 'unsubscribed',
+        unsubscribedAt: at,
+      })
+      await tx.deleteTokens(subscriber.id)
+    })
+    expect(statements().slice(2, -1)).toEqual([
+      [
+        expect.stringMatching(/^INSERT INTO subscribers /),
+        [subscriber.id, null, 'unsubscribed', at, at, null, at],
+      ],
+      ['DELETE FROM subscription_tokens WHERE subscriber_id = $1', [subscriber.id]],
+    ])
+    expect(connect).toHaveBeenCalledOnce()
+    expect(statements().at(-1)).toEqual(['COMMIT', undefined])
+  })
+
   it('claims a new address with one insert that takes the row lock', async () => {
     const { release, statements, store } = recordingPool((text) =>
       text.startsWith('INSERT INTO subscribers') ? { rows: [subscriberRow] } : undefined,
@@ -188,8 +255,8 @@ describe('PostgreSQL subscription store', () => {
         ],
       ],
       [
-        'UPDATE subscribers SET status = $2, confirmed_at = $3, unsubscribed_at = $4, updated_at = $5 WHERE id = $1',
-        ['subscriber-1', 'confirmed', at, null, at],
+        'UPDATE subscribers SET status = $2, confirmed_at = $3, unsubscribed_at = $4, updated_at = $5, email_canonical = $6 WHERE id = $1',
+        ['subscriber-1', 'confirmed', at, null, at, 'reader@example.com'],
       ],
       [
         'UPDATE subscription_tokens SET consumed_at = $3 WHERE subscriber_id = $1 AND purpose = ANY($2::text[]) AND consumed_at IS NULL',

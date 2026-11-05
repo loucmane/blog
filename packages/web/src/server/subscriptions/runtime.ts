@@ -6,10 +6,12 @@ import { getOwnerRuntime, type OwnerRuntime } from '@/server/owner/runtime'
 import { InMemorySubscriptionStore } from './in-memory-store'
 import { createSubscriptionRequestLimiter, type SubscriptionRequestLimiter } from './rate-limit'
 import { SubscriptionService } from './service'
+import type { SubscriptionStore } from './ports'
 
 export interface SubscriptionRuntime {
   readonly limiter: SubscriptionRequestLimiter
   readonly service: SubscriptionService
+  readonly store: SubscriptionStore
 }
 
 /**
@@ -22,7 +24,11 @@ export function createSubscriptionRuntime(
   const store = owner.pool
     ? new PostgresSubscriptionStore(new PostgresContentRepository(owner.pool))
     : new InMemorySubscriptionStore(owner.repository)
-  return { limiter: createSubscriptionRequestLimiter(), service: new SubscriptionService(store) }
+  return {
+    limiter: createSubscriptionRequestLimiter(),
+    service: new SubscriptionService(store),
+    store,
+  }
 }
 
 function isConfigurationError(error: unknown): boolean {

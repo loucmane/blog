@@ -37,7 +37,10 @@
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint src tests next.config.ts",
     "test": "vitest run --root ../.. packages/web",
-    "lab:seed": "node scripts/lab-seed.mjs"
+    "lab:seed": "node scripts/lab-seed.mjs",
+    "subscribers:summary": "node scripts/subscribers.mjs summary",
+    "subscribers:export": "node scripts/subscribers.mjs export",
+    "subscribers:erase": "node scripts/subscribers.mjs erase"
   },
   "browserslist": {
     "production": [
