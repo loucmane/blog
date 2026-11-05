@@ -9,6 +9,7 @@ import {
   newCorrelationId,
   type Logger,
 } from '../observability/logger'
+import { createOutboxHandlers, type OutboxHandlerDependencies } from './handlers'
 import type { OutboxClaim, OutboxHandlers, OutboxStore, QueuedOutboxEvent } from './ports'
 import { outboxRetryDelayMs } from './retry'
 
@@ -41,6 +42,19 @@ export interface OutboxDispatcherOptions {
    */
   readonly logger?: Logger
   readonly store: OutboxStore
+}
+
+export type OutboxDispatcherDependencies = Omit<OutboxDispatcherOptions, 'handlers'> &
+  OutboxHandlerDependencies
+
+/** Builds the application dispatcher without exposing its effect handlers to route callers. */
+export function createOutboxDispatcher(
+  dependencies: OutboxDispatcherDependencies,
+): OutboxDispatcher {
+  return new OutboxDispatcher({
+    ...dependencies,
+    handlers: createOutboxHandlers(dependencies),
+  })
 }
 
 interface Failure {

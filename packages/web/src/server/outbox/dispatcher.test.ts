@@ -11,6 +11,7 @@ import { createLogger } from '../observability/logger'
 import { redactedEmail, redactedSecret } from '../observability/redact'
 import {
   claimRepository,
+  createOutboxDispatcher,
   defaultOutboxHandlerTimeoutMs,
   eventCorrelationId,
   maxOutboxBatchSize,
@@ -158,6 +159,40 @@ async function seedEvent(
 }
 
 describe('outbox dispatcher', () => {
+  it('builds the application handlers and dispatches publication search and cache effects', async () => {
+    const { clock, content, repository, search, store } = setup()
+    const revalidate = vi.fn(async () => undefined)
+    const lines: string[] = []
+    const dispatcher = createOutboxDispatcher({
+      cache: { revalidate },
+      clock,
+      content: repository,
+      logger: createLogger({
+        clock,
+        correlationId: 'factory-drain-test-0001',
+        sink: (line) => lines.push(line),
+      }),
+      search,
+      store,
+    })
+    await publishStory(content, 'factory-story')
+
+    const report = await dispatcher.drain()
+
+    expect(report.completed).toHaveLength(3)
+    expect(report.deadLettered).toEqual([])
+    expect(report.retrying).toEqual([])
+    const cacheEvent = (await outbox(repository)).find(({ type }) => type === 'cache.revalidate')!
+    expect(revalidate).toHaveBeenCalledExactlyOnceWith({
+      idempotencyKey: cacheEvent.id,
+      slugs: ['factory-story'],
+    })
+    expect((await search.search({ limit: 10, offset: 0, query: 'factory' })).total).toBe(1)
+    expect(await dispatcher.drain()).toEqual({ completed: [], deadLettered: [], retrying: [] })
+    expect(revalidate).toHaveBeenCalledOnce()
+    expect(lines.map((line) => JSON.parse(line))).toHaveLength(3)
+  })
+
   it('keeps publication and reading independent of every external adapter, retries each failed event, and replays without duplicates', async () => {
     const { cache, clock, content, dispatcherWith, phaseHandlers, repository, search, store } =
       setup()
