@@ -149,6 +149,7 @@ describe('PostgreSQL and media persistence integration', () => {
       '0007_outbox_retry_state',
       '0008_subscribers_consent',
       '0009_distribution_telemetry',
+      '0010_subscriber_privacy_events',
     ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: migrationIds,
@@ -472,6 +473,7 @@ describe('PostgreSQL and media persistence integration', () => {
         '0007_outbox_retry_state',
         '0008_subscribers_consent',
         '0009_distribution_telemetry',
+        '0010_subscriber_privacy_events',
       ],
     })
 

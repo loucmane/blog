@@ -5,6 +5,7 @@ import type { ContentTransaction } from '../content/ports'
 import type {
   Subscriber,
   SubscriberConsent,
+  SubscriberSummary,
   SubscriptionEvent,
   SubscriptionToken,
   SubscriptionTokenPurpose,
@@ -154,8 +155,51 @@ const claimAttempts = 3
 class PostgresSubscriptionTransaction implements SubscriptionTransaction {
   constructor(
     private readonly connection: PostgresQueries,
-    private readonly content: ContentTransaction,
+    readonly content: ContentTransaction,
   ) {}
+
+  async subscriberSummary(): Promise<SubscriberSummary> {
+    const result = await this.connection.query<{
+      confirmed: number
+      pending: number
+      unsubscribed: number
+      newest: Timestamp | null
+    }>(`SELECT count(*) FILTER (WHERE status = 'confirmed')::int AS confirmed,
+      count(*) FILTER (WHERE status = 'pending')::int AS pending,
+      count(*) FILTER (WHERE status = 'unsubscribed')::int AS unsubscribed,
+      max(created_at) AS newest FROM subscribers`)
+    const row = result.rows[0]!
+    return {
+      confirmed: row.confirmed,
+      pending: row.pending,
+      unsubscribed: row.unsubscribed,
+      newestSubscriptionAt: nullableIso(row.newest),
+    }
+  }
+
+  async listSubscribers(): Promise<readonly Subscriber[]> {
+    return (
+      await this.connection.query<SubscriberRow>('SELECT * FROM subscribers ORDER BY id')
+    ).rows.map(mapSubscriber)
+  }
+
+  async insertSubscriber(subscriber: Subscriber): Promise<void> {
+    await this.connection.query(insert('subscribers'), [
+      subscriber.id,
+      subscriber.emailCanonical,
+      subscriber.status,
+      subscriber.createdAt,
+      subscriber.updatedAt,
+      subscriber.confirmedAt,
+      subscriber.unsubscribedAt,
+    ])
+  }
+
+  async deleteTokens(subscriberId: string): Promise<void> {
+    await this.connection.query('DELETE FROM subscription_tokens WHERE subscriber_id = $1', [
+      subscriberId,
+    ])
+  }
 
   async appendEvent(event: SubscriptionEvent): Promise<void> {
     await this.connection.query(insert('subscription_events'), [
@@ -228,18 +272,18 @@ class PostgresSubscriptionTransaction implements SubscriptionTransaction {
     return row ? mapToken(row) : null
   }
 
-  async listConsents(subscriberId: string): Promise<readonly SubscriberConsent[]> {
+  async listConsents(subscriberId?: string): Promise<readonly SubscriberConsent[]> {
     const result = await this.connection.query<ConsentRow>(
-      'SELECT * FROM subscriber_consents WHERE subscriber_id = $1 ORDER BY granted_at, id',
-      [subscriberId],
+      `SELECT * FROM subscriber_consents ${subscriberId === undefined ? '' : 'WHERE subscriber_id = $1'} ORDER BY granted_at, id`,
+      subscriberId === undefined ? [] : [subscriberId],
     )
     return result.rows.map(mapConsent)
   }
 
-  async listEvents(subscriberId: string): Promise<readonly SubscriptionEvent[]> {
+  async listEvents(subscriberId?: string): Promise<readonly SubscriptionEvent[]> {
     const result = await this.connection.query<EventRow>(
-      'SELECT * FROM subscription_events WHERE subscriber_id = $1 ORDER BY created_at, id',
-      [subscriberId],
+      `SELECT * FROM subscription_events ${subscriberId === undefined ? '' : 'WHERE subscriber_id = $1'} ORDER BY created_at, id`,
+      subscriberId === undefined ? [] : [subscriberId],
     )
     return result.rows.map(mapEvent)
   }
@@ -284,7 +328,7 @@ class PostgresSubscriptionTransaction implements SubscriptionTransaction {
   async updateSubscriber(subscriber: Subscriber): Promise<void> {
     const result = await this.connection.query(
       `UPDATE subscribers
-       SET status = $2, confirmed_at = $3, unsubscribed_at = $4, updated_at = $5
+       SET status = $2, confirmed_at = $3, unsubscribed_at = $4, updated_at = $5, email_canonical = $6
        WHERE id = $1`,
       [
         subscriber.id,
@@ -292,6 +336,7 @@ class PostgresSubscriptionTransaction implements SubscriptionTransaction {
         subscriber.confirmedAt,
         subscriber.unsubscribedAt,
         subscriber.updatedAt,
+        subscriber.emailCanonical,
       ],
     )
     if (result.rowCount !== 1) throw new Error(`Subscriber ${subscriber.id} does not exist.`)
@@ -314,9 +359,14 @@ class PostgresSubscriptionTransaction implements SubscriptionTransaction {
 export class PostgresSubscriptionStore implements SubscriptionStore {
   constructor(private readonly repository: PostgresContentRepository) {}
 
-  transaction<T>(work: (transaction: SubscriptionTransaction) => Promise<T>): Promise<T> {
-    return this.repository.transactionOnConnection((content, connection) =>
-      work(new PostgresSubscriptionTransaction(connection, content)),
-    )
+  transaction<T>(
+    work: (transaction: SubscriptionTransaction) => Promise<T>,
+    options?: { readonly snapshot?: boolean },
+  ): Promise<T> {
+    return this.repository.transactionOnConnection(async (content, connection) => {
+      if (options?.snapshot)
+        await connection.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+      return work(new PostgresSubscriptionTransaction(connection, content))
+    })
   }
 }

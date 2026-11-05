@@ -36,6 +36,7 @@ describe('owner workspace layout', () => {
       'Stories',
       'New story',
       'Publishing jobs',
+      'Subscribers',
       'Reader Lab',
       'Account',
     ])

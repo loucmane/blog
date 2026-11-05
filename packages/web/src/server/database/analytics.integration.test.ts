@@ -51,13 +51,15 @@ describe('daily analytics on PostgreSQL', () => {
     async (populated) => {
       const migrations = await readContentMigrations()
       const before = migrations.filter(({ id }) => id < migrationId)
+      // Up to this migration only, so a later migration does not change what this test applies.
+      const upToTelemetry = migrations.filter(({ id }) => id <= migrationId)
       await applyContentMigrations(pool, before)
       if (populated)
         await pool.query(
           "INSERT INTO authors (id, display_name, slug, created_at, updated_at) VALUES ('author-telemetry', 'Synthetic Author', 'synthetic-author', now(), now())",
         )
       expect(await tables()).toEqual([])
-      expect((await applyContentMigrations(pool, migrations)).applied).toEqual([migrationId])
+      expect((await applyContentMigrations(pool, upToTelemetry)).applied).toEqual([migrationId])
       expect(await tables()).toEqual(['analytics_page_views_daily', 'web_vitals_daily'])
       if (populated) {
         await sink().record({ type: 'page_view', routePattern: '/' })
@@ -87,7 +89,7 @@ describe('daily analytics on PostgreSQL', () => {
           (row) => row.id,
         ),
       ).toEqual(before.map(({ id }) => id))
-      expect((await applyContentMigrations(pool, migrations)).applied).toEqual([migrationId])
+      expect((await applyContentMigrations(pool, upToTelemetry)).applied).toEqual([migrationId])
       expect((await pool.query('SELECT count(*)::int AS n FROM web_vitals_daily')).rows[0]?.n).toBe(
         0,
       )

@@ -298,7 +298,7 @@ describe('content database migrations', () => {
     // The checks admit exactly the states, purposes and history the domain names.
     expect(checked('status')).toEqual([[...subscriberStatuses]])
     expect(checked('purpose')).toEqual([[...subscriptionTokenPurposes]])
-    expect(checked('type')).toEqual([[...subscriptionEventTypes]])
+    expect(checked('type')).toEqual([['confirmation-requested', 'confirmed', 'unsubscribed']])
     expect(sql).toMatch(
       /BEFORE UPDATE OR DELETE ON subscription_events\s+FOR EACH ROW EXECUTE FUNCTION subscription_events_append_only\(\);/,
     )
@@ -314,6 +314,31 @@ describe('content database migrations', () => {
     )
     expect(downSql).toContain(
       "DELETE FROM content_schema_migrations WHERE id = '0008_subscribers_consent'",
+    )
+  })
+
+  it('widens only subscription privacy event checks and refuses destructive rollback', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0010_subscriber_privacy_events.sql'),
+      'utf8',
+    )
+    const down = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0010_subscriber_privacy_events.down.sql'),
+      'utf8',
+    )
+    const types = sql
+      .match(/CHECK \(type IN \(([^)]*)\)\)/)?.[1]
+      ?.split(',')
+      .map((value) => value.trim().replaceAll("'", ''))
+    expect(types).toEqual([...subscriptionEventTypes])
+    expect(sql).toContain(
+      "CHECK ((type IN ('unsubscribed', 'exported', 'erased')) = (consent_id IS NULL))",
+    )
+    expect(sql).not.toMatch(/CREATE TABLE|DROP TABLE|DROP TRIGGER/)
+    expect(down).toContain('LOCK TABLE subscription_events IN ACCESS EXCLUSIVE MODE')
+    expect(down).toContain('RAISE EXCEPTION')
+    expect(down).toContain(
+      "DELETE FROM content_schema_migrations WHERE id = '0010_subscriber_privacy_events'",
     )
   })
 
@@ -334,6 +359,7 @@ describe('content database migrations', () => {
         '0007_outbox_retry_state',
         '0008_subscribers_consent',
         '0009_distribution_telemetry',
+        '0010_subscriber_privacy_events',
       ],
       skipped: [],
     })
@@ -357,6 +383,7 @@ describe('content database migrations', () => {
         '0007_outbox_retry_state',
         '0008_subscribers_consent',
         '0009_distribution_telemetry',
+        '0010_subscriber_privacy_events',
       ],
     })
   })
