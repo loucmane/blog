@@ -3,6 +3,15 @@ import { createHash } from 'node:crypto'
 import { z } from 'zod'
 
 import { safeHref } from '@/lib/safe-url'
+import {
+  canonicalEmailAddress,
+  subscriberStatuses,
+  subscriptionEventTypes,
+  type Subscriber,
+  type SubscriberConsent,
+  type SubscriptionEvent,
+} from '../subscriptions/domain'
+import type { SubscriptionStore, SubscriptionTransaction } from '../subscriptions/ports'
 
 import {
   articleStatuses,
@@ -27,10 +36,10 @@ import {
 } from './domain'
 import { parseMigratedContentDocument } from './document'
 import { ImportCollisionError } from './errors'
-import type { ContentRepository, OriginalObjectStore } from './ports'
+import type { ContentRepository, ContentTransaction, OriginalObjectStore } from './ports'
 
 export const PORTABLE_CONTENT_FORMAT = 'owner-operated-magazine-content'
-export const PORTABLE_CONTENT_VERSION = 1
+export const PORTABLE_CONTENT_VERSION = 2
 
 export interface PortableMediaObject {
   readonly bytes: number
@@ -41,6 +50,9 @@ export interface PortableMediaObject {
 }
 
 export interface PortableContentData {
+  readonly subscribers: readonly Subscriber[]
+  readonly consents: readonly SubscriberConsent[]
+  readonly subscriptionEvents: readonly SubscriptionEvent[]
   readonly articleAuthors: readonly ArticleAuthor[]
   readonly articleTaxonomies: readonly ArticleTaxonomy[]
   readonly articles: readonly Article[]
@@ -283,10 +295,65 @@ const mediaObjectSchema = z
   })
   .strict()
 
+const subscriberSchema = z
+  .object({
+    id,
+    emailCanonical: z
+      .string()
+      .refine((value) => canonicalEmailAddress(value) === value)
+      .nullable(),
+    status: z.enum(subscriberStatuses),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    confirmedAt: nullableTimestamp,
+    unsubscribedAt: nullableTimestamp,
+  })
+  .strict()
+  .superRefine((subscriber, context) => {
+    if (
+      (subscriber.emailCanonical === null && subscriber.status !== 'unsubscribed') ||
+      (subscriber.status === 'confirmed' && subscriber.confirmedAt === null) ||
+      (subscriber.status === 'unsubscribed' && subscriber.unsubscribedAt === null)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'subscriber status and timestamps are inconsistent',
+      })
+    }
+  })
+const consentSchema = z
+  .object({
+    id,
+    subscriberId: id,
+    consentTextVersion: z.string().regex(/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/),
+    source: z.string().regex(/^[a-z0-9]+(?:[-/][a-z0-9]+)*$/),
+    grantedAt: timestamp,
+    withdrawnAt: nullableTimestamp,
+  })
+  .strict()
+const subscriptionEventSchema = z
+  .object({
+    id,
+    subscriberId: id,
+    type: z.enum(subscriptionEventTypes),
+    consentId: id.nullable(),
+    createdAt: timestamp,
+  })
+  .strict()
+  .refine(
+    (event) =>
+      (event.type === 'confirmed' || event.type === 'confirmation-requested') ===
+      (event.consentId !== null),
+    'only confirmation events reference a consent',
+  )
+
 const unsignedBundleSchema = z
   .object({
     data: z
       .object({
+        subscribers: z.array(subscriberSchema).optional(),
+        consents: z.array(consentSchema).optional(),
+        subscriptionEvents: z.array(subscriptionEventSchema).optional(),
         // Version-one bundles exported before byline support omit these links.
         articleAuthors: z.array(articleAuthorSchema).optional(),
         articleTaxonomies: z.array(articleTaxonomySchema),
@@ -299,7 +366,7 @@ const unsignedBundleSchema = z
         outboxEvents: z.array(outboxSchema),
         publicationJobs: z.array(jobSchema),
         publicationSettings: settingsSchema.nullable(),
-        redirects: z.array(redirectSchema),
+        redirects: z.array(redirectSchema).optional(),
         reusableBlockRevisions: z.array(reusableBlockRevisionSchema),
         reusableBlocks: z.array(reusableBlockSchema),
         revisions: z.array(revisionSchema),
@@ -309,18 +376,42 @@ const unsignedBundleSchema = z
     exportedAt: timestamp,
     format: z.literal(PORTABLE_CONTENT_FORMAT),
     media: z.object({ objects: z.array(mediaObjectSchema) }).strict(),
-    version: z.literal(PORTABLE_CONTENT_VERSION),
+    version: z.union([z.literal(1), z.literal(PORTABLE_CONTENT_VERSION)]),
   })
   .strict()
-const bundleSchema = unsignedBundleSchema.extend({ digest: sha256 }).strict()
+const bundleSchema = unsignedBundleSchema
+  .extend({ digest: sha256 })
+  .strict()
+  .superRefine((bundle, context) => {
+    if (bundle.version === 2) {
+      for (const section of [
+        'subscribers',
+        'consents',
+        'subscriptionEvents',
+        'redirects',
+      ] as const) {
+        if (bundle.data[section] === undefined)
+          context.addIssue({
+            code: 'custom',
+            path: ['data', section],
+            message: 'version 2 requires this section',
+          })
+      }
+    }
+  })
 
 function normalizePortableBundle(bundle: z.infer<typeof bundleSchema>): PortableContentBundle {
   const articles = new Map(bundle.data.articles.map((article) => [article.id, article]))
   const fallbackTimeZone = bundle.data.publicationSettings?.ownerTimeZone ?? 'UTC'
-  return {
+  const normalized = {
     ...bundle,
+    version: PORTABLE_CONTENT_VERSION,
     data: {
       ...bundle.data,
+      subscribers: bundle.data.subscribers ?? [],
+      consents: bundle.data.consents ?? [],
+      subscriptionEvents: bundle.data.subscriptionEvents ?? [],
+      redirects: bundle.data.redirects ?? [],
       articleAuthors: bundle.data.articleAuthors ?? [],
       mediaAssets: bundle.data.mediaAssets.map((asset) => ({
         ...asset,
@@ -339,6 +430,8 @@ function normalizePortableBundle(bundle: z.infer<typeof bundleSchema>): Portable
       })),
     },
   } as unknown as PortableContentBundle
+  const { digest: _digest, ...unsigned } = normalized
+  return { ...normalized, digest: digest(unsigned) }
 }
 
 function canonicalize(value: unknown): unknown {
@@ -384,6 +477,32 @@ function groupArticleAuthors(links: readonly ArticleAuthor[]): Map<string, Artic
 }
 
 function validateRelationships(bundle: PortableContentBundle, issues: string[]) {
+  const subscribers = new Map(
+    bundle.data.subscribers.map((subscriber) => [subscriber.id, subscriber]),
+  )
+  const consents = new Map(bundle.data.consents.map((consent) => [consent.id, consent]))
+  const addresses = new Set<string>()
+  for (const subscriber of bundle.data.subscribers) {
+    if (subscriber.emailCanonical !== null) {
+      if (addresses.has(subscriber.emailCanonical)) issues.push('duplicate subscriber address')
+      addresses.add(subscriber.emailCanonical)
+    }
+  }
+  for (const consent of bundle.data.consents) {
+    const subscriber = subscribers.get(consent.subscriberId)
+    if (!subscriber) issues.push(`consent ${consent.id} has no subscriber`)
+    if (subscriber?.emailCanonical === null && consent.withdrawnAt === null)
+      issues.push(`erased subscriber ${consent.subscriberId} retains active consent`)
+  }
+  for (const event of bundle.data.subscriptionEvents) {
+    if (!subscribers.has(event.subscriberId))
+      issues.push(`subscription event ${event.id} has no subscriber`)
+    if (
+      event.consentId !== null &&
+      consents.get(event.consentId)?.subscriberId !== event.subscriberId
+    )
+      issues.push(`subscription event ${event.id} has an invalid consent`)
+  }
   const articles = new Map(bundle.data.articles.map((article) => [article.id, article]))
   const articleIds = new Set(articles.keys())
   const authorIds = new Set(bundle.data.authors.map(({ id: authorId }) => authorId))
@@ -573,40 +692,100 @@ function validateRelationships(bundle: PortableContentBundle, issues: string[]) 
 export async function createPortableContentBundle(
   repository: ContentRepository,
   exportedAt: string,
+  subscriptions?: SubscriptionStore,
 ): Promise<PortableContentBundle> {
-  const data = await repository.transaction(async (transaction): Promise<PortableContentData> => {
-    const articles = sortById(await transaction.listArticles())
-    // One query at a time: the transaction holds a single PostgreSQL client, and concurrent
-    // client.query() calls on it are deprecated in pg 8 and removed in pg 9.
-    const articleAuthors: ArticleAuthor[] = []
-    const autosaves: DraftAutosave[] = []
-    for (const { id: articleId } of articles) {
-      const authors = await transaction.listArticleAuthors(articleId)
-      authors.forEach(({ id: authorId }, position) =>
-        articleAuthors.push({ articleId, authorId, position }),
-      )
-      // Append one by one: spreading a very large list into push() exceeds the argument limit.
-      for (const autosave of await transaction.listAutosaves(articleId)) autosaves.push(autosave)
-    }
-    return {
-      articleAuthors,
-      articleTaxonomies: await transaction.listArticleTaxonomies(),
-      articles,
-      auditEvents: sortById(await transaction.listAuditEvents()),
-      authors: sortById(await transaction.listAuthors()),
-      autosaves: sortById(autosaves),
-      mediaAssets: sortById(await transaction.listMediaAssets()),
-      mediaRenditions: sortById(await transaction.listMediaRenditions()),
-      outboxEvents: sortById(await transaction.listOutboxEvents()),
-      publicationJobs: sortById(await transaction.listPublicationJobs()),
-      publicationSettings: await transaction.getPublicationSettings(),
-      redirects: sortById(await transaction.listRedirects()),
-      reusableBlockRevisions: sortById(await transaction.listReusableBlockRevisions()),
-      reusableBlocks: sortById(await transaction.listReusableBlocks()),
-      revisions: sortById(await transaction.listRevisions()),
-      taxonomies: sortById(await transaction.listTaxonomyTerms()),
-    }
-  })
+  const data = await portableTransaction(
+    repository,
+    subscriptions,
+    async (transaction, subscription): Promise<PortableContentData> => {
+      const articles = sortById(await transaction.listArticles())
+      // One query at a time: the transaction holds a single PostgreSQL client, and concurrent
+      // client.query() calls on it are deprecated in pg 8 and removed in pg 9.
+      const articleAuthors: ArticleAuthor[] = []
+      const autosaves: DraftAutosave[] = []
+      for (const { id: articleId } of articles) {
+        const authors = await transaction.listArticleAuthors(articleId)
+        authors.forEach(({ id: authorId }, position) =>
+          articleAuthors.push({ articleId, authorId, position }),
+        )
+        // Append one by one: spreading a very large list into push() exceeds the argument limit.
+        for (const autosave of await transaction.listAutosaves(articleId)) autosaves.push(autosave)
+      }
+      return {
+        subscribers: subscription ? sortById(await subscription.listSubscribers()) : [],
+        consents: subscription ? sortById(await subscription.listConsents()) : [],
+        subscriptionEvents: subscription ? sortById(await subscription.listEvents()) : [],
+        articleAuthors,
+        articleTaxonomies: await transaction.listArticleTaxonomies(),
+        articles,
+        auditEvents: sortById(await transaction.listAuditEvents()),
+        authors: sortById(await transaction.listAuthors()),
+        autosaves: sortById(autosaves),
+        mediaAssets: sortById(await transaction.listMediaAssets()),
+        mediaRenditions: sortById(await transaction.listMediaRenditions()),
+        outboxEvents: sortById(await transaction.listOutboxEvents()),
+        publicationJobs: sortById(await transaction.listPublicationJobs()),
+        publicationSettings: await transaction.getPublicationSettings(),
+        redirects: sortById(await transaction.listRedirects()),
+        reusableBlockRevisions: sortById(await transaction.listReusableBlockRevisions()),
+        reusableBlocks: sortById(await transaction.listReusableBlocks()),
+        revisions: sortById(await transaction.listRevisions()),
+        taxonomies: sortById(await transaction.listTaxonomyTerms()),
+      }
+    },
+    true,
+  )
+  return signPortableContent(data, exportedAt)
+}
+
+/** Supply the shared subscription store for a whole-magazine snapshot or restore. */
+function portableTransaction<T>(
+  repository: ContentRepository,
+  subscriptions: SubscriptionStore | undefined,
+  work: (content: ContentTransaction, subscription: SubscriptionTransaction | null) => Promise<T>,
+  snapshot = false,
+): Promise<T> {
+  return subscriptions
+    ? subscriptions.transaction((transaction) => work(transaction.content, transaction), {
+        snapshot,
+      })
+    : repository.transaction((transaction) => work(transaction, null))
+}
+
+/** A single subscriber's portable record contains no unrelated content or link credentials. */
+export function createPortableSubscriberBundle(
+  subscriber: Subscriber,
+  consents: readonly SubscriberConsent[],
+  events: readonly SubscriptionEvent[],
+  exportedAt: string,
+): PortableContentBundle {
+  return signPortableContent(
+    {
+      subscribers: [subscriber],
+      consents: sortById(consents),
+      subscriptionEvents: sortById(events),
+      articleAuthors: [],
+      articleTaxonomies: [],
+      articles: [],
+      auditEvents: [],
+      authors: [],
+      autosaves: [],
+      mediaAssets: [],
+      mediaRenditions: [],
+      outboxEvents: [],
+      publicationJobs: [],
+      publicationSettings: null,
+      redirects: [],
+      reusableBlockRevisions: [],
+      reusableBlocks: [],
+      revisions: [],
+      taxonomies: [],
+    },
+    exportedAt,
+  )
+}
+
+function signPortableContent(data: PortableContentData, exportedAt: string): PortableContentBundle {
   const media = {
     objects: [
       ...data.mediaAssets.map((asset) => ({
@@ -654,6 +833,9 @@ export function inspectPortableContentBundle(value: unknown): PortableContentIns
     issues.push('bundle digest does not match canonical content')
   const bundle = normalizePortableBundle(parsed.data)
   for (const [label, values] of [
+    ['subscribers', bundle.data.subscribers],
+    ['consents', bundle.data.consents],
+    ['subscription events', bundle.data.subscriptionEvents],
     ['articles', bundle.data.articles],
     ['authors', bundle.data.authors],
     ['taxonomies', bundle.data.taxonomies],
@@ -676,42 +858,56 @@ export function inspectPortableContentBundle(value: unknown): PortableContentIns
     : { bundle, issues: [], status: 'valid' }
 }
 
-async function existingCollisions(repository: ContentRepository): Promise<readonly string[]> {
-  return repository.transaction(async (transaction) => {
-    const collections = await Promise.all([
-      transaction.listArticles(),
-      transaction.listAuthors(),
-      transaction.listAuditEvents(),
-      transaction.listMediaAssets(),
-      transaction.listMediaRenditions(),
-      transaction.listOutboxEvents(),
-      transaction.listPublicationJobs(),
-      transaction.listRedirects(),
-      transaction.listReusableBlockRevisions(),
-      transaction.listReusableBlocks(),
-      transaction.listRevisions(),
-      transaction.listTaxonomyTerms(),
-    ])
-    const ids = collections.flat().map(({ id: entityId }) => entityId)
-    if ((await transaction.getPublicationSettings()) !== null) ids.push('publication-settings')
-    if ((await transaction.listArticleTaxonomies()).length > 0) ids.push('article-taxonomies')
-    return ids.sort()
-  })
+async function existingCollisions(transaction: ContentTransaction): Promise<readonly string[]> {
+  const collections = [
+    await transaction.listArticles(),
+    await transaction.listAuthors(),
+    await transaction.listAuditEvents(),
+    await transaction.listMediaAssets(),
+    await transaction.listMediaRenditions(),
+    await transaction.listOutboxEvents(),
+    await transaction.listPublicationJobs(),
+    await transaction.listRedirects(),
+    await transaction.listReusableBlockRevisions(),
+    await transaction.listReusableBlocks(),
+    await transaction.listRevisions(),
+    await transaction.listTaxonomyTerms(),
+  ]
+  const ids = collections.flat().map(({ id: entityId }) => entityId)
+  if ((await transaction.getPublicationSettings()) !== null) ids.push('publication-settings')
+  if ((await transaction.listArticleTaxonomies()).length > 0) ids.push('article-taxonomies')
+  return ids.sort()
 }
 
 export async function importPortableContentBundle(
   repository: ContentRepository,
   value: unknown,
+  subscriptions?: SubscriptionStore,
 ): Promise<{ readonly imported: Readonly<Record<string, number>> }> {
   const inspection = inspectPortableContentBundle(value)
   if (inspection.status === 'invalid') {
     throw new Error(`Portable import is invalid: ${inspection.issues.join('; ')}`)
   }
-  const collisions = await existingCollisions(repository)
-  if (collisions.length > 0) throw new ImportCollisionError(collisions)
   const { data } = inspection.bundle
+  if (
+    !subscriptions &&
+    (data.subscribers.length || data.consents.length || data.subscriptionEvents.length)
+  ) {
+    throw new Error('Portable import requires the shared subscription store.')
+  }
 
-  await repository.transaction(async (transaction) => {
+  await portableTransaction(repository, subscriptions, async (transaction, subscription) => {
+    await transaction.lockIdempotency('portable-import', 'empty-store')
+    const collisions = [
+      ...(await existingCollisions(transaction)),
+      ...(subscription ? (await subscription.listSubscribers()).map(({ id }) => id) : []),
+    ]
+    if (collisions.length > 0) throw new ImportCollisionError(collisions)
+    if (subscription) {
+      for (const subscriber of data.subscribers) await subscription.insertSubscriber(subscriber)
+      for (const consent of data.consents) await subscription.saveConsent(consent)
+      for (const event of data.subscriptionEvents) await subscription.appendEvent(event)
+    }
     if (data.publicationSettings)
       await transaction.savePublicationSettings(data.publicationSettings)
     for (const author of data.authors) await transaction.saveAuthor(author)
@@ -741,6 +937,9 @@ export async function importPortableContentBundle(
 
   return {
     imported: {
+      subscribers: data.subscribers.length,
+      consents: data.consents.length,
+      subscriptionEvents: data.subscriptionEvents.length,
       articleAuthors: data.articleAuthors.length,
       articles: data.articles.length,
       auditEvents: data.auditEvents.length,

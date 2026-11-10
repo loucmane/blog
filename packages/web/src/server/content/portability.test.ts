@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto'
 
 import { describe, expect, it, vi } from 'vitest'
+import { InMemorySubscriptionStore } from '../subscriptions/in-memory-store'
+import { SubscriptionService } from '../subscriptions/service'
+import { subscriptionConsent } from '../subscriptions/consent'
 
 import { CURRENT_CONTENT_DOCUMENT_VERSION, type ContentDocument } from './document'
 import { ImportCollisionError } from './errors'
@@ -137,6 +140,114 @@ function withArticleAuthors(bundle: PortableContentBundle, articleAuthors: unkno
   const unsigned = { ...base, data: { ...base.data, articleAuthors } }
   return { ...unsigned, digest: createHash('sha256').update(canonicalJson(unsigned)).digest('hex') }
 }
+
+describe('subscriber portability v2', () => {
+  it('round trips content, subscribers, consent, events and redirects in one store', async () => {
+    const { repository } = await populatedRepository()
+    const store = new InMemorySubscriptionStore(repository)
+    await new SubscriptionService(store, clock).subscribe({
+      email: 'reader@example.com',
+      consentTextVersion: subscriptionConsent.version,
+      source: 'subscription-form',
+    })
+    await repository.transaction((transaction) =>
+      transaction.saveRedirect({
+        id: 'redirect-portable',
+        articleId: 'article-portable',
+        fromSlug: 'old-story',
+        toSlug: 'lossless-portable-story',
+        createdAt: clock.now().toISOString(),
+      }),
+    )
+    const bundle = await createPortableContentBundle(repository, clock.now().toISOString(), store)
+    expect(bundle.version).toBe(2)
+    expect(bundle.data.subscribers).toHaveLength(1)
+    expect(bundle.data.consents).toHaveLength(1)
+    expect(bundle.data.subscriptionEvents).toHaveLength(1)
+    expect(bundle.data.redirects).toHaveLength(1)
+    const restored = new InMemoryContentRepository()
+    const subscriptions = new InMemorySubscriptionStore(restored)
+    await expect(importPortableContentBundle(restored, bundle)).rejects.toThrow(
+      'shared subscription store',
+    )
+    await importPortableContentBundle(restored, bundle, subscriptions)
+    expect(
+      canonicalJson(await createPortableContentBundle(restored, bundle.exportedAt, subscriptions)),
+    ).toBe(canonicalJson(bundle))
+    await expect(
+      importPortableContentBundle(restored, bundle, subscriptions),
+    ).rejects.toBeInstanceOf(ImportCollisionError)
+  })
+
+  it('accepts an authentic v1 bundle without new sections and rejects malformed v2 relationships', async () => {
+    const { repository } = await populatedRepository()
+    const current = await createPortableContentBundle(repository, clock.now().toISOString())
+    const {
+      subscribers: _subscribers,
+      consents: _consents,
+      subscriptionEvents: _events,
+      redirects: _redirects,
+      ...data
+    } = current.data
+    const { digest: _digest, ...base } = current
+    const unsigned = { ...base, data, version: 1 }
+    const legacy = {
+      ...unsigned,
+      digest: createHash('sha256').update(canonicalJson(unsigned)).digest('hex'),
+    }
+    const restored = new InMemoryContentRepository()
+    await importPortableContentBundle(restored, legacy)
+    const exported = await createPortableContentBundle(restored, current.exportedAt)
+    expect(exported.data).toMatchObject({
+      subscribers: [],
+      consents: [],
+      subscriptionEvents: [],
+      redirects: [],
+    })
+    expect(inspectPortableContentBundle({ ...legacy, version: 2 }).status).toBe('invalid')
+    const invalid = {
+      ...base,
+      data: {
+        ...current.data,
+        subscriptionEvents: [
+          {
+            id: 'orphan',
+            type: 'erased',
+            subscriberId: 'missing',
+            consentId: null,
+            createdAt: current.exportedAt,
+          },
+        ],
+      },
+    }
+    const signed = {
+      ...invalid,
+      digest: createHash('sha256').update(canonicalJson(invalid)).digest('hex'),
+    }
+    expect(inspectPortableContentBundle(signed)).toMatchObject({
+      status: 'invalid',
+      issues: [expect.stringContaining('no subscriber')],
+    })
+  })
+
+  it('rolls subscription inserts back if restoring content fails later', async () => {
+    const { repository } = await populatedRepository()
+    const source = new InMemorySubscriptionStore(repository)
+    await new SubscriptionService(source, clock).subscribe({
+      email: 'reader@example.com',
+      consentTextVersion: subscriptionConsent.version,
+      source: 'subscription-form',
+    })
+    const bundle = await createPortableContentBundle(repository, clock.now().toISOString(), source)
+    const restored = new FailingBylineRepository()
+    const subscriptions = new InMemorySubscriptionStore(restored)
+    await expect(importPortableContentBundle(restored, bundle, subscriptions)).rejects.toThrow(
+      'byline write failed',
+    )
+    expect(await subscriptions.transaction((tx) => tx.listSubscribers())).toEqual([])
+    expect(await restored.inspect((tx) => tx.listArticles())).toEqual([])
+  })
+})
 
 describe('portable content ownership', () => {
   it('exports deterministically and recreates identities and relationships in an empty store', async () => {

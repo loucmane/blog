@@ -9,6 +9,8 @@ import { subscriptionConsent } from './consent'
 import { InMemorySubscriptionStore } from './in-memory-store'
 import { createSubscriptionRuntime, getSubscriptionRuntime } from './runtime'
 import { subscriptionConfirmEventType } from './service'
+import { OwnerSubscriberOperations } from './owner-operations'
+import { createLogger } from '../observability/logger'
 
 const runtimeSymbol = Symbol.for('magazine.subscription-runtime')
 
@@ -49,6 +51,14 @@ describe('subscription runtime', () => {
         ({ type }) => type,
       ),
     ).toEqual([subscriptionConfirmEventType])
+    const operations = new OwnerSubscriberOperations(
+      runtime.store,
+      createLogger({ correlationId: 'shared-runtime-test', sink: () => undefined }),
+    )
+    expect(await operations.summary()).toMatchObject({ pending: 1 })
+    expect(
+      (await operations.exportSubscriber('reader@example.com'))?.data.subscribers,
+    ).toHaveLength(1)
   })
 
   it('is made once for the process', () => {
