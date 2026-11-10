@@ -1,7 +1,9 @@
 import type { OutboxEvent } from '../content/domain'
+import type { ContentTransaction } from '../content/ports'
 import type {
   Subscriber,
   SubscriberConsent,
+  SubscriberSummary,
   SubscriptionEvent,
   SubscriptionToken,
   SubscriptionTokenPurpose,
@@ -16,6 +18,14 @@ import type {
  * lock is taken is read again under it.
  */
 export interface SubscriptionTransaction {
+  /** Content and subscriptions commit together, including portable imports. */
+  readonly content: ContentTransaction
+  subscriberSummary(): Promise<SubscriberSummary>
+  listSubscribers(): Promise<readonly Subscriber[]>
+  /** Inserts an exact portable identity, including an anonymized subscriber. */
+  insertSubscriber(subscriber: Subscriber): Promise<void>
+  /** Removes all link credentials, including expired and consumed ones. */
+  deleteTokens(subscriberId: string): Promise<void>
   /** Appends to the subscription history, which is never changed or emptied. */
   appendEvent(event: SubscriptionEvent): Promise<void>
   /**
@@ -35,9 +45,9 @@ export interface SubscriptionTransaction {
   getSubscriberByEmail(emailCanonical: string): Promise<Subscriber | null>
   getToken(tokenHash: string): Promise<SubscriptionToken | null>
   /** A subscriber's consents, the earliest granted first. */
-  listConsents(subscriberId: string): Promise<readonly SubscriberConsent[]>
+  listConsents(subscriberId?: string): Promise<readonly SubscriberConsent[]>
   /** A subscriber's history, the earliest first. */
-  listEvents(subscriberId: string): Promise<readonly SubscriptionEvent[]>
+  listEvents(subscriberId?: string): Promise<readonly SubscriptionEvent[]>
   /** The subscriber, locked until the commit; null when there is none. */
   lockSubscriber(id: string): Promise<Subscriber | null>
   /** Queues an outbox event in this transaction. */
@@ -54,5 +64,8 @@ export interface SubscriptionTransaction {
 
 export interface SubscriptionStore {
   /** Runs `work` in one transaction: it commits when `work` resolves and rolls back when it throws. */
-  transaction<T>(work: (transaction: SubscriptionTransaction) => Promise<T>): Promise<T>
+  transaction<T>(
+    work: (transaction: SubscriptionTransaction) => Promise<T>,
+    options?: { readonly snapshot?: boolean },
+  ): Promise<T>
 }

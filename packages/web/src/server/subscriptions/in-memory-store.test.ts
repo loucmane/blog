@@ -30,6 +30,34 @@ function setup() {
 }
 
 describe('in-memory subscription store', () => {
+  it('restores anonymized identities and rolls token deletion and imports back with the content', async () => {
+    const { store } = setup()
+    await store.transaction(async (tx) => {
+      await tx.insertSubscriber(subscriber)
+      await tx.saveToken(token)
+    })
+    await expect(
+      store.transaction(async (tx) => {
+        await tx.deleteTokens(subscriber.id)
+        await tx.insertSubscriber({
+          ...subscriber,
+          id: 'anonymized',
+          emailCanonical: null,
+          status: 'unsubscribed',
+          unsubscribedAt: at,
+        })
+        throw new Error('rollback requested')
+      }),
+    ).rejects.toThrow('rollback requested')
+    expect(await store.transaction((tx) => tx.getToken(token.tokenHash))).toEqual(token)
+    expect(await store.transaction((tx) => tx.listSubscribers())).toEqual([subscriber])
+    await store.transaction((tx) => tx.deleteTokens(subscriber.id))
+    expect(await store.transaction((tx) => tx.getToken(token.tokenHash))).toBeNull()
+    await expect(
+      store.transaction((tx) => tx.insertSubscriber({ ...subscriber, id: 'duplicate-address' })),
+    ).rejects.toThrow('already exists')
+  })
+
   it('keeps the keys the database keeps', async () => {
     const { store } = setup()
     await store.transaction((transaction) => transaction.claimSubscriberByEmail(subscriber))

@@ -27,8 +27,42 @@ function inOrder<T extends { readonly id: string }>(at: (value: T) => string) {
 class InMemorySubscriptionTransaction implements SubscriptionTransaction {
   constructor(
     private readonly state: State,
-    private readonly content: ContentTransaction,
+    readonly content: ContentTransaction,
   ) {}
+
+  async subscriberSummary() {
+    const rows = [...this.state.subscribers.values()]
+    return {
+      confirmed: rows.filter(({ status }) => status === 'confirmed').length,
+      pending: rows.filter(({ status }) => status === 'pending').length,
+      unsubscribed: rows.filter(({ status }) => status === 'unsubscribed').length,
+      newestSubscriptionAt:
+        rows
+          .map(({ createdAt }) => createdAt)
+          .sort()
+          .at(-1) ?? null,
+    }
+  }
+
+  async listSubscribers(): Promise<readonly Subscriber[]> {
+    return [...this.state.subscribers.values()].map((subscriber) => ({ ...subscriber }))
+  }
+
+  async insertSubscriber(subscriber: Subscriber): Promise<void> {
+    if (
+      this.state.subscribers.has(subscriber.id) ||
+      (subscriber.emailCanonical !== null && this.findByEmail(subscriber.emailCanonical))
+    ) {
+      throw new Error('That subscriber already exists.')
+    }
+    this.state.subscribers.set(subscriber.id, { ...subscriber })
+  }
+
+  async deleteTokens(subscriberId: string): Promise<void> {
+    for (const [hash, token] of this.state.tokens) {
+      if (token.subscriberId === subscriberId) this.state.tokens.delete(hash)
+    }
+  }
 
   async appendEvent(event: SubscriptionEvent): Promise<void> {
     this.requireSubscriber(event.subscriberId)
@@ -74,16 +108,16 @@ class InMemorySubscriptionTransaction implements SubscriptionTransaction {
     return found ? { ...found } : null
   }
 
-  async listConsents(subscriberId: string): Promise<readonly SubscriberConsent[]> {
+  async listConsents(subscriberId?: string): Promise<readonly SubscriberConsent[]> {
     return [...this.state.consents.values()]
-      .filter((consent) => consent.subscriberId === subscriberId)
+      .filter((consent) => subscriberId === undefined || consent.subscriberId === subscriberId)
       .sort(inOrder<SubscriberConsent>(({ grantedAt }) => grantedAt))
       .map((consent) => ({ ...consent }))
   }
 
-  async listEvents(subscriberId: string): Promise<readonly SubscriptionEvent[]> {
+  async listEvents(subscriberId?: string): Promise<readonly SubscriptionEvent[]> {
     return this.state.events
-      .filter((event) => event.subscriberId === subscriberId)
+      .filter((event) => subscriberId === undefined || event.subscriberId === subscriberId)
       .sort(inOrder<SubscriptionEvent>(({ createdAt }) => createdAt))
       .map((event) => ({ ...event }))
   }
