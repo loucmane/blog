@@ -15,6 +15,7 @@ import {
 } from '@/server/lab/seed'
 import { OwnerConfigurationError } from '@/server/owner/config'
 import { getOwnerRuntime, type OwnerRuntime } from '@/server/owner/runtime'
+import { limitInternalAuthenticationFailure } from '@/server/security/rate-limit'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -29,11 +30,15 @@ const headers = { 'cache-control': 'private, no-store' }
 export async function POST(request: Request) {
   return observeRequest(request, async ({ recordFailure }) => {
     const token = process.env.MAGAZINE_LAB_SEED_TOKEN
-    if (
-      !labSeedAllowed() ||
-      !configuredSecretIsStrong(token) ||
-      !secureTokenMatches(readBearerToken(request.headers.get('authorization')), token)
-    ) {
+    if (!labSeedAllowed() || !configuredSecretIsStrong(token)) {
+      return NextResponse.json(
+        { error: 'The lab seed is not available.' },
+        { headers, status: 404 },
+      )
+    }
+    if (!secureTokenMatches(readBearerToken(request.headers.get('authorization')), token)) {
+      const limited = limitInternalAuthenticationFailure(request, 'lab-seed')
+      if (limited) return limited
       return NextResponse.json(
         { error: 'The lab seed is not available.' },
         { headers, status: 404 },
