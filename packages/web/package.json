@@ -40,7 +40,8 @@
     "lab:seed": "node scripts/lab-seed.mjs",
     "subscribers:summary": "node scripts/subscribers.mjs summary",
     "subscribers:export": "node scripts/subscribers.mjs export",
-    "subscribers:erase": "node scripts/subscribers.mjs erase"
+    "subscribers:erase": "node scripts/subscribers.mjs erase",
+    "restore:drill": "node scripts/restore-drill.mjs"
   },
   "browserslist": {
     "production": [
