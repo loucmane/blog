@@ -5,12 +5,13 @@ import { PostgresSearchProjection } from '@/server/database/postgres-search-proj
 import { createOutboxDispatcher } from '@/server/outbox/dispatcher'
 import { answerOutboxDrainRequest } from '@/server/outbox/drain'
 import { getOwnerRuntime } from '@/server/owner/runtime'
+import { limitInternalAuthenticationFailure } from '@/server/security/rate-limit'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  return answerOutboxDrainRequest(request, {
+  const response = await answerOutboxDrainRequest(request, {
     secret: process.env.MAGAZINE_OUTBOX_DRAIN_SECRET,
     createDispatcher: (logger) => {
       const { pool, repository } = getOwnerRuntime()
@@ -30,4 +31,13 @@ export async function POST(request: Request) {
       })
     },
   })
+  if (response.status === 401) {
+    const limited = limitInternalAuthenticationFailure(request, 'outbox-drain')
+    if (limited) {
+      const correlationId = response.headers.get('x-correlation-id')
+      if (correlationId) limited.headers.set('x-correlation-id', correlationId)
+      return limited
+    }
+  }
+  return response
 }
