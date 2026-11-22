@@ -36,6 +36,16 @@ function requiredEnvironment(name: string): string {
   return value
 }
 
+function createTestPool(connectionString: string): Pool {
+  const pool = new Pool({ connectionString })
+  // DROP DATABASE … WITH (FORCE) in afterEach ends this pool's idle connections (57P01);
+  // without a listener that surfaces as an uncaught error. Anything else is a real failure.
+  pool.on('error', (error: Error & { code?: string }) => {
+    if (error.code !== '57P01') throw error
+  })
+  return pool
+}
+
 const databaseUrl = requiredEnvironment('TASK42_DATABASE_URL')
 const restoreDatabaseUrl = requiredEnvironment('TASK42_RESTORE_DATABASE_URL')
 const composeFile = requiredEnvironment('TASK42_COMPOSE_FILE')
@@ -102,11 +112,11 @@ describe('repeatable isolated PostgreSQL 18 restore drill', () => {
         },
       },
     }
-    admin = new Pool({ connectionString: databaseUrl })
+    admin = createTestPool(databaseUrl)
     await admin.query(
       `CREATE DATABASE ${quotedIdentifier(sourceUrl.pathname.slice(1))} TEMPLATE template0`,
     )
-    source = new Pool({ connectionString: sourceUrl.href })
+    source = createTestPool(sourceUrl.href)
     const migrations = await readContentMigrations()
     await applyContentMigrations(source, migrations)
     sourceObjects = s3DrillClient(config.source.objects)
@@ -243,7 +253,7 @@ describe('repeatable isolated PostgreSQL 18 restore drill', () => {
       tools: async (command, args, url, input) => {
         const result = await dockerTools(command, args, url, input)
         if (command === 'pg_restore' && input) {
-          const target = new Pool({ connectionString: config.target.databaseUrl })
+          const target = createTestPool(config.target.databaseUrl)
           try {
             await target.query(sql)
           } finally {
@@ -412,7 +422,7 @@ describe('repeatable isolated PostgreSQL 18 restore drill', () => {
   it('refuses a reused target without changing its sentinel data', async () => {
     const targetName = new URL(config.target.databaseUrl).pathname.slice(1)
     await admin.query(`CREATE DATABASE ${quotedIdentifier(targetName)} TEMPLATE template0`)
-    const target = new Pool({ connectionString: config.target.databaseUrl })
+    const target = createTestPool(config.target.databaseUrl)
     try {
       await target.query('CREATE TABLE sentinel (id int); INSERT INTO sentinel VALUES (42)')
       const evidence = await runRestoreDrill(config, { tools: dockerTools })
