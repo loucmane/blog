@@ -21,16 +21,18 @@ export interface DrillMediaObject {
   readonly contentType: string
 }
 
-export async function mediaManifest(
-  client: Pick<MigrationClient, 'query'>,
-): Promise<{ originals: readonly DrillMediaObject[]; renditions: readonly string[] }> {
+export async function mediaManifest(client: Pick<MigrationClient, 'query'>): Promise<{
+  originals: readonly (DrillMediaObject & { readonly assetId: string })[]
+  renditions: readonly string[]
+}> {
   const originals = await client.query<{
+    assetId: string
     key: string
     sha256: string
     bytes: string
     contentType: string
   }>(
-    'SELECT original_key AS key, original_sha256 AS sha256, bytes::text, content_type AS "contentType" FROM public.media_assets ORDER BY original_key',
+    'SELECT id AS "assetId", original_key AS key, original_sha256 AS sha256, bytes::text, content_type AS "contentType" FROM public.media_assets ORDER BY original_key',
   )
   const renditions = await client.query<{ key: string }>(
     'SELECT object_key AS key FROM public.media_renditions ORDER BY object_key',
@@ -52,7 +54,7 @@ export function s3DrillClient(config: DrillLocation['objects']): S3Client {
   })
 }
 
-function missing(error: unknown): boolean {
+export function missingObject(error: unknown): boolean {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -67,7 +69,7 @@ export async function createFreshBucket(client: S3Client, bucket: string): Promi
       abortSignal: AbortSignal.timeout(60_000),
     })
   } catch (error) {
-    if (!missing(error)) throw error
+    if (!missingObject(error)) throw error
     await client.send(new CreateBucketCommand({ Bucket: bucket }), {
       abortSignal: AbortSignal.timeout(60_000),
     })
@@ -123,7 +125,7 @@ export async function copyOriginals(input: {
     try {
       body = await from.getOriginal(object.key, AbortSignal.timeout(60_000))
     } catch (error) {
-      if (!missing(error)) throw error
+      if (!missingObject(error)) throw error
       evidence.failures.push({ code: 'missing_object', stage: 'backup', subject })
       continue
     }
@@ -169,7 +171,7 @@ export async function verifyOriginals(
         evidence.failures.push({ code: 'checksum_mismatch', stage: 'comparison', subject })
       } else evidence.media.verified += 1
     } catch (error) {
-      if (!missing(error)) throw error
+      if (!missingObject(error)) throw error
       evidence.failures.push({ code: 'missing_object', stage: 'comparison', subject })
     }
   }

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { checkServerIdentity } from 'node:tls'
 
 import { Pool } from 'pg'
 
@@ -10,6 +11,7 @@ import {
   type DrillFailure,
   type TableEvidence,
 } from './restore-drill-contract'
+import { mediaManifest } from './restore-drill-media'
 
 export type PostgresTool = 'pg_dump' | 'pg_restore'
 export type PostgresToolRunner = (
@@ -19,20 +21,35 @@ export type PostgresToolRunner = (
   input?: Uint8Array,
 ) => Promise<Buffer>
 
+export const maxArchiveBytes = 256 * 1024 * 1024
+
+function postgresConnection(databaseUrl: string) {
+  const url = new URL(databaseUrl)
+  return {
+    host: url.hostname.replace(/^\[|\]$/g, ''),
+    port: Number(url.port || 5432),
+    database: decodeURIComponent(url.pathname.slice(1)),
+    user: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    sslmode: url.searchParams.get('sslmode') ?? 'disable',
+  }
+}
+
 // A deliberately bounded local drill: raw archives are held in memory, never logged or saved.
 export const runPostgresTool: PostgresToolRunner = (command, args, databaseUrl, input) =>
   new Promise((resolve, reject) => {
     // These subprocesses are PostgreSQL tools, not Next; omit its augmented required env fields.
     const environment = { PATH: process.env.PATH, LANG: 'C' } as unknown as NodeJS.ProcessEnv
     if (databaseUrl) {
-      const url = new URL(databaseUrl)
+      const { host, port, database, user, password, sslmode } = postgresConnection(databaseUrl)
       Object.assign(environment, {
-        PGHOST: url.hostname.replace(/^\[|\]$/g, ''),
-        PGPORT: url.port || '5432',
-        PGDATABASE: url.pathname.slice(1),
-        PGUSER: decodeURIComponent(url.username),
-        PGPASSWORD: decodeURIComponent(url.password),
-        PGSSLMODE: 'disable',
+        PGHOST: host,
+        PGPORT: String(port),
+        PGDATABASE: database,
+        PGUSER: user,
+        PGPASSWORD: password,
+        PGSSLMODE: sslmode,
+        ...(sslmode === 'verify-full' ? { PGSSLROOTCERT: 'system', PGGSSENCMODE: 'disable' } : {}),
         PGCONNECT_TIMEOUT: '10',
       })
     }
@@ -46,7 +63,7 @@ export const runPostgresTool: PostgresToolRunner = (command, args, databaseUrl, 
     let exceeded = false
     child.stdout.on('data', (chunk: Buffer) => {
       size += chunk.length
-      if (size > 256 * 1024 * 1024) {
+      if (size > maxArchiveBytes) {
         exceeded = true
         child.kill('SIGKILL')
       } else chunks.push(chunk)
@@ -62,8 +79,17 @@ export const runPostgresTool: PostgresToolRunner = (command, args, databaseUrl, 
   })
 
 export function drillPool(databaseUrl: string): Pool {
+  const { sslmode, password, ...connection } = postgresConnection(databaseUrl)
   const pool = new Pool({
-    connectionString: databaseUrl,
+    ...connection,
+    password: async () => password,
+    ssl:
+      sslmode === 'verify-full'
+        ? {
+            rejectUnauthorized: true,
+            checkServerIdentity: (_, cert) => checkServerIdentity(connection.host, cert),
+          }
+        : false,
     max: 2,
     connectionTimeoutMillis: 10_000,
     statement_timeout: 60_000,
@@ -116,6 +142,47 @@ export function postgres18Version(output: string): string {
   return version
 }
 
+export async function capturePostgresSnapshot(input: {
+  pool: Pool
+  databaseUrl: string
+  tools: PostgresToolRunner
+  reviewed: readonly ContentMigration[]
+  now: () => Date
+}) {
+  const snapshot = await input.pool.connect()
+  try {
+    await snapshot.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
+    await snapshot.query("SET LOCAL idle_in_transaction_session_timeout = '15min'")
+    const snapshotAt = input.now().toISOString()
+    const { rows } = await snapshot.query<{ id: string }>('SELECT pg_export_snapshot() AS id')
+    const migrations = await migrationIdentity(snapshot)
+    requireMigrationPrefix(migrations, input.reviewed)
+    const tables = await captureTables(snapshot)
+    const media = await mediaManifest(snapshot)
+    const archive = await input.tools(
+      'pg_dump',
+      [
+        '--format=custom',
+        '--no-owner',
+        '--no-privileges',
+        '--no-password',
+        '--snapshot',
+        rows[0]!.id,
+      ],
+      input.databaseUrl,
+    )
+    if (archive.length === 0 || archive.length > maxArchiveBytes)
+      throw new DrillError('operation_failed')
+    await snapshot.query('ROLLBACK')
+    snapshot.release()
+    return { snapshotAt, migrations, tables, media, archive }
+  } catch (error) {
+    // Destroy the connection on failure so a partially completed transaction cannot return to the pool.
+    snapshot.release(true)
+    throw error
+  }
+}
+
 // Only these fixed labels appear in evidence; all other table identities are hashed.
 const entityNames = new Set([
   'publication_settings',
@@ -161,8 +228,9 @@ export async function captureTables(
   const result: Record<string, TableEvidence> = {}
   for (const { schemaname, tablename } of tables.rows) {
     if (schemaname === 'public' && tablename === 'content_schema_migrations') continue
-    const rows = await client.query<{ value: string }>(
-      `SELECT to_jsonb(t)::text AS value FROM ${quotedIdentifier(schemaname)}.${quotedIdentifier(tablename)} t`,
+    const rows = await client.query<{ digest: string }>(
+      `SELECT encode(sha256(convert_to(to_jsonb(t)::text, 'UTF8')), 'hex') AS digest
+       FROM ${quotedIdentifier(schemaname)}.${quotedIdentifier(tablename)} t`,
     )
     const label =
       schemaname === 'public' && entityNames.has(tablename)
@@ -171,7 +239,7 @@ export async function captureTables(
     // PostgreSQL renders jsonb deterministically, including full-precision numeric values.
     result[label] = {
       count: rows.rows.length,
-      sha256: fingerprint(rows.rows.map(({ value }) => hash(value)).sort()),
+      sha256: fingerprint(rows.rows.map(({ digest }) => digest).sort()),
     }
   }
   return result

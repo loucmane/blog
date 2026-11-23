@@ -1,3 +1,4 @@
+import { existsSync, realpathSync } from 'node:fs'
 import { open } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,7 +8,7 @@ import { registerApplicationModules } from './subscribers.mjs'
 const usage =
   'Usage: pnpm --filter web restore:drill --evidence /absolute/path/evidence.json < isolated-drill.json. Reads local-only configuration from stdin; the evidence file must not exist.'
 
-async function readConfiguration() {
+export async function readConfiguration() {
   const chunks = []
   let bytes = 0
   for await (const chunk of process.stdin) {
@@ -23,8 +24,13 @@ async function readConfiguration() {
 }
 
 async function execute(configuration) {
-  const { runRestoreDrill } = await import('../src/server/operations/restore-drill.ts')
-  return runRestoreDrill(configuration)
+  const [{ runRestoreDrill }, { readBackupKey }] = await Promise.all([
+    import('../src/server/operations/restore-drill.ts'),
+    import('../src/server/operations/backup-crypto.ts'),
+  ])
+  return runRestoreDrill(configuration, {
+    loadBackupKey: () => readBackupKey(process.env.MAGAZINE_BACKUP_KEY_FILE),
+  })
 }
 
 export async function runRestoreDrillCommand({
@@ -64,7 +70,11 @@ export async function runRestoreDrillCommand({
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  existsSync(process.argv[1]) &&
+  realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   const hooks = registerApplicationModules()
   try {
     process.exitCode = await runRestoreDrillCommand()

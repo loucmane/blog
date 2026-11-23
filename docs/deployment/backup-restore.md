@@ -2,17 +2,16 @@
 
 **Status:** Canonical requirements; implementation provisional
 
-**Updated:** 2026-11-13
+**Updated:** 2026-11-23
 
 ## Task 42 Foundation
 
 Task 42 implements provider-independent logical backup command plans, strict portable
 content export/import, media manifests with application-owned SHA-256, and deterministic restore
 comparison. Its isolated Docker drill proves PostgreSQL 18.4 custom-format dump/restore and
-S3-compatible original copying without production credentials or data. Hosted-provider PITR,
-independent encrypted retention and production RPO/RTO evidence remain Task 46. The local
-repeatable drill below implements blog-0046.1; its measurements describe the isolated fixture,
-not the recovery time or backup freshness of a managed deployment.
+S3-compatible original copying without production credentials or data. The independent backup
+command implements blog-0046.2. Hosted-provider PITR and managed-deployment RPO/RTO evidence
+remain Task 46. The repeatable drill implements blog-0046.1 and measures the isolated fixture.
 
 ## Objectives
 
@@ -43,6 +42,100 @@ Use the database provider's point-in-time recovery and object-storage durability
 - Copy originals to an independent S3-compatible target or offline archive.
 - Compare checksums and report missing/orphaned objects.
 - Treat renditions as rebuildable and exclude them unless recovery-time evidence justifies inclusion.
+
+### Run The Independent Backup
+
+Run a backup daily at 02:00 UTC, before destructive migrations, and after recovery. Use an
+operator host with Node 24, PostgreSQL 18 `pg_dump`, enough memory for the archive, and a
+private, existing staging directory (mode `0700`) outside Git. The source database role needs
+read access to the application database. The object-store role needs only list and get access
+to the source bucket. PostgreSQL uses a single exported read-only snapshot for the migration
+ledger, table fingerprints, media inventory, and logical archive. Each listed original must
+match the SHA-256 and size from that snapshot. A nonzero `unreferencedObjects` count reports
+bucket objects absent from the snapshot's original and rendition inventories. Check whether
+these are recent writes before treating them as orphans.
+
+Keep source configuration in a private JSON file (mode `0600`) outside Git. Use a direct
+database endpoint and an HTTPS object endpoint. The database URL supports `sslmode` as its
+only query parameter. Hosted connections use certificate and hostname verification, including
+when the configuration requests `require`. The PostgreSQL CLI uses the system trust store.
+Literal loopback endpoints allow unencrypted connections for local fixtures.
+
+```json
+{
+  "databaseUrl": "postgresql://<backup-user>:<password>@<database-host>/<database>?sslmode=verify-full",
+  "objects": {
+    "endpoint": "https://<object-storage-host>",
+    "bucket": "<originals-bucket>",
+    "region": "<region>",
+    "accessKeyId": "<read-only-access-id>",
+    "secretAccessKey": "<read-only-secret>"
+  }
+}
+```
+
+Set `MAGAZINE_BACKUP_KEY_FILE` to the absolute path of an operator-owned regular file with
+mode `0600` or `0400`. Its contents are 32 random bytes encoded as unpadded base64url, with
+an optional final newline. From a private directory, this command generates a new key file
+without displaying its contents or overwriting an existing key:
+
+```sh
+node --input-type=module -e 'import { randomBytes } from "node:crypto"; import { writeFileSync } from "node:fs"; writeFileSync(process.argv[1], randomBytes(32).toString("base64url") + "\n", { flag: "wx", mode: 0o600 })' /absolute/private/backup-key
+```
+
+Store an offline copy in separate custody from both the backup host and storage provider.
+Losing every key copy makes its backup sets unrecoverable. To rehearse key recovery, restore
+the offline key into a private file with the same permissions, point `MAGAZINE_BACKUP_KEY_FILE`
+there, verify a downloaded set, and use a synthetic set for the isolated drill. Record only
+the set ID, date, and outcome. Keep the previous key while any sets encrypted with it remain.
+Use a separate retention directory per key when rotating.
+
+```sh
+pnpm --filter web backup:create --directory /absolute/private/backup-staging < /absolute/private/backup-source.json
+pnpm --filter web backup:verify --directory '/absolute/private/backup-staging/backup-<id>'
+```
+
+Use the set directory name returned by `backup:create` in place of `backup-<id>` in these
+examples. Copy the entire directory, preserving its name, to independent storage outside the
+database and object-storage provider accounts. Download and verify the copy before pruning.
+Keep storage access restricted and audited. The set contains `database.enc`,
+`media-manifest.enc` (original keys, asset IDs that reference rights records, MIME types,
+checksums, and table fingerprints), and a numbered encrypted file per original. The public
+manifest records timestamps, migration identity, tool versions, and plaintext and ciphertext
+sizes and SHA-256 digests. It contains no URLs, object names, credentials, or personal data.
+`manifest.mac` authenticates the manifest itself. Encrypted files use AES-256-GCM in 1 MiB
+chunks with per-chunk authentication and per-set derived keys. Verification also checks exact
+file sizes and both digests. The PostgreSQL archive stays in memory and is capped at 256 MiB.
+Schedule capacity review before reaching that limit and treat a size refusal as a backup failure.
+
+### Prune Retention
+
+After a successful independent copy and verification, preview the prune plan and then apply it
+to the private filesystem archive root. Serialize these operations with any external copy or
+cleanup routine that can replace files in that root. For off-host media, follow the same
+verified plan against independently stored sets.
+
+```sh
+pnpm --filter web backup:prune --directory /absolute/private/backup-archive --dry-run
+pnpm --filter web backup:prune --directory /absolute/private/backup-archive
+```
+
+The command retains the newest verified set in each of the seven most recent populated UTC
+days, four most recent populated UTC weeks (Monday start), and twelve most recent populated
+UTC months. A set can satisfy multiple periods. The newest verified set always survives.
+Only complete sets that pass verification under the configured key are eligible for deletion.
+The JSON includes the kept set names, the names selected for removal, and any candidate sets
+skipped with their failure codes. Skips produce a nonzero exit even if eligible older sets
+were removed. An interrupted run can leave a hidden staging or quarantine directory. Review
+these against the last backup result before doing any manual cleanup.
+
+Page the operator on a failed command or when the newest independently stored verified
+snapshot is older than 24 hours. Preserve the last verified sets and inspect the fixed
+failure code. `invalid_key_file` calls for checking custody, path, format, and permissions.
+`authentication_failed` calls for confirming the key and inspecting the storage copy.
+`truncated_file` or `checksum_mismatch` calls for re-copying from a trusted verified set or
+re-running the backup. Investigate `missing_object` against the source database and bucket
+before retrying. Keep only redacted evidence in incident records.
 
 ### Portable Product Export
 
@@ -135,6 +228,13 @@ hyphens (buckets). Only literal `127.0.0.1` and `::1` endpoints are accepted; co
 query parameters, remote addresses and existing targets are refused. Do not use port forwards
 to a shared or production service. The isolated acknowledgement describes a real prerequisite.
 
+To rehearse recovery from an encrypted synthetic set, replace the `source` object in the drill
+configuration with `{"backupDirectory":"/absolute/private/backup-staging/backup-…"}` and supply
+`MAGAZINE_BACKUP_KEY_FILE` as above. Keep the target isolated and fresh. The drill verifies the
+complete set before writing to the target and compares the restored rows with fingerprints
+captured at backup time. Encrypted-source evidence records the set ID. Use a fresh synthetic
+backup to exercise the 24-hour RPO as well as the restore.
+
 The command performs these checks:
 
 - Opens a read-only repeatable-read PostgreSQL snapshot. The custom-format logical dump,
@@ -149,9 +249,10 @@ The command performs these checks:
   consent and subscription history, authentication records and audit rows. This is intentionally
   strict: a forward migration that changes existing row representations or adds tables can
   require an explicitly reviewed comparison update. A mismatch never passes automatically.
-- Lists the whole source and target bucket with pagination; copies and hashes original bytes;
-  detects missing originals, orphaned objects and checksum/size differences. Source objects
-  referenced as renditions are recognized but not copied; renditions remain rebuildable.
+- Lists the whole target bucket with pagination and checks original bytes, missing originals,
+  orphaned objects and checksum or size differences. For a live fixture source it also lists
+  the source bucket and recognizes renditions. For an encrypted source it authenticates the
+  archived originals and uses the encrypted inventory to restore them.
 - Generates and validates the versioned portable content export on the restored copy,
   including subscribers and consent. Relationship validation also checks publication and
   scheduling invariants. It does not dispatch outbox work or send subscription email.
@@ -197,7 +298,7 @@ or worker at a restored target as part of this command.
 
 ### Managed Deployment Evidence Still Required
 
-Provider PITR, independent encrypted backup retention (blog-0046.2), managed-scale RPO/RTO,
+Provider PITR, operation of the independent backup schedule, managed-scale RPO/RTO,
 representative public rendering and search (step 6), and designated test-owner sign-in on a
 restored copy (step 7) remain managed-deployment acceptance work under blog-0046. Provider
 PITR is an additional recovery layer, not proof from this logical-restore drill. The command

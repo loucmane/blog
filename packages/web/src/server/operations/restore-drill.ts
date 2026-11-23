@@ -1,12 +1,15 @@
 import { performance } from 'node:perf_hooks'
 
 import type { S3Client } from '@aws-sdk/client-s3'
-import type { Pool, PoolClient } from 'pg'
+import type { Pool } from 'pg'
 
 import { createPortableContentBundle, inspectPortableContentBundle } from '../content/portability'
 import { applyContentMigrations, readContentMigrations } from '../database/migrations'
 import { PostgresContentRepository } from '../database/postgres-content-repository'
 import { PostgresSubscriptionStore } from '../database/postgres-subscriptions'
+import { S3OriginalObjectStore } from '../database/s3-original-object-store'
+import { BackupError } from './backup-crypto'
+import { readVerifiedBackup } from './backup-set'
 import {
   DrillError,
   fingerprint,
@@ -14,17 +17,19 @@ import {
   measureRecovery,
   newDrillEvidence,
   restoreDrillConfig,
+  type DrillLocation,
   type DrillStage,
   type RestoreDrillEvidence,
 } from './restore-drill-contract'
 import {
   copyOriginals,
   createFreshBucket,
-  mediaManifest,
   s3DrillClient,
   verifyOriginals,
+  type DrillMediaObject,
 } from './restore-drill-media'
 import {
+  capturePostgresSnapshot,
   captureTables,
   compareTables,
   drillPool,
@@ -45,6 +50,7 @@ export async function runRestoreDrill(
     readonly tools?: PostgresToolRunner
     readonly now?: () => Date
     readonly monotonic?: () => number
+    readonly loadBackupKey?: () => Promise<Buffer>
   } = {},
 ): Promise<RestoreDrillEvidence> {
   const now = options.now ?? (() => new Date())
@@ -55,12 +61,11 @@ export async function runRestoreDrill(
   let restoreStart: number | null = null
   const pools: Pool[] = []
   const clients: S3Client[] = []
-  let snapshot: PoolClient | undefined
   try {
     const parsed = restoreDrillConfig.safeParse(input)
     if (!parsed.success) throw new DrillError('invalid_configuration')
     const config = parsed.data
-    const identity = (location: typeof config.source) => {
+    const identity = (location: DrillLocation) => {
       const url = new URL(location.databaseUrl)
       return fingerprint({
         database: `${url.hostname}:${url.port || '5432'}${url.pathname}`,
@@ -68,63 +73,102 @@ export async function runRestoreDrill(
         endpoint: location.objects.endpoint,
       })
     }
-    evidence.identities = { source: identity(config.source), target: identity(config.target) }
+    const location = config.source
     stage = 'preflight'
-    const source = drillPool(config.source.databaseUrl)
-    pools.push(source)
     const adminUrl = new URL(config.target.databaseUrl)
     const targetName = adminUrl.pathname.slice(1)
     adminUrl.pathname = '/postgres'
     const admin = drillPool(adminUrl.href)
     pools.push(admin)
-    evidence.tools.sourcePostgres = postgres18Version(
-      (await source.query('SHOW server_version')).rows[0].server_version,
-    )
     evidence.tools.targetPostgres = postgres18Version(
       (await admin.query('SHOW server_version')).rows[0].server_version,
-    )
-    evidence.tools.pgDump = postgres18Version(
-      (await tools('pg_dump', ['--version'])).toString('utf8'),
     )
     evidence.tools.pgRestore = postgres18Version(
       (await tools('pg_restore', ['--version'])).toString('utf8'),
     )
     const existing = await admin.query('SELECT 1 FROM pg_database WHERE datname = $1', [targetName])
     if (existing.rowCount) throw new DrillError('target_exists')
-    const from = s3DrillClient(config.source.objects)
     const to = s3DrillClient(config.target.objects)
-    clients.push(from, to)
+    clients.push(to)
     const migrations = await readContentMigrations()
     const reviewed = migrations.map(({ id, checksum }) => ({ id, checksum }))
     evidence.migrations.reviewedSha256 = fingerprint(reviewed)
 
     stage = 'backup'
-    snapshot = await source.connect()
-    await snapshot.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
-    await snapshot.query("SET LOCAL idle_in_transaction_session_timeout = '15min'")
-    evidence.snapshotAt = now().toISOString()
-    const snapshotId: string = (await snapshot.query('SELECT pg_export_snapshot() AS id')).rows[0]
-      .id
-    const sourceMigrations = await migrationIdentity(snapshot)
-    evidence.migrations.sourceSha256 = fingerprint(sourceMigrations)
-    requireMigrationPrefix(sourceMigrations, migrations)
-    evidence.tables.source = await captureTables(snapshot)
-    const manifest = await mediaManifest(snapshot)
-    evidence.media.expected = manifest.originals.length
-    const dump = await tools(
-      'pg_dump',
-      ['--format=custom', '--no-owner', '--no-privileges', '--snapshot', snapshotId],
-      config.source.databaseUrl,
-    )
-    if (!dump.length) throw new DrillError('operation_failed')
-    evidence.backup = {
-      sha256: hash(dump),
-      bytes: dump.length,
-      mediaManifestSha256: fingerprint(manifest.originals),
+    let dump: Buffer
+    let originals: readonly DrillMediaObject[]
+    let copyMedia: () => Promise<void>
+    if ('backupDirectory' in location) {
+      if (!options.loadBackupKey) throw new BackupError('invalid_key_file')
+      const set = await readVerifiedBackup(
+        location.backupDirectory,
+        await options.loadBackupKey(),
+        true,
+      )
+      const { manifest, catalog } = set
+      requireMigrationPrefix(manifest.migrations, migrations)
+      evidence.identities = { source: hash(manifest.id), target: identity(config.target) }
+      evidence.snapshotAt = manifest.snapshotAt
+      evidence.tools.sourcePostgres = manifest.tools.postgres
+      evidence.tools.pgDump = manifest.tools.pgDump
+      evidence.migrations.sourceSha256 = fingerprint(manifest.migrations)
+      evidence.tables.source = catalog.tables
+      evidence.backup = {
+        setId: manifest.id,
+        sha256: manifest.database.sha256,
+        bytes: manifest.database.bytes,
+        mediaManifestSha256: manifest.mediaManifest.sha256,
+      }
+      dump = set.archive
+      originals = catalog.originals
+      copyMedia = async () => {
+        const store = new S3OriginalObjectStore(to, config.target.objects.bucket)
+        for (const [index, object] of catalog.originals.entries()) {
+          const body = await set.readOriginal(index, true)
+          await store.putOriginal({ ...object, body }, AbortSignal.timeout(60_000))
+          evidence.media.copied += 1
+        }
+      }
+    } else {
+      evidence.identities = { source: identity(location), target: identity(config.target) }
+      const source = drillPool(location.databaseUrl)
+      pools.push(source)
+      evidence.tools.sourcePostgres = postgres18Version(
+        (await source.query('SHOW server_version')).rows[0].server_version,
+      )
+      evidence.tools.pgDump = postgres18Version(
+        (await tools('pg_dump', ['--version'])).toString('utf8'),
+      )
+      const snapshot = await capturePostgresSnapshot({
+        pool: source,
+        databaseUrl: location.databaseUrl,
+        tools,
+        reviewed: migrations,
+        now,
+      })
+      evidence.snapshotAt = snapshot.snapshotAt
+      evidence.migrations.sourceSha256 = fingerprint(snapshot.migrations)
+      evidence.tables.source = snapshot.tables
+      dump = snapshot.archive
+      originals = snapshot.media.originals
+      evidence.backup = {
+        sha256: hash(dump),
+        bytes: dump.length,
+        mediaManifestSha256: fingerprint(originals),
+      }
+      const from = s3DrillClient(location.objects)
+      clients.push(from)
+      copyMedia = () =>
+        copyOriginals({
+          source: from,
+          target: to,
+          sourceBucket: location.objects.bucket,
+          targetBucket: config.target.objects.bucket,
+          manifest: snapshot.media,
+          evidence,
+        })
     }
-    await snapshot.query('ROLLBACK')
-    snapshot.release()
-    snapshot = undefined
+    evidence.media.expected = originals.length
 
     stage = 'restore'
     restoreStart = monotonic()
@@ -140,14 +184,7 @@ export async function runRestoreDrill(
     )
     const target = drillPool(config.target.databaseUrl)
     pools.push(target)
-    await copyOriginals({
-      source: from,
-      target: to,
-      sourceBucket: config.source.objects.bucket,
-      targetBucket: config.target.objects.bucket,
-      manifest,
-      evidence,
-    })
+    await copyMedia()
 
     stage = 'migrations'
     const restoredMigrations = await migrationIdentity(target)
@@ -165,7 +202,7 @@ export async function runRestoreDrill(
     stage = 'comparison'
     evidence.tables.restored = await captureTables(target)
     evidence.failures.push(...compareTables(evidence.tables.source, evidence.tables.restored))
-    await verifyOriginals(to, config.target.objects.bucket, manifest.originals, evidence)
+    await verifyOriginals(to, config.target.objects.bucket, originals, evidence)
 
     stage = 'export'
     const repository = new PostgresContentRepository(target)
@@ -179,19 +216,14 @@ export async function runRestoreDrill(
     if (inspection.status !== 'valid') evidence.failures.push({ code: 'export_invalid', stage })
   } catch (error) {
     evidence.failures.push({
-      code: error instanceof DrillError ? error.code : 'operation_failed',
+      code:
+        error instanceof DrillError || error instanceof BackupError
+          ? error.code
+          : 'operation_failed',
       stage,
     })
   } finally {
     // Connection cleanup only. Retain isolated targets for diagnosis and operator teardown.
-    if (snapshot) {
-      try {
-        await snapshot.query('ROLLBACK')
-      } catch {
-        evidence.failures.push({ code: 'operation_failed', stage: 'cleanup' })
-      }
-      snapshot.release()
-    }
     for (const pool of pools) {
       try {
         await pool.end()
