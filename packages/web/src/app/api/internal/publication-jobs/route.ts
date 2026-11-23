@@ -10,6 +10,7 @@ import {
 } from '@/server/owner/config'
 import { runDuePublicationJobs } from '@/server/owner/publication-worker'
 import { getOwnerRuntime } from '@/server/owner/runtime'
+import { limitInternalAuthenticationFailure } from '@/server/security/rate-limit'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -24,6 +25,8 @@ export async function POST(request: Request) {
     }
     const provided = readBearerToken(request.headers.get('authorization'))
     if (!secureTokenMatches(provided, expectedToken)) {
+      const limited = limitInternalAuthenticationFailure(request, 'publication-jobs')
+      if (limited) return limited
       return NextResponse.json({ error: 'Publication worker is unavailable.' }, { status: 404 })
     }
 

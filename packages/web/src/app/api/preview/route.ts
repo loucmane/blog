@@ -16,6 +16,7 @@ import {
 } from '@/lib/request-security'
 import { resolveRuntimeSiteUrl } from '@/lib/site-url'
 import { observeRequest } from '@/server/observability/request'
+import { limitPreviewEnable } from '@/server/security/rate-limit'
 
 export async function POST(request: NextRequest) {
   return observeRequest(request, async () => {
@@ -43,7 +44,10 @@ export async function POST(request: NextRequest) {
       if (parsedBody.reason === 'too-large') {
         return NextResponse.json({ error: 'The preview request is too large.' }, { status: 413 })
       }
-      return NextResponse.json({ error: 'The preview request is not valid.' }, { status: 400 })
+      return (
+        limitPreviewEnable(request) ??
+        NextResponse.json({ error: 'The preview request is not valid.' }, { status: 400 })
+      )
     }
 
     if (
@@ -52,16 +56,19 @@ export async function POST(request: NextRequest) {
       Array.isArray(parsedBody.value) ||
       Object.keys(parsedBody.value).some((key) => !['slug', 'token'].includes(key))
     ) {
-      return NextResponse.json({ error: 'The preview request is not valid.' }, { status: 400 })
+      return (
+        limitPreviewEnable(request) ??
+        NextResponse.json({ error: 'The preview request is not valid.' }, { status: 400 })
+      )
     }
 
     const slug = normalizeStorySlug('slug' in parsedBody.value ? parsedBody.value.slug : null)
     const tokenValue = 'token' in parsedBody.value ? parsedBody.value.token : null
     const token = typeof tokenValue === 'string' ? tokenValue : undefined
     if (!slug || !previewTokenMatches(token, slug, previewTokenSecret)) {
-      return NextResponse.json(
-        { error: 'This preview link is invalid or expired.' },
-        { status: 401 },
+      return (
+        limitPreviewEnable(request) ??
+        NextResponse.json({ error: 'This preview link is invalid or expired.' }, { status: 401 })
       )
     }
 

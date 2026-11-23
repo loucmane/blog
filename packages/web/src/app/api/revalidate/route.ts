@@ -13,6 +13,7 @@ import { expirePublicReader } from '@/reader/cache'
 import { normalizeReaderSlug } from '@/reader/slug'
 import { resolveReaderStore } from '@/reader/store'
 import { observeRequest } from '@/server/observability/request'
+import { limitInternalAuthenticationFailure } from '@/server/security/rate-limit'
 
 export async function POST(request: NextRequest) {
   return observeRequest(request, async () => {
@@ -30,6 +31,8 @@ export async function POST(request: NextRequest) {
 
     const providedToken = readBearerToken(request.headers.get('authorization'))
     if (!secureTokenMatches(providedToken, revalidationSecret)) {
+      const limited = limitInternalAuthenticationFailure(request, 'revalidate')
+      if (limited) return limited
       return NextResponse.json(
         { error: 'This revalidation request is not authorized.' },
         { status: 401 },
