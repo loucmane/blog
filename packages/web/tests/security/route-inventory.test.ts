@@ -27,6 +27,8 @@ const fixturePath = 'app/api/planted/route.ts'
 const fixture = (source: string) => new Map([[fixturePath, source]])
 
 describe('route and server-action authorization inventory', () => {
+  // Parses every source under packages/web/src with the TypeScript compiler; under CI coverage
+  // that took 5.4 s, past vitest's 5 s default.
   it('classifies every discovered export and checks each handler against its reviewed guard and evidence', () => {
     const files = sources()
     expect(inventoryProblems(files, routeClassifications)).toEqual([])
@@ -37,7 +39,7 @@ describe('route and server-action authorization inventory', () => {
       for (const evidence of rule.evidence)
         expect(existsSync(path.resolve(evidence)), evidence).toBe(true)
     }
-  })
+  }, 30_000)
 
   it('rejects a newly planted unguarded POST, even when someone classifies it', () => {
     const files = fixture('export async function POST() { return Response.json({ ok: true }) }')
