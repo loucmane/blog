@@ -5,7 +5,10 @@ import {
   type OwnerJob,
   type OwnerJobState,
   type OwnerJobView,
+  type OwnerRecoveryView,
 } from '@/server/observability/jobs'
+
+import { RecoveryStatus } from './recovery-status'
 
 const stateDescriptions: Readonly<Record<OwnerJobState, string>> = {
   'needs-attention': 'The site has stopped trying these. Each says why; a maintainer can fix them.',
@@ -79,12 +82,15 @@ function JobCard({ job }: { readonly job: OwnerJob }) {
 /**
  * The owner's publishing jobs: how many are in each of the five states, then the jobs of each
  * state that has any, the most urgent state first. Each job says in plain language what it does
- * and what became of it, and opens onto the stored detail a maintainer needs.
+ * and what became of it, and opens onto the stored detail a maintainer needs. The last backup and
+ * restore drill follow.
  */
 export function JobBoard({
+  recovery,
   timeZone,
   view,
 }: {
+  readonly recovery: OwnerRecoveryView | null
   readonly timeZone: string
   readonly view: OwnerJobView
 }) {
@@ -159,6 +165,8 @@ export function JobBoard({
       <p className="mt-10 text-sm text-muted-foreground">
         Cancelled and replaced schedules are not listed: nothing is sent for them.
       </p>
+
+      <RecoveryStatus recovery={recovery} />
     </div>
   )
 }

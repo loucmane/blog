@@ -10,8 +10,9 @@ import {
   type S3Client,
 } from '@aws-sdk/client-s3'
 import { Pool } from 'pg'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { runBackupCommand } from '../../../scripts/backup.mjs'
 import { MediaOriginalService } from '../content/media'
 import { createBackup, pruneBackups, verifyBackup } from '../operations/backup'
 import { hash, type DrillLocation } from '../operations/restore-drill-contract'
@@ -201,6 +202,79 @@ describe('independent backup with disposable PostgreSQL and S3', () => {
     expect(evidence.tables.restored).toEqual(evidence.tables.source)
     expect(evidence.tables.restored.subscribers?.count).toBe(1)
     expect(evidence.media).toMatchObject({ expected: 1, copied: 1, verified: 1 })
+  }, 120_000)
+
+  it('records each backup:create run in the application database, and backs that table up', async () => {
+    const keyFile = path.join(root, 'operator-key')
+    await writeFile(keyFile, `${key.toString('base64url')}\n`, { mode: 0o600 })
+    const output = vi.fn()
+    const error = vi.fn()
+    // The source fixture is the application database here: the runs land beside what is backed up.
+    const create = (args: { DATABASE_URL: string; input?: unknown }) =>
+      runBackupCommand({
+        args: ['create', '--directory', root],
+        // Only these two names are read; the cast drops Next's augmented required fields.
+        environment: {
+          MAGAZINE_BACKUP_KEY_FILE: keyFile,
+          DATABASE_URL: args.DATABASE_URL,
+        } as unknown as NodeJS.ProcessEnv,
+        input: async () => ('input' in args ? args.input : source),
+        create: (target: string, backupKey: Buffer, configuration: unknown) =>
+          createBackup(target, backupKey, configuration, { tools: dockerTools }),
+        output,
+        error,
+      })
+    const runs = async () =>
+      (
+        await sourcePool.query(
+          `SELECT kind, outcome, failure_reason, rpo_ms, rto_ms, started_at <= finished_at AS ordered
+           FROM operation_runs ORDER BY id`,
+        )
+      ).rows
+
+    expect(await create({ DATABASE_URL: source.databaseUrl })).toBe(0)
+    expect(await runs()).toEqual([
+      {
+        failure_reason: null,
+        kind: 'backup',
+        ordered: true,
+        outcome: 'succeeded',
+        rpo_ms: null,
+        rto_ms: null,
+      },
+    ])
+
+    // The second backup holds the first run: an application table like any other.
+    expect(await create({ DATABASE_URL: source.databaseUrl })).toBe(0)
+    const second = JSON.parse(output.mock.calls.at(-1)?.[0] as string).name as string
+    const evidence = await runRestoreDrill(
+      { isolated: true, source: { backupDirectory: path.join(root, second) }, target },
+      { tools: dockerTools, loadBackupKey: async () => key },
+    )
+    expect(evidence.failures).toEqual([])
+    expect(evidence.status).toBe('passed')
+    expect(evidence.tables.source.operation_runs?.count).toBe(1)
+    expect(evidence.tables.restored).toEqual(evidence.tables.source)
+
+    // A failed backup is recorded with its fixed code.
+    expect(await create({ DATABASE_URL: source.databaseUrl, input: {} })).toBe(1)
+    expect((await runs()).at(-1)).toMatchObject({
+      failure_reason: 'invalid_configuration',
+      outcome: 'failed',
+    })
+
+    // A backup whose run cannot be recorded keeps its set and exits 3, naming no connection detail.
+    const unreachable = new URL(source.databaseUrl)
+    unreachable.port = '1'
+    error.mockClear()
+    expect(await create({ DATABASE_URL: unreachable.href })).toBe(3)
+    expect(error).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('(operation_failed)'))
+    const kept = JSON.parse(output.mock.calls.at(-1)?.[0] as string).name as string
+    expect((await verifyBackup(path.join(root, kept), key)).id).toBe(kept.slice('backup-'.length))
+    for (const secret of [unreachable.href, decodeURIComponent(unreachable.password)]) {
+      expect(JSON.stringify(error.mock.calls)).not.toContain(secret)
+    }
+    expect(await runs()).toHaveLength(3)
   }, 120_000)
 
   it('prunes only verified redundant sets and repeats without removing the latest', async () => {

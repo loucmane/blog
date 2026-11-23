@@ -150,6 +150,7 @@ describe('PostgreSQL and media persistence integration', () => {
       '0008_subscribers_consent',
       '0009_distribution_telemetry',
       '0010_subscriber_privacy_events',
+      '0011_operation_runs',
     ]
     expect(await applyContentMigrations(pool, migrations)).toEqual({
       applied: migrationIds,
@@ -474,6 +475,7 @@ describe('PostgreSQL and media persistence integration', () => {
         '0008_subscribers_consent',
         '0009_distribution_telemetry',
         '0010_subscriber_privacy_events',
+        '0011_operation_runs',
       ],
     })
 

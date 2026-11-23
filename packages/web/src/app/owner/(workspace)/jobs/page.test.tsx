@@ -14,7 +14,12 @@ import { CURRENT_CONTENT_DOCUMENT_VERSION } from '@/server/content/document'
 import type { OutboxEvent, PublicationJob } from '@/server/content/domain'
 import { InMemoryContentRepository } from '@/server/content/in-memory-repository'
 import { ContentService } from '@/server/content/service'
-import type { OwnerJobView } from '@/server/observability/jobs'
+import {
+  projectRecoveryView,
+  recoveryRunbook,
+  type OwnerJobView,
+} from '@/server/observability/jobs'
+import type { OperationRun } from '@/server/operations/operation-runs'
 import { OwnerWorkspaceService } from '@/server/owner/workspace'
 
 import { JobBoard } from './job-board'
@@ -113,6 +118,26 @@ function region(name: string) {
   return screen.getByRole('region', { name })
 }
 
+function emptyView(): OwnerJobView {
+  return {
+    counts: {
+      'needs-attention': 0,
+      sending: 0,
+      sent: 0,
+      'waiting-to-retry': 0,
+      'waiting-to-send': 0,
+    },
+    jobs: {
+      'needs-attention': [],
+      sending: [],
+      sent: [],
+      'waiting-to-retry': [],
+      'waiting-to-send': [],
+    },
+    unlistedSent: 0,
+  }
+}
+
 afterEach(() => {
   cleanup()
 })
@@ -165,6 +190,84 @@ describe('owner publishing jobs page', () => {
     ])
     expect(waiting[1]).toHaveTextContent('Scheduled for')
     expect(within(region('Sent')).getByRole('listitem')).toHaveTextContent('Done at')
+    // The in-memory runtime has no database, so no backup or restore drill.
+    expect(region('Backups and restore drills')).toHaveTextContent(
+      'This site has no database, so there are no backups or restore drills to show.',
+    )
+  })
+
+  it('shows the last backup and restore drill, the drill’s recovery against target, and a next step when one needs attention', () => {
+    const now = new Date('2026-11-23T12:00:00.000Z')
+    const backup: OperationRun = {
+      failureReason: null,
+      finishedAt: '2026-11-23T02:10:00.000Z',
+      kind: 'backup',
+      outcome: 'succeeded',
+      rpoMs: null,
+      rtoMs: null,
+      startedAt: '2026-11-23T02:00:00.000Z',
+    }
+    const drill: OperationRun = {
+      failureReason: 'rto_exceeded',
+      finishedAt: '2026-11-20T15:00:00.000Z',
+      kind: 'restore-drill',
+      outcome: 'failed',
+      rpoMs: 5 * 60 * 60 * 1_000,
+      rtoMs: 5 * 60 * 60 * 1_000,
+      startedAt: '2026-11-20T10:00:00.000Z',
+    }
+    const recovery = projectRecoveryView(
+      { backup, restoreDrill: drill },
+      { formatTime: (instant) => `[${instant}]`, now },
+    )
+
+    render(<JobBoard recovery={recovery} timeZone="UTC" view={emptyView()} />)
+
+    const cards = within(region('Backups and restore drills')).getAllByRole('listitem')
+    expect(
+      cards.map((card) => within(card).getByRole('heading', { level: 3 }).textContent),
+    ).toEqual(['Backup', 'Restore drill'])
+    const [backupCard, drillCard] = cards as [HTMLElement, HTMLElement]
+    expect(backupCard).toHaveTextContent('Up to date')
+    expect(backupCard).toHaveTextContent(
+      'The last backup finished at [2026-11-23T02:10:00.000Z] and worked.',
+    )
+    expect(backupCard).not.toHaveTextContent('Next step')
+    expect(drillCard).toHaveTextContent('Needs attention')
+    expect(drillCard).toHaveTextContent('missed a recovery target')
+    expect(within(drillCard).getByText('Recovery point').nextElementSibling).toHaveTextContent(
+      'The restored copy was 5 hours old, within the 24-hour target.',
+    )
+    expect(within(drillCard).getByText('Recovery time').nextElementSibling).toHaveTextContent(
+      'The restore took 5 hours, over the 4-hour target.',
+    )
+    expect(drillCard).toHaveTextContent(`Next step: Ask your maintainer to bring the restore back`)
+    expect(drillCard).toHaveTextContent(recoveryRunbook)
+    const details = within(drillCard).getByText('Details for a maintainer').closest('details')!
+    expect(within(details).getByText('Failure code').nextElementSibling).toHaveTextContent(
+      'rto_exceeded',
+    )
+    expect(within(details).getByText('Recovery time (ms)').nextElementSibling).toHaveTextContent(
+      '18000000',
+    )
+    expect(within(backupCard).getByText('Details for a maintainer')).toBeInTheDocument()
+    expect(within(backupCard).queryByText('Recovery time (ms)')).not.toBeInTheDocument()
+  })
+
+  it('tells the owner when no backup or restore drill has been recorded yet', () => {
+    const recovery = projectRecoveryView(
+      { backup: null, restoreDrill: null },
+      { formatTime: String, now: new Date('2026-11-23T12:00:00.000Z') },
+    )
+
+    render(<JobBoard recovery={recovery} timeZone="UTC" view={emptyView()} />)
+
+    const section = within(region('Backups and restore drills'))
+    expect(section.getAllByText('Needs attention')).toHaveLength(2)
+    expect(section.getByText('No backup has been recorded yet.')).toBeInTheDocument()
+    expect(section.getByText('No restore drill has been recorded yet.')).toBeInTheDocument()
+    expect(section.queryByText('Details for a maintainer')).not.toBeInTheDocument()
+    expect(section.getAllByText(/^Next step:/)).toHaveLength(2)
   })
 
   it('reads nothing before the owner is signed in', async () => {
@@ -175,25 +278,11 @@ describe('owner publishing jobs page', () => {
   })
 
   it('says when there are no jobs yet, and how many older sent jobs are not listed', () => {
-    const empty: OwnerJobView = {
-      counts: {
-        'needs-attention': 0,
-        sending: 0,
-        sent: 0,
-        'waiting-to-retry': 0,
-        'waiting-to-send': 0,
-      },
-      jobs: {
-        'needs-attention': [],
-        sending: [],
-        sent: [],
-        'waiting-to-retry': [],
-        'waiting-to-send': [],
-      },
-      unlistedSent: 0,
-    }
+    const empty = emptyView()
 
-    const { unmount } = render(<JobBoard timeZone="Europe/Stockholm" view={empty} />)
+    const { unmount } = render(
+      <JobBoard recovery={null} timeZone="Europe/Stockholm" view={empty} />,
+    )
 
     expect(screen.getByRole('heading', { name: 'No jobs yet' })).toBeInTheDocument()
     expect(screen.getByText(/Times are in Europe\/Stockholm/)).toBeInTheDocument()
@@ -224,6 +313,7 @@ describe('owner publishing jobs page', () => {
     }
     render(
       <JobBoard
+        recovery={null}
         timeZone="UTC"
         view={{
           ...empty,

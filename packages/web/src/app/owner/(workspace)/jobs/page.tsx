@@ -14,6 +14,6 @@ export const metadata: Metadata = {
 
 export default async function OwnerJobsPage() {
   await requireOwnerPageSession()
-  const { timeZone, view } = await ownerJobViewFor(getOwnerRuntime())
-  return <JobBoard timeZone={timeZone} view={view} />
+  const { recovery, timeZone, view } = await ownerJobViewFor(getOwnerRuntime())
+  return <JobBoard recovery={recovery} timeZone={timeZone} view={view} />
 }

@@ -103,6 +103,11 @@ test('follows a scheduled story’s jobs in plain language, with details a maint
     await expect(followUps.filter({ has: page.getByRole('heading', { name: job }) })).toHaveCount(1)
   }
 
+  // Owner test mode keeps content in memory, so it has no backup or restore drill to show.
+  await expect(
+    page.getByRole('region', { name: 'Backups and restore drills', exact: true }),
+  ).toContainText('This site has no database, so there are no backups or restore drills to show.')
+
   const details = sent.getByText('Details for a maintainer', { exact: true })
   await details.focus()
   await expect(details).toBeFocused()
@@ -119,7 +124,7 @@ test('follows a scheduled story’s jobs in plain language, with details a maint
   expect(await seriousAccessibilityViolations(page)).toEqual([])
 })
 
-test('reports the health of the stores and the job queue, uncached and without secrets', async ({
+test('reports the health of the stores, the job queue, backups and drills, uncached and without secrets', async ({
   request,
 }) => {
   const response = await request.get('/api/health', {
@@ -135,9 +140,12 @@ test('reports the health of the stores and the job queue, uncached and without s
   expect(body).not.toContain('owner@example.test')
   expect(JSON.parse(body)).toMatchObject({
     checks: {
+      // The in-memory owner test runtime has no database, so no backup or restore drill.
+      backup: { status: 'not_configured' },
       database: { status: 'up' },
       email: { status: 'configured_for_development' },
       jobQueue: { status: expect.stringMatching(/^(up|degraded)$/) },
+      restoreDrill: { status: 'not_configured' },
       search: { status: 'not_configured' },
     },
     correlationId: 'browser-health-check-0001',

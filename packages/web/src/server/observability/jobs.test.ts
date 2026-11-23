@@ -6,16 +6,20 @@ import type { Clock } from '../content/ports'
 import { OutboxDispatcher } from '../outbox/dispatcher'
 import { InMemoryOutboxStore } from '../outbox/in-memory-outbox-store'
 import type { OutboxHandler } from '../outbox/ports'
+import type { OperationRun } from '../operations/operation-runs'
 import { outboxRetryDelaysMs } from '../outbox/retry'
 import {
   defaultJobBacklogMs,
   defaultListedSentJobs,
   jobQueueFinding,
   jobRecordSource,
+  ownerDuration,
   ownerJobStateNames,
   ownerJobStates,
   ownerTimeFormatter,
   projectJobView,
+  projectRecoveryView,
+  recoveryRunbook,
   type JobRecords,
   type OwnerJobState,
 } from './jobs'
@@ -530,5 +534,180 @@ describe('owner job view', () => {
       '3 Nov 2026, 10:00',
     )
     expect(ownerTimeFormatter('UTC')('2026-11-03T09:00:00.000Z')).toBe('3 Nov 2026, 09:00')
+  })
+})
+
+describe('owner view of backups and restore drills', () => {
+  const hour = 60 * minute
+  const day = 24 * hour
+
+  function run(kind: OperationRun['kind'], ageMs: number, overrides: Partial<OperationRun> = {}) {
+    const finishedAt = new Date(now.valueOf() - ageMs).toISOString()
+    return {
+      failureReason: null,
+      finishedAt,
+      kind,
+      outcome: 'succeeded',
+      rpoMs: kind === 'backup' ? null : 3 * hour + 5 * minute,
+      rtoMs: kind === 'backup' ? null : 12 * minute,
+      startedAt: finishedAt,
+      ...overrides,
+    } satisfies OperationRun
+  }
+
+  it('says when nothing ran yet, and what to do about it', () => {
+    const view = projectRecoveryView({ backup: null, restoreDrill: null }, options)
+
+    expect(view.backup).toEqual({
+      ageMs: null,
+      finding: 'never_run',
+      lastRun: null,
+      measurements: [],
+      nextStep: `Ask your maintainer to set up the daily backup that ${recoveryRunbook} describes.`,
+      summary: 'No backup has been recorded yet.',
+      title: 'Backup',
+    })
+    expect(view.restoreDrill).toMatchObject({
+      ageMs: null,
+      finding: 'never_run',
+      measurements: [],
+      nextStep: `Ask your maintainer to run the restore drill that ${recoveryRunbook} describes.`,
+      summary: 'No restore drill has been recorded yet.',
+    })
+  })
+
+  it('shows a recent backup and drill as up to date, with the drill’s recovery point and time against target', () => {
+    const backup = run('backup', 2 * hour)
+    const drill = run('restore-drill', 3 * day)
+
+    const view = projectRecoveryView({ backup, restoreDrill: drill }, options)
+
+    expect(view.backup).toEqual({
+      ageMs: 2 * hour,
+      finding: null,
+      lastRun: backup,
+      measurements: [],
+      nextStep: null,
+      summary: `The last backup finished at <${backup.finishedAt}> and worked.`,
+      title: 'Backup',
+    })
+    expect(view.restoreDrill).toMatchObject({
+      finding: null,
+      lastRun: drill,
+      nextStep: null,
+      summary: `The last restore drill finished at <${drill.finishedAt}> and worked.`,
+    })
+    expect(view.restoreDrill.measurements).toEqual([
+      {
+        label: 'Recovery point',
+        met: true,
+        text: 'The restored copy was 3 hours 5 minutes old, within the 24-hour target.',
+      },
+      {
+        label: 'Recovery time',
+        met: true,
+        text: 'The restore took 12 minutes, within the 4-hour target.',
+      },
+    ])
+  })
+
+  it('names a stale, failed or off-target run plainly, each with one next step that points to the runbook', () => {
+    const stale = projectRecoveryView(
+      { backup: run('backup', 25 * hour), restoreDrill: run('restore-drill', 36 * day) },
+      options,
+    )
+    const failed = projectRecoveryView(
+      {
+        backup: run('backup', hour, { failureReason: 'missing_object', outcome: 'failed' }),
+        restoreDrill: run('restore-drill', hour, {
+          failureReason: 'row_count_mismatch',
+          outcome: 'failed',
+          rpoMs: null,
+          rtoMs: null,
+        }),
+      },
+      options,
+    )
+    const offTarget = projectRecoveryView(
+      {
+        backup: null,
+        restoreDrill: run('restore-drill', hour, {
+          failureReason: 'rpo_exceeded',
+          outcome: 'failed',
+          rpoMs: 2 * day + 3 * hour,
+        }),
+      },
+      options,
+    )
+
+    expect(stale.backup).toMatchObject({
+      finding: 'stale',
+      summary: `The last backup finished at <${at(-25 * 60)}> and worked, but that is more than 24 hours ago.`,
+    })
+    expect(stale.restoreDrill).toMatchObject({
+      finding: 'stale',
+      summary: `The last restore drill finished at <${at(-36 * 24 * 60)}> and worked, but that is more than 35 days ago.`,
+    })
+    expect(failed.backup).toMatchObject({
+      finding: 'last_run_failed',
+      summary: `The last backup did not work. It stopped at <${at(-60)}>.`,
+    })
+    expect(failed.restoreDrill).toMatchObject({
+      finding: 'last_run_failed',
+      summary: `The last restore drill did not work. It stopped at <${at(-60)}>.`,
+    })
+    expect(failed.restoreDrill.measurements.map(({ text }) => text)).toEqual([
+      'Not measured. The target is 24 hours.',
+      'Not measured. The target is 4 hours.',
+    ])
+    expect(offTarget.restoreDrill).toMatchObject({
+      finding: 'targets_missed',
+      summary: `The last restore drill finished at <${at(-60)}> but missed a recovery target.`,
+    })
+    expect(offTarget.restoreDrill.measurements[0]).toEqual({
+      label: 'Recovery point',
+      met: false,
+      text: 'The restored copy was 2 days 3 hours old, over the 24-hour target.',
+    })
+    const checks = [stale, failed, offTarget].flatMap(({ backup, restoreDrill }) => [
+      backup,
+      restoreDrill,
+    ])
+    for (const check of checks) {
+      expect(check.nextStep).toContain(recoveryRunbook)
+      expect(check.nextStep).toMatch(/^Ask your maintainer to /)
+    }
+    // Each finding of each kind has its own next step.
+    expect(new Set(checks.map(({ nextStep }) => nextStep)).size).toBe(checks.length)
+  })
+
+  it('states durations in whole units, never rounded up past a target', () => {
+    expect(
+      [
+        999,
+        1_000,
+        59_999,
+        minute,
+        2 * minute,
+        hour,
+        hour + minute,
+        24 * hour - 1,
+        2 * day,
+        2 * day + hour,
+        3 * day + 2 * hour,
+      ].map(ownerDuration),
+    ).toEqual([
+      'less than a second',
+      '1 second',
+      '59 seconds',
+      '1 minute',
+      '2 minutes',
+      '1 hour',
+      '1 hour 1 minute',
+      '23 hours 59 minutes',
+      '2 days',
+      '2 days 1 hour',
+      '3 days 2 hours',
+    ])
   })
 })

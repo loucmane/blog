@@ -8,7 +8,13 @@ import {
   recoveryTargets,
   restoreDrillConfig,
 } from './restore-drill-contract'
-import { compareTables, postgres18Version, requireMigrationPrefix } from './restore-drill-postgres'
+import {
+  compareTables,
+  forwardMigrationTables,
+  postgres18Version,
+  requireMigrationPrefix,
+  tablesCreatedBy,
+} from './restore-drill-postgres'
 import { runRestoreDrill } from './restore-drill'
 
 function configuration() {
@@ -98,6 +104,40 @@ describe('isolated restore drill boundary', () => {
     }
     expect(compareTables(source, {})).toHaveLength(names.length)
     expect(compareTables({}, source)).toHaveLength(names.length)
+  })
+
+  it('accepts a table a reviewed forward migration created only while it is empty', () => {
+    const source = { articles: { count: 2, sha256: hash('articles') } }
+    const empty = { count: 0, sha256: fingerprint([]) }
+    const created = tablesCreatedBy(['0010_subscriber_privacy_events', '0011_operation_runs'])
+
+    expect([...created]).toEqual(['operation_runs'])
+    expect(forwardMigrationTables['0011_operation_runs']).toEqual(['operation_runs'])
+    expect(compareTables(source, { ...source, operation_runs: empty }, created)).toEqual([])
+    // Rows the source could not have held, an unreviewed table, or one missing from the restore fail.
+    for (const [restored, subject] of [
+      [{ ...source, operation_runs: { count: 1, sha256: hash('row') } }, 'operation_runs'],
+      [{ ...source, unreviewed_table: empty }, 'unreviewed_table'],
+    ] as const) {
+      expect(compareTables(source, restored, created)).toEqual([
+        { code: 'row_count_mismatch', stage: 'comparison', subject },
+      ])
+    }
+    expect(compareTables(source, { ...source, operation_runs: empty })).toEqual([
+      { code: 'row_count_mismatch', stage: 'comparison', subject: 'operation_runs' },
+    ])
+    // A table the source holds is compared as before, whatever migration created it.
+    const withRuns = { ...source, operation_runs: { count: 1, sha256: hash('run') } }
+    expect(
+      compareTables(
+        withRuns,
+        { ...source, operation_runs: { count: 1, sha256: hash('x') } },
+        created,
+      ),
+    ).toEqual([{ code: 'invariant_changed', stage: 'comparison', subject: 'operation_runs' }])
+    expect(compareTables(withRuns, source, created)).toEqual([
+      { code: 'row_count_mismatch', stage: 'comparison', subject: 'operation_runs' },
+    ])
   })
 
   it('requires a gap-free, known and checksum-identical migration prefix', () => {

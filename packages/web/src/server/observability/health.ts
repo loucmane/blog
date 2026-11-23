@@ -1,13 +1,25 @@
 import type { Clock } from '../content/ports'
 import type { Logger } from './logger'
 
-export const healthCheckNames = ['database', 'search', 'email', 'jobQueue'] as const
+/**
+ * `backup` and `restoreDrill` read the latest run the operator commands recorded in the
+ * application database (blog-0046.3); every other check uses its subsystem.
+ */
+export const healthCheckNames = [
+  'database',
+  'search',
+  'email',
+  'jobQueue',
+  'backup',
+  'restoreDrill',
+] as const
 export type HealthCheckName = (typeof healthCheckNames)[number]
 
 /**
- * `degraded` works but needs a look: slow, or holding jobs that wait too long or need attention.
- * `down` does not work: it failed or did not answer in time. `not_configured` is neither: this
- * site has not set the subsystem up.
+ * `degraded` works but needs a look: slow, holding jobs that wait too long or need attention, or a
+ * backup or restore drill that is missing, failed, out of date or missed its targets. `down` does
+ * not work: it failed or did not answer in time. `not_configured` is neither: this site has not
+ * set the subsystem up.
  */
 export type HealthCheckStatus =
   'configured_for_development' | 'degraded' | 'down' | 'not_configured' | 'up'
@@ -18,11 +30,39 @@ export type OverallHealthStatus = 'degraded' | 'down' | 'ok'
  * check: no error message, which could name a host, a user or a secret.
  */
 export type HealthReason =
-  'backlog' | 'misconfigured' | 'needs_attention' | 'slow' | 'timeout' | 'unavailable'
-/** What a probe that answered can report as wrong. */
-export type HealthFinding = 'backlog' | 'needs_attention'
+  | 'backlog'
+  | 'last_run_failed'
+  | 'misconfigured'
+  | 'needs_attention'
+  | 'never_run'
+  | 'slow'
+  | 'stale'
+  | 'targets_missed'
+  | 'timeout'
+  | 'unavailable'
+/**
+ * What a probe that answered can report as wrong. The job queue holds jobs that need attention
+ * (`needs_attention`) or wait too long (`backlog`). A backup or restore drill was never recorded
+ * (`never_run`), its latest run failed (`last_run_failed`), the drill missed a recovery target
+ * (`targets_missed`), or the run is older than allowed (`stale`).
+ */
+export type HealthFinding =
+  'backlog' | 'last_run_failed' | 'needs_attention' | 'never_run' | 'stale' | 'targets_missed'
+
+/** A probe's answer when it can also say how old the state it read is. */
+export interface HealthObservation {
+  /** Milliseconds since the state the probe read was recorded; absent when nothing was. */
+  readonly ageMs?: number
+  readonly finding: HealthFinding | null
+}
 
 export interface HealthCheckResult {
+  /**
+   * How long ago the state the check read was recorded, in whole milliseconds: for the backup
+   * and the restore drill, since their latest run finished. Absent for every other check and
+   * when nothing was recorded.
+   */
+  readonly ageMs?: number
   /** How long the check took; absent for a subsystem that is not configured. */
   readonly durationMs?: number
   readonly reason?: HealthReason
@@ -40,9 +80,10 @@ export interface HealthProbe {
   readonly mode?: 'development'
   /**
    * Uses the subsystem once. It throws when the subsystem cannot be reached or used, and resolves
-   * with a finding when it works but something about it is wrong.
+   * with a finding when it works but something about it is wrong, or with an observation that
+   * also carries the age of what it read.
    */
-  readonly run: (signal: AbortSignal) => Promise<HealthFinding | null | void>
+  readonly run: (signal: AbortSignal) => Promise<HealthFinding | HealthObservation | null | void>
   /** The check is `degraded` (slow) when the probe takes at least this long. */
   readonly slowMs?: number
   /** The check is `down` (timeout) when the probe has not answered by then; it is then aborted. */
@@ -68,6 +109,18 @@ interface CheckContext {
   readonly logger: Logger
 }
 
+function observation(answer: HealthFinding | HealthObservation | null | void): HealthObservation {
+  if (answer === undefined || answer === null) return { finding: null }
+  return typeof answer === 'string' ? { finding: answer } : answer
+}
+
+/** Only a whole, non-negative age leaves a check; anything else is left out. */
+function reportedAge({ ageMs }: HealthObservation): { readonly ageMs?: number } {
+  return ageMs === undefined || !Number.isFinite(ageMs)
+    ? {}
+    : { ageMs: Math.max(0, Math.round(ageMs)) }
+}
+
 async function runCheck(
   name: HealthCheckName,
   probe: HealthProbe | null,
@@ -82,7 +135,7 @@ async function runCheck(
   let timer: ReturnType<typeof setTimeout> | undefined
   const answered = Promise.resolve()
     .then(() => probe.run(controller.signal))
-    .then((finding) => ({ finding: finding ?? null }))
+    .then(observation)
   // A probe abandoned at its timeout may still fail later; that failure is not unhandled.
   answered.catch(() => undefined)
   const timedOut = new Promise<null>((resolve) => {
@@ -96,9 +149,11 @@ async function runCheck(
       context.logger.warn('health.check.timeout', { check: name, durationMs, timeoutMs })
       return { durationMs, reason: 'timeout', status: 'down' }
     }
-    if (outcome.finding) return { durationMs, reason: outcome.finding, status: 'degraded' }
-    if (durationMs >= slowMs) return { durationMs, reason: 'slow', status: 'degraded' }
+    const age = reportedAge(outcome)
+    if (outcome.finding) return { ...age, durationMs, reason: outcome.finding, status: 'degraded' }
+    if (durationMs >= slowMs) return { ...age, durationMs, reason: 'slow', status: 'degraded' }
     return {
+      ...age,
       durationMs,
       status: probe.mode === 'development' ? 'configured_for_development' : 'up',
     }
@@ -114,8 +169,9 @@ async function runCheck(
 
 /**
  * The site is down when its database is: no page can be served without it. Any other check that
- * is down or degraded, or a slow database, makes the site degraded. A subsystem that is not
- * configured counts for nothing, except the database, which every site needs.
+ * is down or degraded, or a slow database, makes the site degraded; a missing, failed or stale
+ * backup or restore drill never makes it down. A subsystem that is not configured counts for
+ * nothing, except the database, which every site needs.
  */
 function overallStatus(
   checks: Readonly<Record<HealthCheckName, HealthCheckResult>>,

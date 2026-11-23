@@ -215,7 +215,22 @@ const entityNames = new Set([
   'content_publication_state',
   'analytics_page_views_daily',
   'web_vitals_daily',
+  'operation_runs',
 ])
+
+/**
+ * The tables each reviewed forward migration creates. A drill that restores an older ledger and
+ * applies one of these migrations finds its tables in the restored copy only. The comparison
+ * accepts them there only while they are empty, since the source could not hold their rows.
+ */
+export const forwardMigrationTables: Readonly<Record<string, readonly string[]>> = {
+  '0011_operation_runs': ['operation_runs'],
+}
+
+/** The tables the given applied forward migrations created, by their evidence label. */
+export function tablesCreatedBy(applied: readonly string[]): ReadonlySet<string> {
+  return new Set(applied.flatMap((id) => forwardMigrationTables[id] ?? []))
+}
 
 export async function captureTables(
   client: Pick<MigrationClient, 'query'>,
@@ -248,11 +263,13 @@ export async function captureTables(
 export function compareTables(
   source: Record<string, TableEvidence>,
   restored: Record<string, TableEvidence>,
+  createdByForwardMigrations: ReadonlySet<string> = new Set(),
 ): DrillFailure[] {
   const failures: DrillFailure[] = []
   for (const subject of new Set([...Object.keys(source), ...Object.keys(restored)])) {
     const expected = source[subject]
     const actual = restored[subject]
+    if (!expected && actual?.count === 0 && createdByForwardMigrations.has(subject)) continue
     if (!expected || !actual || expected.count !== actual.count)
       failures.push({ code: 'row_count_mismatch', stage: 'comparison', subject })
     else if (expected.sha256 !== actual.sha256)
