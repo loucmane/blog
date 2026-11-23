@@ -20,6 +20,7 @@ import { MediaOriginalService } from '../content/media'
 import { ContentService } from '../content/service'
 import {
   hash,
+  type DrillLocation,
   type RestoreDrillConfig,
   type RestoreDrillEvidence,
 } from '../operations/restore-drill-contract'
@@ -74,7 +75,7 @@ const dockerTools: PostgresToolRunner = async (command, args, url, input) => {
 }
 
 describe('repeatable isolated PostgreSQL 18 restore drill', () => {
-  let config: RestoreDrillConfig
+  let config: RestoreDrillConfig & { source: DrillLocation }
   let source: Pool
   let admin: Pool
   let sourceObjects: S3Client

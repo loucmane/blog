@@ -41,7 +41,10 @@
     "subscribers:summary": "node scripts/subscribers.mjs summary",
     "subscribers:export": "node scripts/subscribers.mjs export",
     "subscribers:erase": "node scripts/subscribers.mjs erase",
-    "restore:drill": "node scripts/restore-drill.mjs"
+    "restore:drill": "node scripts/restore-drill.mjs",
+    "backup:create": "node scripts/backup.mjs create",
+    "backup:verify": "node scripts/backup.mjs verify",
+    "backup:prune": "node scripts/backup.mjs prune"
   },
   "browserslist": {
     "production": [

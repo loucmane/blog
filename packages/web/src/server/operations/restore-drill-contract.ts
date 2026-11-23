@@ -1,8 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto'
+import path from 'node:path'
 
 import { z } from 'zod'
 
 import { canonicalJson } from '../content/portability'
+import type { BackupFailureCode } from './backup-crypto'
 
 export const recoveryTargets = { rpoMilliseconds: 86_400_000, rtoMilliseconds: 14_400_000 }
 
@@ -55,13 +57,16 @@ function location(kind: 'source' | 'target') {
 export const restoreDrillConfig = z
   .object({
     isolated: z.literal(true),
-    source: location('source'),
+    source: z.union([
+      location('source'),
+      z.object({ backupDirectory: z.string().refine(path.isAbsolute) }).strict(),
+    ]),
     target: location('target'),
   })
   .strict()
 
 export type RestoreDrillConfig = z.infer<typeof restoreDrillConfig>
-export type DrillLocation = RestoreDrillConfig['source']
+export type DrillLocation = RestoreDrillConfig['target']
 export type DrillStage =
   | 'configuration'
   | 'preflight'
@@ -72,16 +77,13 @@ export type DrillStage =
   | 'export'
   | 'cleanup'
 export type DrillFailureCode =
-  | 'invalid_configuration'
-  | 'operation_failed'
+  | BackupFailureCode
   | 'unsupported_version'
   | 'target_exists'
   | 'migration_identity_mismatch'
   | 'row_count_mismatch'
   | 'invariant_changed'
-  | 'missing_object'
   | 'orphaned_object'
-  | 'checksum_mismatch'
   | 'export_invalid'
   | 'rpo_exceeded'
   | 'rto_exceeded'
@@ -129,7 +131,7 @@ export interface RestoreDrillEvidence {
     sourcePostgres: string | null
     targetPostgres: string | null
   }
-  backup: { sha256: string; bytes: number; mediaManifestSha256: string } | null
+  backup: { sha256: string; bytes: number; mediaManifestSha256: string; setId?: string } | null
   readonly migrations: {
     reviewedSha256: string | null
     sourceSha256: string | null
