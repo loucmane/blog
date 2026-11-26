@@ -2,7 +2,7 @@
 
 **Status:** Canonical requirements; implementation provisional
 
-**Updated:** 2026-11-23
+**Updated:** 2026-11-26
 
 ## Task 42 Foundation
 
@@ -12,6 +12,8 @@ comparison. Its isolated Docker drill proves PostgreSQL 18.4 custom-format dump/
 S3-compatible original copying without production credentials or data. The independent backup
 command implements blog-0046.2. Hosted-provider PITR and managed-deployment RPO/RTO evidence
 remain Task 46. The repeatable drill implements blog-0046.1 and measures the isolated fixture.
+blog-0046.3 records every backup and drill run and reports their age and result through the
+health endpoint and the owner job view ([Health Reporting](#health-reporting)).
 
 ## Objectives
 
@@ -56,10 +58,22 @@ bucket objects absent from the snapshot's original and rendition inventories. Ch
 these are recent writes before treating them as orphans.
 
 Keep source configuration in a private JSON file (mode `0600`) outside Git. Use a direct
-database endpoint and an HTTPS object endpoint. The database URL supports `sslmode` as its
-only query parameter. Hosted connections use certificate and hostname verification, including
-when the configuration requests `require`. The PostgreSQL CLI uses the system trust store.
-Literal loopback endpoints allow unencrypted connections for local fixtures.
+database endpoint and an HTTPS object endpoint. The database URL accepts two query parameters,
+each at most once, and refuses any other: `sslmode` (`disable`, `require`, `verify-ca` or
+`verify-full`) and `channel_binding` (`disable`, `prefer` or `require`), which Neon's connection
+strings carry. Keep a Neon URL's `sslmode=require&channel_binding=require` as Neon gives it.
+Hosted connections use certificate and hostname verification, including when the configuration
+requests `require`, and `channel_binding` never relaxes that. The PostgreSQL CLI uses the system
+trust store and receives `channel_binding` unchanged, so with `require` `pg_dump` refuses a
+server that does not bind the connection to its TLS channel. The command's node-postgres
+connections, the run recorder's included, enforce `require` the same way. They authenticate only
+with SCRAM-SHA-256-PLUS over TLS, and only once the server's SCRAM signature checks out. A server
+that asks for a cleartext or MD5 password, offers only plain SCRAM-SHA-256, or lets the client
+in without authenticating is refused before any password is sent. The command then reports
+`operation_failed`, with no host, URL or driver text. With `prefer` they bind whenever the server
+offers it, as Neon's does, and otherwise use plain SCRAM-SHA-256. Literal loopback endpoints
+allow unencrypted connections for local fixtures, which therefore cannot ask for
+`channel_binding=require`.
 
 ```json
 {
@@ -107,6 +121,28 @@ sizes and SHA-256 digests. It contains no URLs, object names, credentials, or pe
 chunks with per-chunk authentication and per-set derived keys. Verification also checks exact
 file sizes and both digests. The PostgreSQL archive stays in memory and is capped at 256 MiB.
 Schedule capacity review before reaching that limit and treat a size refusal as a backup failure.
+
+`backup:create` records every run, success or failure, in the application database that
+`DATABASE_URL` names: kind, outcome, the fixed failure code, and start and finish times. It
+records nothing else. Set `DATABASE_URL` in the command's environment to the database the
+backup reads, the one whose health check reports it. The URL follows the source URL's rules
+above, so a Neon `DATABASE_URL` works as Neon gives it. The run is written through
+node-postgres alone, as described there. Its role needs `INSERT` on `operation_runs`; the
+application's own role already has it.
+For a dedicated recording role, run `GRANT INSERT ON operation_runs TO <recording-role>`.
+`backup:verify` and `backup:prune` record nothing. `backup:create` exits with one of three
+codes:
+
+- `0`: the set was created and its run recorded.
+- `1`: the backup failed. Its failure is recorded when the database accepts it; the warning
+  says when it did not.
+- `3`: the set was created and kept, but its run was not recorded. The fixed warning names
+  `not_configured` (no `DATABASE_URL`), `invalid_configuration`, `tls_required` or
+  `operation_failed` (connection or write failure, or missing `INSERT`).
+
+Treat `3` as a failed scheduled run. The kept set remains valid for copying and verification,
+but the health check keeps reporting the previous backup until a run is recorded. Correct the
+URL or the role's access, then run the backup again.
 
 ### Prune Retention
 
@@ -185,8 +221,10 @@ the local S3 credentials need source list/get and target create/list/put/get per
 Keep application servers and workers disconnected from the target throughout the drill.
 
 Supply configuration through stdin, using a private file outside Git (mode `0600`). This
-command does not use `DATABASE_URL` or the application's media environment variables. Replace
-the angle-bracket placeholders with credentials for the disposable local services only:
+command reads `DATABASE_URL` only to record the run in the application database. It never
+reads, restores into or compares that database, and it does not use the application's media
+environment variables. Replace the angle-bracket placeholders with credentials for the
+disposable local services only:
 
 ```json
 {
@@ -220,7 +258,14 @@ pnpm --filter web restore:drill --evidence /absolute/private/recovery/drill-2026
 
 The evidence directory must already exist and the evidence file must be new. The command
 reserves the file with mode `0600` before accessing services, writes and syncs the result,
-and exits zero only for a passed drill. It never overwrites prior evidence. Pick new target
+and exits zero only for a passed drill. It never overwrites prior evidence. Once the evidence is
+written, the command records the run in the database that `DATABASE_URL` names: the
+outcome, the first failure code, the evidence timestamps and the measured recovery point and
+time. That database's health check and owner job view then report the drill. URL and role rules
+match `backup:create`. A drill that never started, because its evidence file could not be
+reserved, records nothing. A drill whose evidence could not be written records a failed run with
+`operation_failed`. A passed drill whose run cannot be recorded keeps its evidence and exits
+`3`. A failed drill keeps exit `1` either way. Pick new target
 database and bucket names for every run. Names must start with `restore_drill_source_` /
 `restore_drill_target_` for databases and `restore-drill-source-` / `restore-drill-target-`
 for buckets, followed by 1–32 lowercase letters, digits and underscores (databases) or
@@ -248,7 +293,10 @@ The command performs these checks:
   published revision pointers, revision bodies, redirects, schedules and leases, subscribers,
   consent and subscription history, authentication records and audit rows. This is intentionally
   strict: a forward migration that changes existing row representations or adds tables can
-  require an explicitly reviewed comparison update. A mismatch never passes automatically.
+  require an explicitly reviewed comparison update. A mismatch never passes automatically. The
+  reviewed list in `restore-drill-postgres.ts` names one such table, `operation_runs` from
+  migration 0011. A drill that restores an older ledger accepts it in the restored copy only
+  while it is empty. Recorded runs are application rows, backed up and compared like any other.
 - Lists the whole target bucket with pagination and checks original bytes, missing originals,
   orphaned objects and checksum or size differences. For a live fixture source it also lists
   the source bucket and recognizes renditions. For an encrypted source it authenticates the
@@ -305,9 +353,80 @@ PITR is an additional recovery layer, not proof from this logical-restore drill.
 validates export and persistence; a local pass does not prove reader availability, owner
 authentication or a production recovery objective.
 
+## Health Reporting
+
+`GET /api/health` reports two checks read from the latest recorded runs, `backup` and
+`restoreDrill`. The latest run of each kind is the one that finished last. Each check holds a
+`status`, a `reason` from the fixed list below when it is degraded, `ageMs` once a run is
+recorded, and the probe's `durationMs`. For `backup`, `ageMs` counts the milliseconds since the
+latest backup started. The backup takes its snapshot just after it starts, so this age never
+understates how old the recoverable point is. For `restoreDrill`, `ageMs` counts from when the
+latest drill finished. Failure codes, timestamps, measurements, paths, keys, hosts, set names
+and counts stay out of the body.
+
+These checks never take the site `down`. A finding makes the overall status `degraded` and the
+endpoint still answers 200, which the container health check and
+`packages/web/scripts/container-smoke.mjs` accept. Both checks share one read of the runs per
+request. It gives up after 1.5 seconds, inside the 2-second check limit, and PostgreSQL ends its
+statement after one second. The 1.5 seconds include waiting for a connection from the
+application's pool. However many health requests give up on a pool with no free connection, the
+reads keep only one connection request waiting in it. When the pool frees, that connection serves
+the next read, or goes back to the pool unused. A stalled database or a saturated pool therefore
+leaves at most one waiting request and no running statement behind. If the runs cannot be
+read, both checks are `down`: with `timeout` when the read ran out of time, and with
+`unavailable` when it failed, for example before migration 0011 is applied. A latest run whose
+stored row the application cannot read back makes only its own check `down` with
+`unavailable`; an older run never stands in for it. Such a row could come from a later release
+that recorded a failure code this one does not know. Unless the database itself is down, the
+site is still only degraded. The in-memory owner test runtime has no database, so both checks
+are `not_configured` there.
+
+The backup check is `up` when the latest backup succeeded and started within the 24-hour
+recovery point target. The drill check is `up` when the latest drill passed with both recovery
+targets met and finished within 35 days. That cadence is the monthly drill plus a few days'
+slack. Both limits are code constants (`recoveryTargets` and `restoreDrillCadenceMs`), so no
+environment variable configures them.
+
+| Check | Reason | Meaning | Operator action |
+| --- | --- | --- | --- |
+| `backup` | `never_run` | No `backup:create` run is recorded. | Schedule [the independent backup](#run-the-independent-backup) with `DATABASE_URL` set, and check its exit status. |
+| `backup` | `last_run_failed` | The latest backup failed. | Read its fixed failure code in the command output or the maintainer details on `/owner/jobs`, apply its step under [Prune Retention](#prune-retention), then rerun the backup. |
+| `backup` | `stale` | The latest backup started more than 24 hours ago. Its snapshot dates from just after that, so a restore would miss the 24-hour target even if the backup finished more recently. | Check the scheduler and the last exit status (including `3`), then run a backup now. |
+| `restoreDrill` | `never_run` | No restore drill is recorded. | Run the [repeatable local drill](#repeatable-local-drill) with `DATABASE_URL` set. |
+| `restoreDrill` | `last_run_failed` | The latest drill failed for a reason other than its recovery targets. | Follow [Responding To A Failed Drill](#responding-to-a-failed-drill), then rerun into new targets. |
+| `restoreDrill` | `targets_missed` | The latest drill missed the 24-hour RPO or the four-hour RTO, or no longer meets them. | Correct the backup cadence (`rpo_exceeded`) or the restore path (`rto_exceeded`), then rerun the drill. |
+| `restoreDrill` | `stale` | The latest drill finished more than 35 days ago. | Run this month's drill. |
+| either, `down` | `timeout` | The read of the runs did not finish in time. | Check the database's load and any long-held lock on `operation_runs`. |
+| either, `down` | `unavailable` | The runs could not be read, or that kind's latest stored row does not follow migration 0011. | Apply migration 0011 if it is missing. Otherwise read the logged `health.check.failed` error and inspect that kind's latest row in `operation_runs`. |
+
+A backup's age runs from its start and a drill's from its finish. With one backup a day, the
+backup check therefore reports `stale` for about the length of each run: from 24 hours after the
+previous backup started until the next one is recorded. In that window a restore really would
+lose more than 24 hours, because the newest snapshot is that old. To keep the check `up`, start
+backups more often than every 24 hours, for example every 12 hours, or let the backup alert
+tolerate the expected run time. The check reads only what the commands recorded and cannot see
+the independent copy, so keep downloading and verifying copied sets as described above.
+
+The owner job view at `/owner/jobs` shows the same states in plain language. It says when the
+last backup started and when the last drill finished, the times their ages run from,
+whether each worked, and the drill's recovery point and time against their targets. A run that
+failed shows when it stopped. Each one that needs attention gets one next step pointing to this
+runbook. A maintainer can open the stored run, including both its times and its fixed failure
+code. When a run cannot be read, the page says so and still shows the publishing jobs. A failed
+read is logged as `owner.jobs.recovery.failed`.
+
+Migration 0011 adds the `operation_runs` table. Its checks admit only what the application
+reads back: finite timestamps from year 0001 to year 9999, and measurements of at most
+9,007,199,254,740,991 ms (`Number.MAX_SAFE_INTEGER`). The application refuses a run outside
+those bounds before it writes one. Its down migration takes an
+`ACCESS EXCLUSIVE` lock and refuses once any run is recorded, because the run history is
+recovery evidence.
+
 ## Failure Handling
 
-- A failed backup or stale backup raises an actionable alert.
+- A failed backup or stale backup raises an actionable alert: the `backup` health check
+  degrades with `last_run_failed` or `stale` (see [Health Reporting](#health-reporting)).
+- A failed, off-target, stale or missing restore drill degrades the `restoreDrill` check.
 - A failed restore is a production-readiness blocker.
 - Backup jobs are idempotent and do not lock ordinary publishing longer than the accepted window.
 - Secrets, password reset tokens, signed URLs, and encryption keys are not embedded in portable exports.

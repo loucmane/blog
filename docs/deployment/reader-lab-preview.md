@@ -73,7 +73,10 @@ The server-side adapter stores originals and variants and serves media through
    string. With pooling ON the hostname contains `-pooler`; do not use that URL.
 4. Store the direct string as `DATABASE_URL`. Preserve `sslmode=require` and any
    additional TLS parameters Neon supplies. Its placeholder format is
-   `postgres://USER:PASSWORD@HOST/DB?sslmode=require`.
+   `postgres://USER:PASSWORD@HOST/DB?sslmode=require`. The backup and restore-drill
+   commands record their runs through this URL. They accept `sslmode` and Neon's
+   `channel_binding` and refuse any other parameter; see
+   [the backup runbook](backup-restore.md#run-the-independent-backup).
 
 **Use the direct connection because seeding holds a session advisory lock for its
 whole run, which transaction pooling cannot preserve.** Both the application and
@@ -181,15 +184,16 @@ changes. All secret values are server-only; never prefix them with `NEXT_PUBLIC_
 
 Inventory sources, relative to `packages/web`: `src/server/owner/config.ts`,
 `runtime.ts`, `setup.ts`, preview/revalidation routes, `src/lib/site-url.ts`,
-`src/server/lab/environment.mjs`, `src/server/operations/restore-drill-postgres.ts`
-and the migration/seed scripts. The docs test scans
-application and command source rather than maintaining a second manual list.
+`src/server/lab/environment.mjs`, `src/server/operations/restore-drill-postgres.ts`,
+`src/server/operations/record-operation-run.ts` and the migration, seed, backup and drill
+scripts. The backup and drill commands read `DATABASE_URL` only to record their runs. The
+docs test scans application and command source rather than maintaining a second manual list.
 
 <!-- reader-lab-environment:start -->
 
 | Name                                     | Purpose                                        | Where to get it / example format                                                            | Preview                                                           | Production                                                                       | Secret?                   |
 | ---------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------- |
-| `DATABASE_URL`                           | Auth, content and migrations                   | Neon Connect, pooling OFF: `postgres://USER:PASSWORD@HOST/DB?sslmode=require`               | Required; isolated direct database                                | Separate reviewed database                                                       | Yes                       |
+| `DATABASE_URL`                           | Auth, content, migrations; backup/drill runs   | Neon Connect, pooling OFF: `postgres://USER:PASSWORD@HOST/DB?sslmode=require`               | Required; isolated direct database                                | Separate reviewed database; also on backup and drill hosts                       | Yes                       |
 | `MAGAZINE_BACKUP_KEY_FILE`               | Independent backup and encrypted drill key file | Absolute operator-host path to a private base64url key file                                 | Operator drill only, outside app runtime                          | Required on backup and encrypted-drill hosts, outside app runtime                 | Protect the file and path |
 | `BETTER_AUTH_SECRET`                     | Auth signing/encryption                        | Generated above: `<AUTH_SECRET>`                                                            | Required                                                          | Separate required secret                                                         | Yes                       |
 | `BETTER_AUTH_URL`                        | Trusted auth origin / passkey host             | Final protected branch URL: `https://<PREVIEW_HOST>`                                        | Exact origin owner will use                                       | Canonical production HTTPS origin                                                | No                        |

@@ -6,6 +6,11 @@ import { describe, expect, it } from 'vitest'
 
 import { outboxStatuses } from '../content/domain'
 import {
+  operationFailureReasons,
+  operationRunKinds,
+  operationRunOutcomes,
+} from '../operations/operation-runs'
+import {
   subscriberStatuses,
   subscriptionEventTypes,
   subscriptionTokenPurposes,
@@ -342,6 +347,67 @@ describe('content database migrations', () => {
     )
   })
 
+  it('records operation runs in one table without payloads, and refuses rollback once a run exists', async () => {
+    const sql = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0011_operation_runs.sql'),
+      'utf8',
+    )
+    const down = await readFile(
+      path.join(process.cwd(), 'packages/web/migrations/0011_operation_runs.down.sql'),
+      'utf8',
+    )
+    const block = sql.match(/CREATE TABLE operation_runs \(([\s\S]*?)\n\);/)?.[1] ?? ''
+    const checked = (column: string) =>
+      sql
+        .match(new RegExp(`CHECK \\(${column} IN \\(([^)]*)\\)\\)`))?.[1]
+        ?.split(',')
+        .map((value) => value.trim().replaceAll("'", ''))
+
+    // One table, holding exactly what the brief allows: no path, key, host, URL, set or payload.
+    expect([...sql.matchAll(/CREATE TABLE ([a-z_]+)/g)].map((match) => match[1])).toEqual([
+      'operation_runs',
+    ])
+    expect([...block.matchAll(/^ {2}([a-z_]+) [a-z]/gm)].map((match) => match[1])).toEqual([
+      'id',
+      'kind',
+      'outcome',
+      'failure_reason',
+      'started_at',
+      'finished_at',
+      'rpo_ms',
+      'rto_ms',
+    ])
+    // The checks admit exactly what the commands record.
+    expect(checked('kind')).toEqual([...operationRunKinds])
+    expect(checked('outcome')).toEqual([...operationRunOutcomes])
+    expect(checked('failure_reason')).toEqual([...operationFailureReasons])
+    expect(sql).toContain("CHECK ((outcome = 'failed') = (failure_reason IS NOT NULL))")
+    expect(sql).toContain('CHECK (finished_at >= started_at)')
+    // Nothing the store could not read back: finite instants with four-digit years, and
+    // measurements JavaScript holds exactly.
+    expect(sql).toContain('CHECK (isfinite(started_at) AND isfinite(finished_at))')
+    expect(sql).toContain(
+      "CHECK (started_at >= '0001-01-01T00:00:00Z' AND finished_at < '10000-01-01T00:00:00Z')",
+    )
+    for (const column of ['rpo_ms', 'rto_ms']) {
+      expect(sql).toContain(
+        `${column} bigint CHECK (${column} BETWEEN 0 AND ${Number.MAX_SAFE_INTEGER})`,
+      )
+    }
+    expect(sql).toContain('ON operation_runs (kind, finished_at DESC, id DESC);')
+    expect(sql).not.toMatch(/ALTER TABLE|DROP /)
+
+    // Down locks the table, refuses once a run exists, and only then drops it.
+    expect(down.indexOf('LOCK TABLE operation_runs IN ACCESS EXCLUSIVE MODE')).toBeGreaterThan(-1)
+    expect(down.indexOf('LOCK TABLE')).toBeLessThan(
+      down.indexOf('IF EXISTS (SELECT FROM operation_runs)'),
+    )
+    expect(down.indexOf('RAISE EXCEPTION')).toBeLessThan(down.indexOf('DROP TABLE operation_runs;'))
+    expect(down).toContain("DELETE FROM content_schema_migrations WHERE id = '0011_operation_runs'")
+    expect(down.trim().startsWith('BEGIN;')).toBe(true)
+    expect(down.trim().endsWith('COMMIT;')).toBe(true)
+  })
+
   it('applies checksum-pinned migrations transactionally and skips exact replays', async () => {
     const migrations = await readContentMigrations()
     const first = new FakeMigrationClient()
@@ -360,6 +426,7 @@ describe('content database migrations', () => {
         '0008_subscribers_consent',
         '0009_distribution_telemetry',
         '0010_subscriber_privacy_events',
+        '0011_operation_runs',
       ],
       skipped: [],
     })
@@ -384,6 +451,7 @@ describe('content database migrations', () => {
         '0008_subscribers_consent',
         '0009_distribution_telemetry',
         '0010_subscriber_privacy_events',
+        '0011_operation_runs',
       ],
     })
   })

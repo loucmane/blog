@@ -1,25 +1,30 @@
 import type { Pool } from 'pg'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const { selectedRuntime } = vi.hoisted(() => ({ selectedRuntime: vi.fn() }))
 vi.mock('../owner/runtime', () => ({ getOwnerRuntime: selectedRuntime }))
 
 import { InMemoryContentRepository } from '../content/in-memory-repository'
 import { PostgresContentRepository } from '../database/postgres-content-repository'
+import { latestRunsTimeoutMs, PostgresOperationRunStore } from '../database/postgres-operation-runs'
 import { PostgresOutboxStore } from '../database/postgres-outbox-store'
+import type { OperationRunStore } from '../operations/operation-runs'
 import { InMemoryOutboxStore } from '../outbox/in-memory-outbox-store'
 import { OwnerConfigurationError, resolveOwnerTimeZone } from '../owner/config'
-import { checkHealth } from './health'
+import { checkHealth, defaultHealthTimeoutMs } from './health'
 import { createLogger } from './logger'
 import {
   healthProbesFor,
   jobRecordsFor,
+  operationRunsFor,
   outboxStoreFor,
   ownerJobViewFor,
   resolveHealthProbes,
 } from './runtime'
 
 const now = new Date('2026-11-03T12:00:00.000Z')
+const minute = 60_000
+const hour = 60 * minute
 
 function silentLogger() {
   const records: Record<string, unknown>[] = []
@@ -30,22 +35,69 @@ function silentLogger() {
   return { logger, records }
 }
 
-/** A pool answering the probes' reads: the publication version, an empty search and empty tables. */
-function answeringPool() {
+/**
+ * Stored rows of operation_runs that finished `ageMs` before `at`, a minute after they started: a
+ * drill is that old, and a backup, aged from its start, a minute older.
+ */
+function runRows(at: Date, ageMs: number, drill: Partial<Record<string, unknown>> = {}) {
+  const finished = new Date(at.valueOf() - ageMs)
+  const started = new Date(finished.valueOf() - minute)
+  return [
+    {
+      failure_reason: null,
+      finished_at: finished,
+      kind: 'backup',
+      outcome: 'succeeded',
+      rpo_ms: null,
+      rto_ms: null,
+      started_at: started,
+    },
+    {
+      failure_reason: null,
+      finished_at: finished,
+      kind: 'restore-drill',
+      outcome: 'succeeded',
+      rpo_ms: String(2 * hour),
+      rto_ms: '600000',
+      started_at: started,
+      ...drill,
+    },
+  ]
+}
+
+/**
+ * A pool answering the probes' reads: the publication version, an empty search, empty tables and
+ * the given backup and restore-drill runs, by default a fresh one of each. The runs come as pg
+ * answers the store's two-statement read, unless `readRuns` answers instead.
+ */
+function answeringPool(
+  runs: readonly Record<string, unknown>[] = runRows(new Date(), 60_000),
+  readRuns: () => Promise<unknown> = async () => [
+    { command: 'SET', rowCount: null, rows: [] },
+    { command: 'SELECT', rowCount: runs.length, rows: runs },
+  ],
+) {
   const query = vi.fn(async (text: string, _values?: readonly unknown[]) => {
     if (text.includes('content_publication_state')) return { rowCount: 1, rows: [{ version: '4' }] }
     if (text.includes('article_search_documents')) {
       return { rowCount: 1, rows: [{ article_id: null, total: 0 }] }
     }
+    if (text.includes('FROM operation_runs')) return readRuns()
     return { rowCount: 0, rows: [] }
   })
+  const release = vi.fn()
   const pool = {
-    connect: vi.fn(async () => ({ query, release: vi.fn() })),
+    connect: vi.fn(async () => ({ query, release })),
     options: {},
     query,
   } as unknown as Pool
-  return { pool, query }
+  const runReads = () => query.mock.calls.filter(([text]) => text.includes('FROM operation_runs'))
+  return { pool, query, release, runReads }
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 async function seedPending(repository: InMemoryContentRepository, createdAt: string) {
   await repository.transaction((transaction) =>
@@ -94,13 +146,40 @@ describe('observability runtime', () => {
     }
     const withoutSettings = { repository, workspace: { publicationSettings: async () => null } }
 
-    const configured = await ownerJobViewFor(withSettings as never, now)
-    const fallback = await ownerJobViewFor(withoutSettings as never, now)
+    const configured = await ownerJobViewFor(withSettings as never, { now })
+    const fallback = await ownerJobViewFor(withoutSettings as never, { now })
 
     expect(configured.timeZone).toBe('UTC')
     expect(configured.view.jobs['waiting-to-send'][0]?.summary).toBe('Queued at 3 Nov 2026, 09:00.')
     expect(fallback.timeZone).toBe(resolveOwnerTimeZone())
     expect(fallback.view.counts['waiting-to-send']).toBe(1)
+    // Without a database there is no backup or restore drill to show.
+    expect(configured.recovery).toBeNull()
+  })
+
+  it('shows the last backup and restore drill from PostgreSQL in the owner’s time zone', async () => {
+    const { pool } = answeringPool(runRows(now, 2 * hour))
+    const runtime = {
+      pool,
+      repository: new InMemoryContentRepository(),
+      workspace: { publicationSettings: async () => ({ ownerTimeZone: 'UTC' }) },
+    }
+
+    const { recovery } = await ownerJobViewFor(runtime as never, { now })
+
+    expect(operationRunsFor(runtime)).toBeInstanceOf(PostgresOperationRunStore)
+    expect(operationRunsFor({ pool: null })).toBeNull()
+    expect(recovery?.backup).toMatchObject({
+      ageMs: 2 * hour + minute,
+      finding: null,
+      summary: 'The last backup started at 3 Nov 2026, 09:59 and worked.',
+    })
+    expect(recovery?.restoreDrill).toMatchObject({
+      ageMs: 2 * hour,
+      finding: null,
+      summary: 'The last restore drill finished at 3 Nov 2026, 10:00 and worked.',
+      title: 'Restore drill',
+    })
   })
 
   it('checks the database and job queue of owner test mode with console email and no search', async () => {
@@ -115,10 +194,12 @@ describe('observability runtime', () => {
     })
 
     expect(fresh.status).toBe('ok')
-    expect(fresh.checks).toMatchObject({
-      database: { status: 'up' },
-      email: { status: 'configured_for_development' },
-      jobQueue: { status: 'up' },
+    expect(fresh.checks).toEqual({
+      backup: { status: 'not_configured' },
+      database: { durationMs: expect.any(Number), status: 'up' },
+      email: { durationMs: expect.any(Number), status: 'configured_for_development' },
+      jobQueue: { durationMs: expect.any(Number), status: 'up' },
+      restoreDrill: { status: 'not_configured' },
       search: { status: 'not_configured' },
     })
     expect(stalled.status).toBe('degraded')
@@ -126,7 +207,7 @@ describe('observability runtime', () => {
   })
 
   it('checks PostgreSQL with its publication version, one small search and the job queue', async () => {
-    const { pool, query } = answeringPool()
+    const { pool, query, runReads } = answeringPool()
     const { logger, records } = silentLogger()
 
     const report = await checkHealth(
@@ -134,12 +215,16 @@ describe('observability runtime', () => {
       { logger },
     )
 
+    // The backup and restore-drill checks share one read of the runs.
+    expect(runReads()).toHaveLength(1)
     expect(records).toEqual([])
     expect(report.status).toBe('ok')
     expect(report.checks).toMatchObject({
+      backup: { ageMs: expect.any(Number), status: 'up' },
       database: { status: 'up' },
       email: { status: 'configured_for_development' },
       jobQueue: { status: 'up' },
+      restoreDrill: { ageMs: expect.any(Number), status: 'up' },
       search: { status: 'up' },
     })
     const searches = query.mock.calls.filter(([text]) => text.includes('websearch_to_tsquery'))
@@ -150,6 +235,208 @@ describe('observability runtime', () => {
     expect(query.mock.calls.map(([text]) => text)).toContain(
       'SELECT version FROM content_publication_state WHERE id = 1',
     )
+  })
+
+  it('reports a stale, failed, off-target or never-run backup and drill as degraded, never down', async () => {
+    const { logger, records } = silentLogger()
+    const clock = { now: () => now }
+    const check = async (runs: readonly Record<string, unknown>[]) => {
+      const { pool } = answeringPool(runs)
+      return checkHealth(
+        healthProbesFor({ pool, repository: new PostgresContentRepository(pool) }, clock),
+        { elapsed: () => 0, logger },
+      )
+    }
+
+    const never = await check([])
+    const stale = await check(runRows(now, 40 * 24 * hour))
+    const [backupRow, drillRow] = runRows(now, hour)
+    const failed = await check([
+      { ...backupRow, failure_reason: 'missing_object', outcome: 'failed' },
+      { ...drillRow, failure_reason: 'rpo_exceeded', outcome: 'failed' },
+    ])
+    const lost = await check([{ ...drillRow, failure_reason: 'export_invalid', outcome: 'failed' }])
+    // Finished within the recovery point target, but started, and took its snapshot, before it.
+    const straddling = await check([
+      {
+        ...backupRow,
+        finished_at: new Date(now.valueOf() - (23 * hour + 50 * minute)),
+        started_at: new Date(now.valueOf() - (24 * hour + 10 * minute)),
+      },
+      drillRow!,
+    ])
+
+    expect(records).toEqual([])
+    for (const report of [never, stale, failed, lost, straddling]) {
+      expect(report.status).toBe('degraded')
+      expect(report.checks.database.status).toBe('up')
+    }
+    expect(straddling.checks).toMatchObject({
+      backup: { ageMs: 24 * hour + 10 * minute, reason: 'stale', status: 'degraded' },
+      restoreDrill: { ageMs: hour, status: 'up' },
+    })
+    expect(never.checks).toMatchObject({
+      backup: { reason: 'never_run', status: 'degraded' },
+      restoreDrill: { reason: 'never_run', status: 'degraded' },
+    })
+    expect(never.checks.backup).not.toHaveProperty('ageMs')
+    // A backup is aged from when it started, a drill from when it finished.
+    expect(stale.checks).toMatchObject({
+      backup: { ageMs: 40 * 24 * hour + minute, reason: 'stale', status: 'degraded' },
+      restoreDrill: { ageMs: 40 * 24 * hour, reason: 'stale', status: 'degraded' },
+    })
+    expect(failed.checks).toMatchObject({
+      backup: { ageMs: hour + minute, reason: 'last_run_failed', status: 'degraded' },
+      restoreDrill: { ageMs: hour, reason: 'targets_missed', status: 'degraded' },
+    })
+    expect(lost.checks).toMatchObject({
+      backup: { reason: 'never_run', status: 'degraded' },
+      restoreDrill: { reason: 'last_run_failed', status: 'degraded' },
+    })
+    // The public report carries only status, reason, the probe's duration and the run's age.
+    for (const report of [never, stale, failed, lost]) {
+      for (const result of [report.checks.backup, report.checks.restoreDrill]) {
+        expect(
+          Object.keys(result).every((key) =>
+            ['ageMs', 'durationMs', 'reason', 'status'].includes(key),
+          ),
+        ).toBe(true)
+      }
+    }
+    expect(JSON.stringify(failed)).not.toMatch(/missing_object|rpo_exceeded|started|finished/)
+  })
+
+  it('times both recovery checks out on one stalled read, and gives that read up once both have', async () => {
+    vi.useFakeTimers()
+    const { logger, records } = silentLogger()
+    const { pool } = answeringPool()
+    const signals: AbortSignal[] = []
+    const stalled: OperationRunStore = {
+      latest: vi.fn((signal?: AbortSignal) => {
+        if (signal) signals.push(signal)
+        return new Promise<never>(() => undefined)
+      }),
+      record: vi.fn(),
+    }
+
+    const checking = checkHealth(
+      healthProbesFor(
+        { pool, repository: new PostgresContentRepository(pool) },
+        undefined,
+        stalled,
+      ),
+      { elapsed: () => Date.now(), logger },
+    )
+    await vi.advanceTimersByTimeAsync(defaultHealthTimeoutMs - 1)
+    expect(signals.map(({ aborted }) => aborted)).toEqual([false])
+    await vi.advanceTimersByTimeAsync(1)
+    const report = await checking
+
+    expect(stalled.latest).toHaveBeenCalledOnce()
+    expect(signals.map(({ aborted }) => aborted)).toEqual([true])
+    expect(report.checks).toMatchObject({
+      backup: { durationMs: defaultHealthTimeoutMs, reason: 'timeout', status: 'down' },
+      database: { status: 'up' },
+      restoreDrill: { durationMs: defaultHealthTimeoutMs, reason: 'timeout', status: 'down' },
+    })
+    expect(report.status).toBe('degraded')
+    expect(records.map(({ check, message }) => [check, message])).toEqual([
+      ['backup', 'health.check.timeout'],
+      ['restoreDrill', 'health.check.timeout'],
+    ])
+  })
+
+  it('gives up the runs read of a stalled database before the health limit, closing its connection', async () => {
+    vi.useFakeTimers()
+    const { logger, records } = silentLogger()
+    const { pool, release, runReads } = answeringPool([], () => new Promise(() => undefined))
+
+    const checking = checkHealth(
+      healthProbesFor({ pool, repository: new PostgresContentRepository(pool) }),
+      { elapsed: () => Date.now(), logger },
+    )
+    await vi.advanceTimersByTimeAsync(latestRunsTimeoutMs)
+    const report = await checking
+
+    expect(runReads()).toHaveLength(1)
+    expect(release).toHaveBeenCalledWith(true)
+    expect(report.checks).toMatchObject({
+      backup: { durationMs: latestRunsTimeoutMs, reason: 'timeout', status: 'down' },
+      database: { status: 'up' },
+      restoreDrill: { durationMs: latestRunsTimeoutMs, reason: 'timeout', status: 'down' },
+    })
+    expect(records).toEqual([
+      expect.objectContaining({ check: 'backup', level: 'warn', message: 'health.check.timeout' }),
+      expect.objectContaining({ check: 'restoreDrill', message: 'health.check.timeout' }),
+    ])
+  })
+
+  it('reports a latest run that cannot be read back as unavailable, for its own check only', async () => {
+    const { logger, records } = silentLogger()
+    const [backupRow, drillRow] = runRows(now, hour)
+    const later = ['a', 'code', 'from', 'a', 'later', 'release'].join('_')
+    const { pool } = answeringPool([
+      backupRow!,
+      { ...drillRow, failure_reason: later, outcome: 'failed' },
+    ])
+
+    const report = await checkHealth(
+      healthProbesFor(
+        { pool, repository: new PostgresContentRepository(pool) },
+        { now: () => now },
+      ),
+      { elapsed: () => 0, logger },
+    )
+
+    expect(report.status).toBe('degraded')
+    expect(report.checks.backup).toEqual({ ageMs: hour + minute, durationMs: 0, status: 'up' })
+    expect(report.checks.restoreDrill).toEqual({
+      durationMs: 0,
+      reason: 'unavailable',
+      status: 'down',
+    })
+    expect(records).toEqual([
+      expect.objectContaining({
+        check: 'restoreDrill',
+        error: expect.objectContaining({ name: 'OperationRunError' }),
+        message: 'health.check.failed',
+      }),
+    ])
+    expect(JSON.stringify([report, records])).not.toContain(later)
+  })
+
+  it('still shows the job view when its backup and drill cannot be read, saying so', async () => {
+    const { logger, records } = silentLogger()
+    const [backupRow, drillRow] = runRows(now, hour)
+    const runtime = (pool: Pool) => ({
+      pool,
+      repository: new InMemoryContentRepository(),
+      workspace: { publicationSettings: async () => ({ ownerTimeZone: 'UTC' }) },
+    })
+    const missing = answeringPool([], async () => {
+      throw Object.assign(new Error('relation "operation_runs" does not exist'), { code: '42P01' })
+    })
+    const unreadable = answeringPool([{ ...backupRow, outcome: 'paused' }, drillRow!])
+
+    const failed = await ownerJobViewFor(runtime(missing.pool) as never, { logger, now })
+    const partly = await ownerJobViewFor(runtime(unreadable.pool) as never, { now })
+
+    expect(failed.view.counts['needs-attention']).toBe(0)
+    expect(failed.recovery?.backup).toMatchObject({
+      finding: 'unavailable',
+      lastRun: null,
+      summary: 'The site could not read its record of the last backup.',
+    })
+    expect(failed.recovery?.restoreDrill).toMatchObject({
+      finding: 'unavailable',
+      lastRun: null,
+      summary: 'The site could not read its record of the last restore drill.',
+    })
+    expect(records).toEqual([
+      expect.objectContaining({ level: 'error', message: 'owner.jobs.recovery.failed' }),
+    ])
+    expect(partly.recovery?.backup).toMatchObject({ finding: 'unavailable', lastRun: null })
+    expect(partly.recovery?.restoreDrill).toMatchObject({ finding: null, title: 'Restore drill' })
   })
 
   it('checks the runtime the application selected', async () => {
@@ -173,9 +460,11 @@ describe('observability runtime', () => {
 
     expect(report.status).toBe('down')
     expect(report.checks).toMatchObject({
+      backup: { reason: 'misconfigured', status: 'down' },
       database: { reason: 'misconfigured', status: 'down' },
       email: { status: 'not_configured' },
       jobQueue: { reason: 'misconfigured', status: 'down' },
+      restoreDrill: { reason: 'misconfigured', status: 'down' },
       search: { reason: 'misconfigured', status: 'down' },
     })
     expect(records[0]).toMatchObject({

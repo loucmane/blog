@@ -34,7 +34,15 @@ function answeringAfter(ms: number, finding: 'backlog' | null = null) {
 }
 
 function probes(overrides: Partial<HealthProbes> = {}): HealthProbes {
-  return { database: up, email: null, jobQueue: up, search: up, ...overrides }
+  return {
+    backup: null,
+    database: up,
+    email: null,
+    jobQueue: up,
+    restoreDrill: null,
+    search: up,
+    ...overrides,
+  }
 }
 
 afterEach(() => {
@@ -64,7 +72,7 @@ describe('health checks', () => {
     )
     expect(broken.checks.email).toMatchObject({ status: 'down', reason: 'unavailable' })
   })
-  it('reports all four subsystems, and is ok when every configured one answers in time', async () => {
+  it('reports every subsystem, and is ok when every configured one answers in time', async () => {
     const { logger, records } = capturingLogger()
 
     const report = await checkHealth(probes(), {
@@ -76,9 +84,11 @@ describe('health checks', () => {
     expect(report).toEqual({
       checkedAt: '2026-11-03T09:00:00.000Z',
       checks: {
+        backup: { status: 'not_configured' },
         database: { durationMs: 0, status: 'up' },
         email: { status: 'not_configured' },
         jobQueue: { durationMs: 0, status: 'up' },
+        restoreDrill: { status: 'not_configured' },
         search: { durationMs: 0, status: 'up' },
       },
       status: 'ok',
@@ -125,9 +135,11 @@ describe('health checks', () => {
     const report = await checking
 
     expect(report.checks).toEqual({
+      backup: { status: 'not_configured' },
       database: { durationMs: 10, status: 'up' },
       email: { status: 'not_configured' },
       jobQueue: { durationMs: 3_000, reason: 'timeout', status: 'down' },
+      restoreDrill: { status: 'not_configured' },
       search: { durationMs: 1_500, reason: 'slow', status: 'degraded' },
     })
     expect(report.status).toBe('degraded')
@@ -147,6 +159,37 @@ describe('health checks', () => {
     await vi.advanceTimersByTimeAsync(60_000)
   })
 
+  it('reports a probe that gave up at a deadline of its own as timed out, not as failed', async () => {
+    const { logger, records } = capturingLogger()
+    const gaveUp: HealthProbe = {
+      run: () => Promise.reject(new DOMException('The read was not done in time.', 'TimeoutError')),
+    }
+    const aborted: HealthProbe = {
+      run: () => Promise.reject(new DOMException('The read was aborted.', 'AbortError')),
+    }
+
+    const report = await checkHealth(probes({ backup: gaveUp, restoreDrill: aborted }), {
+      elapsed: () => 0,
+      logger,
+    })
+
+    expect(report.checks.backup).toEqual({ durationMs: 0, reason: 'timeout', status: 'down' })
+    expect(report.checks.restoreDrill).toEqual({
+      durationMs: 0,
+      reason: 'unavailable',
+      status: 'down',
+    })
+    expect(report.status).toBe('degraded')
+    expect(records).toEqual([
+      expect.objectContaining({ check: 'backup', level: 'warn', message: 'health.check.timeout' }),
+      expect.objectContaining({
+        check: 'restoreDrill',
+        level: 'error',
+        message: 'health.check.failed',
+      }),
+    ])
+  })
+
   it('reports what a working probe found wrong as degraded', async () => {
     const { logger } = capturingLogger()
 
@@ -161,6 +204,61 @@ describe('health checks', () => {
       status: 'degraded',
     })
     expect(report.status).toBe('degraded')
+  })
+
+  it('reports the age a probe observed, whole and never negative, beside its status and reason', async () => {
+    const { logger } = capturingLogger()
+
+    const report = await checkHealth(
+      probes({
+        backup: { run: async () => ({ ageMs: 3_600_000.4, finding: null }) },
+        jobQueue: { run: async () => ({ finding: 'backlog' }) },
+        restoreDrill: { run: async () => ({ ageMs: 40 * 86_400_000, finding: 'stale' }) },
+      }),
+      { elapsed: () => 0, logger },
+    )
+    const clamped = await checkHealth(
+      probes({
+        backup: { run: async () => ({ ageMs: -5, finding: null }) },
+        restoreDrill: { run: async () => ({ ageMs: Number.NaN, finding: 'never_run' }) },
+      }),
+      { elapsed: () => 0, logger },
+    )
+
+    expect(report.checks).toMatchObject({
+      backup: { ageMs: 3_600_000, durationMs: 0, status: 'up' },
+      jobQueue: { durationMs: 0, reason: 'backlog', status: 'degraded' },
+      restoreDrill: { ageMs: 3_456_000_000, durationMs: 0, reason: 'stale', status: 'degraded' },
+    })
+    expect(report.checks.jobQueue).not.toHaveProperty('ageMs')
+    expect(clamped.checks.backup).toEqual({ ageMs: 0, durationMs: 0, status: 'up' })
+    expect(clamped.checks.restoreDrill).toEqual({
+      durationMs: 0,
+      reason: 'never_run',
+      status: 'degraded',
+    })
+  })
+
+  it('never lets a missing, failed or unreadable backup or drill take the site down', async () => {
+    const { logger } = capturingLogger()
+
+    for (const backup of [
+      { run: async () => 'last_run_failed' as const },
+      { run: async () => ({ finding: 'never_run' as const }) },
+      { run: () => Promise.reject(new Error('relation "operation_runs" does not exist')) },
+    ]) {
+      const report = await checkHealth(
+        probes({ backup, restoreDrill: { run: async () => 'targets_missed' as const } }),
+        { elapsed: () => 0, logger },
+      )
+      expect(report.status).toBe('degraded')
+      expect(report.checks.database.status).toBe('up')
+      expect(report.checks.restoreDrill).toEqual({
+        durationMs: 0,
+        reason: 'targets_missed',
+        status: 'degraded',
+      })
+    }
   })
 
   it('logs a failing probe, redacted, under the correlation id, and keeps its error out of the report', async () => {

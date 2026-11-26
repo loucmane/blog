@@ -47,6 +47,12 @@ function createTestPool(connectionString: string): Pool {
   return pool
 }
 
+/** The command's environment: only the database that records the run. */
+function recordingEnvironment(databaseUrl: string): NodeJS.ProcessEnv {
+  // Only DATABASE_URL is read; the cast drops Next's augmented required fields.
+  return { DATABASE_URL: databaseUrl } as unknown as NodeJS.ProcessEnv
+}
+
 const databaseUrl = requiredEnvironment('TASK42_DATABASE_URL')
 const restoreDatabaseUrl = requiredEnvironment('TASK42_RESTORE_DATABASE_URL')
 const composeFile = requiredEnvironment('TASK42_COMPOSE_FILE')
@@ -266,16 +272,42 @@ describe('repeatable isolated PostgreSQL 18 restore drill', () => {
     })
   }
 
+  /** The drill runs recorded in the source fixture, which stands in for the application database. */
+  async function recordedRuns() {
+    return (
+      await source.query(
+        `SELECT kind, outcome, failure_reason, started_at, finished_at, rpo_ms::float8 AS rpo_ms,
+           rto_ms::float8 AS rto_ms
+         FROM operation_runs ORDER BY id`,
+      )
+    ).rows
+  }
+
   it('runs the operator command end to end and records counts, checksums, export validity and measured objectives', async () => {
     const evidencePath = path.join(directory, 'evidence.json')
     const exit = await runRestoreDrillCommand({
       args: ['--evidence', evidencePath],
+      environment: recordingEnvironment(config.source.databaseUrl),
       input: async () => config,
       drill: (value: unknown) => runRestoreDrill(value, { tools: dockerTools }),
       output: () => {},
     })
     expect(exit).toBe(0)
     const evidence: RestoreDrillEvidence = JSON.parse(await readFile(evidencePath, 'utf8'))
+    // The command recorded the passed drill, with what it measured, after the drill compared tables.
+    expect(await recordedRuns()).toEqual([
+      {
+        failure_reason: null,
+        finished_at: new Date(evidence.completedAt!),
+        kind: 'restore-drill',
+        outcome: 'succeeded',
+        rpo_ms: evidence.recovery.rpoMilliseconds,
+        rto_ms: evidence.recovery.rtoMilliseconds,
+        started_at: new Date(evidence.startedAt),
+      },
+    ])
+    expect(evidence.tables.source.operation_runs).toEqual(evidence.tables.restored.operation_runs)
+    expect(evidence.tables.source.operation_runs?.count).toBe(0)
     expect(evidence.status).toBe('passed')
     expect(evidence.failures).toEqual([])
     expect(evidence.tables.restored).toEqual(evidence.tables.source)
@@ -304,18 +336,37 @@ describe('repeatable isolated PostgreSQL 18 restore drill', () => {
     assertRedacted(evidence)
   }, 60_000)
 
-  it('applies only the documented forward migration when restoring an older compatible ledger', async () => {
-    // 0010 changes only event constraints; these fixture rows are valid with either version.
-    const down = await readFile(
-      path.resolve('packages/web/migrations/0010_subscriber_privacy_events.down.sql'),
-      'utf8',
-    )
-    await source.query(down)
+  it('applies only the documented forward migrations when restoring an older compatible ledger', async () => {
+    // 0011 adds an empty table, which the reviewed comparison accepts in the restored copy only;
+    // 0010 changes only event constraints, and these fixture rows are valid with either version.
+    for (const id of ['0011_operation_runs', '0010_subscriber_privacy_events']) {
+      await source.query(
+        await readFile(path.resolve(`packages/web/migrations/${id}.down.sql`), 'utf8'),
+      )
+    }
     const evidence = await runRestoreDrill(config, { tools: dockerTools })
+    expect(evidence.failures).toEqual([])
     expect(evidence.status).toBe('passed')
-    expect(evidence.migrations.appliedCount).toBe(1)
+    expect(evidence.migrations.appliedCount).toBe(2)
     expect(evidence.migrations.finalSha256).toBe(evidence.migrations.reviewedSha256)
+    expect(evidence.tables.source).not.toHaveProperty('operation_runs')
+    expect(evidence.tables.restored.operation_runs?.count).toBe(0)
     assertRedacted(evidence)
+  }, 60_000)
+
+  it('records a failed drill with its first failure code through the operator command', async () => {
+    const exit = await runRestoreDrillCommand({
+      args: ['--evidence', path.join(directory, 'failed-evidence.json')],
+      environment: recordingEnvironment(config.source.databaseUrl),
+      input: async () => config,
+      drill: () => alteredRestore('DELETE FROM slug_redirects'),
+      output: () => {},
+      error: () => {},
+    })
+    expect(exit).toBe(1)
+    expect(await recordedRuns()).toMatchObject([
+      { failure_reason: 'row_count_mismatch', kind: 'restore-drill', outcome: 'failed' },
+    ])
   }, 60_000)
 
   it('reports a missing row by entity', async () => {

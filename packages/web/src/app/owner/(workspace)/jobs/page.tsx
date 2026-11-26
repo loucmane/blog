@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 
+import { correlationIdFrom, createLogger } from '@/server/observability/logger'
 import { ownerJobViewFor } from '@/server/observability/runtime'
 import { getOwnerRuntime } from '@/server/owner/runtime'
 import { requireOwnerPageSession } from '@/server/owner/session'
@@ -14,6 +16,7 @@ export const metadata: Metadata = {
 
 export default async function OwnerJobsPage() {
   await requireOwnerPageSession()
-  const { timeZone, view } = await ownerJobViewFor(getOwnerRuntime())
-  return <JobBoard timeZone={timeZone} view={view} />
+  const logger = createLogger({ correlationId: correlationIdFrom(await headers()) })
+  const { recovery, timeZone, view } = await ownerJobViewFor(getOwnerRuntime(), { logger })
+  return <JobBoard recovery={recovery} timeZone={timeZone} view={view} />
 }

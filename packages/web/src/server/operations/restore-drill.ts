@@ -38,6 +38,7 @@ import {
   quotedIdentifier,
   requireMigrationPrefix,
   runPostgresTool,
+  tablesCreatedBy,
   type PostgresToolRunner,
 } from './restore-drill-postgres'
 
@@ -201,7 +202,13 @@ export async function runRestoreDrill(
 
     stage = 'comparison'
     evidence.tables.restored = await captureTables(target)
-    evidence.failures.push(...compareTables(evidence.tables.source, evidence.tables.restored))
+    evidence.failures.push(
+      ...compareTables(
+        evidence.tables.source,
+        evidence.tables.restored,
+        tablesCreatedBy(migrationReport.applied),
+      ),
+    )
     await verifyOriginals(to, config.target.objects.bucket, originals, evidence)
 
     stage = 'export'

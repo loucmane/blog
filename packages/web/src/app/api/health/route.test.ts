@@ -25,13 +25,25 @@ function driverError() {
   )
 }
 
-/** A PostgreSQL runtime whose pool refuses every statement that `refused` accepts. */
-function postgresRuntime(refused: (text: string) => boolean) {
+/**
+ * A PostgreSQL runtime whose pool refuses every statement that `refused` accepts, and answers the
+ * backup and restore-drill read with `runs`, as pg answers that two-statement read.
+ */
+function postgresRuntime(
+  refused: (text: string) => boolean,
+  runs: readonly Record<string, unknown>[] = [],
+) {
   const query = vi.fn(async (text: string) => {
     if (refused(text)) throw driverError()
     if (text.includes('content_publication_state')) return { rowCount: 1, rows: [{ version: '1' }] }
     if (text.includes('article_search_documents')) {
       return { rowCount: 1, rows: [{ article_id: null, total: 0 }] }
+    }
+    if (text.includes('FROM operation_runs')) {
+      return [
+        { command: 'SET', rowCount: null, rows: [] },
+        { command: 'SELECT', rowCount: runs.length, rows: runs },
+      ]
     }
     return { rowCount: 0, rows: [] }
   })
@@ -58,7 +70,7 @@ afterEach(() => {
 })
 
 describe('GET /api/health', () => {
-  it('reports all four subsystems, uncached, under the caller’s correlation id', async () => {
+  it('reports every subsystem, uncached, under the caller’s correlation id', async () => {
     selectedRuntime.mockReturnValue({ pool: null, repository: new InMemoryContentRepository() })
 
     const response = await GET(healthRequest({ 'x-correlation-id': 'uptime-monitor-0001' }))
@@ -69,14 +81,70 @@ describe('GET /api/health', () => {
     expect(await response.json()).toEqual({
       checkedAt: expect.any(String),
       checks: {
+        // The in-memory runtime has no database, so no backup or restore drill.
+        backup: { status: 'not_configured' },
         database: { durationMs: expect.any(Number), status: 'up' },
         email: { durationMs: expect.any(Number), status: 'configured_for_development' },
         jobQueue: { durationMs: expect.any(Number), status: 'up' },
+        restoreDrill: { status: 'not_configured' },
         search: { status: 'not_configured' },
       },
       correlationId: 'uptime-monitor-0001',
       status: 'ok',
     })
+  })
+
+  it('answers 200 and degraded for a missing, stale or failed backup or drill, with only its status, reason and age', async () => {
+    consoleLines()
+    const finished = new Date(Date.now() - 30 * 60 * 60 * 1_000)
+    const stale = {
+      failure_reason: null,
+      finished_at: finished,
+      kind: 'backup',
+      outcome: 'succeeded',
+      rpo_ms: null,
+      rto_ms: null,
+      started_at: new Date(finished.valueOf() - 60_000),
+    }
+    const failedDrill = {
+      ...stale,
+      failure_reason: 'checksum_mismatch',
+      kind: 'restore-drill',
+      outcome: 'failed',
+      rpo_ms: '3600017',
+      rto_ms: '120013',
+    }
+
+    selectedRuntime.mockReturnValue(postgresRuntime(() => false))
+    const never = await GET(healthRequest())
+    selectedRuntime.mockReturnValue(postgresRuntime(() => false, [stale, failedDrill]))
+    const recorded = await GET(healthRequest())
+
+    expect(never.status).toBe(200)
+    expect(await never.json()).toMatchObject({
+      checks: {
+        backup: { reason: 'never_run', status: 'degraded' },
+        database: { status: 'up' },
+        restoreDrill: { reason: 'never_run', status: 'degraded' },
+      },
+      status: 'degraded',
+    })
+    expect(recorded.status).toBe(200)
+    const body = await recorded.text()
+    const report = JSON.parse(body)
+    expect(report).toMatchObject({
+      checks: {
+        backup: { ageMs: expect.any(Number), reason: 'stale', status: 'degraded' },
+        restoreDrill: { ageMs: expect.any(Number), reason: 'last_run_failed', status: 'degraded' },
+      },
+      status: 'degraded',
+    })
+    expect(report.checks.backup.ageMs).toBeGreaterThanOrEqual(30 * 60 * 60 * 1_000)
+    for (const check of [report.checks.backup, report.checks.restoreDrill]) {
+      expect(Object.keys(check).sort()).toEqual(['ageMs', 'durationMs', 'reason', 'status'])
+    }
+    // No stored failure code, time, measurement, path, key or host reaches the public body.
+    expect(body).not.toMatch(/checksum_mismatch|3600017|120013|finished|started|backup-|\//)
   })
 
   it('answers 503 when the database is down and names no secret, connection string or host', async () => {
@@ -92,16 +160,24 @@ describe('GET /api/health', () => {
     const report = JSON.parse(body)
     expect(report).toMatchObject({
       checks: {
+        backup: { reason: 'unavailable', status: 'down' },
         database: { reason: 'unavailable', status: 'down' },
         email: { status: 'configured_for_development' },
         jobQueue: { reason: 'unavailable', status: 'down' },
+        restoreDrill: { reason: 'unavailable', status: 'down' },
         search: { reason: 'unavailable', status: 'down' },
       },
       status: 'down',
     })
     // Each failure is logged under the request's correlation id, with its secrets redacted.
     const failures = lines.filter(({ message }) => message === 'health.check.failed')
-    expect(failures.map(({ check }) => check).sort()).toEqual(['database', 'jobQueue', 'search'])
+    expect(failures.map(({ check }) => check).sort()).toEqual([
+      'backup',
+      'database',
+      'jobQueue',
+      'restoreDrill',
+      'search',
+    ])
     for (const failure of failures) {
       expect(failure.correlationId).toBe(report.correlationId)
       expect(JSON.stringify(failure)).not.toContain('hunter2')

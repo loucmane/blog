@@ -1,9 +1,24 @@
 import type { Article, OutboxEvent, PublicationJob } from '../content/domain'
 import type { ContentRepository } from '../content/ports'
+import {
+  backupFinding,
+  recoveryPointMet,
+  recoveryTimeMet,
+  restoreDrillCadenceMs,
+  restoreDrillFinding,
+  runAgeMs,
+  unreadableRun,
+  type BackupFinding,
+  type LatestOperationRun,
+  type LatestOperationRuns,
+  type OperationRun,
+  type RecoveryFinding,
+} from '../operations/operation-runs'
+import { recoveryTargets } from '../operations/restore-drill-contract'
 import { retryDueAt } from '../outbox/dispatcher'
 import type { DeadLetteredOutboxEvent, OutboxStore } from '../outbox/ports'
 import { outboxRetryDelaysMs } from '../outbox/retry'
-import type { HealthFinding } from './health'
+import type { HealthFinding, HealthReason } from './health'
 import { redactText } from './redact'
 
 /** The states an owner sees a job in, the most urgent first (AC-12, US-03). */
@@ -340,6 +355,208 @@ export function projectJobView(records: JobRecords, options: JobViewOptions): Ow
     counts,
     jobs: { ...grouped, sent: sent.slice(0, listedSent) },
     unlistedSent: Math.max(sent.length - listedSent, 0),
+  }
+}
+
+/** The runbook every next step about backups and restore drills points to. */
+export const recoveryRunbook = 'docs/deployment/backup-restore.md'
+
+/** A drill's recovery point or time against its target, in plain words. */
+export interface OwnerRecoveryMeasurement {
+  readonly label: 'Recovery point' | 'Recovery time'
+  /** Whether the target was met; null when the drill did not measure it. */
+  readonly met: boolean | null
+  readonly text: string
+}
+
+/**
+ * What the owner view says is wrong with a kind's latest run: what the health check finds, or
+ * `unavailable` when the run cannot be read back, the reason the check is then down with.
+ */
+export type OwnerRecoveryFinding = RecoveryFinding | Extract<HealthReason, 'unavailable'>
+type OwnerBackupFinding = BackupFinding | Extract<HealthReason, 'unavailable'>
+
+/** The last backup or the last restore drill, as the owner reads it on the job view. */
+export interface OwnerRecoveryCheck {
+  /**
+   * Milliseconds since the last backup started or the last drill finished, as the health check
+   * reports it (`runAgeMs`); null when none was recorded or it is unreadable.
+   */
+  readonly ageMs: number | null
+  /** What is wrong, as the health check reports it; null when nothing is. */
+  readonly finding: OwnerRecoveryFinding | null
+  /** The stored run, for whoever maintains the site; null when none was recorded or readable. */
+  readonly lastRun: OperationRun | null
+  /** For a drill that ran: its recovery point and time against their targets. */
+  readonly measurements: readonly OwnerRecoveryMeasurement[]
+  /** One plain next step, pointing to the runbook, when something is wrong; otherwise null. */
+  readonly nextStep: string | null
+  /**
+   * Whether the last run worked and when, in plain language: when a backup that worked started,
+   * the time its age counts from; when a drill finished; when a run that failed stopped.
+   */
+  readonly summary: string
+  readonly title: 'Backup' | 'Restore drill'
+}
+
+export interface OwnerRecoveryView {
+  readonly backup: OwnerRecoveryCheck
+  readonly restoreDrill: OwnerRecoveryCheck
+}
+
+const hour = 3_600_000
+const day = 24 * hour
+const recoveryPointHours = recoveryTargets.rpoMilliseconds / hour
+const recoveryTimeHours = recoveryTargets.rtoMilliseconds / hour
+const drillCadenceDays = restoreDrillCadenceMs / day
+
+function count(value: number, unit: string): string {
+  return `${value} ${unit}${value === 1 ? '' : 's'}`
+}
+
+/** A duration in the owner's words, to the minute and never rounded up past a target. */
+export function ownerDuration(milliseconds: number): string {
+  if (milliseconds < 1_000) return 'less than a second'
+  const seconds = Math.floor(milliseconds / 1_000)
+  if (seconds < 60) return count(seconds, 'second')
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return count(minutes, 'minute')
+  const hours = Math.floor(minutes / 60)
+  if (hours < 48) {
+    return minutes % 60 === 0
+      ? count(hours, 'hour')
+      : `${count(hours, 'hour')} ${count(minutes % 60, 'minute')}`
+  }
+  const days = Math.floor(hours / 24)
+  return hours % 24 === 0
+    ? count(days, 'day')
+    : `${count(days, 'day')} ${count(hours % 24, 'hour')}`
+}
+
+function measurement(
+  label: OwnerRecoveryMeasurement['label'],
+  milliseconds: number | null,
+  met: boolean | null,
+  targetHours: number,
+): OwnerRecoveryMeasurement {
+  const target = `the ${targetHours}-hour target`
+  if (milliseconds === null || met === null) {
+    return { label, met: null, text: `Not measured. The target is ${count(targetHours, 'hour')}.` }
+  }
+  const measured =
+    label === 'Recovery point'
+      ? `The restored copy was ${ownerDuration(milliseconds)} old`
+      : `The restore took ${ownerDuration(milliseconds)}`
+  return { label, met, text: `${measured}, ${met ? 'within' : 'over'} ${target}.` }
+}
+
+const backupSteps: Readonly<Record<OwnerBackupFinding, string>> = {
+  last_run_failed: `Ask your maintainer to find out why the backup failed and run it again, as ${recoveryRunbook} describes.`,
+  never_run: `Ask your maintainer to set up the daily backup that ${recoveryRunbook} describes.`,
+  stale: `Ask your maintainer to find out why no backup has finished since then and to run one, as ${recoveryRunbook} describes.`,
+  unavailable: `Ask your maintainer to find out why the site cannot read its backup records, as ${recoveryRunbook} describes.`,
+}
+
+const drillSteps: Readonly<Record<OwnerRecoveryFinding, string>> = {
+  last_run_failed: `Ask your maintainer to fix what the drill found and run it again, as “Responding To A Failed Drill” in ${recoveryRunbook} describes.`,
+  never_run: `Ask your maintainer to run the restore drill that ${recoveryRunbook} describes.`,
+  stale: `Ask your maintainer to run this month’s restore drill, as ${recoveryRunbook} describes.`,
+  targets_missed: `Ask your maintainer to bring the restore back within its targets and run the drill again, as ${recoveryRunbook} describes.`,
+  unavailable: `Ask your maintainer to find out why the site cannot read its restore-drill records, as ${recoveryRunbook} describes.`,
+}
+
+function backupSummary(
+  run: OperationRun | null,
+  finding: OwnerBackupFinding | null,
+  formatTime: JobViewOptions['formatTime'],
+) {
+  if (finding === 'unavailable') return 'The site could not read its record of the last backup.'
+  if (run === null) return 'No backup has been recorded yet.'
+  if (finding === 'last_run_failed') {
+    return `The last backup did not work. It stopped at ${formatTime(run.finishedAt)}.`
+  }
+  // A backup saves the site as it was just after it started, so its age counts from its start.
+  const started = formatTime(run.startedAt)
+  if (finding === 'stale') {
+    return `The last backup started at ${started} and worked, but that is more than ${count(recoveryPointHours, 'hour')} ago.`
+  }
+  return `The last backup started at ${started} and worked.`
+}
+
+function drillSummary(run: OperationRun | null, finding: OwnerRecoveryFinding | null, at: string) {
+  if (finding === 'unavailable') {
+    return 'The site could not read its record of the last restore drill.'
+  }
+  if (run === null) return 'No restore drill has been recorded yet.'
+  if (finding === 'last_run_failed')
+    return `The last restore drill did not work. It stopped at ${at}.`
+  if (finding === 'targets_missed') {
+    return `The last restore drill finished at ${at} but missed a recovery target.`
+  }
+  if (finding === 'stale') {
+    return `The last restore drill finished at ${at} and worked, but that is more than ${count(drillCadenceDays, 'day')} ago.`
+  }
+  return `The last restore drill finished at ${at} and worked.`
+}
+
+/**
+ * The latest backup and restore drill in the owner's words (blog-0046.3): when the backup started
+ * and the drill finished, the times their ages count from, whether each worked, the drill's
+ * recovery point and time against their targets, and, for each thing the health check reports as
+ * wrong, one plain next step pointing to the runbook. The findings and ages are the health check's
+ * own, so the two never disagree: a latest run that cannot be read back is `unavailable`, with
+ * nothing shown from it.
+ */
+export function projectRecoveryView(
+  latest: LatestOperationRuns,
+  options: JobViewOptions,
+): OwnerRecoveryView {
+  const readable = (run: LatestOperationRun) => (run === unreadableRun ? null : run)
+  const finished = (run: OperationRun | null) =>
+    run === null ? '' : options.formatTime(run.finishedAt)
+  const backupRun = readable(latest.backup)
+  const drillRun = readable(latest.restoreDrill)
+  const backup: OwnerBackupFinding | null =
+    latest.backup === unreadableRun ? 'unavailable' : backupFinding(backupRun, options.now)
+  const drill: OwnerRecoveryFinding | null =
+    latest.restoreDrill === unreadableRun
+      ? 'unavailable'
+      : restoreDrillFinding(drillRun, options.now)
+  return {
+    backup: {
+      ageMs: runAgeMs(backupRun, options.now),
+      finding: backup,
+      lastRun: backupRun,
+      measurements: [],
+      nextStep: backup === null ? null : backupSteps[backup],
+      summary: backupSummary(backupRun, backup, options.formatTime),
+      title: 'Backup',
+    },
+    restoreDrill: {
+      ageMs: runAgeMs(drillRun, options.now),
+      finding: drill,
+      lastRun: drillRun,
+      measurements:
+        drillRun === null
+          ? []
+          : [
+              measurement(
+                'Recovery point',
+                drillRun.rpoMs,
+                recoveryPointMet(drillRun),
+                recoveryPointHours,
+              ),
+              measurement(
+                'Recovery time',
+                drillRun.rtoMs,
+                recoveryTimeMet(drillRun),
+                recoveryTimeHours,
+              ),
+            ],
+      nextStep: drill === null ? null : drillSteps[drill],
+      summary: drillSummary(drillRun, drill, finished(drillRun)),
+      title: 'Restore drill',
+    },
   }
 }
 

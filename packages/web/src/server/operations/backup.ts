@@ -44,6 +44,18 @@ function loopback(host: string): boolean {
   return host === '[::1]' || (isIPv4(host) && host.startsWith('127.'))
 }
 
+const sslModes = ['disable', 'require', 'verify-ca', 'verify-full']
+/** The values libpq accepts for `channel_binding`, which Neon's connection strings carry. */
+const channelBindings = ['disable', 'prefer', 'require']
+
+/**
+ * The URL of the database a backup reads, or a run is recorded in, with its TLS made explicit.
+ * Its only query parameters are `sslmode` and `channel_binding`, each at most once. A host that is
+ * not a literal loopback address must not turn TLS off, and always gets `sslmode=verify-full`:
+ * certificate and hostname checks in node-postgres and libpq alike, whatever mode was asked for.
+ * `channel_binding` is kept as given and never relaxes that; `require` needs TLS, so a loopback
+ * URL without TLS cannot ask for it.
+ */
 export function backupDatabaseUrl(value: string): string {
   const url = new URL(value)
   if (
@@ -59,18 +71,20 @@ export function backupDatabaseUrl(value: string): string {
   const mode = modes[0]
   if (!local && mode !== undefined && !['require', 'verify-ca', 'verify-full'].includes(mode))
     throw new BackupError('tls_required')
+  const bindings = url.searchParams.getAll('channel_binding')
+  const binding = bindings[0]
+  const encrypted = !local || (mode !== undefined && mode !== 'disable')
   if (
     modes.length > 1 ||
-    [...url.searchParams.keys()].some((name) => name !== 'sslmode') ||
-    (mode !== undefined && !['disable', 'require', 'verify-ca', 'verify-full'].includes(mode)) ||
+    bindings.length > 1 ||
+    [...url.searchParams.keys()].some((name) => name !== 'sslmode' && name !== 'channel_binding') ||
+    (mode !== undefined && !sslModes.includes(mode)) ||
+    (binding !== undefined && !channelBindings.includes(binding)) ||
+    (binding === 'require' && !encrypted) ||
     [url.username, url.password, url.pathname].some((part) => /\0/.test(decodeURIComponent(part)))
   )
     throw new BackupError('invalid_configuration')
-  // Both node-postgres and libpq must check the certificate and hostname for hosted databases.
-  url.searchParams.set(
-    'sslmode',
-    local && (!mode || mode === 'disable') ? 'disable' : 'verify-full',
-  )
+  url.searchParams.set('sslmode', encrypted ? 'verify-full' : 'disable')
   return url.href
 }
 
