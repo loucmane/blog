@@ -383,6 +383,17 @@ describe('content database migrations', () => {
     expect(checked('failure_reason')).toEqual([...operationFailureReasons])
     expect(sql).toContain("CHECK ((outcome = 'failed') = (failure_reason IS NOT NULL))")
     expect(sql).toContain('CHECK (finished_at >= started_at)')
+    // Nothing the store could not read back: finite instants with four-digit years, and
+    // measurements JavaScript holds exactly.
+    expect(sql).toContain('CHECK (isfinite(started_at) AND isfinite(finished_at))')
+    expect(sql).toContain(
+      "CHECK (started_at >= '0001-01-01T00:00:00Z' AND finished_at < '10000-01-01T00:00:00Z')",
+    )
+    for (const column of ['rpo_ms', 'rto_ms']) {
+      expect(sql).toContain(
+        `${column} bigint CHECK (${column} BETWEEN 0 AND ${Number.MAX_SAFE_INTEGER})`,
+      )
+    }
     expect(sql).toContain('ON operation_runs (kind, finished_at DESC, id DESC);')
     expect(sql).not.toMatch(/ALTER TABLE|DROP /)
 

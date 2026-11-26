@@ -1,6 +1,6 @@
 import {
   PostgresOperationRunStore,
-  type OperationRunClient,
+  type OperationRunPool,
 } from '../database/postgres-operation-runs'
 import { backupDatabaseUrl } from './backup'
 import { BackupError } from './backup-crypto'
@@ -28,16 +28,16 @@ export class RecordError extends Error {
 }
 
 /** A connection the recorder writes one run through and then closes. */
-export interface RecordingConnection extends OperationRunClient {
+export interface RecordingConnection extends OperationRunPool {
   end(): Promise<void>
 }
 
 /**
  * Records a finished backup or restore-drill run in the application database that DATABASE_URL
  * names, the database whose health check and owner job view report it. The URL follows the
- * backup source's rules: `sslmode` as its only query parameter, and certificate and hostname
- * verification for any host that is not a literal loopback address. The role needs INSERT on
- * `operation_runs`.
+ * backup source's rules: `sslmode` and `channel_binding` as its only query parameters, as a Neon
+ * connection string carries them, and certificate and hostname verification for any host that is
+ * not a literal loopback address. The role needs INSERT on `operation_runs`.
  */
 export async function recordOperationRun(
   environment: Readonly<Record<string, string | undefined>>,

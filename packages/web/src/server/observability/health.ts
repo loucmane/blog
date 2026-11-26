@@ -86,7 +86,11 @@ export interface HealthProbe {
   readonly run: (signal: AbortSignal) => Promise<HealthFinding | HealthObservation | null | void>
   /** The check is `degraded` (slow) when the probe takes at least this long. */
   readonly slowMs?: number
-  /** The check is `down` (timeout) when the probe has not answered by then; it is then aborted. */
+  /**
+   * The check is `down` (timeout) when the probe has not answered by then; it is then aborted. A
+   * probe that gives up sooner, at a deadline of its own, rejects with a `TimeoutError`, as an
+   * `AbortSignal.timeout` signal does, and is reported the same way.
+   */
   readonly timeoutMs?: number
 }
 
@@ -159,6 +163,10 @@ async function runCheck(
     }
   } catch (error) {
     const durationMs = took()
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      context.logger.warn('health.check.timeout', { check: name, durationMs, error })
+      return { durationMs, reason: 'timeout', status: 'down' }
+    }
     const misconfigured = error instanceof HealthCheckConfigurationError
     context.logger.error('health.check.failed', { check: name, durationMs, error })
     return { durationMs, reason: misconfigured ? 'misconfigured' : 'unavailable', status: 'down' }

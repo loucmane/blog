@@ -27,7 +27,7 @@ function driverError() {
 
 /**
  * A PostgreSQL runtime whose pool refuses every statement that `refused` accepts, and answers the
- * backup and restore-drill read with `runs`.
+ * backup and restore-drill read with `runs`, as pg answers that two-statement read.
  */
 function postgresRuntime(
   refused: (text: string) => boolean,
@@ -39,7 +39,12 @@ function postgresRuntime(
     if (text.includes('article_search_documents')) {
       return { rowCount: 1, rows: [{ article_id: null, total: 0 }] }
     }
-    if (text.includes('FROM operation_runs')) return { rowCount: runs.length, rows: runs }
+    if (text.includes('FROM operation_runs')) {
+      return [
+        { command: 'SET', rowCount: null, rows: [] },
+        { command: 'SELECT', rowCount: runs.length, rows: runs },
+      ]
+    }
     return { rowCount: 0, rows: [] }
   })
   const pool = {

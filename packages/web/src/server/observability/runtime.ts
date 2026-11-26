@@ -6,8 +6,11 @@ import { PostgresSearchQuery } from '../database/postgres-search-query'
 import { consoleEmailHealthProbe } from '../email/console'
 import {
   backupFinding,
+  OperationRunError,
   restoreDrillFinding,
   runAgeMs,
+  unreadableRun,
+  type LatestOperationRun,
   type LatestOperationRuns,
   type OperationRun,
   type OperationRunStore,
@@ -33,6 +36,7 @@ import {
   type OwnerJobView,
   type OwnerRecoveryView,
 } from './jobs'
+import type { Logger } from './logger'
 
 /** The search a probe runs: one result of an ordinary word, which every search path can serve. */
 const probeSearch = { limit: 1, offset: 0, query: 'health' }
@@ -60,13 +64,31 @@ export function operationRunsFor(
 }
 
 /**
+ * The latest runs as the owner job view shows them. When they cannot be read at all, the failure
+ * is logged and both show as unreadable, as the health check reports them unavailable; the rest
+ * of the view does not depend on them.
+ */
+async function recoveryRunsFor(
+  runs: OperationRunStore,
+  logger: Logger | undefined,
+): Promise<LatestOperationRuns> {
+  try {
+    return await runs.latest()
+  } catch (error) {
+    logger?.error('owner.jobs.recovery.failed', { error })
+    return { backup: unreadableRun, restoreDrill: unreadableRun }
+  }
+}
+
+/**
  * The owner job view of a runtime as it is at `now`, its times in the owner's time zone: the one
  * in the publication settings, or the configured default. It includes the latest backup and
- * restore drill, or null for a runtime without a database.
+ * restore drill, or null for a runtime without a database; `logger` records why those could not
+ * be read.
  */
 export async function ownerJobViewFor(
   runtime: Pick<OwnerRuntime, 'repository' | 'workspace'> & Partial<Pick<OwnerRuntime, 'pool'>>,
-  now: Date = new Date(),
+  { logger, now = new Date() }: { readonly logger?: Logger; readonly now?: Date } = {},
 ): Promise<{
   readonly recovery: OwnerRecoveryView | null
   readonly timeZone: string
@@ -76,7 +98,7 @@ export async function ownerJobViewFor(
   const [records, settings, latest] = await Promise.all([
     jobRecordsFor(runtime).read(),
     runtime.workspace.publicationSettings(),
-    runs ? runs.latest() : null,
+    runs ? recoveryRunsFor(runs, logger) : null,
   ])
   const timeZone = settings?.ownerTimeZone ?? resolveOwnerTimeZone()
   const options = { formatTime: ownerTimeFormatter(timeZone), now }
@@ -87,16 +109,44 @@ export async function ownerJobViewFor(
   }
 }
 
-/** A probe of one kind's latest run: what is wrong with it, and how long ago it finished. */
-function recoveryProbe(
+/**
+ * One read of the latest runs, shared by the probes that call it: the backup and restore-drill
+ * checks of one health request issue one read, not two. The read is aborted once every probe that
+ * waits for it was, so it is given up as soon as no check can use it.
+ */
+function sharedLatestRuns(
   runs: OperationRunStore,
+): (signal: AbortSignal) => Promise<LatestOperationRuns> {
+  const controller = new AbortController()
+  let read: Promise<LatestOperationRuns> | undefined
+  let waiting = 0
+  return (signal) => {
+    read ??= runs.latest(controller.signal)
+    waiting += 1
+    const leave = () => {
+      waiting -= 1
+      if (waiting === 0) controller.abort(signal.reason)
+    }
+    if (signal.aborted) leave()
+    else signal.addEventListener('abort', leave, { once: true })
+    return read
+  }
+}
+
+/**
+ * A probe of one kind's latest run: what is wrong with it, and how long ago it finished. A latest
+ * run that cannot be read back says nothing about the run, so its check is unavailable.
+ */
+function recoveryProbe(
+  latest: (signal: AbortSignal) => Promise<LatestOperationRuns>,
   clock: Clock | undefined,
-  latestOf: (latest: LatestOperationRuns) => OperationRun | null,
+  latestOf: (latest: LatestOperationRuns) => LatestOperationRun,
   findingOf: (run: OperationRun | null, now: Date) => RecoveryFinding | null,
 ): HealthProbe {
   return {
-    run: async (): Promise<HealthObservation> => {
-      const run = latestOf(await runs.latest())
+    run: async (signal): Promise<HealthObservation> => {
+      const run = latestOf(await latest(signal))
+      if (run === unreadableRun) throw new OperationRunError()
       const now = clock?.now() ?? new Date()
       const ageMs = runAgeMs(run, now)
       return { finding: findingOf(run, now), ...(ageMs === null ? {} : { ageMs }) }
@@ -105,23 +155,25 @@ function recoveryProbe(
 }
 
 /**
- * The health probes of a runtime. The database answers with its publication version, one query
- * that also proves the content migrations ran. Search runs the PostgreSQL search; the in-memory
- * runtime of owner test mode has none, so it is not configured there. The job queue is read as the
- * owner job view reads it. Email is a development console simulation; its probe never sends and
- * never reports that a production email transport is up. The backup and the restore drill are
- * read from the runs the operator commands recorded in the database, so the in-memory runtime has
- * neither configured.
+ * The health probes of a runtime, built for one health request. The database answers with its
+ * publication version, one query that also proves the content migrations ran. Search runs the
+ * PostgreSQL search; the in-memory runtime of owner test mode has none, so it is not configured
+ * there. The job queue is read as the owner job view reads it. Email is a development console
+ * simulation; its probe never sends and never reports that a production email transport is up.
+ * The backup and the restore drill are read from `runs`, by default the runs the operator commands
+ * recorded in the database, in one bounded read the two probes share, so the in-memory runtime
+ * has neither configured.
  */
 export function healthProbesFor(
   runtime: Pick<OwnerRuntime, 'pool' | 'repository'>,
   clock?: Clock,
+  runs: OperationRunStore | null = operationRunsFor(runtime),
 ): HealthProbes {
   const jobs = jobRecordsFor(runtime)
-  const runs = operationRunsFor(runtime)
+  const latest = runs ? sharedLatestRuns(runs) : null
   const { pool } = runtime
   return {
-    backup: runs ? recoveryProbe(runs, clock, ({ backup }) => backup, backupFinding) : null,
+    backup: latest ? recoveryProbe(latest, clock, ({ backup }) => backup, backupFinding) : null,
     database: {
       run: async () => {
         await runtime.repository.readPublicationVersion()
@@ -134,8 +186,8 @@ export function healthProbesFor(
         return jobQueueFinding(projectJobView(await jobs.read(), { formatTime: String, now }), now)
       },
     },
-    restoreDrill: runs
-      ? recoveryProbe(runs, clock, ({ restoreDrill }) => restoreDrill, restoreDrillFinding)
+    restoreDrill: latest
+      ? recoveryProbe(latest, clock, ({ restoreDrill }) => restoreDrill, restoreDrillFinding)
       : null,
     search: pool
       ? {

@@ -15,8 +15,12 @@ CREATE TABLE operation_runs (
   )),
   started_at timestamptz NOT NULL,
   finished_at timestamptz NOT NULL,
-  rpo_ms bigint CHECK (rpo_ms >= 0),
-  rto_ms bigint CHECK (rto_ms >= 0),
+  -- At most Number.MAX_SAFE_INTEGER, the largest the application reads back exactly.
+  rpo_ms bigint CHECK (rpo_ms BETWEEN 0 AND 9007199254740991),
+  rto_ms bigint CHECK (rto_ms BETWEEN 0 AND 9007199254740991),
+  -- Only instants the application reads back: finite, with a four-digit year.
+  CHECK (isfinite(started_at) AND isfinite(finished_at)),
+  CHECK (started_at >= '0001-01-01T00:00:00Z' AND finished_at < '10000-01-01T00:00:00Z'),
   CHECK (finished_at >= started_at),
   CHECK ((outcome = 'failed') = (failure_reason IS NOT NULL)),
   -- A backup measures no recovery; a drill that worked measured both.

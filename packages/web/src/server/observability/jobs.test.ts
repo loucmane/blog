@@ -6,7 +6,7 @@ import type { Clock } from '../content/ports'
 import { OutboxDispatcher } from '../outbox/dispatcher'
 import { InMemoryOutboxStore } from '../outbox/in-memory-outbox-store'
 import type { OutboxHandler } from '../outbox/ports'
-import type { OperationRun } from '../operations/operation-runs'
+import { unreadableRun, type OperationRun } from '../operations/operation-runs'
 import { outboxRetryDelaysMs } from '../outbox/retry'
 import {
   defaultJobBacklogMs,
@@ -679,6 +679,35 @@ describe('owner view of backups and restore drills', () => {
     }
     // Each finding of each kind has its own next step.
     expect(new Set(checks.map(({ nextStep }) => nextStep)).size).toBe(checks.length)
+  })
+
+  it('says when the last run cannot be read, shows nothing from it, and leaves the other kind alone', () => {
+    const drill = run('restore-drill', 3 * day)
+    const view = projectRecoveryView({ backup: unreadableRun, restoreDrill: drill }, options)
+    const neither = projectRecoveryView(
+      { backup: unreadableRun, restoreDrill: unreadableRun },
+      options,
+    )
+
+    expect(view.backup).toEqual({
+      ageMs: null,
+      finding: 'unavailable',
+      lastRun: null,
+      measurements: [],
+      nextStep: `Ask your maintainer to find out why the site cannot read its backup records, as ${recoveryRunbook} describes.`,
+      summary: 'The site could not read its record of the last backup.',
+      title: 'Backup',
+    })
+    expect(view.restoreDrill).toMatchObject({ finding: null, lastRun: drill, nextStep: null })
+    expect(neither.restoreDrill).toEqual({
+      ageMs: null,
+      finding: 'unavailable',
+      lastRun: null,
+      measurements: [],
+      nextStep: `Ask your maintainer to find out why the site cannot read its restore-drill records, as ${recoveryRunbook} describes.`,
+      summary: 'The site could not read its record of the last restore drill.',
+      title: 'Restore drill',
+    })
   })
 
   it('states durations in whole units, never rounded up past a target', () => {

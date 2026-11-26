@@ -73,7 +73,10 @@ The server-side adapter stores originals and variants and serves media through
    string. With pooling ON the hostname contains `-pooler`; do not use that URL.
 4. Store the direct string as `DATABASE_URL`. Preserve `sslmode=require` and any
    additional TLS parameters Neon supplies. Its placeholder format is
-   `postgres://USER:PASSWORD@HOST/DB?sslmode=require`.
+   `postgres://USER:PASSWORD@HOST/DB?sslmode=require`. The backup and restore-drill
+   commands record their runs through this URL. They accept `sslmode` and Neon's
+   `channel_binding` and refuse any other parameter; see
+   [the backup runbook](backup-restore.md#run-the-independent-backup).
 
 **Use the direct connection because seeding holds a session advisory lock for its
 whole run, which transaction pooling cannot preserve.** Both the application and

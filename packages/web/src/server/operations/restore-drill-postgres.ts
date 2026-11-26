@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process'
 import { checkServerIdentity } from 'node:tls'
 
-import { Pool } from 'pg'
+import { Pool, type PoolConfig } from 'pg'
 
 import type { ContentMigration, MigrationClient } from '../database/migrations'
 import {
@@ -32,6 +32,8 @@ function postgresConnection(databaseUrl: string) {
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
     sslmode: url.searchParams.get('sslmode') ?? 'disable',
+    // Only a URL that backupDatabaseUrl checked carries it; the drill's own URLs have no parameters.
+    channelBinding: url.searchParams.get('channel_binding'),
   }
 }
 
@@ -41,7 +43,8 @@ export const runPostgresTool: PostgresToolRunner = (command, args, databaseUrl, 
     // These subprocesses are PostgreSQL tools, not Next; omit its augmented required env fields.
     const environment = { PATH: process.env.PATH, LANG: 'C' } as unknown as NodeJS.ProcessEnv
     if (databaseUrl) {
-      const { host, port, database, user, password, sslmode } = postgresConnection(databaseUrl)
+      const { host, port, database, user, password, sslmode, channelBinding } =
+        postgresConnection(databaseUrl)
       Object.assign(environment, {
         PGHOST: host,
         PGPORT: String(port),
@@ -50,6 +53,8 @@ export const runPostgresTool: PostgresToolRunner = (command, args, databaseUrl, 
         PGPASSWORD: password,
         PGSSLMODE: sslmode,
         ...(sslmode === 'verify-full' ? { PGSSLROOTCERT: 'system', PGGSSENCMODE: 'disable' } : {}),
+        // libpq enforces it: with `require`, pg_dump refuses a server that does not bind.
+        ...(channelBinding === null ? {} : { PGCHANNELBINDING: channelBinding }),
         PGCONNECT_TIMEOUT: '10',
       })
     }
@@ -79,8 +84,9 @@ export const runPostgresTool: PostgresToolRunner = (command, args, databaseUrl, 
   })
 
 export function drillPool(databaseUrl: string): Pool {
-  const { sslmode, password, ...connection } = postgresConnection(databaseUrl)
-  const pool = new Pool({
+  const { sslmode, password, channelBinding, ...connection } = postgresConnection(databaseUrl)
+  // @types/pg 8.20 does not declare enableChannelBinding yet; pg 8.22 reads it.
+  const config: PoolConfig & { readonly enableChannelBinding: boolean } = {
     ...connection,
     password: async () => password,
     ssl:
@@ -90,11 +96,15 @@ export function drillPool(databaseUrl: string): Pool {
             checkServerIdentity: (_, cert) => checkServerIdentity(connection.host, cert),
           }
         : false,
+    // SCRAM-SHA-256-PLUS whenever the server offers it, as libpq does for `prefer` and `require`.
+    // Unlike libpq, node-postgres does not refuse a server that offers none; verify-full holds.
+    enableChannelBinding: channelBinding === 'require' || channelBinding === 'prefer',
     max: 2,
     connectionTimeoutMillis: 10_000,
     statement_timeout: 60_000,
     options: '-c timezone=UTC -c search_path=public',
-  })
+  }
+  const pool = new Pool(config)
   // Never let pg emit driver text containing connection information to stderr.
   pool.on('error', () => {})
   return pool

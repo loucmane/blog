@@ -9,6 +9,7 @@ const { selectedRuntime, ownerSession } = vi.hoisted(() => ({
 }))
 vi.mock('@/server/owner/runtime', () => ({ getOwnerRuntime: selectedRuntime }))
 vi.mock('@/server/owner/session', () => ({ requireOwnerPageSession: ownerSession }))
+vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
 
 import { CURRENT_CONTENT_DOCUMENT_VERSION } from '@/server/content/document'
 import type { OutboxEvent, PublicationJob } from '@/server/content/domain'
@@ -19,7 +20,7 @@ import {
   recoveryRunbook,
   type OwnerJobView,
 } from '@/server/observability/jobs'
-import type { OperationRun } from '@/server/operations/operation-runs'
+import { unreadableRun, type OperationRun } from '@/server/operations/operation-runs'
 import { OwnerWorkspaceService } from '@/server/owner/workspace'
 
 import { JobBoard } from './job-board'
@@ -267,6 +268,27 @@ describe('owner publishing jobs page', () => {
     expect(section.getByText('No backup has been recorded yet.')).toBeInTheDocument()
     expect(section.getByText('No restore drill has been recorded yet.')).toBeInTheDocument()
     expect(section.queryByText('Details for a maintainer')).not.toBeInTheDocument()
+    expect(section.getAllByText(/^Next step:/)).toHaveLength(2)
+  })
+
+  it('tells the owner when the last backup or restore drill cannot be read, and what to do', () => {
+    const recovery = projectRecoveryView(
+      { backup: unreadableRun, restoreDrill: unreadableRun },
+      { formatTime: String, now: new Date('2026-11-23T12:00:00.000Z') },
+    )
+
+    render(<JobBoard recovery={recovery} timeZone="UTC" view={emptyView()} />)
+
+    const section = within(region('Backups and restore drills'))
+    expect(section.getAllByText('Needs attention')).toHaveLength(2)
+    expect(
+      section.getByText('The site could not read its record of the last backup.'),
+    ).toBeInTheDocument()
+    expect(
+      section.getByText('The site could not read its record of the last restore drill.'),
+    ).toBeInTheDocument()
+    expect(section.queryByText('Details for a maintainer')).not.toBeInTheDocument()
+    expect(section.queryByText('Recovery point')).not.toBeInTheDocument()
     expect(section.getAllByText(/^Next step:/)).toHaveLength(2)
   })
 

@@ -159,6 +159,37 @@ describe('health checks', () => {
     await vi.advanceTimersByTimeAsync(60_000)
   })
 
+  it('reports a probe that gave up at a deadline of its own as timed out, not as failed', async () => {
+    const { logger, records } = capturingLogger()
+    const gaveUp: HealthProbe = {
+      run: () => Promise.reject(new DOMException('The read was not done in time.', 'TimeoutError')),
+    }
+    const aborted: HealthProbe = {
+      run: () => Promise.reject(new DOMException('The read was aborted.', 'AbortError')),
+    }
+
+    const report = await checkHealth(probes({ backup: gaveUp, restoreDrill: aborted }), {
+      elapsed: () => 0,
+      logger,
+    })
+
+    expect(report.checks.backup).toEqual({ durationMs: 0, reason: 'timeout', status: 'down' })
+    expect(report.checks.restoreDrill).toEqual({
+      durationMs: 0,
+      reason: 'unavailable',
+      status: 'down',
+    })
+    expect(report.status).toBe('degraded')
+    expect(records).toEqual([
+      expect.objectContaining({ check: 'backup', level: 'warn', message: 'health.check.timeout' }),
+      expect.objectContaining({
+        check: 'restoreDrill',
+        level: 'error',
+        message: 'health.check.failed',
+      }),
+    ])
+  })
+
   it('reports what a working probe found wrong as degraded', async () => {
     const { logger } = capturingLogger()
 

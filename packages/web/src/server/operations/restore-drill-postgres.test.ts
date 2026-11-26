@@ -5,7 +5,7 @@ import { PassThrough } from 'node:stream'
 
 import { describe, expect, it, vi } from 'vitest'
 
-import { runPostgresTool } from './restore-drill-postgres'
+import { drillPool, runPostgresTool } from './restore-drill-postgres'
 
 vi.mock('node:child_process', () => ({ spawn: vi.fn() }))
 
@@ -50,6 +50,44 @@ describe('restore drill PostgreSQL subprocess boundary', () => {
       PGCONNECT_TIMEOUT: '10',
     })
     expect(JSON.stringify(args)).not.toContain(password)
+  })
+
+  it('hands a hosted URL’s verified TLS and channel binding to the PostgreSQL tools and node-postgres', async () => {
+    const { child, spawn } = processFixture()
+    const url = new URL(
+      'postgresql://neondb_owner@ep-quiet-lake-a1b2c3d4.eu-central-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require',
+    )
+    url.password = randomUUID()
+    const result = runPostgresTool('pg_dump', ['--format=custom'], url.href)
+    child.emit('close', 0)
+    await result
+    expect((spawn.mock.calls[0]![2] as SpawnOptions).env).toMatchObject({
+      PGHOST: 'ep-quiet-lake-a1b2c3d4.eu-central-1.aws.neon.tech',
+      PGSSLMODE: 'verify-full',
+      PGSSLROOTCERT: 'system',
+      PGGSSENCMODE: 'disable',
+      // libpq refuses a server that does not bind the channel; pg_dump keeps the URL's value.
+      PGCHANNELBINDING: 'require',
+    })
+
+    // node-postgres binds whenever the server offers SCRAM-SHA-256-PLUS for `require` and `prefer`.
+    const pools = ['require', 'prefer', 'disable', null].map((binding) => {
+      const target = new URL(url)
+      if (binding === null) target.searchParams.delete('channel_binding')
+      else target.searchParams.set('channel_binding', binding)
+      return drillPool(target.href)
+    })
+    const options = pools.map(
+      (pool) => (pool as unknown as { options: Record<string, unknown> }).options,
+    )
+    expect(options.map(({ enableChannelBinding }) => enableChannelBinding)).toEqual([
+      true,
+      true,
+      false,
+      false,
+    ])
+    for (const { ssl } of options) expect(ssl).toMatchObject({ rejectUnauthorized: true })
+    await Promise.all(pools.map((pool) => pool.end()))
   })
 
   it('returns binary dump output without string conversion', async () => {

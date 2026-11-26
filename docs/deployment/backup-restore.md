@@ -2,7 +2,7 @@
 
 **Status:** Canonical requirements; implementation provisional
 
-**Updated:** 2026-11-23
+**Updated:** 2026-11-26
 
 ## Task 42 Foundation
 
@@ -58,10 +58,18 @@ bucket objects absent from the snapshot's original and rendition inventories. Ch
 these are recent writes before treating them as orphans.
 
 Keep source configuration in a private JSON file (mode `0600`) outside Git. Use a direct
-database endpoint and an HTTPS object endpoint. The database URL supports `sslmode` as its
-only query parameter. Hosted connections use certificate and hostname verification, including
-when the configuration requests `require`. The PostgreSQL CLI uses the system trust store.
-Literal loopback endpoints allow unencrypted connections for local fixtures.
+database endpoint and an HTTPS object endpoint. The database URL accepts two query parameters,
+each at most once, and refuses any other: `sslmode` (`disable`, `require`, `verify-ca` or
+`verify-full`) and `channel_binding` (`disable`, `prefer` or `require`), which Neon's connection
+strings carry. Keep a Neon URL's `sslmode=require&channel_binding=require` as Neon gives it.
+Hosted connections use certificate and hostname verification, including when the configuration
+requests `require`, and `channel_binding` never relaxes that. The PostgreSQL CLI uses the system
+trust store and receives `channel_binding` unchanged, so with `require` `pg_dump` refuses a
+server that does not bind the connection to its TLS channel. The command's node-postgres
+connections bind whenever the server offers it, as Neon's does, but do not themselves refuse a
+server that offers none; certificate and hostname verification still applies there. Literal
+loopback endpoints allow unencrypted connections for local fixtures, which therefore cannot ask
+for `channel_binding=require`.
 
 ```json
 {
@@ -114,7 +122,9 @@ Schedule capacity review before reaching that limit and treat a size refusal as 
 `DATABASE_URL` names: kind, outcome, the fixed failure code, and start and finish times. It
 records nothing else. Set `DATABASE_URL` in the command's environment to the database the
 backup reads, the one whose health check reports it. The URL follows the source URL's rules
-above. Its role needs `INSERT` on `operation_runs`; the application's own role already has it.
+above, so a Neon `DATABASE_URL` works as Neon gives it. The run is written through
+node-postgres alone, as described there. Its role needs `INSERT` on `operation_runs`; the
+application's own role already has it.
 For a dedicated recording role, run `GRANT INSERT ON operation_runs TO <recording-role>`.
 `backup:verify` and `backup:prune` record nothing. `backup:create` exits with one of three
 codes:
@@ -349,10 +359,16 @@ and counts stay out of the body.
 
 These checks never take the site `down`. A finding makes the overall status `degraded` and the
 endpoint still answers 200, which the container health check and
-`packages/web/scripts/container-smoke.mjs` accept. If the runs cannot be read, for example
-before migration 0011 is applied, the check is `down` with `unavailable` or `timeout`. Unless
-the database itself is down, the site is still only degraded. The in-memory owner test runtime
-has no database, so both checks are `not_configured` there.
+`packages/web/scripts/container-smoke.mjs` accept. Both checks share one read of the runs per
+request. It gives up after 1.5 seconds, inside the 2-second check limit, and PostgreSQL ends its
+statement after one second, so a stalled database leaves no read waiting. If the runs cannot be
+read, both checks are `down`: with `timeout` when the read ran out of time, and with
+`unavailable` when it failed, for example before migration 0011 is applied. A latest run whose
+stored row the application cannot read back makes only its own check `down` with
+`unavailable`; an older run never stands in for it. Such a row could come from a later release
+that recorded a failure code this one does not know. Unless the database itself is down, the
+site is still only degraded. The in-memory owner test runtime has no database, so both checks
+are `not_configured` there.
 
 The backup check is `up` when the latest backup succeeded and finished within the 24-hour
 recovery point target. The drill check is `up` when the latest drill passed with both recovery
@@ -369,6 +385,8 @@ environment variable configures them.
 | `restoreDrill` | `last_run_failed` | The latest drill failed for a reason other than its recovery targets. | Follow [Responding To A Failed Drill](#responding-to-a-failed-drill), then rerun into new targets. |
 | `restoreDrill` | `targets_missed` | The latest drill missed the 24-hour RPO or the four-hour RTO, or no longer meets them. | Correct the backup cadence (`rpo_exceeded`) or the restore path (`rto_exceeded`), then rerun the drill. |
 | `restoreDrill` | `stale` | The latest drill finished more than 35 days ago. | Run this month's drill. |
+| either, `down` | `timeout` | The read of the runs did not finish in time. | Check the database's load and any long-held lock on `operation_runs`. |
+| either, `down` | `unavailable` | The runs could not be read, or that kind's latest stored row does not follow migration 0011. | Apply migration 0011 if it is missing. Otherwise read the logged `health.check.failed` error and inspect that kind's latest row in `operation_runs`. |
 
 The age runs from when each run finished. With one backup a day, a run that takes longer than
 the previous one reports `stale` until it finishes. Let the backup alert tolerate the expected
@@ -379,10 +397,15 @@ above.
 The owner job view at `/owner/jobs` shows the same states in plain language. It says when the
 last backup and drill finished, whether each worked, and the drill's recovery point and time
 against their targets. Each one that needs attention gets one next step pointing to this
-runbook. A maintainer can open the stored run, including its fixed failure code.
+runbook. A maintainer can open the stored run, including its fixed failure code. When a run
+cannot be read, the page says so and still shows the publishing jobs. A failed read is logged
+as `owner.jobs.recovery.failed`.
 
-Migration 0011 adds the `operation_runs` table. Its down migration takes an `ACCESS EXCLUSIVE`
-lock and refuses once any run is recorded, because the run history is recovery evidence.
+Migration 0011 adds the `operation_runs` table. Its checks admit only what the application
+reads back: finite timestamps with four-digit years, and measurements of at most
+9,007,199,254,740,991 ms (`Number.MAX_SAFE_INTEGER`). Its down migration takes an
+`ACCESS EXCLUSIVE` lock and refuses once any run is recorded, because the run history is
+recovery evidence.
 
 ## Failure Handling
 

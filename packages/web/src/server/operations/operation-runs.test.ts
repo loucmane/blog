@@ -1,8 +1,14 @@
 import { randomBytes } from 'node:crypto'
 
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { PostgresOperationRunStore } from '../database/postgres-operation-runs'
+import {
+  latestRunsStatementTimeoutMs,
+  latestRunsTimeoutMs,
+  PostgresOperationRunStore,
+  type OperationRunPool,
+} from '../database/postgres-operation-runs'
+import { defaultHealthTimeoutMs } from '../observability/health'
 import {
   backupFinding,
   backupRun,
@@ -16,6 +22,7 @@ import {
   restoreDrillFinding,
   restoreDrillRun,
   runAgeMs,
+  unreadableRun,
   type OperationRun,
 } from './operation-runs'
 import { recordOperationRun, RecordError, type RecordingConnection } from './record-operation-run'
@@ -64,6 +71,40 @@ function connection(fails = false) {
   const end = vi.fn(async () => undefined)
   return { connection: { end, query } as unknown as RecordingConnection, end, query }
 }
+
+/**
+ * A pool whose connections answer the latest-runs read with `rows`, both statements' results in
+ * order, as pg answers a two-statement message; `answer` replaces that answer.
+ */
+function postgresPool(
+  rows: readonly Record<string, unknown>[],
+  answer: (text: string) => Promise<unknown> = async () => [
+    { command: 'SET', rows: [] },
+    { command: 'SELECT', rows },
+  ],
+) {
+  const query = vi.fn(answer)
+  const release = vi.fn()
+  const connect = vi.fn(async () => ({ query, release }))
+  const write = vi.fn(async (_text: string, _values: readonly unknown[]) => ({ rows: [] }))
+  return { connect, pool: { connect, query: write } as OperationRunPool, query, release, write }
+}
+
+/** A stored backup row and a stored drill row, as pg reads them: timestamps and bigint text. */
+const storedBackup = {
+  failure_reason: null,
+  finished_at: new Date(ago(hour)),
+  kind: 'backup',
+  outcome: 'succeeded',
+  rpo_ms: null,
+  rto_ms: null,
+  started_at: new Date(ago(2 * hour)),
+}
+const storedDrill = { ...storedBackup, kind: 'restore-drill', rpo_ms: '7200000', rto_ms: '600000' }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('operation runs', () => {
   it('keeps exactly what migration 0011 allows and refuses anything else without naming a value', () => {
@@ -189,34 +230,30 @@ describe('operation runs', () => {
   })
 
   it('writes and reads runs in PostgreSQL with parameters only, and checks rows read back', async () => {
-    const query = vi.fn(async (text: string, _values: readonly unknown[]) => ({
-      rows: text.startsWith('INSERT')
-        ? []
-        : [
-            {
-              failure_reason: 'rto_exceeded',
-              finished_at: new Date(ago(day)),
-              kind: 'restore-drill',
-              outcome: 'failed',
-              rpo_ms: String(2 * hour),
-              rto_ms: String(5 * hour),
-              started_at: new Date(ago(day + 5 * hour)),
-            },
-            {
-              failure_reason: null,
-              finished_at: ago(hour),
-              kind: 'backup',
-              outcome: 'succeeded',
-              rpo_ms: null,
-              rto_ms: null,
-              started_at: ago(hour + 60_000),
-            },
-          ],
-    }))
-    const store = new PostgresOperationRunStore({ query } as never)
+    const { pool, query, release, write } = postgresPool([
+      {
+        failure_reason: 'rto_exceeded',
+        finished_at: new Date(ago(day)),
+        kind: 'restore-drill',
+        outcome: 'failed',
+        rpo_ms: String(2 * hour),
+        rto_ms: String(5 * hour),
+        started_at: new Date(ago(day + 5 * hour)),
+      },
+      {
+        failure_reason: null,
+        finished_at: ago(hour),
+        kind: 'backup',
+        outcome: 'succeeded',
+        rpo_ms: null,
+        rto_ms: null,
+        started_at: ago(hour + 60_000),
+      },
+    ])
+    const store = new PostgresOperationRunStore(pool)
 
     await store.record(drill())
-    expect(query).toHaveBeenLastCalledWith(expect.stringContaining('INSERT INTO operation_runs'), [
+    expect(write).toHaveBeenLastCalledWith(expect.stringContaining('INSERT INTO operation_runs'), [
       'restore-drill',
       'succeeded',
       null,
@@ -235,29 +272,132 @@ describe('operation runs', () => {
         startedAt: ago(day + 5 * hour),
       }),
     })
-    expect(query.mock.calls.at(-1)?.[0]).toMatch(/ORDER BY finished_at DESC, id DESC LIMIT 1/)
+    // One message on one pooled connection, which PostgreSQL limits itself, then handed back.
+    expect(query).toHaveBeenCalledOnce()
+    const [text] = query.mock.calls[0]!
+    expect(text).toMatch(/^SET LOCAL statement_timeout = '1000ms';\n\(SELECT /)
+    expect(text.match(/ORDER BY finished_at DESC, id DESC LIMIT 1/g)).toHaveLength(2)
+    expect(release).toHaveBeenCalledExactlyOnceWith()
+    expect(latestRunsStatementTimeoutMs).toBeLessThan(latestRunsTimeoutMs)
+    expect(latestRunsTimeoutMs).toBeLessThan(defaultHealthTimeoutMs)
 
-    const calls = query.mock.calls.length
+    const calls = write.mock.calls.length
     await expect(store.record(drill({ rtoMs: null }))).rejects.toThrow(OperationRunError)
-    expect(query.mock.calls).toHaveLength(calls)
-    const empty = new PostgresOperationRunStore({ query: async () => ({ rows: [] }) } as never)
+    expect(write.mock.calls).toHaveLength(calls)
+    const empty = new PostgresOperationRunStore(postgresPool([]).pool)
     expect(await empty.latest()).toEqual({ backup: null, restoreDrill: null })
-    const corrupt = new PostgresOperationRunStore({
-      query: async () => ({
-        rows: [
-          {
-            failure_reason: null,
-            finished_at: ago(hour),
-            kind: 'export',
-            outcome: 'succeeded',
-            rpo_ms: null,
-            rto_ms: null,
-            started_at: ago(2 * hour),
-          },
-        ],
-      }),
-    } as never)
-    await expect(corrupt.latest()).rejects.toThrow(OperationRunError)
+  })
+
+  it('reads a stored row that breaks the table rules as unreadable, for its kind only', async () => {
+    for (const corrupt of [
+      { ...storedDrill, outcome: 'paused' },
+      { ...storedDrill, failure_reason: 'a_code_from_a_later_release', outcome: 'failed' },
+      // pg reads PostgreSQL's infinite timestamps as JavaScript infinities.
+      { ...storedDrill, finished_at: Number.POSITIVE_INFINITY },
+      { ...storedDrill, started_at: Number.NEGATIVE_INFINITY },
+      { ...storedDrill, finished_at: new Date(Date.UTC(10_000, 0, 1)) },
+      { ...storedDrill, rto_ms: '9007199254740993' },
+      { ...storedDrill, rpo_ms: null },
+    ]) {
+      const store = new PostgresOperationRunStore(postgresPool([storedBackup, corrupt]).pool)
+      expect(await store.latest()).toEqual({
+        backup: backup({ finishedAt: ago(hour), startedAt: ago(2 * hour) }),
+        restoreDrill: unreadableRun,
+      })
+    }
+    const both = new PostgresOperationRunStore(
+      postgresPool([
+        { ...storedBackup, rpo_ms: '1' },
+        { ...storedDrill, kind: 'restore-drill', outcome: 'skipped' },
+      ]).pool,
+    )
+    expect(await both.latest()).toEqual({ backup: unreadableRun, restoreDrill: unreadableRun })
+  })
+
+  it('gives up a read that stalls before or after it gets a connection, and keeps nothing of it', async () => {
+    vi.useFakeTimers()
+    // The pool has no connection to give in time.
+    let handOver: (connection: unknown) => void = () => undefined
+    const connect = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          handOver = resolve
+        }),
+    )
+    const waiting = new PostgresOperationRunStore({ connect, query: vi.fn() } as never)
+    const acquiring = expect(waiting.latest()).rejects.toMatchObject({ name: 'TimeoutError' })
+    await vi.advanceTimersByTimeAsync(latestRunsTimeoutMs)
+    await acquiring
+
+    // The statement does not answer in time: its connection is closed, not handed back.
+    const stalled = postgresPool([], () => new Promise(() => undefined))
+    const reading = expect(new PostgresOperationRunStore(stalled.pool).latest()).rejects.toThrow(
+      'The latest operation runs were not read in time.',
+    )
+    await vi.advanceTimersByTimeAsync(latestRunsTimeoutMs - 1)
+    expect(stalled.release).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+    await reading
+    expect(stalled.query).toHaveBeenCalledOnce()
+    expect(stalled.release).toHaveBeenCalledExactlyOnceWith(true)
+    vi.useRealTimers()
+
+    // The connection that comes too late goes back to the pool without a statement.
+    const late = { query: vi.fn(), release: vi.fn() }
+    handOver(late)
+    await vi.waitFor(() => expect(late.release).toHaveBeenCalledExactlyOnceWith())
+    expect(late.query).not.toHaveBeenCalled()
+  })
+
+  it('stops a read as soon as its caller gives up, and starts none for a caller that already has', async () => {
+    let issued: () => void = () => undefined
+    const statement = new Promise<void>((resolve) => {
+      issued = resolve
+    })
+    const { connect, pool, release } = postgresPool([], () => {
+      issued()
+      return new Promise(() => undefined)
+    })
+    const store = new PostgresOperationRunStore(pool)
+    const caller = new AbortController()
+
+    const reading = store.latest(caller.signal)
+    await statement
+    caller.abort(new Error('the check gave up'))
+    await expect(reading).rejects.toThrow('the check gave up')
+    expect(release).toHaveBeenCalledExactlyOnceWith(true)
+
+    await expect(store.latest(AbortSignal.abort(new Error('already gone')))).rejects.toThrow(
+      'already gone',
+    )
+    expect(connect).toHaveBeenCalledOnce()
+  })
+
+  it('reports a statement PostgreSQL ended at its timeout as a timeout, and other failures as they are', async () => {
+    const canceled = postgresPool([], async () => {
+      throw Object.assign(new Error('canceling statement due to statement timeout'), {
+        code: '57014',
+      })
+    })
+    await expect(new PostgresOperationRunStore(canceled.pool).latest()).rejects.toMatchObject({
+      name: 'TimeoutError',
+    })
+    expect(canceled.release).toHaveBeenCalledExactlyOnceWith(true)
+
+    const missing = postgresPool([], async () => {
+      throw Object.assign(new Error('relation "operation_runs" does not exist'), { code: '42P01' })
+    })
+    await expect(new PostgresOperationRunStore(missing.pool).latest()).rejects.toMatchObject({
+      code: '42P01',
+    })
+    expect(missing.release).toHaveBeenCalledExactlyOnceWith(true)
+
+    // One result, not the two a two-statement message gets.
+    const single = postgresPool([], async () => ({ rows: [storedBackup] }))
+    await expect(new PostgresOperationRunStore(single.pool).latest()).rejects.toThrow(
+      'unexpected answer',
+    )
+    expect(single.release).toHaveBeenCalledExactlyOnceWith()
   })
 
   it('tells a fresh backup from a stale, failed or missing one', () => {
@@ -347,11 +487,39 @@ describe('operation runs', () => {
     )
     expect(loopback.query).toHaveBeenCalledOnce()
 
+    // A Neon connection string as Neon gives it: the channel binding is kept, TLS still verified.
+    const neon = new URL(
+      'postgresql://neondb_owner@ep-quiet-lake-a1b2c3d4.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+    )
+    neon.password = password
+    const neonRecorded = connection()
+    const neonConnect = vi.fn((_databaseUrl: string) => neonRecorded.connection)
+    await recordOperationRun({ DATABASE_URL: neon.href }, run, neonConnect)
+    const neonUrl = new URL(neonConnect.mock.calls[0]![0])
+    expect(Object.fromEntries(neonUrl.searchParams)).toEqual({
+      channel_binding: 'require',
+      sslmode: 'verify-full',
+    })
+    expect([neonUrl.hostname, neonUrl.password]).toEqual([neon.hostname, password])
+    expect(neonRecorded.query).toHaveBeenCalledWith(expect.stringContaining('INSERT'), [
+      'backup',
+      'succeeded',
+      null,
+      run.startedAt,
+      run.finishedAt,
+      null,
+      null,
+    ])
+    expect(neonRecorded.end).toHaveBeenCalledOnce()
+
     const refusals: [Record<string, string | undefined>, string][] = [
       [{}, 'not_configured'],
       [{ DATABASE_URL: '' }, 'not_configured'],
       [{ DATABASE_URL: `${hosted.href}?sslmode=disable` }, 'tls_required'],
+      [{ DATABASE_URL: `${hosted.href}?sslmode=disable&channel_binding=require` }, 'tls_required'],
       [{ DATABASE_URL: `${hosted.href}?sslmode=require&host=10.0.0.1` }, 'invalid_configuration'],
+      [{ DATABASE_URL: `${neon.href}&sslrootcert=/private/root.crt` }, 'invalid_configuration'],
+      [{ DATABASE_URL: `${hosted.href}?channel_binding=always` }, 'invalid_configuration'],
       [{ DATABASE_URL: hosted.href.replace('postgresql:', 'mysql:') }, 'invalid_configuration'],
       [{ DATABASE_URL: `not a url ${password}` }, 'invalid_configuration'],
     ]

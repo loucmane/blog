@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { chunkBytes } from './backup-crypto'
 import { readVerifiedBackup, writeBackupSet } from './backup-set'
-import { backupDatabaseUrl, pruneBackups, verifyBackup } from './backup'
+import { backupDatabaseUrl, createBackup, pruneBackups, verifyBackup } from './backup'
 import { hash } from './restore-drill-contract'
 
 const directories: string[] = []
@@ -183,5 +183,74 @@ describe('independent backup sets', () => {
         'sslmode',
       ),
     ).toBe('disable')
+  })
+
+  it('accepts the channel binding a Neon connection string carries, never in place of verified TLS', async () => {
+    // Neon's direct connection string, its credential made at runtime.
+    const neon = new URL(
+      'postgresql://neondb_owner@ep-quiet-lake-a1b2c3d4.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+    )
+    neon.password = randomBytes(12).toString('base64url')
+    const checked = new URL(backupDatabaseUrl(neon.href))
+    expect([...checked.searchParams]).toEqual([
+      ['sslmode', 'verify-full'],
+      ['channel_binding', 'require'],
+    ])
+    expect(checked.password).toBe(neon.password)
+
+    const hosted = 'postgresql://fixture@db.example.test/magazine'
+    for (const binding of ['require', 'prefer', 'disable']) {
+      const url = new URL(backupDatabaseUrl(`${hosted}?channel_binding=${binding}`))
+      expect(Object.fromEntries(url.searchParams)).toEqual({
+        channel_binding: binding,
+        sslmode: 'verify-full',
+      })
+    }
+    // It never stands in for TLS, and nothing else rides along with it.
+    expect(() => backupDatabaseUrl(`${hosted}?sslmode=disable&channel_binding=require`)).toThrow(
+      'tls_required',
+    )
+    for (const query of [
+      '?channel_binding=required',
+      '?channel_binding=',
+      '?channel_binding=require&channel_binding=disable',
+      '?sslmode=require&channel_binding=require&sslrootcert=system',
+      '?channel_binding=require&options=-c%20statement_timeout%3D0',
+    ]) {
+      expect(() => backupDatabaseUrl(hosted + query)).toThrow('invalid_configuration')
+    }
+    // A loopback URL without TLS cannot require binding; with TLS it can, and is verified.
+    const local = 'postgresql://fixture@127.0.0.1:5432/magazine'
+    expect(() => backupDatabaseUrl(`${local}?channel_binding=require`)).toThrow(
+      'invalid_configuration',
+    )
+    expect(
+      Object.fromEntries(
+        new URL(backupDatabaseUrl(`${local}?channel_binding=disable`)).searchParams,
+      ),
+    ).toEqual({ channel_binding: 'disable', sslmode: 'disable' })
+    expect(
+      new URL(
+        backupDatabaseUrl(`${local}?sslmode=require&channel_binding=require`),
+      ).searchParams.get('sslmode'),
+    ).toBe('verify-full')
+
+    // The backup's own source accepts it: the run gets past the URL to the next check, the key.
+    const objects = {
+      endpoint: 'https://objects.example.test',
+      bucket: 'synthetic',
+      region: 'us-east-1',
+      accessKeyId: 'fixture',
+      secretAccessKey: randomBytes(16).toString('base64url'),
+    }
+    await expect(
+      createBackup(await root(), Buffer.alloc(0), { databaseUrl: neon.href, objects }),
+    ).rejects.toThrow('invalid_key_file')
+    await expect(
+      createBackup(await root(), Buffer.alloc(0), {
+        databaseUrl: `${neon.href}&sslnegotiation=direct`,
+        objects,
+      }),
+    ).rejects.toThrow('invalid_configuration')
   })
 })

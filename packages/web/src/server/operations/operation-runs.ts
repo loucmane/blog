@@ -61,15 +61,29 @@ export interface OperationRun {
   readonly startedAt: string
 }
 
-/** The latest run of each kind, by when it finished; null for a kind that never ran. */
+/**
+ * Stands for a kind's latest run when its stored row cannot be read back: it breaks the rules of
+ * migration 0011, as a row written by a later release could. Its check is unavailable; an older
+ * run never stands in for it.
+ */
+export const unreadableRun = 'unreadable'
+
+/** The latest run of one kind: the run, null when none was recorded, or `unreadableRun`. */
+export type LatestOperationRun = OperationRun | null | typeof unreadableRun
+
+/** The latest run of each kind, by when it finished. */
 export interface LatestOperationRuns {
-  readonly backup: OperationRun | null
-  readonly restoreDrill: OperationRun | null
+  readonly backup: LatestOperationRun
+  readonly restoreDrill: LatestOperationRun
 }
 
 /** Where the operator commands record their runs, and where the site reads the latest of each. */
 export interface OperationRunStore {
-  latest(): Promise<LatestOperationRuns>
+  /**
+   * The latest run of each kind. It rejects when the runs cannot be read, within the store's own
+   * time limit, or as soon as `signal` aborts.
+   */
+  latest(signal?: AbortSignal): Promise<LatestOperationRuns>
   record(run: OperationRun): Promise<void>
 }
 
@@ -175,7 +189,8 @@ function isLater(candidate: OperationRun, latest: OperationRun | null): boolean 
 export class InMemoryOperationRunStore implements OperationRunStore {
   private readonly runs: OperationRun[] = []
 
-  async latest(): Promise<LatestOperationRuns> {
+  async latest(signal?: AbortSignal): Promise<LatestOperationRuns> {
+    signal?.throwIfAborted()
     let backup: OperationRun | null = null
     let restoreDrill: OperationRun | null = null
     for (const run of this.runs) {
