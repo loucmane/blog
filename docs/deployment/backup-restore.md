@@ -66,10 +66,14 @@ Hosted connections use certificate and hostname verification, including when the
 requests `require`, and `channel_binding` never relaxes that. The PostgreSQL CLI uses the system
 trust store and receives `channel_binding` unchanged, so with `require` `pg_dump` refuses a
 server that does not bind the connection to its TLS channel. The command's node-postgres
-connections bind whenever the server offers it, as Neon's does, but do not themselves refuse a
-server that offers none; certificate and hostname verification still applies there. Literal
-loopback endpoints allow unencrypted connections for local fixtures, which therefore cannot ask
-for `channel_binding=require`.
+connections, the run recorder's included, enforce `require` the same way. They authenticate only
+with SCRAM-SHA-256-PLUS over TLS, and only once the server's SCRAM signature checks out. A server
+that asks for a cleartext or MD5 password, offers only plain SCRAM-SHA-256, or lets the client
+in without authenticating is refused before any password is sent. The command then reports
+`operation_failed`, with no host, URL or driver text. With `prefer` they bind whenever the server
+offers it, as Neon's does, and otherwise use plain SCRAM-SHA-256. Literal loopback endpoints
+allow unencrypted connections for local fixtures, which therefore cannot ask for
+`channel_binding=require`.
 
 ```json
 {
@@ -352,16 +356,23 @@ authentication or a production recovery objective.
 ## Health Reporting
 
 `GET /api/health` reports two checks read from the latest recorded runs, `backup` and
-`restoreDrill`. Each holds a `status`, a `reason` from the fixed list below when it is
-degraded, `ageMs` (milliseconds since the latest run finished) once a run is recorded, and the
-probe's `durationMs`. Failure codes, timestamps, measurements, paths, keys, hosts, set names
+`restoreDrill`. The latest run of each kind is the one that finished last. Each check holds a
+`status`, a `reason` from the fixed list below when it is degraded, `ageMs` once a run is
+recorded, and the probe's `durationMs`. For `backup`, `ageMs` counts the milliseconds since the
+latest backup started. The backup takes its snapshot just after it starts, so this age never
+understates how old the recoverable point is. For `restoreDrill`, `ageMs` counts from when the
+latest drill finished. Failure codes, timestamps, measurements, paths, keys, hosts, set names
 and counts stay out of the body.
 
 These checks never take the site `down`. A finding makes the overall status `degraded` and the
 endpoint still answers 200, which the container health check and
 `packages/web/scripts/container-smoke.mjs` accept. Both checks share one read of the runs per
 request. It gives up after 1.5 seconds, inside the 2-second check limit, and PostgreSQL ends its
-statement after one second, so a stalled database leaves no read waiting. If the runs cannot be
+statement after one second. The 1.5 seconds include waiting for a connection from the
+application's pool. However many health requests give up on a pool with no free connection, the
+reads keep only one connection request waiting in it. When the pool frees, that connection serves
+the next read, or goes back to the pool unused. A stalled database or a saturated pool therefore
+leaves at most one waiting request and no running statement behind. If the runs cannot be
 read, both checks are `down`: with `timeout` when the read ran out of time, and with
 `unavailable` when it failed, for example before migration 0011 is applied. A latest run whose
 stored row the application cannot read back makes only its own check `down` with
@@ -370,7 +381,7 @@ that recorded a failure code this one does not know. Unless the database itself 
 site is still only degraded. The in-memory owner test runtime has no database, so both checks
 are `not_configured` there.
 
-The backup check is `up` when the latest backup succeeded and finished within the 24-hour
+The backup check is `up` when the latest backup succeeded and started within the 24-hour
 recovery point target. The drill check is `up` when the latest drill passed with both recovery
 targets met and finished within 35 days. That cadence is the monthly drill plus a few days'
 slack. Both limits are code constants (`recoveryTargets` and `restoreDrillCadenceMs`), so no
@@ -380,7 +391,7 @@ environment variable configures them.
 | --- | --- | --- | --- |
 | `backup` | `never_run` | No `backup:create` run is recorded. | Schedule [the independent backup](#run-the-independent-backup) with `DATABASE_URL` set, and check its exit status. |
 | `backup` | `last_run_failed` | The latest backup failed. | Read its fixed failure code in the command output or the maintainer details on `/owner/jobs`, apply its step under [Prune Retention](#prune-retention), then rerun the backup. |
-| `backup` | `stale` | The latest backup finished more than 24 hours ago. | Check the scheduler and the last exit status (including `3`), then run a backup now. |
+| `backup` | `stale` | The latest backup started more than 24 hours ago. Its snapshot dates from just after that, so a restore would miss the 24-hour target even if the backup finished more recently. | Check the scheduler and the last exit status (including `3`), then run a backup now. |
 | `restoreDrill` | `never_run` | No restore drill is recorded. | Run the [repeatable local drill](#repeatable-local-drill) with `DATABASE_URL` set. |
 | `restoreDrill` | `last_run_failed` | The latest drill failed for a reason other than its recovery targets. | Follow [Responding To A Failed Drill](#responding-to-a-failed-drill), then rerun into new targets. |
 | `restoreDrill` | `targets_missed` | The latest drill missed the 24-hour RPO or the four-hour RTO, or no longer meets them. | Correct the backup cadence (`rpo_exceeded`) or the restore path (`rto_exceeded`), then rerun the drill. |
@@ -388,22 +399,26 @@ environment variable configures them.
 | either, `down` | `timeout` | The read of the runs did not finish in time. | Check the database's load and any long-held lock on `operation_runs`. |
 | either, `down` | `unavailable` | The runs could not be read, or that kind's latest stored row does not follow migration 0011. | Apply migration 0011 if it is missing. Otherwise read the logged `health.check.failed` error and inspect that kind's latest row in `operation_runs`. |
 
-The age runs from when each run finished. With one backup a day, a run that takes longer than
-the previous one reports `stale` until it finishes. Let the backup alert tolerate the expected
-run time, or schedule a second daily run. The check reads only what the commands recorded and
-cannot see the independent copy, so keep downloading and verifying copied sets as described
-above.
+A backup's age runs from its start and a drill's from its finish. With one backup a day, the
+backup check therefore reports `stale` for about the length of each run: from 24 hours after the
+previous backup started until the next one is recorded. In that window a restore really would
+lose more than 24 hours, because the newest snapshot is that old. To keep the check `up`, start
+backups more often than every 24 hours, for example every 12 hours, or let the backup alert
+tolerate the expected run time. The check reads only what the commands recorded and cannot see
+the independent copy, so keep downloading and verifying copied sets as described above.
 
 The owner job view at `/owner/jobs` shows the same states in plain language. It says when the
-last backup and drill finished, whether each worked, and the drill's recovery point and time
-against their targets. Each one that needs attention gets one next step pointing to this
-runbook. A maintainer can open the stored run, including its fixed failure code. When a run
-cannot be read, the page says so and still shows the publishing jobs. A failed read is logged
-as `owner.jobs.recovery.failed`.
+last backup started and when the last drill finished, the times their ages run from,
+whether each worked, and the drill's recovery point and time against their targets. A run that
+failed shows when it stopped. Each one that needs attention gets one next step pointing to this
+runbook. A maintainer can open the stored run, including both its times and its fixed failure
+code. When a run cannot be read, the page says so and still shows the publishing jobs. A failed
+read is logged as `owner.jobs.recovery.failed`.
 
 Migration 0011 adds the `operation_runs` table. Its checks admit only what the application
-reads back: finite timestamps with four-digit years, and measurements of at most
-9,007,199,254,740,991 ms (`Number.MAX_SAFE_INTEGER`). Its down migration takes an
+reads back: finite timestamps from year 0001 to year 9999, and measurements of at most
+9,007,199,254,740,991 ms (`Number.MAX_SAFE_INTEGER`). The application refuses a run outside
+those bounds before it writes one. Its down migration takes an
 `ACCESS EXCLUSIVE` lock and refuses once any run is recorded, because the run history is
 recovery evidence.
 

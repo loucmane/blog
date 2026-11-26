@@ -577,21 +577,23 @@ describe('owner view of backups and restore drills', () => {
   })
 
   it('shows a recent backup and drill as up to date, with the drill’s recovery point and time against target', () => {
-    const backup = run('backup', 2 * hour)
-    const drill = run('restore-drill', 3 * day)
+    const backup = run('backup', 2 * hour, { startedAt: at(-150) })
+    const drill = run('restore-drill', 3 * day, { startedAt: at(-3 * 24 * 60 - 20) })
 
     const view = projectRecoveryView({ backup, restoreDrill: drill }, options)
 
+    // A backup is shown, and aged, from when it started; a drill from when it finished.
     expect(view.backup).toEqual({
-      ageMs: 2 * hour,
+      ageMs: 150 * minute,
       finding: null,
       lastRun: backup,
       measurements: [],
       nextStep: null,
-      summary: `The last backup finished at <${backup.finishedAt}> and worked.`,
+      summary: `The last backup started at <${at(-150)}> and worked.`,
       title: 'Backup',
     })
     expect(view.restoreDrill).toMatchObject({
+      ageMs: 3 * day,
       finding: null,
       lastRun: drill,
       nextStep: null,
@@ -642,7 +644,7 @@ describe('owner view of backups and restore drills', () => {
 
     expect(stale.backup).toMatchObject({
       finding: 'stale',
-      summary: `The last backup finished at <${at(-25 * 60)}> and worked, but that is more than 24 hours ago.`,
+      summary: `The last backup started at <${at(-25 * 60)}> and worked, but that is more than 24 hours ago.`,
     })
     expect(stale.restoreDrill).toMatchObject({
       finding: 'stale',
@@ -679,6 +681,19 @@ describe('owner view of backups and restore drills', () => {
     }
     // Each finding of each kind has its own next step.
     expect(new Set(checks.map(({ nextStep }) => nextStep)).size).toBe(checks.length)
+  })
+
+  it('calls a backup stale once it started more than 24 hours ago, however recently it finished', () => {
+    const straddling = run('backup', 23 * hour + 50 * minute, { startedAt: at(-(24 * 60 + 10)) })
+
+    const view = projectRecoveryView({ backup: straddling, restoreDrill: null }, options)
+
+    expect(view.backup).toMatchObject({
+      ageMs: 24 * hour + 10 * minute,
+      finding: 'stale',
+      summary: `The last backup started at <${at(-(24 * 60 + 10))}> and worked, but that is more than 24 hours ago.`,
+    })
+    expect(view.backup.nextStep).toContain(recoveryRunbook)
   })
 
   it('says when the last run cannot be read, shows nothing from it, and leaves the other kind alone', () => {

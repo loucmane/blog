@@ -207,8 +207,9 @@ describe('backup and restore-drill runs on PostgreSQL', () => {
       { elapsed: () => 0, logger },
     )
     expect(report.status).toBe('degraded')
+    // The backup is aged from when it started, two hours before `now`.
     expect(report.checks).toMatchObject({
-      backup: { ageMs: hour, status: 'up' },
+      backup: { ageMs: 2 * hour, status: 'up' },
       database: { status: 'up' },
       restoreDrill: { reason: 'unavailable', status: 'down' },
     })
@@ -298,10 +299,25 @@ describe('backup and restore-drill runs on PostgreSQL', () => {
       restoreDrill: { reason: 'never_run', status: 'degraded' },
     })
 
+    // Started 24 h 10 min ago and finished 23 h 50 min ago: its snapshot is past the target.
+    const ago = (milliseconds: number) => new Date(now.valueOf() - milliseconds).toISOString()
+    await store.record(
+      run({
+        finishedAt: ago(23 * hour + 50 * 60_000),
+        kind: 'backup',
+        startedAt: ago(24 * hour + 10 * 60_000),
+      }),
+    )
+    expect(await report(now)).toMatchObject({
+      backup: { ageMs: 24 * hour + 10 * 60_000, reason: 'stale', status: 'degraded' },
+      restoreDrill: { reason: 'never_run', status: 'degraded' },
+    })
+
     await store.record(run({ kind: 'backup' }))
     await store.record(run({ kind: 'restore-drill' }))
+    // A backup is aged from when it started, a drill from when it finished.
     expect(await report(now)).toMatchObject({
-      backup: { ageMs: hour, status: 'up' },
+      backup: { ageMs: 2 * hour, status: 'up' },
       restoreDrill: { ageMs: hour, status: 'up' },
     })
     const later = new Date(now.valueOf() + 36 * 24 * hour)
@@ -323,7 +339,7 @@ describe('backup and restore-drill runs on PostgreSQL', () => {
       }),
     )
     expect(await report(now)).toMatchObject({
-      backup: { ageMs: 0, reason: 'last_run_failed', status: 'degraded' },
+      backup: { ageMs: 2 * hour, reason: 'last_run_failed', status: 'degraded' },
       restoreDrill: { ageMs: 0, reason: 'last_run_failed', status: 'degraded' },
     })
   }, 60_000)

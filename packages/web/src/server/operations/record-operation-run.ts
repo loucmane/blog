@@ -37,7 +37,9 @@ export interface RecordingConnection extends OperationRunPool {
  * names, the database whose health check and owner job view report it. The URL follows the
  * backup source's rules: `sslmode` and `channel_binding` as its only query parameters, as a Neon
  * connection string carries them, and certificate and hostname verification for any host that is
- * not a literal loopback address. The role needs INSERT on `operation_runs`.
+ * not a literal loopback address. With `channel_binding=require` the run is written only over a
+ * connection that bound (`drillPool`); any other fails as `operation_failed`. The role needs
+ * INSERT on `operation_runs`.
  */
 export async function recordOperationRun(
   environment: Readonly<Record<string, string | undefined>>,

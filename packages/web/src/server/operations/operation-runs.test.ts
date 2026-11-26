@@ -1,5 +1,7 @@
 import { randomBytes } from 'node:crypto'
+import { EventEmitter } from 'node:events'
 
+import { Pool, type ClientBase } from 'pg'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -21,6 +23,7 @@ import {
   restoreDrillCadenceMs,
   restoreDrillFinding,
   restoreDrillRun,
+  runAgeFrom,
   runAgeMs,
   unreadableRun,
   type OperationRun,
@@ -90,6 +93,42 @@ function postgresPool(
   return { connect, pool: { connect, query: write } as OperationRunPool, query, release, write }
 }
 
+/**
+ * A client for a real pg `Pool` (its `Client` option): it connects at once and reads no runs, so
+ * what a test sees is the pool's own queue.
+ */
+class InstantClient extends EventEmitter {
+  // What pg-pool reads to decide that a released client can be used again.
+  readonly _ending = false
+  readonly _queryable = true
+
+  connect(callback: (error?: Error) => void): void {
+    queueMicrotask(() => callback())
+  }
+
+  async query(): Promise<unknown> {
+    return [
+      { command: 'SET', rows: [] },
+      { command: 'SELECT', rows: [] },
+    ]
+  }
+
+  end(callback?: () => void): void {
+    queueMicrotask(() => callback?.())
+  }
+
+  ref(): void {}
+
+  unref(): void {}
+}
+
+/** A real pg pool of one instant client, that connection already taken, as busy requests hold it. */
+async function saturatedPool() {
+  const pool = new Pool({ Client: InstantClient as unknown as new () => ClientBase, max: 1 })
+  const holder = await pool.connect()
+  return { holder, pool }
+}
+
 /** A stored backup row and a stored drill row, as pg reads them: timestamps and bigint text. */
 const storedBackup = {
   failure_reason: null,
@@ -139,6 +178,33 @@ describe('operation runs', () => {
         expect(String((error as Error).message)).not.toContain(secret)
       }
     }
+  })
+
+  it('keeps instants from year 0001 to year 9999, the years migration 0011 keeps, and no others', () => {
+    const at = (instant: string) => backup({ finishedAt: instant, startedAt: instant })
+    for (const instant of ['0001-01-01T00:00:00.000Z', '9999-12-31T23:59:59.999Z']) {
+      expect(operationRun(at(instant))).toEqual(at(instant))
+    }
+    for (const instant of [
+      '0000-12-31T23:59:59.999Z',
+      '0000-01-01T00:00:00.000Z',
+      '10000-01-01T00:00:00.000Z',
+      '+010000-01-01T00:00:00.000Z',
+      '-000001-01-01T00:00:00.000Z',
+    ]) {
+      expect(() => operationRun(at(instant))).toThrow(OperationRunError)
+    }
+    // A run that starts before year 0001 or finishes after year 9999 is refused as well.
+    expect(() =>
+      operationRun(
+        backup({ finishedAt: '0001-01-01T00:00:00.000Z', startedAt: '0000-12-31T23:59:59.999Z' }),
+      ),
+    ).toThrow(OperationRunError)
+    expect(() =>
+      operationRun(
+        backup({ finishedAt: '10000-01-01T00:00:00.000Z', startedAt: '9999-12-31T23:59:59.999Z' }),
+      ),
+    ).toThrow(OperationRunError)
   })
 
   it('records a backup from when it ran and the fixed code it failed with', () => {
@@ -296,6 +362,7 @@ describe('operation runs', () => {
       { ...storedDrill, finished_at: Number.POSITIVE_INFINITY },
       { ...storedDrill, started_at: Number.NEGATIVE_INFINITY },
       { ...storedDrill, finished_at: new Date(Date.UTC(10_000, 0, 1)) },
+      { ...storedDrill, started_at: new Date('0000-06-01T00:00:00.000Z') },
       { ...storedDrill, rto_ms: '9007199254740993' },
       { ...storedDrill, rpo_ms: null },
     ]) {
@@ -349,6 +416,113 @@ describe('operation runs', () => {
     expect(late.query).not.toHaveBeenCalled()
   })
 
+  it('adds one connection request at most to a saturated pg pool, and hands it back unused once the pool frees', async () => {
+    vi.useFakeTimers()
+    const { holder, pool } = await saturatedPool()
+    // Each health request reads through a store of its own, on the one pool.
+    const read = () => new PostgresOperationRunStore(pool).latest()
+    const timedOut = () => expect(read()).rejects.toMatchObject({ name: 'TimeoutError' })
+
+    const together = [timedOut(), timedOut(), timedOut()]
+    expect(pool.waitingCount).toBe(1)
+    await vi.advanceTimersByTimeAsync(latestRunsTimeoutMs)
+    await Promise.all(together)
+    // pg-pool keeps a request it queued; the reads that gave up added no other.
+    expect(pool.waitingCount).toBe(1)
+    for (let round = 0; round < 3; round += 1) {
+      const reading = timedOut()
+      await vi.advanceTimersByTimeAsync(latestRunsTimeoutMs)
+      await reading
+      expect(pool.waitingCount).toBe(1)
+    }
+    vi.useRealTimers()
+
+    holder.release()
+    // No read waits for that request any more, so its connection goes back unused.
+    await vi.waitFor(() => expect([pool.waitingCount, pool.idleCount]).toEqual([0, 1]))
+    await expect(read()).resolves.toEqual({ backup: null, restoreDrill: null })
+    expect([pool.waitingCount, pool.idleCount, pool.totalCount]).toEqual([0, 1, 1])
+    await pool.end()
+  })
+
+  it('gives the pool’s one waiting request to a later read that still waits when the pool frees', async () => {
+    vi.useFakeTimers()
+    const { holder, pool } = await saturatedPool()
+    const store = new PostgresOperationRunStore(pool)
+    const first = expect(store.latest()).rejects.toMatchObject({ name: 'TimeoutError' })
+    await vi.advanceTimersByTimeAsync(latestRunsTimeoutMs)
+    await first
+
+    // The later read waits within its own deadline for the request the first one left.
+    const second = store.latest()
+    expect(pool.waitingCount).toBe(1)
+    holder.release()
+
+    await expect(second).resolves.toEqual({ backup: null, restoreDrill: null })
+    expect([pool.waitingCount, pool.idleCount]).toEqual([0, 1])
+    vi.useRealTimers()
+    await pool.end()
+  })
+
+  it('asks a free pool for one connection at a time, and fails every read waiting on a request that fails', async () => {
+    const { connect, pool, query, release } = postgresPool([storedBackup])
+    let asking = 0
+    const atOnce: number[] = []
+    connect.mockImplementation(async () => {
+      atOnce.push((asking += 1))
+      await Promise.resolve()
+      asking -= 1
+      return { query, release }
+    })
+    const store = new PostgresOperationRunStore(pool)
+    const read = await Promise.all([store.latest(), store.latest(), store.latest()])
+    expect(atOnce).toEqual([1, 1, 1])
+    expect(read).toEqual(
+      Array.from({ length: 3 }, () => ({
+        backup: backup({ startedAt: ago(2 * hour) }),
+        restoreDrill: null,
+      })),
+    )
+    expect(connect).toHaveBeenCalledTimes(3)
+    expect(release).toHaveBeenCalledTimes(3)
+
+    const refused = Object.assign(new Error('connect ECONNREFUSED synthetic driver text'), {
+      code: 'ECONNREFUSED',
+    })
+    connect.mockRejectedValueOnce(refused)
+    const waiting = await Promise.allSettled([store.latest(), store.latest()])
+    expect(waiting).toEqual([
+      { reason: refused, status: 'rejected' },
+      { reason: refused, status: 'rejected' },
+    ])
+    expect(connect).toHaveBeenCalledTimes(4)
+    // The next read asks again.
+    await expect(store.latest()).resolves.toMatchObject({ restoreDrill: null })
+    expect(connect).toHaveBeenCalledTimes(5)
+  })
+
+  it('hands back unused, without a statement, a connection that comes as its read gives up', async () => {
+    const caller = new AbortController()
+    const { connect, pool, query, release } = postgresPool([])
+    connect
+      .mockImplementationOnce(async () => ({ query, release }))
+      // Asked for at once for the next waiting read, after the first read got its connection and
+      // before it could use it: the first read's caller gives up meanwhile.
+      .mockImplementationOnce(async () => {
+        caller.abort(new Error('the check gave up'))
+        return { query, release }
+      })
+    const store = new PostgresOperationRunStore(pool)
+
+    const first = store.latest(caller.signal)
+    const second = store.latest()
+
+    await expect(first).rejects.toThrow('the check gave up')
+    await expect(second).resolves.toEqual({ backup: null, restoreDrill: null })
+    expect(query).toHaveBeenCalledOnce()
+    expect(release.mock.calls).toEqual([[], []])
+  })
+
   it('stops a read as soon as its caller gives up, and starts none for a caller that already has', async () => {
     let issued: () => void = () => undefined
     const statement = new Promise<void>((resolve) => {
@@ -400,19 +574,27 @@ describe('operation runs', () => {
     expect(single.release).toHaveBeenCalledExactlyOnceWith()
   })
 
-  it('tells a fresh backup from a stale, failed or missing one', () => {
+  it('tells a fresh backup from a stale, failed or missing one, by when it started', () => {
     expect(backupFinding(null, now)).toBe('never_run')
     expect(backupFinding(backup({ finishedAt: ago(hour) }), now)).toBeNull()
     const limit = backup({
-      finishedAt: ago(recoveryTargets.rpoMilliseconds),
-      startedAt: ago(recoveryTargets.rpoMilliseconds + 60_000),
+      finishedAt: ago(recoveryTargets.rpoMilliseconds - 20 * 60_000),
+      startedAt: ago(recoveryTargets.rpoMilliseconds),
     })
     expect(backupFinding(limit, now)).toBeNull()
     const stale = backup({
-      finishedAt: ago(recoveryTargets.rpoMilliseconds + 1),
-      startedAt: ago(recoveryTargets.rpoMilliseconds + 60_000),
+      finishedAt: ago(hour),
+      startedAt: ago(recoveryTargets.rpoMilliseconds + 1),
     })
     expect(backupFinding(stale, now)).toBe('stale')
+    // Its snapshot, taken after it started, is past the target, however recently it finished.
+    const straddling = backup({
+      finishedAt: ago(23 * hour + 50 * 60_000),
+      startedAt: ago(24 * hour + 10 * 60_000),
+    })
+    expect(backupFinding(straddling, now)).toBe('stale')
+    expect(runAgeMs(straddling, now)).toBe(24 * hour + 10 * 60_000)
+    expect(runAgeFrom(straddling)).toBe(straddling.startedAt)
     // A failure is reported even when an earlier backup would still be fresh.
     expect(backupFinding(backup({ failureReason: 'missing_object', outcome: 'failed' }), now)).toBe(
       'last_run_failed',
@@ -420,7 +602,7 @@ describe('operation runs', () => {
     expect(runAgeMs(stale, now)).toBe(recoveryTargets.rpoMilliseconds + 1)
     expect(runAgeMs(null, now)).toBeNull()
     // A run recorded by a clock slightly ahead is not older than now.
-    expect(runAgeMs(backup({ finishedAt: ago(-5_000), startedAt: ago(0) }), now)).toBe(0)
+    expect(runAgeMs(backup({ finishedAt: ago(-5_000), startedAt: ago(-5_000) }), now)).toBe(0)
   })
 
   it('tells a fresh drill from a stale, failed, off-target or missing one', () => {
@@ -436,6 +618,9 @@ describe('operation runs', () => {
       startedAt: ago(restoreDrillCadenceMs + hour),
     })
     expect(restoreDrillFinding(stale, now)).toBe('stale')
+    // A drill is due a cadence after it finished, so its age counts from its finish.
+    expect(runAgeMs(stale, now)).toBe(restoreDrillCadenceMs + 1)
+    expect(runAgeFrom(stale)).toBe(stale.finishedAt)
     expect(restoreDrillCadenceMs).toBe(35 * day)
     expect(
       restoreDrillFinding(drill({ failureReason: 'export_invalid', outcome: 'failed' }), now),

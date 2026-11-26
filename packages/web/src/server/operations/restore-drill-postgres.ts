@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process'
 import { checkServerIdentity } from 'node:tls'
 
-import { Pool, type PoolConfig } from 'pg'
+import { Client, Pool, type ClientConfig, type PoolConfig } from 'pg'
 
 import type { ContentMigration, MigrationClient } from '../database/migrations'
 import {
@@ -83,8 +83,125 @@ export const runPostgresTool: PostgresToolRunner = (command, args, databaseUrl, 
     child.stdin.end(input)
   })
 
-export function drillPool(databaseUrl: string): Pool {
+/** The SASL mechanism that binds SCRAM to the TLS channel: all `channel_binding=require` allows. */
+const channelBoundMechanism = 'SCRAM-SHA-256-PLUS'
+
+/**
+ * A connection that requires channel binding was refused: the server did not authenticate it with
+ * SCRAM-SHA-256-PLUS over TLS. It names no URL, host or driver text.
+ */
+export class ChannelBindingError extends Error {
+  constructor() {
+    super(
+      'The server did not authenticate with SCRAM-SHA-256-PLUS, which channel_binding=require needs.',
+    )
+    this.name = 'ChannelBindingError'
+  }
+}
+
+/** The parts of a pg 8.22 client that `requireChannelBinding` reads and wraps; see there. */
+interface ClientInternals {
+  readonly connection: {
+    emit(event: string | symbol, ...args: unknown[]): boolean
+    readonly stream: { destroy(): void; readonly getPeerCertificate?: unknown }
+  }
+  readonly saslSession?: { readonly mechanism?: unknown } | null
+}
+
+/** Clients that `requireChannelBinding` let through authentication, after a bound exchange. */
+const channelBoundClients = new WeakSet<object>()
+
+function offersChannelBinding(message: unknown): boolean {
+  const mechanisms = (message as { readonly mechanisms?: unknown } | undefined)?.mechanisms
+  return Array.isArray(mechanisms) && mechanisms.includes(channelBoundMechanism)
+}
+
+/**
+ * Holds one node-postgres client to `channel_binding=require`, as libpq holds it. The client
+ * answers no cleartext or MD5 password request, takes part in SASL only when the server offers
+ * SCRAM-SHA-256-PLUS over TLS, and accepts the server's AuthenticationOk only once that exchange
+ * ended with the server's signature checked. Plain SCRAM-SHA-256, and a server that authenticates
+ * without asking, are refused too. A refusal fails the connection with a `ChannelBindingError`
+ * before any password or hash is sent, and closes its socket; nothing the server sends after it
+ * reaches the client.
+ *
+ * This is the one function that relies on pg internals, as pg 8.22 has them and its tests pin:
+ * - `client.connection` emits each backend message under its pg-protocol name, before the client's
+ *   own handlers see it, and its `stream` is the TLS socket once TLS is up;
+ * - during SASL, `client.saslSession.mechanism` names the mechanism the client chose, and the
+ *   client clears `saslSession` once the server's final signature checks out.
+ * Should these change, this refuses connections rather than accept them, and `drillPool` hands out
+ * no client that this did not see bind.
+ */
+function requireChannelBinding(client: Client): void {
+  const internals = client as unknown as ClientInternals
+  const { connection } = internals
+  const emit = connection.emit.bind(connection)
+  let refused = false
+  let mechanism: unknown = null
+  const refuse = (): boolean => {
+    if (!refused) {
+      refused = true
+      emit('error', new ChannelBindingError())
+      connection.stream.destroy()
+    }
+    return false
+  }
+  connection.emit = (event, ...args) => {
+    // A refused connection only closes.
+    if (refused) return event === 'end' && emit(event, ...args)
+    switch (event) {
+      case 'authenticationCleartextPassword':
+      case 'authenticationMD5Password':
+        return refuse()
+      case 'authenticationSASL':
+        if (
+          !offersChannelBinding(args[0]) ||
+          typeof connection.stream.getPeerCertificate !== 'function'
+        ) {
+          return refuse()
+        }
+        break
+      case 'authenticationSASLFinal':
+        // The client checks the server's signature in its own handler, then clears the session.
+        mechanism = internals.saslSession?.mechanism
+        break
+      case 'authenticationOk':
+        if (mechanism !== channelBoundMechanism || internals.saslSession !== null) return refuse()
+        channelBoundClients.add(client)
+        break
+    }
+    return emit(event, ...args)
+  }
+}
+
+/**
+ * The node-postgres client of a URL with `channel_binding=require`: one held to it as libpq holds
+ * it (`requireChannelBinding`).
+ */
+export class ChannelBindingClient extends Client {
+  constructor(config?: string | ClientConfig) {
+    super(config)
+    requireChannelBinding(this)
+  }
+}
+
+/**
+ * pg-pool calls this before it hands out a new client. One that `requireChannelBinding` did not
+ * let through after a bound exchange is refused, so no pg change that hid authentication from it
+ * could hand out a connection that did not bind.
+ */
+function requireChannelBound(client: object): void {
+  if (!channelBoundClients.has(client)) throw new ChannelBindingError()
+}
+
+/**
+ * The pool configuration `drillPool` uses for a URL that `backupDatabaseUrl` checked, or for one of
+ * the drill's own URLs, which have no parameters.
+ */
+export function drillPoolConfig(databaseUrl: string): PoolConfig {
   const { sslmode, password, channelBinding, ...connection } = postgresConnection(databaseUrl)
+  const required = channelBinding === 'require'
   // @types/pg 8.20 does not declare enableChannelBinding yet; pg 8.22 reads it.
   const config: PoolConfig & { readonly enableChannelBinding: boolean } = {
     ...connection,
@@ -96,15 +213,20 @@ export function drillPool(databaseUrl: string): Pool {
             checkServerIdentity: (_, cert) => checkServerIdentity(connection.host, cert),
           }
         : false,
-    // SCRAM-SHA-256-PLUS whenever the server offers it, as libpq does for `prefer` and `require`.
-    // Unlike libpq, node-postgres does not refuse a server that offers none; verify-full holds.
-    enableChannelBinding: channelBinding === 'require' || channelBinding === 'prefer',
+    // SCRAM-SHA-256-PLUS whenever the server offers it, as libpq does for `prefer`. For `require`,
+    // as libpq does too, every connection must bind: no other authentication is accepted.
+    enableChannelBinding: required || channelBinding === 'prefer',
+    ...(required ? { Client: ChannelBindingClient, onConnect: requireChannelBound } : {}),
     max: 2,
     connectionTimeoutMillis: 10_000,
     statement_timeout: 60_000,
     options: '-c timezone=UTC -c search_path=public',
   }
-  const pool = new Pool(config)
+  return config
+}
+
+export function drillPool(databaseUrl: string): Pool {
+  const pool = new Pool(drillPoolConfig(databaseUrl))
   // Never let pg emit driver text containing connection information to stderr.
   pool.on('error', () => {})
   return pool

@@ -87,7 +87,11 @@ export interface OperationRunStore {
   record(run: OperationRun): Promise<void>
 }
 
-const instant = z.iso.datetime({ precision: 3 })
+/** The earliest instant migration 0011 keeps; the four-digit ISO format ends at year 9999. */
+const earliestInstant = Date.parse('0001-01-01T00:00:00.000Z')
+const instant = z.iso
+  .datetime({ precision: 3 })
+  .refine((value) => Date.parse(value) >= earliestInstant)
 const measurement = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable()
 
 // The rules migration 0011 checks, so a store refuses a run before the database would.
@@ -219,9 +223,22 @@ export type RecoveryFinding = Extract<
 /** A backup measures no recovery target, so it cannot miss one. */
 export type BackupFinding = Exclude<RecoveryFinding, 'targets_missed'>
 
-/** How long ago a run finished, in whole milliseconds and never negative; null for none. */
+/**
+ * The instant a run's age counts from. A backup takes its snapshot after it starts and publishes
+ * its set when it finishes, so counted from its start a backup is never reported younger than the
+ * point a restore from it recovers to. A restore drill is due again a cadence after it finished.
+ * Which run is the latest still goes by when runs finished.
+ */
+export function runAgeFrom(run: OperationRun): string {
+  return run.kind === 'backup' ? run.startedAt : run.finishedAt
+}
+
+/**
+ * How old a run is, in whole milliseconds and never negative; null for none: since a backup
+ * started, or since a drill finished (`runAgeFrom`).
+ */
 export function runAgeMs(run: OperationRun | null, now: Date): number | null {
-  return run === null ? null : Math.max(0, Math.round(now.valueOf() - Date.parse(run.finishedAt)))
+  return run === null ? null : Math.max(0, Math.round(now.valueOf() - Date.parse(runAgeFrom(run))))
 }
 
 /** Whether a drill's measurement met its target; null when the drill did not measure it. */
@@ -234,8 +251,10 @@ export function recoveryTimeMet(run: OperationRun): boolean | null {
 }
 
 /**
- * What is wrong with the latest backup: none was recorded, it failed, or it finished longer ago
- * than the recovery point target, so a restore now would lose more than the target allows.
+ * What is wrong with the latest backup: none was recorded, it failed, or it started longer ago
+ * than the recovery point target. A backup takes its snapshot after it starts, so once a restore
+ * from it would lose more than the target allows, it is reported stale, however recently it
+ * finished.
  */
 export function backupFinding(run: OperationRun | null, now: Date): BackupFinding | null {
   if (run === null) return 'never_run'

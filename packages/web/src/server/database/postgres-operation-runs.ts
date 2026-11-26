@@ -43,9 +43,9 @@ interface OperationRunRow {
 /**
  * How long reading the latest runs may take, from asking the pool for a connection to the last
  * row. It is under the health check's 2-second limit, so a stalled database fails the read in time
- * and keeps nothing of it waiting: a connection that comes too late goes back to the pool unused,
- * and a statement still running loses its connection. PostgreSQL itself ends the statement after
- * `latestRunsStatementTimeoutMs`.
+ * and keeps little of it waiting: at most one connection request per pool (see
+ * `pooledConnection`), and a statement still running loses its connection. PostgreSQL itself ends
+ * the statement after `latestRunsStatementTimeoutMs`.
  */
 export const latestRunsTimeoutMs = 1_500
 export const latestRunsStatementTimeoutMs = 1_000
@@ -75,33 +75,97 @@ function statementTimedOut(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === '57014'
 }
 
+/** A read waiting for its pool's one connection request. */
+interface Waiter {
+  readonly accept: (connection: OperationRunConnection) => void
+  readonly refuse: (error: unknown) => void
+}
+
+/** Per pool: the reads that wait for a connection, oldest first, and whether one is requested. */
+interface Checkout {
+  requested: boolean
+  readonly waiters: Waiter[]
+}
+
+const checkouts = new WeakMap<OperationRunPool, Checkout>()
+
 /**
- * Settles as `work` does, unless `signal` aborts first. Then it rejects with the abort reason at
- * once and hands whatever `work` still delivers to `abandon`, so nothing taken for the read is
- * kept.
+ * Asks `pool` for one connection, for the oldest read still waiting, and then for another while
+ * reads still wait. A connection no read waits for any more goes back to the pool unused. A failed
+ * request fails every read that waited for it; the next read asks again.
  */
-function unlessAborted<T>(
+function requestConnection(pool: OperationRunPool, checkout: Checkout): void {
+  checkout.requested = true
+  new Promise<OperationRunConnection>((resolve) => resolve(pool.connect())).then(
+    (connection) => {
+      checkout.requested = false
+      const waiter = checkout.waiters.shift()
+      if (waiter === undefined) connection.release()
+      else waiter.accept(connection)
+      if (checkout.waiters.length > 0) requestConnection(pool, checkout)
+    },
+    (error: unknown) => {
+      checkout.requested = false
+      for (const waiter of checkout.waiters.splice(0)) waiter.refuse(error)
+    },
+  )
+}
+
+/**
+ * A pooled connection for one read, unless `signal` aborts first; it then rejects with the abort
+ * reason at once. pg-pool cannot withdraw a connection request it has queued, so the store keeps
+ * at most one request per pool, shared by every read of every store on that pool: a read that
+ * finds one waits for it within its own deadline and never adds another. However many reads give
+ * up on a pool that has nothing to hand out, that pool holds one waiting request. When the pool
+ * frees, the connection goes to the oldest read still waiting, or back to the pool unused.
+ */
+function pooledConnection(
+  pool: OperationRunPool,
   signal: AbortSignal,
-  work: Promise<T>,
-  abandon: (late: T) => void = () => undefined,
-): Promise<T> {
+): Promise<OperationRunConnection> {
+  if (signal.aborted) return Promise.reject(signal.reason)
+  const checkout = checkouts.get(pool) ?? { requested: false, waiters: [] }
+  checkouts.set(pool, checkout)
+  return new Promise((resolve, reject) => {
+    const waiter: Waiter = {
+      accept: (connection) => {
+        signal.removeEventListener('abort', leave)
+        resolve(connection)
+      },
+      refuse: (error) => {
+        signal.removeEventListener('abort', leave)
+        reject(error)
+      },
+    }
+    function leave() {
+      const index = checkout.waiters.indexOf(waiter)
+      if (index !== -1) checkout.waiters.splice(index, 1)
+      reject(signal.reason)
+    }
+    signal.addEventListener('abort', leave, { once: true })
+    checkout.waiters.push(waiter)
+    if (!checkout.requested) requestConnection(pool, checkout)
+  })
+}
+
+/**
+ * Settles as `work` does, unless `signal`, which has not aborted yet, aborts first. Then it rejects
+ * with the abort reason at once, and whatever `work` still delivers is dropped.
+ */
+function unlessAborted<T>(signal: AbortSignal, work: Promise<T>): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     let settled = false
     const stop = () => {
       if (settled) return
       settled = true
       reject(signal.reason)
-      work.then(abandon, () => undefined)
+      work.catch(() => undefined)
     }
     const finish = (settle: () => void) => {
       if (settled) return
       settled = true
       signal.removeEventListener('abort', stop)
       settle()
-    }
-    if (signal.aborted) {
-      stop()
-      return
     }
     signal.addEventListener('abort', stop, { once: true })
     work.then(
@@ -155,15 +219,20 @@ export class PostgresOperationRunStore implements OperationRunStore {
   /**
    * The latest run of each kind, read in one statement on one pooled connection, within
    * `latestRunsTimeoutMs` and while `signal` has not aborted. Past that it rejects with a
-   * `TimeoutError` or the abort reason.
+   * `TimeoutError` or the abort reason. The connection comes through the pool's one shared
+   * request (`pooledConnection`).
    */
   async latest(signal?: AbortSignal): Promise<LatestOperationRuns> {
     const deadline = new AbortController()
     const timer = setTimeout(() => deadline.abort(readTimedOut()), latestRunsTimeoutMs)
     const limit = signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal
     try {
-      limit.throwIfAborted()
-      const connection = await unlessAborted(limit, this.pool.connect(), (late) => late.release())
+      const connection = await pooledConnection(this.pool, limit)
+      if (limit.aborted) {
+        // The read gave up just as its connection came: hand it back without a statement.
+        connection.release()
+        limit.throwIfAborted()
+      }
       let answer: unknown
       try {
         answer = await unlessAborted(limit, connection.query(latestRuns))

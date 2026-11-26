@@ -378,7 +378,10 @@ type OwnerBackupFinding = BackupFinding | Extract<HealthReason, 'unavailable'>
 
 /** The last backup or the last restore drill, as the owner reads it on the job view. */
 export interface OwnerRecoveryCheck {
-  /** Milliseconds since the last run finished; null when none was recorded or it is unreadable. */
+  /**
+   * Milliseconds since the last backup started or the last drill finished, as the health check
+   * reports it (`runAgeMs`); null when none was recorded or it is unreadable.
+   */
   readonly ageMs: number | null
   /** What is wrong, as the health check reports it; null when nothing is. */
   readonly finding: OwnerRecoveryFinding | null
@@ -388,7 +391,10 @@ export interface OwnerRecoveryCheck {
   readonly measurements: readonly OwnerRecoveryMeasurement[]
   /** One plain next step, pointing to the runbook, when something is wrong; otherwise null. */
   readonly nextStep: string | null
-  /** When the last run finished and whether it worked, in plain language. */
+  /**
+   * Whether the last run worked and when, in plain language: when a backup that worked started,
+   * the time its age counts from; when a drill finished; when a run that failed stopped.
+   */
   readonly summary: string
   readonly title: 'Backup' | 'Restore drill'
 }
@@ -459,14 +465,22 @@ const drillSteps: Readonly<Record<OwnerRecoveryFinding, string>> = {
   unavailable: `Ask your maintainer to find out why the site cannot read its restore-drill records, as ${recoveryRunbook} describes.`,
 }
 
-function backupSummary(run: OperationRun | null, finding: OwnerBackupFinding | null, at: string) {
+function backupSummary(
+  run: OperationRun | null,
+  finding: OwnerBackupFinding | null,
+  formatTime: JobViewOptions['formatTime'],
+) {
   if (finding === 'unavailable') return 'The site could not read its record of the last backup.'
   if (run === null) return 'No backup has been recorded yet.'
-  if (finding === 'last_run_failed') return `The last backup did not work. It stopped at ${at}.`
-  if (finding === 'stale') {
-    return `The last backup finished at ${at} and worked, but that is more than ${count(recoveryPointHours, 'hour')} ago.`
+  if (finding === 'last_run_failed') {
+    return `The last backup did not work. It stopped at ${formatTime(run.finishedAt)}.`
   }
-  return `The last backup finished at ${at} and worked.`
+  // A backup saves the site as it was just after it started, so its age counts from its start.
+  const started = formatTime(run.startedAt)
+  if (finding === 'stale') {
+    return `The last backup started at ${started} and worked, but that is more than ${count(recoveryPointHours, 'hour')} ago.`
+  }
+  return `The last backup started at ${started} and worked.`
 }
 
 function drillSummary(run: OperationRun | null, finding: OwnerRecoveryFinding | null, at: string) {
@@ -486,18 +500,20 @@ function drillSummary(run: OperationRun | null, finding: OwnerRecoveryFinding | 
 }
 
 /**
- * The latest backup and restore drill in the owner's words (blog-0046.3): when each last
- * finished, whether it worked, the drill's recovery point and time against their targets, and,
- * for each thing the health check reports as wrong, one plain next step pointing to the runbook.
- * The findings are the health check's own, so the two never disagree: a latest run that cannot be
- * read back is `unavailable`, with nothing shown from it.
+ * The latest backup and restore drill in the owner's words (blog-0046.3): when the backup started
+ * and the drill finished, the times their ages count from, whether each worked, the drill's
+ * recovery point and time against their targets, and, for each thing the health check reports as
+ * wrong, one plain next step pointing to the runbook. The findings and ages are the health check's
+ * own, so the two never disagree: a latest run that cannot be read back is `unavailable`, with
+ * nothing shown from it.
  */
 export function projectRecoveryView(
   latest: LatestOperationRuns,
   options: JobViewOptions,
 ): OwnerRecoveryView {
   const readable = (run: LatestOperationRun) => (run === unreadableRun ? null : run)
-  const at = (run: OperationRun | null) => (run === null ? '' : options.formatTime(run.finishedAt))
+  const finished = (run: OperationRun | null) =>
+    run === null ? '' : options.formatTime(run.finishedAt)
   const backupRun = readable(latest.backup)
   const drillRun = readable(latest.restoreDrill)
   const backup: OwnerBackupFinding | null =
@@ -513,7 +529,7 @@ export function projectRecoveryView(
       lastRun: backupRun,
       measurements: [],
       nextStep: backup === null ? null : backupSteps[backup],
-      summary: backupSummary(backupRun, backup, at(backupRun)),
+      summary: backupSummary(backupRun, backup, options.formatTime),
       title: 'Backup',
     },
     restoreDrill: {
@@ -538,7 +554,7 @@ export function projectRecoveryView(
               ),
             ],
       nextStep: drill === null ? null : drillSteps[drill],
-      summary: drillSummary(drillRun, drill, at(drillRun)),
+      summary: drillSummary(drillRun, drill, finished(drillRun)),
       title: 'Restore drill',
     },
   }

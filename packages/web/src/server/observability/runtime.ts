@@ -134,8 +134,9 @@ function sharedLatestRuns(
 }
 
 /**
- * A probe of one kind's latest run: what is wrong with it, and how long ago it finished. A latest
- * run that cannot be read back says nothing about the run, so its check is unavailable.
+ * A probe of one kind's latest run: what is wrong with it, and its age (`runAgeMs`: since a backup
+ * started, or since a drill finished). A latest run that cannot be read back says nothing about
+ * the run, so its check is unavailable.
  */
 function recoveryProbe(
   latest: (signal: AbortSignal) => Promise<LatestOperationRuns>,

@@ -230,8 +230,9 @@ describe('owner publishing jobs page', () => {
     ).toEqual(['Backup', 'Restore drill'])
     const [backupCard, drillCard] = cards as [HTMLElement, HTMLElement]
     expect(backupCard).toHaveTextContent('Up to date')
+    // A backup is shown from when it started, the time its age counts from.
     expect(backupCard).toHaveTextContent(
-      'The last backup finished at [2026-11-23T02:10:00.000Z] and worked.',
+      'The last backup started at [2026-11-23T02:00:00.000Z] and worked.',
     )
     expect(backupCard).not.toHaveTextContent('Next step')
     expect(drillCard).toHaveTextContent('Needs attention')

@@ -23,7 +23,8 @@ import {
 } from './runtime'
 
 const now = new Date('2026-11-03T12:00:00.000Z')
-const hour = 3_600_000
+const minute = 60_000
+const hour = 60 * minute
 
 function silentLogger() {
   const records: Record<string, unknown>[] = []
@@ -34,10 +35,13 @@ function silentLogger() {
   return { logger, records }
 }
 
-/** Stored rows of operation_runs, finished `ageMs` before `at`. */
+/**
+ * Stored rows of operation_runs that finished `ageMs` before `at`, a minute after they started: a
+ * drill is that old, and a backup, aged from its start, a minute older.
+ */
 function runRows(at: Date, ageMs: number, drill: Partial<Record<string, unknown>> = {}) {
   const finished = new Date(at.valueOf() - ageMs)
-  const started = new Date(finished.valueOf() - 60_000)
+  const started = new Date(finished.valueOf() - minute)
   return [
     {
       failure_reason: null,
@@ -166,11 +170,16 @@ describe('observability runtime', () => {
     expect(operationRunsFor(runtime)).toBeInstanceOf(PostgresOperationRunStore)
     expect(operationRunsFor({ pool: null })).toBeNull()
     expect(recovery?.backup).toMatchObject({
+      ageMs: 2 * hour + minute,
+      finding: null,
+      summary: 'The last backup started at 3 Nov 2026, 09:59 and worked.',
+    })
+    expect(recovery?.restoreDrill).toMatchObject({
       ageMs: 2 * hour,
       finding: null,
-      summary: 'The last backup finished at 3 Nov 2026, 10:00 and worked.',
+      summary: 'The last restore drill finished at 3 Nov 2026, 10:00 and worked.',
+      title: 'Restore drill',
     })
-    expect(recovery?.restoreDrill).toMatchObject({ finding: null, title: 'Restore drill' })
   })
 
   it('checks the database and job queue of owner test mode with console email and no search', async () => {
@@ -247,23 +256,37 @@ describe('observability runtime', () => {
       { ...drillRow, failure_reason: 'rpo_exceeded', outcome: 'failed' },
     ])
     const lost = await check([{ ...drillRow, failure_reason: 'export_invalid', outcome: 'failed' }])
+    // Finished within the recovery point target, but started, and took its snapshot, before it.
+    const straddling = await check([
+      {
+        ...backupRow,
+        finished_at: new Date(now.valueOf() - (23 * hour + 50 * minute)),
+        started_at: new Date(now.valueOf() - (24 * hour + 10 * minute)),
+      },
+      drillRow!,
+    ])
 
     expect(records).toEqual([])
-    for (const report of [never, stale, failed, lost]) {
+    for (const report of [never, stale, failed, lost, straddling]) {
       expect(report.status).toBe('degraded')
       expect(report.checks.database.status).toBe('up')
     }
+    expect(straddling.checks).toMatchObject({
+      backup: { ageMs: 24 * hour + 10 * minute, reason: 'stale', status: 'degraded' },
+      restoreDrill: { ageMs: hour, status: 'up' },
+    })
     expect(never.checks).toMatchObject({
       backup: { reason: 'never_run', status: 'degraded' },
       restoreDrill: { reason: 'never_run', status: 'degraded' },
     })
     expect(never.checks.backup).not.toHaveProperty('ageMs')
+    // A backup is aged from when it started, a drill from when it finished.
     expect(stale.checks).toMatchObject({
-      backup: { ageMs: 40 * 24 * hour, reason: 'stale', status: 'degraded' },
+      backup: { ageMs: 40 * 24 * hour + minute, reason: 'stale', status: 'degraded' },
       restoreDrill: { ageMs: 40 * 24 * hour, reason: 'stale', status: 'degraded' },
     })
     expect(failed.checks).toMatchObject({
-      backup: { ageMs: hour, reason: 'last_run_failed', status: 'degraded' },
+      backup: { ageMs: hour + minute, reason: 'last_run_failed', status: 'degraded' },
       restoreDrill: { ageMs: hour, reason: 'targets_missed', status: 'degraded' },
     })
     expect(lost.checks).toMatchObject({
@@ -366,7 +389,7 @@ describe('observability runtime', () => {
     )
 
     expect(report.status).toBe('degraded')
-    expect(report.checks.backup).toEqual({ ageMs: hour, durationMs: 0, status: 'up' })
+    expect(report.checks.backup).toEqual({ ageMs: hour + minute, durationMs: 0, status: 'up' })
     expect(report.checks.restoreDrill).toEqual({
       durationMs: 0,
       reason: 'unavailable',

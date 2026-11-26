@@ -51,16 +51,16 @@ export type HealthFinding =
 
 /** A probe's answer when it can also say how old the state it read is. */
 export interface HealthObservation {
-  /** Milliseconds since the state the probe read was recorded; absent when nothing was. */
+  /** How old the state the probe read is, in milliseconds; absent when nothing was recorded. */
   readonly ageMs?: number
   readonly finding: HealthFinding | null
 }
 
 export interface HealthCheckResult {
   /**
-   * How long ago the state the check read was recorded, in whole milliseconds: for the backup
-   * and the restore drill, since their latest run finished. Absent for every other check and
-   * when nothing was recorded.
+   * How old the state the check read is, in whole milliseconds: since the latest backup started,
+   * which bounds the age of its snapshot, and since the latest restore drill finished. Absent for
+   * every other check and when nothing was recorded.
    */
   readonly ageMs?: number
   /** How long the check took; absent for a subsystem that is not configured. */

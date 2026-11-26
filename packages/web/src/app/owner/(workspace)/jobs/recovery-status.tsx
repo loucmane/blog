@@ -68,9 +68,9 @@ function RecoveryCard({ check }: { readonly check: OwnerRecoveryCheck }) {
 }
 
 /**
- * The last backup and the last restore drill: when each finished and whether it worked, the
- * drill's recovery point and time against their targets, and one plain next step for each that
- * needs attention. A site without a database has neither to show.
+ * The last backup and the last restore drill: whether each worked, when the backup started and the
+ * drill finished, the drill's recovery point and time against their targets, and one plain next
+ * step for each that needs attention. A site without a database has neither to show.
  */
 export function RecoveryStatus({ recovery }: { readonly recovery: OwnerRecoveryView | null }) {
   return (
